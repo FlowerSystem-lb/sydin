@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
 
 interface Item {
@@ -127,7 +128,7 @@ export default function InventoryPage() {
         imageUrl = data.publicUrl;
       }
 
-      const { error } = await supabase.from("inventory").insert([{
+      const newItem = {
         name,
         sku,
         category,
@@ -135,12 +136,28 @@ export default function InventoryPage() {
         notes,
         image: imageUrl,
         user_id: user.id,
-      }]);
+      };
+
+      const { data: createdItem, error } = await supabase
+        .from("inventory")
+        .insert([newItem])
+        .select("*")
+        .single();
 
       if (error) {
         alert(error.message);
         setIsAdding(false);
         return;
+      }
+
+      if (createdItem) {
+        await logInventoryHistory({
+          itemId: createdItem.id,
+          userId: user.id,
+          action: "created",
+          newQuantity: createdItem.quantity,
+          newValues: createdItem,
+        });
       }
 
       alert("Item added successfully");
@@ -242,19 +259,22 @@ export default function InventoryPage() {
         imageUrl = data.publicUrl;
       }
 
+      const oldItem = { ...selectedItem };
+      const updatedItem = {
+        name: trimmedName,
+        sku: editSku.trim(),
+        category: editCategory.trim(),
+        quantity: quantityValue,
+        notes: editNotes,
+        image: imageUrl,
+      };
+
       const { data, error } = await supabase
         .from("inventory")
-        .update({
-          name: trimmedName,
-          sku: editSku.trim(),
-          category: editCategory.trim(),
-          quantity: quantityValue,
-          notes: editNotes,
-          image: imageUrl,
-        })
+        .update(updatedItem)
         .eq("id", selectedItem.id)
         .eq("user_id", user.id)
-        .select("id");
+        .select("*");
 
       if (error) {
         setEditError(error.message);
@@ -267,6 +287,16 @@ export default function InventoryPage() {
         setIsEditing(false);
         return;
       }
+
+      await logInventoryHistory({
+        itemId: selectedItem.id,
+        userId: user.id,
+        action: "edited",
+        oldQuantity: oldItem.quantity,
+        newQuantity: (data[0] as Item).quantity,
+        oldValues: oldItem,
+        newValues: data[0],
+      });
 
       await fetchItems();
       closeEditModal(true);
@@ -285,6 +315,29 @@ export default function InventoryPage() {
       confirm("Delete this item?");
 
     if (!confirmDelete) return;
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      alert("Please login");
+      return;
+    }
+
+    const itemToDelete = items.find((item) => item.id === id);
+
+    if (itemToDelete) {
+      await logInventoryHistory({
+        itemId: itemToDelete.id,
+        userId: user.id,
+        action: "deleted",
+        oldQuantity: itemToDelete.quantity,
+        oldValues: itemToDelete,
+      });
+    } else {
+      console.warn("Inventory history skipped: item data was not available.");
+    }
 
     const { error } =
       await supabase

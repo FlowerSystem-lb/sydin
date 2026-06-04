@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import Sidebar from "@/components/Sidebar";
+import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
 
 interface Item {
@@ -17,6 +18,14 @@ interface Item {
   sku?: string;
   notes?: string;
   created_at?: string;
+}
+
+interface InventoryHistory {
+  id: number;
+  action: string;
+  old_quantity: number | null;
+  new_quantity: number | null;
+  created_at: string;
 }
 
 const LOW_STOCK_THRESHOLD = 10;
@@ -36,6 +45,14 @@ function formatCreatedDate(date?: string) {
   }).format(parsedDate);
 }
 
+function formatAction(action: string) {
+  return action.charAt(0).toUpperCase() + action.slice(1);
+}
+
+function formatQuantity(quantity: number | null) {
+  return quantity ?? "N/A";
+}
+
 export default function ItemDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -44,6 +61,7 @@ export default function ItemDetailsPage() {
   const itemId = Array.isArray(rawId) ? rawId[0] : rawId;
 
   const [item, setItem] = useState<Item | null>(null);
+  const [history, setHistory] = useState<InventoryHistory[]>([]);
   const [qrUrl, setQrUrl] = useState("");
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [loading, setLoading] = useState(true);
@@ -59,6 +77,25 @@ export default function ItemDetailsPage() {
   const [editImage, setEditImage] = useState<File | null>(null);
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  const fetchHistory = async (userId: string, historyItemId: number) => {
+    const { data, error: historyError } = await supabase
+      .from("inventory_history")
+      .select("id, action, old_quantity, new_quantity, created_at")
+      .eq("item_id", historyItemId)
+      .eq("user_id", userId)
+      .order("created_at", {
+        ascending: false,
+      });
+
+    if (historyError) {
+      console.warn("Inventory history fetch failed:", historyError.message);
+      setHistory([]);
+      return;
+    }
+
+    setHistory((data as InventoryHistory[]) || []);
+  };
 
   useEffect(() => {
     if (!itemId) return;
@@ -114,7 +151,16 @@ export default function ItemDetailsPage() {
         return;
       }
 
-      setItem((data?.[0] as Item | undefined) || null);
+      const loadedItem = (data?.[0] as Item | undefined) || null;
+
+      setItem(loadedItem);
+
+      if (loadedItem) {
+        await fetchHistory(user.id, loadedItem.id);
+      } else {
+        setHistory([]);
+      }
+
       setLoading(false);
     };
 
@@ -208,16 +254,19 @@ export default function ItemDetailsPage() {
         imageUrl = data.publicUrl;
       }
 
+      const oldItem = { ...item };
+      const updatedItem = {
+        name: trimmedName,
+        sku: editSku.trim(),
+        category: editCategory.trim(),
+        quantity: quantityValue,
+        notes: editNotes,
+        image: imageUrl,
+      };
+
       const { data, error: updateError } = await supabase
         .from("inventory")
-        .update({
-          name: trimmedName,
-          sku: editSku.trim(),
-          category: editCategory.trim(),
-          quantity: quantityValue,
-          notes: editNotes,
-          image: imageUrl,
-        })
+        .update(updatedItem)
         .eq("id", item.id)
         .eq("user_id", user.id)
         .select("*");
@@ -234,7 +283,20 @@ export default function ItemDetailsPage() {
         return;
       }
 
-      setItem(data[0] as Item);
+      const updatedRecord = data[0] as Item;
+
+      await logInventoryHistory({
+        itemId: item.id,
+        userId: user.id,
+        action: "edited",
+        oldQuantity: oldItem.quantity,
+        newQuantity: updatedRecord.quantity,
+        oldValues: oldItem,
+        newValues: updatedRecord,
+      });
+
+      setItem(updatedRecord);
+      await fetchHistory(user.id, item.id);
       closeEditModal(true);
     } catch (error) {
       console.log(error);
@@ -263,6 +325,14 @@ export default function ItemDetailsPage() {
         setIsDeleting(false);
         return;
       }
+
+      await logInventoryHistory({
+        itemId: item.id,
+        userId: user.id,
+        action: "deleted",
+        oldQuantity: item.quantity,
+        oldValues: item,
+      });
 
       const { error: deleteError } = await supabase
         .from("inventory")
@@ -415,7 +485,8 @@ export default function ItemDetailsPage() {
           )}
 
           {!loading && item && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+            <>
+              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
               <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-6">
                 <div className="flex min-h-[360px] items-center justify-center rounded-[28px] bg-[#f4f0e8] p-5 sm:min-h-[460px]">
                   {item.image ? (
@@ -574,7 +645,91 @@ export default function ItemDetailsPage() {
                   </div>
                 </div>
               </section>
-            </div>
+              </div>
+
+              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                      Audit trail
+                    </p>
+
+                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                      Item History
+                    </h2>
+                  </div>
+
+                  <span className="self-start rounded-full border border-indigo-300/25 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-indigo-100 sm:self-auto">
+                    {history.length} {history.length === 1 ? "entry" : "entries"}
+                  </span>
+                </div>
+
+                {history.length > 0 ? (
+                  <div className="mt-6 space-y-4">
+                    {history.map((entry) => (
+                      <div
+                        key={entry.id}
+                        className="relative rounded-[26px] border border-white/10 bg-black/25 p-4 sm:p-5"
+                      >
+                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="flex items-start gap-4">
+                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 text-sm font-black text-indigo-100">
+                              {formatAction(entry.action).charAt(0)}
+                            </div>
+
+                            <div>
+                              <h3 className="text-xl font-bold text-white">
+                                {formatAction(entry.action)}
+                              </h3>
+
+                              <p className="mt-1 text-sm font-medium text-slate-400">
+                                {formatCreatedDate(entry.created_at)}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-w-[340px]">
+                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                Old quantity
+                              </p>
+
+                              <p className="mt-2 text-2xl font-black text-slate-200">
+                                {formatQuantity(entry.old_quantity)}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                New quantity
+                              </p>
+
+                              <p className="mt-2 text-2xl font-black text-indigo-100">
+                                {formatQuantity(entry.new_quantity)}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-[26px] border border-dashed border-indigo-300/25 bg-black/25 px-5 py-12 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-indigo-100">
+                      0
+                    </div>
+
+                    <h3 className="mt-5 text-2xl font-bold text-white">
+                      No history yet
+                    </h3>
+
+                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-slate-400">
+                      Create, edit, and delete activity for this item will appear here.
+                    </p>
+                  </div>
+                )}
+              </section>
+            </>
           )}
         </div>
       </main>

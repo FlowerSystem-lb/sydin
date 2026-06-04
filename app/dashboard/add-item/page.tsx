@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
 
 export default function AddItemPage() {
@@ -83,26 +84,38 @@ export default function AddItemPage() {
         imageUrl = data.publicUrl;
       }
 
+      const newItem = {
+        name: trimmedName,
+        sku: sku.trim(),
+        category: category.trim(),
+        quantity: quantityValue,
+        notes,
+        image: imageUrl,
+        user_id: user.id,
+      };
+
       // Insert inventory item
-      const { error } =
+      const { data: createdItem, error } =
         await supabase
           .from("inventory")
-          .insert([
-            {
-              name: trimmedName,
-              sku: sku.trim(),
-              category: category.trim(),
-              quantity: quantityValue,
-              notes,
-              image: imageUrl,
-              user_id: user.id,
-            },
-          ]);
+          .insert([newItem])
+          .select("*")
+          .single();
 
       if (error) {
         alert(error.message);
         setLoading(false);
         return;
+      }
+
+      if (createdItem) {
+        await logInventoryHistory({
+          itemId: createdItem.id,
+          userId: user.id,
+          action: "created",
+          newQuantity: createdItem.quantity,
+          newValues: createdItem,
+        });
       }
 
       alert("Item added successfully");
