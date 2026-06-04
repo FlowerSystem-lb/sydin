@@ -415,7 +415,7 @@ export default function ItemDetailsPage() {
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
-                  Review item metadata, stock levels, image, notes, and future QR access.
+                  Review item metadata, stock levels, image, notes, history, and public QR access.
                 </p>
               </div>
 
@@ -452,10 +452,14 @@ export default function ItemDetailsPage() {
           </section>
 
           {loading && (
-            <div className="rounded-[32px] border border-white/10 bg-white/[0.045] p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-              <p className="text-xl font-semibold text-slate-300">
-                Loading item...
-              </p>
+            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
+              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
+                <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+              </div>
+
+              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
+                <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+              </div>
             </div>
           )}
 
@@ -500,8 +504,14 @@ export default function ItemDetailsPage() {
                       />
                     </div>
                   ) : (
-                    <div className="text-lg font-semibold text-slate-500">
-                      No Image
+                    <div className="flex min-h-[300px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-slate-500">
+                      <span className="text-sm font-black uppercase tracking-[0.18em]">
+                        Image
+                      </span>
+
+                      <span className="mt-2 text-base font-semibold">
+                        Not added yet
+                      </span>
                     </div>
                   )}
                 </div>
@@ -724,7 +734,7 @@ export default function ItemDetailsPage() {
                     </h3>
 
                     <p className="mx-auto mt-2 max-w-md text-base leading-7 text-slate-400">
-                      Create, edit, and delete activity for this item will appear here.
+                      Create, edit, and delete activity for this item will appear here as the record changes.
                     </p>
                   </div>
                 )}
@@ -827,8 +837,14 @@ export default function ItemDetailsPage() {
                       />
                     </div>
                   ) : (
-                    <div className="flex h-[120px] items-center justify-center rounded-2xl bg-[#f4f0e8] text-slate-500">
-                      No Image
+                    <div className="flex h-[120px] flex-col items-center justify-center rounded-2xl bg-[#f4f0e8] text-slate-500">
+                      <span className="text-xs font-black uppercase tracking-[0.16em]">
+                        Image
+                      </span>
+
+                      <span className="mt-1 text-xs font-semibold">
+                        Not added
+                      </span>
                     </div>
                   )}
 

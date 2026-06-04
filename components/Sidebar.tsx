@@ -25,10 +25,15 @@ export default function Sidebar({
       href: "/dashboard/inventory",
       marker: "I",
     },
+    {
+      name: "Add Item",
+      href: "/dashboard/add-item",
+      marker: "+",
+    },
   ];
 
   const addActionClass =
-    "rounded-2xl border border-indigo-400/30 bg-indigo-500/15 px-4 py-3 text-sm font-semibold text-white shadow-[0_18px_50px_rgba(79,70,229,0.18)] transition hover:border-indigo-300/50 hover:bg-indigo-500/25";
+    "inline-flex min-h-11 items-center justify-center rounded-2xl border border-indigo-400/30 bg-indigo-500/15 px-4 py-3 text-sm font-bold text-white shadow-[0_18px_50px_rgba(79,70,229,0.18)] transition hover:border-indigo-300/50 hover:bg-indigo-500/25";
 
   const renderAddAction = () => {
     if (onAddItem) {
@@ -82,7 +87,10 @@ export default function Sidebar({
 
           <nav className="mt-8 flex flex-col gap-2">
             {links.map((link) => {
-              const active = pathname === link.href;
+              const active =
+                link.href === "/dashboard"
+                  ? pathname === link.href
+                  : pathname === link.href || pathname.startsWith(`${link.href}/`);
 
               return (
                 <Link
@@ -162,15 +170,18 @@ export default function Sidebar({
           {renderAddAction()}
         </div>
 
-        <nav className="mt-3 grid grid-cols-2 gap-2">
+        <nav className="mt-3 grid grid-cols-3 gap-2">
           {links.map((link) => {
-            const active = pathname === link.href;
+            const active =
+              link.href === "/dashboard"
+                ? pathname === link.href
+                : pathname === link.href || pathname.startsWith(`${link.href}/`);
 
             return (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-2xl px-4 py-3 text-center text-sm font-semibold transition ${
+                className={`min-h-11 rounded-2xl px-2 py-3 text-center text-xs font-bold transition sm:px-4 sm:text-sm ${
                   active
                     ? "bg-white text-black"
                     : "bg-white/[0.06] text-slate-300"

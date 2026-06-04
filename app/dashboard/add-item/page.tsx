@@ -53,8 +53,7 @@ export default function AddItemPage() {
         await supabase.auth.getUser();
 
       if (!user) {
-        alert("Please login");
-        setLoading(false);
+        setFormError("Please login before adding inventory.");
         return;
       }
 
@@ -71,8 +70,7 @@ export default function AddItemPage() {
           .upload(fileName, image);
 
         if (uploadError) {
-          alert(uploadError.message);
-          setLoading(false);
+          setFormError(uploadError.message);
           return;
         }
 
@@ -103,8 +101,7 @@ export default function AddItemPage() {
           .single();
 
       if (error) {
-        alert(error.message);
-        setLoading(false);
+        setFormError(error.message);
         return;
       }
 
@@ -118,18 +115,20 @@ export default function AddItemPage() {
         });
       }
 
-      alert("Item added successfully");
-
       router.push(
         "/dashboard/inventory"
       );
     } catch (error) {
       console.log(error);
 
-      alert("Something went wrong");
+      setFormError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while saving this item."
+      );
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (

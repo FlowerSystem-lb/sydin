@@ -23,6 +23,9 @@ export default function InventoryPage() {
 
   const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState("");
+  const [loadingItems, setLoadingItems] = useState(true);
+  const [pageError, setPageError] = useState("");
+  const [pageNotice, setPageNotice] = useState("");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -33,6 +36,7 @@ export default function InventoryPage() {
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [addError, setAddError] = useState("");
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [editName, setEditName] = useState("");
@@ -43,6 +47,7 @@ export default function InventoryPage() {
   const [editImage, setEditImage] = useState<File | null>(null);
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const fetchItems = async () => {
     const {
@@ -50,7 +55,10 @@ export default function InventoryPage() {
     } =
       await supabase.auth.getUser();
 
-    if (!user) return;
+    if (!user) {
+      setPageError("Please login to view your inventory.");
+      return;
+    }
 
     const { data, error } =
       await supabase
@@ -63,6 +71,7 @@ export default function InventoryPage() {
 
     if (error) {
       console.log(error);
+      setPageError(error.message);
       return;
     }
 
@@ -72,26 +81,56 @@ export default function InventoryPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
+    supabase.auth.getUser().then(({ data: { user }, error: userError }) => {
+      if (!isActive) return;
 
-      supabase
-        .from("inventory")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("id", {
-          ascending: false,
-        })
+      if (userError) {
+        setPageError(userError.message);
+        setLoadingItems(false);
+        return;
+      }
+
+      if (!user) {
+        setPageError("Please login to view your inventory.");
+        setLoadingItems(false);
+        return;
+      }
+
+      Promise.resolve(
+        supabase
+          .from("inventory")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("id", {
+            ascending: false,
+          })
+      )
         .then(({ data, error }) => {
           if (!isActive) return;
 
           if (error) {
             console.log(error);
+            setPageError(error.message);
+            setLoadingItems(false);
             return;
           }
 
           setItems(data || []);
+          setLoadingItems(false);
+        })
+        .catch((error) => {
+          if (!isActive) return;
+
+          console.log(error);
+          setPageError("Something went wrong while loading inventory.");
+          setLoadingItems(false);
         });
+    }).catch((error) => {
+      if (!isActive) return;
+
+      console.log(error);
+      setPageError("Something went wrong while checking your session.");
+      setLoadingItems(false);
     });
 
     return () => {
@@ -101,13 +140,36 @@ export default function InventoryPage() {
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isAdding) return;
+
+    const trimmedName = name.trim();
+    const quantityValue = Number(quantity);
+
+    if (!trimmedName) {
+      setAddError("Product name is required.");
+      return;
+    }
+
+    if (
+      quantity === "" ||
+      Number.isNaN(quantityValue) ||
+      quantityValue < 0
+    ) {
+      setAddError("Quantity must be 0 or more.");
+      return;
+    }
+
     try {
       setIsAdding(true);
+      setAddError("");
+      setPageError("");
+      setPageNotice("");
+
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        alert("Please login");
-        setIsAdding(false);
+        setAddError("Please login before adding inventory.");
         return;
       }
 
@@ -119,8 +181,7 @@ export default function InventoryPage() {
           .upload(fileName, image);
 
         if (uploadError) {
-          alert(uploadError.message);
-          setIsAdding(false);
+          setAddError(uploadError.message);
           return;
         }
 
@@ -129,10 +190,10 @@ export default function InventoryPage() {
       }
 
       const newItem = {
-        name,
-        sku,
-        category,
-        quantity: Number(quantity),
+        name: trimmedName,
+        sku: sku.trim(),
+        category: category.trim(),
+        quantity: quantityValue,
         notes,
         image: imageUrl,
         user_id: user.id,
@@ -145,8 +206,7 @@ export default function InventoryPage() {
         .single();
 
       if (error) {
-        alert(error.message);
-        setIsAdding(false);
+        setAddError(error.message);
         return;
       }
 
@@ -160,7 +220,7 @@ export default function InventoryPage() {
         });
       }
 
-      alert("Item added successfully");
+      setPageNotice("Item added successfully.");
       setIsModalOpen(false);
       setName("");
       setSku("");
@@ -168,12 +228,17 @@ export default function InventoryPage() {
       setQuantity("");
       setNotes("");
       setImage(null);
-      fetchItems();
+      await fetchItems();
     } catch (error) {
       console.log(error);
-      alert("Something went wrong");
+      setAddError(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong while adding this item."
+      );
+    } finally {
+      setIsAdding(false);
     }
-    setIsAdding(false);
   };
 
   const openEditModal = (item: Item) => {
@@ -227,6 +292,8 @@ export default function InventoryPage() {
     try {
       setIsEditing(true);
       setEditError("");
+      setPageError("");
+      setPageNotice("");
 
       const {
         data: { user },
@@ -299,58 +366,74 @@ export default function InventoryPage() {
       });
 
       await fetchItems();
+      setPageNotice("Item updated successfully.");
       closeEditModal(true);
     } catch (error) {
       console.log(error);
       setEditError("Something went wrong while updating this item.");
+    } finally {
+      setIsEditing(false);
     }
-
-    setIsEditing(false);
   };
 
   const deleteItem = async (
     id: number
   ) => {
+    if (deletingId) return;
+
     const confirmDelete =
       confirm("Delete this item?");
 
     if (!confirmDelete) return;
 
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      setDeletingId(id);
+      setPageError("");
+      setPageNotice("");
 
-    if (!user) {
-      alert("Please login");
-      return;
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setPageError("Please login before deleting inventory.");
+        return;
+      }
+
+      const itemToDelete = items.find((item) => item.id === id);
+
+      if (itemToDelete) {
+        await logInventoryHistory({
+          itemId: itemToDelete.id,
+          userId: user.id,
+          action: "deleted",
+          oldQuantity: itemToDelete.quantity,
+          oldValues: itemToDelete,
+        });
+      } else {
+        console.warn("Inventory history skipped: item data was not available.");
+      }
+
+      const { error } =
+        await supabase
+          .from("inventory")
+          .delete()
+          .eq("id", id)
+          .eq("user_id", user.id);
+
+      if (error) {
+        setPageError(error.message);
+        return;
+      }
+
+      setPageNotice("Item deleted successfully.");
+      await fetchItems();
+    } catch (error) {
+      console.log(error);
+      setPageError("Something went wrong while deleting this item.");
+    } finally {
+      setDeletingId(null);
     }
-
-    const itemToDelete = items.find((item) => item.id === id);
-
-    if (itemToDelete) {
-      await logInventoryHistory({
-        itemId: itemToDelete.id,
-        userId: user.id,
-        action: "deleted",
-        oldQuantity: itemToDelete.quantity,
-        oldValues: itemToDelete,
-      });
-    } else {
-      console.warn("Inventory history skipped: item data was not available.");
-    }
-
-    const { error } =
-      await supabase
-        .from("inventory")
-        .delete()
-        .eq("id", id);
-
-    if (error) {
-      alert("Error deleting item");
-      return;
-    }
-
-    fetchItems();
   };
 
   const filteredItems =
@@ -370,7 +453,12 @@ export default function InventoryPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
-      <Sidebar onAddItem={() => setIsModalOpen(true)} />
+      <Sidebar
+        onAddItem={() => {
+          setAddError("");
+          setIsModalOpen(true);
+        }}
+      />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8">
@@ -398,6 +486,18 @@ export default function InventoryPage() {
               </Link>
             </div>
           </section>
+
+          {(pageNotice || pageError) && (
+            <div
+              className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
+                pageError
+                  ? "border-red-500/30 bg-red-500/10 text-red-200"
+                  : "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+              }`}
+            >
+              {pageError || pageNotice}
+            </div>
+          )}
 
           {/* Search */}
           <section className="rounded-[28px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5">
@@ -435,9 +535,21 @@ export default function InventoryPage() {
           </section>
 
           {/* Items */}
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-            {filteredItems.map((item) => (
-              <div
+          {loadingItems ? (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {[1, 2, 3, 4].map((item) => (
+                <div
+                  key={item}
+                  className="h-[460px] overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_24px_80px_rgba(0,0,0,0.24)]"
+                >
+                  <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+              {filteredItems.map((item) => (
+                <div
                 key={item.id}
                 role="link"
                 tabIndex={0}
@@ -472,8 +584,16 @@ export default function InventoryPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex h-[220px] w-full items-center justify-center border-b border-white/10 bg-[#f4f0e8] text-base font-semibold text-slate-500 md:h-[240px] xl:h-[250px]">
-                    No Image
+                  <div className="flex h-[220px] w-full items-center justify-center border-b border-white/10 bg-[#f4f0e8] p-5 text-slate-500 md:h-[240px] xl:h-[250px]">
+                    <div className="flex h-full w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center">
+                      <span className="text-sm font-black uppercase tracking-[0.16em]">
+                        Image
+                      </span>
+
+                      <span className="mt-2 text-sm font-semibold">
+                        Not added
+                      </span>
+                    </div>
                   </div>
                 )}
 
@@ -529,20 +649,22 @@ export default function InventoryPage() {
                           item.id
                         );
                       }}
-                      className="min-h-[52px] flex-1 rounded-2xl border border-red-400/25 bg-red-500/15 py-3 text-base font-bold text-red-200 transition hover:bg-red-500/25"
+                      disabled={deletingId === item.id}
+                      className="min-h-[52px] flex-1 rounded-2xl border border-red-400/25 bg-red-500/15 py-3 text-base font-bold text-red-200 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                      Delete
+                      {deletingId === item.id ? "Deleting..." : "Delete"}
                     </button>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Empty State */}
-          {filteredItems.length ===
+          {!loadingItems && filteredItems.length ===
             0 && (
-            <div className="mt-2 flex flex-col items-center justify-center rounded-[32px] border border-white/10 bg-white/[0.045] px-4 py-20 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <div className="mt-2 flex flex-col items-center justify-center rounded-[32px] border border-dashed border-indigo-300/25 bg-white/[0.045] px-4 py-20 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
               <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-300/20 bg-indigo-500/15 text-2xl font-black text-indigo-200">
                 0
               </div>
@@ -557,12 +679,22 @@ export default function InventoryPage() {
                   : "No products match the current search."}
               </p>
 
-              <Link
-                href="/dashboard/add-item"
-                className="mt-6 rounded-2xl bg-white px-5 py-3 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
-              >
-                Add your first item
-              </Link>
+              {items.length === 0 ? (
+                <Link
+                  href="/dashboard/add-item"
+                  className="mt-6 rounded-2xl bg-white px-5 py-3 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                >
+                  Add your first item
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSearch("")}
+                  className="mt-6 rounded-2xl bg-white px-5 py-3 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                >
+                  Clear search
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -582,8 +714,14 @@ export default function InventoryPage() {
               </div>
 
               <button
-                onClick={() => setIsModalOpen(false)}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white"
+                type="button"
+                onClick={() => {
+                  if (isAdding) return;
+                  setIsModalOpen(false);
+                  setAddError("");
+                }}
+                disabled={isAdding}
+                className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-50"
               >
                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -656,10 +794,23 @@ export default function InventoryPage() {
               </div>
 
               <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                {addError && (
+                  <div className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
+                    {addError}
+                  </div>
+                )}
+              </div>
+
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
                 <button
                   type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1]"
+                  onClick={() => {
+                    if (isAdding) return;
+                    setIsModalOpen(false);
+                    setAddError("");
+                  }}
+                  disabled={isAdding}
+                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -774,8 +925,14 @@ export default function InventoryPage() {
                       />
                     </div>
                   ) : (
-                    <div className="flex h-[120px] items-center justify-center rounded-2xl bg-[#f4f0e8] text-slate-500">
-                      No Image
+                    <div className="flex h-[120px] flex-col items-center justify-center rounded-2xl bg-[#f4f0e8] text-slate-500">
+                      <span className="text-xs font-black uppercase tracking-[0.16em]">
+                        Image
+                      </span>
+
+                      <span className="mt-1 text-xs font-semibold">
+                        Not added
+                      </span>
                     </div>
                   )}
 

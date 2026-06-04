@@ -118,10 +118,14 @@ export default function PublicItemPage() {
         </header>
 
         {loading && (
-          <section className="rounded-[30px] border border-white/10 bg-white/[0.045] p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-            <p className="text-lg font-semibold text-slate-300">
-              Loading item...
-            </p>
+          <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+            <div className="min-h-[360px] overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
+              <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+            </div>
+
+            <div className="min-h-[360px] overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
+              <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+            </div>
           </section>
         )}
 
@@ -160,8 +164,14 @@ export default function PublicItemPage() {
                       />
                     </div>
                   ) : (
-                    <div className="text-lg font-semibold text-slate-500">
-                      No Image
+                    <div className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-slate-500">
+                      <span className="text-sm font-black uppercase tracking-[0.18em]">
+                        Image
+                      </span>
+
+                      <span className="mt-2 text-base font-semibold">
+                        Not added yet
+                      </span>
                     </div>
                   )}
                 </div>

@@ -226,13 +226,15 @@ export default function DashboardPage() {
                   {[1, 2, 3].map((item) => (
                     <div
                       key={item}
-                      className="min-h-[116px] rounded-3xl border border-white/10 bg-white/[0.04] animate-pulse"
-                    />
+                      className="min-h-[116px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]"
+                    >
+                      <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+                    </div>
                   ))}
                 </div>
               ) : recentItems.length === 0 ? (
-                <div className="rounded-3xl border border-white/10 bg-black/25 px-5 py-14 text-center">
-                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/15 text-lg font-black text-indigo-200">
+                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/25 px-5 py-14 text-center">
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-indigo-200">
                     0
                   </div>
 
@@ -270,9 +272,15 @@ export default function DashboardPage() {
                             />
                           </div>
                         ) : (
-                          <span className="text-sm font-semibold text-slate-500">
-                            No Image
-                          </span>
+                          <div className="flex h-full w-full flex-col items-center justify-center rounded-2xl border border-slate-300/30 bg-white/35 text-center text-slate-500">
+                            <span className="text-xs font-black uppercase tracking-[0.16em]">
+                              Image
+                            </span>
+
+                            <span className="mt-1 text-xs font-semibold">
+                              Not added
+                            </span>
+                          </div>
                         )}
                       </div>
 
