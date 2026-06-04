@@ -5,6 +5,12 @@ import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/app/lib/supabase";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionUsage,
+  type SubscriptionUsage,
+} from "@/app/lib/subscription";
 
 interface Item {
   id: number;
@@ -18,8 +24,15 @@ interface Item {
 
 const LOW_STOCK_THRESHOLD = 10;
 
+const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
+  subscription: FALLBACK_SUBSCRIPTION,
+  usedItems: 0,
+};
+
 export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
+  const [subscriptionUsage, setSubscriptionUsage] =
+    useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -40,14 +53,17 @@ export default function DashboardPage() {
         return;
       }
 
-      supabase
-        .from("inventory")
-        .select("*")
-        .eq("user_id", user.id)
-        .order("id", {
-          ascending: false,
-        })
-        .then(({ data, error: inventoryError }) => {
+      Promise.all([
+        supabase
+          .from("inventory")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("id", {
+            ascending: false,
+          }),
+        getSubscriptionUsage(user.id),
+      ])
+        .then(([{ data, error: inventoryError }, usage]) => {
           if (!isActive) return;
 
           if (inventoryError) {
@@ -57,6 +73,14 @@ export default function DashboardPage() {
           }
 
           setItems(data || []);
+          setSubscriptionUsage(usage);
+          setLoading(false);
+        })
+        .catch((loadError) => {
+          if (!isActive) return;
+
+          console.log(loadError);
+          setError("Something went wrong while loading your dashboard.");
           setLoading(false);
         });
     });
@@ -87,6 +111,17 @@ export default function DashboardPage() {
   const recentItems = useMemo(
     () => items.slice(0, 3),
     [items]
+  );
+
+  const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
+  const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
+  const usagePercent = Math.min(
+    100,
+    Math.round(
+      (subscriptionUsage.usedItems /
+        Math.max(subscriptionUsage.subscription.item_limit, 1)) *
+        100
+    )
   );
 
   const summaryCards = [
@@ -122,7 +157,11 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
-      <Sidebar addItemHref="/dashboard/add-item" />
+      <Sidebar
+        addItemHref="/dashboard/add-item"
+        planName={currentPlanName}
+        itemUsage={itemUsageText}
+      />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
@@ -170,6 +209,49 @@ export default function DashboardPage() {
               {error}
             </div>
           )}
+
+          <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                  Subscription
+                </p>
+
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                  Current plan: {loading ? "..." : currentPlanName}
+                </h2>
+
+                <p className="mt-3 text-base text-slate-400">
+                  Usage: {loading ? "... / ... items" : itemUsageText}
+                </p>
+              </div>
+
+              <div className="min-w-0 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-4 lg:min-w-[320px]">
+                <div className="flex items-center justify-between gap-4">
+                  <span className="text-sm font-bold text-indigo-100">
+                    Item usage
+                  </span>
+
+                  <span className="text-sm font-black text-white">
+                    {loading ? "..." : `${usagePercent}%`}
+                  </span>
+                </div>
+
+                <div className="mt-3 h-3 overflow-hidden rounded-full bg-black/35">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-indigo-300 via-violet-400 to-fuchsia-400 transition-all"
+                    style={{
+                      width: loading ? "0%" : `${usagePercent}%`,
+                    }}
+                  />
+                </div>
+
+                <p className="mt-3 text-xs font-semibold text-slate-500">
+                  Limits are visible now. Add item limits are not enforced yet.
+                </p>
+              </div>
+            </div>
+          </section>
 
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {summaryCards.map((card) => (

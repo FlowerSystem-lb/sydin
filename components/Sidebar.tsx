@@ -6,11 +6,15 @@ import { usePathname } from "next/navigation";
 interface SidebarProps {
   onAddItem?: () => void;
   addItemHref?: string;
+  planName?: string;
+  itemUsage?: string;
 }
 
 export default function Sidebar({
   onAddItem,
   addItemHref,
+  planName,
+  itemUsage,
 }: SidebarProps) {
   const pathname = usePathname();
 
@@ -138,10 +142,22 @@ export default function Sidebar({
                 </p>
 
                 <p className="text-xs text-slate-500">
-                  Premium workspace
+                  {planName ? `${planName} plan` : "Premium workspace"}
                 </p>
               </div>
             </div>
+
+            {itemUsage && (
+              <div className="mt-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-200">
+                  Usage
+                </p>
+
+                <p className="mt-1 text-sm font-black text-white">
+                  {itemUsage}
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </aside>
@@ -162,7 +178,9 @@ export default function Sidebar({
               </p>
 
               <p className="text-xs text-slate-400">
-                Inventory SaaS
+                {planName && itemUsage
+                  ? `${planName}: ${itemUsage}`
+                  : "Inventory SaaS"}
               </p>
             </div>
           </Link>
