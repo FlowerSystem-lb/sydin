@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/app/lib/supabase";
 
@@ -17,6 +18,8 @@ interface Item {
 }
 
 export default function InventoryPage() {
+  const router = useRouter();
+
   const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState("");
 
@@ -383,7 +386,25 @@ export default function InventoryPage() {
             {filteredItems.map((item) => (
               <div
                 key={item.id}
-                className="group flex h-full flex-col overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.055] shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-indigo-300/35 hover:bg-white/[0.075]"
+                role="link"
+                tabIndex={0}
+                onClick={() =>
+                  router.push(
+                    `/dashboard/inventory/${item.id}`
+                  )
+                }
+                onKeyDown={(e) => {
+                  if (
+                    e.key === "Enter" ||
+                    e.key === " "
+                  ) {
+                    e.preventDefault();
+                    router.push(
+                      `/dashboard/inventory/${item.id}`
+                    );
+                  }
+                }}
+                className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.055] shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-indigo-300/35 hover:bg-white/[0.075] focus:outline-none focus:ring-4 focus:ring-indigo-400/20"
               >
                 {item.image ? (
                   <div className="flex h-[220px] w-full items-center justify-center overflow-hidden border-b border-white/10 bg-[#f4f0e8] p-4 md:h-[240px] xl:h-[250px]">
@@ -437,22 +458,24 @@ export default function InventoryPage() {
                   {/* Actions */}
                   <div className="mt-auto flex gap-3 pt-6">
                     <button
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         openEditModal(
                           item
-                        )
-                      }
+                        );
+                      }}
                       className="min-h-[52px] flex-1 rounded-2xl bg-white/90 py-3 text-base font-bold text-black transition hover:bg-white"
                     >
                       Edit
                     </button>
 
                     <button
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         deleteItem(
                           item.id
-                        )
-                      }
+                        );
+                      }}
                       className="min-h-[52px] flex-1 rounded-2xl border border-red-400/25 bg-red-500/15 py-3 text-base font-bold text-red-200 transition hover:bg-red-500/25"
                     >
                       Delete
