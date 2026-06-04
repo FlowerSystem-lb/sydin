@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/app/lib/supabase";
 
@@ -329,16 +330,16 @@ export default function InventoryPage() {
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
-                  Search, edit, and manage every product in your SydIn workspace.
+                  Manage products, stock, categories, and item details.
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsModalOpen(true)}
-                className="rounded-2xl bg-white px-5 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+              <Link
+                href="/dashboard/add-item"
+                className="rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
               >
                 Add Item
-              </button>
+              </Link>
             </div>
           </section>
 
@@ -348,17 +349,33 @@ export default function InventoryPage() {
               Search inventory
             </label>
 
-            <input
-              type="text"
-              placeholder="Search by product or category..."
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-            />
+            <div className="relative">
+              <svg
+                className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={1.8}
+                  d="m21 21-4.35-4.35m1.35-5.65a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
+                />
+              </svg>
+
+              <input
+                type="text"
+                placeholder="Search by product or category..."
+                value={search}
+                onChange={(e) =>
+                  setSearch(
+                    e.target.value
+                  )
+                }
+                className="w-full rounded-2xl border border-white/10 bg-black/35 py-4 pl-14 pr-5 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+              />
+            </div>
           </section>
 
           {/* Items */}
@@ -394,11 +411,9 @@ export default function InventoryPage() {
                       </h2>
 
                       <div className="mt-3 flex flex-wrap gap-2">
-                        {item.sku && (
-                          <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
-                            SKU {item.sku}
-                          </span>
-                        )}
+                        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
+                          SKU {item.sku || "N/A"}
+                        </span>
 
                         <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
                           {item.category}
@@ -407,7 +422,7 @@ export default function InventoryPage() {
                     </div>
 
                     <span className="shrink-0 rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-3 py-2 text-lg font-black text-indigo-100">
-                      {item.quantity}
+                      Qty {item.quantity}
                     </span>
                   </div>
 
@@ -456,11 +471,22 @@ export default function InventoryPage() {
                 0
               </div>
 
-              <h2 className="mb-3 text-2xl font-bold text-white md:text-3xl">No items found</h2>
+              <h2 className="mb-3 text-2xl font-bold text-white md:text-3xl">
+                {items.length === 0 ? "No inventory items yet" : "No items found"}
+              </h2>
 
               <p className="max-w-md text-lg text-slate-400">
-                Your inventory is empty or no products match the current search.
+                {items.length === 0
+                  ? "Add your first product to start tracking stock, categories, and item details."
+                  : "No products match the current search."}
               </p>
+
+              <Link
+                href="/dashboard/add-item"
+                className="mt-6 rounded-2xl bg-white px-5 py-3 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+              >
+                Add your first item
+              </Link>
             </div>
           )}
         </div>
@@ -679,9 +705,9 @@ export default function InventoryPage() {
 
                   <div>
                     <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setEditImage(e.target.files?.[0] || null)}
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setEditImage(e.target.files?.[0] || null)}
                       className="w-full cursor-pointer text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-200 transition-colors hover:file:bg-indigo-500/30"
                     />
 
