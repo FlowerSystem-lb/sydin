@@ -24,3 +24,49 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.sydin-reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
+  will-change: opacity, transform;
+}
+
+.sydin-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sydin-float-slow {
+  animation: sydin-float 12s ease-in-out infinite;
+}
+
+.sydin-float-slower {
+  animation: sydin-float 16s ease-in-out infinite reverse;
+}
+
+@keyframes sydin-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+
+  50% {
+    transform: translate3d(18px, -22px, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sydin-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .sydin-float-slow,
+  .sydin-float-slower {
+    animation: none;
+  }
+}
