@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import QRCode from "react-qr-code";
 import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/app/lib/supabase";
 
@@ -38,10 +39,13 @@ function formatCreatedDate(date?: string) {
 export default function ItemDetailsPage() {
   const params = useParams();
   const router = useRouter();
+  const qrCodeRef = useRef<HTMLDivElement>(null);
   const rawId = params.id;
   const itemId = Array.isArray(rawId) ? rawId[0] : rawId;
 
   const [item, setItem] = useState<Item | null>(null);
+  const [qrUrl, setQrUrl] = useState("");
+  const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [authMissing, setAuthMissing] = useState(false);
@@ -55,6 +59,20 @@ export default function ItemDetailsPage() {
   const [editImage, setEditImage] = useState<File | null>(null);
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+
+  useEffect(() => {
+    if (!itemId) return;
+
+    const timeoutId = window.setTimeout(() => {
+      setQrUrl(
+        `${window.location.origin}/dashboard/inventory/${itemId}`
+      );
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, [itemId]);
 
   useEffect(() => {
     let isActive = true;
@@ -266,6 +284,49 @@ export default function ItemDetailsPage() {
     }
   };
 
+  const copyQrLink = async () => {
+    if (!qrUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(qrUrl);
+      setCopyLabel("Copied");
+
+      window.setTimeout(() => {
+        setCopyLabel("Copy Link");
+      }, 1800);
+    } catch (error) {
+      console.log(error);
+      setCopyLabel("Copy failed");
+
+      window.setTimeout(() => {
+        setCopyLabel("Copy Link");
+      }, 1800);
+    }
+  };
+
+  const downloadQrCode = () => {
+    const svg = qrCodeRef.current?.querySelector("svg");
+
+    if (!svg || !item) return;
+
+    const serializer = new XMLSerializer();
+    const source = serializer.serializeToString(svg);
+    const blob = new Blob([source], {
+      type: "image/svg+xml;charset=utf-8",
+    });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+
+    link.href = url;
+    link.download = `${item.name
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "item"}-qr.svg`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
       <Sidebar />
@@ -453,18 +514,59 @@ export default function ItemDetailsPage() {
                     Item QR Code
                   </p>
 
-                  <div className="mt-5 flex min-h-[190px] flex-col items-center justify-center rounded-3xl border border-dashed border-indigo-300/25 bg-black/25 p-6 text-center">
-                    <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] text-lg font-black text-indigo-200">
-                      QR
+                  <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-indigo-300/25 bg-black/25 p-5 text-center sm:p-6">
+                    <div
+                      ref={qrCodeRef}
+                      className="rounded-3xl bg-white p-4 shadow-[0_24px_80px_rgba(255,255,255,0.08)]"
+                    >
+                      {qrUrl ? (
+                        <QRCode
+                          value={qrUrl}
+                          size={180}
+                          bgColor="#ffffff"
+                          fgColor="#02030a"
+                          level="M"
+                        />
+                      ) : (
+                        <div className="flex h-[180px] w-[180px] items-center justify-center text-sm font-semibold text-slate-500">
+                          Preparing QR...
+                        </div>
+                      )}
                     </div>
 
-                    <h3 className="text-2xl font-bold">
+                    <h3 className="mt-5 text-2xl font-bold">
                       Item QR Code
                     </h3>
 
                     <p className="mt-2 text-slate-400">
-                      QR generation coming next
+                      Scan to open this item page.
                     </p>
+
+                    {qrUrl && (
+                      <p className="mt-3 max-w-full break-all rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs text-slate-400">
+                        {qrUrl}
+                      </p>
+                    )}
+
+                    <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row">
+                      <button
+                        type="button"
+                        onClick={copyQrLink}
+                        disabled={!qrUrl}
+                        className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                      >
+                        {copyLabel}
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={downloadQrCode}
+                        disabled={!qrUrl}
+                        className="flex-1 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black transition hover:bg-slate-200 disabled:opacity-50"
+                      >
+                        Download QR
+                      </button>
+                    </div>
                   </div>
                 </div>
               </section>
