@@ -89,7 +89,7 @@ export default function PricingPage() {
         />
 
         <Reveal>
-          <div className="mx-auto mt-10 max-w-7xl overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
+          <div className="mx-auto mt-10 max-w-7xl overflow-x-auto rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
             <div className="grid min-w-[720px] grid-cols-4 border-b border-white/10 bg-white/[0.04]">
               <div className="p-4 text-sm font-black text-slate-400">
                 Feature
@@ -104,7 +104,7 @@ export default function PricingPage() {
               ))}
             </div>
 
-            <div className="overflow-x-auto">
+            <div>
               {comparisonRows.map((row) => (
                 <div
                   key={row[0]}

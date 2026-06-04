@@ -43,7 +43,7 @@ export default function DashboardPage() {
       if (!isActive) return;
 
       if (userError) {
-        setError(userError.message);
+        setError("We could not confirm your session. Please sign in again.");
         setLoading(false);
         return;
       }
@@ -67,7 +67,9 @@ export default function DashboardPage() {
           if (!isActive) return;
 
           if (inventoryError) {
-            setError(inventoryError.message);
+            setError(
+              "We could not load your inventory summary. Refresh the page and try again."
+            );
             setLoading(false);
             return;
           }
@@ -76,13 +78,19 @@ export default function DashboardPage() {
           setSubscriptionUsage(usage);
           setLoading(false);
         })
-        .catch((loadError) => {
+        .catch(() => {
           if (!isActive) return;
 
-          console.log(loadError);
-          setError("Something went wrong while loading your dashboard.");
+          setError(
+            "We could not load your dashboard. Refresh the page and try again."
+          );
           setLoading(false);
         });
+    }).catch(() => {
+      if (!isActive) return;
+
+      setError("We could not confirm your session. Please sign in again.");
+      setLoading(false);
     });
 
     return () => {
@@ -218,11 +226,19 @@ export default function DashboardPage() {
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
-                  Current plan: {loading ? "..." : currentPlanName}
+                  {loading ? (
+                    <span className="inline-block h-9 w-64 max-w-full animate-pulse rounded-2xl bg-white/[0.08]" />
+                  ) : (
+                    `Current plan: ${currentPlanName}`
+                  )}
                 </h2>
 
                 <p className="mt-3 text-base text-slate-400">
-                  Usage: {loading ? "... / ... items" : itemUsageText}
+                  {loading ? (
+                    <span className="inline-block h-5 w-40 animate-pulse rounded-full bg-white/[0.08]" />
+                  ) : (
+                    `Usage: ${itemUsageText}`
+                  )}
                 </p>
               </div>
 
@@ -266,7 +282,11 @@ export default function DashboardPage() {
                     </p>
 
                     <p className="mt-4 text-5xl font-bold tracking-tight text-white">
-                      {loading ? "..." : card.value.toLocaleString()}
+                      {loading ? (
+                        <span className="block h-12 w-24 animate-pulse rounded-2xl bg-white/[0.08]" />
+                      ) : (
+                        card.value.toLocaleString()
+                      )}
                     </p>
                   </div>
 
@@ -349,6 +369,7 @@ export default function DashboardPage() {
                               src={item.image}
                               alt={item.name}
                               fill
+                              loading="lazy"
                               sizes="96px"
                               className="object-contain"
                             />

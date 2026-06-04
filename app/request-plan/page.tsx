@@ -76,8 +76,7 @@ export default function RequestPlanPage() {
       }
 
       setSuccess(true);
-    } catch (requestError) {
-      console.log(requestError);
+    } catch {
       setError("Something went wrong while sending your request.");
     } finally {
       setSubmitting(false);

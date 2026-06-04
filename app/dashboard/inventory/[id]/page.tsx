@@ -89,7 +89,6 @@ export default function ItemDetailsPage() {
       });
 
     if (historyError) {
-      console.warn("Inventory history fetch failed:", historyError.message);
       setHistory([]);
       return;
     }
@@ -123,45 +122,52 @@ export default function ItemDetailsPage() {
         return;
       }
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser();
+      try {
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser();
 
-      if (!isActive) return;
+        if (!isActive) return;
 
-      if (userError || !user) {
-        setAuthMissing(true);
+        if (userError || !user) {
+          setAuthMissing(true);
+          setLoading(false);
+          return;
+        }
+
+        const { data, error: itemError } = await supabase
+          .from("inventory")
+          .select("*")
+          .eq("id", Number(itemId))
+          .eq("user_id", user.id)
+          .limit(1);
+
+        if (!isActive) return;
+
+        if (itemError) {
+          setError("We could not load this item. Refresh the page and try again.");
+          setLoading(false);
+          return;
+        }
+
+        const loadedItem = (data?.[0] as Item | undefined) || null;
+
+        setItem(loadedItem);
+
+        if (loadedItem) {
+          await fetchHistory(user.id, loadedItem.id);
+        } else {
+          setHistory([]);
+        }
+
         setLoading(false);
-        return;
-      }
+      } catch {
+        if (!isActive) return;
 
-      const { data, error: itemError } = await supabase
-        .from("inventory")
-        .select("*")
-        .eq("id", Number(itemId))
-        .eq("user_id", user.id)
-        .limit(1);
-
-      if (!isActive) return;
-
-      if (itemError) {
-        setError(itemError.message);
+        setError("We could not load this item. Refresh the page and try again.");
         setLoading(false);
-        return;
       }
-
-      const loadedItem = (data?.[0] as Item | undefined) || null;
-
-      setItem(loadedItem);
-
-      if (loadedItem) {
-        await fetchHistory(user.id, loadedItem.id);
-      } else {
-        setHistory([]);
-      }
-
-      setLoading(false);
     };
 
     loadItem();
@@ -206,7 +212,7 @@ export default function ItemDetailsPage() {
     const quantityValue = Number(editQuantity);
 
     if (!trimmedName) {
-      setEditError("Product name is required.");
+      setEditError("Add a product name before saving.");
       return;
     }
 
@@ -215,7 +221,7 @@ export default function ItemDetailsPage() {
       Number.isNaN(quantityValue) ||
       quantityValue < 0
     ) {
-      setEditError("Quantity must be 0 or more.");
+      setEditError("Enter a quantity of 0 or more before saving.");
       return;
     }
 
@@ -228,8 +234,7 @@ export default function ItemDetailsPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setEditError("Please login before updating inventory.");
-        setIsEditing(false);
+        setEditError("Please sign in again before updating inventory.");
         return;
       }
 
@@ -242,8 +247,9 @@ export default function ItemDetailsPage() {
           .upload(fileName, editImage);
 
         if (uploadError) {
-          setEditError(uploadError.message);
-          setIsEditing(false);
+          setEditError(
+            "Image upload failed. Try a smaller file or a different image."
+          );
           return;
         }
 
@@ -272,14 +278,12 @@ export default function ItemDetailsPage() {
         .select("*");
 
       if (updateError) {
-        setEditError(updateError.message);
-        setIsEditing(false);
+        setEditError("We could not update this item. Please try again.");
         return;
       }
 
       if (!data || data.length === 0) {
         setEditError("Item not found or you do not have access to update it.");
-        setIsEditing(false);
         return;
       }
 
@@ -298,12 +302,11 @@ export default function ItemDetailsPage() {
       setItem(updatedRecord);
       await fetchHistory(user.id, item.id);
       closeEditModal(true);
-    } catch (error) {
-      console.log(error);
+    } catch {
       setEditError("Something went wrong while updating this item.");
+    } finally {
+      setIsEditing(false);
     }
-
-    setIsEditing(false);
   };
 
   const deleteItem = async () => {
@@ -321,8 +324,7 @@ export default function ItemDetailsPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setError("Please login before deleting inventory.");
-        setIsDeleting(false);
+        setError("Please sign in again before deleting inventory.");
         return;
       }
 
@@ -341,15 +343,14 @@ export default function ItemDetailsPage() {
         .eq("user_id", user.id);
 
       if (deleteError) {
-        setError(deleteError.message);
-        setIsDeleting(false);
+        setError("We could not delete this item. Please try again.");
         return;
       }
 
       router.push("/dashboard/inventory");
-    } catch (error) {
-      console.log(error);
+    } catch {
       setError("Something went wrong while deleting this item.");
+    } finally {
       setIsDeleting(false);
     }
   };
@@ -364,8 +365,7 @@ export default function ItemDetailsPage() {
       window.setTimeout(() => {
         setCopyLabel("Copy Link");
       }, 1800);
-    } catch (error) {
-      console.log(error);
+    } catch {
       setCopyLabel("Copy failed");
 
       window.setTimeout(() => {
@@ -499,6 +499,7 @@ export default function ItemDetailsPage() {
                         src={item.image}
                         alt={item.name}
                         fill
+                        priority
                         sizes="(min-width: 1280px) 55vw, 100vw"
                         className="object-contain"
                       />
@@ -833,6 +834,8 @@ export default function ItemDetailsPage() {
                         src={item.image}
                         alt={item.name}
                         fill
+                        loading="lazy"
+                        sizes="120px"
                         className="object-contain p-3"
                       />
                     </div>

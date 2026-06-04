@@ -72,7 +72,7 @@ export default function InventoryPage() {
       await supabase.auth.getUser();
 
     if (!user) {
-      setPageError("Please login to view your inventory.");
+      setPageError("Please sign in again to view your inventory.");
       setUsageLoading(false);
       return;
     }
@@ -89,8 +89,7 @@ export default function InventoryPage() {
     ]);
 
     if (error) {
-      console.log(error);
-      setPageError(error.message);
+      setPageError("We could not load your inventory. Refresh the page and try again.");
       setUsageLoading(false);
       return;
     }
@@ -107,14 +106,14 @@ export default function InventoryPage() {
       if (!isActive) return;
 
       if (userError) {
-        setPageError(userError.message);
+        setPageError("We could not confirm your session. Please sign in again.");
         setLoadingItems(false);
         setUsageLoading(false);
         return;
       }
 
       if (!user) {
-        setPageError("Please login to view your inventory.");
+        setPageError("Please sign in again to view your inventory.");
         setLoadingItems(false);
         setUsageLoading(false);
         return;
@@ -134,8 +133,7 @@ export default function InventoryPage() {
           if (!isActive) return;
 
           if (error) {
-            console.log(error);
-            setPageError(error.message);
+            setPageError("We could not load your inventory. Refresh the page and try again.");
             setLoadingItems(false);
             setUsageLoading(false);
             return;
@@ -146,18 +144,16 @@ export default function InventoryPage() {
           setLoadingItems(false);
           setUsageLoading(false);
         })
-        .catch((error) => {
+        .catch(() => {
           if (!isActive) return;
 
-          console.log(error);
           setPageError("Something went wrong while loading inventory.");
           setLoadingItems(false);
           setUsageLoading(false);
         });
-    }).catch((error) => {
+    }).catch(() => {
       if (!isActive) return;
 
-      console.log(error);
       setPageError("Something went wrong while checking your session.");
       setLoadingItems(false);
       setUsageLoading(false);
@@ -179,7 +175,7 @@ export default function InventoryPage() {
     const quantityValue = Number(quantity);
 
     if (!trimmedName) {
-      setAddError("Product name is required.");
+      setAddError("Add a product name before saving.");
       return;
     }
 
@@ -188,7 +184,7 @@ export default function InventoryPage() {
       Number.isNaN(quantityValue) ||
       quantityValue < 0
     ) {
-      setAddError("Quantity must be 0 or more.");
+      setAddError("Enter a quantity of 0 or more before saving.");
       return;
     }
 
@@ -201,7 +197,7 @@ export default function InventoryPage() {
       const { data: { user } } = await supabase.auth.getUser();
 
       if (!user) {
-        setAddError("Please login before adding inventory.");
+        setAddError("Please sign in again before adding inventory.");
         return;
       }
 
@@ -224,7 +220,9 @@ export default function InventoryPage() {
           .upload(fileName, image);
 
         if (uploadError) {
-          setAddError(uploadError.message);
+          setAddError(
+            "Image upload failed. Try a smaller file or a different image."
+          );
           return;
         }
 
@@ -249,7 +247,7 @@ export default function InventoryPage() {
         .single();
 
       if (error) {
-        setAddError(error.message);
+        setAddError("We could not save this item. Please try again.");
         return;
       }
 
@@ -273,7 +271,6 @@ export default function InventoryPage() {
       setImage(null);
       await fetchItems();
     } catch (error) {
-      console.log(error);
       setAddError(
         error instanceof Error
           ? error.message
@@ -319,7 +316,7 @@ export default function InventoryPage() {
     const quantityValue = Number(editQuantity);
 
     if (!trimmedName) {
-      setEditError("Product name is required.");
+      setEditError("Add a product name before saving.");
       return;
     }
 
@@ -328,7 +325,7 @@ export default function InventoryPage() {
       Number.isNaN(quantityValue) ||
       quantityValue < 0
     ) {
-      setEditError("Quantity must be 0 or more.");
+      setEditError("Enter a quantity of 0 or more before saving.");
       return;
     }
 
@@ -343,7 +340,7 @@ export default function InventoryPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setEditError("Please login before updating inventory.");
+        setEditError("Please sign in again before updating inventory.");
         setIsEditing(false);
         return;
       }
@@ -357,7 +354,9 @@ export default function InventoryPage() {
           .upload(fileName, editImage);
 
         if (uploadError) {
-          setEditError(uploadError.message);
+          setEditError(
+            "Image upload failed. Try a smaller file or a different image."
+          );
           setIsEditing(false);
           return;
         }
@@ -387,7 +386,7 @@ export default function InventoryPage() {
         .select("*");
 
       if (error) {
-        setEditError(error.message);
+        setEditError("We could not update this item. Please try again.");
         setIsEditing(false);
         return;
       }
@@ -411,8 +410,7 @@ export default function InventoryPage() {
       await fetchItems();
       setPageNotice("Item updated successfully.");
       closeEditModal(true);
-    } catch (error) {
-      console.log(error);
+    } catch {
       setEditError("Something went wrong while updating this item.");
     } finally {
       setIsEditing(false);
@@ -439,7 +437,7 @@ export default function InventoryPage() {
       } = await supabase.auth.getUser();
 
       if (!user) {
-        setPageError("Please login before deleting inventory.");
+        setPageError("Please sign in again before deleting inventory.");
         return;
       }
 
@@ -453,8 +451,6 @@ export default function InventoryPage() {
           oldQuantity: itemToDelete.quantity,
           oldValues: itemToDelete,
         });
-      } else {
-        console.warn("Inventory history skipped: item data was not available.");
       }
 
       const { error } =
@@ -465,14 +461,13 @@ export default function InventoryPage() {
           .eq("user_id", user.id);
 
       if (error) {
-        setPageError(error.message);
+        setPageError("We could not delete this item. Please try again.");
         return;
       }
 
       setPageNotice("Item deleted successfully.");
       await fetchItems();
-    } catch (error) {
-      console.log(error);
+    } catch {
       setPageError("Something went wrong while deleting this item.");
     } finally {
       setDeletingId(null);
@@ -627,6 +622,7 @@ export default function InventoryPage() {
                         src={item.image}
                         alt={item.name}
                         fill
+                        loading="lazy"
                         sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
                         className="object-contain transition-transform duration-500 group-hover:scale-[1.02]"
                       />
@@ -979,6 +975,8 @@ export default function InventoryPage() {
                         src={selectedItem.image}
                         alt={selectedItem.name}
                         fill
+                        loading="lazy"
+                        sizes="120px"
                         className="object-contain p-3"
                       />
                     </div>

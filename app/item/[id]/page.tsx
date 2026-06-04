@@ -71,22 +71,29 @@ export default function PublicItemPage() {
         return;
       }
 
-      const { data, error: itemError } = await supabase
-        .from("inventory")
-        .select("*")
-        .eq("id", Number(itemId))
-        .limit(1);
+      try {
+        const { data, error: itemError } = await supabase
+          .from("inventory")
+          .select("*")
+          .eq("id", Number(itemId))
+          .limit(1);
 
-      if (!isActive) return;
+        if (!isActive) return;
 
-      if (itemError) {
-        setError(itemError.message);
+        if (itemError) {
+          setError("We could not load this public item. Try scanning again.");
+          setLoading(false);
+          return;
+        }
+
+        setItem((data?.[0] as Item | undefined) || null);
         setLoading(false);
-        return;
-      }
+      } catch {
+        if (!isActive) return;
 
-      setItem((data?.[0] as Item | undefined) || null);
-      setLoading(false);
+        setError("We could not load this public item. Try scanning again.");
+        setLoading(false);
+      }
     };
 
     loadItem();
@@ -159,6 +166,7 @@ export default function PublicItemPage() {
                         src={item.image}
                         alt={item.name}
                         fill
+                        priority
                         sizes="(min-width: 1024px) 50vw, 100vw"
                         className="object-contain"
                       />

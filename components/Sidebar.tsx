@@ -45,17 +45,9 @@ export default function Sidebar({
               `${usage.usedItems} / ${usage.subscription.item_limit} items`
             );
           })
-          .catch((error) => {
-            if (!isActive) return;
-
-            console.log(error);
-          });
+          .catch(() => undefined);
       })
-      .catch((error) => {
-        if (!isActive) return;
-
-        console.log(error);
-      });
+      .catch(() => undefined);
 
     return () => {
       isActive = false;

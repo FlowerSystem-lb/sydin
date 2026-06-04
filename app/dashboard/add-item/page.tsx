@@ -55,17 +55,15 @@ export default function AddItemPage() {
             setSubscriptionUsage(usage);
             setUsageLoading(false);
           })
-          .catch((error) => {
+          .catch(() => {
             if (!isActive) return;
 
-            console.log(error);
             setUsageLoading(false);
           });
       })
-      .catch((error) => {
+      .catch(() => {
         if (!isActive) return;
 
-        console.log(error);
         setUsageLoading(false);
       });
 
@@ -87,7 +85,7 @@ export default function AddItemPage() {
     const quantityValue = Number(quantity);
 
     if (!trimmedName) {
-      setFormError("Product name is required.");
+      setFormError("Add a product name before saving.");
       return;
     }
 
@@ -96,7 +94,7 @@ export default function AddItemPage() {
       Number.isNaN(quantityValue) ||
       quantityValue < 0
     ) {
-      setFormError("Quantity must be 0 or more.");
+      setFormError("Enter a quantity of 0 or more before saving.");
       return;
     }
 
@@ -111,7 +109,7 @@ export default function AddItemPage() {
         await supabase.auth.getUser();
 
       if (!user) {
-        setFormError("Please login before adding inventory.");
+        setFormError("Please sign in again before adding inventory.");
         return;
       }
 
@@ -139,7 +137,9 @@ export default function AddItemPage() {
           .upload(fileName, image);
 
         if (uploadError) {
-          setFormError(uploadError.message);
+          setFormError(
+            "Image upload failed. Try a smaller file or a different image."
+          );
           return;
         }
 
@@ -170,7 +170,7 @@ export default function AddItemPage() {
           .single();
 
       if (error) {
-        setFormError(error.message);
+        setFormError("We could not save this item. Please try again.");
         return;
       }
 
@@ -188,8 +188,6 @@ export default function AddItemPage() {
         "/dashboard/inventory"
       );
     } catch (error) {
-      console.log(error);
-
       setFormError(
         error instanceof Error
           ? error.message
@@ -239,6 +237,7 @@ export default function AddItemPage() {
 
           <form
             onSubmit={handleSubmit}
+            aria-busy={loading}
             className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7 lg:p-8"
           >
             <div className="mb-6 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-4 sm:p-5">
@@ -249,12 +248,16 @@ export default function AddItemPage() {
                   </p>
 
                   <p className="mt-1 text-2xl font-black text-white">
-                    {usageLoading ? "..." : currentPlanName}
+                    {usageLoading ? (
+                      <span className="block h-8 w-28 animate-pulse rounded-2xl bg-white/[0.08]" />
+                    ) : (
+                      currentPlanName
+                    )}
                   </p>
                 </div>
 
                 <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-white">
-                  {usageLoading ? "... / ... items" : itemUsageText}
+                  {usageLoading ? "Checking usage..." : itemUsageText}
                 </div>
               </div>
             </div>
@@ -417,7 +420,7 @@ export default function AddItemPage() {
                 className="rounded-2xl bg-white px-7 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
               >
                 {loading
-                  ? "Saving..."
+                  ? "Saving item..."
                   : "Save Item"}
               </button>
             </div>
