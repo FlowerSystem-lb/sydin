@@ -1,8 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  getOrCreateBusinessSettings,
+} from "@/app/lib/businessSettings";
 import {
   formatPlanName,
   getSubscriptionUsage,
@@ -14,6 +18,8 @@ interface SidebarProps {
   addItemHref?: string;
   planName?: string;
   itemUsage?: string;
+  businessName?: string;
+  businessLogoUrl?: string;
 }
 
 export default function Sidebar({
@@ -21,13 +27,17 @@ export default function Sidebar({
   addItemHref,
   planName,
   itemUsage,
+  businessName,
+  businessLogoUrl,
 }: SidebarProps) {
   const pathname = usePathname();
   const [loadedPlanName, setLoadedPlanName] = useState("");
   const [loadedItemUsage, setLoadedItemUsage] = useState("");
+  const [loadedBusinessName, setLoadedBusinessName] = useState("");
+  const [loadedBusinessLogoUrl, setLoadedBusinessLogoUrl] = useState("");
 
   useEffect(() => {
-    if (planName && itemUsage) return;
+    if (planName && itemUsage && businessName) return;
 
     let isActive = true;
 
@@ -36,14 +46,28 @@ export default function Sidebar({
       .then(({ data: { user } }) => {
         if (!isActive || !user) return;
 
-        getSubscriptionUsage(user.id)
-          .then((usage) => {
+        Promise.all([
+          planName && itemUsage
+            ? Promise.resolve(null)
+            : getSubscriptionUsage(user.id),
+          businessName
+            ? Promise.resolve(null)
+            : getOrCreateBusinessSettings(user.id),
+        ])
+          .then(([usage, settings]) => {
             if (!isActive) return;
 
-            setLoadedPlanName(formatPlanName(usage.subscription.plan));
-            setLoadedItemUsage(
-              `${usage.usedItems} / ${usage.subscription.item_limit} items`
-            );
+            if (usage) {
+              setLoadedPlanName(formatPlanName(usage.subscription.plan));
+              setLoadedItemUsage(
+                `${usage.usedItems} / ${usage.subscription.item_limit} items`
+              );
+            }
+
+            if (settings) {
+              setLoadedBusinessName(settings.business_name);
+              setLoadedBusinessLogoUrl(settings.business_logo_url);
+            }
           })
           .catch(() => undefined);
       })
@@ -52,10 +76,13 @@ export default function Sidebar({
     return () => {
       isActive = false;
     };
-  }, [itemUsage, planName]);
+  }, [businessLogoUrl, businessName, itemUsage, planName]);
 
   const displayPlanName = planName || loadedPlanName;
   const displayItemUsage = itemUsage || loadedItemUsage;
+  const displayBusinessName =
+    businessName || loadedBusinessName || "SydIn Account";
+  const displayBusinessLogoUrl = businessLogoUrl || loadedBusinessLogoUrl;
 
   const links = [
     {
@@ -72,6 +99,11 @@ export default function Sidebar({
       name: "Add Item",
       href: "/dashboard/add-item",
       marker: "+",
+    },
+    {
+      name: "Settings",
+      href: "/dashboard/settings",
+      marker: "S",
     },
   ];
 
@@ -173,11 +205,23 @@ export default function Sidebar({
             </p>
 
             <div className="mt-3 flex items-center gap-3">
-              <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-slate-200 to-slate-500" />
+              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-sm font-black">
+                {displayBusinessLogoUrl ? (
+                  <Image
+                    src={displayBusinessLogoUrl}
+                    alt={displayBusinessName}
+                    fill
+                    sizes="40px"
+                    className="object-contain p-1"
+                  />
+                ) : (
+                  "S"
+                )}
+              </div>
 
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold">
-                  SydIn Account
+                  {displayBusinessName}
                 </p>
 
                 <p className="text-xs text-slate-500">
@@ -209,8 +253,18 @@ export default function Sidebar({
             href="/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-sm font-black">
-              S
+            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-sm font-black">
+              {displayBusinessLogoUrl ? (
+                <Image
+                  src={displayBusinessLogoUrl}
+                  alt={displayBusinessName}
+                  fill
+                  sizes="40px"
+                  className="object-contain p-1"
+                />
+              ) : (
+                "S"
+              )}
             </div>
 
             <div>
@@ -219,9 +273,7 @@ export default function Sidebar({
               </p>
 
               <p className="text-xs text-slate-400">
-                {displayPlanName && displayItemUsage
-                  ? `${displayPlanName}: ${displayItemUsage}`
-                  : "Inventory SaaS"}
+                {displayBusinessName}
               </p>
             </div>
           </Link>
@@ -229,7 +281,7 @@ export default function Sidebar({
           {renderAddAction()}
         </div>
 
-        <nav className="mt-3 grid grid-cols-3 gap-2">
+        <nav className="mt-3 grid grid-cols-4 gap-2">
           {links.map((link) => {
             const active =
               link.href === "/dashboard"

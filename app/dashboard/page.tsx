@@ -6,6 +6,11 @@ import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/app/lib/supabase";
 import {
+  DEFAULT_BUSINESS_SETTINGS,
+  getOrCreateBusinessSettings,
+  type BusinessSettings,
+} from "@/app/lib/businessSettings";
+import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
   getSubscriptionUsage,
@@ -22,8 +27,6 @@ interface Item {
   notes?: string;
 }
 
-const LOW_STOCK_THRESHOLD = 10;
-
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
@@ -33,6 +36,8 @@ export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
+  const [businessSettings, setBusinessSettings] =
+    useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -62,8 +67,9 @@ export default function DashboardPage() {
             ascending: false,
           }),
         getSubscriptionUsage(user.id),
+        getOrCreateBusinessSettings(user.id),
       ])
-        .then(([{ data, error: inventoryError }, usage]) => {
+        .then(([{ data, error: inventoryError }, usage, settings]) => {
           if (!isActive) return;
 
           if (inventoryError) {
@@ -76,6 +82,7 @@ export default function DashboardPage() {
 
           setItems(data || []);
           setSubscriptionUsage(usage);
+          setBusinessSettings(settings);
           setLoading(false);
         })
         .catch(() => {
@@ -105,7 +112,8 @@ export default function DashboardPage() {
     );
 
     const lowStockItems = items.filter(
-      (item) => Number(item.quantity || 0) <= LOW_STOCK_THRESHOLD
+      (item) =>
+        Number(item.quantity || 0) <= businessSettings.low_stock_threshold
     ).length;
 
     return {
@@ -114,7 +122,7 @@ export default function DashboardPage() {
       lowStockItems,
       recentlyAddedItems: Math.min(items.length, 3),
     };
-  }, [items]);
+  }, [businessSettings.low_stock_threshold, items]);
 
   const recentItems = useMemo(
     () => items.slice(0, 3),
@@ -150,7 +158,7 @@ export default function DashboardPage() {
     {
       label: "Low Stock Items",
       value: stats.lowStockItems,
-      detail: `At or below ${LOW_STOCK_THRESHOLD} units`,
+      detail: `At or below ${businessSettings.low_stock_threshold} units`,
       marker: "LS",
       accent: "from-rose-400 to-fuchsia-500",
     },
@@ -169,6 +177,8 @@ export default function DashboardPage() {
         addItemHref="/dashboard/add-item"
         planName={currentPlanName}
         itemUsage={itemUsageText}
+        businessName={businessSettings.business_name}
+        businessLogoUrl={businessSettings.business_logo_url}
       />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
@@ -182,7 +192,7 @@ export default function DashboardPage() {
                 </div>
 
                 <p className="text-lg font-medium text-slate-400">
-                  Welcome back
+                  Welcome back to {businessSettings.business_name}
                 </p>
 
                 <h1 className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
@@ -402,7 +412,7 @@ export default function DashboardPage() {
                           Qty {item.quantity}
                         </span>
 
-                        {item.quantity <= LOW_STOCK_THRESHOLD && (
+                        {item.quantity <= businessSettings.low_stock_threshold && (
                           <span className="rounded-full border border-red-400/30 bg-red-500/15 px-3 py-2 text-xs font-bold text-red-300">
                             Low Stock
                           </span>

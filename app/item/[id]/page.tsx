@@ -5,6 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
+import {
+  DEFAULT_PUBLIC_BRANDING,
+  getPublicBusinessBranding,
+  type PublicBusinessBranding,
+} from "@/app/lib/businessSettings";
 import { supabase } from "@/app/lib/supabase";
 
 interface Item {
@@ -16,6 +21,7 @@ interface Item {
   sku?: string;
   notes?: string;
   created_at?: string;
+  user_id?: string;
 }
 
 const LOW_STOCK_THRESHOLD = 10;
@@ -41,6 +47,8 @@ export default function PublicItemPage() {
   const itemId = Array.isArray(rawId) ? rawId[0] : rawId;
 
   const [item, setItem] = useState<Item | null>(null);
+  const [branding, setBranding] =
+    useState<PublicBusinessBranding>(DEFAULT_PUBLIC_BRANDING);
   const [publicUrl, setPublicUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -86,7 +94,20 @@ export default function PublicItemPage() {
           return;
         }
 
-        setItem((data?.[0] as Item | undefined) || null);
+        const loadedItem = (data?.[0] as Item | undefined) || null;
+
+        setItem(loadedItem);
+
+        if (loadedItem?.user_id) {
+          const publicBranding = await getPublicBusinessBranding(
+            loadedItem.user_id
+          );
+
+          if (!isActive) return;
+
+          setBranding(publicBranding);
+        }
+
         setLoading(false);
       } catch {
         if (!isActive) return;
@@ -107,20 +128,36 @@ export default function PublicItemPage() {
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] px-4 py-5 text-white sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
         <header className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7">
-          <div className="flex items-center gap-3">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_20px_60px_rgba(124,58,237,0.35)]">
-              S
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_20px_60px_rgba(124,58,237,0.35)]">
+                {branding.business_logo_url ? (
+                  <Image
+                    src={branding.business_logo_url}
+                    alt={branding.business_name}
+                    fill
+                    sizes="48px"
+                    className="object-contain p-1"
+                  />
+                ) : (
+                  "S"
+                )}
+              </div>
+
+              <div>
+                <p className="break-words text-2xl font-bold tracking-tight">
+                  {branding.business_name}
+                </p>
+
+                <p className="text-sm text-slate-400">
+                  Public inventory item
+                </p>
+              </div>
             </div>
 
-            <div>
-              <p className="text-2xl font-bold tracking-tight">
-                SydIn
-              </p>
-
-              <p className="text-sm text-slate-400">
-                Public inventory item
-              </p>
-            </div>
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+              Powered by SydIn
+            </p>
           </div>
         </header>
 
@@ -255,6 +292,47 @@ export default function PublicItemPage() {
                     {item.notes || "No notes added yet."}
                   </p>
                 </div>
+
+                {(branding.contact_email ||
+                  branding.contact_phone ||
+                  branding.contact_website) && (
+                  <div className="mt-5 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 p-4">
+                    <p className="text-sm font-semibold text-indigo-200">
+                      Business contact
+                    </p>
+
+                    <div className="mt-3 flex flex-col gap-2 text-sm font-semibold text-slate-300">
+                      {branding.contact_email && (
+                        <a
+                          href={`mailto:${branding.contact_email}`}
+                          className="break-all transition hover:text-white"
+                        >
+                          {branding.contact_email}
+                        </a>
+                      )}
+
+                      {branding.contact_phone && (
+                        <a
+                          href={`tel:${branding.contact_phone}`}
+                          className="break-all transition hover:text-white"
+                        >
+                          {branding.contact_phone}
+                        </a>
+                      )}
+
+                      {branding.contact_website && (
+                        <a
+                          href={branding.contact_website}
+                          className="break-all transition hover:text-white"
+                          rel="noreferrer"
+                          target="_blank"
+                        >
+                          {branding.contact_website}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                )}
               </div>
             </section>
 

@@ -8,6 +8,11 @@ import QRCode from "react-qr-code";
 import Sidebar from "@/components/Sidebar";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
+import {
+  DEFAULT_BUSINESS_SETTINGS,
+  getOrCreateBusinessSettings,
+  type BusinessSettings,
+} from "@/app/lib/businessSettings";
 
 interface Item {
   id: number;
@@ -27,8 +32,6 @@ interface InventoryHistory {
   new_quantity: number | null;
   created_at: string;
 }
-
-const LOW_STOCK_THRESHOLD = 10;
 
 function formatCreatedDate(date?: string) {
   if (!date) return "Not available";
@@ -64,6 +67,8 @@ export default function ItemDetailsPage() {
   const [history, setHistory] = useState<InventoryHistory[]>([]);
   const [qrUrl, setQrUrl] = useState("");
   const [copyLabel, setCopyLabel] = useState("Copy Link");
+  const [businessSettings, setBusinessSettings] =
+    useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [authMissing, setAuthMissing] = useState(false);
@@ -136,12 +141,18 @@ export default function ItemDetailsPage() {
           return;
         }
 
-        const { data, error: itemError } = await supabase
-          .from("inventory")
-          .select("*")
-          .eq("id", Number(itemId))
-          .eq("user_id", user.id)
-          .limit(1);
+        const [
+          { data, error: itemError },
+          settings,
+        ] = await Promise.all([
+          supabase
+            .from("inventory")
+            .select("*")
+            .eq("id", Number(itemId))
+            .eq("user_id", user.id)
+            .limit(1),
+          getOrCreateBusinessSettings(user.id),
+        ]);
 
         if (!isActive) return;
 
@@ -154,6 +165,7 @@ export default function ItemDetailsPage() {
         const loadedItem = (data?.[0] as Item | undefined) || null;
 
         setItem(loadedItem);
+        setBusinessSettings(settings);
 
         if (loadedItem) {
           await fetchHistory(user.id, loadedItem.id);
@@ -399,7 +411,10 @@ export default function ItemDetailsPage() {
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
-      <Sidebar />
+      <Sidebar
+        businessName={businessSettings.business_name}
+        businessLogoUrl={businessSettings.business_logo_url}
+      />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
@@ -531,7 +546,7 @@ export default function ItemDetailsPage() {
                       </h2>
                     </div>
 
-                    {item.quantity <= LOW_STOCK_THRESHOLD && (
+                    {item.quantity <= businessSettings.low_stock_threshold && (
                       <span className="self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
                         Low Stock
                       </span>
@@ -597,6 +612,26 @@ export default function ItemDetailsPage() {
                   </p>
 
                   <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-indigo-300/25 bg-black/25 p-5 text-center sm:p-6">
+                    <div className="mb-5 flex flex-col items-center gap-3">
+                      <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_18px_55px_rgba(99,102,241,0.28)]">
+                        {businessSettings.business_logo_url ? (
+                          <Image
+                            src={businessSettings.business_logo_url}
+                            alt={businessSettings.business_name}
+                            fill
+                            sizes="56px"
+                            className="object-contain p-1"
+                          />
+                        ) : (
+                          "S"
+                        )}
+                      </div>
+
+                      <p className="text-sm font-bold text-indigo-100">
+                        {businessSettings.business_name}
+                      </p>
+                    </div>
+
                     <div
                       ref={qrCodeRef}
                       className="rounded-3xl bg-white p-4 shadow-[0_24px_80px_rgba(255,255,255,0.08)]"

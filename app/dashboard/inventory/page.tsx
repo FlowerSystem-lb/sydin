@@ -8,6 +8,11 @@ import Sidebar from "@/components/Sidebar";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
 import {
+  DEFAULT_BUSINESS_SETTINGS,
+  getOrCreateBusinessSettings,
+  type BusinessSettings,
+} from "@/app/lib/businessSettings";
+import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
   getPlanLimitMessage,
@@ -52,6 +57,8 @@ export default function InventoryPage() {
   const [isLimitError, setIsLimitError] = useState(false);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
+  const [businessSettings, setBusinessSettings] =
+    useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
   const [usageLoading, setUsageLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
@@ -77,7 +84,7 @@ export default function InventoryPage() {
       return;
     }
 
-    const [{ data, error }, usage] = await Promise.all([
+    const [{ data, error }, usage, settings] = await Promise.all([
       supabase
         .from("inventory")
         .select("*")
@@ -86,6 +93,7 @@ export default function InventoryPage() {
           ascending: false,
         }),
       getSubscriptionUsage(user.id),
+      getOrCreateBusinessSettings(user.id),
     ]);
 
     if (error) {
@@ -96,6 +104,7 @@ export default function InventoryPage() {
 
     setItems(data || []);
     setSubscriptionUsage(usage);
+    setBusinessSettings(settings);
     setUsageLoading(false);
   };
 
@@ -128,8 +137,9 @@ export default function InventoryPage() {
             ascending: false,
           }),
         getSubscriptionUsage(user.id),
+        getOrCreateBusinessSettings(user.id),
       ])
-        .then(([{ data, error }, usage]) => {
+        .then(([{ data, error }, usage, settings]) => {
           if (!isActive) return;
 
           if (error) {
@@ -141,6 +151,7 @@ export default function InventoryPage() {
 
           setItems(data || []);
           setSubscriptionUsage(usage);
+          setBusinessSettings(settings);
           setLoadingItems(false);
           setUsageLoading(false);
         })
@@ -502,6 +513,8 @@ export default function InventoryPage() {
         }}
         planName={currentPlanName}
         itemUsage={usageLoading ? "... / ... items" : itemUsageText}
+        businessName={businessSettings.business_name}
+        businessLogoUrl={businessSettings.business_logo_url}
       />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
@@ -667,7 +680,7 @@ export default function InventoryPage() {
 
                   {/* Low stock */}
                   {item.quantity <=
-                    10 && (
+                    businessSettings.low_stock_threshold && (
                     <div className="mt-5 inline-block self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
                       Low Stock
                     </div>
