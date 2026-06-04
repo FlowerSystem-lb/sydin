@@ -247,7 +247,7 @@ export default function DashboardPage() {
                 </div>
 
                 <p className="mt-3 text-xs font-semibold text-slate-500">
-                  Limits are visible now. Add item limits are not enforced yet.
+                  Add item limits are enforced from your current plan.
                 </p>
               </div>
             </div>

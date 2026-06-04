@@ -1,7 +1,13 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  formatPlanName,
+  getSubscriptionUsage,
+} from "@/app/lib/subscription";
+import { supabase } from "@/app/lib/supabase";
 
 interface SidebarProps {
   onAddItem?: () => void;
@@ -17,6 +23,47 @@ export default function Sidebar({
   itemUsage,
 }: SidebarProps) {
   const pathname = usePathname();
+  const [loadedPlanName, setLoadedPlanName] = useState("");
+  const [loadedItemUsage, setLoadedItemUsage] = useState("");
+
+  useEffect(() => {
+    if (planName && itemUsage) return;
+
+    let isActive = true;
+
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        if (!isActive || !user) return;
+
+        getSubscriptionUsage(user.id)
+          .then((usage) => {
+            if (!isActive) return;
+
+            setLoadedPlanName(formatPlanName(usage.subscription.plan));
+            setLoadedItemUsage(
+              `${usage.usedItems} / ${usage.subscription.item_limit} items`
+            );
+          })
+          .catch((error) => {
+            if (!isActive) return;
+
+            console.log(error);
+          });
+      })
+      .catch((error) => {
+        if (!isActive) return;
+
+        console.log(error);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, [itemUsage, planName]);
+
+  const displayPlanName = planName || loadedPlanName;
+  const displayItemUsage = itemUsage || loadedItemUsage;
 
   const links = [
     {
@@ -142,19 +189,21 @@ export default function Sidebar({
                 </p>
 
                 <p className="text-xs text-slate-500">
-                  {planName ? `${planName} plan` : "Premium workspace"}
+                  {displayPlanName
+                    ? `${displayPlanName} plan`
+                    : "Premium workspace"}
                 </p>
               </div>
             </div>
 
-            {itemUsage && (
+            {displayItemUsage && (
               <div className="mt-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-4 py-3">
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-200">
                   Usage
                 </p>
 
                 <p className="mt-1 text-sm font-black text-white">
-                  {itemUsage}
+                  {displayItemUsage}
                 </p>
               </div>
             )}
@@ -178,8 +227,8 @@ export default function Sidebar({
               </p>
 
               <p className="text-xs text-slate-400">
-                {planName && itemUsage
-                  ? `${planName}: ${itemUsage}`
+                {displayPlanName && displayItemUsage
+                  ? `${displayPlanName}: ${displayItemUsage}`
                   : "Inventory SaaS"}
               </p>
             </div>

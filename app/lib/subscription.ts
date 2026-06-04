@@ -19,6 +19,22 @@ export const FALLBACK_SUBSCRIPTION: UserSubscription = {
   status: "active",
 };
 
+export const PLAN_ITEM_LIMITS: Record<SubscriptionPlan, number> = {
+  free: 50,
+  standard: 200,
+  pro: 1000,
+};
+
+function normalizePlan(plan: string | null | undefined): SubscriptionPlan {
+  const normalizedPlan = String(plan || "").toLowerCase();
+
+  if (normalizedPlan === "standard" || normalizedPlan === "pro") {
+    return normalizedPlan;
+  }
+
+  return "free";
+}
+
 export function formatPlanName(plan: SubscriptionPlan) {
   const labels: Record<SubscriptionPlan, string> = {
     free: "Free",
@@ -29,7 +45,7 @@ export function formatPlanName(plan: SubscriptionPlan) {
   return labels[plan] || "Free";
 }
 
-export async function getOrCreateUserSubscription(
+export async function getUserSubscription(
   userId: string
 ): Promise<UserSubscription> {
   const { data, error } = await supabase
@@ -44,39 +60,22 @@ export async function getOrCreateUserSubscription(
   }
 
   if (data) {
+    const plan = normalizePlan(data.plan);
+
     return {
-      plan: (data.plan as SubscriptionPlan) || "free",
-      item_limit: Number(data.item_limit || 50),
+      plan,
+      item_limit: PLAN_ITEM_LIMITS[plan],
       status: data.status || "active",
     };
   }
 
-  const { data: createdSubscription, error: createError } = await supabase
-    .from("user_subscriptions")
-    .insert([
-      {
-        user_id: userId,
-        plan: "free",
-        item_limit: 50,
-        status: "active",
-      },
-    ])
-    .select("plan, item_limit, status")
-    .single();
-
-  if (createError) {
-    console.warn("Subscription create failed:", createError.message);
-    return FALLBACK_SUBSCRIPTION;
-  }
-
-  return {
-    plan: (createdSubscription.plan as SubscriptionPlan) || "free",
-    item_limit: Number(createdSubscription.item_limit || 50),
-    status: createdSubscription.status || "active",
-  };
+  return FALLBACK_SUBSCRIPTION;
 }
 
-export async function countUserInventoryItems(userId: string) {
+export async function countUserInventoryItems(
+  userId: string,
+  options: { strict?: boolean } = {}
+) {
   const { count, error } = await supabase
     .from("inventory")
     .select("id", {
@@ -87,6 +86,11 @@ export async function countUserInventoryItems(userId: string) {
 
   if (error) {
     console.warn("Inventory count failed:", error.message);
+
+    if (options.strict) {
+      throw new Error("Could not verify your item limit. Please try again.");
+    }
+
     return 0;
   }
 
@@ -94,15 +98,24 @@ export async function countUserInventoryItems(userId: string) {
 }
 
 export async function getSubscriptionUsage(
-  userId: string
+  userId: string,
+  options: { strictCount?: boolean } = {}
 ): Promise<SubscriptionUsage> {
   const [subscription, usedItems] = await Promise.all([
-    getOrCreateUserSubscription(userId),
-    countUserInventoryItems(userId),
+    getUserSubscription(userId),
+    countUserInventoryItems(userId, {
+      strict: options.strictCount,
+    }),
   ]);
 
   return {
     subscription,
     usedItems,
   };
+}
+
+export function getPlanLimitMessage(plan: SubscriptionPlan) {
+  return `You reached the ${formatPlanName(
+    plan
+  )} plan limit. Request Standard or Pro to add more items.`;
 }

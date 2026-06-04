@@ -1,11 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getPlanLimitMessage,
+  getSubscriptionUsage,
+  type SubscriptionUsage,
+} from "@/app/lib/subscription";
+
+const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
+  subscription: FALLBACK_SUBSCRIPTION,
+  usedItems: 0,
+};
 
 export default function AddItemPage() {
   const router = useRouter();
@@ -18,6 +30,49 @@ export default function AddItemPage() {
   const [image, setImage] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
+  const [isLimitError, setIsLimitError] = useState(false);
+  const [subscriptionUsage, setSubscriptionUsage] =
+    useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
+  const [usageLoading, setUsageLoading] = useState(true);
+
+  useEffect(() => {
+    let isActive = true;
+
+    supabase.auth
+      .getUser()
+      .then(({ data: { user } }) => {
+        if (!isActive) return;
+
+        if (!user) {
+          setUsageLoading(false);
+          return;
+        }
+
+        getSubscriptionUsage(user.id)
+          .then((usage) => {
+            if (!isActive) return;
+
+            setSubscriptionUsage(usage);
+            setUsageLoading(false);
+          })
+          .catch((error) => {
+            if (!isActive) return;
+
+            console.log(error);
+            setUsageLoading(false);
+          });
+      })
+      .catch((error) => {
+        if (!isActive) return;
+
+        console.log(error);
+        setUsageLoading(false);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const handleSubmit = async (
     e: React.FormEvent
@@ -25,6 +80,8 @@ export default function AddItemPage() {
     e.preventDefault();
 
     if (loading) return;
+
+    setIsLimitError(false);
 
     const trimmedName = name.trim();
     const quantityValue = Number(quantity);
@@ -46,6 +103,7 @@ export default function AddItemPage() {
     try {
       setLoading(true);
       setFormError("");
+      setIsLimitError(false);
 
       const {
         data: { user },
@@ -54,6 +112,17 @@ export default function AddItemPage() {
 
       if (!user) {
         setFormError("Please login before adding inventory.");
+        return;
+      }
+
+      const usage = await getSubscriptionUsage(user.id, {
+        strictCount: true,
+      });
+      setSubscriptionUsage(usage);
+
+      if (usage.usedItems >= usage.subscription.item_limit) {
+        setFormError(getPlanLimitMessage(usage.subscription.plan));
+        setIsLimitError(true);
         return;
       }
 
@@ -131,9 +200,15 @@ export default function AddItemPage() {
     }
   };
 
+  const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
+  const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
-      <Sidebar />
+      <Sidebar
+        planName={currentPlanName}
+        itemUsage={usageLoading ? "... / ... items" : itemUsageText}
+      />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-8">
@@ -166,6 +241,24 @@ export default function AddItemPage() {
             onSubmit={handleSubmit}
             className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7 lg:p-8"
           >
+            <div className="mb-6 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-4 sm:p-5">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-200">
+                    Current plan
+                  </p>
+
+                  <p className="mt-1 text-2xl font-black text-white">
+                    {usageLoading ? "..." : currentPlanName}
+                  </p>
+                </div>
+
+                <div className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-black text-white">
+                  {usageLoading ? "... / ... items" : itemUsageText}
+                </div>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-400">
@@ -297,7 +390,16 @@ export default function AddItemPage() {
 
             {formError && (
               <div className="mt-5 rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
-                {formError}
+                <p>{formError}</p>
+
+                {isLimitError && (
+                  <Link
+                    href="/request-plan"
+                    className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-slate-200"
+                  >
+                    Request a plan
+                  </Link>
+                )}
               </div>
             )}
 

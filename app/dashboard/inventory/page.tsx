@@ -7,6 +7,13 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getPlanLimitMessage,
+  getSubscriptionUsage,
+  type SubscriptionUsage,
+} from "@/app/lib/subscription";
 
 interface Item {
   id: number;
@@ -17,6 +24,11 @@ interface Item {
   sku?: string;
   notes?: string;
 }
+
+const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
+  subscription: FALLBACK_SUBSCRIPTION,
+  usedItems: 0,
+};
 
 export default function InventoryPage() {
   const router = useRouter();
@@ -37,6 +49,10 @@ export default function InventoryPage() {
   const [image, setImage] = useState<File | null>(null);
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState("");
+  const [isLimitError, setIsLimitError] = useState(false);
+  const [subscriptionUsage, setSubscriptionUsage] =
+    useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
+  const [usageLoading, setUsageLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
   const [editName, setEditName] = useState("");
@@ -57,25 +73,31 @@ export default function InventoryPage() {
 
     if (!user) {
       setPageError("Please login to view your inventory.");
+      setUsageLoading(false);
       return;
     }
 
-    const { data, error } =
-      await supabase
+    const [{ data, error }, usage] = await Promise.all([
+      supabase
         .from("inventory")
         .select("*")
         .eq("user_id", user.id)
         .order("id", {
           ascending: false,
-        });
+        }),
+      getSubscriptionUsage(user.id),
+    ]);
 
     if (error) {
       console.log(error);
       setPageError(error.message);
+      setUsageLoading(false);
       return;
     }
 
     setItems(data || []);
+    setSubscriptionUsage(usage);
+    setUsageLoading(false);
   };
 
   useEffect(() => {
@@ -87,36 +109,42 @@ export default function InventoryPage() {
       if (userError) {
         setPageError(userError.message);
         setLoadingItems(false);
+        setUsageLoading(false);
         return;
       }
 
       if (!user) {
         setPageError("Please login to view your inventory.");
         setLoadingItems(false);
+        setUsageLoading(false);
         return;
       }
 
-      Promise.resolve(
+      Promise.all([
         supabase
           .from("inventory")
           .select("*")
           .eq("user_id", user.id)
           .order("id", {
             ascending: false,
-          })
-      )
-        .then(({ data, error }) => {
+          }),
+        getSubscriptionUsage(user.id),
+      ])
+        .then(([{ data, error }, usage]) => {
           if (!isActive) return;
 
           if (error) {
             console.log(error);
             setPageError(error.message);
             setLoadingItems(false);
+            setUsageLoading(false);
             return;
           }
 
           setItems(data || []);
+          setSubscriptionUsage(usage);
           setLoadingItems(false);
+          setUsageLoading(false);
         })
         .catch((error) => {
           if (!isActive) return;
@@ -124,6 +152,7 @@ export default function InventoryPage() {
           console.log(error);
           setPageError("Something went wrong while loading inventory.");
           setLoadingItems(false);
+          setUsageLoading(false);
         });
     }).catch((error) => {
       if (!isActive) return;
@@ -131,6 +160,7 @@ export default function InventoryPage() {
       console.log(error);
       setPageError("Something went wrong while checking your session.");
       setLoadingItems(false);
+      setUsageLoading(false);
     });
 
     return () => {
@@ -142,6 +172,8 @@ export default function InventoryPage() {
     e.preventDefault();
 
     if (isAdding) return;
+
+    setIsLimitError(false);
 
     const trimmedName = name.trim();
     const quantityValue = Number(quantity);
@@ -170,6 +202,17 @@ export default function InventoryPage() {
 
       if (!user) {
         setAddError("Please login before adding inventory.");
+        return;
+      }
+
+      const usage = await getSubscriptionUsage(user.id, {
+        strictCount: true,
+      });
+      setSubscriptionUsage(usage);
+
+      if (usage.usedItems >= usage.subscription.item_limit) {
+        setAddError(getPlanLimitMessage(usage.subscription.plan));
+        setIsLimitError(true);
         return;
       }
 
@@ -451,13 +494,19 @@ export default function InventoryPage() {
           )
     );
 
+  const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
+  const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
+
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
       <Sidebar
         onAddItem={() => {
           setAddError("");
+          setIsLimitError(false);
           setIsModalOpen(true);
         }}
+        planName={currentPlanName}
+        itemUsage={usageLoading ? "... / ... items" : itemUsageText}
       />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
@@ -796,7 +845,16 @@ export default function InventoryPage() {
               <div className="mt-2 flex flex-col gap-3 sm:flex-row">
                 {addError && (
                   <div className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
-                    {addError}
+                    <p>{addError}</p>
+
+                    {isLimitError && (
+                      <Link
+                        href="/request-plan"
+                        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-slate-200"
+                      >
+                        Request a plan
+                      </Link>
+                    )}
                   </div>
                 )}
               </div>
