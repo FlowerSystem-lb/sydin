@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
+import Sidebar from "@/components/Sidebar";
 import { supabase } from "@/app/lib/supabase";
 
 interface Item {
@@ -14,394 +16,295 @@ interface Item {
   notes?: string;
 }
 
-export default function InventoryPage() {
+const LOW_STOCK_THRESHOLD = 10;
+
+export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
-  const [search, setSearch] = useState("");
-  
-  // Modal State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [name, setName] = useState("");
-  const [sku, setSku] = useState("");
-  const [category, setCategory] = useState("");
-  const [quantity, setQuantity] = useState("");
-  const [notes, setNotes] = useState("");
-  const [image, setImage] = useState<File | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const fetchItems = async () => {
-    const {
-      data: { user },
-    } =
-      await supabase.auth.getUser();
+  useEffect(() => {
+    let isActive = true;
 
-    if (!user) return;
+    supabase.auth.getUser().then(({ data: { user }, error: userError }) => {
+      if (!isActive) return;
 
-    const { data, error } =
-      await supabase
+      if (userError) {
+        setError(userError.message);
+        setLoading(false);
+        return;
+      }
+
+      if (!user) {
+        setLoading(false);
+        return;
+      }
+
+      supabase
         .from("inventory")
         .select("*")
         .eq("user_id", user.id)
         .order("id", {
           ascending: false,
+        })
+        .then(({ data, error: inventoryError }) => {
+          if (!isActive) return;
+
+          if (inventoryError) {
+            setError(inventoryError.message);
+            setLoading(false);
+            return;
+          }
+
+          setItems(data || []);
+          setLoading(false);
         });
+    });
 
-    if (error) {
-      console.log(error);
-      return;
-    }
-
-    setItems(data || []);
-  };
-
-  useEffect(() => {
-    fetchItems();
+    return () => {
+      isActive = false;
+    };
   }, []);
 
-  const handleAddItem = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      setIsAdding(true);
-      const { data: { user } } = await supabase.auth.getUser();
-      
-      if (!user) {
-        alert("Please login");
-        setIsAdding(false);
-        return;
-      }
-
-      let imageUrl = "";
-      if (image) {
-        const fileName = `${Date.now()}-${image.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("products")
-          .upload(fileName, image);
-
-        if (uploadError) {
-          alert(uploadError.message);
-          setIsAdding(false);
-          return;
-        }
-
-        const { data } = supabase.storage.from("products").getPublicUrl(fileName);
-        imageUrl = data.publicUrl;
-      }
-
-      const { error } = await supabase.from("inventory").insert([{
-        name,
-        sku,
-        category,
-        quantity: Number(quantity),
-        notes,
-        image: imageUrl,
-        user_id: user.id,
-      }]);
-
-      if (error) {
-        alert(error.message);
-        setIsAdding(false);
-        return;
-      }
-
-      alert("Item added successfully");
-      setIsModalOpen(false);
-      setName("");
-      setSku("");
-      setCategory("");
-      setQuantity("");
-      setNotes("");
-      setImage(null);
-      fetchItems();
-    } catch (error) {
-      console.log(error);
-      alert("Something went wrong");
-    }
-    setIsAdding(false);
-  };
-
-  const deleteItem = async (
-    id: number
-  ) => {
-    const confirmDelete =
-      confirm("Delete this item?");
-
-    if (!confirmDelete) return;
-
-    const { error } =
-      await supabase
-        .from("inventory")
-        .delete()
-        .eq("id", id);
-
-    if (error) {
-      alert("Error deleting item");
-      return;
-    }
-
-    fetchItems();
-  };
-
-  const filteredItems =
-    items.filter(
-      (item) =>
-        item.name
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          ) ||
-        item.category
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
+  const stats = useMemo(() => {
+    const totalStock = items.reduce(
+      (sum, item) => sum + Number(item.quantity || 0),
+      0
     );
 
+    const lowStockItems = items.filter(
+      (item) => Number(item.quantity || 0) <= LOW_STOCK_THRESHOLD
+    ).length;
+
+    return {
+      totalItems: items.length,
+      totalStock,
+      lowStockItems,
+      recentlyAddedItems: Math.min(items.length, 3),
+    };
+  }, [items]);
+
+  const recentItems = useMemo(
+    () => items.slice(0, 3),
+    [items]
+  );
+
+  const summaryCards = [
+    {
+      label: "Total Items",
+      value: stats.totalItems,
+      detail: "Products tracked",
+      marker: "TI",
+      accent: "from-indigo-400 to-violet-500",
+    },
+    {
+      label: "Total Stock",
+      value: stats.totalStock,
+      detail: "Units available",
+      marker: "TS",
+      accent: "from-cyan-300 to-indigo-500",
+    },
+    {
+      label: "Low Stock Items",
+      value: stats.lowStockItems,
+      detail: `At or below ${LOW_STOCK_THRESHOLD} units`,
+      marker: "LS",
+      accent: "from-rose-400 to-fuchsia-500",
+    },
+    {
+      label: "Recently Added Items",
+      value: stats.recentlyAddedItems,
+      detail: "Latest records",
+      marker: "RA",
+      accent: "from-violet-400 to-sky-400",
+    },
+  ];
+
   return (
-    <div className="min-h-screen bg-black text-white">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="hidden lg:flex w-[260px] min-h-screen border-r border-neutral-800 p-8 flex-col">
-          <h1 className="text-5xl font-bold">
-            SydIn
-          </h1>
+    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
+      <Sidebar addItemHref="/dashboard/add-item" />
 
-          <p className="text-neutral-400 mt-3">
-            Inventory SaaS
-          </p>
-
-          <div className="mt-20 flex flex-col gap-6 text-2xl">
-            <Link href="/dashboard">
-              Dashboard
-            </Link>
-
-            <Link href="/dashboard/inventory">
-              Inventory
-            </Link>
-
-            <button 
-              onClick={() => setIsModalOpen(true)}
-              className="text-left hover:text-white transition-colors"
-            >
-              Add Item
-            </button>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="flex-1 p-5 lg:p-12">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6 mb-10">
-            <h1 className="text-5xl lg:text-7xl font-bold">
-              Inventory
-            </h1>
-
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="bg-white hover:bg-neutral-200 text-black px-6 py-4 rounded-2xl text-xl font-semibold text-center transition-colors"
-            >
-              Add Item
-            </button>
-          </div>
-
-          {/* Search */}
-          <div className="mb-10">
-            <input
-              type="text"
-              placeholder="Search inventory..."
-              value={search}
-              onChange={(e) =>
-                setSearch(
-                  e.target.value
-                )
-              }
-              className="w-full bg-white/5 backdrop-blur-md border border-white/10 focus:border-purple-500/50 rounded-2xl px-6 py-5 text-lg lg:text-2xl outline-none transition-colors"
-            />
-          </div>
-
-          {/* Items */}
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
-            {filteredItems.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[30px] overflow-hidden group hover:-translate-y-2 hover:bg-white/10 hover:border-purple-500/30 hover:shadow-[0_8px_30px_rgb(168,85,247,0.15)] transition-all duration-300"
-              >
-                {item.image ? (
-                  <div className="w-full h-[240px] lg:h-[320px] overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-full h-[240px] lg:h-[320px] bg-white/5 flex items-center justify-center text-neutral-500 text-xl border-b border-white/5">
-                    No Image
-                  </div>
-                )}
-
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <h2 className="text-3xl lg:text-4xl font-bold">
-                        {item.name}
-                      </h2>
-
-                      <p className="text-neutral-400 text-lg lg:text-xl mt-2">
-                        {item.category}
-                      </p>
-                    </div>
-
-                    <div className="text-3xl lg:text-4xl font-bold">
-                      {item.quantity}
-                    </div>
-                  </div>
-
-                  {/* Low stock */}
-                  {item.quantity <=
-                    10 && (
-                    <div className="mt-5 inline-block bg-red-500/20 text-red-400 px-4 py-2 rounded-xl text-sm lg:text-lg">
-                      Low Stock
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="flex gap-3 mt-6">
-                    <button className="flex-1 bg-white/90 hover:bg-white text-black py-3 rounded-2xl text-lg font-semibold transition-colors">
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={() =>
-                        deleteItem(
-                          item.id
-                        )
-                      }
-                      className="flex-1 bg-red-500/80 hover:bg-red-500 text-white py-3 rounded-2xl text-lg font-semibold transition-colors"
-                    >
-                      Delete
-                    </button>
-                  </div>
+      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+        <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
+          <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
+            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+              <div className="max-w-3xl">
+                <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-slate-300">
+                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_22px_rgba(52,211,153,0.8)]" />
+                  Live inventory overview
                 </div>
-              </div>
-            ))}
-          </div>
 
-          {/* Empty State */}
-          {filteredItems.length ===
-            0 && (
-            <div className="flex flex-col items-center justify-center py-20 px-4 mt-8 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[30px] text-center">
-              <div className="w-24 h-24 mb-6 rounded-full bg-purple-500/10 flex items-center justify-center border border-purple-500/20">
-                <svg className="w-12 h-12 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
-                </svg>
+                <p className="text-lg font-medium text-slate-400">
+                  Welcome back
+                </p>
+
+                <h1 className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                  Dashboard
+                </h1>
+
+                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                  Monitor stock health, recently added products, and inventory movement signals from one polished workspace.
+                </p>
               </div>
-              <h2 className="text-2xl md:text-3xl font-bold mb-3 text-white">No items found</h2>
-              <p className="text-neutral-400 text-lg max-w-md">
-                Your inventory is currently empty or no items match your search.
-              </p>
+
+              <div className="flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="/dashboard/inventory"
+                  className="rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                >
+                  View Inventory
+                </Link>
+
+                <Link
+                  href="/dashboard/add-item"
+                  className="rounded-2xl border border-indigo-400/30 bg-indigo-500/15 px-5 py-4 text-center text-base font-bold text-white transition hover:border-indigo-300/60 hover:bg-indigo-500/25"
+                >
+                  Add Item
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {error && (
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
+              {error}
             </div>
           )}
-        </div>
-      </div>
 
-      {/* Add Item Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[30px] w-full max-w-2xl p-6 md:p-10 my-8">
-            <div className="flex items-center justify-between mb-8">
-              <h2 className="text-3xl md:text-4xl font-bold">Add Item</h2>
-              <button 
-                onClick={() => setIsModalOpen(false)}
-                className="text-neutral-400 hover:text-white transition-colors p-2"
+          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {summaryCards.map((card) => (
+              <div
+                key={card.label}
+                className="group rounded-[28px] border border-white/10 bg-white/[0.055] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-indigo-300/30 hover:bg-white/[0.075] sm:p-6"
               >
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-semibold text-slate-400">
+                      {card.label}
+                    </p>
+
+                    <p className="mt-4 text-5xl font-bold tracking-tight text-white">
+                      {loading ? "..." : card.value.toLocaleString()}
+                    </p>
+                  </div>
+
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-xs font-black text-white shadow-[0_18px_55px_rgba(99,102,241,0.28)]`}>
+                    {card.marker}
+                  </div>
+                </div>
+
+                <p className="mt-5 text-sm text-slate-500">
+                  {card.detail}
+                </p>
+              </div>
+            ))}
+          </section>
+
+          <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                  Latest activity
+                </p>
+
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                  Recent Items
+                </h2>
+              </div>
+
+              <Link
+                href="/dashboard/inventory"
+                className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3 text-center text-sm font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+              >
+                View Inventory
+              </Link>
             </div>
 
-            <form onSubmit={handleAddItem} className="flex flex-col gap-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-neutral-400 mb-2">Product Name</label>
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 focus:border-purple-500/50 rounded-2xl px-5 py-4 text-lg outline-none transition-colors"
-                    required
-                  />
+            <div className="mt-6">
+              {loading ? (
+                <div className="grid grid-cols-1 gap-4">
+                  {[1, 2, 3].map((item) => (
+                    <div
+                      key={item}
+                      className="min-h-[116px] rounded-3xl border border-white/10 bg-white/[0.04] animate-pulse"
+                    />
+                  ))}
                 </div>
-                <div>
-                  <label className="block text-neutral-400 mb-2">SKU</label>
-                  <input
-                    type="text"
-                    value={sku}
-                    onChange={(e) => setSku(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 focus:border-purple-500/50 rounded-2xl px-5 py-4 text-lg outline-none transition-colors"
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-400 mb-2">Quantity</label>
-                  <input
-                    type="number"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 focus:border-purple-500/50 rounded-2xl px-5 py-4 text-lg outline-none transition-colors"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-neutral-400 mb-2">Category</label>
-                  <input
-                    type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full bg-black/50 border border-white/10 focus:border-purple-500/50 rounded-2xl px-5 py-4 text-lg outline-none transition-colors"
-                    required
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-neutral-400 mb-2">Notes</label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  className="w-full bg-black/50 border border-white/10 focus:border-purple-500/50 rounded-2xl px-5 py-4 text-lg outline-none transition-colors min-h-[100px] resize-y"
-                />
-              </div>
+              ) : recentItems.length === 0 ? (
+                <div className="rounded-3xl border border-white/10 bg-black/25 px-5 py-14 text-center">
+                  <div className="mx-auto mb-5 flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-500/15 text-lg font-black text-indigo-200">
+                    0
+                  </div>
 
-              <div>
-                <label className="block text-neutral-400 mb-2">Upload Image</label>
-                <div className="border border-white/10 rounded-2xl p-4 bg-black/50 flex items-center">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImage(e.target.files?.[0] || null)}
-                    className="text-neutral-300 w-full file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-semibold file:bg-purple-500/20 file:text-purple-400 hover:file:bg-purple-500/30 transition-colors cursor-pointer"
-                  />
-                </div>
-              </div>
+                  <h3 className="text-2xl font-bold">
+                    No inventory yet
+                  </h3>
 
-              <div className="flex gap-4 mt-4">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="flex-1 bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl text-xl font-bold transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isAdding}
-                  className="flex-1 bg-purple-600/80 hover:bg-purple-600 text-white py-4 rounded-2xl text-xl font-bold transition-colors disabled:opacity-50"
-                >
-                  {isAdding ? "Saving..." : "Save Item"}
-                </button>
-              </div>
-            </form>
-          </div>
+                  <p className="mx-auto mt-3 max-w-md text-slate-400">
+                    Add your first product and your dashboard will start showing live inventory signals.
+                  </p>
+
+                  <Link
+                    href="/dashboard/add-item"
+                    className="mt-6 inline-flex rounded-2xl bg-white px-5 py-3 font-bold text-black transition hover:bg-slate-200"
+                  >
+                    Add Item
+                  </Link>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 gap-4">
+                  {recentItems.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/25 p-4 transition hover:border-indigo-300/25 hover:bg-white/[0.055] sm:flex-row sm:items-center"
+                    >
+                      <div className="flex h-[132px] shrink-0 items-center justify-center rounded-3xl bg-[#f4f0e8] p-4 sm:h-24 sm:w-24">
+                        {item.image ? (
+                          <div className="relative h-full w-full">
+                            <Image
+                              src={item.image}
+                              alt={item.name}
+                              fill
+                              sizes="96px"
+                              className="object-contain"
+                            />
+                          </div>
+                        ) : (
+                          <span className="text-sm font-semibold text-slate-500">
+                            No Image
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="min-w-0 flex-1">
+                        <h3 className="text-2xl font-bold tracking-tight text-white break-words">
+                          {item.name}
+                        </h3>
+
+                        <p className="mt-1 text-slate-400 break-words">
+                          {item.category}
+                        </p>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
+                        <span className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-lg font-bold text-white">
+                          Qty {item.quantity}
+                        </span>
+
+                        {item.quantity <= LOW_STOCK_THRESHOLD && (
+                          <span className="rounded-full border border-red-400/30 bg-red-500/15 px-3 py-2 text-xs font-bold text-red-300">
+                            Low Stock
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </section>
         </div>
-      )}
+      </main>
     </div>
   );
 }
