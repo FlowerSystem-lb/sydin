@@ -53,6 +53,8 @@ export const pricingPlans = [
       "QR pages",
       "Item history",
     ],
+    ctaLabel: "Start Free",
+    ctaHref: "/signup",
   },
   {
     name: "Standard",
@@ -66,6 +68,8 @@ export const pricingPlans = [
       "Exports coming",
       "Priority feature access",
     ],
+    ctaLabel: "Request Standard",
+    ctaHref: "/request-plan?plan=Standard",
   },
   {
     name: "Pro",
@@ -78,6 +82,8 @@ export const pricingPlans = [
       "Multi-depot ready",
       "Team features later",
     ],
+    ctaLabel: "Request Pro",
+    ctaHref: "/request-plan?plan=Pro",
   },
 ];
 
@@ -448,14 +454,14 @@ export function PricingCards({
             </ul>
 
             <Link
-              href="/signup"
+              href={plan.ctaHref}
               className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-black transition ${
                 plan.featured
                   ? "bg-white text-black hover:bg-slate-200"
                   : "border border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1]"
               }`}
             >
-              Start Free
+              {plan.ctaLabel}
             </Link>
           </div>
         </Reveal>
