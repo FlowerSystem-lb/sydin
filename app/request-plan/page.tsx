@@ -10,8 +10,10 @@ import Reveal from "@/components/Reveal";
 import { supabase } from "@/app/lib/supabase";
 
 type PlanName = "Standard" | "Pro";
+type PaymentMethod = "WhishMoney" | "OMT" | "Crypto";
 
 const planOptions: PlanName[] = ["Standard", "Pro"];
+const paymentMethods: PaymentMethod[] = ["WhishMoney", "OMT", "Crypto"];
 
 export default function RequestPlanPage() {
   const [fullName, setFullName] = useState("");
@@ -25,6 +27,7 @@ export default function RequestPlanPage() {
 
     return plan === "Pro" ? "Pro" : "Standard";
   });
+  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("WhishMoney");
   const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
@@ -61,7 +64,9 @@ export default function RequestPlanPage() {
             email: trimmedEmail,
             phone: phone.trim() || null,
             selected_plan: selectedPlan,
-            message: message.trim() || null,
+            message:
+              `Preferred payment method: ${paymentMethod}` +
+              (message.trim() ? `\n\n${message.trim()}` : ""),
           },
         ]);
 
@@ -85,7 +90,7 @@ export default function RequestPlanPage() {
         <SectionIntro
           eyebrow="Manual activation"
           title="Request a SydIn plan activation."
-          text="Tell us which plan fits your business. We will contact you to activate Standard or Pro while payments are being prepared."
+          text="Tell us which plan fits your business. Early access payments are handled manually through WhishMoney, OMT, or crypto. Card payments are coming soon."
         />
 
         <div className="mx-auto mt-10 grid max-w-7xl grid-cols-1 gap-6 lg:grid-cols-[0.8fr_1.2fr]">
@@ -104,7 +109,7 @@ export default function RequestPlanPage() {
                   "Send your plan request",
                   "We review your business needs",
                   "We contact you by email or WhatsApp",
-                  "Your selected plan is activated manually",
+                  "Your selected plan is activated after manual payment",
                 ].map((step, index) => (
                   <div
                     key={step}
@@ -233,6 +238,37 @@ export default function RequestPlanPage() {
                           {plan}
                         </button>
                       ))}
+                    </div>
+                  </div>
+
+                  <div className="mt-5">
+                    <label className="mb-2 block text-sm font-bold text-slate-400">
+                      Payment method
+                    </label>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {paymentMethods.map((method) => (
+                        <button
+                          key={method}
+                          type="button"
+                          onClick={() => setPaymentMethod(method)}
+                          className={`min-h-14 rounded-2xl border px-5 py-4 text-left text-base font-black transition ${
+                            paymentMethod === method
+                              ? "border-indigo-300/50 bg-indigo-500/20 text-white"
+                              : "border-white/10 bg-black/25 text-slate-300 hover:bg-white/[0.06]"
+                          }`}
+                        >
+                          {method}
+                        </button>
+                      ))}
+
+                      <button
+                        type="button"
+                        disabled
+                        className="min-h-14 cursor-not-allowed rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-4 text-left text-base font-black text-slate-500"
+                      >
+                        Card payments coming soon
+                      </button>
                     </div>
                   </div>
 

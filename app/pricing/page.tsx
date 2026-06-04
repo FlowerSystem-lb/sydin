@@ -31,7 +31,7 @@ const faqs = [
   },
   {
     question: "Are payments active now?",
-    answer: "Payments are coming soon. Early users can request manual activation while the billing flow is being prepared.",
+    answer: "Early access payments are handled manually through WhishMoney, OMT, or crypto. Card payments are coming soon.",
   },
   {
     question: "Can I upgrade later?",
@@ -54,10 +54,31 @@ export default function PricingPage() {
 
           <Reveal>
             <p className="mx-auto mt-6 max-w-2xl rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-5 py-4 text-center text-sm font-semibold text-indigo-100">
-              Payments are coming soon. Early users can request manual activation.
+              Early access payments are handled manually through WhishMoney, OMT, or crypto. Card payments are coming soon.
             </p>
           </Reveal>
         </div>
+      </section>
+
+      <section className="px-4 py-8 sm:px-6 lg:px-8">
+        <Reveal>
+          <div className="mx-auto max-w-5xl rounded-[30px] border border-white/10 bg-white/[0.045] p-6 text-center shadow-[0_24px_90px_rgba(0,0,0,0.24)] backdrop-blur-2xl sm:p-7">
+            <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-300">
+              Payment methods
+            </p>
+
+            <div className="mt-5 flex flex-wrap justify-center gap-3">
+              {["WhishMoney", "OMT", "Crypto", "Card payments coming soon"].map((method) => (
+                <span
+                  key={method}
+                  className="rounded-full border border-white/10 bg-black/25 px-4 py-2 text-sm font-bold text-slate-300"
+                >
+                  {method}
+                </span>
+              ))}
+            </div>
+          </div>
+        </Reveal>
       </section>
 
       <section className="px-4 py-16 sm:px-6 lg:px-8">

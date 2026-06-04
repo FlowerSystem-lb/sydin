@@ -301,7 +301,7 @@ export default function Home() {
         <SectionIntro
           eyebrow="Pricing preview"
           title="Simple plans for early SydIn users."
-          text="Payments are coming soon. Early users can request manual activation."
+          text="Early access payments are handled manually through WhishMoney, OMT, or crypto. Card payments are coming soon."
         />
 
         <div className="mx-auto mt-10 max-w-7xl">
