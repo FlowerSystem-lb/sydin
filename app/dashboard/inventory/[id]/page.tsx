@@ -65,7 +65,7 @@ export default function ItemDetailsPage() {
 
     const timeoutId = window.setTimeout(() => {
       setQrUrl(
-        `${window.location.origin}/dashboard/inventory/${itemId}`
+        `${window.location.origin}/item/${itemId}`
       );
     }, 0);
 
@@ -540,6 +540,10 @@ export default function ItemDetailsPage() {
 
                     <p className="mt-2 text-slate-400">
                       Scan to open this item page.
+                    </p>
+
+                    <p className="mt-2 text-sm text-indigo-200">
+                      This QR opens the public item page.
                     </p>
 
                     {qrUrl && (
