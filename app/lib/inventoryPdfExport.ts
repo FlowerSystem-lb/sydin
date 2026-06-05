@@ -52,11 +52,23 @@ function slugifyFilename(value: string) {
 }
 
 function getImageFormat(url: string, contentType: string | null) {
-  const source = `${contentType || ""} ${url}`.toLowerCase();
+  const normalizedContentType = (contentType || "").toLowerCase();
+  const normalizedUrl = url.toLowerCase();
 
-  if (source.includes("png")) return "PNG";
+  if (normalizedContentType.includes("png")) return "PNG";
+  if (
+    normalizedContentType.includes("jpeg") ||
+    normalizedContentType.includes("jpg")
+  ) {
+    return "JPEG";
+  }
 
-  return "JPEG";
+  if (normalizedUrl.endsWith(".png")) return "PNG";
+  if (normalizedUrl.endsWith(".jpg") || normalizedUrl.endsWith(".jpeg")) {
+    return "JPEG";
+  }
+
+  return null;
 }
 
 function blobToDataUrl(blob: Blob) {
@@ -67,6 +79,41 @@ function blobToDataUrl(blob: Blob) {
     reader.onerror = () => reject(reader.error);
     reader.readAsDataURL(blob);
   });
+}
+
+function getImageDimensions(dataUrl: string) {
+  return new Promise<{ width: number; height: number }>((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () =>
+      resolve({
+        width: image.naturalWidth || image.width,
+        height: image.naturalHeight || image.height,
+      });
+    image.onerror = () => reject(new Error("Image could not be loaded."));
+    image.src = dataUrl;
+  });
+}
+
+function getContainedImageSize(
+  sourceWidth: number,
+  sourceHeight: number,
+  maxWidth: number,
+  maxHeight: number
+) {
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
+    return {
+      width: maxWidth,
+      height: maxHeight,
+    };
+  }
+
+  const ratio = Math.min(maxWidth / sourceWidth, maxHeight / sourceHeight);
+
+  return {
+    width: sourceWidth * ratio,
+    height: sourceHeight * ratio,
+  };
 }
 
 async function getImageData(imageUrl: string, maxBytes = 1_500_000) {
@@ -83,13 +130,15 @@ async function getImageData(imageUrl: string, maxBytes = 1_500_000) {
 
     const format = getImageFormat(imageUrl, response.headers.get("content-type"));
 
-    if (format !== "JPEG" && format !== "PNG") return null;
+    if (!format) return null;
 
     const dataUrl = await blobToDataUrl(blob);
+    const dimensions = await getImageDimensions(dataUrl);
 
     return {
       dataUrl,
       format,
+      ...dimensions,
     };
   } catch {
     return null;
@@ -150,6 +199,12 @@ export async function exportInventoryPdf({
   ).length;
   const logo = await getLogoData(branding.businessLogoUrl);
   const itemThumbnails = await getItemThumbnailData(items);
+  const thumbnailCandidateIds = new Set(
+    items
+      .filter((item) => item.image)
+      .slice(0, 50)
+      .map((item) => item.id)
+  );
   const headerStartX = logo ? 40 : margin;
   const contactLines = [
     branding.contactEmail,
@@ -186,13 +241,26 @@ export async function exportInventoryPdf({
   document.setFont("helvetica", "normal");
   document.setFontSize(9);
   document.setTextColor(196, 204, 220);
-  document.text(`Generated ${formatDateForDisplay(generatedAt)}`, pageWidth - margin, 15, {
+  const wordmarkX = pageWidth - margin - 43;
+  document.setFont("helvetica", "bold");
+  document.setFontSize(15);
+  document.setTextColor(255, 255, 255);
+  document.text("Syd", wordmarkX, 14);
+  document.setFillColor(79, 70, 229);
+  document.roundedRect(wordmarkX + 16, 7.5, 14, 8.5, 1.8, 1.8, "F");
+  document.setFontSize(9);
+  document.text("IN", wordmarkX + 19, 13.2);
+
+  document.setFont("helvetica", "normal");
+  document.setFontSize(8.5);
+  document.setTextColor(196, 204, 220);
+  document.text(`Generated ${formatDateForDisplay(generatedAt)}`, pageWidth - margin, 24, {
     align: "right",
   });
   document.text(
     `${items.length} ${items.length === 1 ? "item" : "items"} | ${lowStockCount} low stock`,
     pageWidth - margin,
-    23,
+    32,
     {
       align: "right",
     }
@@ -231,7 +299,11 @@ export async function exportInventoryPdf({
     startY: summaryTop + 26,
     head: [["Image", "Name", "SKU", "Category", "Depot", "Qty", "Status", "Notes"]],
     body: items.map((item) => [
-      itemThumbnails.has(item.id) ? "" : "No image",
+      itemThumbnails.has(item.id)
+        ? ""
+        : item.image && !thumbnailCandidateIds.has(item.id)
+          ? "Image available"
+          : "No image",
       item.name,
       item.sku || "N/A",
       item.category,
@@ -293,13 +365,20 @@ export async function exportInventoryPdf({
       if (!thumbnail) return;
 
       try {
+        const size = getContainedImageSize(
+          thumbnail.width,
+          thumbnail.height,
+          13,
+          10
+        );
+
         document.addImage(
           thumbnail.dataUrl,
           thumbnail.format,
-          data.cell.x + 3,
-          data.cell.y + 2,
-          12,
-          10
+          data.cell.x + (data.cell.width - size.width) / 2,
+          data.cell.y + (data.cell.height - size.height) / 2,
+          size.width,
+          size.height
         );
       } catch {
         // Keep the table exportable even if a thumbnail decoder rejects a file.

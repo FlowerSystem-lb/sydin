@@ -21,6 +21,7 @@ import {
   getOrCreateBusinessSettings,
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
+import { exportInventoryExcel } from "@/app/lib/inventoryExcelExport";
 import { exportInventoryPdf } from "@/app/lib/inventoryPdfExport";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -192,6 +193,7 @@ export default function InventoryPage() {
   const [pageError, setPageError] = useState("");
   const [pageNotice, setPageNotice] = useState("");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isScannerStarting, setIsScannerStarting] = useState(false);
   const [scannerError, setScannerError] = useState("");
@@ -977,6 +979,61 @@ export default function InventoryPage() {
     }
   };
 
+  const exportInventoryReportExcel = async () => {
+    if (loadingItems || items.length === 0 || isExportingExcel) return;
+
+    try {
+      setIsExportingExcel(true);
+      setPageError("");
+      setPageNotice("");
+
+      const lowStockThreshold = Number.isFinite(
+        Number(businessSettings.low_stock_threshold)
+      )
+        ? Number(businessSettings.low_stock_threshold)
+        : 10;
+      const publicBaseUrl = window.location.origin;
+
+      await exportInventoryExcel({
+        items: items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          sku: item.sku,
+          category: item.category,
+          quantity: item.quantity,
+          notes: item.notes,
+          image: item.image,
+          publicItemUrl: item.public_id
+            ? `${publicBaseUrl}/item/${item.public_id}`
+            : "",
+          depotLabel: formatDepotLabel(
+            depots.find((depot) => depot.id === item.depot_id)
+          ),
+        })),
+        branding: {
+          businessName:
+            businessSettings.business_name ||
+            DEFAULT_BUSINESS_SETTINGS.business_name,
+          businessLogoUrl: businessSettings.business_logo_url,
+          contactEmail: businessSettings.contact_email,
+          contactPhone: businessSettings.contact_phone,
+          contactWebsite: businessSettings.contact_website,
+        },
+        lowStockThreshold,
+      });
+
+      setPageNotice(
+        `Excel report exported for ${items.length} inventory item${
+          items.length === 1 ? "" : "s"
+        }.`
+      );
+    } catch {
+      setPageError("We could not export your Excel report. Please try again.");
+    } finally {
+      setIsExportingExcel(false);
+    }
+  };
+
   const activeDepots = depots.filter((depot) => depot.is_active);
   const editDepotOptions = depots.filter(
     (depot) =>
@@ -1061,6 +1118,7 @@ export default function InventoryPage() {
   const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
   const exportDisabled = loadingItems || items.length === 0;
   const pdfExportDisabled = exportDisabled || isExportingPdf;
+  const excelExportDisabled = exportDisabled || isExportingExcel;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
@@ -1112,6 +1170,15 @@ export default function InventoryPage() {
                   className="rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-5 py-4 text-center text-base font-bold text-indigo-100 transition hover:border-indigo-300/45 hover:bg-indigo-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isExportingPdf ? "Exporting PDF..." : "Export PDF"}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={exportInventoryReportExcel}
+                  disabled={excelExportDisabled}
+                  className="rounded-2xl border border-emerald-300/25 bg-emerald-500/15 px-5 py-4 text-center text-base font-bold text-emerald-100 transition hover:border-emerald-300/45 hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {isExportingExcel ? "Exporting Excel..." : "Export Excel"}
                 </button>
 
                 <Link
