@@ -43,6 +43,9 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 const CSV_HEADERS = [
   "Name",
   "SKU",
@@ -83,6 +86,45 @@ function slugifyFilename(value: string) {
   );
 }
 
+function formatFileSize(size: number) {
+  if (size < 1024 * 1024) {
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getImageValidationError(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return "Choose a JPG, PNG, or WebP image.";
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    return "Image must be 5MB or smaller.";
+  }
+
+  return "";
+}
+
+function getImageExtension(file: File) {
+  const extensionByType: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+
+  return extensionByType[file.type] || "jpg";
+}
+
+function createImagePath(userId: string, file: File) {
+  const random =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2, 12);
+
+  return `${userId}/${Date.now()}-${random}.${getImageExtension(file)}`;
+}
+
 export default function InventoryPage() {
   const router = useRouter();
 
@@ -101,6 +143,8 @@ export default function InventoryPage() {
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [selectedDepotId, setSelectedDepotId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -231,6 +275,44 @@ export default function InventoryPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!image) {
+      setImagePreviewUrl("");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(image);
+    setImagePreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [image]);
+
+  const handleAddImageChange = (file: File | null) => {
+    setImageError("");
+
+    if (!file) {
+      setImage(null);
+      return;
+    }
+
+    const validationError = getImageValidationError(file);
+
+    if (validationError) {
+      setImage(null);
+      setImageError(validationError);
+      return;
+    }
+
+    setImage(file);
+  };
+
+  const clearAddImage = () => {
+    setImage(null);
+    setImageError("");
+  };
+
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -258,6 +340,7 @@ export default function InventoryPage() {
     try {
       setIsAdding(true);
       setAddError("");
+      setImageError("");
       setPageError("");
       setPageNotice("");
 
@@ -281,7 +364,14 @@ export default function InventoryPage() {
 
       let imageUrl = "";
       if (image) {
-        const fileName = `${Date.now()}-${image.name}`;
+        const validationError = getImageValidationError(image);
+
+        if (validationError) {
+          setImageError(validationError);
+          return;
+        }
+
+        const fileName = createImagePath(user.id, image);
         const { error: uploadError } = await supabase.storage
           .from("products")
           .upload(fileName, image);
@@ -337,6 +427,7 @@ export default function InventoryPage() {
       setQuantity("");
       setNotes("");
       setImage(null);
+      setImageError("");
       setSelectedDepotId("");
       await fetchItems();
     } catch (error) {
@@ -678,6 +769,7 @@ export default function InventoryPage() {
       <Sidebar
         onAddItem={() => {
           setAddError("");
+          setImageError("");
           setIsLimitError(false);
           setIsModalOpen(true);
         }}
@@ -973,6 +1065,7 @@ export default function InventoryPage() {
                   if (isAdding) return;
                   setIsModalOpen(false);
                   setAddError("");
+                  setImageError("");
                 }}
                 disabled={isAdding}
                 className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-50"
@@ -984,6 +1077,90 @@ export default function InventoryPage() {
             </div>
 
             <form onSubmit={handleAddItem} className="flex flex-col gap-5 sm:gap-6">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-400">Product Image</label>
+                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-4 transition hover:border-indigo-300/45 hover:bg-black/40">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-[190px_1fr] md:items-center">
+                    <label className="group flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.05] px-5 py-6 text-center transition hover:border-indigo-300/45 hover:bg-white/[0.08]">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-2xl font-black text-indigo-100 transition group-hover:bg-indigo-500/30">
+                        +
+                      </span>
+
+                      <span className="mt-4 text-base font-black text-white">
+                        Take or upload photo
+                      </span>
+
+                      <span className="mt-2 max-w-[210px] text-sm leading-5 text-slate-400">
+                        JPG, PNG, or WebP up to 5MB.
+                      </span>
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) =>
+                          handleAddImageChange(e.target.files?.[0] || null)
+                        }
+                        className="sr-only"
+                      />
+                    </label>
+
+                    <div className="min-h-[170px] rounded-3xl border border-white/10 bg-black/25 p-4">
+                      {image && imagePreviewUrl ? (
+                        <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-[140px_1fr] sm:items-center">
+                          <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f0e8]">
+                            <img
+                              src={imagePreviewUrl}
+                              alt="Selected product preview"
+                              className="h-full w-full object-contain p-3"
+                            />
+                          </div>
+
+                          <div>
+                            <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                              Selected image
+                            </p>
+
+                            <p className="mt-2 break-words text-base font-semibold text-white">
+                              {image.name}
+                            </p>
+
+                            <p className="mt-1 text-sm text-slate-400">
+                              {formatFileSize(image.size)}
+                            </p>
+
+                            <button
+                              type="button"
+                              onClick={clearAddImage}
+                              disabled={isAdding}
+                              className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Remove image
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex h-full min-h-[138px] flex-col justify-center rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-5">
+                          <p className="text-base font-semibold text-white">
+                            No image selected
+                          </p>
+
+                          <p className="mt-2 text-sm leading-6 text-slate-500">
+                            Add a product photo before saving if you want visual inventory records.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {imageError && (
+                    <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                      {imageError}
+                    </p>
+                  )}
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-400">Product Name</label>
@@ -1008,8 +1185,19 @@ export default function InventoryPage() {
                   <label className="mb-2 block text-sm font-semibold text-slate-400">Quantity</label>
                   <input
                     type="number"
+                    min="0"
+                    inputMode="numeric"
                     value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (["-", "+", "e", "E"].includes(e.key)) {
+                        e.preventDefault();
+                      }
+                    }}
+                    onChange={(e) =>
+                      setQuantity(
+                        e.target.value.startsWith("-") ? "" : e.target.value
+                      )
+                    }
                     className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     required
                   />
@@ -1054,18 +1242,6 @@ export default function InventoryPage() {
                 />
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">Upload Image</label>
-                <div className="flex items-center rounded-2xl border border-white/10 bg-white/[0.06] p-4">
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) => setImage(e.target.files?.[0] || null)}
-                    className="w-full cursor-pointer text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-200 transition-colors hover:file:bg-indigo-500/30"
-                  />
-                </div>
-              </div>
-
               <div className="mt-2 flex flex-col gap-3 sm:flex-row">
                 {addError && (
                   <div className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
@@ -1090,6 +1266,7 @@ export default function InventoryPage() {
                     if (isAdding) return;
                     setIsModalOpen(false);
                     setAddError("");
+                    setImageError("");
                   }}
                   disabled={isAdding}
                   className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
