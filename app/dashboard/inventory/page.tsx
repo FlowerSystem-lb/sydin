@@ -35,6 +35,45 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
+const CSV_HEADERS = [
+  "Name",
+  "SKU",
+  "Category",
+  "Quantity",
+  "Low Stock",
+  "Notes",
+  "Image URL",
+  "Public Item URL",
+];
+
+function escapeCsvValue(value: string | number | null | undefined) {
+  const stringValue = String(value ?? "");
+
+  if (/[",\r\n]/.test(stringValue)) {
+    return `"${stringValue.replace(/"/g, '""')}"`;
+  }
+
+  return stringValue;
+}
+
+function formatDateForFilename(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function slugifyFilename(value: string) {
+  return (
+    value
+      .trim()
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/(^-|-$)/g, "") || "sydin"
+  );
+}
+
 export default function InventoryPage() {
   const router = useRouter();
 
@@ -485,6 +524,56 @@ export default function InventoryPage() {
     }
   };
 
+  const exportInventoryCsv = () => {
+    if (loadingItems || items.length === 0) return;
+
+    try {
+      setPageError("");
+      setPageNotice("");
+
+      const lowStockThreshold = Number.isFinite(
+        Number(businessSettings.low_stock_threshold)
+      )
+        ? Number(businessSettings.low_stock_threshold)
+        : 10;
+      const publicBaseUrl = window.location.origin;
+      const rows = items.map((item) => [
+        item.name,
+        item.sku || "",
+        item.category,
+        item.quantity,
+        item.quantity <= lowStockThreshold ? "Yes" : "No",
+        item.notes || "",
+        item.image || "",
+        `${publicBaseUrl}/item/${item.id}`,
+      ]);
+      const csv = [CSV_HEADERS, ...rows]
+        .map((row) => row.map(escapeCsvValue).join(","))
+        .join("\r\n");
+      const blob = new Blob([csv], {
+        type: "text/csv;charset=utf-8",
+      });
+      const downloadUrl = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const businessSlug = slugifyFilename(
+        businessSettings.business_name || DEFAULT_BUSINESS_SETTINGS.business_name
+      );
+      const dateStamp = formatDateForFilename(new Date());
+
+      link.href = downloadUrl;
+      link.download = `${businessSlug}-inventory-${dateStamp}.csv`;
+      link.style.display = "none";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(downloadUrl);
+
+      setPageNotice(`Exported ${items.length} inventory item${items.length === 1 ? "" : "s"}.`);
+    } catch {
+      setPageError("We could not export your inventory. Please try again.");
+    }
+  };
+
   const filteredItems =
     items.filter(
       (item) =>
@@ -502,6 +591,7 @@ export default function InventoryPage() {
 
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
   const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
+  const exportDisabled = loadingItems || items.length === 0;
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
@@ -535,12 +625,23 @@ export default function InventoryPage() {
                 </p>
               </div>
 
-              <Link
-                href="/dashboard/add-item"
-                className="rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
-              >
-                Add Item
-              </Link>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={exportInventoryCsv}
+                  disabled={exportDisabled}
+                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  Export CSV
+                </button>
+
+                <Link
+                  href="/dashboard/add-item"
+                  className="rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                >
+                  Add Item
+                </Link>
+              </div>
             </div>
           </section>
 
