@@ -8,12 +8,16 @@ export interface PdfInventoryItem {
   quantity: number;
   sku?: string;
   notes?: string;
+  image?: string;
   depotLabel: string;
 }
 
 export interface PdfBusinessBranding {
   businessName: string;
   businessLogoUrl: string;
+  contactEmail?: string;
+  contactPhone?: string;
+  contactWebsite?: string;
 }
 
 export interface ExportInventoryPdfOptions {
@@ -51,7 +55,6 @@ function getImageFormat(url: string, contentType: string | null) {
   const source = `${contentType || ""} ${url}`.toLowerCase();
 
   if (source.includes("png")) return "PNG";
-  if (source.includes("webp")) return "WEBP";
 
   return "JPEG";
 }
@@ -66,24 +69,55 @@ function blobToDataUrl(blob: Blob) {
   });
 }
 
-async function getLogoData(logoUrl: string) {
-  if (!logoUrl) return null;
+async function getImageData(imageUrl: string, maxBytes = 1_500_000) {
+  if (!imageUrl) return null;
 
   try {
-    const response = await fetch(logoUrl);
+    const response = await fetch(imageUrl);
 
     if (!response.ok) return null;
 
     const blob = await response.blob();
+
+    if (blob.size > maxBytes) return null;
+
+    const format = getImageFormat(imageUrl, response.headers.get("content-type"));
+
+    if (format !== "JPEG" && format !== "PNG") return null;
+
     const dataUrl = await blobToDataUrl(blob);
 
     return {
       dataUrl,
-      format: getImageFormat(logoUrl, response.headers.get("content-type")),
+      format,
     };
   } catch {
     return null;
   }
+}
+
+async function getLogoData(logoUrl: string) {
+  return getImageData(logoUrl);
+}
+
+async function getItemThumbnailData(items: PdfInventoryItem[]) {
+  const thumbnailItems = items
+    .filter((item) => item.image)
+    .slice(0, 50);
+  const thumbnailEntries = await Promise.all(
+    thumbnailItems.map(async (item) => {
+      const imageData = await getImageData(item.image || "", 900_000);
+
+      return [item.id, imageData] as const;
+    })
+  );
+
+  return new Map(
+    thumbnailEntries.filter((entry): entry is readonly [
+      number,
+      NonNullable<Awaited<ReturnType<typeof getImageData>>>
+    ] => Boolean(entry[1]))
+  );
 }
 
 export async function exportInventoryPdf({
@@ -105,15 +139,30 @@ export async function exportInventoryPdf({
     ? lowStockThreshold
     : 10;
   const lowStockCount = items.filter((item) => item.quantity <= threshold).length;
+  const totalQuantity = items.reduce((total, item) => total + item.quantity, 0);
+  const assignedDepotCount = new Set(
+    items
+      .map((item) => item.depotLabel)
+      .filter((depotLabel) => depotLabel && depotLabel !== "Unassigned")
+  ).size;
+  const unassignedItemCount = items.filter(
+    (item) => item.depotLabel === "Unassigned"
+  ).length;
   const logo = await getLogoData(branding.businessLogoUrl);
-  const headerStartX = logo ? 38 : margin;
+  const itemThumbnails = await getItemThumbnailData(items);
+  const headerStartX = logo ? 40 : margin;
+  const contactLines = [
+    branding.contactEmail,
+    branding.contactPhone,
+    branding.contactWebsite,
+  ].filter(Boolean) as string[];
 
   document.setFillColor(8, 11, 24);
-  document.rect(0, 0, pageWidth, 34, "F");
+  document.rect(0, 0, pageWidth, 42, "F");
 
   if (logo) {
     try {
-      document.addImage(logo.dataUrl, logo.format, margin, 9, 18, 18);
+      document.addImage(logo.dataUrl, logo.format, margin, 9, 20, 20);
     } catch {
       // Keep export resilient if a browser/PDF image decoder rejects the logo.
     }
@@ -121,11 +170,18 @@ export async function exportInventoryPdf({
 
   document.setTextColor(255, 255, 255);
   document.setFont("helvetica", "bold");
-  document.setFontSize(15);
-  document.text(businessName, headerStartX, 15);
+  document.setFontSize(14);
+  document.text(businessName, headerStartX, 14);
 
   document.setFontSize(22);
   document.text("Inventory Report", headerStartX, 25);
+
+  if (contactLines.length > 0) {
+    document.setFont("helvetica", "normal");
+    document.setFontSize(8);
+    document.setTextColor(196, 204, 220);
+    document.text(contactLines.join("  |  "), headerStartX, 34);
+  }
 
   document.setFont("helvetica", "normal");
   document.setFontSize(9);
@@ -142,16 +198,46 @@ export async function exportInventoryPdf({
     }
   );
 
+  const summaryTop = 50;
+  const summaryCards = [
+    ["Total items", String(items.length)],
+    ["Total quantity", String(totalQuantity)],
+    ["Low stock", String(lowStockCount)],
+    ["Assigned depots", String(assignedDepotCount)],
+    ["Unassigned", String(unassignedItemCount)],
+  ];
+  const cardGap = 3;
+  const cardWidth =
+    (pageWidth - margin * 2 - cardGap * (summaryCards.length - 1)) /
+    summaryCards.length;
+
+  summaryCards.forEach(([label, value], index) => {
+    const x = margin + index * (cardWidth + cardGap);
+
+    document.setFillColor(248, 250, 252);
+    document.setDrawColor(226, 232, 240);
+    document.roundedRect(x, summaryTop, cardWidth, 18, 2.5, 2.5, "FD");
+    document.setFont("helvetica", "normal");
+    document.setFontSize(7.5);
+    document.setTextColor(100, 116, 139);
+    document.text(label.toUpperCase(), x + 4, summaryTop + 6);
+    document.setFont("helvetica", "bold");
+    document.setFontSize(13);
+    document.setTextColor(15, 23, 42);
+    document.text(value, x + 4, summaryTop + 14);
+  });
+
   autoTable(document, {
-    startY: 42,
-    head: [["Name", "SKU", "Category", "Depot", "Quantity", "Low Stock", "Notes"]],
+    startY: summaryTop + 26,
+    head: [["Image", "Name", "SKU", "Category", "Depot", "Qty", "Status", "Notes"]],
     body: items.map((item) => [
+      itemThumbnails.has(item.id) ? "" : "No image",
       item.name,
       item.sku || "N/A",
       item.category,
       item.depotLabel,
       String(item.quantity),
-      item.quantity <= threshold ? "Yes" : "No",
+      item.quantity <= threshold ? "Low Stock" : "In Stock",
       item.notes || "",
     ]),
     margin: {
@@ -161,8 +247,8 @@ export async function exportInventoryPdf({
     },
     styles: {
       font: "helvetica",
-      fontSize: 8,
-      cellPadding: 2.4,
+      fontSize: 7.5,
+      cellPadding: 2.2,
       overflow: "linebreak",
       valign: "top",
       lineColor: [226, 232, 240],
@@ -178,18 +264,45 @@ export async function exportInventoryPdf({
       fillColor: [248, 250, 252],
     },
     columnStyles: {
-      0: { cellWidth: 46 },
-      1: { cellWidth: 28 },
-      2: { cellWidth: 32 },
-      3: { cellWidth: 38 },
-      4: { cellWidth: 22, halign: "right" },
-      5: { cellWidth: 24 },
-      6: { cellWidth: "auto" },
+      0: { cellWidth: 20, halign: "center", minCellHeight: 14 },
+      1: { cellWidth: 42 },
+      2: { cellWidth: 25 },
+      3: { cellWidth: 29 },
+      4: { cellWidth: 34 },
+      5: { cellWidth: 16, halign: "right" },
+      6: { cellWidth: 24 },
+      7: { cellWidth: "auto" },
     },
     didParseCell: (data) => {
-      if (data.section === "body" && data.column.index === 5 && data.cell.raw === "Yes") {
+      if (data.section === "body" && data.column.index === 6 && data.cell.raw === "Low Stock") {
         data.cell.styles.textColor = [185, 28, 28];
         data.cell.styles.fontStyle = "bold";
+      }
+
+      if (data.section === "body" && data.column.index === 6 && data.cell.raw === "In Stock") {
+        data.cell.styles.textColor = [22, 101, 52];
+        data.cell.styles.fontStyle = "bold";
+      }
+    },
+    didDrawCell: (data) => {
+      if (data.section !== "body" || data.column.index !== 0) return;
+
+      const item = items[data.row.index];
+      const thumbnail = item ? itemThumbnails.get(item.id) : null;
+
+      if (!thumbnail) return;
+
+      try {
+        document.addImage(
+          thumbnail.dataUrl,
+          thumbnail.format,
+          data.cell.x + 3,
+          data.cell.y + 2,
+          12,
+          10
+        );
+      } catch {
+        // Keep the table exportable even if a thumbnail decoder rejects a file.
       }
     },
   });
@@ -203,8 +316,8 @@ export async function exportInventoryPdf({
     document.setFont("helvetica", "normal");
     document.setFontSize(8);
     document.setTextColor(100, 116, 139);
-    document.text("Generated by SydIn", margin, pageHeight - 7);
-    document.text(`Page ${pageNumber} of ${pageCount}`, pageWidth - margin, pageHeight - 7, {
+    document.text("Generated by SydIN", margin, pageHeight - 7);
+    document.text(`Page ${pageNumber} of ${pageCount} | ${formatDateForDisplay(generatedAt)}`, pageWidth - margin, pageHeight - 7, {
       align: "right",
     });
   }

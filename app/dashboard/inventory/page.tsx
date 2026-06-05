@@ -948,6 +948,7 @@ export default function InventoryPage() {
           category: item.category,
           quantity: item.quantity,
           notes: item.notes,
+          image: item.image,
           depotLabel: formatDepotLabel(
             depots.find((depot) => depot.id === item.depot_id)
           ),
@@ -957,6 +958,9 @@ export default function InventoryPage() {
             businessSettings.business_name ||
             DEFAULT_BUSINESS_SETTINGS.business_name,
           businessLogoUrl: businessSettings.business_logo_url,
+          contactEmail: businessSettings.contact_email,
+          contactPhone: businessSettings.contact_phone,
+          contactWebsite: businessSettings.contact_website,
         },
         lowStockThreshold,
       });
