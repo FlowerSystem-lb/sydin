@@ -43,6 +43,10 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
+type DepotFilter = "all" | "unassigned" | string;
+type StockFilter = "all" | "low";
+type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
+
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
@@ -130,6 +134,9 @@ export default function InventoryPage() {
 
   const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState("");
+  const [depotFilter, setDepotFilter] = useState<DepotFilter>("all");
+  const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [loadingItems, setLoadingItems] = useState(true);
   const [pageError, setPageError] = useState("");
   const [pageNotice, setPageNotice] = useState("");
@@ -744,20 +751,76 @@ export default function InventoryPage() {
   const getDepotForItem = (item: Item) =>
     depots.find((depot) => depot.id === item.depot_id) || null;
 
-  const filteredItems =
-    items.filter(
-      (item) =>
-        item.name
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          ) ||
-        item.category
-          .toLowerCase()
-          .includes(
-            search.toLowerCase()
-          )
-    );
+  const lowStockThreshold = Number.isFinite(
+    Number(businessSettings.low_stock_threshold)
+  )
+    ? Number(businessSettings.low_stock_threshold)
+    : 10;
+  const normalizedSearch = search.trim().toLowerCase();
+  const depotFilterOptions = depots.filter(
+    (depot) =>
+      depot.is_active || items.some((item) => item.depot_id === depot.id)
+  );
+  const hasActiveFilters =
+    normalizedSearch !== "" ||
+    depotFilter !== "all" ||
+    stockFilter !== "all" ||
+    sortBy !== "newest";
+
+  const resetInventoryControls = () => {
+    setSearch("");
+    setDepotFilter("all");
+    setStockFilter("all");
+    setSortBy("newest");
+  };
+
+  const searchMatchedItems = items.filter((item) => {
+    if (!normalizedSearch) return true;
+
+    const depot = getDepotForItem(item);
+    const searchableText = [
+      item.name,
+      item.sku,
+      item.category,
+      item.notes,
+      formatDepotLabel(depot),
+      depot?.name,
+      depot?.code,
+      depot?.notes,
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase();
+
+    return searchableText.includes(normalizedSearch);
+  });
+
+  const filteredItems = searchMatchedItems.filter((item) => {
+    const matchesDepot =
+      depotFilter === "all" ||
+      (depotFilter === "unassigned" && !item.depot_id) ||
+      String(item.depot_id) === depotFilter;
+    const matchesStock =
+      stockFilter === "all" || item.quantity <= lowStockThreshold;
+
+    return matchesDepot && matchesStock;
+  });
+
+  const visibleItems = [...filteredItems].sort((firstItem, secondItem) => {
+    if (sortBy === "name-az") {
+      return firstItem.name.localeCompare(secondItem.name);
+    }
+
+    if (sortBy === "quantity-asc") {
+      return firstItem.quantity - secondItem.quantity;
+    }
+
+    if (sortBy === "quantity-desc") {
+      return secondItem.quantity - firstItem.quantity;
+    }
+
+    return secondItem.id - firstItem.id;
+  });
 
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
   const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
@@ -838,38 +901,117 @@ export default function InventoryPage() {
             </div>
           )}
 
-          {/* Search */}
+          {/* Search and Filters */}
           <section className="rounded-[28px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5">
-            <label className="mb-3 block text-sm font-semibold text-slate-400">
-              Search inventory
-            </label>
+            <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div className="flex-1">
+                  <label className="mb-3 block text-sm font-semibold text-slate-400">
+                    Search inventory
+                  </label>
 
-            <div className="relative">
-              <svg
-                className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={1.8}
-                  d="m21 21-4.35-4.35m1.35-5.65a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-                />
-              </svg>
+                  <div className="relative">
+                    <svg
+                      className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.8}
+                        d="m21 21-4.35-4.35m1.35-5.65a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
+                      />
+                    </svg>
 
-              <input
-                type="text"
-                placeholder="Search by product or category..."
-                value={search}
-                onChange={(e) =>
-                  setSearch(
-                    e.target.value
-                  )
-                }
-                className="w-full rounded-2xl border border-white/10 bg-black/35 py-4 pl-14 pr-5 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-              />
+                    <input
+                      type="text"
+                      placeholder="Search name, SKU, category, depot, or notes..."
+                      value={search}
+                      onChange={(e) =>
+                        setSearch(
+                          e.target.value
+                        )
+                      }
+                      className="w-full rounded-2xl border border-white/10 bg-black/35 py-4 pl-14 pr-5 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <p className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-bold text-slate-300">
+                    Showing {visibleItems.length} of {items.length} items
+                  </p>
+
+                  {hasActiveFilters && (
+                    <button
+                      type="button"
+                      onClick={resetInventoryControls}
+                      className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                    >
+                      Clear Filters
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Depot
+                  </label>
+
+                  <select
+                    value={depotFilter}
+                    onChange={(e) => setDepotFilter(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                  >
+                    <option value="all">All depots</option>
+                    <option value="unassigned">Unassigned</option>
+                    {depotFilterOptions.map((depot) => (
+                      <option
+                        key={depot.id}
+                        value={depot.id}
+                      >
+                        {formatDepotLabel(depot)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Stock
+                  </label>
+
+                  <select
+                    value={stockFilter}
+                    onChange={(e) => setStockFilter(e.target.value as StockFilter)}
+                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                  >
+                    <option value="all">All stock</option>
+                    <option value="low">Low stock only</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Sort
+                  </label>
+
+                  <select
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value as SortOption)}
+                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                  >
+                    <option value="newest">Newest</option>
+                    <option value="name-az">Name A-Z</option>
+                    <option value="quantity-asc">Quantity low-high</option>
+                    <option value="quantity-desc">Quantity high-low</option>
+                  </select>
+                </div>
+              </div>
             </div>
           </section>
 
@@ -887,7 +1029,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {filteredItems.map((item) => (
+              {visibleItems.map((item) => (
                 <div
                 key={item.id}
                 role="link"
@@ -968,7 +1110,7 @@ export default function InventoryPage() {
 
                   {/* Low stock */}
                   {item.quantity <=
-                    businessSettings.low_stock_threshold && (
+                    lowStockThreshold && (
                     <div className="mt-5 inline-block self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
                       Low Stock
                     </div>
@@ -1008,7 +1150,7 @@ export default function InventoryPage() {
           )}
 
           {/* Empty State */}
-          {!loadingItems && filteredItems.length ===
+          {!loadingItems && visibleItems.length ===
             0 && (
             <div className="mt-2 flex flex-col items-center justify-center rounded-[32px] border border-dashed border-indigo-300/25 bg-white/[0.045] px-4 py-20 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
               <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-300/20 bg-indigo-500/15 text-2xl font-black text-indigo-200">
@@ -1022,7 +1164,7 @@ export default function InventoryPage() {
               <p className="max-w-md text-lg text-slate-400">
                 {items.length === 0
                   ? "Add your first product to start tracking stock, categories, and item details."
-                  : "No products match the current search."}
+                  : "No products match the current search or filters."}
               </p>
 
               {items.length === 0 ? (
@@ -1035,10 +1177,10 @@ export default function InventoryPage() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setSearch("")}
+                  onClick={resetInventoryControls}
                   className="mt-6 rounded-2xl bg-white px-5 py-3 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
                 >
-                  Clear search
+                  Clear filters
                 </button>
               )}
             </div>
