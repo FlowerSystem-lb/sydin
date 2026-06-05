@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Wordmark from "@/components/Wordmark";
 import Reveal from "@/components/Reveal";
 
 type MarketingSection = "home" | "features" | "pricing" | "demo" | "contact" | "none";
@@ -145,14 +146,12 @@ export function MarketingLogo() {
       className="flex min-w-0 items-center gap-3"
       aria-label="SydIn home"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-300 via-violet-500 to-fuchsia-500 text-base font-black text-white shadow-[0_18px_60px_rgba(124,58,237,0.36)]">
-        S
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 text-sm font-black text-indigo-100 shadow-[0_18px_60px_rgba(79,70,229,0.22)]">
+        IN
       </div>
 
       <div className="min-w-0">
-        <p className="text-xl font-black tracking-tight">
-          SydIn
-        </p>
+        <Wordmark size="sm" />
 
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
           Visual inventory

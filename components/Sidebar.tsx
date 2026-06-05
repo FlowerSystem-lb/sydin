@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import LogoutButton from "@/components/LogoutButton";
+import Wordmark from "@/components/Wordmark";
 import {
   getOrCreateBusinessSettings,
 } from "@/app/lib/businessSettings";
@@ -83,6 +85,12 @@ export default function Sidebar({
   const displayBusinessName =
     businessName || loadedBusinessName || "SydIn Account";
   const displayBusinessLogoUrl = businessLogoUrl || loadedBusinessLogoUrl;
+  const displayInitials = displayBusinessName
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((word) => word[0]?.toUpperCase())
+    .join("") || "SI";
 
   const links = [
     {
@@ -148,16 +156,14 @@ export default function Sidebar({
         <div className="relative flex min-h-full flex-col">
           <Link
             href="/dashboard"
-            className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/[0.04] p-3"
+            className="flex items-center gap-3 rounded-3xl border border-white/10 bg-white/[0.04] p-3 transition hover:bg-white/[0.065]"
           >
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_20px_60px_rgba(124,58,237,0.35)]">
-              S
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 text-sm font-black text-indigo-100 shadow-[0_20px_60px_rgba(79,70,229,0.22)]">
+              IN
             </div>
 
             <div>
-              <h1 className="text-2xl font-bold tracking-tight">
-                SydIn
-              </h1>
+              <Wordmark />
 
               <p className="text-sm text-slate-400">
                 Inventory SaaS
@@ -204,23 +210,33 @@ export default function Sidebar({
             </div>
           )}
 
-          <div className="mt-auto rounded-3xl border border-white/10 bg-white/[0.04] p-4">
-            <p className="text-xs uppercase tracking-[0.18em] text-slate-500">
-              Workspace
-            </p>
+          <div className="mt-auto rounded-3xl border border-white/10 bg-white/[0.045] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.2)]">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-500">
+                  Workspace
+                </p>
 
-            <div className="mt-3 flex items-center gap-3">
-              <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-sm font-black">
+                <p className="mt-1 text-xs text-slate-500">
+                  Signed-in account
+                </p>
+              </div>
+
+              <LogoutButton variant="compact" />
+            </div>
+
+            <div className="mt-4 flex items-center gap-3">
+              <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-sm font-black text-indigo-100">
                 {displayBusinessLogoUrl ? (
                   <Image
                     src={displayBusinessLogoUrl}
                     alt={displayBusinessName}
                     fill
-                    sizes="40px"
-                    className="object-contain p-1"
+                    sizes="48px"
+                    className="bg-white object-contain p-1.5"
                   />
                 ) : (
-                  "S"
+                  displayInitials
                 )}
               </div>
 
@@ -229,7 +245,7 @@ export default function Sidebar({
                   {displayBusinessName}
                 </p>
 
-                <p className="text-xs text-slate-500">
+                <p className="mt-1 text-xs text-slate-500">
                   {displayPlanName
                     ? `${displayPlanName} plan`
                     : "Premium workspace"}
@@ -239,13 +255,15 @@ export default function Sidebar({
 
             {displayItemUsage && (
               <div className="mt-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-4 py-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-200">
-                  Usage
-                </p>
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-indigo-200">
+                    Usage
+                  </p>
 
-                <p className="mt-1 text-sm font-black text-white">
+                  <p className="text-sm font-black text-white">
                   {displayItemUsage}
-                </p>
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -258,7 +276,7 @@ export default function Sidebar({
             href="/dashboard"
             className="flex items-center gap-3"
           >
-            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-sm font-black">
+            <div className="relative flex h-10 w-10 items-center justify-center overflow-hidden rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-xs font-black text-indigo-100">
               {displayBusinessLogoUrl ? (
                 <Image
                   src={displayBusinessLogoUrl}
@@ -268,14 +286,12 @@ export default function Sidebar({
                   className="object-contain p-1"
                 />
               ) : (
-                "S"
+                displayInitials
               )}
             </div>
 
             <div>
-              <p className="text-lg font-bold">
-                SydIn
-              </p>
+              <Wordmark size="sm" />
 
               <p className="text-xs text-slate-400">
                 {displayBusinessName}
@@ -283,7 +299,10 @@ export default function Sidebar({
             </div>
           </Link>
 
-          {renderAddAction()}
+          <div className="flex items-center gap-2">
+            {renderAddAction()}
+            <LogoutButton variant="icon" />
+          </div>
         </div>
 
         <nav className="mt-3 grid grid-cols-5 gap-2">

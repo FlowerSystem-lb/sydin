@@ -1,8 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { supabase } from "@/app/lib/supabase";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import Wordmark from "@/components/Wordmark";
+import { supabase } from "@/app/lib/supabase";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -66,14 +68,27 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black px-4 py-8 text-white">
+    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.2),_transparent_34%),linear-gradient(135deg,_#02030a,_#050713_52%,_#02030a)] px-4 py-8 text-white">
       <form
         onSubmit={handleSignup}
-        className="w-full max-w-[500px] rounded-[30px] border border-neutral-800 bg-[#080808] p-6 sm:p-10"
+        className="w-full max-w-[500px] rounded-[30px] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-10"
       >
-        <h1 className="text-5xl font-bold mb-10">
-          Signup
-        </h1>
+        <div className="mb-8 flex items-start justify-between gap-4">
+          <div>
+            <Wordmark size="lg" />
+
+            <h1 className="mt-6 text-4xl font-bold tracking-tight">
+              Create account
+            </h1>
+          </div>
+
+          <Link
+            href="/"
+            className="shrink-0 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-slate-200 transition hover:bg-white/[0.1] hover:text-white"
+          >
+            Back to Home
+          </Link>
+        </div>
 
         <div className="mb-6 flex flex-col gap-4">
           <button
@@ -109,7 +124,7 @@ export default function SignupPage() {
             onChange={(e) =>
               setEmail(e.target.value)
             }
-            className="bg-black border border-neutral-800 rounded-2xl px-6 py-5 text-2xl outline-none"
+            className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
           />
 
           <input
@@ -119,12 +134,12 @@ export default function SignupPage() {
             onChange={(e) =>
               setPassword(e.target.value)
             }
-            className="bg-black border border-neutral-800 rounded-2xl px-6 py-5 text-2xl outline-none"
+            className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
           />
 
           <button
             type="submit"
-            className="bg-white text-black py-5 rounded-2xl text-2xl font-semibold"
+            className="rounded-2xl bg-white py-4 text-base font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
           >
             Create Account
           </button>
