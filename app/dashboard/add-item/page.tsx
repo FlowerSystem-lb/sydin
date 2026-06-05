@@ -19,10 +19,52 @@ import {
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 
+const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
+
+function formatFileSize(size: number) {
+  if (size < 1024 * 1024) {
+    return `${Math.max(1, Math.round(size / 1024))} KB`;
+  }
+
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function getImageValidationError(file: File) {
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
+    return "Choose a JPG, PNG, or WebP image.";
+  }
+
+  if (file.size > MAX_IMAGE_SIZE) {
+    return "Image must be 5MB or smaller.";
+  }
+
+  return "";
+}
+
+function getImageExtension(file: File) {
+  const extensionByType: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+
+  return extensionByType[file.type] || "jpg";
+}
+
+function createImagePath(userId: string, file: File) {
+  const random =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2, 12);
+
+  return `${userId}/${Date.now()}-${random}.${getImageExtension(file)}`;
+}
 
 export default function AddItemPage() {
   const router = useRouter();
@@ -33,6 +75,8 @@ export default function AddItemPage() {
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [imageError, setImageError] = useState("");
+  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [selectedDepotId, setSelectedDepotId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -83,6 +127,44 @@ export default function AddItemPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!image) {
+      setImagePreviewUrl("");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(image);
+    setImagePreviewUrl(previewUrl);
+
+    return () => {
+      URL.revokeObjectURL(previewUrl);
+    };
+  }, [image]);
+
+  const handleImageChange = (file: File | null) => {
+    setImageError("");
+
+    if (!file) {
+      setImage(null);
+      return;
+    }
+
+    const validationError = getImageValidationError(file);
+
+    if (validationError) {
+      setImage(null);
+      setImageError(validationError);
+      return;
+    }
+
+    setImage(file);
+  };
+
+  const clearImage = () => {
+    setImage(null);
+    setImageError("");
+  };
+
   const handleSubmit = async (
     e: React.FormEvent
   ) => {
@@ -112,6 +194,7 @@ export default function AddItemPage() {
     try {
       setLoading(true);
       setFormError("");
+      setImageError("");
       setIsLimitError(false);
 
       const {
@@ -137,9 +220,15 @@ export default function AddItemPage() {
 
       let imageUrl = "";
 
-      // Upload image
       if (image) {
-        const fileName = `${Date.now()}-${image.name}`;
+        const validationError = getImageValidationError(image);
+
+        if (validationError) {
+          setImageError(validationError);
+          return;
+        }
+
+        const fileName = createImagePath(user.id, image);
 
         const {
           error: uploadError,
@@ -229,11 +318,11 @@ export default function AddItemPage() {
                   New product
                 </p>
 
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                <h1 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
                   Add Item
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400 sm:mt-4 sm:text-lg sm:leading-7">
                   Add a new product to your inventory.
                 </p>
               </div>
@@ -274,7 +363,95 @@ export default function AddItemPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+            <div className="flex flex-col">
+              <div className="order-1 md:order-3 md:mt-5">
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                  Product Image
+                </label>
+
+                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-4 transition hover:border-indigo-300/45 hover:bg-black/40 sm:p-5">
+                  <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr] lg:items-center">
+                    <label className="group flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.05] px-5 py-6 text-center transition hover:border-indigo-300/45 hover:bg-white/[0.08]">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-2xl font-black text-indigo-100 transition group-hover:bg-indigo-500/30">
+                        +
+                      </span>
+
+                      <span className="mt-4 text-lg font-black text-white">
+                        Take or upload photo
+                      </span>
+
+                      <span className="mt-2 max-w-[220px] text-sm leading-5 text-slate-400">
+                        JPG, PNG, or WebP up to 5MB.
+                      </span>
+
+                      <input
+                        type="file"
+                        accept="image/*"
+                        capture="environment"
+                        onChange={(e) =>
+                          handleImageChange(e.target.files?.[0] || null)
+                        }
+                        className="sr-only"
+                      />
+                    </label>
+
+                    <div className="min-h-[190px] rounded-3xl border border-white/10 bg-black/25 p-4">
+                      {image && imagePreviewUrl ? (
+                        <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-[160px_1fr] sm:items-center">
+                          <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f0e8]">
+                            <img
+                              src={imagePreviewUrl}
+                              alt="Selected product preview"
+                              className="h-full w-full object-contain p-3"
+                            />
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-bold uppercase tracking-[0.16em] text-indigo-200">
+                              Selected image
+                            </p>
+
+                            <p className="mt-2 break-words text-base font-semibold text-white">
+                              {image.name}
+                            </p>
+
+                            <p className="mt-1 text-sm text-slate-400">
+                              {formatFileSize(image.size)}
+                            </p>
+
+                            <button
+                              type="button"
+                              onClick={clearImage}
+                              disabled={loading}
+                              className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Remove image
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex h-full min-h-[158px] flex-col justify-center rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-5">
+                          <p className="text-base font-semibold text-white">
+                            No image selected
+                          </p>
+
+                          <p className="mt-2 text-sm leading-6 text-slate-500">
+                            JPG, PNG, or WebP. Maximum size 5MB.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {imageError && (
+                    <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                      {imageError}
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              <div className="order-2 mt-5 grid grid-cols-1 gap-5 md:order-1 md:mt-0 md:grid-cols-2">
               <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-400">
                   Product Name
@@ -286,6 +463,31 @@ export default function AddItemPage() {
                   onChange={(e) =>
                     setName(
                       e.target.value
+                    )
+                  }
+                  className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                  Quantity
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  inputMode="numeric"
+                  value={quantity}
+                  onKeyDown={(e) => {
+                    if (["-", "+", "e", "E"].includes(e.key)) {
+                      e.preventDefault();
+                    }
+                  }}
+                  onChange={(e) =>
+                    setQuantity(
+                      e.target.value.startsWith("-") ? "" : e.target.value
                     )
                   }
                   className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
@@ -328,25 +530,6 @@ export default function AddItemPage() {
                 />
               </div>
 
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">
-                  Quantity
-                </label>
-
-                <input
-                  type="number"
-                  min="0"
-                  value={quantity}
-                  onChange={(e) =>
-                    setQuantity(
-                      e.target.value
-                    )
-                  }
-                  className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                  required
-                />
-              </div>
-
               <div className="md:col-span-2">
                 <label className="mb-2 block text-sm font-semibold text-slate-400">
                   Depot
@@ -368,9 +551,9 @@ export default function AddItemPage() {
                   ))}
                 </select>
               </div>
-            </div>
+              </div>
 
-            <div className="mt-5">
+            <div className="order-3 mt-5 md:order-2">
               <label className="mb-2 block text-sm font-semibold text-slate-400">
                 Notes
               </label>
@@ -385,44 +568,6 @@ export default function AddItemPage() {
                 className="min-h-[130px] w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
               />
             </div>
-
-            <div className="mt-5">
-              <label className="mb-2 block text-sm font-semibold text-slate-400">
-                Product Image
-              </label>
-
-              <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-5 transition hover:border-indigo-300/45 hover:bg-black/40">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-base font-semibold text-white">
-                      Upload product image
-                    </p>
-
-                    <p className="mt-1 text-sm text-slate-500">
-                      PNG, JPG, or WebP works best.
-                    </p>
-                  </div>
-
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(e) =>
-                      setImage(
-                        e.target
-                          .files?.[0] ||
-                          null
-                      )
-                    }
-                    className="w-full cursor-pointer text-sm text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-200 transition-colors hover:file:bg-indigo-500/30 sm:w-auto"
-                  />
-                </div>
-
-                {image && (
-                  <p className="mt-4 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-slate-300">
-                    Selected: {image.name}
-                  </p>
-                )}
-              </div>
             </div>
 
             {formError && (
@@ -440,7 +585,7 @@ export default function AddItemPage() {
               </div>
             )}
 
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <div className="sticky bottom-0 z-10 -mx-5 mt-7 flex flex-col-reverse gap-3 border-t border-white/10 bg-[#050713]/95 px-5 py-4 backdrop-blur-xl sm:static sm:mx-0 sm:flex-row sm:justify-end sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
               <Link
                 href="/dashboard/inventory"
                 className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-4 text-center text-base font-bold text-white transition hover:bg-white/[0.1]"
