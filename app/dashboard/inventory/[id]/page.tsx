@@ -54,6 +54,13 @@ const movementTypes: StockMovementType[] = [
   "damaged_lost",
 ];
 
+const movementHelperText: Record<StockMovementType, string> = {
+  stock_in: "Stock In adds quantity to current stock.",
+  stock_out: "Stock Out removes quantity from current stock.",
+  adjustment: "Adjustment sets the final quantity for this item.",
+  damaged_lost: "Damaged / Lost removes damaged or missing stock.",
+};
+
 function formatCreatedDate(date?: string) {
   if (!date) return "Not available";
 
@@ -1131,50 +1138,83 @@ export default function ItemDetailsPage() {
                   Movement Type
                 </label>
 
-                <select
-                  value={movementType}
-                  onChange={(e) =>
-                    setMovementType(e.target.value as StockMovementType)
-                  }
-                  disabled={isRecordingMovement}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-emerald-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
-                >
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                   {movementTypes.map((type) => (
-                    <option key={type} value={type}>
-                      {STOCK_MOVEMENT_LABELS[type]}
-                    </option>
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setMovementType(type)}
+                      disabled={isRecordingMovement}
+                      className={`rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
+                        movementType === type
+                          ? "border-emerald-300/60 bg-emerald-500/15 shadow-[0_0_0_4px_rgba(16,185,129,0.1)]"
+                          : "border-white/10 bg-white/[0.045] hover:border-white/20 hover:bg-white/[0.08]"
+                      }`}
+                      aria-pressed={movementType === type}
+                    >
+                      <span className="flex items-center gap-3">
+                        <span
+                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-black ${
+                            movementType === type
+                              ? "border-emerald-300/35 bg-emerald-400/20 text-emerald-100"
+                              : "border-white/10 bg-black/25 text-slate-300"
+                          }`}
+                        >
+                          {STOCK_MOVEMENT_LABELS[type].charAt(0)}
+                        </span>
+
+                        <span className="min-w-0">
+                          <span className="block text-base font-bold text-white">
+                            {STOCK_MOVEMENT_LABELS[type]}
+                          </span>
+
+                          <span className="mt-1 block text-sm leading-5 text-slate-400">
+                            {movementHelperText[type]}
+                          </span>
+                        </span>
+                      </span>
+                    </button>
                   ))}
-                </select>
+                </div>
               </div>
 
-              <div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-[0.8fr_1.2fr] md:items-start">
+                <div>
                 <label className="mb-2 block text-sm font-semibold text-slate-400">
                   {movementType === "adjustment"
                     ? "Final Quantity"
                     : "Quantity"}
                 </label>
 
-                <input
-                  type="number"
-                  min="0"
-                  step="1"
-                  value={movementQuantity}
-                  onChange={(e) => setMovementQuantity(e.target.value)}
-                  disabled={isRecordingMovement}
-                  className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-emerald-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
-                  required
-                />
+                  <div className="rounded-2xl border border-white/10 bg-black/25 p-1 transition focus-within:border-emerald-300/60 focus-within:bg-white/[0.06] focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]">
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      value={movementQuantity}
+                      onChange={(e) => setMovementQuantity(e.target.value)}
+                      disabled={isRecordingMovement}
+                      className="w-full rounded-[14px] bg-transparent px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-slate-600 disabled:opacity-50"
+                      placeholder="0"
+                      required
+                    />
+                  </div>
+                </div>
 
-                <p className="mt-2 text-sm leading-6 text-slate-500">
-                  {movementType === "stock_in" &&
-                    "Adds this quantity to current stock."}
-                  {movementType === "stock_out" &&
-                    "Subtracts this quantity from current stock."}
-                  {movementType === "damaged_lost" &&
-                    "Subtracts damaged or lost stock from current quantity."}
-                  {movementType === "adjustment" &&
-                    "Sets the item quantity to this final value."}
-                </p>
+                <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4">
+                  <p className="text-sm font-bold text-emerald-100">
+                    {STOCK_MOVEMENT_LABELS[movementType]}
+                  </p>
+
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    {movementHelperText[movementType]}
+                  </p>
+
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                    Current quantity: {item.quantity}
+                  </p>
+                </div>
               </div>
 
               <div>
