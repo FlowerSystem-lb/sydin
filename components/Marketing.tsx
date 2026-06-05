@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Reveal from "@/components/Reveal";
 
-type MarketingSection = "home" | "features" | "pricing" | "demo";
+type MarketingSection = "home" | "features" | "pricing" | "demo" | "contact" | "none";
 
 interface MarketingPageProps {
   active?: MarketingSection;
@@ -38,6 +38,11 @@ const navLinks: Array<{
     label: "Demo",
     href: "/demo",
     key: "demo",
+  },
+  {
+    label: "Contact",
+    href: "/contact",
+    key: "contact",
   },
 ];
 
@@ -205,7 +210,7 @@ export function MarketingHeader({
           </div>
         </div>
 
-        <nav className="grid grid-cols-4 gap-2 md:hidden">
+        <nav className="grid grid-cols-5 gap-2 md:hidden">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -247,6 +252,15 @@ export function MarketingFooter() {
           </Link>
           <Link href="/demo" className="hover:text-white">
             Demo
+          </Link>
+          <Link href="/contact" className="hover:text-white">
+            Contact
+          </Link>
+          <Link href="/privacy" className="hover:text-white">
+            Privacy
+          </Link>
+          <Link href="/terms" className="hover:text-white">
+            Terms
           </Link>
           <Link href="/login" className="hover:text-white">
             Sign in
