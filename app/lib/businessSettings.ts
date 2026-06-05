@@ -10,14 +10,6 @@ export interface BusinessSettings {
   show_contact_publicly: boolean;
 }
 
-export interface PublicBusinessBranding {
-  business_name: string;
-  business_logo_url: string;
-  contact_email: string;
-  contact_phone: string;
-  contact_website: string;
-}
-
 export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   business_name: "SydIn Account",
   business_logo_url: "",
@@ -26,14 +18,6 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   contact_phone: "",
   contact_website: "",
   show_contact_publicly: false,
-};
-
-export const DEFAULT_PUBLIC_BRANDING: PublicBusinessBranding = {
-  business_name: "SydIn",
-  business_logo_url: "",
-  contact_email: "",
-  contact_phone: "",
-  contact_website: "",
 };
 
 function normalizeThreshold(value: unknown) {
@@ -56,19 +40,6 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
     contact_phone: data?.contact_phone || "",
     contact_website: data?.contact_website || "",
     show_contact_publicly: Boolean(data?.show_contact_publicly),
-  };
-}
-
-function normalizePublicBranding(
-  data: Partial<PublicBusinessBranding> | null
-) {
-  return {
-    business_name:
-      data?.business_name?.trim() || DEFAULT_PUBLIC_BRANDING.business_name,
-    business_logo_url: data?.business_logo_url || "",
-    contact_email: data?.contact_email || "",
-    contact_phone: data?.contact_phone || "",
-    contact_website: data?.contact_website || "",
   };
 }
 
@@ -110,21 +81,4 @@ export async function getOrCreateBusinessSettings(userId: string) {
   }
 
   return normalizeBusinessSettings(createdSettings);
-}
-
-export async function getPublicBusinessBranding(userId: string) {
-  const { data, error } = await supabase
-    .from("public_business_branding")
-    .select(
-      "business_name, business_logo_url, contact_email, contact_phone, contact_website"
-    )
-    .eq("user_id", userId)
-    .maybeSingle();
-
-  if (error) {
-    console.warn("Public business branding fetch failed:", error.message);
-    return DEFAULT_PUBLIC_BRANDING;
-  }
-
-  return normalizePublicBranding(data);
 }
