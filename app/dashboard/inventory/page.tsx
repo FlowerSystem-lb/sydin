@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+  BrowserMultiFormatReader,
+  type IScannerControls,
+} from "@zxing/browser";
 import Sidebar from "@/components/Sidebar";
 import {
   formatDepotLabel,
@@ -129,8 +133,55 @@ function createImagePath(userId: string, file: File) {
   return `${userId}/${Date.now()}-${random}.${getImageExtension(file)}`;
 }
 
+function extractScannedPublicId(scannedText: string) {
+  const trimmedText = scannedText.trim();
+  const itemPathMatch = trimmedText.match(/(?:^|\/)item\/([^/?#\s]+)/i);
+
+  if (itemPathMatch?.[1]) {
+    return decodeURIComponent(itemPathMatch[1]);
+  }
+
+  const uuidPattern =
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+  return uuidPattern.test(trimmedText) ? trimmedText : "";
+}
+
+function getScannerErrorMessage(error: unknown) {
+  const errorName =
+    error instanceof DOMException
+      ? error.name
+      : error &&
+          typeof error === "object" &&
+          "name" in error &&
+          typeof error.name === "string"
+        ? error.name
+        : "";
+
+  if (errorName === "NotAllowedError" || errorName === "SecurityError") {
+    return "Camera permission was denied. Allow camera access and try again.";
+  }
+
+  if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
+    return "No camera was found on this device.";
+  }
+
+  if (errorName === "NotReadableError" || errorName === "TrackStartError") {
+    return "The camera is already in use by another app or browser tab.";
+  }
+
+  if (errorName === "OverconstrainedError") {
+    return "We could not start the preferred camera. Try another browser or device.";
+  }
+
+  return "Scanner failed. Close it and try again.";
+}
+
 export default function InventoryPage() {
   const router = useRouter();
+  const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
+  const scannerControlsRef = useRef<IScannerControls | null>(null);
+  const scannerMatchedRef = useRef(false);
 
   const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState("");
@@ -141,6 +192,10 @@ export default function InventoryPage() {
   const [pageError, setPageError] = useState("");
   const [pageNotice, setPageNotice] = useState("");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isScannerStarting, setIsScannerStarting] = useState(false);
+  const [scannerError, setScannerError] = useState("");
+  const [scannerStatus, setScannerStatus] = useState("");
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -319,6 +374,182 @@ export default function InventoryPage() {
     setImage(null);
     setImageError("");
   };
+
+  const stopScanner = () => {
+    scannerControlsRef.current?.stop();
+    scannerControlsRef.current = null;
+
+    const stream = scannerVideoRef.current?.srcObject;
+
+    if (stream instanceof MediaStream) {
+      stream.getTracks().forEach((track) => track.stop());
+    }
+
+    if (scannerVideoRef.current) {
+      scannerVideoRef.current.srcObject = null;
+    }
+  };
+
+  const closeScanner = () => {
+    stopScanner();
+    scannerMatchedRef.current = false;
+    setIsScannerOpen(false);
+    setIsScannerStarting(false);
+    setScannerError("");
+    setScannerStatus("");
+  };
+
+  const openScanner = () => {
+    setPageError("");
+    setPageNotice("");
+    setScannerError("");
+    setScannerStatus("Starting camera...");
+    scannerMatchedRef.current = false;
+    setIsScannerOpen(true);
+  };
+
+  const handleScannedText = (scannedValue: string) => {
+    const scannedText = scannedValue.trim();
+
+    if (!scannedText) {
+      setPageNotice("We could not read that code. Try scanning again.");
+      closeScanner();
+      return;
+    }
+
+    const scannedPublicId = extractScannedPublicId(scannedText);
+    const publicItemMatch = scannedPublicId
+      ? items.find((item) => item.public_id === scannedPublicId)
+      : null;
+
+    if (publicItemMatch) {
+      closeScanner();
+      router.push(`/dashboard/inventory/${publicItemMatch.id}`);
+      return;
+    }
+
+    const exactSkuMatches = items.filter(
+      (item) => (item.sku || "").trim() === scannedText
+    );
+
+    if (exactSkuMatches.length === 1) {
+      closeScanner();
+      router.push(`/dashboard/inventory/${exactSkuMatches[0].id}`);
+      return;
+    }
+
+    if (exactSkuMatches.length > 1) {
+      setSearch(scannedText);
+      setPageNotice(
+        `Found ${exactSkuMatches.length} items with that SKU. Showing matches.`
+      );
+      closeScanner();
+      return;
+    }
+
+    const normalizedScannedText = scannedText.toLowerCase();
+    const caseInsensitiveSkuMatches = items.filter(
+      (item) => (item.sku || "").trim().toLowerCase() === normalizedScannedText
+    );
+
+    if (caseInsensitiveSkuMatches.length === 1) {
+      closeScanner();
+      router.push(`/dashboard/inventory/${caseInsensitiveSkuMatches[0].id}`);
+      return;
+    }
+
+    if (caseInsensitiveSkuMatches.length > 1) {
+      setSearch(scannedText);
+      setPageNotice(
+        `Found ${caseInsensitiveSkuMatches.length} items with that SKU. Showing matches.`
+      );
+      closeScanner();
+      return;
+    }
+
+    setSearch(scannedPublicId || scannedText);
+    setPageNotice("No exact match found. Showing search results for the scanned code.");
+    closeScanner();
+  };
+
+  useEffect(() => {
+    return () => {
+      stopScanner();
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isScannerOpen) return;
+
+    let isActive = true;
+
+    const startScanner = async () => {
+      if (!navigator.mediaDevices?.getUserMedia) {
+        setScannerError("This browser does not support camera scanning.");
+        setScannerStatus("");
+        setIsScannerStarting(false);
+        return;
+      }
+
+      if (!scannerVideoRef.current) {
+        setScannerError("Scanner preview is not ready. Close it and try again.");
+        setScannerStatus("");
+        setIsScannerStarting(false);
+        return;
+      }
+
+      try {
+        setIsScannerStarting(true);
+        setScannerError("");
+        setScannerStatus("Starting camera...");
+
+        const reader = new BrowserMultiFormatReader();
+        const controls = await reader.decodeFromConstraints(
+          {
+            audio: false,
+            video: {
+              facingMode: {
+                ideal: "environment",
+              },
+            },
+          },
+          scannerVideoRef.current,
+          (result, _error, controls) => {
+            if (!isActive || scannerMatchedRef.current || !result) return;
+
+            scannerMatchedRef.current = true;
+            controls.stop();
+            scannerControlsRef.current = null;
+            handleScannedText(result.getText());
+          }
+        );
+
+        if (!isActive) {
+          controls.stop();
+          return;
+        }
+
+        scannerControlsRef.current = controls;
+        setScannerStatus("Scan a SydIn QR code or product barcode.");
+      } catch (error) {
+        if (!isActive) return;
+
+        setScannerError(getScannerErrorMessage(error));
+        setScannerStatus("");
+      } finally {
+        if (isActive) {
+          setIsScannerStarting(false);
+        }
+      }
+    };
+
+    void startScanner();
+
+    return () => {
+      isActive = false;
+      stopScanner();
+    };
+  }, [isScannerOpen]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -940,6 +1171,14 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                  <button
+                    type="button"
+                    onClick={openScanner}
+                    className="rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-4 py-3 text-sm font-bold text-indigo-100 transition hover:border-indigo-300/45 hover:bg-indigo-500/25"
+                  >
+                    Scan
+                  </button>
+
                   <p className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-bold text-slate-300">
                     Showing {visibleItems.length} of {items.length} items
                   </p>
@@ -1187,6 +1426,105 @@ export default function InventoryPage() {
           )}
         </div>
       </main>
+
+      {isScannerOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/85 p-4 backdrop-blur-xl">
+          <div className="my-8 w-full max-w-2xl overflow-hidden rounded-[32px] border border-white/10 bg-[#080b18]/95 shadow-[0_30px_120px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5 sm:p-6">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                  Inventory scanner
+                </p>
+
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
+                  Scan Item
+                </h2>
+
+                <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
+                  Scan a SydIn QR code or product barcode.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeScanner}
+                className="shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white"
+                aria-label="Close scanner"
+              >
+                <svg
+                  className="h-7 w-7"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.6}
+                    d="M6 18 18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="p-5 sm:p-6">
+              <div className="overflow-hidden rounded-[28px] border border-indigo-300/20 bg-black">
+                <video
+                  ref={scannerVideoRef}
+                  muted
+                  playsInline
+                  className="aspect-[3/4] w-full bg-black object-cover sm:aspect-video"
+                />
+              </div>
+
+              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3">
+                {scannerError ? (
+                  <p className="text-sm font-semibold text-red-200">
+                    {scannerError}
+                  </p>
+                ) : (
+                  <p className="text-sm font-semibold text-slate-300">
+                    {isScannerStarting
+                      ? "Starting camera..."
+                      : scannerStatus || "Point the camera at a code."}
+                  </p>
+                )}
+              </div>
+
+              <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+                <button
+                  type="button"
+                  onClick={closeScanner}
+                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3 text-base font-bold text-white transition hover:bg-white/[0.1]"
+                >
+                  Close
+                </button>
+
+                {scannerError && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      stopScanner();
+                      scannerMatchedRef.current = false;
+                      setScannerError("");
+                      setScannerStatus("Starting camera...");
+                      setIsScannerStarting(false);
+                      setIsScannerOpen(false);
+
+                      window.setTimeout(() => {
+                        setIsScannerOpen(true);
+                      }, 0);
+                    }}
+                    className="rounded-2xl bg-white px-5 py-3 text-base font-bold text-black transition hover:bg-slate-200"
+                  >
+                    Try Again
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Add Item Modal */}
       {isModalOpen && (
