@@ -1,0 +1,83 @@
+import { supabase } from "@/app/lib/supabase";
+
+export type StockMovementType =
+  | "stock_in"
+  | "stock_out"
+  | "adjustment"
+  | "damaged_lost";
+
+export interface StockMovement {
+  id: number;
+  movement_type: StockMovementType;
+  quantity_delta: number;
+  quantity_before: number;
+  quantity_after: number;
+  notes: string | null;
+  created_at: string;
+}
+
+export const STOCK_MOVEMENT_LABELS: Record<StockMovementType, string> = {
+  stock_in: "Stock In",
+  stock_out: "Stock Out",
+  adjustment: "Adjustment",
+  damaged_lost: "Damaged / Lost",
+};
+
+function normalizeMovement(data: Partial<StockMovement>): StockMovement {
+  return {
+    id: Number(data.id),
+    movement_type: (data.movement_type || "adjustment") as StockMovementType,
+    quantity_delta: Number(data.quantity_delta || 0),
+    quantity_before: Number(data.quantity_before || 0),
+    quantity_after: Number(data.quantity_after || 0),
+    notes: data.notes || null,
+    created_at: data.created_at || "",
+  };
+}
+
+export async function getStockMovementsForItem(
+  userId: string,
+  itemId: number
+) {
+  const { data, error } = await supabase
+    .from("stock_movements")
+    .select(
+      "id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at"
+    )
+    .eq("user_id", userId)
+    .eq("item_id", itemId)
+    .order("created_at", {
+      ascending: false,
+    });
+
+  if (error) {
+    throw error;
+  }
+
+  return ((data || []) as Partial<StockMovement>[]).map(normalizeMovement);
+}
+
+export async function recordStockMovement({
+  itemId,
+  movementType,
+  quantity,
+  notes,
+}: {
+  itemId: number;
+  movementType: StockMovementType;
+  quantity: number;
+  notes?: string;
+}) {
+  const { data, error } = await supabase.rpc("record_stock_movement", {
+    p_item_id: itemId,
+    p_movement_type: movementType,
+    p_quantity: quantity,
+    p_notes: notes?.trim() || null,
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return normalizeMovement(data as Partial<StockMovement>);
+}

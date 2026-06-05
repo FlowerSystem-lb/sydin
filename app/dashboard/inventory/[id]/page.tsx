@@ -18,6 +18,13 @@ import {
   getDepotsForUser,
   type Depot,
 } from "@/app/lib/depots";
+import {
+  getStockMovementsForItem,
+  recordStockMovement,
+  STOCK_MOVEMENT_LABELS,
+  type StockMovement,
+  type StockMovementType,
+} from "@/app/lib/stockMovements";
 
 interface Item {
   id: number;
@@ -39,6 +46,13 @@ interface InventoryHistory {
   new_quantity: number | null;
   created_at: string;
 }
+
+const movementTypes: StockMovementType[] = [
+  "stock_in",
+  "stock_out",
+  "adjustment",
+  "damaged_lost",
+];
 
 function formatCreatedDate(date?: string) {
   if (!date) return "Not available";
@@ -63,6 +77,12 @@ function formatQuantity(quantity: number | null) {
   return quantity ?? "N/A";
 }
 
+function formatQuantityDelta(delta: number) {
+  if (delta > 0) return `+${delta}`;
+
+  return String(delta);
+}
+
 export default function ItemDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -72,11 +92,13 @@ export default function ItemDetailsPage() {
 
   const [item, setItem] = useState<Item | null>(null);
   const [history, setHistory] = useState<InventoryHistory[]>([]);
+  const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
   const [qrUrl, setQrUrl] = useState("");
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [businessSettings, setBusinessSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
   const [depots, setDepots] = useState<Depot[]>([]);
+  const [pageNotice, setPageNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [authMissing, setAuthMissing] = useState(false);
@@ -91,6 +113,13 @@ export default function ItemDetailsPage() {
   const [editDepotId, setEditDepotId] = useState("");
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
+  const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
+  const [movementType, setMovementType] =
+    useState<StockMovementType>("stock_in");
+  const [movementQuantity, setMovementQuantity] = useState("");
+  const [movementNotes, setMovementNotes] = useState("");
+  const [movementError, setMovementError] = useState("");
+  const [isRecordingMovement, setIsRecordingMovement] = useState(false);
 
   const fetchHistory = async (userId: string, historyItemId: number) => {
     const { data, error: historyError } = await supabase
@@ -108,6 +137,16 @@ export default function ItemDetailsPage() {
     }
 
     setHistory((data as InventoryHistory[]) || []);
+  };
+
+  const fetchStockMovements = async (userId: string, movementItemId: number) => {
+    try {
+      const movements = await getStockMovementsForItem(userId, movementItemId);
+
+      setStockMovements(movements);
+    } catch {
+      setStockMovements([]);
+    }
   };
 
   useEffect(() => {
@@ -183,8 +222,10 @@ export default function ItemDetailsPage() {
 
         if (loadedItem) {
           await fetchHistory(user.id, loadedItem.id);
+          await fetchStockMovements(user.id, loadedItem.id);
         } else {
           setHistory([]);
+          setStockMovements([]);
         }
 
         setLoading(false);
@@ -229,6 +270,102 @@ export default function ItemDetailsPage() {
     setEditImage(null);
     setEditDepotId("");
     setEditError("");
+  };
+
+  const openMovementModal = () => {
+    if (!item) return;
+
+    setMovementType("stock_in");
+    setMovementQuantity("");
+    setMovementNotes("");
+    setMovementError("");
+    setIsMovementModalOpen(true);
+  };
+
+  const closeMovementModal = (force = false) => {
+    if (isRecordingMovement && !force) return;
+
+    setIsMovementModalOpen(false);
+    setMovementType("stock_in");
+    setMovementQuantity("");
+    setMovementNotes("");
+    setMovementError("");
+  };
+
+  const handleRecordMovement = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!item || isRecordingMovement) return;
+
+    const quantityValue = Number(movementQuantity);
+
+    if (
+      movementQuantity === "" ||
+      Number.isNaN(quantityValue) ||
+      !Number.isInteger(quantityValue) ||
+      quantityValue < 0
+    ) {
+      setMovementError("Enter a whole quantity of 0 or more.");
+      return;
+    }
+
+    if (
+      (movementType === "stock_out" || movementType === "damaged_lost") &&
+      item.quantity - quantityValue < 0
+    ) {
+      setMovementError("This movement would make the item quantity negative.");
+      return;
+    }
+
+    try {
+      setIsRecordingMovement(true);
+      setMovementError("");
+      setPageNotice("");
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setMovementError("Please sign in again before recording movement.");
+        return;
+      }
+
+      const movement = await recordStockMovement({
+        itemId: item.id,
+        movementType,
+        quantity: quantityValue,
+        notes: movementNotes,
+      });
+
+      const { data: refreshedItem, error: refreshError } = await supabase
+        .from("inventory")
+        .select("*")
+        .eq("id", item.id)
+        .eq("user_id", user.id)
+        .limit(1);
+
+      if (!refreshError && refreshedItem?.[0]) {
+        setItem(refreshedItem[0] as Item);
+      } else {
+        setItem({
+          ...item,
+          quantity: movement.quantity_after,
+        });
+      }
+
+      await fetchStockMovements(user.id, item.id);
+      closeMovementModal(true);
+      setPageNotice("Stock movement recorded successfully.");
+    } catch (movementError) {
+      setMovementError(
+        movementError instanceof Error
+          ? movementError.message
+          : "We could not record this movement. Please try again."
+      );
+    } finally {
+      setIsRecordingMovement(false);
+    }
   };
 
   const handleUpdateItem = async (e: React.FormEvent) => {
@@ -469,6 +606,14 @@ export default function ItemDetailsPage() {
                   <>
                     <button
                       type="button"
+                      onClick={openMovementModal}
+                      className="rounded-2xl border border-emerald-300/25 bg-emerald-500/15 px-5 py-4 text-base font-bold text-emerald-100 transition hover:border-emerald-300/45 hover:bg-emerald-500/25"
+                    >
+                      Record Movement
+                    </button>
+
+                    <button
+                      type="button"
                       onClick={openEditModal}
                       className="rounded-2xl bg-white px-5 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
                     >
@@ -488,6 +633,12 @@ export default function ItemDetailsPage() {
               </div>
             </div>
           </section>
+
+          {pageNotice && (
+            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-5 py-4 text-sm font-semibold text-emerald-200">
+              {pageNotice}
+            </div>
+          )}
 
           {loading && (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
@@ -729,6 +880,121 @@ export default function ItemDetailsPage() {
               <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                      Stock activity
+                    </p>
+
+                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                      Stock Movements
+                    </h2>
+                  </div>
+
+                  <span className="self-start rounded-full border border-emerald-300/25 bg-emerald-500/15 px-4 py-2 text-sm font-bold text-emerald-100 sm:self-auto">
+                    {stockMovements.length}{" "}
+                    {stockMovements.length === 1 ? "movement" : "movements"}
+                  </span>
+                </div>
+
+                {stockMovements.length > 0 ? (
+                  <div className="mt-6 space-y-4">
+                    {stockMovements.map((movement) => (
+                      <div
+                        key={movement.id}
+                        className="rounded-[26px] border border-white/10 bg-black/25 p-4 sm:p-5"
+                      >
+                        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                          <div className="flex items-start gap-4">
+                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/25 bg-emerald-500/15 text-sm font-black text-emerald-100">
+                              {STOCK_MOVEMENT_LABELS[
+                                movement.movement_type
+                              ].charAt(0)}
+                            </div>
+
+                            <div>
+                              <h3 className="text-xl font-bold text-white">
+                                {
+                                  STOCK_MOVEMENT_LABELS[
+                                    movement.movement_type
+                                  ]
+                                }
+                              </h3>
+
+                              <p className="mt-1 text-sm font-medium text-slate-400">
+                                {formatCreatedDate(movement.created_at)}
+                              </p>
+
+                              {movement.notes && (
+                                <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words text-sm leading-6 text-slate-300">
+                                  {movement.notes}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[520px]">
+                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                Before
+                              </p>
+
+                              <p className="mt-2 text-2xl font-black text-slate-200">
+                                {movement.quantity_before}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                Change
+                              </p>
+
+                              <p
+                                className={`mt-2 text-2xl font-black ${
+                                  movement.quantity_delta < 0
+                                    ? "text-red-200"
+                                    : movement.quantity_delta > 0
+                                      ? "text-emerald-200"
+                                      : "text-slate-200"
+                                }`}
+                              >
+                                {formatQuantityDelta(movement.quantity_delta)}
+                              </p>
+                            </div>
+
+                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                                After
+                              </p>
+
+                              <p className="mt-2 text-2xl font-black text-indigo-100">
+                                {movement.quantity_after}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="mt-6 rounded-[26px] border border-dashed border-emerald-300/25 bg-black/25 px-5 py-12 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-lg font-black text-emerald-100">
+                      0
+                    </div>
+
+                    <h3 className="mt-5 text-2xl font-bold text-white">
+                      No stock movements yet
+                    </h3>
+
+                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-slate-400">
+                      Stock in, stock out, adjustments, and damaged or lost
+                      activity will appear here.
+                    </p>
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
                       Audit trail
                     </p>
@@ -812,6 +1078,147 @@ export default function ItemDetailsPage() {
           )}
         </div>
       </main>
+
+      {isMovementModalOpen && item && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/80 p-4 backdrop-blur-xl">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#080b18]/90 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
+            <div className="mb-8 flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                  Stock activity
+                </p>
+
+                <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
+                  Record Movement
+                </h2>
+
+                <p className="mt-3 text-sm leading-6 text-slate-400">
+                  Current quantity:{" "}
+                  <span className="font-bold text-indigo-100">
+                    {item.quantity}
+                  </span>
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => closeMovementModal()}
+                disabled={isRecordingMovement}
+                className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-50"
+              >
+                <svg
+                  className="h-8 w-8"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleRecordMovement}
+              className="flex flex-col gap-5 sm:gap-6"
+            >
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                  Movement Type
+                </label>
+
+                <select
+                  value={movementType}
+                  onChange={(e) =>
+                    setMovementType(e.target.value as StockMovementType)
+                  }
+                  disabled={isRecordingMovement}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-emerald-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
+                >
+                  {movementTypes.map((type) => (
+                    <option key={type} value={type}>
+                      {STOCK_MOVEMENT_LABELS[type]}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                  {movementType === "adjustment"
+                    ? "Final Quantity"
+                    : "Quantity"}
+                </label>
+
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={movementQuantity}
+                  onChange={(e) => setMovementQuantity(e.target.value)}
+                  disabled={isRecordingMovement}
+                  className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-emerald-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
+                  required
+                />
+
+                <p className="mt-2 text-sm leading-6 text-slate-500">
+                  {movementType === "stock_in" &&
+                    "Adds this quantity to current stock."}
+                  {movementType === "stock_out" &&
+                    "Subtracts this quantity from current stock."}
+                  {movementType === "damaged_lost" &&
+                    "Subtracts damaged or lost stock from current quantity."}
+                  {movementType === "adjustment" &&
+                    "Sets the item quantity to this final value."}
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                  Notes
+                </label>
+
+                <textarea
+                  value={movementNotes}
+                  onChange={(e) => setMovementNotes(e.target.value)}
+                  disabled={isRecordingMovement}
+                  className="min-h-[120px] w-full resize-y rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-emerald-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
+                  placeholder="Optional reason, order note, or context"
+                />
+              </div>
+
+              {movementError && (
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
+                  {movementError}
+                </div>
+              )}
+
+              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => closeMovementModal()}
+                  disabled={isRecordingMovement}
+                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isRecordingMovement}
+                  className="flex-1 rounded-2xl bg-white py-4 text-base font-bold text-black transition hover:bg-slate-200 disabled:opacity-50"
+                >
+                  {isRecordingMovement ? "Recording..." : "Record Movement"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {isEditModalOpen && item && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/80 p-4 backdrop-blur-xl">
