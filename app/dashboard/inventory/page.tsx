@@ -35,6 +35,7 @@ interface Item {
   sku?: string;
   notes?: string;
   depot_id?: number | null;
+  public_id?: string | null;
 }
 
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
@@ -567,7 +568,7 @@ export default function InventoryPage() {
         item.quantity <= lowStockThreshold ? "Yes" : "No",
         item.notes || "",
         item.image || "",
-        `${publicBaseUrl}/item/${item.id}`,
+        item.public_id ? `${publicBaseUrl}/item/${item.public_id}` : "",
       ]);
       const csv = [CSV_HEADERS, ...rows]
         .map((row) => row.map(escapeCsvValue).join(","))

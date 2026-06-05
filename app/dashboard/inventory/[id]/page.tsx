@@ -29,6 +29,7 @@ interface Item {
   notes?: string;
   created_at?: string;
   depot_id?: number | null;
+  public_id?: string | null;
 }
 
 interface InventoryHistory {
@@ -110,18 +111,20 @@ export default function ItemDetailsPage() {
   };
 
   useEffect(() => {
-    if (!itemId) return;
+    if (!item?.public_id) {
+      return;
+    }
 
     const timeoutId = window.setTimeout(() => {
       setQrUrl(
-        `${window.location.origin}/item/${itemId}`
+        `${window.location.origin}/item/${item.public_id}`
       );
     }, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [itemId]);
+  }, [item?.public_id]);
 
   useEffect(() => {
     let isActive = true;
@@ -676,7 +679,7 @@ export default function ItemDetailsPage() {
                         />
                       ) : (
                         <div className="flex h-[180px] w-[180px] items-center justify-center text-sm font-semibold text-slate-500">
-                          Preparing QR...
+                          Public link unavailable
                         </div>
                       )}
                     </div>
@@ -686,7 +689,7 @@ export default function ItemDetailsPage() {
                     </h3>
 
                     <p className="mt-2 text-slate-400">
-                      Scan to open this item page.
+                      Scan to open this public item page.
                     </p>
 
                     <p className="mt-2 text-sm text-indigo-200">

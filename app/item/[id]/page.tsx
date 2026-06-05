@@ -5,28 +5,24 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
-import {
-  DEFAULT_PUBLIC_BRANDING,
-  getPublicBusinessBranding,
-  type PublicBusinessBranding,
-} from "@/app/lib/businessSettings";
 import { supabase } from "@/app/lib/supabase";
 
-interface Item {
-  id: number;
+interface PublicItem {
   name: string;
   category: string;
   quantity: number;
   image: string;
-  sku?: string;
-  notes?: string;
-  created_at?: string;
-  user_id?: string;
+  sku?: string | null;
+  notes?: string | null;
+  created_at?: string | null;
+  business_name?: string | null;
+  business_logo_url?: string | null;
+  contact_email?: string | null;
+  contact_phone?: string | null;
+  contact_website?: string | null;
 }
 
-const LOW_STOCK_THRESHOLD = 10;
-
-function formatCreatedDate(date?: string) {
+function formatCreatedDate(date?: string | null) {
   if (!date) return "Not available";
 
   const parsedDate = new Date(date);
@@ -41,37 +37,58 @@ function formatCreatedDate(date?: string) {
   }).format(parsedDate);
 }
 
+function normalizePublicItem(data: unknown): PublicItem | null {
+  const row = Array.isArray(data) ? data[0] : data;
+
+  if (!row || typeof row !== "object") return null;
+
+  const item = row as Partial<PublicItem>;
+
+  if (!item.name) return null;
+
+  return {
+    name: item.name,
+    category: item.category || "Uncategorized",
+    quantity: Number(item.quantity || 0),
+    image: item.image || "",
+    sku: item.sku || "",
+    notes: item.notes || "",
+    created_at: item.created_at || null,
+    business_name: item.business_name || "SydIn",
+    business_logo_url: item.business_logo_url || "",
+    contact_email: item.contact_email || "",
+    contact_phone: item.contact_phone || "",
+    contact_website: item.contact_website || "",
+  };
+}
+
 export default function PublicItemPage() {
   const params = useParams();
-  const rawId = params.id;
-  const itemId = Array.isArray(rawId) ? rawId[0] : rawId;
+  const rawPublicId = params.id;
+  const publicId = Array.isArray(rawPublicId) ? rawPublicId[0] : rawPublicId;
 
-  const [item, setItem] = useState<Item | null>(null);
-  const [branding, setBranding] =
-    useState<PublicBusinessBranding>(DEFAULT_PUBLIC_BRANDING);
+  const [item, setItem] = useState<PublicItem | null>(null);
   const [publicUrl, setPublicUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!itemId) return;
+    if (!publicId) return;
 
     const timeoutId = window.setTimeout(() => {
-      setPublicUrl(
-        `${window.location.origin}/item/${itemId}`
-      );
+      setPublicUrl(`${window.location.origin}/item/${publicId}`);
     }, 0);
 
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [itemId]);
+  }, [publicId]);
 
   useEffect(() => {
     let isActive = true;
 
     const loadItem = async () => {
-      if (!itemId) {
+      if (!publicId) {
         if (isActive) {
           setError("Item not found.");
           setLoading(false);
@@ -80,39 +97,27 @@ export default function PublicItemPage() {
       }
 
       try {
-        const { data, error: itemError } = await supabase
-          .from("inventory")
-          .select("*")
-          .eq("id", Number(itemId))
-          .limit(1);
+        const { data, error: itemError } = await supabase.rpc(
+          "get_public_item",
+          {
+            p_public_id: publicId,
+          }
+        );
 
         if (!isActive) return;
 
         if (itemError) {
-          setError("We could not load this public item. Try scanning again.");
+          setError("This public item is unavailable or the link is invalid.");
           setLoading(false);
           return;
         }
 
-        const loadedItem = (data?.[0] as Item | undefined) || null;
-
-        setItem(loadedItem);
-
-        if (loadedItem?.user_id) {
-          const publicBranding = await getPublicBusinessBranding(
-            loadedItem.user_id
-          );
-
-          if (!isActive) return;
-
-          setBranding(publicBranding);
-        }
-
+        setItem(normalizePublicItem(data));
         setLoading(false);
       } catch {
         if (!isActive) return;
 
-        setError("We could not load this public item. Try scanning again.");
+        setError("This public item is unavailable or the link is invalid.");
         setLoading(false);
       }
     };
@@ -122,7 +127,14 @@ export default function PublicItemPage() {
     return () => {
       isActive = false;
     };
-  }, [itemId]);
+  }, [publicId]);
+
+  const businessName = item?.business_name || "SydIn";
+  const businessLogoUrl = item?.business_logo_url || "";
+  const hasContact =
+    Boolean(item?.contact_email) ||
+    Boolean(item?.contact_phone) ||
+    Boolean(item?.contact_website);
 
   return (
     <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] px-4 py-5 text-white sm:px-6 sm:py-8">
@@ -131,10 +143,10 @@ export default function PublicItemPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
               <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_20px_60px_rgba(124,58,237,0.35)]">
-                {branding.business_logo_url ? (
+                {businessLogoUrl ? (
                   <Image
-                    src={branding.business_logo_url}
-                    alt={branding.business_name}
+                    src={businessLogoUrl}
+                    alt={businessName}
                     fill
                     sizes="48px"
                     className="object-contain p-1"
@@ -146,7 +158,7 @@ export default function PublicItemPage() {
 
               <div>
                 <p className="break-words text-2xl font-bold tracking-tight">
-                  {branding.business_name}
+                  {businessName}
                 </p>
 
                 <p className="text-sm text-slate-400">
@@ -223,22 +235,14 @@ export default function PublicItemPage() {
               </div>
 
               <div className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
-                      Product
-                    </p>
+                <div>
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                    Product
+                  </p>
 
-                    <h1 className="mt-2 break-words text-4xl font-bold tracking-tight text-white sm:text-5xl">
-                      {item.name}
-                    </h1>
-                  </div>
-
-                  {item.quantity <= LOW_STOCK_THRESHOLD && (
-                    <span className="self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
-                      Low Stock
-                    </span>
-                  )}
+                  <h1 className="mt-2 break-words text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                    {item.name}
+                  </h1>
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -293,41 +297,39 @@ export default function PublicItemPage() {
                   </p>
                 </div>
 
-                {(branding.contact_email ||
-                  branding.contact_phone ||
-                  branding.contact_website) && (
+                {hasContact && (
                   <div className="mt-5 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 p-4">
                     <p className="text-sm font-semibold text-indigo-200">
                       Business contact
                     </p>
 
                     <div className="mt-3 flex flex-col gap-2 text-sm font-semibold text-slate-300">
-                      {branding.contact_email && (
+                      {item.contact_email && (
                         <a
-                          href={`mailto:${branding.contact_email}`}
+                          href={`mailto:${item.contact_email}`}
                           className="break-all transition hover:text-white"
                         >
-                          {branding.contact_email}
+                          {item.contact_email}
                         </a>
                       )}
 
-                      {branding.contact_phone && (
+                      {item.contact_phone && (
                         <a
-                          href={`tel:${branding.contact_phone}`}
+                          href={`tel:${item.contact_phone}`}
                           className="break-all transition hover:text-white"
                         >
-                          {branding.contact_phone}
+                          {item.contact_phone}
                         </a>
                       )}
 
-                      {branding.contact_website && (
+                      {item.contact_website && (
                         <a
-                          href={branding.contact_website}
+                          href={item.contact_website}
                           className="break-all transition hover:text-white"
                           rel="noreferrer"
                           target="_blank"
                         >
-                          {branding.contact_website}
+                          {item.contact_website}
                         </a>
                       )}
                     </div>
