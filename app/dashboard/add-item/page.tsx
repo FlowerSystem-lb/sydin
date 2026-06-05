@@ -4,6 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import {
+  formatDepotLabel,
+  getActiveDepotsForUser,
+  type Depot,
+} from "@/app/lib/depots";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
 import {
@@ -28,6 +33,8 @@ export default function AddItemPage() {
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [selectedDepotId, setSelectedDepotId] = useState("");
+  const [depots, setDepots] = useState<Depot[]>([]);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [isLimitError, setIsLimitError] = useState(false);
@@ -48,11 +55,15 @@ export default function AddItemPage() {
           return;
         }
 
-        getSubscriptionUsage(user.id)
-          .then((usage) => {
+        Promise.all([
+          getSubscriptionUsage(user.id),
+          getActiveDepotsForUser(user.id).catch(() => []),
+        ])
+          .then(([usage, loadedDepots]) => {
             if (!isActive) return;
 
             setSubscriptionUsage(usage);
+            setDepots(loadedDepots);
             setUsageLoading(false);
           })
           .catch(() => {
@@ -158,6 +169,7 @@ export default function AddItemPage() {
         quantity: quantityValue,
         notes,
         image: imageUrl,
+        depot_id: selectedDepotId ? Number(selectedDepotId) : null,
         user_id: user.id,
       };
 
@@ -333,6 +345,28 @@ export default function AddItemPage() {
                   className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                   required
                 />
+              </div>
+
+              <div className="md:col-span-2">
+                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                  Depot
+                </label>
+
+                <select
+                  value={selectedDepotId}
+                  onChange={(e) => setSelectedDepotId(e.target.value)}
+                  className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                >
+                  <option value="">Unassigned</option>
+                  {depots.map((depot) => (
+                    <option
+                      key={depot.id}
+                      value={depot.id}
+                    >
+                      {formatDepotLabel(depot)}
+                    </option>
+                  ))}
+                </select>
               </div>
             </div>
 

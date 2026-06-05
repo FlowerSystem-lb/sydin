@@ -101,6 +101,11 @@ export default function Sidebar({
       marker: "+",
     },
     {
+      name: "Depots",
+      href: "/dashboard/depots",
+      marker: "L",
+    },
+    {
       name: "Settings",
       href: "/dashboard/settings",
       marker: "S",
@@ -281,7 +286,7 @@ export default function Sidebar({
           {renderAddAction()}
         </div>
 
-        <nav className="mt-3 grid grid-cols-4 gap-2">
+        <nav className="mt-3 grid grid-cols-5 gap-2">
           {links.map((link) => {
             const active =
               link.href === "/dashboard"

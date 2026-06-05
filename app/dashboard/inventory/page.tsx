@@ -5,6 +5,11 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import {
+  formatDepotLabel,
+  getDepotsForUser,
+  type Depot,
+} from "@/app/lib/depots";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
 import {
@@ -28,6 +33,7 @@ interface Item {
   image: string;
   sku?: string;
   notes?: string;
+  depot_id?: number | null;
 }
 
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
@@ -39,6 +45,7 @@ const CSV_HEADERS = [
   "Name",
   "SKU",
   "Category",
+  "Depot",
   "Quantity",
   "Low Stock",
   "Notes",
@@ -91,6 +98,8 @@ export default function InventoryPage() {
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
+  const [selectedDepotId, setSelectedDepotId] = useState("");
+  const [depots, setDepots] = useState<Depot[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [isLimitError, setIsLimitError] = useState(false);
@@ -107,6 +116,7 @@ export default function InventoryPage() {
   const [editQuantity, setEditQuantity] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editImage, setEditImage] = useState<File | null>(null);
+  const [editDepotId, setEditDepotId] = useState("");
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -123,7 +133,7 @@ export default function InventoryPage() {
       return;
     }
 
-    const [{ data, error }, usage, settings] = await Promise.all([
+    const [{ data, error }, usage, settings, loadedDepots] = await Promise.all([
       supabase
         .from("inventory")
         .select("*")
@@ -133,6 +143,7 @@ export default function InventoryPage() {
         }),
       getSubscriptionUsage(user.id),
       getOrCreateBusinessSettings(user.id),
+      getDepotsForUser(user.id).catch(() => []),
     ]);
 
     if (error) {
@@ -144,6 +155,7 @@ export default function InventoryPage() {
     setItems(data || []);
     setSubscriptionUsage(usage);
     setBusinessSettings(settings);
+    setDepots(loadedDepots);
     setUsageLoading(false);
   };
 
@@ -177,8 +189,9 @@ export default function InventoryPage() {
           }),
         getSubscriptionUsage(user.id),
         getOrCreateBusinessSettings(user.id),
+        getDepotsForUser(user.id).catch(() => []),
       ])
-        .then(([{ data, error }, usage, settings]) => {
+        .then(([{ data, error }, usage, settings, loadedDepots]) => {
           if (!isActive) return;
 
           if (error) {
@@ -191,6 +204,7 @@ export default function InventoryPage() {
           setItems(data || []);
           setSubscriptionUsage(usage);
           setBusinessSettings(settings);
+          setDepots(loadedDepots);
           setLoadingItems(false);
           setUsageLoading(false);
         })
@@ -287,6 +301,7 @@ export default function InventoryPage() {
         quantity: quantityValue,
         notes,
         image: imageUrl,
+        depot_id: selectedDepotId ? Number(selectedDepotId) : null,
         user_id: user.id,
       };
 
@@ -319,6 +334,7 @@ export default function InventoryPage() {
       setQuantity("");
       setNotes("");
       setImage(null);
+      setSelectedDepotId("");
       await fetchItems();
     } catch (error) {
       setAddError(
@@ -339,6 +355,7 @@ export default function InventoryPage() {
     setEditQuantity(String(item.quantity));
     setEditNotes(item.notes || "");
     setEditImage(null);
+    setEditDepotId(item.depot_id ? String(item.depot_id) : "");
     setEditError("");
     setIsEditModalOpen(true);
   };
@@ -354,6 +371,7 @@ export default function InventoryPage() {
     setEditQuantity("");
     setEditNotes("");
     setEditImage(null);
+    setEditDepotId("");
     setEditError("");
   };
 
@@ -426,6 +444,7 @@ export default function InventoryPage() {
         quantity: quantityValue,
         notes: editNotes,
         image: imageUrl,
+        depot_id: editDepotId ? Number(editDepotId) : null,
       };
 
       const { data, error } = await supabase
@@ -541,6 +560,7 @@ export default function InventoryPage() {
         item.name,
         item.sku || "",
         item.category,
+        formatDepotLabel(depots.find((depot) => depot.id === item.depot_id)),
         item.quantity,
         item.quantity <= lowStockThreshold ? "Yes" : "No",
         item.notes || "",
@@ -573,6 +593,15 @@ export default function InventoryPage() {
       setPageError("We could not export your inventory. Please try again.");
     }
   };
+
+  const activeDepots = depots.filter((depot) => depot.is_active);
+  const editDepotOptions = depots.filter(
+    (depot) =>
+      depot.is_active ||
+      (selectedItem?.depot_id && depot.id === selectedItem.depot_id)
+  );
+  const getDepotForItem = (item: Item) =>
+    depots.find((depot) => depot.id === item.depot_id) || null;
 
   const filteredItems =
     items.filter(
@@ -771,6 +800,12 @@ export default function InventoryPage() {
                         <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
                           {item.category}
                         </span>
+
+                        {getDepotForItem(item) && (
+                          <span className="rounded-full border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-100">
+                            Depot {formatDepotLabel(getDepotForItem(item))}
+                          </span>
+                        )}
                       </div>
                     </div>
 
@@ -929,6 +964,25 @@ export default function InventoryPage() {
                     required
                   />
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">Depot</label>
+                  <select
+                    value={selectedDepotId}
+                    onChange={(e) => setSelectedDepotId(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                  >
+                    <option value="">Unassigned</option>
+                    {activeDepots.map((depot) => (
+                      <option
+                        key={depot.id}
+                        value={depot.id}
+                      >
+                        {formatDepotLabel(depot)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -1068,6 +1122,25 @@ export default function InventoryPage() {
                     className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     required
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">Depot</label>
+                  <select
+                    value={editDepotId}
+                    onChange={(e) => setEditDepotId(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                  >
+                    <option value="">Unassigned</option>
+                    {editDepotOptions.map((depot) => (
+                      <option
+                        key={depot.id}
+                        value={depot.id}
+                      >
+                        {formatDepotLabel(depot)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 

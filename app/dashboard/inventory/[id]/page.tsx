@@ -13,6 +13,11 @@ import {
   getOrCreateBusinessSettings,
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
+import {
+  formatDepotLabel,
+  getDepotsForUser,
+  type Depot,
+} from "@/app/lib/depots";
 
 interface Item {
   id: number;
@@ -23,6 +28,7 @@ interface Item {
   sku?: string;
   notes?: string;
   created_at?: string;
+  depot_id?: number | null;
 }
 
 interface InventoryHistory {
@@ -69,6 +75,7 @@ export default function ItemDetailsPage() {
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [businessSettings, setBusinessSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+  const [depots, setDepots] = useState<Depot[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [authMissing, setAuthMissing] = useState(false);
@@ -80,6 +87,7 @@ export default function ItemDetailsPage() {
   const [editQuantity, setEditQuantity] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editImage, setEditImage] = useState<File | null>(null);
+  const [editDepotId, setEditDepotId] = useState("");
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
 
@@ -144,6 +152,7 @@ export default function ItemDetailsPage() {
         const [
           { data, error: itemError },
           settings,
+          loadedDepots,
         ] = await Promise.all([
           supabase
             .from("inventory")
@@ -152,6 +161,7 @@ export default function ItemDetailsPage() {
             .eq("user_id", user.id)
             .limit(1),
           getOrCreateBusinessSettings(user.id),
+          getDepotsForUser(user.id).catch(() => []),
         ]);
 
         if (!isActive) return;
@@ -166,6 +176,7 @@ export default function ItemDetailsPage() {
 
         setItem(loadedItem);
         setBusinessSettings(settings);
+        setDepots(loadedDepots);
 
         if (loadedItem) {
           await fetchHistory(user.id, loadedItem.id);
@@ -198,6 +209,7 @@ export default function ItemDetailsPage() {
     setEditQuantity(String(item.quantity));
     setEditNotes(item.notes || "");
     setEditImage(null);
+    setEditDepotId(item.depot_id ? String(item.depot_id) : "");
     setEditError("");
     setIsEditModalOpen(true);
   };
@@ -212,6 +224,7 @@ export default function ItemDetailsPage() {
     setEditQuantity("");
     setEditNotes("");
     setEditImage(null);
+    setEditDepotId("");
     setEditError("");
   };
 
@@ -280,6 +293,7 @@ export default function ItemDetailsPage() {
         quantity: quantityValue,
         notes: editNotes,
         image: imageUrl,
+        depot_id: editDepotId ? Number(editDepotId) : null,
       };
 
       const { data, error: updateError } = await supabase
@@ -408,6 +422,12 @@ export default function ItemDetailsPage() {
     link.click();
     URL.revokeObjectURL(url);
   };
+
+  const assignedDepot =
+    depots.find((depot) => depot.id === item?.depot_id) || null;
+  const editDepotOptions = depots.filter(
+    (depot) => depot.is_active || (item?.depot_id && depot.id === item.depot_id)
+  );
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
@@ -571,6 +591,16 @@ export default function ItemDetailsPage() {
 
                       <p className="mt-2 break-words text-lg font-bold text-white">
                         {item.category}
+                      </p>
+                    </div>
+
+                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
+                      <p className="text-sm font-semibold text-slate-500">
+                        Depot
+                      </p>
+
+                      <p className="mt-2 break-words text-lg font-bold text-white">
+                        {formatDepotLabel(assignedDepot)}
                       </p>
                     </div>
 
@@ -848,6 +878,25 @@ export default function ItemDetailsPage() {
                     className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     required
                   />
+                </div>
+
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">Depot</label>
+                  <select
+                    value={editDepotId}
+                    onChange={(e) => setEditDepotId(e.target.value)}
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                  >
+                    <option value="">Unassigned</option>
+                    {editDepotOptions.map((depot) => (
+                      <option
+                        key={depot.id}
+                        value={depot.id}
+                      >
+                        {formatDepotLabel(depot)}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
