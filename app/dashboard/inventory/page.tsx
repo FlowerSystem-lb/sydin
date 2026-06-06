@@ -1153,7 +1153,14 @@ export default function InventoryPage() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
+                <Link
+                  href="/dashboard/inventory/import"
+                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                >
+                  Import
+                </Link>
+
                 <button
                   type="button"
                   onClick={exportInventoryCsv}
