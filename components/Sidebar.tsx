@@ -152,7 +152,7 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-[280px] border-r border-white/10 bg-[radial-gradient(circle_at_top,_rgba(99,102,241,0.16),_transparent_34%),linear-gradient(180deg,_rgba(5,7,19,0.96),_rgba(2,3,10,0.92))] p-5 text-white shadow-[24px_0_80px_rgba(0,0,0,0.35)] backdrop-blur-2xl lg:flex lg:flex-col">
+      <aside className="glass-sidebar fixed inset-y-0 left-0 z-40 hidden w-[280px] p-5 text-white lg:flex lg:flex-col">
         <div className="relative flex min-h-full flex-col">
           <Link
             href="/dashboard"
@@ -270,7 +270,7 @@ export default function Sidebar({
         </div>
       </aside>
 
-      <header className="sticky top-0 z-40 border-b border-white/10 bg-[#050713]/85 px-4 py-3 text-white backdrop-blur-2xl lg:hidden">
+      <header className="glass-nav sticky top-0 z-40 px-4 py-3 text-white lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/dashboard"

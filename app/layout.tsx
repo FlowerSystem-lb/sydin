@@ -14,7 +14,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full antialiased">
-      <body className="flex min-h-full flex-col font-sans">{children}</body>
+      <body className="sydin-shell flex min-h-full flex-col font-sans">
+        {children}
+      </body>
     </html>
   );
 }

@@ -83,7 +83,7 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.2),_transparent_34%),linear-gradient(135deg,_#02030a,_#050713_52%,_#02030a)] px-4 py-8 text-white">
+    <div className="liquid-bg flex min-h-screen items-center justify-center px-4 py-8 text-white">
       <form
         onSubmit={handleSignup}
         className="w-full max-w-[500px] rounded-[30px] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-10"

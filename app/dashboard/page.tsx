@@ -172,7 +172,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
       <Sidebar
         addItemHref="/dashboard/add-item"
         planName={currentPlanName}

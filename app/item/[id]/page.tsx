@@ -137,7 +137,7 @@ export default function PublicItemPage() {
     Boolean(item?.contact_website);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-[radial-gradient(circle_at_top_left,_rgba(79,70,229,0.22),_transparent_32%),radial-gradient(circle_at_80%_0%,_rgba(147,51,234,0.16),_transparent_28%),linear-gradient(135deg,_#02030a_0%,_#050713_48%,_#02030a_100%)] px-4 py-5 text-white sm:px-6 sm:py-8">
+    <main className="liquid-bg min-h-screen overflow-x-hidden px-4 py-5 text-white sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
         <header className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
