@@ -121,6 +121,7 @@ export default function ItemDetailsPage() {
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [movementType, setMovementType] =
     useState<StockMovementType>("stock_in");
   const [movementQuantity, setMovementQuantity] = useState("");
@@ -485,10 +486,6 @@ export default function ItemDetailsPage() {
   const deleteItem = async () => {
     if (!item || isDeleting) return;
 
-    const confirmDelete = confirm("Delete this item?");
-
-    if (!confirmDelete) return;
-
     try {
       setIsDeleting(true);
 
@@ -629,7 +626,7 @@ export default function ItemDetailsPage() {
 
                     <button
                       type="button"
-                      onClick={deleteItem}
+                      onClick={() => setIsDeleteDialogOpen(true)}
                       disabled={isDeleting}
                       className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-4 text-base font-bold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
                     >
@@ -1427,6 +1424,45 @@ export default function ItemDetailsPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {isDeleteDialogOpen && item && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-detail-item-title"
+            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[#080b18]/95 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
+              Delete inventory item
+            </p>
+            <h2 id="delete-detail-item-title" className="mt-3 break-words text-2xl font-bold text-white">
+              Delete {item.name}?
+            </h2>
+            <p className="mt-3 leading-7 text-slate-400">
+              This removes the item from inventory. This action cannot be undone.
+            </p>
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setIsDeleteDialogOpen(false)}
+                disabled={isDeleting}
+                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteItem()}
+                disabled={isDeleting}
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isDeleting ? "Deleting..." : "Delete Item"}
+              </button>
+            </div>
           </div>
         </div>
       )}

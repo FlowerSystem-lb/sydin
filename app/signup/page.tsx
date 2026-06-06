@@ -16,6 +16,12 @@ export default function SignupPage() {
     useState(false);
   const [oauthError, setOauthError] =
     useState("");
+  const [signupError, setSignupError] =
+    useState("");
+  const [signupSuccess, setSignupSuccess] =
+    useState(false);
+  const [loading, setLoading] =
+    useState(false);
 
   const handleGoogleSignup = async () => {
     if (googleLoading) return;
@@ -51,20 +57,29 @@ export default function SignupPage() {
   ) => {
     e.preventDefault();
 
-    const { error } =
-      await supabase.auth.signUp({
-        email,
-        password,
-      });
+    if (loading) return;
 
-    if (error) {
-      alert(error.message);
-      return;
+    try {
+      setLoading(true);
+      setSignupError("");
+
+      const { error } =
+        await supabase.auth.signUp({
+          email,
+          password,
+        });
+
+      if (error) {
+        setSignupError(error.message);
+        return;
+      }
+
+      setSignupSuccess(true);
+    } catch {
+      setSignupError("Account creation failed. Please try again.");
+    } finally {
+      setLoading(false);
     }
-
-    alert("Account created");
-
-    router.push("/login");
   };
 
   return (
@@ -90,60 +105,100 @@ export default function SignupPage() {
           </Link>
         </div>
 
-        <div className="mb-6 flex flex-col gap-4">
-          <button
-            type="button"
-            onClick={handleGoogleSignup}
-            disabled={googleLoading}
-            className="flex min-h-14 items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white px-5 py-4 text-base font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+        {signupSuccess ? (
+          <div
+            role="status"
+            className="rounded-3xl border border-emerald-400/25 bg-emerald-500/10 p-6"
           >
-            <span className="flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-white text-sm font-black text-black">
-              G
-            </span>
-            {googleLoading ? "Connecting..." : "Sign up with Google"}
-          </button>
-
-          {oauthError && (
-            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
-              {oauthError}
-            </div>
-          )}
-
-          <div className="flex items-center gap-3 text-sm font-semibold text-neutral-500">
-            <span className="h-px flex-1 bg-neutral-800" />
-            or sign up with email
-            <span className="h-px flex-1 bg-neutral-800" />
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-emerald-200">
+              Account created
+            </p>
+            <p className="mt-3 leading-7 text-slate-300">
+              Your SydIN account is ready. Continue to sign in.
+            </p>
+            <button
+              type="button"
+              onClick={() => router.push("/login")}
+              className="mt-6 w-full rounded-2xl bg-white py-4 text-base font-black text-black transition hover:bg-slate-200"
+            >
+              Continue to Sign In
+            </button>
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="mb-6 flex flex-col gap-4">
+              <button
+                type="button"
+                onClick={handleGoogleSignup}
+                disabled={googleLoading}
+                className="flex min-h-14 items-center justify-center gap-3 rounded-2xl border border-white/10 bg-white px-5 py-4 text-base font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                <span className="flex h-7 w-7 items-center justify-center rounded-full border border-black/10 bg-white text-sm font-black text-black">
+                  G
+                </span>
+                {googleLoading ? "Connecting..." : "Sign up with Google"}
+              </button>
 
-        <div className="flex flex-col gap-6">
-          <input
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) =>
-              setEmail(e.target.value)
-            }
-            className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-          />
+              {oauthError && (
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                  {oauthError}
+                </div>
+              )}
 
-          <input
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) =>
-              setPassword(e.target.value)
-            }
-            className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-          />
+              <div className="flex items-center gap-3 text-sm font-semibold text-neutral-500">
+                <span className="h-px flex-1 bg-neutral-800" />
+                or sign up with email
+                <span className="h-px flex-1 bg-neutral-800" />
+              </div>
+            </div>
 
-          <button
-            type="submit"
-            className="rounded-2xl bg-white py-4 text-base font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
-          >
-            Create Account
-          </button>
-        </div>
+            <div className="flex flex-col gap-6">
+              <input
+                type="email"
+                required
+                autoComplete="email"
+                aria-label="Email"
+                placeholder="Email"
+                value={email}
+                onChange={(e) =>
+                  setEmail(e.target.value)
+                }
+                className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+              />
+
+              <input
+                type="password"
+                required
+                minLength={6}
+                autoComplete="new-password"
+                aria-label="Password"
+                placeholder="Password"
+                value={password}
+                onChange={(e) =>
+                  setPassword(e.target.value)
+                }
+                className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+              />
+
+              {signupError && (
+                <div
+                  role="alert"
+                  className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200"
+                >
+                  {signupError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="rounded-2xl bg-white py-4 text-base font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {loading ? "Creating account..." : "Create Account"}
+              </button>
+            </div>
+          </>
+        )}
       </form>
     </div>
   );

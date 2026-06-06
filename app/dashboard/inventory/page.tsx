@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -208,7 +208,6 @@ export default function InventoryPage() {
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
-  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [selectedDepotId, setSelectedDepotId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
   const [isAdding, setIsAdding] = useState(false);
@@ -231,6 +230,7 @@ export default function InventoryPage() {
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [pendingDeleteItem, setPendingDeleteItem] = useState<Item | null>(null);
 
   const fetchItems = async () => {
     const {
@@ -339,19 +339,18 @@ export default function InventoryPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!image) {
-      setImagePreviewUrl("");
-      return;
-    }
+  const imagePreviewUrl = useMemo(
+    () => (image ? URL.createObjectURL(image) : ""),
+    [image]
+  );
 
-    const previewUrl = URL.createObjectURL(image);
-    setImagePreviewUrl(previewUrl);
+  useEffect(() => {
+    if (!imagePreviewUrl) return;
 
     return () => {
-      URL.revokeObjectURL(previewUrl);
+      URL.revokeObjectURL(imagePreviewUrl);
     };
-  }, [image]);
+  }, [imagePreviewUrl]);
 
   const handleAddImageChange = (file: File | null) => {
     setImageError("");
@@ -377,7 +376,7 @@ export default function InventoryPage() {
     setImageError("");
   };
 
-  const stopScanner = () => {
+  const stopScanner = useCallback(() => {
     scannerControlsRef.current?.stop();
     scannerControlsRef.current = null;
 
@@ -390,16 +389,16 @@ export default function InventoryPage() {
     if (scannerVideoRef.current) {
       scannerVideoRef.current.srcObject = null;
     }
-  };
+  }, []);
 
-  const closeScanner = () => {
+  const closeScanner = useCallback(() => {
     stopScanner();
     scannerMatchedRef.current = false;
     setIsScannerOpen(false);
     setIsScannerStarting(false);
     setScannerError("");
     setScannerStatus("");
-  };
+  }, [stopScanner]);
 
   const openScanner = () => {
     setPageError("");
@@ -410,7 +409,7 @@ export default function InventoryPage() {
     setIsScannerOpen(true);
   };
 
-  const handleScannedText = (scannedValue: string) => {
+  const handleScannedText = useCallback((scannedValue: string) => {
     const scannedText = scannedValue.trim();
 
     if (!scannedText) {
@@ -472,13 +471,13 @@ export default function InventoryPage() {
     setSearch(scannedPublicId || scannedText);
     setPageNotice("No exact match found. Showing search results for the scanned code.");
     closeScanner();
-  };
+  }, [closeScanner, items, router]);
 
   useEffect(() => {
     return () => {
       stopScanner();
     };
-  }, []);
+  }, [stopScanner]);
 
   useEffect(() => {
     if (!isScannerOpen) return;
@@ -551,7 +550,7 @@ export default function InventoryPage() {
       isActive = false;
       stopScanner();
     };
-  }, [isScannerOpen]);
+  }, [handleScannedText, isScannerOpen, stopScanner]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -825,11 +824,6 @@ export default function InventoryPage() {
   ) => {
     if (deletingId) return;
 
-    const confirmDelete =
-      confirm("Delete this item?");
-
-    if (!confirmDelete) return;
-
     try {
       setDeletingId(id);
       setPageError("");
@@ -869,6 +863,7 @@ export default function InventoryPage() {
       }
 
       setPageNotice("Item deleted successfully.");
+      setPendingDeleteItem(null);
       await fetchItems();
     } catch {
       setPageError("Something went wrong while deleting this item.");
@@ -1450,9 +1445,7 @@ export default function InventoryPage() {
                     <button
                       onClick={(e) => {
                         e.stopPropagation();
-                        deleteItem(
-                          item.id
-                        );
+                        setPendingDeleteItem(item);
                       }}
                       disabled={deletingId === item.id}
                       className="min-h-[52px] flex-1 rounded-2xl border border-red-400/25 bg-red-500/15 py-3 text-base font-bold text-red-200 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
@@ -1667,10 +1660,13 @@ export default function InventoryPage() {
                       {image && imagePreviewUrl ? (
                         <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-[140px_1fr] sm:items-center">
                           <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f0e8]">
-                            <img
+                            <Image
                               src={imagePreviewUrl}
                               alt="Selected product preview"
-                              className="h-full w-full object-contain p-3"
+                              fill
+                              unoptimized
+                              sizes="140px"
+                              className="object-contain p-3"
                             />
                           </div>
 
@@ -1840,6 +1836,45 @@ export default function InventoryPage() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {pendingDeleteItem && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-item-title"
+            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[#080b18]/95 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
+              Delete inventory item
+            </p>
+            <h2 id="delete-item-title" className="mt-3 break-words text-2xl font-bold text-white">
+              Delete {pendingDeleteItem.name}?
+            </h2>
+            <p className="mt-3 leading-7 text-slate-400">
+              This removes the item from inventory. This action cannot be undone.
+            </p>
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setPendingDeleteItem(null)}
+                disabled={deletingId !== null}
+                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void deleteItem(pendingDeleteItem.id)}
+                disabled={deletingId !== null}
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deletingId === pendingDeleteItem.id ? "Deleting..." : "Delete Item"}
+              </button>
+            </div>
           </div>
         </div>
       )}

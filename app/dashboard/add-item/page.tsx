@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
@@ -76,7 +77,6 @@ export default function AddItemPage() {
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
-  const [imagePreviewUrl, setImagePreviewUrl] = useState("");
   const [selectedDepotId, setSelectedDepotId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -127,19 +127,18 @@ export default function AddItemPage() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!image) {
-      setImagePreviewUrl("");
-      return;
-    }
+  const imagePreviewUrl = useMemo(
+    () => (image ? URL.createObjectURL(image) : ""),
+    [image]
+  );
 
-    const previewUrl = URL.createObjectURL(image);
-    setImagePreviewUrl(previewUrl);
+  useEffect(() => {
+    if (!imagePreviewUrl) return;
 
     return () => {
-      URL.revokeObjectURL(previewUrl);
+      URL.revokeObjectURL(imagePreviewUrl);
     };
-  }, [image]);
+  }, [imagePreviewUrl]);
 
   const handleImageChange = (file: File | null) => {
     setImageError("");
@@ -399,10 +398,13 @@ export default function AddItemPage() {
                       {image && imagePreviewUrl ? (
                         <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-[160px_1fr] sm:items-center">
                           <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f0e8]">
-                            <img
+                            <Image
                               src={imagePreviewUrl}
                               alt="Selected product preview"
-                              className="h-full w-full object-contain p-3"
+                              fill
+                              unoptimized
+                              sizes="140px"
+                              className="object-contain p-3"
                             />
                           </div>
 

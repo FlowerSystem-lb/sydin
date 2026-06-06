@@ -18,6 +18,8 @@ export default function LoginPage() {
     useState(false);
   const [oauthError, setOauthError] =
     useState("");
+  const [loginError, setLoginError] =
+    useState("");
 
   const handleGoogleLogin = async () => {
     if (googleLoading) return;
@@ -55,6 +57,7 @@ export default function LoginPage() {
 
     try {
       setLoading(true);
+      setLoginError("");
 
       const { error } =
         await supabase.auth.signInWithPassword({
@@ -63,7 +66,7 @@ export default function LoginPage() {
         });
 
       if (error) {
-        alert(error.message);
+        setLoginError(error.message);
         setLoading(false);
         return;
       }
@@ -71,7 +74,7 @@ export default function LoginPage() {
       window.location.href =
         "/dashboard";
     } catch {
-      alert("Login failed");
+      setLoginError("Login failed. Check your details and try again.");
     }
 
     setLoading(false);
@@ -129,6 +132,9 @@ export default function LoginPage() {
         <div className="flex flex-col gap-6">
           <input
             type="email"
+            required
+            autoComplete="email"
+            aria-label="Email"
             placeholder="Email"
             value={email}
             onChange={(e) =>
@@ -139,6 +145,9 @@ export default function LoginPage() {
 
           <input
             type="password"
+            required
+            autoComplete="current-password"
+            aria-label="Password"
             placeholder="Password"
             value={password}
             onChange={(e) =>
@@ -146,6 +155,15 @@ export default function LoginPage() {
             }
             className="rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
           />
+
+          {loginError && (
+            <div
+              role="alert"
+              className="rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200"
+            >
+              {loginError}
+            </div>
+          )}
 
           <button
             type="submit"

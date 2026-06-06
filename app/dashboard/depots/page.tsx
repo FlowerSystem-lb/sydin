@@ -19,6 +19,7 @@ export default function DepotsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [pendingDeleteDepot, setPendingDeleteDepot] = useState<Depot | null>(null);
   const [pageError, setPageError] = useState("");
   const [pageNotice, setPageNotice] = useState("");
   const [name, setName] = useState("");
@@ -208,12 +209,6 @@ export default function DepotsPage() {
   const handleDeleteDepot = async (depot: Depot) => {
     if (deletingId) return;
 
-    const confirmDelete = confirm(
-      `Delete ${formatDepotLabel(depot)}? Items assigned to it will become Unassigned.`
-    );
-
-    if (!confirmDelete) return;
-
     try {
       setDeletingId(depot.id);
       setPageError("");
@@ -226,6 +221,7 @@ export default function DepotsPage() {
 
       await deleteDepot(userId, depot.id);
       setPageNotice("Depot deleted. Assigned items were moved to Unassigned.");
+      setPendingDeleteDepot(null);
       await loadDepots();
     } catch {
       setPageError("We could not delete this depot. Please try again.");
@@ -520,7 +516,7 @@ export default function DepotsPage() {
 
                             <button
                               type="button"
-                              onClick={() => handleDeleteDepot(depot)}
+                              onClick={() => setPendingDeleteDepot(depot)}
                               disabled={deletingId === depot.id}
                               className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-3 text-sm font-bold text-red-200 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                             >
@@ -551,6 +547,45 @@ export default function DepotsPage() {
           </div>
         </div>
       </main>
+
+      {pendingDeleteDepot && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-depot-title"
+            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[#080b18]/95 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
+          >
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
+              Delete depot
+            </p>
+            <h2 id="delete-depot-title" className="mt-3 break-words text-2xl font-bold text-white">
+              Delete {formatDepotLabel(pendingDeleteDepot)}?
+            </h2>
+            <p className="mt-3 leading-7 text-slate-400">
+              Items assigned to this depot will become Unassigned. Inventory items will not be deleted.
+            </p>
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
+              <button
+                type="button"
+                onClick={() => setPendingDeleteDepot(null)}
+                disabled={deletingId !== null}
+                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void handleDeleteDepot(pendingDeleteDepot)}
+                disabled={deletingId !== null}
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {deletingId === pendingDeleteDepot.id ? "Deleting..." : "Delete Depot"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
