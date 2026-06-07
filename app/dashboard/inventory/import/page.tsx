@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import Wordmark from "@/components/Wordmark";
 import {
   getDepotsForUser,
@@ -25,6 +26,7 @@ import {
   formatPlanName,
   getPlanLimitMessage,
   getSubscriptionUsage,
+  hasSubscriptionCapability,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 
@@ -146,6 +148,10 @@ export default function InventoryImportPage() {
     projectedItemCount > usage.subscription.item_limit;
   const currentPlanName = formatPlanName(usage.subscription.plan);
   const itemUsageText = `${usage.usedItems} / ${usage.subscription.item_limit} items`;
+  const canImport = hasSubscriptionCapability(
+    usage.subscription,
+    "csvExcelImport"
+  );
   const previewRows = validation
     ? [...validation.invalidRows, ...validation.validRows].slice(0, 100)
     : [];
@@ -261,6 +267,18 @@ export default function InventoryImportPage() {
       setDepots(freshDepots);
       setExistingSkus(freshExistingSkus);
 
+      if (
+        !hasSubscriptionCapability(
+          freshUsage.subscription,
+          "csvExcelImport"
+        )
+      ) {
+        setPageError(
+          "Import requires an active Standard or Pro plan. No items were imported."
+        );
+        return;
+      }
+
       if (freshValidation.invalidRows.length > 0) {
         setPageError(
           "Inventory or depot data changed after preview. Review the updated row errors before importing."
@@ -366,7 +384,17 @@ export default function InventoryImportPage() {
             </div>
           </section>
 
-          <section className="grid grid-cols-3 gap-2 rounded-[24px] border border-white/10 bg-white/[0.035] p-2 sm:gap-3 sm:p-3">
+          {!initialLoading && !canImport ? (
+            <LockedFeaturePanel
+              feature="Import inventory in bulk with Standard or Pro."
+              benefit="Upload CSV or Excel files, review every row, and create inventory records in one controlled workflow."
+              currentPlan={currentPlanName}
+              requiredPlan="Standard"
+              source="import"
+            />
+          ) : (
+            <>
+              <section className="grid grid-cols-3 gap-2 rounded-[24px] border border-white/10 bg-white/[0.035] p-2 sm:gap-3 sm:p-3">
             {[
               ["1", "Upload", !parsedFile && !success],
               ["2", "Review", Boolean(parsedFile && !success)],
@@ -390,7 +418,7 @@ export default function InventoryImportPage() {
                 {String(label)}
               </div>
             ))}
-          </section>
+              </section>
 
           {initialLoading ? (
             <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
@@ -873,6 +901,8 @@ export default function InventoryImportPage() {
             <section className="rounded-[24px] border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
               {fileError || pageError}
             </section>
+          )}
+            </>
           )}
         </div>
       </main>

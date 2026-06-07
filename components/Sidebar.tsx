@@ -152,6 +152,12 @@ export default function Sidebar({
   const displayBusinessName =
     businessName || loadedBusinessName || "SydIn Account";
   const displayBusinessLogoUrl = businessLogoUrl || loadedBusinessLogoUrl;
+  const upgradePlan =
+    displayPlanName === "Free"
+      ? "Standard"
+      : displayPlanName === "Standard"
+        ? "Pro"
+        : "";
   const usageMatch = displayItemUsage.match(
     /([\d,]+)\s*\/\s*([\d,]+)/
   );
@@ -361,6 +367,15 @@ export default function Sidebar({
                 </p>
               </div>
             </div>
+
+            {upgradePlan && (
+              <Link
+                href={`/request-plan?plan=${upgradePlan}&source=sidebar`}
+                className="mt-3 inline-flex min-h-9 w-full items-center justify-center rounded-xl border border-cyan-200/20 bg-sky-400/10 px-3 py-2 text-xs font-bold text-cyan-100 transition hover:border-cyan-200/35 hover:bg-sky-400/15"
+              >
+                Upgrade to {upgradePlan}
+              </Link>
+            )}
 
             {displayItemUsage && (
               <div className="mt-4 rounded-lg border border-sky-200/10 bg-[#020b20]/45 p-3">

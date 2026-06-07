@@ -2,6 +2,26 @@ import { supabase } from "@/app/lib/supabase";
 
 export type SubscriptionPlan = "free" | "standard" | "pro";
 export type PublicPlanId = SubscriptionPlan | "business";
+export type UpgradePlan = "Standard" | "Pro" | "Business";
+export type BooleanPlanCapability =
+  | "productPhotos"
+  | "qrPublicPages"
+  | "csvExport"
+  | "searchAndFilters"
+  | "businessName"
+  | "customBusinessLogo"
+  | "publicContactBranding"
+  | "customLowStockThreshold"
+  | "scanner"
+  | "csvExcelImport"
+  | "excelExport"
+  | "advancedReportsLater"
+  | "reportsCenterLater"
+  | "pickListsLater"
+  | "analyticsLater"
+  | "priorityManualSupport"
+  | "teamsRolesLater"
+  | "advancedSupportLater";
 
 export interface PlanCapabilities {
   itemLimit: number | null;
@@ -13,6 +33,7 @@ export interface PlanCapabilities {
   searchAndFilters: boolean;
   businessName: boolean;
   customBusinessLogo: boolean;
+  publicContactBranding: boolean;
   customLowStockThreshold: boolean;
   scanner: boolean;
   csvExcelImport: boolean;
@@ -65,6 +86,8 @@ export const PLAN_ITEM_LIMITS: Record<SubscriptionPlan, number> = {
   pro: 1000,
 };
 
+export const FREE_LOW_STOCK_THRESHOLD = 10;
+
 export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
   free: {
     id: "free",
@@ -93,6 +116,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       searchAndFilters: true,
       businessName: true,
       customBusinessLogo: false,
+      publicContactBranding: false,
       customLowStockThreshold: false,
       scanner: false,
       csvExcelImport: false,
@@ -135,6 +159,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       searchAndFilters: true,
       businessName: true,
       customBusinessLogo: true,
+      publicContactBranding: true,
       customLowStockThreshold: true,
       scanner: true,
       csvExcelImport: true,
@@ -176,6 +201,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       searchAndFilters: true,
       businessName: true,
       customBusinessLogo: true,
+      publicContactBranding: true,
       customLowStockThreshold: true,
       scanner: true,
       csvExcelImport: true,
@@ -217,6 +243,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       searchAndFilters: true,
       businessName: true,
       customBusinessLogo: true,
+      publicContactBranding: true,
       customLowStockThreshold: true,
       scanner: true,
       csvExcelImport: true,
@@ -250,6 +277,60 @@ function normalizePlan(plan: string | null | undefined): SubscriptionPlan {
   return "free";
 }
 
+function isActiveStatus(status: string | null | undefined) {
+  return String(status || "").trim().toLowerCase() === "active";
+}
+
+export function getEffectivePlan(
+  subscription: Pick<UserSubscription, "plan" | "status">
+): SubscriptionPlan {
+  return isActiveStatus(subscription.status)
+    ? normalizePlan(subscription.plan)
+    : "free";
+}
+
+export function getSubscriptionCapabilities(
+  subscription: Pick<UserSubscription, "plan" | "status">
+) {
+  return PLAN_DEFINITIONS[getEffectivePlan(subscription)].capabilities;
+}
+
+export function hasSubscriptionCapability(
+  subscription: Pick<UserSubscription, "plan" | "status">,
+  capability: BooleanPlanCapability
+) {
+  return getSubscriptionCapabilities(subscription)[capability];
+}
+
+export function getSubscriptionDepotLimit(
+  subscription: Pick<UserSubscription, "plan" | "status">
+) {
+  return getSubscriptionCapabilities(subscription).depotLimit || 1;
+}
+
+export function getEffectiveLowStockThreshold(
+  subscription: Pick<UserSubscription, "plan" | "status">,
+  storedThreshold: number
+) {
+  if (
+    !hasSubscriptionCapability(subscription, "customLowStockThreshold")
+  ) {
+    return FREE_LOW_STOCK_THRESHOLD;
+  }
+
+  return Number.isFinite(storedThreshold) && storedThreshold >= 0
+    ? Math.round(storedThreshold)
+    : FREE_LOW_STOCK_THRESHOLD;
+}
+
+export function getUpgradePlanForDepotLimit(
+  plan: SubscriptionPlan
+): UpgradePlan {
+  if (plan === "free") return "Standard";
+  if (plan === "standard") return "Pro";
+  return "Business";
+}
+
 export function formatPlanName(plan: SubscriptionPlan) {
   const labels: Record<SubscriptionPlan, string> = {
     free: "Free",
@@ -275,12 +356,14 @@ export async function getUserSubscription(
   }
 
   if (data) {
-    const plan = normalizePlan(data.plan);
+    const storedPlan = normalizePlan(data.plan);
+    const status = data.status || "inactive";
+    const plan = isActiveStatus(status) ? storedPlan : "free";
 
     return {
       plan,
       item_limit: PLAN_ITEM_LIMITS[plan],
-      status: data.status || "active",
+      status,
     };
   }
 

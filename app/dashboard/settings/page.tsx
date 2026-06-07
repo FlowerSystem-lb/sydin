@@ -5,12 +5,21 @@ import Image from "next/image";
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import Sidebar from "@/components/Sidebar";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { supabase } from "@/app/lib/supabase";
+import {
+  FALLBACK_SUBSCRIPTION,
+  FREE_LOW_STOCK_THRESHOLD,
+  formatPlanName,
+  getSubscriptionCapabilities,
+  getUserSubscription,
+  type UserSubscription,
+} from "@/app/lib/subscription";
 
 function getLogoExtension(fileName: string) {
   const extension = fileName.split(".").pop()?.toLowerCase();
@@ -25,6 +34,10 @@ function getLogoExtension(fileName: string) {
 export default function SettingsPage() {
   const [settings, setSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+  const [savedSettings, setSavedSettings] =
+    useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+  const [subscription, setSubscription] =
+    useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -45,11 +58,16 @@ export default function SettingsPage() {
           return;
         }
 
-        getOrCreateBusinessSettings(user.id)
-          .then((loadedSettings) => {
+        Promise.all([
+          getOrCreateBusinessSettings(user.id),
+          getUserSubscription(user.id),
+        ])
+          .then(([loadedSettings, loadedSubscription]) => {
             if (!isActive) return;
 
             setSettings(loadedSettings);
+            setSavedSettings(loadedSettings);
+            setSubscription(loadedSubscription);
             setLoading(false);
           })
           .catch(() => {
@@ -71,6 +89,12 @@ export default function SettingsPage() {
     };
   }, []);
 
+  const currentPlanName = formatPlanName(subscription.plan);
+  const planCapabilities = getSubscriptionCapabilities(subscription);
+  const canUseCustomLogo = planCapabilities.customBusinessLogo;
+  const canCustomizeThreshold = planCapabilities.customLowStockThreshold;
+  const canShowPublicContact = planCapabilities.publicContactBranding;
+
   const handleSave = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -86,8 +110,8 @@ export default function SettingsPage() {
     }
 
     if (
-      !Number.isFinite(lowStockThreshold) ||
-      lowStockThreshold < 0
+      canCustomizeThreshold &&
+      (!Number.isFinite(lowStockThreshold) || lowStockThreshold < 0)
     ) {
       setError("Low-stock threshold must be 0 or more.");
       setSuccess("");
@@ -105,6 +129,29 @@ export default function SettingsPage() {
 
       if (!user) {
         setError("Please sign in again before saving settings.");
+        return;
+      }
+
+      const freshSubscription = await getUserSubscription(user.id);
+      const freshCapabilities =
+        getSubscriptionCapabilities(freshSubscription);
+      setSubscription(freshSubscription);
+
+      if (logoFile && !freshCapabilities.customBusinessLogo) {
+        setError(
+          "Custom business logos require an active Standard or Pro plan."
+        );
+        return;
+      }
+
+      if (
+        !freshCapabilities.publicContactBranding &&
+        !savedSettings.show_contact_publicly &&
+        settings.show_contact_publicly
+      ) {
+        setError(
+          "Public contact branding requires an active Standard or Pro plan."
+        );
         return;
       }
 
@@ -136,11 +183,17 @@ export default function SettingsPage() {
       const updatedSettings = {
         business_name: businessName,
         business_logo_url: businessLogoUrl || null,
-        low_stock_threshold: Math.round(lowStockThreshold),
+        low_stock_threshold: freshCapabilities.customLowStockThreshold
+          ? Math.round(lowStockThreshold)
+          : savedSettings.low_stock_threshold,
         contact_email: settings.contact_email.trim() || null,
         contact_phone: settings.contact_phone.trim() || null,
         contact_website: settings.contact_website.trim() || null,
-        show_contact_publicly: settings.show_contact_publicly,
+        show_contact_publicly: freshCapabilities.publicContactBranding
+          ? settings.show_contact_publicly
+          : savedSettings.show_contact_publicly
+            ? settings.show_contact_publicly
+            : false,
       };
 
       const { data, error: updateError } = await supabase
@@ -164,17 +217,20 @@ export default function SettingsPage() {
         return;
       }
 
-      setSettings({
+      const savedThreshold = Number(data?.low_stock_threshold);
+      const normalizedSettings = {
         business_name: data?.business_name || businessName,
         business_logo_url: data?.business_logo_url || businessLogoUrl || "",
-        low_stock_threshold:
-          Number(data?.low_stock_threshold) ||
-          Math.round(lowStockThreshold),
+        low_stock_threshold: Number.isFinite(savedThreshold)
+          ? savedThreshold
+          : updatedSettings.low_stock_threshold,
         contact_email: data?.contact_email || "",
         contact_phone: data?.contact_phone || "",
         contact_website: data?.contact_website || "",
         show_contact_publicly: Boolean(data?.show_contact_publicly),
-      });
+      };
+      setSettings(normalizedSettings);
+      setSavedSettings(normalizedSettings);
       setLogoFile(null);
       setSuccess("Business settings saved.");
     } catch {
@@ -187,6 +243,7 @@ export default function SettingsPage() {
   return (
     <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
       <Sidebar
+        planName={currentPlanName}
         businessName={settings.business_name}
         businessLogoUrl={settings.business_logo_url}
       />
@@ -284,22 +341,37 @@ export default function SettingsPage() {
                         Business logo
                       </label>
 
-                      <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-5 transition hover:border-indigo-300/45 hover:bg-black/40">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={(event) =>
-                            setLogoFile(event.target.files?.[0] || null)
-                          }
-                          className="w-full cursor-pointer text-sm text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-200 transition-colors hover:file:bg-indigo-500/30"
-                        />
+                      {canUseCustomLogo ? (
+                        <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-5 transition hover:border-indigo-300/45 hover:bg-black/40">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(event) =>
+                              setLogoFile(event.target.files?.[0] || null)
+                            }
+                            className="w-full cursor-pointer text-sm text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-200 transition-colors hover:file:bg-indigo-500/30"
+                          />
 
-                        {logoFile && (
-                          <p className="mt-4 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-slate-300">
-                            Selected: {logoFile.name}
-                          </p>
-                        )}
-                      </div>
+                          {logoFile && (
+                            <p className="mt-4 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-slate-300">
+                              Selected: {logoFile.name}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <LockedFeaturePanel
+                          feature="Custom business logo"
+                          benefit={
+                            settings.business_logo_url
+                              ? "Your existing logo is preserved and remains visible. Upgrade before replacing it with a new file."
+                              : "Add your business logo to the workspace, exports, and public inventory identity."
+                          }
+                          currentPlan={currentPlanName}
+                          requiredPlan="Standard"
+                          source="business-logo"
+                          compact
+                        />
+                      )}
                     </div>
                   </div>
                 </div>
@@ -313,16 +385,27 @@ export default function SettingsPage() {
                     <input
                       type="number"
                       min="0"
-                      value={settings.low_stock_threshold}
+                      value={
+                        canCustomizeThreshold
+                          ? settings.low_stock_threshold
+                          : FREE_LOW_STOCK_THRESHOLD
+                      }
                       onChange={(event) =>
                         setSettings((current) => ({
                           ...current,
                           low_stock_threshold: Number(event.target.value),
                         }))
                       }
+                      disabled={!canCustomizeThreshold}
                       className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                       required
                     />
+                    {!canCustomizeThreshold && (
+                      <p className="mt-2 text-xs leading-5 text-slate-500">
+                        Free uses a fixed threshold of 10. Your saved custom
+                        value is preserved for a future upgrade.
+                      </p>
+                    )}
                   </div>
 
                   <div>
@@ -380,33 +463,58 @@ export default function SettingsPage() {
                   </div>
                 </div>
 
-                <label className="mt-6 flex cursor-pointer flex-col gap-4 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-base font-bold text-white">
-                      Show contact publicly
-                    </p>
+                {canShowPublicContact || savedSettings.show_contact_publicly ? (
+                  <label className="mt-6 flex cursor-pointer flex-col gap-4 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-base font-bold text-white">
+                        Show contact publicly
+                      </p>
 
-                    <p className="mt-1 text-sm leading-6 text-slate-400">
-                      Public QR item pages can show contact fields when this is enabled.
-                    </p>
-                  </div>
+                      <p className="mt-1 text-sm leading-6 text-slate-400">
+                        Public QR item pages can show contact fields when this
+                        is enabled.
+                        {!canShowPublicContact &&
+                          " You can turn off the existing setting, but Standard is required to enable it again."}
+                      </p>
+                    </div>
 
-                  <span className="relative shrink-0">
-                    <input
-                      type="checkbox"
-                      checked={settings.show_contact_publicly}
-                      onChange={(event) =>
-                        setSettings((current) => ({
-                          ...current,
-                          show_contact_publicly: event.target.checked,
-                        }))
-                      }
-                      className="peer sr-only"
+                    <span className="relative shrink-0">
+                      <input
+                        type="checkbox"
+                        checked={settings.show_contact_publicly}
+                        onChange={(event) =>
+                          setSettings((current) => {
+                            if (
+                              !canShowPublicContact &&
+                              event.target.checked
+                            ) {
+                              return current;
+                            }
+
+                            return {
+                              ...current,
+                              show_contact_publicly: event.target.checked,
+                            };
+                          })
+                        }
+                        className="peer sr-only"
+                      />
+                      <span className="block h-7 w-12 rounded-full border border-white/15 bg-black/35 transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
+                      <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-cyan-100" />
+                    </span>
+                  </label>
+                ) : (
+                  <div className="mt-6">
+                    <LockedFeaturePanel
+                      feature="Public contact branding"
+                      benefit="Show business contact details on public QR item pages with Standard or Pro."
+                      currentPlan={currentPlanName}
+                      requiredPlan="Standard"
+                      source="public-contact-branding"
+                      compact
                     />
-                    <span className="block h-7 w-12 rounded-full border border-white/15 bg-black/35 transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
-                    <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-cyan-100" />
-                  </span>
-                </label>
+                  </div>
+                )}
 
                 {(error || success) && (
                   <div

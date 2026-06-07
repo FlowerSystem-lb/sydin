@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   createDepot,
   deleteDepot,
@@ -12,6 +13,19 @@ import {
   type Depot,
 } from "@/app/lib/depots";
 import { supabase } from "@/app/lib/supabase";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionDepotLimit,
+  getSubscriptionUsage,
+  getUpgradePlanForDepotLimit,
+  type SubscriptionUsage,
+} from "@/app/lib/subscription";
+
+const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
+  subscription: FALLBACK_SUBSCRIPTION,
+  usedItems: 0,
+};
 
 export default function DepotsPage() {
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -31,6 +45,8 @@ export default function DepotsPage() {
   const [editCode, setEditCode] = useState("");
   const [editNotes, setEditNotes] = useState("");
   const [editIsActive, setEditIsActive] = useState(true);
+  const [subscriptionUsage, setSubscriptionUsage] =
+    useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
 
   const loadDepots = async () => {
     const {
@@ -46,8 +62,12 @@ export default function DepotsPage() {
     setUserId(user.id);
 
     try {
-      const loadedDepots = await getDepotsForUser(user.id);
+      const [loadedDepots, loadedUsage] = await Promise.all([
+        getDepotsForUser(user.id),
+        getSubscriptionUsage(user.id),
+      ]);
       setDepots(loadedDepots);
+      setSubscriptionUsage(loadedUsage);
     } catch {
       setPageError("We could not load your depots. Refresh the page and try again.");
     } finally {
@@ -71,11 +91,15 @@ export default function DepotsPage() {
 
         setUserId(user.id);
 
-        getDepotsForUser(user.id)
-          .then((loadedDepots) => {
+        Promise.all([
+          getDepotsForUser(user.id),
+          getSubscriptionUsage(user.id),
+        ])
+          .then(([loadedDepots, loadedUsage]) => {
             if (!isActiveRequest) return;
 
             setDepots(loadedDepots);
+            setSubscriptionUsage(loadedUsage);
             setLoading(false);
           })
           .catch(() => {
@@ -104,6 +128,14 @@ export default function DepotsPage() {
     setIsActive(true);
   };
 
+  const currentPlan = subscriptionUsage.subscription.plan;
+  const currentPlanName = formatPlanName(currentPlan);
+  const depotLimit = getSubscriptionDepotLimit(
+    subscriptionUsage.subscription
+  );
+  const reachedDepotLimit = depots.length >= depotLimit;
+  const requiredPlan = getUpgradePlanForDepotLimit(currentPlan);
+
   const handleCreateDepot = async (event: React.FormEvent) => {
     event.preventDefault();
 
@@ -130,6 +162,28 @@ export default function DepotsPage() {
 
       if (!currentUserId) {
         setPageError("Please sign in again before creating a depot.");
+        return;
+      }
+
+      const [freshDepots, freshUsage] = await Promise.all([
+        getDepotsForUser(currentUserId),
+        getSubscriptionUsage(currentUserId),
+      ]);
+      const freshDepotLimit = getSubscriptionDepotLimit(
+        freshUsage.subscription
+      );
+
+      setDepots(freshDepots);
+      setSubscriptionUsage(freshUsage);
+
+      if (freshDepots.length >= freshDepotLimit) {
+        setPageError(
+          `You reached the ${formatPlanName(
+            freshUsage.subscription.plan
+          )} plan limit of ${freshDepotLimit} depot${
+            freshDepotLimit === 1 ? "" : "s"
+          }. Existing depots remain available.`
+        );
         return;
       }
 
@@ -232,7 +286,7 @@ export default function DepotsPage() {
 
   return (
     <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
-      <Sidebar />
+      <Sidebar planName={currentPlanName} />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-8">
@@ -287,73 +341,90 @@ export default function DepotsPage() {
                 Add Location
               </h2>
 
-              <div className="mt-6 grid grid-cols-1 gap-5">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">
-                    Name
-                  </label>
-
-                  <input
-                    type="text"
-                    value={name}
-                    onChange={(event) => setName(event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
-                    required
+              {!loading && reachedDepotLimit ? (
+                <div className="mt-6">
+                  <LockedFeaturePanel
+                    feature={`${currentPlanName} depot limit reached`}
+                    benefit={`${currentPlanName} includes up to ${depotLimit} depot${
+                      depotLimit === 1 ? "" : "s"
+                    }. Existing locations remain visible, editable, and removable.`}
+                    currentPlan={currentPlanName}
+                    requiredPlan={requiredPlan}
+                    source="depot-limit"
+                    compact
                   />
                 </div>
+              ) : (
+                <>
+                  <div className="mt-6 grid grid-cols-1 gap-5">
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                        Name
+                      </label>
 
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">
-                    Code
-                  </label>
+                      <input
+                        type="text"
+                        value={name}
+                        onChange={(event) => setName(event.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        required
+                      />
+                    </div>
 
-                  <input
-                    type="text"
-                    value={code}
-                    onChange={(event) => setCode(event.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
-                  />
-                </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                        Code
+                      </label>
 
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">
-                    Notes
-                  </label>
+                      <input
+                        type="text"
+                        value={code}
+                        onChange={(event) => setCode(event.target.value)}
+                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                      />
+                    </div>
 
-                  <textarea
-                    value={notes}
-                    onChange={(event) => setNotes(event.target.value)}
-                    className="min-h-[120px] w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
-                  />
-                </div>
+                    <div>
+                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                        Notes
+                      </label>
 
-                <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-5 py-4">
-                  <span>
-                    <span className="block text-sm font-bold text-white">
-                      Active
-                    </span>
+                      <textarea
+                        value={notes}
+                        onChange={(event) => setNotes(event.target.value)}
+                        className="min-h-[120px] w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                      />
+                    </div>
 
-                    <span className="mt-1 block text-xs text-slate-400">
-                      Active depots appear in item forms.
-                    </span>
-                  </span>
+                    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-5 py-4">
+                      <span>
+                        <span className="block text-sm font-bold text-white">
+                          Active
+                        </span>
 
-                  <input
-                    type="checkbox"
-                    checked={isActive}
-                    onChange={(event) => setIsActive(event.target.checked)}
-                    className="h-6 w-6 accent-indigo-400"
-                  />
-                </label>
-              </div>
+                        <span className="mt-1 block text-xs text-slate-400">
+                          Active depots appear in item forms.
+                        </span>
+                      </span>
 
-              <button
-                type="submit"
-                disabled={saving}
-                className="mt-6 w-full rounded-2xl bg-white px-6 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {saving ? "Saving depot..." : "Add Depot"}
-              </button>
+                      <input
+                        type="checkbox"
+                        checked={isActive}
+                        onChange={(event) => setIsActive(event.target.checked)}
+                        className="h-6 w-6 accent-indigo-400"
+                      />
+                    </label>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={saving}
+                    className="mt-6 w-full rounded-2xl bg-white px-6 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {saving ? "Saving depot..." : "Add Depot"}
+                  </button>
+                </>
+              )}
             </form>
 
             <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7">

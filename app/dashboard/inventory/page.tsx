@@ -11,6 +11,10 @@ import {
 import Sidebar from "@/components/Sidebar";
 import UiIcon from "@/components/UiIcon";
 import {
+  LockedActionLabel,
+  UpgradeDialog,
+} from "@/components/UpgradePrompt";
+import {
   formatDepotLabel,
   getDepotsForUser,
   type Depot,
@@ -27,8 +31,11 @@ import { exportInventoryPdf } from "@/app/lib/inventoryPdfExport";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
+  getEffectiveLowStockThreshold,
+  getSubscriptionCapabilities,
   getPlanLimitMessage,
   getSubscriptionUsage,
+  type UpgradePlan,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 
@@ -52,6 +59,12 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
 type DepotFilter = "all" | "unassigned" | string;
 type StockFilter = "all" | "low";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
+type LockedFeature = {
+  feature: string;
+  benefit: string;
+  requiredPlan: UpgradePlan;
+  source: string;
+};
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -199,6 +212,9 @@ export default function InventoryPage() {
   const [isScannerStarting, setIsScannerStarting] = useState(false);
   const [scannerError, setScannerError] = useState("");
   const [scannerStatus, setScannerStatus] = useState("");
+  const [lockedFeature, setLockedFeature] = useState<LockedFeature | null>(
+    null
+  );
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -232,6 +248,16 @@ export default function InventoryPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [pendingDeleteItem, setPendingDeleteItem] = useState<Item | null>(null);
+  const planCapabilities = getSubscriptionCapabilities(
+    subscriptionUsage.subscription
+  );
+  const canUseScanner = planCapabilities.scanner;
+  const canExportPdf = planCapabilities.pdfExport !== "none";
+  const canExportExcel = planCapabilities.excelExport;
+  const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
+    subscriptionUsage.subscription,
+    businessSettings.low_stock_threshold
+  );
 
   const fetchItems = async () => {
     const {
@@ -402,6 +428,17 @@ export default function InventoryPage() {
   }, [stopScanner]);
 
   const openScanner = () => {
+    if (!canUseScanner) {
+      setLockedFeature({
+        feature: "Inventory scanner",
+        benefit:
+          "Scan SydIN QR codes and product barcodes directly from your inventory workspace.",
+        requiredPlan: "Standard",
+        source: "scanner",
+      });
+      return;
+    }
+
     setPageError("");
     setPageNotice("");
     setScannerError("");
@@ -880,11 +917,6 @@ export default function InventoryPage() {
       setPageError("");
       setPageNotice("");
 
-      const lowStockThreshold = Number.isFinite(
-        Number(businessSettings.low_stock_threshold)
-      )
-        ? Number(businessSettings.low_stock_threshold)
-        : 10;
       const publicBaseUrl = window.location.origin;
       const rows = items.map((item) => [
         item.name,
@@ -892,7 +924,7 @@ export default function InventoryPage() {
         item.category,
         formatDepotLabel(depots.find((depot) => depot.id === item.depot_id)),
         item.quantity,
-        item.quantity <= lowStockThreshold ? "Yes" : "No",
+        item.quantity <= effectiveLowStockThreshold ? "Yes" : "No",
         item.notes || "",
         item.image || "",
         item.public_id ? `${publicBaseUrl}/item/${item.public_id}` : "",
@@ -925,18 +957,23 @@ export default function InventoryPage() {
   };
 
   const exportInventoryReportPdf = async () => {
+    if (!canExportPdf) {
+      setLockedFeature({
+        feature: "PDF inventory export",
+        benefit:
+          "Create a polished, branded PDF inventory report for sharing and review.",
+        requiredPlan: "Standard",
+        source: "pdf-export",
+      });
+      return;
+    }
+
     if (loadingItems || items.length === 0 || isExportingPdf) return;
 
     try {
       setIsExportingPdf(true);
       setPageError("");
       setPageNotice("");
-
-      const lowStockThreshold = Number.isFinite(
-        Number(businessSettings.low_stock_threshold)
-      )
-        ? Number(businessSettings.low_stock_threshold)
-        : 10;
 
       await exportInventoryPdf({
         items: items.map((item) => ({
@@ -960,7 +997,7 @@ export default function InventoryPage() {
           contactPhone: businessSettings.contact_phone,
           contactWebsite: businessSettings.contact_website,
         },
-        lowStockThreshold,
+        lowStockThreshold: effectiveLowStockThreshold,
       });
 
       setPageNotice(
@@ -976,6 +1013,17 @@ export default function InventoryPage() {
   };
 
   const exportInventoryReportExcel = async () => {
+    if (!canExportExcel) {
+      setLockedFeature({
+        feature: "Excel inventory export",
+        benefit:
+          "Export a structured Excel workbook with item details, depot assignments, and public links.",
+        requiredPlan: "Standard",
+        source: "excel-export",
+      });
+      return;
+    }
+
     if (loadingItems || items.length === 0 || isExportingExcel) return;
 
     try {
@@ -983,11 +1031,6 @@ export default function InventoryPage() {
       setPageError("");
       setPageNotice("");
 
-      const lowStockThreshold = Number.isFinite(
-        Number(businessSettings.low_stock_threshold)
-      )
-        ? Number(businessSettings.low_stock_threshold)
-        : 10;
       const publicBaseUrl = window.location.origin;
 
       await exportInventoryExcel({
@@ -1015,7 +1058,7 @@ export default function InventoryPage() {
           contactPhone: businessSettings.contact_phone,
           contactWebsite: businessSettings.contact_website,
         },
-        lowStockThreshold,
+        lowStockThreshold: effectiveLowStockThreshold,
       });
 
       setPageNotice(
@@ -1039,11 +1082,7 @@ export default function InventoryPage() {
   const getDepotForItem = (item: Item) =>
     depots.find((depot) => depot.id === item.depot_id) || null;
 
-  const lowStockThreshold = Number.isFinite(
-    Number(businessSettings.low_stock_threshold)
-  )
-    ? Number(businessSettings.low_stock_threshold)
-    : 10;
+  const lowStockThreshold = effectiveLowStockThreshold;
   const normalizedSearch = search.trim().toLowerCase();
   const depotFilterOptions = depots.filter(
     (depot) =>
@@ -1113,8 +1152,10 @@ export default function InventoryPage() {
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
   const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
   const exportDisabled = loadingItems || items.length === 0;
-  const pdfExportDisabled = exportDisabled || isExportingPdf;
-  const excelExportDisabled = exportDisabled || isExportingExcel;
+  const pdfExportDisabled =
+    usageLoading || (canExportPdf && (exportDisabled || isExportingPdf));
+  const excelExportDisabled =
+    usageLoading || (canExportExcel && (exportDisabled || isExportingExcel));
 
   return (
     <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
@@ -1152,10 +1193,20 @@ export default function InventoryPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
                 <Link
                   href="/dashboard/inventory/import"
-                  className="action-button px-5 py-3.5 text-center text-sm"
+                  className={`action-button px-5 py-3.5 text-center text-sm ${
+                    !usageLoading && !planCapabilities.csvExcelImport
+                      ? "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                      : ""
+                  }`}
                 >
-                  <UiIcon name="upload" />
-                  Import
+                  {!usageLoading && !planCapabilities.csvExcelImport ? (
+                    <LockedActionLabel>Import</LockedActionLabel>
+                  ) : (
+                    <>
+                      <UiIcon name="upload" />
+                      Import
+                    </>
+                  )}
                 </Link>
 
                 <button
@@ -1172,20 +1223,40 @@ export default function InventoryPage() {
                   type="button"
                   onClick={exportInventoryReportPdf}
                   disabled={pdfExportDisabled}
-                  className="action-button px-5 py-3.5 text-center text-sm"
+                  className={`action-button px-5 py-3.5 text-center text-sm ${
+                    !usageLoading && !canExportPdf
+                      ? "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                      : ""
+                  }`}
                 >
-                  <UiIcon name="download" />
-                  {isExportingPdf ? "Exporting PDF..." : "Export PDF"}
+                  {!usageLoading && !canExportPdf ? (
+                    <LockedActionLabel>Export PDF</LockedActionLabel>
+                  ) : (
+                    <>
+                      <UiIcon name="download" />
+                      {isExportingPdf ? "Exporting PDF..." : "Export PDF"}
+                    </>
+                  )}
                 </button>
 
                 <button
                   type="button"
                   onClick={exportInventoryReportExcel}
                   disabled={excelExportDisabled}
-                  className="action-button px-5 py-3.5 text-center text-sm"
+                  className={`action-button px-5 py-3.5 text-center text-sm ${
+                    !usageLoading && !canExportExcel
+                      ? "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                      : ""
+                  }`}
                 >
-                  <UiIcon name="sheet" />
-                  {isExportingExcel ? "Exporting Excel..." : "Export Excel"}
+                  {!usageLoading && !canExportExcel ? (
+                    <LockedActionLabel>Export Excel</LockedActionLabel>
+                  ) : (
+                    <>
+                      <UiIcon name="sheet" />
+                      {isExportingExcel ? "Exporting Excel..." : "Export Excel"}
+                    </>
+                  )}
                 </button>
 
                 <Link
@@ -1253,10 +1324,21 @@ export default function InventoryPage() {
                   <button
                     type="button"
                     onClick={openScanner}
-                    className="action-button action-button-primary px-4 py-3 text-sm"
+                    disabled={usageLoading}
+                    className={`action-button px-4 py-3 text-sm ${
+                      canUseScanner
+                        ? "action-button-primary"
+                        : "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                    }`}
                   >
-                    <UiIcon name="scan" />
-                    Scan
+                    {!usageLoading && !canUseScanner ? (
+                      <LockedActionLabel>Scan</LockedActionLabel>
+                    ) : (
+                      <>
+                        <UiIcon name="scan" />
+                        Scan
+                      </>
+                    )}
                   </button>
 
                   <p className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-bold text-slate-300">
@@ -1606,6 +1688,16 @@ export default function InventoryPage() {
           </div>
         </div>
       )}
+
+      <UpgradeDialog
+        open={Boolean(lockedFeature)}
+        onClose={() => setLockedFeature(null)}
+        feature={lockedFeature?.feature || ""}
+        benefit={lockedFeature?.benefit || ""}
+        currentPlan={currentPlanName}
+        requiredPlan={lockedFeature?.requiredPlan || "Standard"}
+        source={lockedFeature?.source || "inventory"}
+      />
 
       {/* Add Item Modal */}
       {isModalOpen && (

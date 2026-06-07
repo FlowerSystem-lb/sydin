@@ -26,6 +26,13 @@ import {
   type StockMovement,
   type StockMovementType,
 } from "@/app/lib/stockMovements";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getEffectiveLowStockThreshold,
+  getUserSubscription,
+  type UserSubscription,
+} from "@/app/lib/subscription";
 
 interface Item {
   id: number;
@@ -105,6 +112,8 @@ export default function ItemDetailsPage() {
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [businessSettings, setBusinessSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+  const [subscription, setSubscription] =
+    useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [pageNotice, setPageNotice] = useState("");
   const [loading, setLoading] = useState(true);
@@ -204,6 +213,7 @@ export default function ItemDetailsPage() {
           { data, error: itemError },
           settings,
           loadedDepots,
+          loadedSubscription,
         ] = await Promise.all([
           supabase
             .from("inventory")
@@ -213,6 +223,7 @@ export default function ItemDetailsPage() {
             .limit(1),
           getOrCreateBusinessSettings(user.id),
           getDepotsForUser(user.id).catch(() => []),
+          getUserSubscription(user.id),
         ]);
 
         if (!isActive) return;
@@ -228,6 +239,7 @@ export default function ItemDetailsPage() {
         setItem(loadedItem);
         setBusinessSettings(settings);
         setDepots(loadedDepots);
+        setSubscription(loadedSubscription);
 
         if (loadedItem) {
           await fetchHistory(user.id, loadedItem.id);
@@ -570,6 +582,10 @@ export default function ItemDetailsPage() {
 
   const assignedDepot =
     depots.find((depot) => depot.id === item?.depot_id) || null;
+  const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
+    subscription,
+    businessSettings.low_stock_threshold
+  );
   const editDepotOptions = depots.filter(
     (depot) => depot.is_active || (item?.depot_id && depot.id === item.depot_id)
   );
@@ -577,6 +593,7 @@ export default function ItemDetailsPage() {
   return (
     <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
       <Sidebar
+        planName={formatPlanName(subscription.plan)}
         businessName={businessSettings.business_name}
         businessLogoUrl={businessSettings.business_logo_url}
       />
@@ -725,7 +742,7 @@ export default function ItemDetailsPage() {
                       </h2>
                     </div>
 
-                    {item.quantity <= businessSettings.low_stock_threshold && (
+                    {item.quantity <= effectiveLowStockThreshold && (
                       <span className="self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
                         Low Stock
                       </span>

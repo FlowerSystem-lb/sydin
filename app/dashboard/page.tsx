@@ -14,6 +14,7 @@ import {
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
+  getEffectiveLowStockThreshold,
   getSubscriptionUsage,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
@@ -41,6 +42,10 @@ export default function DashboardPage() {
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
+    subscriptionUsage.subscription,
+    businessSettings.low_stock_threshold
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -114,7 +119,7 @@ export default function DashboardPage() {
 
     const lowStockItems = items.filter(
       (item) =>
-        Number(item.quantity || 0) <= businessSettings.low_stock_threshold
+        Number(item.quantity || 0) <= effectiveLowStockThreshold
     ).length;
 
     return {
@@ -123,7 +128,7 @@ export default function DashboardPage() {
       lowStockItems,
       recentlyAddedItems: Math.min(items.length, 3),
     };
-  }, [businessSettings.low_stock_threshold, items]);
+  }, [effectiveLowStockThreshold, items]);
 
   const recentItems = useMemo(
     () => items.slice(0, 3),
@@ -131,6 +136,12 @@ export default function DashboardPage() {
   );
 
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
+  const upgradePlan =
+    subscriptionUsage.subscription.plan === "free"
+      ? "Standard"
+      : subscriptionUsage.subscription.plan === "standard"
+        ? "Pro"
+        : "";
   const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
   const usagePercent = Math.min(
     100,
@@ -159,7 +170,7 @@ export default function DashboardPage() {
     {
       label: "Low Stock Items",
       value: stats.lowStockItems,
-      detail: `At or below ${businessSettings.low_stock_threshold} units`,
+      detail: `At or below ${effectiveLowStockThreshold} units`,
       icon: "alert" as UiIconName,
       accent: "from-rose-400 to-fuchsia-500",
     },
@@ -276,6 +287,15 @@ export default function DashboardPage() {
                 <p className="mt-3 text-xs font-semibold text-slate-500">
                   Add item limits are enforced from your current plan.
                 </p>
+
+                {upgradePlan && (
+                  <Link
+                    href={`/request-plan?plan=${upgradePlan}&source=dashboard-plan`}
+                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-indigo-200/25 bg-white/[0.06] px-4 py-2.5 text-sm font-bold text-indigo-100 transition hover:border-indigo-200/40 hover:bg-white/[0.1]"
+                  >
+                    Request {upgradePlan}
+                  </Link>
+                )}
               </div>
             </div>
           </section>
@@ -413,7 +433,7 @@ export default function DashboardPage() {
                           Qty {item.quantity}
                         </span>
 
-                        {item.quantity <= businessSettings.low_stock_threshold && (
+                        {item.quantity <= effectiveLowStockThreshold && (
                           <span className="rounded-full border border-red-400/30 bg-red-500/15 px-3 py-2 text-xs font-bold text-red-300">
                             Low Stock
                           </span>
