@@ -10,6 +10,7 @@ import { supabase } from "@/app/lib/supabase";
 type RequestStatus = "pending" | "paid" | "activated" | "rejected";
 type StatusFilter = "all" | RequestStatus;
 type PlanFilter = "all" | "standard" | "pro";
+type RequestAction = "mark_paid" | "reject";
 
 interface PlanRequest {
   id: string;
@@ -39,6 +40,11 @@ type LoadResult =
       type: "error";
       message: string;
     };
+
+interface PendingAction {
+  action: RequestAction;
+  request: PlanRequest;
+}
 
 const statusFilters: { value: StatusFilter; label: string }[] = [
   { value: "all", label: "All statuses" },
@@ -170,6 +176,76 @@ async function requestPlanRequests(): Promise<LoadResult> {
   }
 }
 
+async function updatePlanRequest(
+  requestId: string,
+  action: RequestAction
+): Promise<
+  | {
+      type: "success";
+      message: string;
+    }
+  | {
+      type: "denied";
+    }
+  | {
+      type: "error";
+      message: string;
+    }
+> {
+  try {
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    if (!session?.access_token) {
+      return {
+        type: "denied",
+      };
+    }
+
+    const response = await fetch(
+      `/api/admin/plan-requests/${encodeURIComponent(requestId)}`,
+      {
+        method: "PATCH",
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          action,
+        }),
+      }
+    );
+    const payload = (await response.json()) as {
+      message?: string;
+      error?: string;
+    };
+
+    if (response.status === 401 || response.status === 403) {
+      return {
+        type: "denied",
+      };
+    }
+
+    if (!response.ok) {
+      return {
+        type: "error",
+        message: payload.error || "The plan request could not be updated.",
+      };
+    }
+
+    return {
+      type: "success",
+      message: payload.message || "Plan request updated.",
+    };
+  } catch {
+    return {
+      type: "error",
+      message: "The plan request is temporarily unavailable.",
+    };
+  }
+}
+
 export default function AdminPlanRequestsPage() {
   const [requests, setRequests] = useState<PlanRequest[]>([]);
   const [search, setSearch] = useState("");
@@ -179,6 +255,9 @@ export default function AdminPlanRequestsPage() {
   const [refreshing, setRefreshing] = useState(false);
   const [accessDenied, setAccessDenied] = useState(false);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -210,6 +289,17 @@ export default function AdminPlanRequestsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!pendingAction || actionLoading) return;
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setPendingAction(null);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [actionLoading, pendingAction]);
+
   const refreshRequests = async () => {
     if (refreshing) return;
 
@@ -229,6 +319,52 @@ export default function AdminPlanRequestsPage() {
     }
 
     setRefreshing(false);
+  };
+
+  const confirmAction = async () => {
+    if (!pendingAction || actionLoading) return;
+
+    setActionLoading(true);
+    setError("");
+    setNotice("");
+
+    const result = await updatePlanRequest(
+      pendingAction.request.id,
+      pendingAction.action
+    );
+
+    if (result.type === "denied") {
+      setAccessDenied(true);
+      setRequests([]);
+      setPendingAction(null);
+      setActionLoading(false);
+      return;
+    }
+
+    if (result.type === "error") {
+      setError(result.message);
+      setActionLoading(false);
+      return;
+    }
+
+    const refreshed = await requestPlanRequests();
+
+    if (refreshed.type === "success") {
+      setRequests(refreshed.requests);
+      setNotice(result.message);
+      setPendingAction(null);
+    } else if (refreshed.type === "denied") {
+      setAccessDenied(true);
+      setRequests([]);
+      setPendingAction(null);
+    } else {
+      setError(
+        `${result.message} Refresh the page to load the latest request status.`
+      );
+      setPendingAction(null);
+    }
+
+    setActionLoading(false);
   };
 
   const filteredRequests = useMemo(() => {
@@ -343,7 +479,7 @@ export default function AdminPlanRequestsPage() {
                 </span>
                 <div>
                   <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-300">
-                    Read-only admin
+                    Manual review admin
                   </p>
                   <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">
                     Plan requests
@@ -351,8 +487,9 @@ export default function AdminPlanRequestsPage() {
                 </div>
               </div>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-                Review early-access Standard and Pro requests. This page does
-                not activate plans or change payment status.
+                Review early-access Standard and Pro requests, confirm manual
+                payments, or reject requests. Subscription activation is not
+                available yet.
               </p>
             </div>
 
@@ -467,6 +604,12 @@ export default function AdminPlanRequestsPage() {
           </section>
         )}
 
+        {notice && (
+          <section className="rounded-3xl border border-emerald-300/25 bg-emerald-500/10 px-5 py-4 text-sm font-semibold text-emerald-100">
+            {notice}
+          </section>
+        )}
+
         {filteredRequests.length > 0 ? (
           <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
             {filteredRequests.map((request) => (
@@ -550,6 +693,44 @@ export default function AdminPlanRequestsPage() {
                     }
                   />
                 </dl>
+
+                {(request.status === "pending" ||
+                  request.status === "paid") && (
+                  <div className="mt-5 flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:justify-end">
+                    {request.status === "pending" && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError("");
+                          setNotice("");
+                          setPendingAction({
+                            action: "mark_paid",
+                            request,
+                          });
+                        }}
+                        disabled={actionLoading}
+                        className="glass-button min-h-11 rounded-2xl px-5 py-3 text-sm sm:min-w-32"
+                      >
+                        Mark Paid
+                      </button>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setError("");
+                        setNotice("");
+                        setPendingAction({
+                          action: "reject",
+                          request,
+                        });
+                      }}
+                      disabled={actionLoading}
+                      className="glass-button glass-button-danger min-h-11 rounded-2xl px-5 py-3 text-sm sm:min-w-32"
+                    >
+                      Reject
+                    </button>
+                  </div>
+                )}
               </article>
             ))}
           </section>
@@ -568,6 +749,124 @@ export default function AdminPlanRequestsPage() {
           </section>
         )}
       </div>
+
+      {pendingAction && (
+        <div
+          className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#020617]/88 p-4 backdrop-blur-xl"
+          onClick={() => {
+            if (!actionLoading) setPendingAction(null);
+          }}
+        >
+          <section
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="request-action-title"
+            className="glass-modal my-8 w-full max-w-lg p-5 sm:p-7"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p
+                  className={`text-xs font-black uppercase tracking-[0.16em] ${
+                    pendingAction.action === "reject"
+                      ? "text-rose-300"
+                      : "text-sky-300"
+                  }`}
+                >
+                  Confirmation required
+                </p>
+                <h2
+                  id="request-action-title"
+                  className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl"
+                >
+                  {pendingAction.action === "mark_paid"
+                    ? "Mark this request paid?"
+                    : "Reject this plan request?"}
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setPendingAction(null)}
+                disabled={actionLoading}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-slate-400 transition hover:bg-white/[0.1] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Close confirmation dialog"
+              >
+                <svg
+                  aria-hidden="true"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M6 6l12 12M18 6 6 18" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4">
+              <p className="text-sm font-black text-white">
+                {pendingAction.request.full_name}
+              </p>
+              <p className="mt-1 break-all text-sm text-slate-400">
+                {pendingAction.request.email || "Email not available"}
+              </p>
+              <div className="mt-3 flex flex-wrap gap-2">
+                <span className="glass-badge text-xs font-bold">
+                  {pendingAction.request.selected_plan}
+                </span>
+                <span
+                  className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-black ${statusStyles[pendingAction.request.status]}`}
+                >
+                  {formatStatus(pendingAction.request.status)}
+                </span>
+              </div>
+            </div>
+
+            <p className="mt-5 text-sm leading-7 text-slate-300">
+              {pendingAction.action === "mark_paid"
+                ? "This records manual payment confirmation and reviewer details. It does not activate Standard or Pro."
+                : "This marks the request as rejected and records reviewer details. The request will remain stored and no customer data will be deleted."}
+            </p>
+
+            {error && (
+              <div className="mt-5 rounded-2xl border border-rose-300/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100">
+                {error}
+              </div>
+            )}
+
+            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setPendingAction(null)}
+                disabled={actionLoading}
+                className="glass-button glass-button-secondary min-h-12 rounded-2xl px-5 py-3 text-sm"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => void confirmAction()}
+                disabled={actionLoading}
+                className={`glass-button min-h-12 rounded-2xl px-5 py-3 text-sm ${
+                  pendingAction.action === "reject"
+                    ? "glass-button-danger"
+                    : ""
+                }`}
+              >
+                {actionLoading
+                  ? pendingAction.action === "mark_paid"
+                    ? "Marking paid..."
+                    : "Rejecting..."
+                  : pendingAction.action === "mark_paid"
+                    ? "Confirm Mark Paid"
+                    : "Confirm Reject"}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }
