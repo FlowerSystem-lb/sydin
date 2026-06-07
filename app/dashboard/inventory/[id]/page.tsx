@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
+import BrandMark from "@/components/BrandMark";
 import Sidebar from "@/components/Sidebar";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
@@ -811,7 +812,7 @@ export default function ItemDetailsPage() {
                             className="object-contain p-1"
                           />
                         ) : (
-                          "S"
+                          <BrandMark compact className="border-0 shadow-none" />
                         )}
                       </div>
 

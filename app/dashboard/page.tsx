@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
+import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -145,28 +146,28 @@ export default function DashboardPage() {
       label: "Total Items",
       value: stats.totalItems,
       detail: "Products tracked",
-      marker: "TI",
+      icon: "box" as UiIconName,
       accent: "from-indigo-400 to-violet-500",
     },
     {
       label: "Total Stock",
       value: stats.totalStock,
       detail: "Units available",
-      marker: "TS",
+      icon: "layers" as UiIconName,
       accent: "from-cyan-300 to-indigo-500",
     },
     {
       label: "Low Stock Items",
       value: stats.lowStockItems,
       detail: `At or below ${businessSettings.low_stock_threshold} units`,
-      marker: "LS",
+      icon: "alert" as UiIconName,
       accent: "from-rose-400 to-fuchsia-500",
     },
     {
       label: "Recently Added Items",
       value: stats.recentlyAddedItems,
       detail: "Latest records",
-      marker: "RA",
+      icon: "clock" as UiIconName,
       accent: "from-violet-400 to-sky-400",
     },
   ];
@@ -300,8 +301,8 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-xs font-black text-white shadow-[0_18px_55px_rgba(99,102,241,0.28)]`}>
-                    {card.marker}
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-white shadow-[0_18px_55px_rgba(99,102,241,0.28)]`}>
+                    <UiIcon name={card.icon} className="h-6 w-6" />
                   </div>
                 </div>
 
@@ -346,8 +347,8 @@ export default function DashboardPage() {
                 </div>
               ) : recentItems.length === 0 ? (
                 <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/25 px-5 py-14 text-center">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-indigo-200">
-                    0
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-indigo-200">
+                    <UiIcon name="box" className="h-8 w-8" />
                   </div>
 
                   <h3 className="text-2xl font-bold">

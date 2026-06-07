@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
+import BrandMark from "@/components/BrandMark";
 import { supabase } from "@/app/lib/supabase";
 
 interface PublicItem {
@@ -152,7 +153,7 @@ export default function PublicItemPage() {
                     className="object-contain p-1"
                   />
                 ) : (
-                  "S"
+                  <BrandMark compact className="border-0 shadow-none" />
                 )}
               </div>
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import BrandMark from "@/components/BrandMark";
 import Wordmark from "@/components/Wordmark";
 import Reveal from "@/components/Reveal";
 
@@ -142,9 +143,7 @@ export function MarketingLogo() {
       className="flex min-w-0 items-center gap-3"
       aria-label="SydIn home"
     >
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 text-sm font-black text-indigo-100 shadow-[0_18px_60px_rgba(79,70,229,0.22)]">
-        IN
-      </div>
+      <BrandMark />
 
       <div className="min-w-0">
         <Wordmark size="sm" />
@@ -169,7 +168,7 @@ export function MarketingHeader({
       </div>
 
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between gap-4">
+        <div className="flex items-center justify-between gap-3">
           <MarketingLogo />
 
           <nav className="hidden items-center gap-2 md:flex">
@@ -188,24 +187,39 @@ export function MarketingHeader({
             ))}
           </nav>
 
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="hidden shrink-0 items-center gap-2 md:flex">
             <Link
               href="/login"
-              className="hidden rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] sm:inline-flex"
+              className="action-button px-4 py-3 text-sm"
             >
               Sign in
             </Link>
 
             <Link
               href="/signup"
-              className="rounded-2xl bg-white px-4 py-3 text-sm font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 sm:px-5"
+              className="action-button action-button-primary px-5 py-3 text-sm font-black"
             >
               Start Free
             </Link>
           </div>
         </div>
 
-        <nav className="grid grid-cols-5 gap-2 md:hidden">
+        <div className="grid grid-cols-2 gap-2 md:hidden">
+          <Link
+            href="/login"
+            className="action-button min-h-11 px-3 py-2.5 text-sm"
+          >
+            Sign in
+          </Link>
+          <Link
+            href="/signup"
+            className="action-button action-button-primary min-h-11 px-3 py-2.5 text-sm"
+          >
+            Start Free
+          </Link>
+        </div>
+
+        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:hidden">
           {navLinks.map((link) => (
             <Link
               key={link.href}
@@ -219,13 +233,6 @@ export function MarketingHeader({
               {link.label}
             </Link>
           ))}
-
-          <Link
-            href="/login"
-            className="min-h-11 rounded-2xl bg-white/[0.06] px-2 py-3 text-center text-xs font-bold text-slate-300"
-          >
-            Sign in
-          </Link>
         </nav>
       </div>
     </header>

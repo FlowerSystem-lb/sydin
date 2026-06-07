@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
+import UiIcon from "@/components/UiIcon";
 import {
   formatDepotLabel,
   getActiveDepotsForUser,
@@ -371,8 +372,8 @@ export default function AddItemPage() {
                 <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-4 transition hover:border-indigo-300/45 hover:bg-black/40 sm:p-5">
                   <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr] lg:items-center">
                     <label className="group flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.05] px-5 py-6 text-center transition hover:border-indigo-300/45 hover:bg-white/[0.08]">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-2xl font-black text-indigo-100 transition group-hover:bg-indigo-500/30">
-                        +
+                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-indigo-100 transition group-hover:bg-indigo-500/30">
+                        <UiIcon name="upload" className="h-7 w-7" />
                       </span>
 
                       <span className="mt-4 text-lg font-black text-white">

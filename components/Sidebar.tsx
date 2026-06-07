@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import LogoutButton from "@/components/LogoutButton";
+import BrandMark from "@/components/BrandMark";
 import Wordmark from "@/components/Wordmark";
 import {
   getOrCreateBusinessSettings,
@@ -151,12 +152,6 @@ export default function Sidebar({
   const displayBusinessName =
     businessName || loadedBusinessName || "SydIn Account";
   const displayBusinessLogoUrl = businessLogoUrl || loadedBusinessLogoUrl;
-  const displayInitials = displayBusinessName
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((word) => word[0]?.toUpperCase())
-    .join("") || "SI";
   const usageMatch = displayItemUsage.match(
     /([\d,]+)\s*\/\s*([\d,]+)/
   );
@@ -263,9 +258,7 @@ export default function Sidebar({
             href="/dashboard"
             className="group flex items-center gap-3 rounded-lg border border-sky-200/10 bg-white/[0.035] p-3 transition hover:border-sky-200/20 hover:bg-white/[0.055]"
           >
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-cyan-200/25 bg-gradient-to-br from-sky-400/25 to-blue-600/25 text-xs font-black text-sky-100 shadow-[0_12px_34px_rgba(14,165,233,0.14)]">
-              IN
-            </div>
+            <BrandMark />
 
             <div className="min-w-0">
               <Wordmark />
@@ -326,7 +319,7 @@ export default function Sidebar({
             </div>
           )}
 
-          <div className="glass-card mt-auto rounded-lg border-sky-200/15 bg-[#071a3a]/68 p-3.5">
+          <div className="glass-card mt-auto rounded-2xl border-sky-200/15 bg-[#071a3a]/68 p-3.5">
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="text-xs font-bold uppercase text-sky-300">
@@ -352,7 +345,7 @@ export default function Sidebar({
                     className="bg-white object-contain p-1.5"
                   />
                 ) : (
-                  displayInitials
+                  <BrandMark compact className="border-0 shadow-none" />
                 )}
               </div>
 
@@ -418,7 +411,7 @@ export default function Sidebar({
                   className="object-contain p-1"
                 />
               ) : (
-                displayInitials
+                <BrandMark compact className="border-0 shadow-none" />
               )}
             </div>
 

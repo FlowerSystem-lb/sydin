@@ -38,7 +38,7 @@ export default function LogoutButton({
       <button
         type="button"
         onClick={handleLogout}
-        className="flex h-10 w-10 items-center justify-center rounded-lg border border-sky-200/10 bg-white/[0.04] text-slate-400 transition hover:border-red-300/20 hover:bg-red-400/10 hover:text-red-100"
+        className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-300/15 bg-red-400/[0.07] text-red-200/80 transition hover:border-red-300/30 hover:bg-red-400/15 hover:text-red-100"
         aria-label="Logout"
         title="Logout"
       >

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import BrandMark from "@/components/BrandMark";
 import Sidebar from "@/components/Sidebar";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -253,9 +254,7 @@ export default function SettingsPage() {
                           />
                         </div>
                       ) : (
-                        <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-2xl font-black">
-                          S
-                        </div>
+                        <BrandMark className="h-16 w-16 rounded-2xl" />
                       )}
                     </div>
                   </div>
@@ -392,17 +391,21 @@ export default function SettingsPage() {
                     </p>
                   </div>
 
-                  <input
-                    type="checkbox"
-                    checked={settings.show_contact_publicly}
-                    onChange={(event) =>
-                      setSettings((current) => ({
-                        ...current,
-                        show_contact_publicly: event.target.checked,
-                      }))
-                    }
-                    className="h-6 w-6 accent-indigo-400"
-                  />
+                  <span className="relative shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={settings.show_contact_publicly}
+                      onChange={(event) =>
+                        setSettings((current) => ({
+                          ...current,
+                          show_contact_publicly: event.target.checked,
+                        }))
+                      }
+                      className="peer sr-only"
+                    />
+                    <span className="block h-7 w-12 rounded-full border border-white/15 bg-black/35 transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
+                    <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-cyan-100" />
+                  </span>
                 </label>
 
                 {(error || success) && (

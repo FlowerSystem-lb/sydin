@@ -16,10 +16,10 @@ export default function Wordmark({
 
   return (
     <span
-      className={`inline-flex items-baseline font-black tracking-tight text-white ${sizeClass} ${className}`}
+      className={`inline-flex items-baseline font-black tracking-[-0.045em] text-white ${sizeClass} ${className}`}
     >
       Syd
-      <span className="brand-chip ml-0.5 rounded-md px-1.5 py-0.5 text-[0.72em] font-black leading-none">
+      <span className="ml-0.5 bg-gradient-to-br from-cyan-200 via-sky-300 to-indigo-300 bg-clip-text text-[0.92em] font-black text-transparent">
         IN
       </span>
     </span>

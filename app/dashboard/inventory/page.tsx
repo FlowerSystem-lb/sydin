@@ -9,6 +9,7 @@ import {
   type IScannerControls,
 } from "@zxing/browser";
 import Sidebar from "@/components/Sidebar";
+import UiIcon from "@/components/UiIcon";
 import {
   formatDepotLabel,
   getDepotsForUser,
@@ -1151,8 +1152,9 @@ export default function InventoryPage() {
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
                 <Link
                   href="/dashboard/inventory/import"
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                  className="action-button px-5 py-3.5 text-center text-sm"
                 >
+                  <UiIcon name="upload" />
                   Import
                 </Link>
 
@@ -1160,8 +1162,9 @@ export default function InventoryPage() {
                   type="button"
                   onClick={exportInventoryCsv}
                   disabled={exportDisabled}
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="action-button px-5 py-3.5 text-center text-sm"
                 >
+                  <UiIcon name="file" />
                   Export CSV
                 </button>
 
@@ -1169,8 +1172,9 @@ export default function InventoryPage() {
                   type="button"
                   onClick={exportInventoryReportPdf}
                   disabled={pdfExportDisabled}
-                  className="rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-5 py-4 text-center text-base font-bold text-indigo-100 transition hover:border-indigo-300/45 hover:bg-indigo-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="action-button px-5 py-3.5 text-center text-sm"
                 >
+                  <UiIcon name="download" />
                   {isExportingPdf ? "Exporting PDF..." : "Export PDF"}
                 </button>
 
@@ -1178,15 +1182,17 @@ export default function InventoryPage() {
                   type="button"
                   onClick={exportInventoryReportExcel}
                   disabled={excelExportDisabled}
-                  className="rounded-2xl border border-emerald-300/25 bg-emerald-500/15 px-5 py-4 text-center text-base font-bold text-emerald-100 transition hover:border-emerald-300/45 hover:bg-emerald-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="action-button px-5 py-3.5 text-center text-sm"
                 >
+                  <UiIcon name="sheet" />
                   {isExportingExcel ? "Exporting Excel..." : "Export Excel"}
                 </button>
 
                 <Link
                   href="/dashboard/add-item"
-                  className="rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                  className="action-button action-button-primary px-5 py-3.5 text-center text-sm"
                 >
+                  <UiIcon name="plus" />
                   Add Item
                 </Link>
               </div>
@@ -1247,8 +1253,9 @@ export default function InventoryPage() {
                   <button
                     type="button"
                     onClick={openScanner}
-                    className="rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-4 py-3 text-sm font-bold text-indigo-100 transition hover:border-indigo-300/45 hover:bg-indigo-500/25"
+                    className="action-button action-button-primary px-4 py-3 text-sm"
                   >
+                    <UiIcon name="scan" />
                     Scan
                   </button>
 
@@ -1463,8 +1470,11 @@ export default function InventoryPage() {
           {!loadingItems && visibleItems.length ===
             0 && (
             <div className="mt-2 flex flex-col items-center justify-center rounded-[32px] border border-dashed border-indigo-300/25 bg-white/[0.045] px-4 py-20 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-300/20 bg-indigo-500/15 text-2xl font-black text-indigo-200">
-                0
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-300/20 bg-indigo-500/15 text-indigo-200">
+                <UiIcon
+                  name={items.length === 0 ? "box" : "search"}
+                  className="h-9 w-9"
+                />
               </div>
 
               <h2 className="mb-3 text-2xl font-bold text-white md:text-3xl">

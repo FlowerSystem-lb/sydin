@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import GoogleMark from "@/components/GoogleMark";
 import Wordmark from "@/components/Wordmark";
 import { supabase } from "@/app/lib/supabase";
 
@@ -95,7 +96,7 @@ export default function SignupPage() {
 
       <form
         onSubmit={handleSignup}
-        className="glass-panel relative z-10 w-full max-w-[480px] overflow-hidden border-sky-200/20 bg-[#071a3a]/75 p-5 shadow-[0_32px_100px_rgba(0,4,18,0.52)] sm:p-8"
+        className="glass-panel relative z-10 w-full max-w-[500px] overflow-hidden border-sky-200/20 bg-[#071a3a]/75 p-5 shadow-[0_32px_100px_rgba(0,4,18,0.52)] sm:p-8"
       >
         <div
           aria-hidden="true"
@@ -162,9 +163,7 @@ export default function SignupPage() {
                 aria-busy={googleLoading}
                 className="flex min-h-14 w-full items-center justify-center gap-3 rounded-lg border border-white/70 bg-white px-5 py-3.5 text-sm font-bold text-slate-950 shadow-[0_12px_36px_rgba(191,219,254,0.14)] transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
               >
-                <span className="flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 bg-white text-sm font-black text-blue-600 shadow-sm">
-                  G
-                </span>
+                <GoogleMark />
                 {googleLoading ? (
                   <>
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-blue-600" />

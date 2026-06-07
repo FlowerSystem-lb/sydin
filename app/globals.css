@@ -22,8 +22,8 @@
   --sydin-focus: rgba(56, 189, 248, 0.3);
   --sydin-shadow: 0 24px 70px rgba(0, 5, 20, 0.36);
   --sydin-shadow-soft: 0 12px 36px rgba(0, 5, 20, 0.24);
-  --sydin-radius-panel: 8px;
-  --sydin-radius-control: 8px;
+  --sydin-radius-panel: 24px;
+  --sydin-radius-control: 14px;
 }
 
 [data-theme="light"] {
@@ -229,7 +229,7 @@ canvas {
 .glass-modal {
   max-width: min(100%, 44rem);
   border-color: var(--sydin-border-strong);
-  border-radius: 12px;
+  border-radius: var(--sydin-radius-panel);
   background:
     linear-gradient(
       145deg,
@@ -406,6 +406,73 @@ select.glass-input option {
   color: #bae6fd;
 }
 
+.brand-mark {
+  position: relative;
+  display: inline-flex;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid rgba(125, 211, 252, 0.3);
+  border-radius: 1rem;
+  background:
+    radial-gradient(circle at 28% 20%, rgba(103, 232, 249, 0.3), transparent 40%),
+    linear-gradient(145deg, rgba(56, 189, 248, 0.24), rgba(79, 70, 229, 0.3));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 14px 36px rgba(37, 99, 235, 0.2);
+  color: #d9f7ff;
+}
+
+.brand-mark::after {
+  position: absolute;
+  inset: 1px;
+  border-radius: inherit;
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.1), transparent 48%);
+  content: "";
+  pointer-events: none;
+}
+
+.brand-mark-compact {
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.875rem;
+}
+
+.action-button {
+  display: inline-flex;
+  min-height: 3rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  border: 1px solid var(--sydin-border);
+  border-radius: 0.875rem;
+  background: rgba(255, 255, 255, 0.055);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  color: var(--sydin-text);
+  font-weight: 700;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.action-button-primary {
+  border-color: rgba(125, 211, 252, 0.42);
+  background: linear-gradient(135deg, rgba(56, 189, 248, 0.28), rgba(79, 70, 229, 0.42));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.2),
+    0 14px 34px rgba(37, 99, 235, 0.2);
+}
+
+.action-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 @media (hover: hover) {
   .glass-button:hover {
     border-color: rgba(165, 243, 252, 0.62);
@@ -426,6 +493,12 @@ select.glass-input option {
 
   .glass-table tbody tr:hover {
     background: rgba(56, 189, 248, 0.055);
+  }
+
+  .action-button:hover {
+    border-color: rgba(125, 211, 252, 0.34);
+    background-color: rgba(255, 255, 255, 0.09);
+    transform: translateY(-1px);
   }
 }
 
