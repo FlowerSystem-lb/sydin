@@ -1,6 +1,46 @@
 import { supabase } from "@/app/lib/supabase";
 
 export type SubscriptionPlan = "free" | "standard" | "pro";
+export type PublicPlanId = SubscriptionPlan | "business";
+
+export interface PlanCapabilities {
+  itemLimit: number | null;
+  productPhotos: boolean;
+  qrPublicPages: boolean;
+  csvExport: boolean;
+  stockMovements: "basic";
+  depotLimit: number | null;
+  searchAndFilters: boolean;
+  businessName: boolean;
+  customBusinessLogo: boolean;
+  customLowStockThreshold: boolean;
+  scanner: boolean;
+  csvExcelImport: boolean;
+  excelExport: boolean;
+  pdfExport: "none" | "basic";
+  advancedReportsLater: boolean;
+  reportsCenterLater: boolean;
+  pickListsLater: boolean;
+  analyticsLater: boolean;
+  priorityManualSupport: boolean;
+  teamsRolesLater: boolean;
+  advancedSupportLater: boolean;
+}
+
+export interface PlanDefinition {
+  id: PublicPlanId;
+  name: string;
+  priceMonthly: number | null;
+  itemLimit: number | null;
+  description: string;
+  audience: string;
+  featured?: boolean;
+  available: boolean;
+  ctaLabel: string;
+  ctaHref: string;
+  highlights: string[];
+  capabilities: PlanCapabilities;
+}
 
 export interface UserSubscription {
   plan: SubscriptionPlan;
@@ -21,9 +61,184 @@ export const FALLBACK_SUBSCRIPTION: UserSubscription = {
 
 export const PLAN_ITEM_LIMITS: Record<SubscriptionPlan, number> = {
   free: 50,
-  standard: 200,
+  standard: 250,
   pro: 1000,
 };
+
+export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
+  free: {
+    id: "free",
+    name: "Free",
+    priceMonthly: 0,
+    itemLimit: PLAN_ITEM_LIMITS.free,
+    description: "A complete starting point for small visual inventories.",
+    audience: "For trying SydIN with real business inventory.",
+    available: true,
+    ctaLabel: "Start Free",
+    ctaHref: "/signup",
+    highlights: [
+      "Up to 50 items",
+      "Product photos and QR pages",
+      "CSV export",
+      "Basic stock movements",
+      "1 depot",
+    ],
+    capabilities: {
+      itemLimit: PLAN_ITEM_LIMITS.free,
+      productPhotos: true,
+      qrPublicPages: true,
+      csvExport: true,
+      stockMovements: "basic",
+      depotLimit: 1,
+      searchAndFilters: true,
+      businessName: true,
+      customBusinessLogo: false,
+      customLowStockThreshold: false,
+      scanner: false,
+      csvExcelImport: false,
+      excelExport: false,
+      pdfExport: "none",
+      advancedReportsLater: false,
+      reportsCenterLater: false,
+      pickListsLater: false,
+      analyticsLater: false,
+      priorityManualSupport: false,
+      teamsRolesLater: false,
+      advancedSupportLater: false,
+    },
+  },
+  standard: {
+    id: "standard",
+    name: "Standard",
+    priceMonthly: 19,
+    itemLimit: PLAN_ITEM_LIMITS.standard,
+    description: "Daily inventory tools for growing small businesses.",
+    audience: "For teams ready to import, scan, and organize across locations.",
+    featured: true,
+    available: true,
+    ctaLabel: "Request Standard",
+    ctaHref: "/request-plan?plan=Standard",
+    highlights: [
+      "Up to 250 items",
+      "3 depots",
+      "Custom logo and low-stock threshold",
+      "Scanner and CSV/Excel import",
+      "Excel and basic PDF export",
+    ],
+    capabilities: {
+      itemLimit: PLAN_ITEM_LIMITS.standard,
+      productPhotos: true,
+      qrPublicPages: true,
+      csvExport: true,
+      stockMovements: "basic",
+      depotLimit: 3,
+      searchAndFilters: true,
+      businessName: true,
+      customBusinessLogo: true,
+      customLowStockThreshold: true,
+      scanner: true,
+      csvExcelImport: true,
+      excelExport: true,
+      pdfExport: "basic",
+      advancedReportsLater: false,
+      reportsCenterLater: false,
+      pickListsLater: false,
+      analyticsLater: false,
+      priorityManualSupport: false,
+      teamsRolesLater: false,
+      advancedSupportLater: false,
+    },
+  },
+  pro: {
+    id: "pro",
+    name: "Pro",
+    priceMonthly: 29,
+    itemLimit: PLAN_ITEM_LIMITS.pro,
+    description: "More capacity and the foundation for advanced operations.",
+    audience: "For established businesses with larger catalogs and reporting needs.",
+    available: true,
+    ctaLabel: "Request Pro",
+    ctaHref: "/request-plan?plan=Pro",
+    highlights: [
+      "Up to 1,000 items",
+      "10 depots",
+      "Everything in Standard",
+      "Advanced reports and analytics later",
+      "Priority manual support during beta",
+    ],
+    capabilities: {
+      itemLimit: PLAN_ITEM_LIMITS.pro,
+      productPhotos: true,
+      qrPublicPages: true,
+      csvExport: true,
+      stockMovements: "basic",
+      depotLimit: 10,
+      searchAndFilters: true,
+      businessName: true,
+      customBusinessLogo: true,
+      customLowStockThreshold: true,
+      scanner: true,
+      csvExcelImport: true,
+      excelExport: true,
+      pdfExport: "basic",
+      advancedReportsLater: true,
+      reportsCenterLater: true,
+      pickListsLater: true,
+      analyticsLater: true,
+      priorityManualSupport: true,
+      teamsRolesLater: false,
+      advancedSupportLater: false,
+    },
+  },
+  business: {
+    id: "business",
+    name: "Business",
+    priceMonthly: null,
+    itemLimit: null,
+    description: "A future plan for larger teams and custom operations.",
+    audience: "For organizations that need tailored limits and support.",
+    available: false,
+    ctaLabel: "Coming Later",
+    ctaHref: "/contact",
+    highlights: [
+      "Custom item limits",
+      "Everything in Pro",
+      "Teams and roles later",
+      "Advanced support later",
+      "Custom operational planning",
+    ],
+    capabilities: {
+      itemLimit: null,
+      productPhotos: true,
+      qrPublicPages: true,
+      csvExport: true,
+      stockMovements: "basic",
+      depotLimit: null,
+      searchAndFilters: true,
+      businessName: true,
+      customBusinessLogo: true,
+      customLowStockThreshold: true,
+      scanner: true,
+      csvExcelImport: true,
+      excelExport: true,
+      pdfExport: "basic",
+      advancedReportsLater: true,
+      reportsCenterLater: true,
+      pickListsLater: true,
+      analyticsLater: true,
+      priorityManualSupport: true,
+      teamsRolesLater: true,
+      advancedSupportLater: true,
+    },
+  },
+};
+
+export const PUBLIC_PLAN_ORDER: PublicPlanId[] = [
+  "free",
+  "standard",
+  "pro",
+  "business",
+];
 
 function normalizePlan(plan: string | null | undefined): SubscriptionPlan {
   const normalizedPlan = String(plan || "").toLowerCase();

@@ -89,7 +89,7 @@ export default function RequestPlanPage() {
         <SectionIntro
           eyebrow="Manual activation"
           title="Request a SydIn plan activation."
-          text="Tell us which plan fits your business. Early access payments are handled manually through WhishMoney, OMT, or crypto. Card payments are coming soon."
+          text="Tell us which plan fits your business. Payments are handled manually during early access, and your inventory data is never deleted when plans change."
         />
 
         <div className="mx-auto mt-10 grid max-w-7xl grid-cols-1 gap-6 lg:grid-cols-[0.8fr_1.2fr]">
@@ -131,8 +131,19 @@ export default function RequestPlanPage() {
             <div className="rounded-[32px] border border-white/10 bg-white/[0.055] p-5 shadow-[0_34px_130px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:p-7 lg:p-8">
               {success ? (
                 <div className="flex min-h-[520px] flex-col items-center justify-center text-center">
-                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-300/25 bg-emerald-500/15 text-2xl font-black text-emerald-100">
-                    ✓
+                  <div className="flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-300/25 bg-emerald-500/15 text-emerald-100">
+                    <svg
+                      aria-hidden="true"
+                      className="h-8 w-8"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="m5 12 4 4L19 6" />
+                    </svg>
                   </div>
 
                   <h1 className="mt-6 max-w-xl text-3xl font-black tracking-tight sm:text-4xl">

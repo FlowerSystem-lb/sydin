@@ -2,6 +2,10 @@ import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import Wordmark from "@/components/Wordmark";
 import Reveal from "@/components/Reveal";
+import {
+  PLAN_DEFINITIONS,
+  PUBLIC_PLAN_ORDER,
+} from "@/app/lib/subscription";
 
 type MarketingSection = "home" | "features" | "pricing" | "demo" | "contact" | "none";
 
@@ -48,51 +52,9 @@ const navLinks: Array<{
   },
 ];
 
-export const pricingPlans = [
-  {
-    name: "Free",
-    price: "$0",
-    cadence: "/month",
-    description: "Start with a clean inventory system for a small catalog.",
-    features: [
-      "Up to 50 items",
-      "Basic inventory",
-      "QR pages",
-      "Item history",
-    ],
-    ctaLabel: "Start Free",
-    ctaHref: "/signup",
-  },
-  {
-    name: "Standard",
-    price: "$20",
-    cadence: "/month",
-    description: "For growing teams that need more room and priority access.",
-    featured: true,
-    features: [
-      "Up to 200 items",
-      "More storage",
-      "Exports coming",
-      "Priority feature access",
-    ],
-    ctaLabel: "Request Standard",
-    ctaHref: "/request-plan?plan=Standard",
-  },
-  {
-    name: "Pro",
-    price: "$25",
-    cadence: "/month",
-    description: "Built for larger operations preparing for advanced workflows.",
-    features: [
-      "Up to 1000 items",
-      "Advanced reports coming",
-      "Multi-depot ready",
-      "Team features later",
-    ],
-    ctaLabel: "Request Pro",
-    ctaHref: "/request-plan?plan=Pro",
-  },
-];
+export const pricingPlans = PUBLIC_PLAN_ORDER.map(
+  (planId) => PLAN_DEFINITIONS[planId]
+);
 
 export const featureCards = [
   {
@@ -424,7 +386,7 @@ export function PricingCards({
   compact = false,
 }: PricingCardsProps) {
   return (
-    <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
       {pricingPlans.map((plan, index) => (
         <Reveal key={plan.name} delay={index * 80}>
           <div
@@ -434,11 +396,21 @@ export function PricingCards({
                 : "border-white/10 bg-white/[0.045]"
             }`}
           >
-            {plan.featured && (
-              <span className="mb-4 self-start rounded-full border border-indigo-300/30 bg-white/[0.08] px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-indigo-100">
-                Popular
-              </span>
-            )}
+            <div className="mb-5 flex min-h-7 items-center justify-between gap-3">
+              {plan.featured ? (
+                <span className="self-start rounded-full border border-indigo-300/30 bg-white/[0.08] px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-indigo-100">
+                  Most popular
+                </span>
+              ) : (
+                <span />
+              )}
+
+              {!plan.available && (
+                <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-400">
+                  Future
+                </span>
+              )}
+            </div>
 
             <h3 className="text-2xl font-black">
               {plan.name}
@@ -450,15 +422,17 @@ export function PricingCards({
 
             <div className="mt-6 flex items-end gap-1">
               <span className="text-5xl font-black">
-                {plan.price}
+                {plan.priceMonthly === null ? "Custom" : `$${plan.priceMonthly}`}
               </span>
-              <span className="pb-2 text-sm font-bold text-slate-500">
-                {plan.cadence}
-              </span>
+              {plan.priceMonthly !== null && (
+                <span className="pb-2 text-sm font-bold text-slate-500">
+                  /month
+                </span>
+              )}
             </div>
 
             <ul className={`mt-6 space-y-3 ${compact ? "text-sm" : "text-base"}`}>
-              {plan.features.map((feature) => (
+              {plan.highlights.map((feature) => (
                 <li
                   key={feature}
                   className="flex gap-3 text-slate-300"
@@ -469,16 +443,22 @@ export function PricingCards({
               ))}
             </ul>
 
-            <Link
-              href={plan.ctaHref}
-              className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-black transition ${
-                plan.featured
-                  ? "bg-white text-black hover:bg-slate-200"
-                  : "border border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1]"
-              }`}
-            >
-              {plan.ctaLabel}
-            </Link>
+            {plan.available ? (
+              <Link
+                href={plan.ctaHref}
+                className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-black transition ${
+                  plan.featured
+                    ? "bg-white text-black hover:bg-slate-200"
+                    : "border border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1]"
+                }`}
+              >
+                {plan.ctaLabel}
+              </Link>
+            ) : (
+              <span className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3 text-sm font-black text-slate-500">
+                {plan.ctaLabel}
+              </span>
+            )}
           </div>
         </Reveal>
       ))}

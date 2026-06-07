@@ -300,8 +300,8 @@ export default function Home() {
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <SectionIntro
           eyebrow="Pricing preview"
-          title="Simple plans for early SydIn users."
-          text="Early access payments are handled manually through WhishMoney, OMT, or crypto. Card payments are coming soon."
+          title="Start free. Add operational tools as you grow."
+          text="Free supports real inventory work. Standard and Pro are activated manually during the private beta, with no ads and no data deletion on plan changes."
         />
 
         <div className="mx-auto mt-10 max-w-7xl">
