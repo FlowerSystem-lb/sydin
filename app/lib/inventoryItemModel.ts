@@ -57,6 +57,36 @@ export function getInventoryUnitLabel(
   return INVENTORY_UNIT_LABELS[normalizedUnit];
 }
 
+export function getInventoryQuantityLabel(
+  quantity: unknown,
+  unitType: unknown,
+  customUnitLabel?: string | null
+) {
+  const normalizedQuantity = Number(quantity);
+  const displayQuantity = Number.isFinite(normalizedQuantity)
+    ? normalizedQuantity
+    : 0;
+  const normalizedUnit = normalizeInventoryUnitType(unitType);
+  const customLabel = customUnitLabel?.trim();
+
+  if (normalizedUnit === "custom" && customLabel) {
+    return `${displayQuantity} ${customLabel}`;
+  }
+
+  const unitLabels: Record<InventoryUnitType, string> = {
+    piece: displayQuantity === 1 ? "piece" : "pcs",
+    box: displayQuantity === 1 ? "box" : "boxes",
+    dozen: displayQuantity === 1 ? "dozen" : "dozen",
+    half_dozen: "half dozen",
+    pack: displayQuantity === 1 ? "pack" : "packs",
+    kg: "kg",
+    meter: displayQuantity === 1 ? "meter" : "meters",
+    custom: displayQuantity === 1 ? "unit" : "units",
+  };
+
+  return `${displayQuantity} ${unitLabels[normalizedUnit]}`;
+}
+
 export function normalizeCurrencyCode(
   currencyCode: string | null | undefined,
   fallback = "USD"

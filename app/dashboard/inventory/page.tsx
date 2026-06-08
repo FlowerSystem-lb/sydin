@@ -29,7 +29,14 @@ import EditItemForm, {
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
-import { normalizeCurrencyCode, type InventoryUnitType } from "@/app/lib/inventoryItemModel";
+import {
+  calculateInventoryValue,
+  formatInventoryPrice,
+  getEffectiveItemLowStockThreshold,
+  getInventoryQuantityLabel,
+  normalizeCurrencyCode,
+  type InventoryUnitType,
+} from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -1115,8 +1122,24 @@ export default function InventoryPage() {
   );
   const getDepotForItem = (item: Item) =>
     depots.find((depot) => depot.id === item.depot_id) || null;
+  const getLowStockThresholdForItem = (item: Item) =>
+    planCapabilities.customLowStockThreshold
+      ? getEffectiveItemLowStockThreshold(
+          item.min_stock_level,
+          effectiveLowStockThreshold
+        )
+      : effectiveLowStockThreshold;
+  const isItemLowStock = (item: Item) =>
+    item.quantity <= getLowStockThresholdForItem(item);
+  const getItemPrice = (value: unknown) =>
+    formatInventoryPrice(value, editCurrencyCode);
+  const getItemValue = (item: Item, price: unknown) => {
+    const value = calculateInventoryValue(item.quantity, price);
 
-  const lowStockThreshold = effectiveLowStockThreshold;
+    return value === null
+      ? null
+      : formatInventoryPrice(value, editCurrencyCode);
+  };
   const normalizedSearch = search.trim().toLowerCase();
   const depotFilterOptions = depots.filter(
     (depot) =>
@@ -1141,7 +1164,9 @@ export default function InventoryPage() {
     const depot = getDepotForItem(item);
     const searchableText = [
       item.name,
+      item.item_code,
       item.sku,
+      item.barcode,
       item.category,
       item.notes,
       formatDepotLabel(depot),
@@ -1162,7 +1187,7 @@ export default function InventoryPage() {
       (depotFilter === "unassigned" && !item.depot_id) ||
       String(item.depot_id) === depotFilter;
     const matchesStock =
-      stockFilter === "all" || item.quantity <= lowStockThreshold;
+      stockFilter === "all" || isItemLowStock(item);
 
     return matchesDepot && matchesStock;
   });
@@ -1517,18 +1542,34 @@ export default function InventoryPage() {
                 <div className="flex flex-1 flex-col p-5 sm:p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
+                      {item.item_code && (
+                        <p className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-indigo-200">
+                          {item.item_code}
+                        </p>
+                      )}
+
                       <h2 className="break-words text-2xl font-bold tracking-tight text-white">
                         {item.name}
                       </h2>
 
                       <div className="mt-3 flex flex-wrap gap-2">
-                        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
-                          SKU {item.sku || "N/A"}
-                        </span>
+                        {item.sku && (
+                          <span className="max-w-full break-all rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
+                            SKU {item.sku}
+                          </span>
+                        )}
 
-                        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
-                          {item.category}
-                        </span>
+                        {item.barcode && (
+                          <span className="max-w-full break-all rounded-full border border-cyan-300/15 bg-cyan-500/[0.08] px-3 py-1 font-mono text-xs font-semibold text-cyan-100">
+                            {item.barcode}
+                          </span>
+                        )}
+
+                        {item.category && (
+                          <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
+                            {item.category}
+                          </span>
+                        )}
 
                         {getDepotForItem(item) && (
                           <span className="rounded-full border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-100">
@@ -1538,18 +1579,66 @@ export default function InventoryPage() {
                       </div>
                     </div>
 
-                    <span className="shrink-0 rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-3 py-2 text-lg font-black text-indigo-100">
-                      Qty {item.quantity}
+                    <span className="max-w-[42%] shrink-0 break-words rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-3 py-2 text-right text-base font-black text-indigo-100">
+                      {getInventoryQuantityLabel(
+                        item.quantity,
+                        item.unit_type,
+                        item.custom_unit_label
+                      )}
                     </span>
                   </div>
 
-                  {/* Low stock */}
-                  {item.quantity <=
-                    lowStockThreshold && (
-                    <div className="mt-5 inline-block self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
-                      Low Stock
+                  <div className="mt-5 flex flex-wrap items-center gap-2">
+                    {isItemLowStock(item) && (
+                      <span className="rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
+                       Low Stock
+                      </span>
+                    )}
+
+                    {item.min_stock_level !== null &&
+                      item.min_stock_level !== undefined && (
+                        <span className="rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-100">
+                          Min: {item.min_stock_level}
+                        </span>
+                      )}
+                  </div>
+
+                  {(item.cost_price !== null &&
+                    item.cost_price !== undefined) ||
+                  (item.selling_price !== null &&
+                    item.selling_price !== undefined) ? (
+                    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {item.cost_price !== null &&
+                        item.cost_price !== undefined && (
+                          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-200">
+                              Cost
+                            </p>
+                            <p className="mt-1 text-sm font-black text-white">
+                              {getItemPrice(item.cost_price)}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Stock {getItemValue(item, item.cost_price)}
+                            </p>
+                          </div>
+                        )}
+
+                      {item.selling_price !== null &&
+                        item.selling_price !== undefined && (
+                          <div className="rounded-2xl border border-violet-300/15 bg-violet-500/[0.07] p-3">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-200">
+                              Selling
+                            </p>
+                            <p className="mt-1 text-sm font-black text-white">
+                              {getItemPrice(item.selling_price)}
+                            </p>
+                            <p className="mt-1 text-xs text-slate-500">
+                              Stock {getItemValue(item, item.selling_price)}
+                            </p>
+                          </div>
+                        )}
                     </div>
-                  )}
+                  ) : null}
 
                   {/* Actions */}
                   <div className="mt-auto flex gap-3 pt-6">

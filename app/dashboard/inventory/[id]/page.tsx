@@ -18,6 +18,11 @@ import EditItemForm, {
 } from "@/app/dashboard/inventory/EditItemForm";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import {
+  calculateInventoryValue,
+  formatInventoryPrice,
+  getEffectiveItemLowStockThreshold,
+  getInventoryQuantityLabel,
+  getInventoryUnitLabel,
   normalizeCurrencyCode,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
@@ -43,6 +48,7 @@ import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
   getEffectiveLowStockThreshold,
+  getSubscriptionCapabilities,
   getUserSubscription,
   type UserSubscription,
 } from "@/app/lib/subscription";
@@ -116,6 +122,49 @@ function formatQuantityDelta(delta: number) {
   if (delta > 0) return `+${delta}`;
 
   return String(delta);
+}
+
+function DetailCard({
+  label,
+  value,
+  detail,
+  accent = "slate",
+  monospace = false,
+}: {
+  label: string;
+  value: string;
+  detail?: string;
+  accent?: "slate" | "indigo" | "cyan" | "violet" | "amber";
+  monospace?: boolean;
+}) {
+  const toneClass =
+    accent === "indigo"
+      ? "border-indigo-300/20 bg-indigo-500/10 text-indigo-100"
+      : accent === "cyan"
+        ? "border-cyan-300/20 bg-cyan-500/10 text-cyan-100"
+        : accent === "violet"
+          ? "border-violet-300/20 bg-violet-500/10 text-violet-100"
+          : accent === "amber"
+            ? "border-amber-300/20 bg-amber-500/10 text-amber-100"
+            : "border-white/10 bg-black/25 text-white";
+
+  return (
+    <div className={`rounded-2xl border p-4 ${toneClass}`}>
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+        {label}
+      </p>
+      <p
+        className={`mt-2 break-words text-lg font-black ${
+          monospace ? "font-mono tracking-wide" : ""
+        }`}
+      >
+        {value}
+      </p>
+      {detail && (
+        <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+      )}
+    </div>
+  );
 }
 
 async function getBusinessCurrency(userId: string) {
@@ -620,6 +669,49 @@ export default function ItemDetailsPage() {
     subscription,
     businessSettings.low_stock_threshold
   );
+  const planCapabilities = getSubscriptionCapabilities(subscription);
+  const itemLowStockThreshold =
+    item && planCapabilities.customLowStockThreshold
+      ? getEffectiveItemLowStockThreshold(
+          item.min_stock_level,
+          effectiveLowStockThreshold
+        )
+      : effectiveLowStockThreshold;
+  const itemIsLowStock = item
+    ? item.quantity <= itemLowStockThreshold
+    : false;
+  const itemUnitLabel = item
+    ? getInventoryUnitLabel(item.unit_type, item.custom_unit_label)
+    : "Piece";
+  const itemQuantityLabel = item
+    ? getInventoryQuantityLabel(
+        item.quantity,
+        item.unit_type,
+        item.custom_unit_label
+      )
+    : "0 pcs";
+  const costPriceText =
+    item?.cost_price !== null && item?.cost_price !== undefined
+      ? formatInventoryPrice(item.cost_price, editCurrencyCode)
+      : null;
+  const sellingPriceText =
+    item?.selling_price !== null && item?.selling_price !== undefined
+      ? formatInventoryPrice(item.selling_price, editCurrencyCode)
+      : null;
+  const stockCostValue = item
+    ? calculateInventoryValue(item.quantity, item.cost_price)
+    : null;
+  const stockRetailValue = item
+    ? calculateInventoryValue(item.quantity, item.selling_price)
+    : null;
+  const stockCostValueText =
+    stockCostValue !== null
+      ? formatInventoryPrice(stockCostValue, editCurrencyCode)
+      : null;
+  const stockRetailValueText =
+    stockRetailValue !== null
+      ? formatInventoryPrice(stockRetailValue, editCurrencyCode)
+      : null;
   const editDepotOptions = depots.filter(
     (depot) => depot.is_active || (item?.depot_id && depot.id === item.depot_id)
   );
@@ -776,64 +868,132 @@ export default function ItemDetailsPage() {
                       </h2>
                     </div>
 
-                    {item.quantity <= effectiveLowStockThreshold && (
+                    {itemIsLowStock && (
                       <span className="self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
                         Low Stock
                       </span>
                     )}
                   </div>
 
-                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                      <p className="text-sm font-semibold text-slate-500">
-                        SKU
-                      </p>
-
-                      <p className="mt-2 break-words text-lg font-bold text-white">
-                        {item.sku || "N/A"}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                      <p className="text-sm font-semibold text-slate-500">
-                        Category
-                      </p>
-
-                      <p className="mt-2 break-words text-lg font-bold text-white">
-                        {item.category}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                      <p className="text-sm font-semibold text-slate-500">
-                        Depot
-                      </p>
-
-                      <p className="mt-2 break-words text-lg font-bold text-white">
-                        {formatDepotLabel(assignedDepot)}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                      <p className="text-sm font-semibold text-slate-500">
-                        Quantity
-                      </p>
-
-                      <p className="mt-2 text-3xl font-black text-indigo-100">
-                        {item.quantity}
-                      </p>
-                    </div>
-
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                      <p className="text-sm font-semibold text-slate-500">
-                        Created
-                      </p>
-
-                      <p className="mt-2 text-lg font-bold text-white">
-                        {formatCreatedDate(item.created_at)}
-                      </p>
-                    </div>
+                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <DetailCard
+                      label="Category"
+                      value={item.category || "Not set"}
+                    />
+                    <DetailCard
+                      label="Depot"
+                      value={formatDepotLabel(assignedDepot)}
+                    />
+                    <DetailCard
+                      label="Created"
+                      value={formatCreatedDate(item.created_at)}
+                    />
                   </div>
+
+                  <section className="mt-5 rounded-[26px] border border-indigo-300/15 bg-indigo-500/[0.07] p-4 sm:p-5">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                          Stock & Unit
+                        </p>
+                        <h3 className="mt-1 text-2xl font-black text-white">
+                          {itemQuantityLabel}
+                        </h3>
+                      </div>
+                      <span className="self-start rounded-full border border-white/10 bg-black/25 px-3 py-2 text-xs font-bold text-slate-300 sm:self-auto">
+                        Unit: {itemUnitLabel}
+                      </span>
+                    </div>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <DetailCard
+                        label="Current stock"
+                        value={itemQuantityLabel}
+                        accent="indigo"
+                      />
+                      <DetailCard
+                        label="Minimum stock"
+                        value={
+                          item.min_stock_level !== null &&
+                          item.min_stock_level !== undefined
+                            ? String(item.min_stock_level)
+                            : "Business default"
+                        }
+                        detail={`Low-stock threshold used here: ${itemLowStockThreshold}`}
+                        accent={
+                          item.min_stock_level !== null &&
+                          item.min_stock_level !== undefined
+                            ? "amber"
+                            : "slate"
+                        }
+                      />
+                    </div>
+                  </section>
+
+                  <section className="mt-5 rounded-[26px] border border-white/10 bg-black/20 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                      Pricing & Value
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                      Private values are visible only inside the authenticated dashboard.
+                    </p>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <DetailCard
+                        label="Cost price"
+                        value={costPriceText || "Not set"}
+                        detail={
+                          stockCostValueText
+                            ? `Stock cost value: ${stockCostValueText}`
+                            : undefined
+                        }
+                        accent={costPriceText ? "cyan" : "slate"}
+                      />
+                      <DetailCard
+                        label="Selling price"
+                        value={sellingPriceText || "Not set"}
+                        detail={
+                          stockRetailValueText
+                            ? `Stock retail value: ${stockRetailValueText}`
+                            : undefined
+                        }
+                        accent={sellingPriceText ? "violet" : "slate"}
+                      />
+                    </div>
+                  </section>
+
+                  <section className="mt-5 rounded-[26px] border border-white/10 bg-black/20 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                      Tracking Codes
+                    </p>
+
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <DetailCard
+                        label="Item code"
+                        value={item.item_code?.trim() || "Not generated yet"}
+                        detail={
+                          item.item_code
+                            ? "SydIN-generated read-only code."
+                            : "Older items may not have a generated code."
+                        }
+                        accent={item.item_code ? "indigo" : "slate"}
+                        monospace={Boolean(item.item_code)}
+                      />
+                      <DetailCard
+                        label="SKU"
+                        value={item.sku || "Not set"}
+                        detail="Internal or supplier stock code."
+                        monospace={Boolean(item.sku)}
+                      />
+                      <DetailCard
+                        label="Barcode"
+                        value={item.barcode || "Not set"}
+                        detail="Product or scanned code."
+                        accent={item.barcode ? "cyan" : "slate"}
+                        monospace={Boolean(item.barcode)}
+                      />
+                    </div>
+                  </section>
 
                   <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
                     <p className="text-sm font-semibold text-slate-500">
