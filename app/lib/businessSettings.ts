@@ -1,9 +1,11 @@
 import { supabase } from "@/app/lib/supabase";
+import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 
 export interface BusinessSettings {
   business_name: string;
   business_logo_url: string;
   low_stock_threshold: number;
+  currency_code?: string;
   contact_email: string;
   contact_phone: string;
   contact_website: string;
@@ -14,6 +16,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   business_name: "SydIn Account",
   business_logo_url: "",
   low_stock_threshold: 10,
+  currency_code: "USD",
   contact_email: "",
   contact_phone: "",
   contact_website: "",
@@ -36,6 +39,7 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
       data?.business_name?.trim() || DEFAULT_BUSINESS_SETTINGS.business_name,
     business_logo_url: data?.business_logo_url || "",
     low_stock_threshold: normalizeThreshold(data?.low_stock_threshold),
+    currency_code: normalizeCurrencyCode(data?.currency_code, "USD"),
     contact_email: data?.contact_email || "",
     contact_phone: data?.contact_phone || "",
     contact_website: data?.contact_website || "",
@@ -47,7 +51,7 @@ export async function getOrCreateBusinessSettings(userId: string) {
   const { data, error } = await supabase
     .from("business_settings")
     .select(
-      "business_name, business_logo_url, low_stock_threshold, contact_email, contact_phone, contact_website, show_contact_publicly"
+      "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly"
     )
     .eq("user_id", userId)
     .maybeSingle();
@@ -71,7 +75,7 @@ export async function getOrCreateBusinessSettings(userId: string) {
       },
     ])
     .select(
-      "business_name, business_logo_url, low_stock_threshold, contact_email, contact_phone, contact_website, show_contact_publicly"
+      "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly"
     )
     .single();
 

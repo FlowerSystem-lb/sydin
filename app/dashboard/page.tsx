@@ -5,6 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import InventoryValueOverview, {
+  type InventoryCategoryValue,
+  type InventoryValueAnalytics,
+} from "@/app/dashboard/components/InventoryValueOverview";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -15,9 +19,14 @@ import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
   getEffectiveLowStockThreshold,
+  getSubscriptionCapabilities,
   getSubscriptionUsage,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
+import {
+  calculateInventoryValue,
+  getEffectiveItemLowStockThreshold,
+} from "@/app/lib/inventoryItemModel";
 
 interface Item {
   id: number;
@@ -27,6 +36,9 @@ interface Item {
   image: string;
   sku?: string;
   notes?: string;
+  cost_price?: number | string | null;
+  selling_price?: number | string | null;
+  min_stock_level?: number | null;
 }
 
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
@@ -46,6 +58,11 @@ export default function DashboardPage() {
     subscriptionUsage.subscription,
     businessSettings.low_stock_threshold
   );
+  const planCapabilities = getSubscriptionCapabilities(
+    subscriptionUsage.subscription
+  );
+  const canViewValueAnalytics =
+    subscriptionUsage.subscription.plan !== "free";
 
   useEffect(() => {
     let isActive = true;
@@ -117,10 +134,16 @@ export default function DashboardPage() {
       0
     );
 
-    const lowStockItems = items.filter(
-      (item) =>
-        Number(item.quantity || 0) <= effectiveLowStockThreshold
-    ).length;
+    const lowStockItems = items.filter((item) => {
+      const itemThreshold = planCapabilities.customLowStockThreshold
+        ? getEffectiveItemLowStockThreshold(
+            item.min_stock_level,
+            effectiveLowStockThreshold
+          )
+        : effectiveLowStockThreshold;
+
+      return Number(item.quantity || 0) <= itemThreshold;
+    }).length;
 
     return {
       totalItems: items.length,
@@ -128,7 +151,114 @@ export default function DashboardPage() {
       lowStockItems,
       recentlyAddedItems: Math.min(items.length, 3),
     };
-  }, [effectiveLowStockThreshold, items]);
+  }, [
+    effectiveLowStockThreshold,
+    items,
+    planCapabilities.customLowStockThreshold,
+  ]);
+
+  const valueAnalytics = useMemo<InventoryValueAnalytics>(() => {
+    const categoryValues = new Map<string, InventoryCategoryValue>();
+    let totalCostValue = 0;
+    let totalRetailValue = 0;
+    let itemsWithPriceData = 0;
+    let hasCostPriceData = false;
+    let lowStockItems = 0;
+    let outOfStockItems = 0;
+
+    items.forEach((item) => {
+      const quantity = Number(item.quantity || 0);
+      const hasCostPrice =
+        item.cost_price !== null &&
+        item.cost_price !== undefined &&
+        item.cost_price !== "";
+      const hasSellingPrice =
+        item.selling_price !== null &&
+        item.selling_price !== undefined &&
+        item.selling_price !== "";
+      const costValue = calculateInventoryValue(quantity, item.cost_price);
+      const retailValue = calculateInventoryValue(
+        quantity,
+        item.selling_price
+      );
+      const itemThreshold = planCapabilities.customLowStockThreshold
+        ? getEffectiveItemLowStockThreshold(
+            item.min_stock_level,
+            effectiveLowStockThreshold
+          )
+        : effectiveLowStockThreshold;
+
+      if (hasCostPrice || hasSellingPrice) {
+        itemsWithPriceData += 1;
+      }
+      if (hasCostPrice) {
+        hasCostPriceData = true;
+      }
+      if (costValue !== null) {
+        totalCostValue += costValue;
+      }
+      if (retailValue !== null) {
+        totalRetailValue += retailValue;
+      }
+      if (quantity <= itemThreshold) {
+        lowStockItems += 1;
+      }
+      if (quantity <= 0) {
+        outOfStockItems += 1;
+      }
+
+      if (hasCostPrice) {
+        const category = item.category?.trim() || "Uncategorized";
+        const currentCategory = categoryValues.get(category) || {
+          category,
+          costValue: 0,
+          retailValue: 0,
+        };
+
+        currentCategory.costValue += costValue || 0;
+        currentCategory.retailValue += retailValue || 0;
+        categoryValues.set(category, currentCategory);
+      }
+    });
+
+    const sortedCategories = [...categoryValues.values()].sort(
+      (left, right) => right.costValue - left.costValue
+    );
+    const categories = sortedCategories.slice(0, 6);
+
+    if (sortedCategories.length > 6) {
+      categories.push(
+        sortedCategories.slice(6).reduce<InventoryCategoryValue>(
+          (other, category) => ({
+            category: "Other",
+            costValue: other.costValue + category.costValue,
+            retailValue: other.retailValue + category.retailValue,
+          }),
+          {
+            category: "Other",
+            costValue: 0,
+            retailValue: 0,
+          }
+        )
+      );
+    }
+
+    return {
+      totalCostValue: Math.round(totalCostValue * 100) / 100,
+      totalRetailValue: Math.round(totalRetailValue * 100) / 100,
+      estimatedMarginValue:
+        Math.round((totalRetailValue - totalCostValue) * 100) / 100,
+      itemsWithPriceData,
+      lowStockItems,
+      outOfStockItems,
+      hasCostPriceData,
+      categories,
+    };
+  }, [
+    effectiveLowStockThreshold,
+    items,
+    planCapabilities.customLowStockThreshold,
+  ]);
 
   const recentItems = useMemo(
     () => items.slice(0, 3),
@@ -333,6 +463,14 @@ export default function DashboardPage() {
             ))}
           </section>
 
+          <InventoryValueOverview
+            analytics={valueAnalytics}
+            currencyCode={businessSettings.currency_code || "USD"}
+            currentPlanName={currentPlanName}
+            isLocked={!canViewValueAnalytics}
+            loading={loading}
+          />
+
           <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -433,7 +571,13 @@ export default function DashboardPage() {
                           Qty {item.quantity}
                         </span>
 
-                        {item.quantity <= effectiveLowStockThreshold && (
+                        {item.quantity <=
+                          (planCapabilities.customLowStockThreshold
+                            ? getEffectiveItemLowStockThreshold(
+                                item.min_stock_level,
+                                effectiveLowStockThreshold
+                              )
+                            : effectiveLowStockThreshold) && (
                           <span className="rounded-full border border-red-400/30 bg-red-500/15 px-3 py-2 text-xs font-bold text-red-300">
                             Low Stock
                           </span>
