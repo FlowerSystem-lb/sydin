@@ -35,6 +35,7 @@ import {
   getEffectiveItemLowStockThreshold,
   getInventoryQuantityLabel,
   normalizeCurrencyCode,
+  normalizeInventoryUnitType,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
@@ -103,6 +104,15 @@ const CSV_HEADERS = [
   "Notes",
   "Image URL",
   "Public Item URL",
+  "Item Code",
+  "Unit Type",
+  "Custom Unit Label",
+  "Cost Price",
+  "Selling Price",
+  "Stock Cost Value",
+  "Stock Retail Value",
+  "Min Stock Level",
+  "Barcode",
 ];
 
 function escapeCsvValue(value: string | number | null | undefined) {
@@ -965,10 +975,25 @@ export default function InventoryPage() {
         item.category,
         formatDepotLabel(depots.find((depot) => depot.id === item.depot_id)),
         item.quantity,
-        item.quantity <= effectiveLowStockThreshold ? "Yes" : "No",
+        item.quantity <=
+        getEffectiveItemLowStockThreshold(
+          item.min_stock_level,
+          effectiveLowStockThreshold
+        )
+          ? "Yes"
+          : "No",
         item.notes || "",
         item.image || "",
         item.public_id ? `${publicBaseUrl}/item/${item.public_id}` : "",
+        item.item_code || "",
+        normalizeInventoryUnitType(item.unit_type),
+        item.unit_type === "custom" ? item.custom_unit_label || "" : "",
+        item.cost_price ?? "",
+        item.selling_price ?? "",
+        calculateInventoryValue(item.quantity, item.cost_price) ?? "",
+        calculateInventoryValue(item.quantity, item.selling_price) ?? "",
+        item.min_stock_level ?? "",
+        item.barcode || "",
       ]);
       const csv = [CSV_HEADERS, ...rows]
         .map((row) => row.map(escapeCsvValue).join(","))
@@ -1023,6 +1048,13 @@ export default function InventoryPage() {
           sku: item.sku,
           category: item.category,
           quantity: item.quantity,
+          itemCode: item.item_code,
+          unitType: normalizeInventoryUnitType(item.unit_type),
+          customUnitLabel: item.custom_unit_label,
+          costPrice: item.cost_price,
+          sellingPrice: item.selling_price,
+          minStockLevel: item.min_stock_level,
+          barcode: item.barcode,
           notes: item.notes,
           image: item.image,
           depotLabel: formatDepotLabel(
@@ -1039,6 +1071,7 @@ export default function InventoryPage() {
           contactWebsite: businessSettings.contact_website,
         },
         lowStockThreshold: effectiveLowStockThreshold,
+        currencyCode: editCurrencyCode,
       });
 
       setPageNotice(
@@ -1081,6 +1114,13 @@ export default function InventoryPage() {
           sku: item.sku,
           category: item.category,
           quantity: item.quantity,
+          itemCode: item.item_code,
+          unitType: normalizeInventoryUnitType(item.unit_type),
+          customUnitLabel: item.custom_unit_label,
+          costPrice: item.cost_price,
+          sellingPrice: item.selling_price,
+          minStockLevel: item.min_stock_level,
+          barcode: item.barcode,
           notes: item.notes,
           image: item.image,
           publicItemUrl: item.public_id
@@ -1100,6 +1140,7 @@ export default function InventoryPage() {
           contactWebsite: businessSettings.contact_website,
         },
         lowStockThreshold: effectiveLowStockThreshold,
+        currencyCode: editCurrencyCode,
       });
 
       setPageNotice(

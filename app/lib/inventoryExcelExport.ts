@@ -1,4 +1,10 @@
 import ExcelJS from "exceljs";
+import {
+  calculateInventoryValue,
+  getEffectiveItemLowStockThreshold,
+  normalizeCurrencyCode,
+  type InventoryUnitType,
+} from "@/app/lib/inventoryItemModel";
 
 export interface ExcelInventoryItem {
   id: number;
@@ -10,6 +16,13 @@ export interface ExcelInventoryItem {
   image?: string;
   publicItemUrl?: string;
   depotLabel: string;
+  itemCode?: string | null;
+  unitType?: InventoryUnitType | null;
+  customUnitLabel?: string | null;
+  costPrice?: number | string | null;
+  sellingPrice?: number | string | null;
+  minStockLevel?: number | null;
+  barcode?: string | null;
 }
 
 export interface ExcelBusinessBranding {
@@ -24,6 +37,7 @@ export interface ExportInventoryExcelOptions {
   items: ExcelInventoryItem[];
   branding: ExcelBusinessBranding;
   lowStockThreshold: number;
+  currencyCode?: string;
 }
 
 interface WorkbookImageData {
@@ -45,6 +59,15 @@ const TABLE_HEADERS = [
   "Notes",
   "Image URL",
   "Public Item URL",
+  "Item Code",
+  "Unit Type",
+  "Custom Unit Label",
+  "Cost Price",
+  "Selling Price",
+  "Stock Cost Value",
+  "Stock Retail Value",
+  "Min Stock Level",
+  "Barcode",
 ];
 
 function formatDateForDisplay(date: Date) {
@@ -284,13 +307,18 @@ export async function exportInventoryExcel({
   items,
   branding,
   lowStockThreshold,
+  currencyCode,
 }: ExportInventoryExcelOptions) {
   const generatedAt = new Date();
   const businessName = branding.businessName.trim() || "SydIn Account";
   const threshold = Number.isFinite(lowStockThreshold)
     ? lowStockThreshold
     : 10;
-  const lowStockCount = items.filter((item) => item.quantity <= threshold).length;
+  const normalizedCurrency = normalizeCurrencyCode(currencyCode, "USD");
+  const isLowStock = (item: ExcelInventoryItem) =>
+    item.quantity <=
+    getEffectiveItemLowStockThreshold(item.minStockLevel, threshold);
+  const lowStockCount = items.filter(isLowStock).length;
   const totalQuantity = items.reduce((total, item) => total + item.quantity, 0);
   const assignedDepotCount = new Set(
     items
@@ -335,6 +363,15 @@ export async function exportInventoryExcel({
     { key: "notes", width: 34 },
     { key: "imageUrl", width: 38 },
     { key: "publicItemUrl", width: 38 },
+    { key: "itemCode", width: 18 },
+    { key: "unitType", width: 16 },
+    { key: "customUnitLabel", width: 22 },
+    { key: "costPrice", width: 16 },
+    { key: "sellingPrice", width: 16 },
+    { key: "stockCostValue", width: 20 },
+    { key: "stockRetailValue", width: 20 },
+    { key: "minStockLevel", width: 18 },
+    { key: "barcode", width: 24 },
   ];
 
   for (let rowIndex = 1; rowIndex <= 4; rowIndex += 1) {
@@ -466,7 +503,7 @@ export async function exportInventoryExcel({
   items.forEach((item, index) => {
     const rowIndex = tableHeaderRow + index + 1;
     const row = worksheet.getRow(rowIndex);
-    const isLowStock = item.quantity <= threshold;
+    const itemIsLowStock = isLowStock(item);
     const thumbnail = itemThumbnails.get(item.id);
     const imageLabel = thumbnail
       ? ""
@@ -482,16 +519,25 @@ export async function exportInventoryExcel({
       item.category,
       item.depotLabel,
       item.quantity,
-      isLowStock ? "Low Stock" : "In Stock",
+      itemIsLowStock ? "Low Stock" : "In Stock",
       item.notes || "",
       "",
       "",
+      item.itemCode || "",
+      item.unitType || "piece",
+      item.unitType === "custom" ? item.customUnitLabel || "" : "",
+      item.costPrice ?? "",
+      item.sellingPrice ?? "",
+      calculateInventoryValue(item.quantity, item.costPrice) ?? "",
+      calculateInventoryValue(item.quantity, item.sellingPrice) ?? "",
+      item.minStockLevel ?? "",
+      item.barcode || "",
     ];
     row.height = thumbnail ? 42 : 28;
 
     row.eachCell({ includeEmpty: true }, (cell, columnNumber) => {
       styleCell(cell, {
-        fill: isLowStock ? "FFFFF1F2" : "FFFFFFFF",
+        fill: itemIsLowStock ? "FFFFF1F2" : "FFFFFFFF",
         align: {
           horizontal: columnNumber === 7 ? "right" : "left",
           vertical: "middle",
@@ -506,11 +552,16 @@ export async function exportInventoryExcel({
       size: 11,
       bold: true,
       color: {
-        argb: isLowStock ? "FFB91C1C" : "FF166534",
+        argb: itemIsLowStock ? "FFB91C1C" : "FF166534",
       },
     };
     setHyperlinkCell(row.getCell(10), item.image || "");
     setHyperlinkCell(row.getCell(11), item.publicItemUrl || "");
+    [15, 16, 17, 18].forEach((columnNumber) => {
+      row.getCell(columnNumber).numFmt = `"${normalizedCurrency}" #,##0.00`;
+    });
+    row.getCell(19).numFmt = "0";
+    row.getCell(20).numFmt = "@";
 
     if (thumbnail) {
       const imageSize = getContainedImageSize(
@@ -533,8 +584,14 @@ export async function exportInventoryExcel({
   });
 
   worksheet.columns.forEach((column, index) => {
-    const maxWidthByColumn = [16, 12, 34, 24, 24, 28, 12, 16, 42, 46, 46][index];
-    const minWidthByColumn = [14, 10, 18, 14, 14, 16, 12, 14, 18, 28, 28][index];
+    const maxWidthByColumn = [
+      16, 12, 34, 24, 24, 28, 12, 16, 42, 46, 46, 22, 18, 24, 18, 18, 22,
+      22, 18, 28,
+    ][index];
+    const minWidthByColumn = [
+      14, 10, 18, 14, 14, 16, 12, 14, 18, 28, 28, 14, 12, 14, 14, 14, 16,
+      16, 14, 18,
+    ][index];
     let longestValue = minWidthByColumn;
 
     column.eachCell?.({ includeEmpty: false }, (cell) => {

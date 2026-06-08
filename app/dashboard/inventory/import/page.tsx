@@ -55,6 +55,25 @@ function getFieldErrorClass(
     : "border-white/10 bg-white/[0.04] text-slate-300";
 }
 
+function getPhaseFieldErrorClass(
+  validation: InventoryImportValidation,
+  rowNumber: number
+) {
+  const phaseFields = new Set([
+    "unit_type",
+    "custom_unit_label",
+    "cost_price",
+    "selling_price",
+    "min_stock_level",
+    "barcode",
+  ]);
+  const row = validation.rows.find((item) => item.rowNumber === rowNumber);
+
+  return row?.errors.some((error) => phaseFields.has(error.field))
+    ? "border-red-400/35 bg-red-500/10 text-red-100"
+    : "border-indigo-300/15 bg-indigo-500/[0.06] text-slate-300";
+}
+
 export default function InventoryImportPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
   const [usage, setUsage] = useState<SubscriptionUsage>(
@@ -299,6 +318,15 @@ export default function InventoryImportPage() {
         sku: row.values.sku,
         category: row.values.category,
         quantity: row.values.quantity,
+        unit_type: row.values.unit_type,
+        custom_unit_label:
+          row.values.unit_type === "custom"
+            ? row.values.custom_unit_label
+            : null,
+        cost_price: row.values.cost_price,
+        selling_price: row.values.selling_price,
+        min_stock_level: row.values.min_stock_level,
+        barcode: row.values.barcode || null,
         notes: row.values.notes,
         depot_id: row.depotId,
         image: "",
@@ -656,6 +684,13 @@ export default function InventoryImportPage() {
                 </div>
               </section>
 
+              {parsedFile.ignoredItemCodeColumn && (
+                <section className="rounded-[24px] border border-amber-300/25 bg-amber-500/10 px-5 py-4 text-sm font-semibold leading-6 text-amber-100">
+                  The uploaded item code column was ignored. SydIN generates
+                  item codes automatically when records are created.
+                </section>
+              )}
+
               {validation.invalidRows.length > 0 && (
                 <section className="rounded-[28px] border border-red-400/25 bg-red-500/10 p-5 text-red-100 shadow-[0_22px_70px_rgba(0,0,0,0.22)]">
                   <h2 className="text-lg font-bold">
@@ -687,10 +722,10 @@ export default function InventoryImportPage() {
 
                 <div className="hidden overflow-hidden rounded-2xl border border-white/10 md:block">
                   <div className="overflow-x-auto">
-                    <table className="w-full min-w-[1050px] border-collapse text-left text-sm">
+                    <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
                       <thead className="bg-[#11172a] text-xs uppercase tracking-[0.12em] text-slate-400">
                         <tr>
-                          {["Row", "Name", "SKU", "Category", "Quantity", "Depot", "Notes", "Status"].map(
+                          {["Row", "Name", "SKU", "Category", "Quantity", "Depot", "Phase 4A", "Notes", "Status"].map(
                             (header) => (
                               <th key={header} className="px-4 py-4 font-bold">
                                 {header}
@@ -719,7 +754,6 @@ export default function InventoryImportPage() {
                                   : String(row.values.quantity),
                               ],
                               ["depot", row.values.depot || "Unassigned"],
-                              ["notes", row.values.notes || "Not provided"],
                             ].map(([field, value]) => (
                               <td key={field} className="px-3 py-3">
                                 <div
@@ -733,6 +767,50 @@ export default function InventoryImportPage() {
                                 </div>
                               </td>
                             ))}
+                            <td className="px-3 py-3">
+                              <div
+                                className={`max-w-[260px] rounded-xl border px-3 py-2 ${getPhaseFieldErrorClass(
+                                  validation,
+                                  row.rowNumber
+                                )}`}
+                              >
+                                <p className="font-semibold">
+                                  Unit: {row.values.unit_type}
+                                  {row.values.custom_unit_label
+                                    ? ` (${row.values.custom_unit_label})`
+                                    : ""}
+                                </p>
+                                <p className="mt-1 text-xs text-slate-400">
+                                  Cost:{" "}
+                                  {row.values.cost_price === null
+                                    ? "Optional"
+                                    : row.values.cost_price}
+                                  {" | "}Price:{" "}
+                                  {row.values.selling_price === null
+                                    ? "Optional"
+                                    : row.values.selling_price}
+                                </p>
+                                <p className="mt-1 break-all text-xs text-slate-400">
+                                  Min:{" "}
+                                  {row.values.min_stock_level === null
+                                    ? "Default"
+                                    : row.values.min_stock_level}
+                                  {" | "}Barcode:{" "}
+                                  {row.values.barcode || "Optional"}
+                                </p>
+                              </div>
+                            </td>
+                            <td className="px-3 py-3">
+                              <div
+                                className={`max-w-[230px] break-words rounded-xl border px-3 py-2 ${getFieldErrorClass(
+                                  validation,
+                                  row.rowNumber,
+                                  "notes"
+                                )}`}
+                              >
+                                {row.values.notes || "Not provided"}
+                              </div>
+                            </td>
                             <td className="px-4 py-4">
                               {row.isValid ? (
                                 <span className="inline-flex rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200">
@@ -814,6 +892,52 @@ export default function InventoryImportPage() {
                             </p>
                           </div>
                         ))}
+                      </div>
+
+                      <div
+                        className={`mt-3 rounded-2xl border p-3 ${getPhaseFieldErrorClass(
+                          validation,
+                          row.rowNumber
+                        )}`}
+                      >
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-200">
+                          Phase 4A details
+                        </p>
+                        <div className="mt-2 grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
+                          <p>
+                            Unit:{" "}
+                            <span className="font-semibold">
+                              {row.values.unit_type}
+                              {row.values.custom_unit_label
+                                ? ` (${row.values.custom_unit_label})`
+                                : ""}
+                            </span>
+                          </p>
+                          <p>
+                            Min stock:{" "}
+                            <span className="font-semibold">
+                              {row.values.min_stock_level ?? "Default"}
+                            </span>
+                          </p>
+                          <p>
+                            Cost:{" "}
+                            <span className="font-semibold">
+                              {row.values.cost_price ?? "Optional"}
+                            </span>
+                          </p>
+                          <p>
+                            Selling:{" "}
+                            <span className="font-semibold">
+                              {row.values.selling_price ?? "Optional"}
+                            </span>
+                          </p>
+                          <p className="break-all sm:col-span-2">
+                            Barcode:{" "}
+                            <span className="font-mono font-semibold">
+                              {row.values.barcode || "Optional"}
+                            </span>
+                          </p>
+                        </div>
                       </div>
 
                       {row.errors.length > 0 && (

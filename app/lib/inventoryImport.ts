@@ -1,6 +1,11 @@
 import ExcelJS from "exceljs";
 import Papa from "papaparse";
 import type { Depot } from "@/app/lib/depots";
+import {
+  INVENTORY_UNIT_TYPES,
+  parseInventoryUnitType,
+  type InventoryUnitType,
+} from "@/app/lib/inventoryItemModel";
 
 export const INVENTORY_IMPORT_HEADERS = [
   "Name",
@@ -9,6 +14,12 @@ export const INVENTORY_IMPORT_HEADERS = [
   "Quantity",
   "Depot",
   "Notes",
+  "Unit Type",
+  "Custom Unit Label",
+  "Cost Price",
+  "Selling Price",
+  "Min Stock Level",
+  "Barcode",
 ] as const;
 
 export const MAX_IMPORT_FILE_SIZE = 5 * 1024 * 1024;
@@ -20,7 +31,13 @@ type ImportColumn =
   | "category"
   | "quantity"
   | "depot"
-  | "notes";
+  | "notes"
+  | "unit_type"
+  | "custom_unit_label"
+  | "cost_price"
+  | "selling_price"
+  | "min_stock_level"
+  | "barcode";
 
 export interface ParsedInventoryRow {
   rowNumber: number;
@@ -33,12 +50,20 @@ export interface ParsedInventoryFile {
   totalRows: number;
   skippedEmptyRows: number;
   rows: ParsedInventoryRow[];
+  ignoredItemCodeColumn: boolean;
 }
 
 export interface InventoryImportRowError {
   field: ImportColumn;
   message: string;
-  type: "required" | "quantity" | "duplicate-sku" | "depot";
+  type:
+    | "required"
+    | "quantity"
+    | "duplicate-sku"
+    | "depot"
+    | "unit"
+    | "price"
+    | "min-stock";
 }
 
 export interface ValidatedInventoryRow {
@@ -50,6 +75,12 @@ export interface ValidatedInventoryRow {
     quantity: number | null;
     depot: string;
     notes: string;
+    unit_type: InventoryUnitType;
+    custom_unit_label: string;
+    cost_price: number | null;
+    selling_price: number | null;
+    min_stock_level: number | null;
+    barcode: string;
   };
   depotId: number | null;
   errors: InventoryImportRowError[];
@@ -71,13 +102,26 @@ const COLUMN_BY_HEADER: Record<string, ImportColumn> = {
   quantity: "quantity",
   depot: "depot",
   notes: "notes",
+  unit_type: "unit_type",
+  unit: "unit_type",
+  custom_unit_label: "custom_unit_label",
+  custom_unit: "custom_unit_label",
+  cost_price: "cost_price",
+  cost: "cost_price",
+  selling_price: "selling_price",
+  price: "selling_price",
+  min_stock_level: "min_stock_level",
+  min_stock: "min_stock_level",
+  barcode: "barcode",
 };
 
 function normalizeHeader(value: unknown) {
   return String(value ?? "")
     .replace(/^\uFEFF/, "")
     .trim()
-    .toLowerCase();
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }
 
 function normalizeCellValue(value: unknown): string {
@@ -126,15 +170,29 @@ function createEmptyValues(): Record<ImportColumn, string> {
     quantity: "",
     depot: "",
     notes: "",
+    unit_type: "",
+    custom_unit_label: "",
+    cost_price: "",
+    selling_price: "",
+    min_stock_level: "",
+    barcode: "",
   };
 }
 
 function buildHeaderMap(headers: unknown[]) {
   const headerMap = new Map<number, ImportColumn>();
   const seenColumns = new Set<ImportColumn>();
+  let ignoredItemCodeColumn = false;
 
   headers.forEach((header, index) => {
-    const column = COLUMN_BY_HEADER[normalizeHeader(header)];
+    const normalizedHeader = normalizeHeader(header);
+
+    if (normalizedHeader === "item_code") {
+      ignoredItemCodeColumn = true;
+      return;
+    }
+
+    const column = COLUMN_BY_HEADER[normalizedHeader];
 
     if (!column) return;
 
@@ -152,7 +210,10 @@ function buildHeaderMap(headers: unknown[]) {
     );
   }
 
-  return headerMap;
+  return {
+    headerMap,
+    ignoredItemCodeColumn,
+  };
 }
 
 function normalizeRows(
@@ -248,7 +309,9 @@ async function parseExcelFile(file: File) {
       columnNumber <= worksheet.columnCount;
       columnNumber += 1
     ) {
-      values.push(row.getCell(columnNumber).value);
+      const cell = row.getCell(columnNumber);
+
+      values.push(cell.text || cell.value);
     }
 
     rawRows.push(values);
@@ -284,7 +347,9 @@ export async function parseInventoryImportFile(
   }
 
   const headerRowIndex = findHeaderRow(rawRows);
-  const headerMap = buildHeaderMap(rawRows[headerRowIndex] || []);
+  const { headerMap, ignoredItemCodeColumn } = buildHeaderMap(
+    rawRows[headerRowIndex] || []
+  );
   const normalized = normalizeRows(rawRows, headerRowIndex, headerMap);
 
   if (normalized.rows.length === 0) {
@@ -299,6 +364,7 @@ export async function parseInventoryImportFile(
     totalRows: normalized.rows.length + normalized.skippedEmptyRows,
     skippedEmptyRows: normalized.skippedEmptyRows,
     rows: normalized.rows,
+    ignoredItemCodeColumn,
   };
 }
 
@@ -337,6 +403,18 @@ export function validateInventoryImportRows({
     const quantity = quantityText === "" ? null : Number(quantityText);
     const depotName = row.values.depot.trim();
     const notes = row.values.notes.trim();
+    const unitTypeText = row.values.unit_type.trim();
+    const unitType = parseInventoryUnitType(unitTypeText);
+    const customUnitLabel = row.values.custom_unit_label.trim();
+    const costPriceText = row.values.cost_price.trim();
+    const costPrice = costPriceText === "" ? null : Number(costPriceText);
+    const sellingPriceText = row.values.selling_price.trim();
+    const sellingPrice =
+      sellingPriceText === "" ? null : Number(sellingPriceText);
+    const minStockLevelText = row.values.min_stock_level.trim();
+    const minStockLevel =
+      minStockLevelText === "" ? null : Number(minStockLevelText);
+    const barcode = row.values.barcode.trim();
     const errors: InventoryImportRowError[] = [];
     let depotId: number | null = null;
 
@@ -358,6 +436,57 @@ export function validateInventoryImportRows({
         field: "quantity",
         message: "Quantity must be a whole number of 0 or more.",
         type: "quantity",
+      });
+    }
+
+    if (!unitType) {
+      errors.push({
+        field: "unit_type",
+        message: `Unit "${unitTypeText}" is not supported.`,
+        type: "unit",
+      });
+    }
+
+    if (unitType === "custom" && !customUnitLabel) {
+      errors.push({
+        field: "custom_unit_label",
+        message: "Custom unit label is required when unit is custom.",
+        type: "unit",
+      });
+    }
+
+    if (
+      costPrice !== null &&
+      (!Number.isFinite(costPrice) || costPrice < 0)
+    ) {
+      errors.push({
+        field: "cost_price",
+        message: "Cost price must be empty or 0 or more.",
+        type: "price",
+      });
+    }
+
+    if (
+      sellingPrice !== null &&
+      (!Number.isFinite(sellingPrice) || sellingPrice < 0)
+    ) {
+      errors.push({
+        field: "selling_price",
+        message: "Selling price must be empty or 0 or more.",
+        type: "price",
+      });
+    }
+
+    if (
+      minStockLevel !== null &&
+      (!Number.isFinite(minStockLevel) ||
+        !Number.isInteger(minStockLevel) ||
+        minStockLevel < 0)
+    ) {
+      errors.push({
+        field: "min_stock_level",
+        message: "Minimum stock must be empty or a whole number of 0 or more.",
+        type: "min-stock",
       });
     }
 
@@ -420,6 +549,13 @@ export function validateInventoryImportRows({
         quantity,
         depot: depotName,
         notes,
+        unit_type: unitType || "piece",
+        custom_unit_label:
+          unitType === "custom" ? customUnitLabel : "",
+        cost_price: costPrice,
+        selling_price: sellingPrice,
+        min_stock_level: minStockLevel,
+        barcode,
       },
       depotId,
       errors,
@@ -459,8 +595,34 @@ export function downloadInventoryCsvTemplate() {
   const csv = Papa.unparse({
     fields: [...INVENTORY_IMPORT_HEADERS],
     data: [
-      ["Example Product", "SKU-1001", "General", 25, "Main Depot", "Example row"],
-      ["Unassigned Product", "", "Supplies", 0, "", "SKU and depot are optional"],
+      [
+        "Example Product",
+        "SKU-1001",
+        "General",
+        25,
+        "Main Depot",
+        "Example row",
+        "piece",
+        "",
+        "2.50",
+        "5.00",
+        3,
+        "0012345678905",
+      ],
+      [
+        "Unassigned Product",
+        "",
+        "Supplies",
+        0,
+        "",
+        "SKU, depot, prices, and barcode are optional",
+        "piece",
+        "",
+        "",
+        "",
+        "",
+        "",
+      ],
     ],
   });
 
@@ -490,6 +652,12 @@ export async function downloadInventoryExcelTemplate() {
     { header: "Quantity", key: "quantity", width: 14 },
     { header: "Depot", key: "depot", width: 24 },
     { header: "Notes", key: "notes", width: 36 },
+    { header: "Unit Type", key: "unit_type", width: 18 },
+    { header: "Custom Unit Label", key: "custom_unit_label", width: 22 },
+    { header: "Cost Price", key: "cost_price", width: 16 },
+    { header: "Selling Price", key: "selling_price", width: 16 },
+    { header: "Min Stock Level", key: "min_stock_level", width: 18 },
+    { header: "Barcode", key: "barcode", width: 22 },
   ];
   worksheet.addRow({
     name: "Example Product",
@@ -498,6 +666,12 @@ export async function downloadInventoryExcelTemplate() {
     quantity: 25,
     depot: "Main Depot",
     notes: "Example row",
+    unit_type: "piece",
+    custom_unit_label: "",
+    cost_price: 2.5,
+    selling_price: 5,
+    min_stock_level: 3,
+    barcode: "0012345678905",
   });
   worksheet.addRow({
     name: "Unassigned Product",
@@ -505,7 +679,13 @@ export async function downloadInventoryExcelTemplate() {
     category: "Supplies",
     quantity: 0,
     depot: "",
-    notes: "SKU and depot are optional",
+    notes: "SKU, depot, prices, and barcode are optional",
+    unit_type: "piece",
+    custom_unit_label: "",
+    cost_price: "",
+    selling_price: "",
+    min_stock_level: "",
+    barcode: "",
   });
 
   const headerRow = worksheet.getRow(1);
@@ -577,9 +757,52 @@ export async function downloadInventoryExcelTemplate() {
       error: "Enter a whole number of 0 or more.",
     };
   });
+  worksheet.getColumn("G").eachCell((cell, rowNumber) => {
+    if (rowNumber === 1) return;
+
+    cell.dataValidation = {
+      type: "list",
+      allowBlank: true,
+      formulae: [`"${INVENTORY_UNIT_TYPES.join(",")}"`],
+      showErrorMessage: true,
+      errorTitle: "Invalid unit",
+      error: "Choose a unit from the list or leave blank for piece.",
+    };
+  });
+  ["I", "J"].forEach((columnName) => {
+    worksheet.getColumn(columnName).numFmt = "0.00";
+    worksheet.getColumn(columnName).eachCell((cell, rowNumber) => {
+      if (rowNumber === 1) return;
+
+      cell.dataValidation = {
+        type: "decimal",
+        operator: "greaterThanOrEqual",
+        allowBlank: true,
+        formulae: [0],
+        showErrorMessage: true,
+        errorTitle: "Invalid price",
+        error: "Enter 0 or more, or leave blank.",
+      };
+    });
+  });
+  worksheet.getColumn("K").numFmt = "0";
+  worksheet.getColumn("K").eachCell((cell, rowNumber) => {
+    if (rowNumber === 1) return;
+
+    cell.dataValidation = {
+      type: "whole",
+      operator: "greaterThanOrEqual",
+      allowBlank: true,
+      formulae: [0],
+      showErrorMessage: true,
+      errorTitle: "Invalid minimum stock",
+      error: "Enter a whole number of 0 or more, or leave blank.",
+    };
+  });
+  worksheet.getColumn("L").numFmt = "@";
   worksheet.autoFilter = {
     from: "A1",
-    to: "F1",
+    to: "L1",
   };
 
   const buffer = await workbook.xlsx.writeBuffer();

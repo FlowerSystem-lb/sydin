@@ -24,6 +24,29 @@ export const INVENTORY_UNIT_LABELS: Record<InventoryUnitType, string> = {
   custom: "Custom",
 };
 
+const INVENTORY_UNIT_ALIASES: Record<string, InventoryUnitType> = {
+  piece: "piece",
+  pieces: "piece",
+  pc: "piece",
+  pcs: "piece",
+  box: "box",
+  boxes: "box",
+  dozen: "dozen",
+  dozens: "dozen",
+  half_dozen: "half_dozen",
+  half_dozen_units: "half_dozen",
+  pack: "pack",
+  packs: "pack",
+  kg: "kg",
+  kilogram: "kg",
+  kilograms: "kg",
+  meter: "meter",
+  meters: "meter",
+  metre: "meter",
+  metres: "meter",
+  custom: "custom",
+};
+
 export interface InventoryItemModelFields {
   item_code?: string | null;
   unit_type?: InventoryUnitType | string | null;
@@ -41,6 +64,22 @@ export function normalizeInventoryUnitType(
     INVENTORY_UNIT_TYPES.includes(value as InventoryUnitType)
     ? (value as InventoryUnitType)
     : DEFAULT_INVENTORY_UNIT_TYPE;
+}
+
+export function parseInventoryUnitType(
+  value: unknown
+): InventoryUnitType | null {
+  const normalizedValue = String(value ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  if (!normalizedValue) {
+    return DEFAULT_INVENTORY_UNIT_TYPE;
+  }
+
+  return INVENTORY_UNIT_ALIASES[normalizedValue] || null;
 }
 
 export function getInventoryUnitLabel(

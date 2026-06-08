@@ -1,5 +1,13 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import {
+  calculateInventoryValue,
+  formatInventoryPrice,
+  getEffectiveItemLowStockThreshold,
+  getInventoryQuantityLabel,
+  normalizeCurrencyCode,
+  type InventoryUnitType,
+} from "@/app/lib/inventoryItemModel";
 
 export interface PdfInventoryItem {
   id: number;
@@ -10,6 +18,13 @@ export interface PdfInventoryItem {
   notes?: string;
   image?: string;
   depotLabel: string;
+  itemCode?: string | null;
+  unitType?: InventoryUnitType | null;
+  customUnitLabel?: string | null;
+  costPrice?: number | string | null;
+  sellingPrice?: number | string | null;
+  minStockLevel?: number | null;
+  barcode?: string | null;
 }
 
 export interface PdfBusinessBranding {
@@ -24,6 +39,7 @@ export interface ExportInventoryPdfOptions {
   items: PdfInventoryItem[];
   branding: PdfBusinessBranding;
   lowStockThreshold: number;
+  currencyCode?: string;
 }
 
 function formatDateForDisplay(date: Date) {
@@ -173,6 +189,7 @@ export async function exportInventoryPdf({
   items,
   branding,
   lowStockThreshold,
+  currencyCode,
 }: ExportInventoryPdfOptions) {
   const generatedAt = new Date();
   const document = new jsPDF({
@@ -187,7 +204,11 @@ export async function exportInventoryPdf({
   const threshold = Number.isFinite(lowStockThreshold)
     ? lowStockThreshold
     : 10;
-  const lowStockCount = items.filter((item) => item.quantity <= threshold).length;
+  const normalizedCurrency = normalizeCurrencyCode(currencyCode, "USD");
+  const isLowStock = (item: PdfInventoryItem) =>
+    item.quantity <=
+    getEffectiveItemLowStockThreshold(item.minStockLevel, threshold);
+  const lowStockCount = items.filter(isLowStock).length;
   const totalQuantity = items.reduce((total, item) => total + item.quantity, 0);
   const assignedDepotCount = new Set(
     items
@@ -297,21 +318,71 @@ export async function exportInventoryPdf({
 
   autoTable(document, {
     startY: summaryTop + 26,
-    head: [["Image", "Name", "SKU", "Category", "Depot", "Qty", "Status", "Notes"]],
-    body: items.map((item) => [
-      itemThumbnails.has(item.id)
-        ? ""
-        : item.image && !thumbnailCandidateIds.has(item.id)
-          ? "Image available"
-          : "No image",
-      item.name,
-      item.sku || "N/A",
-      item.category,
-      item.depotLabel,
-      String(item.quantity),
-      item.quantity <= threshold ? "Low Stock" : "In Stock",
-      item.notes || "",
-    ]),
+    head: [
+      [
+        "Image",
+        "Item",
+        "Tracking",
+        "Category / Depot",
+        "Stock",
+        "Pricing / Value",
+        "Status",
+        "Notes",
+      ],
+    ],
+    body: items.map((item) => {
+      const costValue = calculateInventoryValue(
+        item.quantity,
+        item.costPrice
+      );
+      const retailValue = calculateInventoryValue(
+        item.quantity,
+        item.sellingPrice
+      );
+      const trackingLines = [
+        item.sku ? `SKU: ${item.sku}` : "",
+        item.barcode ? `Barcode: ${item.barcode}` : "",
+      ].filter(Boolean);
+      const pricingLines = [
+        item.costPrice != null && item.costPrice !== ""
+          ? `Cost: ${formatInventoryPrice(item.costPrice, normalizedCurrency)}`
+          : "",
+        costValue != null
+          ? `Cost value: ${formatInventoryPrice(costValue, normalizedCurrency)}`
+          : "",
+        item.sellingPrice != null && item.sellingPrice !== ""
+          ? `Sell: ${formatInventoryPrice(item.sellingPrice, normalizedCurrency)}`
+          : "",
+        retailValue != null
+          ? `Retail value: ${formatInventoryPrice(retailValue, normalizedCurrency)}`
+          : "",
+      ].filter(Boolean);
+      const stockLines = [
+        getInventoryQuantityLabel(
+          item.quantity,
+          item.unitType,
+          item.customUnitLabel
+        ),
+        item.minStockLevel != null ? `Min: ${item.minStockLevel}` : "",
+      ].filter(Boolean);
+
+      return [
+        itemThumbnails.has(item.id)
+          ? ""
+          : item.image && !thumbnailCandidateIds.has(item.id)
+            ? "Image available"
+            : "No image",
+        [item.name, item.itemCode ? `Code: ${item.itemCode}` : ""]
+          .filter(Boolean)
+          .join("\n"),
+        trackingLines.join("\n"),
+        [item.category, item.depotLabel].filter(Boolean).join("\n"),
+        stockLines.join("\n"),
+        pricingLines.join("\n"),
+        isLowStock(item) ? "Low Stock" : "In Stock",
+        item.notes || "",
+      ];
+    }),
     margin: {
       left: margin,
       right: margin,
@@ -337,11 +408,11 @@ export async function exportInventoryPdf({
     },
     columnStyles: {
       0: { cellWidth: 20, halign: "center", minCellHeight: 14 },
-      1: { cellWidth: 42 },
-      2: { cellWidth: 25 },
-      3: { cellWidth: 29 },
-      4: { cellWidth: 34 },
-      5: { cellWidth: 16, halign: "right" },
+      1: { cellWidth: 35 },
+      2: { cellWidth: 38 },
+      3: { cellWidth: 34 },
+      4: { cellWidth: 24 },
+      5: { cellWidth: 46 },
       6: { cellWidth: 24 },
       7: { cellWidth: "auto" },
     },
