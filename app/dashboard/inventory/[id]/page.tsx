@@ -7,7 +7,20 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import BrandMark from "@/components/BrandMark";
 import Sidebar from "@/components/Sidebar";
+import EditItemForm, {
+  createEditItemFormValues,
+  createEmptyEditItemFormValues,
+  getEditSaveErrorMessage,
+  validateEditItemFormValues,
+  type EditItemFieldErrors,
+  type EditItemFieldName,
+  type EditItemFormValues,
+} from "@/app/dashboard/inventory/EditItemForm";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
+import {
+  normalizeCurrencyCode,
+  type InventoryUnitType,
+} from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -45,6 +58,13 @@ interface Item {
   created_at?: string;
   depot_id?: number | null;
   public_id?: string | null;
+  item_code?: string | null;
+  unit_type?: InventoryUnitType | string | null;
+  custom_unit_label?: string | null;
+  cost_price?: number | string | null;
+  selling_price?: number | string | null;
+  min_stock_level?: number | null;
+  barcode?: string | null;
 }
 
 interface InventoryHistory {
@@ -98,6 +118,18 @@ function formatQuantityDelta(delta: number) {
   return String(delta);
 }
 
+async function getBusinessCurrency(userId: string) {
+  const { data, error } = await supabase
+    .from("business_settings")
+    .select("currency_code")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (error) return "USD";
+
+  return normalizeCurrencyCode(data?.currency_code, "USD");
+}
+
 export default function ItemDetailsPage() {
   const params = useParams();
   const router = useRouter();
@@ -121,13 +153,13 @@ export default function ItemDetailsPage() {
   const [authMissing, setAuthMissing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editName, setEditName] = useState("");
-  const [editSku, setEditSku] = useState("");
-  const [editCategory, setEditCategory] = useState("");
-  const [editQuantity, setEditQuantity] = useState("");
-  const [editNotes, setEditNotes] = useState("");
+  const [editValues, setEditValues] = useState<EditItemFormValues>(
+    createEmptyEditItemFormValues
+  );
+  const [editFieldErrors, setEditFieldErrors] =
+    useState<EditItemFieldErrors>({});
   const [editImage, setEditImage] = useState<File | null>(null);
-  const [editDepotId, setEditDepotId] = useState("");
+  const [editCurrencyCode, setEditCurrencyCode] = useState("USD");
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
@@ -214,6 +246,7 @@ export default function ItemDetailsPage() {
           settings,
           loadedDepots,
           loadedSubscription,
+          loadedCurrency,
         ] = await Promise.all([
           supabase
             .from("inventory")
@@ -224,6 +257,7 @@ export default function ItemDetailsPage() {
           getOrCreateBusinessSettings(user.id),
           getDepotsForUser(user.id).catch(() => []),
           getUserSubscription(user.id),
+          getBusinessCurrency(user.id),
         ]);
 
         if (!isActive) return;
@@ -240,6 +274,7 @@ export default function ItemDetailsPage() {
         setBusinessSettings(settings);
         setDepots(loadedDepots);
         setSubscription(loadedSubscription);
+        setEditCurrencyCode(loadedCurrency);
 
         if (loadedItem) {
           await fetchHistory(user.id, loadedItem.id);
@@ -268,13 +303,9 @@ export default function ItemDetailsPage() {
   const openEditModal = () => {
     if (!item) return;
 
-    setEditName(item.name);
-    setEditSku(item.sku || "");
-    setEditCategory(item.category);
-    setEditQuantity(String(item.quantity));
-    setEditNotes(item.notes || "");
+    setEditValues(createEditItemFormValues(item));
+    setEditFieldErrors({});
     setEditImage(null);
-    setEditDepotId(item.depot_id ? String(item.depot_id) : "");
     setEditError("");
     setIsEditModalOpen(true);
   };
@@ -283,14 +314,30 @@ export default function ItemDetailsPage() {
     if (isEditing && !force) return;
 
     setIsEditModalOpen(false);
-    setEditName("");
-    setEditSku("");
-    setEditCategory("");
-    setEditQuantity("");
-    setEditNotes("");
+    setEditValues(createEmptyEditItemFormValues());
+    setEditFieldErrors({});
     setEditImage(null);
-    setEditDepotId("");
     setEditError("");
+  };
+
+  const updateEditValue = <Field extends keyof EditItemFormValues>(
+    field: Field,
+    value: EditItemFormValues[Field]
+  ) => {
+    setEditValues((currentValues) => ({
+      ...currentValues,
+      [field]: value,
+    }));
+  };
+
+  const clearEditFieldError = (field: EditItemFieldName) => {
+    setEditFieldErrors((currentErrors) => {
+      if (!currentErrors[field]) return currentErrors;
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[field];
+      return nextErrors;
+    });
   };
 
   const openMovementModal = () => {
@@ -394,26 +441,18 @@ export default function ItemDetailsPage() {
 
     if (!item || isEditing) return;
 
-    const trimmedName = editName.trim();
-    const quantityValue = Number(editQuantity);
+    const validation = validateEditItemFormValues(editValues);
 
-    if (!trimmedName) {
-      setEditError("Add a product name before saving.");
-      return;
-    }
-
-    if (
-      editQuantity === "" ||
-      Number.isNaN(quantityValue) ||
-      quantityValue < 0
-    ) {
-      setEditError("Enter a quantity of 0 or more before saving.");
+    if (!validation.parsedValues) {
+      setEditFieldErrors(validation.errors);
+      setEditError("Review the highlighted fields before saving.");
       return;
     }
 
     try {
       setIsEditing(true);
       setEditError("");
+      setEditFieldErrors({});
 
       const {
         data: { user },
@@ -448,13 +487,8 @@ export default function ItemDetailsPage() {
 
       const oldItem = { ...item };
       const updatedItem = {
-        name: trimmedName,
-        sku: editSku.trim(),
-        category: editCategory.trim(),
-        quantity: quantityValue,
-        notes: editNotes,
+        ...validation.parsedValues,
         image: imageUrl,
-        depot_id: editDepotId ? Number(editDepotId) : null,
       };
 
       const { data, error: updateError } = await supabase
@@ -465,7 +499,7 @@ export default function ItemDetailsPage() {
         .select("*");
 
       if (updateError) {
-        setEditError("We could not update this item. Please try again.");
+        setEditError(getEditSaveErrorMessage(updateError));
         return;
       }
 
@@ -1277,14 +1311,17 @@ export default function ItemDetailsPage() {
 
       {isEditModalOpen && item && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/80 p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#080b18]/90 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
-            <div className="mb-8 flex items-center justify-between">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#080b18]/95 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
+            <div className="mb-8 flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
                   Product details
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Edit Item</h2>
+                <p className="mt-2 text-sm leading-6 text-slate-400">
+                  Update stock, pricing, tracking codes, and product details.
+                </p>
               </div>
 
               <button
@@ -1299,149 +1336,21 @@ export default function ItemDetailsPage() {
               </button>
             </div>
 
-            <form onSubmit={handleUpdateItem} className="flex flex-col gap-5 sm:gap-6">
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Product Name</label>
-                  <input
-                    type="text"
-                    value={editName}
-                    onChange={(e) => setEditName(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">SKU</label>
-                  <input
-                    type="text"
-                    value={editSku}
-                    onChange={(e) => setEditSku(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Quantity</label>
-                  <input
-                    type="number"
-                    min="0"
-                    value={editQuantity}
-                    onChange={(e) => setEditQuantity(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Category</label>
-                  <input
-                    type="text"
-                    value={editCategory}
-                    onChange={(e) => setEditCategory(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                    required
-                  />
-                </div>
-
-                <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Depot</label>
-                  <select
-                    value={editDepotId}
-                    onChange={(e) => setEditDepotId(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                  >
-                    <option value="">Unassigned</option>
-                    {editDepotOptions.map((depot) => (
-                      <option
-                        key={depot.id}
-                        value={depot.id}
-                      >
-                        {formatDepotLabel(depot)}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">Notes</label>
-                <textarea
-                  value={editNotes}
-                  onChange={(e) => setEditNotes(e.target.value)}
-                  className="min-h-[110px] w-full resize-y rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                />
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">Replace Image</label>
-                <div className="grid grid-cols-1 items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4 md:grid-cols-[140px_1fr]">
-                  {item.image ? (
-                    <div className="relative h-[120px] overflow-hidden rounded-2xl bg-[#f4f0e8] p-3">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        loading="lazy"
-                        sizes="120px"
-                        className="object-contain p-3"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex h-[120px] flex-col items-center justify-center rounded-2xl bg-[#f4f0e8] text-slate-500">
-                      <span className="text-xs font-black uppercase tracking-[0.16em]">
-                        Image
-                      </span>
-
-                      <span className="mt-1 text-xs font-semibold">
-                        Not added
-                      </span>
-                    </div>
-                  )}
-
-                  <div>
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => setEditImage(e.target.files?.[0] || null)}
-                      className="w-full cursor-pointer text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-200 transition-colors hover:file:bg-indigo-500/30"
-                    />
-
-                    {editImage && (
-                      <p className="mt-3 text-sm text-slate-400">
-                        New image: {editImage.name}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              {editError && (
-                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
-                  {editError}
-                </div>
-              )}
-
-              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => closeEditModal()}
-                  disabled={isEditing}
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isEditing}
-                  className="flex-1 rounded-2xl bg-white py-4 text-base font-bold text-black transition hover:bg-slate-200 disabled:opacity-50"
-                >
-                  {isEditing ? "Saving..." : "Save Changes"}
-                </button>
-              </div>
-            </form>
+            <EditItemForm
+              item={item}
+              values={editValues}
+              fieldErrors={editFieldErrors}
+              depots={editDepotOptions}
+              currencyCode={editCurrencyCode}
+              selectedImage={editImage}
+              saving={isEditing}
+              error={editError}
+              onValueChange={updateEditValue}
+              onFieldErrorClear={clearEditFieldError}
+              onImageChange={setEditImage}
+              onCancel={() => closeEditModal()}
+              onSubmit={handleUpdateItem}
+            />
           </div>
         </div>
       )}
