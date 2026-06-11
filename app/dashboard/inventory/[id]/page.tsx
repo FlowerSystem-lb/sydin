@@ -7,6 +7,11 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import BrandMark from "@/components/BrandMark";
 import Sidebar from "@/components/Sidebar";
+import {
+  getCategoriesForUser,
+  resolveCategoryDisplay,
+  type Category,
+} from "@/app/lib/categories";
 import EditItemForm, {
   createEditItemFormValues,
   createEmptyEditItemFormValues,
@@ -61,6 +66,7 @@ interface Item {
   id: number;
   name: string;
   category: string;
+  category_id?: number | null;
   quantity: number;
   image: string;
   sku?: string;
@@ -202,6 +208,7 @@ export default function ItemDetailsPage() {
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [pageNotice, setPageNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -302,6 +309,7 @@ export default function ItemDetailsPage() {
           loadedDepots,
           loadedSubscription,
           loadedSuppliers,
+          loadedCategories,
           loadedCurrency,
         ] = await Promise.all([
           supabase
@@ -314,6 +322,7 @@ export default function ItemDetailsPage() {
           getDepotsForUser(user.id).catch(() => []),
           getUserSubscription(user.id),
           getSuppliersForUser(user.id).catch(() => []),
+          getCategoriesForUser(user.id).catch(() => []),
           getBusinessCurrency(user.id),
         ]);
 
@@ -332,6 +341,7 @@ export default function ItemDetailsPage() {
         setDepots(loadedDepots);
         setSubscription(loadedSubscription);
         setSuppliers(loadedSuppliers);
+        setCategories(loadedCategories);
         setEditCurrencyCode(loadedCurrency);
 
         if (loadedItem) {
@@ -499,7 +509,7 @@ export default function ItemDetailsPage() {
 
     if (!item || isEditing) return;
 
-    const validation = validateEditItemFormValues(editValues);
+    const validation = validateEditItemFormValues(editValues, categories);
 
     if (!validation.parsedValues) {
       setEditFieldErrors(validation.errors);
@@ -676,6 +686,8 @@ export default function ItemDetailsPage() {
     depots.find((depot) => depot.id === item?.depot_id) || null;
   const assignedSupplier =
     suppliers.find((supplier) => supplier.id === item?.supplier_id) || null;
+  const assignedCategory =
+    categories.find((category) => category.id === item?.category_id) || null;
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
     subscription,
     businessSettings.low_stock_threshold
@@ -889,7 +901,7 @@ export default function ItemDetailsPage() {
                   <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
                     <DetailCard
                       label="Category"
-                      value={item.category || "Not set"}
+                      value={resolveCategoryDisplay(item, assignedCategory)}
                     />
                     <DetailCard
                       label="Depot"
@@ -1538,6 +1550,7 @@ export default function ItemDetailsPage() {
               values={editValues}
               fieldErrors={editFieldErrors}
               depots={editDepotOptions}
+              categories={categories}
               suppliers={suppliers}
               currencyCode={editCurrencyCode}
               selectedImage={editImage}

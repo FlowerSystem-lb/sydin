@@ -6,6 +6,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Sidebar";
 import UiIcon from "@/components/UiIcon";
+import CategorySelector from "@/components/CategorySelector";
+import {
+  getCategoriesForUser,
+  type Category,
+} from "@/app/lib/categories";
 import {
   formatDepotLabel,
   getActiveDepotsForUser,
@@ -118,6 +123,9 @@ function getSaveErrorMessage(error: {
   if (errorText.includes("supplier")) {
     return "The supplier could not be linked. Confirm the Phase 4C migration is applied and choose one of your own suppliers.";
   }
+  if (errorText.includes("category")) {
+    return "The category could not be linked. Run the Phase 6A migration and choose one of your own categories.";
+  }
 
   const phaseFields = [
     "unit_type",
@@ -126,6 +134,7 @@ function getSaveErrorMessage(error: {
     "selling_price",
     "min_stock_level",
     "barcode",
+    "category_id",
   ];
 
   if (
@@ -235,7 +244,7 @@ export default function AddItemPage() {
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
   const [barcode, setBarcode] = useState("");
-  const [category, setCategory] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [unitType, setUnitType] = useState<InventoryUnitType>(
     DEFAULT_INVENTORY_UNIT_TYPE
@@ -252,6 +261,7 @@ export default function AddItemPage() {
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -277,17 +287,27 @@ export default function AddItemPage() {
           getSubscriptionUsage(user.id),
           getActiveDepotsForUser(user.id).catch(() => []),
           getSuppliersForUser(user.id).catch(() => []),
+          getCategoriesForUser(user.id).catch(() => []),
           getBusinessCurrency(user.id),
         ])
-          .then(([usage, loadedDepots, loadedSuppliers, loadedCurrency]) => {
-            if (!isActive) return;
+          .then(
+            ([
+              usage,
+              loadedDepots,
+              loadedSuppliers,
+              loadedCategories,
+              loadedCurrency,
+            ]) => {
+              if (!isActive) return;
 
-            setSubscriptionUsage(usage);
-            setDepots(loadedDepots);
-            setSuppliers(loadedSuppliers);
-            setCurrencyCode(loadedCurrency);
-            setUsageLoading(false);
-          })
+              setSubscriptionUsage(usage);
+              setDepots(loadedDepots);
+              setSuppliers(loadedSuppliers);
+              setCategories(loadedCategories);
+              setCurrencyCode(loadedCurrency);
+              setUsageLoading(false);
+            }
+          )
           .catch(() => {
             if (!isActive) return;
 
@@ -490,7 +510,13 @@ export default function AddItemPage() {
         name: trimmedName,
         sku: sku.trim(),
         barcode: barcode.trim() || null,
-        category: category.trim(),
+        category:
+          categories.find(
+            (category) => String(category.id) === selectedCategoryId
+          )?.name || null,
+        category_id: selectedCategoryId
+          ? Number(selectedCategoryId)
+          : null,
         quantity: quantityValue as number,
         unit_type: unitType,
         custom_unit_label:
@@ -734,18 +760,13 @@ export default function AddItemPage() {
                   >
                     Category
                   </label>
-                  <input
+                  <CategorySelector
                     id="category"
-                    type="text"
-                    value={category}
-                    onChange={(event) => setCategory(event.target.value)}
+                    categories={categories}
+                    value={selectedCategoryId}
+                    onChange={setSelectedCategoryId}
                     disabled={loading}
-                    placeholder="e.g. Flowers"
-                    className={inputClassName}
                   />
-                  <p className="mt-2 text-xs leading-5 text-slate-500">
-                    Optional grouping for search and organization.
-                  </p>
                 </div>
 
                 <div>

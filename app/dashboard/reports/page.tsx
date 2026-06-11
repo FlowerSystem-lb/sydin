@@ -6,6 +6,11 @@ import Sidebar from "@/components/Sidebar";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
+  getCategoriesForUser,
+  resolveCategoryDisplay,
+  type Category,
+} from "@/app/lib/categories";
+import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
@@ -427,6 +432,7 @@ export default function ReportsPage() {
   const [items, setItems] = useState<InventoryReportItem[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [movements, setMovements] = useState<ReportStockMovement[]>([]);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
@@ -469,7 +475,7 @@ export default function ReportsPage() {
           supabase
             .from("inventory")
             .select(
-              "id, name, item_code, category, quantity, unit_type, custom_unit_label, cost_price, selling_price, min_stock_level, depot_id, supplier_id"
+              "id, name, item_code, category, category_id, quantity, unit_type, custom_unit_label, cost_price, selling_price, min_stock_level, depot_id, supplier_id"
             )
             .eq("user_id", user.id)
             .order("name", { ascending: true }),
@@ -492,14 +498,17 @@ export default function ReportsPage() {
         setSubscriptionUsage(usage);
         setBusinessSettings(settings);
 
-        const [loadedDepots, loadedSuppliers] = await Promise.all([
+        const [loadedDepots, loadedSuppliers, loadedCategories] =
+          await Promise.all([
           getDepotsForUser(user.id),
           getSuppliersForUser(user.id),
+          getCategoriesForUser(user.id),
         ]);
 
         if (!isActive) return;
         setDepots(loadedDepots);
         setSuppliers(loadedSuppliers);
+        setCategories(loadedCategories);
 
         setLoading(false);
       })
@@ -560,6 +569,10 @@ export default function ReportsPage() {
       new Map(suppliers.map((supplier) => [supplier.id, supplier.name])),
     [suppliers]
   );
+  const categoryNames = useMemo(
+    () => new Map(categories.map((category) => [category.id, category])),
+    [categories]
+  );
   const itemsById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
     [items]
@@ -611,7 +624,13 @@ export default function ReportsPage() {
     );
     const valueByCategory = groupInventoryValues(
       costPricedItems,
-      (item) => item.category?.trim() || "Uncategorized"
+      (item) =>
+        resolveCategoryDisplay(
+          item,
+          item.category_id
+            ? categoryNames.get(item.category_id) || null
+            : null
+        )
     );
 
     return {
@@ -625,6 +644,7 @@ export default function ReportsPage() {
     };
   }, [
     depotNames,
+    categoryNames,
     hasAdvancedReports,
     items,
     supplierNames,

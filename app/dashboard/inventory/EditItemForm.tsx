@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import type { FormEvent, ReactNode } from "react";
+import CategorySelector from "@/components/CategorySelector";
+import type { Category } from "@/app/lib/categories";
 import { formatDepotLabel, type Depot } from "@/app/lib/depots";
 import {
   calculateInventoryValue,
@@ -29,6 +31,7 @@ export interface EditableInventoryItem {
   id: number;
   name: string;
   category: string;
+  category_id?: number | null;
   quantity: number;
   image: string;
   sku?: string | null;
@@ -47,6 +50,7 @@ export interface EditableInventoryItem {
 export interface EditItemFormValues {
   name: string;
   category: string;
+  categoryId: string;
   depotId: string;
   quantity: string;
   unitType: InventoryUnitType;
@@ -63,6 +67,7 @@ export interface EditItemFormValues {
 export interface ParsedEditItemValues {
   name: string;
   category: string;
+  category_id: number | null;
   depot_id: number | null;
   quantity: number;
   unit_type: InventoryUnitType;
@@ -97,6 +102,11 @@ export function createEditItemFormValues(
   return {
     name: item.name || "",
     category: item.category || "",
+    categoryId: item.category_id
+      ? String(item.category_id)
+      : item.category?.trim()
+        ? "legacy"
+        : "",
     depotId: item.depot_id ? String(item.depot_id) : "",
     quantity: String(Number(item.quantity || 0)),
     unitType,
@@ -115,6 +125,7 @@ export function createEmptyEditItemFormValues(): EditItemFormValues {
   return {
     name: "",
     category: "",
+    categoryId: "",
     depotId: "",
     quantity: "",
     unitType: DEFAULT_INVENTORY_UNIT_TYPE,
@@ -129,7 +140,10 @@ export function createEmptyEditItemFormValues(): EditItemFormValues {
   };
 }
 
-export function validateEditItemFormValues(values: EditItemFormValues) {
+export function validateEditItemFormValues(
+  values: EditItemFormValues,
+  categories: Category[] = []
+) {
   const trimmedName = values.name.trim();
   const trimmedCustomUnitLabel = values.customUnitLabel.trim();
   const quantityValue = values.quantity === "" ? null : Number(values.quantity);
@@ -197,7 +211,16 @@ export function validateEditItemFormValues(values: EditItemFormValues) {
     errors,
     parsedValues: {
       name: trimmedName,
-      category: values.category.trim(),
+      category:
+        values.categoryId === "legacy"
+          ? values.category.trim()
+          : categories.find(
+              (category) => String(category.id) === values.categoryId
+            )?.name || "",
+      category_id:
+        values.categoryId && values.categoryId !== "legacy"
+          ? Number(values.categoryId)
+          : null,
       depot_id: values.depotId ? Number(values.depotId) : null,
       quantity: quantityValue as number,
       unit_type: values.unitType,
@@ -223,6 +246,9 @@ export function getEditSaveErrorMessage(error: {
   if (errorText.includes("supplier")) {
     return "The supplier could not be linked. Confirm the Phase 4C migration is applied and choose one of your own suppliers.";
   }
+  if (errorText.includes("category")) {
+    return "The category could not be linked. Run the Phase 6A migration and choose one of your own categories.";
+  }
 
   const phaseFields = [
     "unit_type",
@@ -231,6 +257,7 @@ export function getEditSaveErrorMessage(error: {
     "selling_price",
     "min_stock_level",
     "barcode",
+    "category_id",
   ];
 
   if (
@@ -319,6 +346,7 @@ export default function EditItemForm({
   values,
   fieldErrors,
   depots,
+  categories,
   suppliers,
   currencyCode,
   selectedImage,
@@ -334,6 +362,7 @@ export default function EditItemForm({
   values: EditItemFormValues;
   fieldErrors: EditItemFieldErrors;
   depots: Depot[];
+  categories: Category[];
   suppliers: Supplier[];
   currencyCode: string;
   selectedImage: File | null;
@@ -448,14 +477,14 @@ export default function EditItemForm({
             <label className="mb-2 block text-sm font-semibold text-slate-300">
               Category
             </label>
-            <input
-              type="text"
-              value={values.category}
-              onChange={(event) =>
-                onValueChange("category", event.target.value)
+            <CategorySelector
+              categories={categories}
+              value={values.categoryId}
+              legacyCategory={values.category}
+              onChange={(categoryId) =>
+                onValueChange("categoryId", categoryId)
               }
               disabled={saving}
-              className={inputClassName}
             />
           </div>
 

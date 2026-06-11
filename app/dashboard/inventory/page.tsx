@@ -10,6 +10,12 @@ import {
 } from "@zxing/browser";
 import Sidebar from "@/components/Sidebar";
 import UiIcon from "@/components/UiIcon";
+import CategorySelector from "@/components/CategorySelector";
+import {
+  getCategoriesForUser,
+  resolveCategoryDisplay,
+  type Category,
+} from "@/app/lib/categories";
 import {
   LockedActionLabel,
   UpgradeDialog,
@@ -65,6 +71,7 @@ interface Item {
   id: number;
   name: string;
   category: string;
+  category_id?: number | null;
   quantity: number;
   image: string;
   sku?: string;
@@ -87,6 +94,7 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
 };
 
 type DepotFilter = "all" | "unassigned" | string;
+type CategoryFilter = "all" | "uncategorized" | string;
 type StockFilter = "all" | "low";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
 type LockedFeature = {
@@ -253,6 +261,8 @@ export default function InventoryPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState("");
   const [depotFilter, setDepotFilter] = useState<DepotFilter>("all");
+  const [categoryFilter, setCategoryFilter] =
+    useState<CategoryFilter>("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [loadingItems, setLoadingItems] = useState(true);
@@ -272,7 +282,7 @@ export default function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
-  const [category, setCategory] = useState("");
+  const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [quantity, setQuantity] = useState("");
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
@@ -281,6 +291,7 @@ export default function InventoryPage() {
   const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [isLimitError, setIsLimitError] = useState(false);
@@ -331,6 +342,7 @@ export default function InventoryPage() {
       settings,
       loadedDepots,
       loadedSuppliers,
+      loadedCategories,
       loadedCurrency,
     ] =
       await Promise.all([
@@ -345,6 +357,7 @@ export default function InventoryPage() {
         getOrCreateBusinessSettings(user.id),
         getDepotsForUser(user.id).catch(() => []),
         getSuppliersForUser(user.id).catch(() => []),
+        getCategoriesForUser(user.id).catch(() => []),
         getBusinessCurrency(user.id),
       ]);
 
@@ -359,6 +372,7 @@ export default function InventoryPage() {
     setBusinessSettings(settings);
     setDepots(loadedDepots);
     setSuppliers(loadedSuppliers);
+    setCategories(loadedCategories);
     setEditCurrencyCode(loadedCurrency);
     setUsageLoading(false);
   };
@@ -395,6 +409,7 @@ export default function InventoryPage() {
         getOrCreateBusinessSettings(user.id),
         getDepotsForUser(user.id).catch(() => []),
         getSuppliersForUser(user.id).catch(() => []),
+        getCategoriesForUser(user.id).catch(() => []),
         getBusinessCurrency(user.id),
       ])
         .then(
@@ -404,6 +419,7 @@ export default function InventoryPage() {
             settings,
             loadedDepots,
             loadedSuppliers,
+            loadedCategories,
             loadedCurrency,
           ]) => {
           if (!isActive) return;
@@ -420,6 +436,7 @@ export default function InventoryPage() {
           setBusinessSettings(settings);
           setDepots(loadedDepots);
           setSuppliers(loadedSuppliers);
+          setCategories(loadedCategories);
           setEditCurrencyCode(loadedCurrency);
           setLoadingItems(false);
           setUsageLoading(false);
@@ -746,7 +763,13 @@ export default function InventoryPage() {
       const newItem = {
         name: trimmedName,
         sku: sku.trim(),
-        category: category.trim(),
+        category:
+          categories.find(
+            (category) => String(category.id) === selectedCategoryId
+          )?.name || null,
+        category_id: selectedCategoryId
+          ? Number(selectedCategoryId)
+          : null,
         quantity: quantityValue,
         notes,
         image: imageUrl,
@@ -780,7 +803,7 @@ export default function InventoryPage() {
       setIsModalOpen(false);
       setName("");
       setSku("");
-      setCategory("");
+      setSelectedCategoryId("");
       setQuantity("");
       setNotes("");
       setImage(null);
@@ -844,7 +867,7 @@ export default function InventoryPage() {
 
     if (!selectedItem || isEditing) return;
 
-    const validation = validateEditItemFormValues(editValues);
+    const validation = validateEditItemFormValues(editValues, categories);
 
     if (!validation.parsedValues) {
       setEditFieldErrors(validation.errors);
@@ -1000,7 +1023,7 @@ export default function InventoryPage() {
       const rows = items.map((item) => [
         item.name,
         item.sku || "",
-        item.category,
+        getCategoryLabel(item),
         formatDepotLabel(depots.find((depot) => depot.id === item.depot_id)),
         item.quantity,
         item.quantity <=
@@ -1075,7 +1098,7 @@ export default function InventoryPage() {
           id: item.id,
           name: item.name,
           sku: item.sku,
-          category: item.category,
+          category: getCategoryLabel(item),
           quantity: item.quantity,
           itemCode: item.item_code,
           unitType: normalizeInventoryUnitType(item.unit_type),
@@ -1141,7 +1164,7 @@ export default function InventoryPage() {
           id: item.id,
           name: item.name,
           sku: item.sku,
-          category: item.category,
+          category: getCategoryLabel(item),
           quantity: item.quantity,
           itemCode: item.item_code,
           unitType: normalizeInventoryUnitType(item.unit_type),
@@ -1194,6 +1217,10 @@ export default function InventoryPage() {
     depots.find((depot) => depot.id === item.depot_id) || null;
   const getSupplierForItem = (item: Item) =>
     suppliers.find((supplier) => supplier.id === item.supplier_id) || null;
+  const getCategoryForItem = (item: Item) =>
+    categories.find((category) => category.id === item.category_id) || null;
+  const getCategoryLabel = (item: Item) =>
+    resolveCategoryDisplay(item, getCategoryForItem(item));
   const getLowStockThresholdForItem = (item: Item) =>
     planCapabilities.customLowStockThreshold
       ? getEffectiveItemLowStockThreshold(
@@ -1220,12 +1247,14 @@ export default function InventoryPage() {
   const hasActiveFilters =
     normalizedSearch !== "" ||
     depotFilter !== "all" ||
+    categoryFilter !== "all" ||
     stockFilter !== "all" ||
     sortBy !== "newest";
 
   const resetInventoryControls = () => {
     setSearch("");
     setDepotFilter("all");
+    setCategoryFilter("all");
     setStockFilter("all");
     setSortBy("newest");
   };
@@ -1240,6 +1269,7 @@ export default function InventoryPage() {
       item.item_code,
       item.sku,
       item.barcode,
+      getCategoryLabel(item),
       item.category,
       item.notes,
       formatDepotLabel(depot),
@@ -1266,8 +1296,14 @@ export default function InventoryPage() {
       String(item.depot_id) === depotFilter;
     const matchesStock =
       stockFilter === "all" || isItemLowStock(item);
+    const matchesCategory =
+      categoryFilter === "all" ||
+      (categoryFilter === "uncategorized" &&
+        !item.category_id &&
+        !item.category?.trim()) ||
+      String(item.category_id) === categoryFilter;
 
-    return matchesDepot && matchesStock;
+    return matchesDepot && matchesCategory && matchesStock;
   });
 
   const visibleItems = [...filteredItems].sort((firstItem, secondItem) => {
@@ -1494,7 +1530,7 @@ export default function InventoryPage() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <div>
                   <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
                     Depot
@@ -1513,6 +1549,28 @@ export default function InventoryPage() {
                         value={depot.id}
                       >
                         {formatDepotLabel(depot)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                    Category
+                  </label>
+
+                  <select
+                    value={categoryFilter}
+                    onChange={(event) =>
+                      setCategoryFilter(event.target.value)
+                    }
+                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                  >
+                    <option value="all">All categories</option>
+                    <option value="uncategorized">Uncategorized</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
                       </option>
                     ))}
                   </select>
@@ -1643,11 +1701,9 @@ export default function InventoryPage() {
                           </span>
                         )}
 
-                        {item.category && (
-                          <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
-                            {item.category}
-                          </span>
-                        )}
+                        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
+                          {getCategoryLabel(item)}
+                        </span>
 
                         {getDepotForItem(item) && (
                           <span className="rounded-full border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-100">
@@ -2067,12 +2123,11 @@ export default function InventoryPage() {
                 </div>
                 <div>
                   <label className="mb-2 block text-sm font-semibold text-slate-400">Category</label>
-                  <input
-                    type="text"
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                    required
+                  <CategorySelector
+                    categories={categories}
+                    value={selectedCategoryId}
+                    onChange={setSelectedCategoryId}
+                    disabled={isAdding}
                   />
                 </div>
 
@@ -2242,6 +2297,7 @@ export default function InventoryPage() {
               values={editValues}
               fieldErrors={editFieldErrors}
               depots={editDepotOptions}
+              categories={categories}
               suppliers={suppliers}
               currencyCode={editCurrencyCode}
               selectedImage={editImage}

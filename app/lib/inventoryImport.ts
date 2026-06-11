@@ -1,6 +1,7 @@
 import ExcelJS from "exceljs";
 import Papa from "papaparse";
 import type { Depot } from "@/app/lib/depots";
+import type { Category } from "@/app/lib/categories";
 import {
   INVENTORY_UNIT_TYPES,
   parseInventoryUnitType,
@@ -83,6 +84,7 @@ export interface ValidatedInventoryRow {
     barcode: string;
   };
   depotId: number | null;
+  categoryId: number | null;
   errors: InventoryImportRowError[];
   isValid: boolean;
 }
@@ -93,6 +95,7 @@ export interface InventoryImportValidation {
   invalidRows: ValidatedInventoryRow[];
   duplicateSkuRows: number;
   depotErrorRows: number;
+  unmatchedCategoryRows: number;
 }
 
 const COLUMN_BY_HEADER: Record<string, ImportColumn> = {
@@ -371,10 +374,12 @@ export async function parseInventoryImportFile(
 export function validateInventoryImportRows({
   rows,
   depots,
+  categories = [],
   existingSkus,
 }: {
   rows: ParsedInventoryRow[];
   depots: Depot[];
+  categories?: Category[];
   existingSkus: string[];
 }): InventoryImportValidation {
   const normalizedExistingSkus = new Set(
@@ -417,6 +422,14 @@ export function validateInventoryImportRows({
     const barcode = row.values.barcode.trim();
     const errors: InventoryImportRowError[] = [];
     let depotId: number | null = null;
+    const matchingCategory = category
+      ? categories.find(
+          (managedCategory) =>
+            managedCategory.name.trim().toLowerCase() ===
+            category.toLowerCase()
+        )
+      : null;
+    const categoryId = matchingCategory?.id || null;
 
     if (!name) {
       errors.push({
@@ -558,6 +571,7 @@ export function validateInventoryImportRows({
         barcode,
       },
       depotId,
+      categoryId,
       errors,
       isValid: errors.length === 0,
     };
@@ -574,6 +588,9 @@ export function validateInventoryImportRows({
     ).length,
     depotErrorRows: validatedRows.filter((row) =>
       row.errors.some((error) => error.type === "depot")
+    ).length,
+    unmatchedCategoryRows: validatedRows.filter(
+      (row) => Boolean(row.values.category) && !row.categoryId
     ).length,
   };
 }

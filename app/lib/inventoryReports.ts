@@ -12,6 +12,7 @@ export interface InventoryReportItem {
   name: string;
   item_code?: string | null;
   category?: string | null;
+  category_id?: number | null;
   quantity: number | string | null;
   unit_type?: string | null;
   custom_unit_label?: string | null;

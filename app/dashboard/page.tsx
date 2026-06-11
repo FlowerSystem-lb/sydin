@@ -9,6 +9,11 @@ import InventoryValueOverview, {
   type InventoryCategoryValue,
   type InventoryValueAnalytics,
 } from "@/app/dashboard/components/InventoryValueOverview";
+import {
+  getCategoriesForUser,
+  resolveCategoryDisplay,
+  type Category,
+} from "@/app/lib/categories";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -32,6 +37,7 @@ interface Item {
   id: number;
   name: string;
   category: string;
+  category_id?: number | null;
   quantity: number;
   image: string;
   sku?: string;
@@ -48,6 +54,7 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
 
 export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [businessSettings, setBusinessSettings] =
@@ -91,8 +98,15 @@ export default function DashboardPage() {
           }),
         getSubscriptionUsage(user.id),
         getOrCreateBusinessSettings(user.id),
+        getCategoriesForUser(user.id).catch(() => []),
       ])
-        .then(([{ data, error: inventoryError }, usage, settings]) => {
+        .then(
+          ([
+            { data, error: inventoryError },
+            usage,
+            settings,
+            loadedCategories,
+          ]) => {
           if (!isActive) return;
 
           if (inventoryError) {
@@ -104,10 +118,12 @@ export default function DashboardPage() {
           }
 
           setItems(data || []);
+          setCategories(loadedCategories);
           setSubscriptionUsage(usage);
           setBusinessSettings(settings);
           setLoading(false);
-        })
+          }
+        )
         .catch(() => {
           if (!isActive) return;
 
@@ -208,7 +224,13 @@ export default function DashboardPage() {
       }
 
       if (hasCostPrice) {
-        const category = item.category?.trim() || "Uncategorized";
+        const category = resolveCategoryDisplay(
+          item,
+          categories.find(
+            (managedCategory) =>
+              managedCategory.id === item.category_id
+          ) || null
+        );
         const currentCategory = categoryValues.get(category) || {
           category,
           costValue: 0,
@@ -224,10 +246,10 @@ export default function DashboardPage() {
     const sortedCategories = [...categoryValues.values()].sort(
       (left, right) => right.costValue - left.costValue
     );
-    const categories = sortedCategories.slice(0, 6);
+    const chartCategories = sortedCategories.slice(0, 6);
 
     if (sortedCategories.length > 6) {
-      categories.push(
+      chartCategories.push(
         sortedCategories.slice(6).reduce<InventoryCategoryValue>(
           (other, category) => ({
             category: "Other",
@@ -252,10 +274,11 @@ export default function DashboardPage() {
       lowStockItems,
       outOfStockItems,
       hasCostPriceData,
-      categories,
+      categories: chartCategories,
     };
   }, [
     effectiveLowStockThreshold,
+    categories,
     items,
     planCapabilities.customLowStockThreshold,
   ]);
@@ -569,7 +592,13 @@ export default function DashboardPage() {
                         </h3>
 
                         <p className="mt-1 text-slate-400 break-words">
-                          {item.category}
+                          {resolveCategoryDisplay(
+                            item,
+                            categories.find(
+                              (category) =>
+                                category.id === item.category_id
+                            ) || null
+                          )}
                         </p>
                       </div>
 
