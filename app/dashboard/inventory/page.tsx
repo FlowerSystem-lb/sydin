@@ -40,6 +40,10 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 import {
+  getSuppliersForUser,
+  type Supplier,
+} from "@/app/lib/suppliers";
+import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
@@ -74,6 +78,7 @@ interface Item {
   selling_price?: number | string | null;
   min_stock_level?: number | null;
   barcode?: string | null;
+  supplier_id?: number | null;
 }
 
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
@@ -113,6 +118,7 @@ const CSV_HEADERS = [
   "Stock Retail Value",
   "Min Stock Level",
   "Barcode",
+  "Supplier Name",
 ];
 
 function escapeCsvValue(value: string | number | null | undefined) {
@@ -272,7 +278,9 @@ export default function InventoryPage() {
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
   const [selectedDepotId, setSelectedDepotId] = useState("");
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [isLimitError, setIsLimitError] = useState(false);
@@ -317,7 +325,14 @@ export default function InventoryPage() {
       return;
     }
 
-    const [{ data, error }, usage, settings, loadedDepots, loadedCurrency] =
+    const [
+      { data, error },
+      usage,
+      settings,
+      loadedDepots,
+      loadedSuppliers,
+      loadedCurrency,
+    ] =
       await Promise.all([
         supabase
           .from("inventory")
@@ -329,6 +344,7 @@ export default function InventoryPage() {
         getSubscriptionUsage(user.id),
         getOrCreateBusinessSettings(user.id),
         getDepotsForUser(user.id).catch(() => []),
+        getSuppliersForUser(user.id).catch(() => []),
         getBusinessCurrency(user.id),
       ]);
 
@@ -342,6 +358,7 @@ export default function InventoryPage() {
     setSubscriptionUsage(usage);
     setBusinessSettings(settings);
     setDepots(loadedDepots);
+    setSuppliers(loadedSuppliers);
     setEditCurrencyCode(loadedCurrency);
     setUsageLoading(false);
   };
@@ -377,10 +394,18 @@ export default function InventoryPage() {
         getSubscriptionUsage(user.id),
         getOrCreateBusinessSettings(user.id),
         getDepotsForUser(user.id).catch(() => []),
+        getSuppliersForUser(user.id).catch(() => []),
         getBusinessCurrency(user.id),
       ])
         .then(
-          ([{ data, error }, usage, settings, loadedDepots, loadedCurrency]) => {
+          ([
+            { data, error },
+            usage,
+            settings,
+            loadedDepots,
+            loadedSuppliers,
+            loadedCurrency,
+          ]) => {
           if (!isActive) return;
 
           if (error) {
@@ -394,6 +419,7 @@ export default function InventoryPage() {
           setSubscriptionUsage(usage);
           setBusinessSettings(settings);
           setDepots(loadedDepots);
+          setSuppliers(loadedSuppliers);
           setEditCurrencyCode(loadedCurrency);
           setLoadingItems(false);
           setUsageLoading(false);
@@ -725,6 +751,7 @@ export default function InventoryPage() {
         notes,
         image: imageUrl,
         depot_id: selectedDepotId ? Number(selectedDepotId) : null,
+        supplier_id: selectedSupplierId ? Number(selectedSupplierId) : null,
         user_id: user.id,
       };
 
@@ -759,6 +786,7 @@ export default function InventoryPage() {
       setImage(null);
       setImageError("");
       setSelectedDepotId("");
+      setSelectedSupplierId("");
       await fetchItems();
     } catch (error) {
       setAddError(
@@ -994,6 +1022,7 @@ export default function InventoryPage() {
         calculateInventoryValue(item.quantity, item.selling_price) ?? "",
         item.min_stock_level ?? "",
         item.barcode || "",
+        suppliers.find((supplier) => supplier.id === item.supplier_id)?.name || "",
       ]);
       const csv = [CSV_HEADERS, ...rows]
         .map((row) => row.map(escapeCsvValue).join(","))
@@ -1163,6 +1192,8 @@ export default function InventoryPage() {
   );
   const getDepotForItem = (item: Item) =>
     depots.find((depot) => depot.id === item.depot_id) || null;
+  const getSupplierForItem = (item: Item) =>
+    suppliers.find((supplier) => supplier.id === item.supplier_id) || null;
   const getLowStockThresholdForItem = (item: Item) =>
     planCapabilities.customLowStockThreshold
       ? getEffectiveItemLowStockThreshold(
@@ -1203,6 +1234,7 @@ export default function InventoryPage() {
     if (!normalizedSearch) return true;
 
     const depot = getDepotForItem(item);
+    const supplier = getSupplierForItem(item);
     const searchableText = [
       item.name,
       item.item_code,
@@ -1214,6 +1246,11 @@ export default function InventoryPage() {
       depot?.name,
       depot?.code,
       depot?.notes,
+      supplier?.name,
+      supplier?.contact_name,
+      supplier?.phone,
+      supplier?.whatsapp,
+      supplier?.email,
     ]
       .filter(Boolean)
       .join(" ")
@@ -1408,7 +1445,7 @@ export default function InventoryPage() {
 
                     <input
                       type="text"
-                      placeholder="Search name, SKU, category, depot, or notes..."
+                      placeholder="Search name, SKU, supplier, depot, or notes..."
                       value={search}
                       onChange={(e) =>
                         setSearch(
@@ -1615,6 +1652,12 @@ export default function InventoryPage() {
                         {getDepotForItem(item) && (
                           <span className="rounded-full border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-100">
                             Depot {formatDepotLabel(getDepotForItem(item))}
+                          </span>
+                        )}
+
+                        {getSupplierForItem(item) && (
+                          <span className="rounded-full border border-sky-300/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-100">
+                            Supplier {getSupplierForItem(item)?.name}
                           </span>
                         )}
                       </div>
@@ -2051,6 +2094,26 @@ export default function InventoryPage() {
                     ))}
                   </select>
                 </div>
+
+                <div className="md:col-span-2">
+                  <label className="mb-2 block text-sm font-semibold text-slate-400">
+                    Supplier
+                  </label>
+                  <select
+                    value={selectedSupplierId}
+                    onChange={(event) =>
+                      setSelectedSupplierId(event.target.value)
+                    }
+                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                  >
+                    <option value="">No supplier</option>
+                    {suppliers.map((supplier) => (
+                      <option key={supplier.id} value={supplier.id}>
+                        {supplier.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <div>
@@ -2179,6 +2242,7 @@ export default function InventoryPage() {
               values={editValues}
               fieldErrors={editFieldErrors}
               depots={editDepotOptions}
+              suppliers={suppliers}
               currencyCode={editCurrencyCode}
               selectedImage={editImage}
               saving={isEditing}

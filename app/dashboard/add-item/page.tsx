@@ -23,6 +23,10 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 import {
+  getSuppliersForUser,
+  type Supplier,
+} from "@/app/lib/suppliers";
+import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
   getPlanLimitMessage,
@@ -111,6 +115,10 @@ function getSaveErrorMessage(error: {
   details?: string;
 }) {
   const errorText = `${error.message || ""} ${error.details || ""}`.toLowerCase();
+  if (errorText.includes("supplier")) {
+    return "The supplier could not be linked. Confirm the Phase 4C migration is applied and choose one of your own suppliers.";
+  }
+
   const phaseFields = [
     "unit_type",
     "custom_unit_label",
@@ -241,7 +249,9 @@ export default function AddItemPage() {
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
   const [selectedDepotId, setSelectedDepotId] = useState("");
+  const [selectedSupplierId, setSelectedSupplierId] = useState("");
   const [depots, setDepots] = useState<Depot[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -266,13 +276,15 @@ export default function AddItemPage() {
         Promise.all([
           getSubscriptionUsage(user.id),
           getActiveDepotsForUser(user.id).catch(() => []),
+          getSuppliersForUser(user.id).catch(() => []),
           getBusinessCurrency(user.id),
         ])
-          .then(([usage, loadedDepots, loadedCurrency]) => {
+          .then(([usage, loadedDepots, loadedSuppliers, loadedCurrency]) => {
             if (!isActive) return;
 
             setSubscriptionUsage(usage);
             setDepots(loadedDepots);
+            setSuppliers(loadedSuppliers);
             setCurrencyCode(loadedCurrency);
             setUsageLoading(false);
           })
@@ -489,6 +501,7 @@ export default function AddItemPage() {
         notes,
         image: imageUrl,
         depot_id: selectedDepotId ? Number(selectedDepotId) : null,
+        supplier_id: selectedSupplierId ? Number(selectedSupplierId) : null,
         user_id: user.id,
       };
 
@@ -832,6 +845,52 @@ export default function AddItemPage() {
                     id="quantity-error"
                     message={fieldErrors.quantity}
                   />
+                </div>
+
+                <div>
+                  <label
+                    htmlFor="supplier"
+                    className="mb-2 block text-sm font-semibold text-slate-300"
+                  >
+                    Supplier
+                  </label>
+                  <div className="relative">
+                    <select
+                      id="supplier"
+                      value={selectedSupplierId}
+                      onChange={(event) =>
+                        setSelectedSupplierId(event.target.value)
+                      }
+                      disabled={loading}
+                      className={`${inputClassName} appearance-none pr-12`}
+                    >
+                      <option value="">No supplier</option>
+                      {suppliers.map((supplier) => (
+                        <option key={supplier.id} value={supplier.id}>
+                          {supplier.name}
+                        </option>
+                      ))}
+                    </select>
+                    <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+                      <svg
+                        aria-hidden="true"
+                        className="h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="m6 9 6 6 6-6"
+                        />
+                      </svg>
+                    </span>
+                  </div>
+                  <p className="mt-2 text-xs leading-5 text-slate-500">
+                    Optional. Create suppliers from the Suppliers page first.
+                  </p>
                 </div>
 
                 <div>

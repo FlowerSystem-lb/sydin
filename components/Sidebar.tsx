@@ -30,6 +30,7 @@ type ShellIconName =
   | "inventory"
   | "add"
   | "depots"
+  | "suppliers"
   | "settings";
 
 function ShellIcon({
@@ -79,6 +80,13 @@ function ShellIcon({
           <path d="M3 21V8l9-5 9 5v13" />
           <path d="M7 21v-8h10v8M7 9h.01M11 9h.01M15 9h.01" />
           <path d="M10 17h4" />
+        </>
+      )}
+      {name === "suppliers" && (
+        <>
+          <path d="M4 21v-8.5L12 8l8 4.5V21" />
+          <path d="M8 10V5.5L12 3l4 2.5V10M8 21v-5h8v5" />
+          <path d="M11 12h2" />
         </>
       )}
       {name === "settings" && (
@@ -196,6 +204,12 @@ export default function Sidebar({
       mobileName: "Depots",
       href: "/dashboard/depots",
       icon: "depots" as const,
+    },
+    {
+      name: "Suppliers",
+      mobileName: "Suppliers",
+      href: "/dashboard/suppliers",
+      icon: "suppliers" as const,
     },
     {
       name: "Settings",
@@ -445,7 +459,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        <nav className="mt-3 grid grid-cols-5 gap-1.5 border-t border-sky-200/10 pt-3 sm:gap-2">
+        <nav className="mt-3 grid grid-cols-6 gap-1 border-t border-sky-200/10 pt-3 sm:gap-2">
           {links.map((link) => {
             const active =
               link.href === "/dashboard"

@@ -28,6 +28,10 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 import {
+  getSuppliersForUser,
+  type Supplier,
+} from "@/app/lib/suppliers";
+import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
@@ -71,6 +75,7 @@ interface Item {
   selling_price?: number | string | null;
   min_stock_level?: number | null;
   barcode?: string | null;
+  supplier_id?: number | null;
 }
 
 interface InventoryHistory {
@@ -196,6 +201,7 @@ export default function ItemDetailsPage() {
   const [subscription, setSubscription] =
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [depots, setDepots] = useState<Depot[]>([]);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [pageNotice, setPageNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -295,6 +301,7 @@ export default function ItemDetailsPage() {
           settings,
           loadedDepots,
           loadedSubscription,
+          loadedSuppliers,
           loadedCurrency,
         ] = await Promise.all([
           supabase
@@ -306,6 +313,7 @@ export default function ItemDetailsPage() {
           getOrCreateBusinessSettings(user.id),
           getDepotsForUser(user.id).catch(() => []),
           getUserSubscription(user.id),
+          getSuppliersForUser(user.id).catch(() => []),
           getBusinessCurrency(user.id),
         ]);
 
@@ -323,6 +331,7 @@ export default function ItemDetailsPage() {
         setBusinessSettings(settings);
         setDepots(loadedDepots);
         setSubscription(loadedSubscription);
+        setSuppliers(loadedSuppliers);
         setEditCurrencyCode(loadedCurrency);
 
         if (loadedItem) {
@@ -665,6 +674,8 @@ export default function ItemDetailsPage() {
 
   const assignedDepot =
     depots.find((depot) => depot.id === item?.depot_id) || null;
+  const assignedSupplier =
+    suppliers.find((supplier) => supplier.id === item?.supplier_id) || null;
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
     subscription,
     businessSettings.low_stock_threshold
@@ -925,6 +936,32 @@ export default function ItemDetailsPage() {
                           item.min_stock_level !== undefined
                             ? "amber"
                             : "slate"
+                        }
+                      />
+                    </div>
+                  </section>
+
+                  <section className="mt-5 rounded-[26px] border border-white/10 bg-black/20 p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-200">
+                      Private Supplier
+                    </p>
+                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                      This supplier information is visible only inside your authenticated workspace.
+                    </p>
+                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <DetailCard
+                        label="Supplier"
+                        value={assignedSupplier?.name || "No supplier"}
+                        accent={assignedSupplier ? "cyan" : "slate"}
+                      />
+                      <DetailCard
+                        label="Contact"
+                        value={assignedSupplier?.contact_name || "Not set"}
+                        detail={
+                          assignedSupplier?.phone ||
+                          assignedSupplier?.whatsapp ||
+                          assignedSupplier?.email ||
+                          undefined
                         }
                       />
                     </div>
@@ -1501,6 +1538,7 @@ export default function ItemDetailsPage() {
               values={editValues}
               fieldErrors={editFieldErrors}
               depots={editDepotOptions}
+              suppliers={suppliers}
               currencyCode={editCurrencyCode}
               selectedImage={editImage}
               saving={isEditing}

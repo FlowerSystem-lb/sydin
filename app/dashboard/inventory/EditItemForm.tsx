@@ -12,6 +12,7 @@ import {
   normalizeInventoryUnitType,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
+import type { Supplier } from "@/app/lib/suppliers";
 
 export type EditItemFieldName =
   | "name"
@@ -40,6 +41,7 @@ export interface EditableInventoryItem {
   selling_price?: number | string | null;
   min_stock_level?: number | null;
   barcode?: string | null;
+  supplier_id?: number | null;
 }
 
 export interface EditItemFormValues {
@@ -55,6 +57,7 @@ export interface EditItemFormValues {
   sku: string;
   barcode: string;
   notes: string;
+  supplierId: string;
 }
 
 export interface ParsedEditItemValues {
@@ -70,6 +73,7 @@ export interface ParsedEditItemValues {
   sku: string;
   barcode: string | null;
   notes: string;
+  supplier_id: number | null;
 }
 
 const inputClassName =
@@ -103,6 +107,7 @@ export function createEditItemFormValues(
     sku: item.sku || "",
     barcode: item.barcode || "",
     notes: item.notes || "",
+    supplierId: item.supplier_id ? String(item.supplier_id) : "",
   };
 }
 
@@ -120,6 +125,7 @@ export function createEmptyEditItemFormValues(): EditItemFormValues {
     sku: "",
     barcode: "",
     notes: "",
+    supplierId: "",
   };
 }
 
@@ -203,6 +209,7 @@ export function validateEditItemFormValues(values: EditItemFormValues) {
       sku: values.sku.trim(),
       barcode: values.barcode.trim() || null,
       notes: values.notes,
+      supplier_id: values.supplierId ? Number(values.supplierId) : null,
     } satisfies ParsedEditItemValues,
   };
 }
@@ -213,6 +220,10 @@ export function getEditSaveErrorMessage(error: {
   details?: string;
 }) {
   const errorText = `${error.message || ""} ${error.details || ""}`.toLowerCase();
+  if (errorText.includes("supplier")) {
+    return "The supplier could not be linked. Confirm the Phase 4C migration is applied and choose one of your own suppliers.";
+  }
+
   const phaseFields = [
     "unit_type",
     "custom_unit_label",
@@ -308,6 +319,7 @@ export default function EditItemForm({
   values,
   fieldErrors,
   depots,
+  suppliers,
   currencyCode,
   selectedImage,
   saving,
@@ -322,6 +334,7 @@ export default function EditItemForm({
   values: EditItemFormValues;
   fieldErrors: EditItemFieldErrors;
   depots: Depot[];
+  suppliers: Supplier[];
   currencyCode: string;
   selectedImage: File | null;
   saving: boolean;
@@ -483,6 +496,48 @@ export default function EditItemForm({
                 </svg>
               </span>
             </div>
+          </div>
+
+          <div>
+            <label className="mb-2 block text-sm font-semibold text-slate-300">
+              Supplier
+            </label>
+            <div className="relative">
+              <select
+                value={values.supplierId}
+                onChange={(event) =>
+                  onValueChange("supplierId", event.target.value)
+                }
+                disabled={saving}
+                className={`${inputClassName} appearance-none pr-12`}
+              >
+                <option value="">No supplier</option>
+                {suppliers.map((supplier) => (
+                  <option key={supplier.id} value={supplier.id}>
+                    {supplier.name}
+                  </option>
+                ))}
+              </select>
+              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+                <svg
+                  aria-hidden="true"
+                  className="h-5 w-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="m6 9 6 6 6-6"
+                  />
+                </svg>
+              </span>
+            </div>
+            <p className="mt-2 text-xs leading-5 text-slate-500">
+              Optional. Manage supplier records from the Suppliers page.
+            </p>
           </div>
         </div>
       </section>
