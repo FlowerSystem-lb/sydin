@@ -348,6 +348,13 @@ export default function DashboardPage() {
 
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
+                  href="/dashboard/reports"
+                  className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-4 text-center text-base font-bold text-cyan-50 transition hover:border-cyan-200/45 hover:bg-cyan-400/15"
+                >
+                  View Reports
+                </Link>
+
+                <Link
                   href="/dashboard/inventory"
                   className="rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
                 >
