@@ -14,7 +14,6 @@ interface PublicItem {
   quantity: number;
   image: string;
   sku?: string | null;
-  notes?: string | null;
   created_at?: string | null;
   business_name?: string | null;
   business_logo_url?: string | null;
@@ -53,7 +52,6 @@ function normalizePublicItem(data: unknown): PublicItem | null {
     quantity: Number(item.quantity || 0),
     image: item.image || "",
     sku: item.sku || "",
-    notes: item.notes || "",
     created_at: item.created_at || null,
     business_name: item.business_name || "SydIn",
     business_logo_url: item.business_logo_url || "",
@@ -61,6 +59,22 @@ function normalizePublicItem(data: unknown): PublicItem | null {
     contact_phone: item.contact_phone || "",
     contact_website: item.contact_website || "",
   };
+}
+
+function getSafePublicWebsite(value?: string | null) {
+  const website = value?.trim();
+
+  if (!website) return "";
+
+  try {
+    const url = new URL(website);
+
+    return url.protocol === "https:" || url.protocol === "http:"
+      ? url.toString()
+      : "";
+  } catch {
+    return "";
+  }
 }
 
 export default function PublicItemPage() {
@@ -132,10 +146,11 @@ export default function PublicItemPage() {
 
   const businessName = item?.business_name || "SydIn";
   const businessLogoUrl = item?.business_logo_url || "";
+  const publicWebsite = getSafePublicWebsite(item?.contact_website);
   const hasContact =
     Boolean(item?.contact_email) ||
     Boolean(item?.contact_phone) ||
-    Boolean(item?.contact_website);
+    Boolean(publicWebsite);
 
   return (
     <main className="liquid-bg min-h-screen overflow-x-hidden px-4 py-5 text-white sm:px-6 sm:py-8">
@@ -288,16 +303,6 @@ export default function PublicItemPage() {
                   </div>
                 </div>
 
-                <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-sm font-semibold text-slate-500">
-                    Notes
-                  </p>
-
-                  <p className="mt-2 whitespace-pre-wrap break-words text-base leading-7 text-slate-300">
-                    {item.notes || "No notes added yet."}
-                  </p>
-                </div>
-
                 {hasContact && (
                   <div className="mt-5 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 p-4">
                     <p className="text-sm font-semibold text-indigo-200">
@@ -323,9 +328,9 @@ export default function PublicItemPage() {
                         </a>
                       )}
 
-                      {item.contact_website && (
+                      {publicWebsite && (
                         <a
-                          href={item.contact_website}
+                          href={publicWebsite}
                           className="break-all transition hover:text-white"
                           rel="noreferrer"
                           target="_blank"

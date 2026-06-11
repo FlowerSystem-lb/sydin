@@ -169,7 +169,9 @@ function RequestPlanContent() {
         ]);
 
       if (insertError) {
-        setError(insertError.message);
+        setError(
+          "We could not send your plan request. Check the details and try again."
+        );
         return;
       }
 
