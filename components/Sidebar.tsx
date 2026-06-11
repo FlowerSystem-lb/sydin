@@ -32,6 +32,7 @@ type ShellIconName =
   | "depots"
   | "categories"
   | "suppliers"
+  | "picklists"
   | "reports"
   | "settings";
 
@@ -95,6 +96,13 @@ function ShellIcon({
           <path d="M4 21v-8.5L12 8l8 4.5V21" />
           <path d="M8 10V5.5L12 3l4 2.5V10M8 21v-5h8v5" />
           <path d="M11 12h2" />
+        </>
+      )}
+      {name === "picklists" && (
+        <>
+          <rect x="5" y="3" width="14" height="18" rx="2" />
+          <path d="M9 3.5h6M9 9l1.5 1.5L13 8M14.5 10H16" />
+          <path d="M9 15l1.5 1.5L13 14M14.5 16H16" />
         </>
       )}
       {name === "reports" && (
@@ -230,6 +238,12 @@ export default function Sidebar({
       mobileName: "Suppliers",
       href: "/dashboard/suppliers",
       icon: "suppliers" as const,
+    },
+    {
+      name: "Pick Lists",
+      mobileName: "Pick Lists",
+      href: "/dashboard/pick-lists",
+      icon: "picklists" as const,
     },
     {
       name: "Reports",
@@ -485,7 +499,7 @@ export default function Sidebar({
           </div>
         </div>
 
-        <nav className="mt-3 grid grid-cols-4 gap-1 border-t border-sky-200/10 pt-3 sm:grid-cols-8 sm:gap-2">
+        <nav className="mt-3 flex gap-1.5 overflow-x-auto border-t border-sky-200/10 pt-3 sm:gap-2">
           {links.map((link) => {
             const active =
               link.href === "/dashboard"
@@ -497,7 +511,7 @@ export default function Sidebar({
                 key={link.href}
                 href={link.href}
                 aria-current={active ? "page" : undefined}
-                className={`flex min-h-14 min-w-0 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-2 text-center text-xs font-semibold leading-tight transition ${
+                className={`flex min-h-14 min-w-[76px] flex-1 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-2 text-center text-xs font-semibold leading-tight transition sm:min-w-[88px] ${
                   active
                     ? "border-sky-300/25 bg-sky-400/15 text-white"
                     : "border-transparent bg-white/[0.035] text-slate-400"

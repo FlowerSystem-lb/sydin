@@ -98,6 +98,15 @@ export const PLAN_CATEGORY_LIMITS: Record<SubscriptionPlan, number> = {
   pro: 200,
 };
 
+export const PLAN_ACTIVE_PICK_LIST_LIMITS: Record<
+  SubscriptionPlan,
+  number | null
+> = {
+  free: 3,
+  standard: 50,
+  pro: null,
+};
+
 export const FREE_LOW_STOCK_THRESHOLD = 10;
 
 export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
@@ -332,6 +341,12 @@ export function getSubscriptionCategoryLimit(
   return PLAN_CATEGORY_LIMITS[getEffectivePlan(subscription)];
 }
 
+export function getSubscriptionPickListLimit(
+  subscription: Pick<UserSubscription, "plan" | "status">
+) {
+  return PLAN_ACTIVE_PICK_LIST_LIMITS[getEffectivePlan(subscription)];
+}
+
 export function getUpgradePlanForCategoryLimit(
   plan: SubscriptionPlan
 ): UpgradePlan {
@@ -341,6 +356,14 @@ export function getUpgradePlanForCategoryLimit(
 }
 
 export function getUpgradePlanForSupplierLimit(
+  plan: SubscriptionPlan
+): UpgradePlan {
+  if (plan === "free") return "Standard";
+  if (plan === "standard") return "Pro";
+  return "Business";
+}
+
+export function getUpgradePlanForPickListLimit(
   plan: SubscriptionPlan
 ): UpgradePlan {
   if (plan === "free") return "Standard";
