@@ -34,7 +34,8 @@ type ShellIconName =
   | "suppliers"
   | "picklists"
   | "reports"
-  | "settings";
+  | "settings"
+  | "help";
 
 function ShellIcon({
   name,
@@ -115,6 +116,12 @@ function ShellIcon({
         <>
           <circle cx="12" cy="12" r="3" />
           <path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1a1.7 1.7 0 0 0 1.9.3A1.7 1.7 0 0 0 10 3V2.8h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z" />
+        </>
+      )}
+      {name === "help" && (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M9.8 9a2.4 2.4 0 1 1 3.5 2.1c-.8.4-1.3 1-1.3 1.9M12 17h.01" />
         </>
       )}
     </svg>
@@ -258,6 +265,12 @@ export default function Sidebar({
       icon: "settings" as const,
     },
   ];
+  const helpLink = {
+    name: "Help Center",
+    mobileName: "Help",
+    href: "/dashboard/help",
+    icon: "help" as const,
+  };
 
   const addActionClass =
     "glass-button min-h-11 w-full rounded-lg px-4 py-3 text-sm";
@@ -371,6 +384,46 @@ export default function Sidebar({
                 </Link>
               );
             })}
+          </nav>
+
+          <div className="mb-2 mt-6 px-3">
+            <p className="text-xs font-bold uppercase text-slate-500">
+              Resources
+            </p>
+          </div>
+
+          <nav>
+            <Link
+              href={helpLink.href}
+              aria-current={
+                pathname === helpLink.href ||
+                pathname.startsWith(`${helpLink.href}/`)
+                  ? "page"
+                  : undefined
+              }
+              className={`group relative flex min-h-12 items-center gap-3 overflow-hidden rounded-lg border px-3 py-2.5 text-sm font-semibold transition ${
+                pathname === helpLink.href ||
+                pathname.startsWith(`${helpLink.href}/`)
+                  ? "border-sky-300/25 bg-gradient-to-r from-sky-400/20 to-blue-500/15 text-white shadow-[0_10px_30px_rgba(14,116,229,0.12)]"
+                  : "border-transparent text-slate-400 hover:border-sky-200/10 hover:bg-white/[0.05] hover:text-white"
+              }`}
+            >
+              <span
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
+                  pathname === helpLink.href ||
+                  pathname.startsWith(`${helpLink.href}/`)
+                    ? "bg-sky-300/15 text-cyan-100"
+                    : "bg-white/[0.035] text-slate-500 group-hover:bg-white/[0.07] group-hover:text-slate-200"
+                }`}
+              >
+                <ShellIcon name="help" className="h-[18px] w-[18px]" />
+              </span>
+              Help Center
+              {(pathname === helpLink.href ||
+                pathname.startsWith(`${helpLink.href}/`)) && (
+                <span className="absolute inset-y-2 left-0 w-0.5 rounded-r-full bg-cyan-300" />
+              )}
+            </Link>
           </nav>
 
           {(onAddItem || addItemHref) && (
@@ -495,6 +548,25 @@ export default function Sidebar({
 
           <div className="flex shrink-0 items-center gap-2">
             {renderAddAction(true)}
+            <Link
+              href={helpLink.href}
+              aria-label="Open Help Center"
+              title="Help Center"
+              aria-current={
+                pathname === helpLink.href ||
+                pathname.startsWith(`${helpLink.href}/`)
+                  ? "page"
+                  : undefined
+              }
+              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition ${
+                pathname === helpLink.href ||
+                pathname.startsWith(`${helpLink.href}/`)
+                  ? "border-cyan-300/30 bg-cyan-400/15 text-cyan-100"
+                  : "border-white/10 bg-white/[0.05] text-slate-400 hover:text-white"
+              }`}
+            >
+              <ShellIcon name="help" className="h-5 w-5" />
+            </Link>
             <LogoutButton variant="icon" />
           </div>
         </div>

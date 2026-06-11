@@ -1,17 +1,27 @@
 import Link from "next/link";
 import { MarketingPage, SectionIntro } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
+import {
+  buildSupportMailtoUrl,
+  buildSupportWhatsAppUrl,
+  SYDIN_SUPPORT_EMAIL,
+  SYDIN_WHATSAPP_DISPLAY,
+} from "@/app/lib/support";
 
 const contactMethods = [
   {
     label: "Support email",
-    value: "support@sydin.app",
+    value: SYDIN_SUPPORT_EMAIL,
     text: "Use this address for product questions, account help, plan requests, and early access support.",
+    href: buildSupportMailtoUrl(),
+    action: "Email SydIN",
   },
   {
     label: "WhatsApp / direct contact",
-    value: "WhatsApp contact placeholder",
-    text: "A direct WhatsApp contact channel will be listed here for customers who prefer quick messaging.",
+    value: SYDIN_WHATSAPP_DISPLAY,
+    text: "Send a WhatsApp message for account or product help during SydIN early access.",
+    href: buildSupportWhatsAppUrl(),
+    action: "Message on WhatsApp",
   },
 ];
 
@@ -40,6 +50,21 @@ export default function ContactPage() {
                 <p className="mt-4 text-base leading-7 text-slate-400">
                   {method.text}
                 </p>
+
+                <a
+                  href={method.href}
+                  target={
+                    method.label.startsWith("WhatsApp") ? "_blank" : undefined
+                  }
+                  rel={
+                    method.label.startsWith("WhatsApp")
+                      ? "noreferrer"
+                      : undefined
+                  }
+                  className="mt-6 inline-flex min-h-12 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-5 py-3 text-sm font-black text-indigo-100 transition hover:border-indigo-300/40 hover:bg-indigo-500/25"
+                >
+                  {method.action}
+                </a>
               </div>
             </Reveal>
           ))}

@@ -32,6 +32,10 @@ import {
   calculateInventoryValue,
   getEffectiveItemLowStockThreshold,
 } from "@/app/lib/inventoryItemModel";
+import {
+  getOnboardingProgress,
+  type OnboardingProgress,
+} from "@/app/lib/onboarding";
 
 interface Item {
   id: number;
@@ -59,6 +63,7 @@ export default function DashboardPage() {
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [businessSettings, setBusinessSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+  const [onboarding, setOnboarding] = useState<OnboardingProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
@@ -99,6 +104,7 @@ export default function DashboardPage() {
         getSubscriptionUsage(user.id),
         getOrCreateBusinessSettings(user.id),
         getCategoriesForUser(user.id).catch(() => []),
+        getOnboardingProgress(user.id).catch(() => null),
       ])
         .then(
           ([
@@ -106,6 +112,7 @@ export default function DashboardPage() {
             usage,
             settings,
             loadedCategories,
+            loadedOnboarding,
           ]) => {
           if (!isActive) return;
 
@@ -121,6 +128,7 @@ export default function DashboardPage() {
           setCategories(loadedCategories);
           setSubscriptionUsage(usage);
           setBusinessSettings(settings);
+          setOnboarding(loadedOnboarding);
           setLoading(false);
           }
         )
@@ -399,6 +407,86 @@ export default function DashboardPage() {
               {error}
             </div>
           )}
+
+          <section className="glass-card p-5 sm:p-6">
+            {loading ? (
+              <div className="h-32 animate-pulse rounded-2xl bg-white/[0.05]" />
+            ) : onboarding ? (
+              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                    Getting started
+                  </p>
+                  <h2 className="mt-2 text-2xl font-black text-white">
+                    {onboarding.completedCount} of {onboarding.totalCount}{" "}
+                    recommended steps complete
+                  </h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                    {onboarding.nextStep
+                      ? `Next suggestion: ${onboarding.nextStep.title}. These setup steps are optional and can be completed in any order.`
+                      : "Your recommended setup is complete. Visit the Help Center whenever you need a guide or support contact."}
+                  </p>
+                  {onboarding.hasPartialError && (
+                    <p className="mt-2 text-xs font-semibold text-amber-200">
+                      Some setup statuses could not be checked right now.
+                    </p>
+                  )}
+                </div>
+
+                <div className="flex min-w-0 flex-col gap-3 sm:flex-row lg:min-w-[420px] lg:items-center">
+                  <div className="flex-1 rounded-2xl border border-cyan-300/15 bg-cyan-400/[0.07] p-4">
+                    <div className="flex items-center justify-between gap-4 text-sm font-bold">
+                      <span className="text-slate-400">Setup progress</span>
+                      <span className="text-cyan-100">
+                        {onboarding.percentage}%
+                      </span>
+                    </div>
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.08]">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-blue-500"
+                        style={{ width: `${onboarding.percentage}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  <Link
+                    href={
+                      onboarding.nextStep?.href || "/dashboard/help"
+                    }
+                    className="glass-button min-h-12 px-5 py-3 text-sm font-bold"
+                  >
+                    {onboarding.nextStep
+                      ? onboarding.nextStep.action
+                      : "Open Help Center"}
+                  </Link>
+                  <Link
+                    href="/dashboard/help"
+                    className="min-h-12 rounded-2xl border border-white/10 bg-white/[0.05] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                  >
+                    View Guide
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-xl font-black text-white">
+                    Need help getting started?
+                  </h2>
+                  <p className="mt-2 text-sm text-slate-400">
+                    Setup progress is unavailable, but all guides and support
+                    contacts remain accessible.
+                  </p>
+                </div>
+                <Link
+                  href="/dashboard/help"
+                  className="glass-button px-5 py-3 text-sm font-bold"
+                >
+                  Open Help Center
+                </Link>
+              </div>
+            )}
+          </section>
 
           <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
