@@ -6,6 +6,10 @@ import Sidebar from "@/components/Sidebar";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import Wordmark from "@/components/Wordmark";
 import {
+  getCategoriesForUser,
+  type Category,
+} from "@/app/lib/categories";
+import {
   getDepotsForUser,
   type Depot,
 } from "@/app/lib/depots";
@@ -80,6 +84,7 @@ export default function InventoryImportPage() {
     DEFAULT_SUBSCRIPTION_USAGE
   );
   const [depots, setDepots] = useState<Depot[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [existingSkus, setExistingSkus] = useState<string[]>([]);
   const [initialLoading, setInitialLoading] = useState(true);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -93,6 +98,7 @@ export default function InventoryImportPage() {
   const [success, setSuccess] = useState<{
     importedCount: number;
     skippedEmptyRows: number;
+    unmatchedCategoryRows: number;
   } | null>(null);
 
   useEffect(() => {
@@ -109,10 +115,16 @@ export default function InventoryImportPage() {
           return;
         }
 
-        const [loadedUsage, loadedDepots, { data: skuRows, error: skuError }] =
+        const [
+          loadedUsage,
+          loadedDepots,
+          loadedCategories,
+          { data: skuRows, error: skuError },
+        ] =
           await Promise.all([
             getSubscriptionUsage(user.id),
             getDepotsForUser(user.id).catch(() => []),
+            getCategoriesForUser(user.id).catch(() => []),
             supabase
               .from("inventory")
               .select("sku")
@@ -131,6 +143,7 @@ export default function InventoryImportPage() {
 
         setUsage(loadedUsage);
         setDepots(loadedDepots);
+        setCategories(loadedCategories);
         setExistingSkus(
           (skuRows || [])
             .map((row) => String(row.sku || ""))
@@ -156,10 +169,11 @@ export default function InventoryImportPage() {
         ? validateInventoryImportRows({
             rows: parsedFile.rows,
             depots,
+            categories,
             existingSkus,
           })
         : null,
-    [depots, existingSkus, parsedFile]
+    [categories, depots, existingSkus, parsedFile]
   );
   const projectedItemCount =
     usage.usedItems + (validation?.validRows.length || 0);
@@ -254,12 +268,14 @@ export default function InventoryImportPage() {
       const [
         freshUsage,
         freshDepots,
+        freshCategories,
         { data: freshSkuRows, error: skuError },
       ] = await Promise.all([
         getSubscriptionUsage(user.id, {
           strictCount: true,
         }),
         getDepotsForUser(user.id),
+        getCategoriesForUser(user.id),
         supabase
           .from("inventory")
           .select("sku")
@@ -279,11 +295,13 @@ export default function InventoryImportPage() {
       const freshValidation = validateInventoryImportRows({
         rows: parsedFile.rows,
         depots: freshDepots,
+        categories: freshCategories,
         existingSkus: freshExistingSkus,
       });
 
       setUsage(freshUsage);
       setDepots(freshDepots);
+      setCategories(freshCategories);
       setExistingSkus(freshExistingSkus);
 
       if (
@@ -316,7 +334,11 @@ export default function InventoryImportPage() {
       const newItems = freshValidation.validRows.map((row) => ({
         name: row.values.name,
         sku: row.values.sku,
-        category: row.values.category,
+        category:
+          freshCategories.find(
+            (category) => category.id === row.categoryId
+          )?.name || row.values.category,
+        category_id: row.categoryId,
         quantity: row.values.quantity,
         unit_type: row.values.unit_type,
         custom_unit_label:
@@ -363,6 +385,7 @@ export default function InventoryImportPage() {
       setSuccess({
         importedCount: createdItems.length,
         skippedEmptyRows: parsedFile.skippedEmptyRows,
+        unmatchedCategoryRows: freshValidation.unmatchedCategoryRows,
       });
     } catch (error) {
       setPageError(
@@ -475,6 +498,11 @@ export default function InventoryImportPage() {
                   ? ` ${success.skippedEmptyRows} empty row${
                       success.skippedEmptyRows === 1 ? " was" : "s were"
                     } ignored.`
+                  : ""}
+                {success.unmatchedCategoryRows > 0
+                  ? ` ${success.unmatchedCategoryRows} category name${
+                      success.unmatchedCategoryRows === 1 ? " was" : "s were"
+                    } kept as legacy text because no managed category matched.`
                   : ""}
               </p>
 
@@ -654,12 +682,17 @@ export default function InventoryImportPage() {
                   </button>
                 </div>
 
-                <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-4">
+                <div className="mt-6 grid grid-cols-2 gap-3 lg:grid-cols-5">
                   {[
                     ["Valid rows", validation.validRows.length, "emerald"],
                     ["Invalid rows", validation.invalidRows.length, "red"],
                     ["Duplicate SKUs", validation.duplicateSkuRows, "amber"],
                     ["Depot errors", validation.depotErrorRows, "indigo"],
+                    [
+                      "Legacy categories",
+                      validation.unmatchedCategoryRows,
+                      "amber",
+                    ],
                   ].map(([label, value, tone]) => (
                     <div
                       key={String(label)}
