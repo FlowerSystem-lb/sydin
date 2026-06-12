@@ -23,6 +23,18 @@ export const STOCK_MOVEMENT_LABELS: Record<StockMovementType, string> = {
   damaged_lost: "Damaged / Lost",
 };
 
+export function formatStockMovementNotes(notes: string | null) {
+  if (!notes) return "";
+
+  const pickListMatch = notes.match(/^Pick list #(\d+):\s*(.+)$/i);
+
+  if (pickListMatch) {
+    return `Pick List #${pickListMatch[1]} — ${pickListMatch[2]}`;
+  }
+
+  return notes;
+}
+
 function normalizeMovement(data: Partial<StockMovement>): StockMovement {
   return {
     id: Number(data.id),

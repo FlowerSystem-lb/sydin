@@ -1,5 +1,6 @@
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
+import PlanCtaLink from "@/components/PlanCtaLink";
 import Wordmark from "@/components/Wordmark";
 import Reveal from "@/components/Reveal";
 import {
@@ -78,8 +79,8 @@ export const featureCards = [
     text: "Use SydIn comfortably on phone, tablet, and desktop when work happens away from the desk.",
   },
   {
-    title: "Reports foundation",
-    text: "Clean records and item history prepare the product for exports, reports, and audits as you grow.",
+    title: "Reports and Pick Lists",
+    text: "Review stock health and value, then prepare orders or events with active Pick List limits matched to your plan.",
   },
 ];
 
@@ -157,12 +158,12 @@ export function MarketingHeader({
               Sign in
             </Link>
 
-            <Link
-              href="/signup"
+            <PlanCtaLink
+              plan="free"
               className="action-button action-button-primary px-5 py-3 text-sm font-black"
             >
               Start Free
-            </Link>
+            </PlanCtaLink>
           </div>
         </div>
 
@@ -173,12 +174,12 @@ export function MarketingHeader({
           >
             Sign in
           </Link>
-          <Link
-            href="/signup"
+          <PlanCtaLink
+            plan="free"
             className="action-button action-button-primary min-h-11 px-3 py-2.5 text-sm"
           >
             Start Free
-          </Link>
+          </PlanCtaLink>
         </div>
 
         <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:hidden">
@@ -273,12 +274,12 @@ export function CTAButtons({
         align === "center" ? "sm:justify-center" : ""
       }`}
     >
-      <Link
-        href="/signup"
+      <PlanCtaLink
+        plan="free"
         className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-white px-7 py-4 text-base font-black text-black shadow-[0_22px_70px_rgba(255,255,255,0.14)] transition hover:bg-slate-200"
       >
         Start Free
-      </Link>
+      </PlanCtaLink>
 
       <Link
         href="/demo"
@@ -386,7 +387,7 @@ export function PricingCards({
   compact = false,
 }: PricingCardsProps) {
   return (
-    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-4">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
       {pricingPlans.map((plan, index) => (
         <Reveal key={plan.name} delay={index * 80}>
           <div
@@ -444,8 +445,8 @@ export function PricingCards({
             </ul>
 
             {plan.available ? (
-              <Link
-                href={plan.ctaHref}
+              <PlanCtaLink
+                plan={plan.id}
                 className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-black transition ${
                   plan.featured
                     ? "bg-white text-black hover:bg-slate-200"
@@ -453,7 +454,7 @@ export function PricingCards({
                 }`}
               >
                 {plan.ctaLabel}
-              </Link>
+              </PlanCtaLink>
             ) : (
               <span className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3 text-sm font-black text-slate-500">
                 {plan.ctaLabel}

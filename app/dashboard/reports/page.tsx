@@ -38,6 +38,7 @@ import {
   type StockHealthReportItem,
 } from "@/app/lib/inventoryReports";
 import {
+  formatStockMovementNotes,
   STOCK_MOVEMENT_LABELS,
   type StockMovementType,
 } from "@/app/lib/stockMovements";
@@ -444,13 +445,12 @@ export default function ReportsPage() {
   const [error, setError] = useState("");
   const [movementError, setMovementError] = useState("");
 
-  const hasAdvancedReports =
-    subscriptionUsage.subscription.plan !== "free";
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
   const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
+  const hasAdvancedReports = planCapabilities.advancedReports;
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
     subscriptionUsage.subscription,
     businessSettings.low_stock_threshold
@@ -1085,7 +1085,9 @@ export default function ReportsPage() {
                                       <p className="mt-1 text-xs text-theme-subtle">
                                         {formatDateTime(movement.created_at)}
                                         {movement.notes
-                                          ? ` · ${movement.notes}`
+                                          ? ` · ${formatStockMovementNotes(
+                                              movement.notes
+                                            )}`
                                           : ""}
                                       </p>
                                     </div>

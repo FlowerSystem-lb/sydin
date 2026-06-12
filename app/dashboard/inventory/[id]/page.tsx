@@ -47,6 +47,7 @@ import {
   type Depot,
 } from "@/app/lib/depots";
 import {
+  formatStockMovementNotes,
   getStockMovementsForItem,
   recordStockMovement,
   STOCK_MOVEMENT_LABELS,
@@ -1190,7 +1191,7 @@ export default function ItemDetailsPage() {
 
                               {movement.notes && (
                                 <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words text-sm leading-6 text-theme-secondary">
-                                  {movement.notes}
+                                  {formatStockMovementNotes(movement.notes)}
                                 </p>
                               )}
                             </div>

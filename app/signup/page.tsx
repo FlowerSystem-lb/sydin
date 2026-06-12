@@ -6,6 +6,10 @@ import { useRouter } from "next/navigation";
 import GoogleMark from "@/components/GoogleMark";
 import Wordmark from "@/components/Wordmark";
 import { supabase } from "@/app/lib/supabase";
+import {
+  buildAuthHref,
+} from "@/app/lib/authNavigation";
+import useAuthIntent from "@/components/useAuthIntent";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -23,6 +27,7 @@ export default function SignupPage() {
     useState(false);
   const [loading, setLoading] =
     useState(false);
+  const { plan: planIntent, returnTo } = useAuthIntent();
 
   const handleGoogleSignup = async () => {
     if (googleLoading) return;
@@ -35,7 +40,7 @@ export default function SignupPage() {
         await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/dashboard`,
+            redirectTo: `${window.location.origin}${returnTo}`,
           },
         });
 
@@ -68,6 +73,13 @@ export default function SignupPage() {
         await supabase.auth.signUp({
           email,
           password,
+          options: {
+            emailRedirectTo: `${window.location.origin}${buildAuthHref(
+              "/login",
+              planIntent,
+              returnTo
+            )}`,
+          },
         });
 
       if (error) {
@@ -123,8 +135,11 @@ export default function SignupPage() {
             Create your account
           </h1>
           <p className="mt-3 max-w-sm text-sm leading-6 text-slate-300 sm:text-base">
-            Build a clear, visual inventory workspace for your business in
-            minutes.
+            {planIntent === "free"
+              ? "Build a clear, visual inventory workspace for your business in minutes."
+              : `Create your account, then continue to the ${
+                  planIntent === "standard" ? "Standard" : "Pro"
+                } plan request.`}
           </p>
         </div>
 
@@ -147,7 +162,9 @@ export default function SignupPage() {
             </p>
             <button
               type="button"
-              onClick={() => router.push("/login")}
+              onClick={() =>
+                router.push(buildAuthHref("/login", planIntent, returnTo))
+              }
               className="glass-button mt-6 min-h-14 w-full rounded-lg px-5 py-3.5 text-base"
             >
               Continue to Sign In
@@ -272,7 +289,7 @@ export default function SignupPage() {
         <p className="mt-7 border-t border-sky-200/10 pt-6 text-center text-sm text-slate-400">
           Already have an account?{" "}
           <Link
-            href="/login"
+            href={buildAuthHref("/login", planIntent, returnTo)}
             className="font-bold text-sky-300 transition hover:text-cyan-200"
           >
             Sign in

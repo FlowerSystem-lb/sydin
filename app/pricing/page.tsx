@@ -6,27 +6,7 @@ import {
   SectionIntro,
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
-
-const comparisonRows = [
-  ["Items", "50", "250", "1,000", "Custom"],
-  ["Product photos", "Included", "Included", "Included", "Included"],
-  ["QR public item pages", "Included", "Included", "Included", "Included"],
-  ["CSV export", "Included", "Included", "Included", "Included"],
-  ["Stock movements", "Basic", "Basic", "Basic", "Custom"],
-  ["Depots", "1", "3", "10", "Custom"],
-  ["Search and filters", "Included", "Included", "Included", "Included"],
-  ["Business name", "Included", "Included", "Included", "Included"],
-  ["Custom business logo", "Not included", "Included", "Included", "Included"],
-  ["Custom low-stock threshold", "Not included", "Included", "Included", "Included"],
-  ["Scanner", "Not included", "Included", "Included", "Included"],
-  ["CSV/Excel import", "Not included", "Included", "Included", "Included"],
-  ["Excel export", "Not included", "Included", "Included", "Included"],
-  ["PDF export", "Not included", "Basic", "Basic", "Advanced later"],
-  ["Reports and analytics", "Not included", "Not included", "Later", "Advanced later"],
-  ["Pick lists", "Not included", "Not included", "Later", "Later"],
-  ["Support", "Beta support", "Beta support", "Priority manual support", "Advanced later"],
-  ["Teams and roles", "Not included", "Not included", "Not included", "Later"],
-];
+import { PLAN_COMPARISON_ROWS } from "@/app/lib/subscription";
 
 const faqs = [
   {
@@ -115,12 +95,12 @@ export default function PricingPage() {
         <SectionIntro
           eyebrow="Compare"
           title="Compare capacity and workflow tools."
-          text="Plan definitions are transparent during beta. Features marked later are roadmap items and are not presented as available today."
+          text="Every listed feature reflects the current product. Standard and Pro use a manual request, payment confirmation, and admin activation flow."
         />
 
         <Reveal>
           <div className="mx-auto mt-10 hidden max-w-7xl overflow-x-auto rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl md:block">
-            <div className="grid min-w-[980px] grid-cols-5 border-b border-white/10 bg-white/[0.04]">
+            <div className="grid min-w-[760px] grid-cols-4 border-b border-white/10 bg-white/[0.04]">
               <div className="p-4 text-sm font-black text-slate-400">
                 Feature
               </div>
@@ -135,14 +115,14 @@ export default function PricingPage() {
             </div>
 
             <div>
-              {comparisonRows.map((row) => (
+              {PLAN_COMPARISON_ROWS.map((row) => (
                 <div
-                  key={row[0]}
-                  className="grid min-w-[980px] grid-cols-5 border-b border-white/10 last:border-b-0"
+                  key={row.feature}
+                  className="grid min-w-[760px] grid-cols-4 border-b border-white/10 last:border-b-0"
                 >
-                  {row.map((cell, index) => (
+                  {[row.feature, ...row.values].map((cell, index) => (
                     <div
-                      key={`${row[0]}-${index}`}
+                      key={`${row.feature}-${index}`}
                       className={`p-4 text-sm ${
                         index === 0
                           ? "font-bold text-white"
@@ -158,7 +138,7 @@ export default function PricingPage() {
           </div>
 
           <div className="mx-auto mt-8 grid max-w-3xl grid-cols-1 gap-4 md:hidden">
-            {comparisonRows.map(([feature, ...values]) => (
+            {PLAN_COMPARISON_ROWS.map(({ feature, values }) => (
               <article
                 key={feature}
                 className="rounded-3xl border border-white/10 bg-white/[0.045] p-5 shadow-[0_20px_70px_rgba(0,0,0,0.22)] backdrop-blur-xl"

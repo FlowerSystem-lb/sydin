@@ -73,8 +73,7 @@ export default function DashboardPage() {
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
-  const canViewValueAnalytics =
-    subscriptionUsage.subscription.plan !== "free";
+  const canViewValueAnalytics = planCapabilities.dashboardAnalytics;
 
   useEffect(() => {
     let isActive = true;
@@ -318,6 +317,7 @@ export default function DashboardPage() {
       label: "Total Items",
       value: stats.totalItems,
       detail: "Products tracked",
+      href: "/dashboard/inventory",
       icon: "box" as UiIconName,
       accent: "from-indigo-400 to-violet-500",
     },
@@ -325,6 +325,7 @@ export default function DashboardPage() {
       label: "Total Stock",
       value: stats.totalStock,
       detail: "Units available",
+      href: "/dashboard/inventory",
       icon: "layers" as UiIconName,
       accent: "from-cyan-300 to-indigo-500",
     },
@@ -332,6 +333,7 @@ export default function DashboardPage() {
       label: "Low Stock Items",
       value: stats.lowStockItems,
       detail: `At or below ${effectiveLowStockThreshold} units`,
+      href: "/dashboard/reports",
       icon: "alert" as UiIconName,
       accent: "from-rose-400 to-fuchsia-500",
     },
@@ -339,6 +341,7 @@ export default function DashboardPage() {
       label: "Recently Added Items",
       value: stats.recentlyAddedItems,
       detail: "Latest records",
+      href: "/dashboard/inventory",
       icon: "clock" as UiIconName,
       accent: "from-violet-400 to-sky-400",
     },
@@ -550,8 +553,9 @@ export default function DashboardPage() {
 
           <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
             {summaryCards.map((card) => (
-              <div
+              <Link
                 key={card.label}
+                href={card.href}
                 className="group rounded-[28px] border border-theme bg-theme-surface p-5 shadow-[0_22px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-indigo-300/30 hover:bg-white/[0.075] sm:p-6"
               >
                 <div className="flex items-start justify-between gap-4">
@@ -577,7 +581,7 @@ export default function DashboardPage() {
                 <p className="mt-5 text-sm text-theme-subtle">
                   {card.detail}
                 </p>
-              </div>
+              </Link>
             ))}
           </section>
 

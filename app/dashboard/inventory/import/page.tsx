@@ -30,6 +30,8 @@ import {
   formatPlanName,
   getPlanLimitMessage,
   getSubscriptionUsage,
+  getUpgradeActionLabel,
+  getUpgradeRequestHref,
   hasSubscriptionCapability,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
@@ -1006,10 +1008,13 @@ export default function InventoryImportPage() {
 
                   {exceedsPlanLimit && (
                     <Link
-                      href="/request-plan"
+                      href={getUpgradeRequestHref(
+                        usage.subscription.plan,
+                        "import-item-limit"
+                      )}
                       className="rounded-2xl bg-white px-5 py-3 text-center text-sm font-black text-black transition hover:bg-slate-200"
                     >
-                      Request a plan
+                      {getUpgradeActionLabel(usage.subscription.plan)}
                     </Link>
                   )}
                 </div>

@@ -1,8 +1,8 @@
 import { supabase } from "@/app/lib/supabase";
 
 export type SubscriptionPlan = "free" | "standard" | "pro";
-export type PublicPlanId = SubscriptionPlan | "business";
-export type UpgradePlan = "Standard" | "Pro" | "Business";
+export type PublicPlanId = SubscriptionPlan;
+export type UpgradePlan = "Standard" | "Pro" | "Contact";
 export type BooleanPlanCapability =
   | "productPhotos"
   | "qrPublicPages"
@@ -15,13 +15,11 @@ export type BooleanPlanCapability =
   | "scanner"
   | "csvExcelImport"
   | "excelExport"
-  | "advancedReportsLater"
-  | "reportsCenterLater"
-  | "pickListsLater"
-  | "analyticsLater"
-  | "priorityManualSupport"
-  | "teamsRolesLater"
-  | "advancedSupportLater";
+  | "advancedReports"
+  | "dashboardAnalytics"
+  | "helpCenter"
+  | "appearanceSettings"
+  | "priorityManualSupport";
 
 export interface PlanCapabilities {
   itemLimit: number | null;
@@ -30,6 +28,9 @@ export interface PlanCapabilities {
   csvExport: boolean;
   stockMovements: "basic";
   depotLimit: number | null;
+  supplierLimit: number | null;
+  categoryLimit: number | null;
+  activePickListLimit: number | null;
   searchAndFilters: boolean;
   businessName: boolean;
   customBusinessLogo: boolean;
@@ -39,26 +40,22 @@ export interface PlanCapabilities {
   csvExcelImport: boolean;
   excelExport: boolean;
   pdfExport: "none" | "basic";
-  advancedReportsLater: boolean;
-  reportsCenterLater: boolean;
-  pickListsLater: boolean;
-  analyticsLater: boolean;
+  advancedReports: boolean;
+  dashboardAnalytics: boolean;
+  helpCenter: boolean;
+  appearanceSettings: boolean;
   priorityManualSupport: boolean;
-  teamsRolesLater: boolean;
-  advancedSupportLater: boolean;
 }
 
 export interface PlanDefinition {
   id: PublicPlanId;
   name: string;
   priceMonthly: number | null;
-  itemLimit: number | null;
   description: string;
   audience: string;
   featured?: boolean;
   available: boolean;
   ctaLabel: string;
-  ctaHref: string;
   highlights: string[];
   capabilities: PlanCapabilities;
 }
@@ -114,18 +111,16 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
     id: "free",
     name: "Free",
     priceMonthly: 0,
-    itemLimit: PLAN_ITEM_LIMITS.free,
     description: "A complete starting point for small visual inventories.",
     audience: "For trying SydIN with real business inventory.",
     available: true,
     ctaLabel: "Start Free",
-    ctaHref: "/signup",
     highlights: [
       "Up to 50 items",
-      "Product photos and QR pages",
-      "CSV export",
-      "Basic stock movements",
-      "1 depot",
+      "1 depot, 3 suppliers, 5 categories",
+      "3 active Pick Lists",
+      "Public QR item pages",
+      "Help Center and appearance settings",
     ],
     capabilities: {
       itemLimit: PLAN_ITEM_LIMITS.free,
@@ -134,6 +129,9 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExport: true,
       stockMovements: "basic",
       depotLimit: 1,
+      supplierLimit: PLAN_SUPPLIER_LIMITS.free,
+      categoryLimit: PLAN_CATEGORY_LIMITS.free,
+      activePickListLimit: PLAN_ACTIVE_PICK_LIST_LIMITS.free,
       searchAndFilters: true,
       businessName: true,
       customBusinessLogo: false,
@@ -143,32 +141,28 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExcelImport: false,
       excelExport: false,
       pdfExport: "none",
-      advancedReportsLater: false,
-      reportsCenterLater: false,
-      pickListsLater: false,
-      analyticsLater: false,
+      advancedReports: false,
+      dashboardAnalytics: false,
+      helpCenter: true,
+      appearanceSettings: true,
       priorityManualSupport: false,
-      teamsRolesLater: false,
-      advancedSupportLater: false,
     },
   },
   standard: {
     id: "standard",
     name: "Standard",
     priceMonthly: 19,
-    itemLimit: PLAN_ITEM_LIMITS.standard,
     description: "Daily inventory tools for growing small businesses.",
     audience: "For teams ready to import, scan, and organize across locations.",
     featured: true,
     available: true,
     ctaLabel: "Request Standard",
-    ctaHref: "/request-plan?plan=Standard",
     highlights: [
       "Up to 250 items",
-      "3 depots",
-      "Custom logo and low-stock threshold",
-      "Scanner and CSV/Excel import",
-      "Excel and basic PDF export",
+      "3 depots, 25 suppliers, 50 categories",
+      "50 active Pick Lists",
+      "Import, scanner, Excel and PDF export",
+      "Advanced reports and QR branding",
     ],
     capabilities: {
       itemLimit: PLAN_ITEM_LIMITS.standard,
@@ -177,6 +171,9 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExport: true,
       stockMovements: "basic",
       depotLimit: 3,
+      supplierLimit: PLAN_SUPPLIER_LIMITS.standard,
+      categoryLimit: PLAN_CATEGORY_LIMITS.standard,
+      activePickListLimit: PLAN_ACTIVE_PICK_LIST_LIMITS.standard,
       searchAndFilters: true,
       businessName: true,
       customBusinessLogo: true,
@@ -186,30 +183,26 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExcelImport: true,
       excelExport: true,
       pdfExport: "basic",
-      advancedReportsLater: false,
-      reportsCenterLater: false,
-      pickListsLater: false,
-      analyticsLater: false,
+      advancedReports: true,
+      dashboardAnalytics: true,
+      helpCenter: true,
+      appearanceSettings: true,
       priorityManualSupport: false,
-      teamsRolesLater: false,
-      advancedSupportLater: false,
     },
   },
   pro: {
     id: "pro",
     name: "Pro",
     priceMonthly: 29,
-    itemLimit: PLAN_ITEM_LIMITS.pro,
-    description: "More capacity and the foundation for advanced operations.",
-    audience: "For established businesses with larger catalogs and reporting needs.",
+    description: "More capacity for advanced inventory operations.",
+    audience: "For established businesses with larger catalogs and active order preparation.",
     available: true,
     ctaLabel: "Request Pro",
-    ctaHref: "/request-plan?plan=Pro",
     highlights: [
       "Up to 1,000 items",
-      "10 depots",
+      "10 depots, 100 suppliers, 200 categories",
+      "Unlimited active Pick Lists",
       "Everything in Standard",
-      "Advanced reports and analytics later",
       "Priority manual support during beta",
     ],
     capabilities: {
@@ -219,6 +212,9 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExport: true,
       stockMovements: "basic",
       depotLimit: 10,
+      supplierLimit: PLAN_SUPPLIER_LIMITS.pro,
+      categoryLimit: PLAN_CATEGORY_LIMITS.pro,
+      activePickListLimit: PLAN_ACTIVE_PICK_LIST_LIMITS.pro,
       searchAndFilters: true,
       businessName: true,
       customBusinessLogo: true,
@@ -228,64 +224,127 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExcelImport: true,
       excelExport: true,
       pdfExport: "basic",
-      advancedReportsLater: true,
-      reportsCenterLater: true,
-      pickListsLater: true,
-      analyticsLater: true,
+      advancedReports: true,
+      dashboardAnalytics: true,
+      helpCenter: true,
+      appearanceSettings: true,
       priorityManualSupport: true,
-      teamsRolesLater: false,
-      advancedSupportLater: false,
-    },
-  },
-  business: {
-    id: "business",
-    name: "Business",
-    priceMonthly: null,
-    itemLimit: null,
-    description: "A future plan for larger teams and custom operations.",
-    audience: "For organizations that need tailored limits and support.",
-    available: false,
-    ctaLabel: "Coming Later",
-    ctaHref: "/contact",
-    highlights: [
-      "Custom item limits",
-      "Everything in Pro",
-      "Teams and roles later",
-      "Advanced support later",
-      "Custom operational planning",
-    ],
-    capabilities: {
-      itemLimit: null,
-      productPhotos: true,
-      qrPublicPages: true,
-      csvExport: true,
-      stockMovements: "basic",
-      depotLimit: null,
-      searchAndFilters: true,
-      businessName: true,
-      customBusinessLogo: true,
-      publicContactBranding: true,
-      customLowStockThreshold: true,
-      scanner: true,
-      csvExcelImport: true,
-      excelExport: true,
-      pdfExport: "basic",
-      advancedReportsLater: true,
-      reportsCenterLater: true,
-      pickListsLater: true,
-      analyticsLater: true,
-      priorityManualSupport: true,
-      teamsRolesLater: true,
-      advancedSupportLater: true,
     },
   },
 };
 
-export const PUBLIC_PLAN_ORDER: PublicPlanId[] = [
-  "free",
-  "standard",
-  "pro",
-  "business",
+export const PUBLIC_PLAN_ORDER: PublicPlanId[] = ["free", "standard", "pro"];
+
+export const PLAN_COMPARISON_ROWS = [
+  {
+    feature: "Items",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      Number(
+        PLAN_DEFINITIONS[plan].capabilities.itemLimit
+      ).toLocaleString()
+    ),
+  },
+  {
+    feature: "Depots",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      String(PLAN_DEFINITIONS[plan].capabilities.depotLimit)
+    ),
+  },
+  {
+    feature: "Suppliers",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      String(PLAN_DEFINITIONS[plan].capabilities.supplierLimit)
+    ),
+  },
+  {
+    feature: "Categories",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      String(PLAN_DEFINITIONS[plan].capabilities.categoryLimit)
+    ),
+  },
+  {
+    feature: "Active Pick Lists",
+    values: PUBLIC_PLAN_ORDER.map((plan) => {
+      const limit = PLAN_DEFINITIONS[plan].capabilities.activePickListLimit;
+      return limit === null ? "Unlimited" : String(limit);
+    }),
+  },
+  {
+    feature: "Public QR item pages",
+    values: PUBLIC_PLAN_ORDER.map(() => "Included"),
+  },
+  {
+    feature: "Product photos and stock movements",
+    values: PUBLIC_PLAN_ORDER.map(() => "Included"),
+  },
+  {
+    feature: "CSV export",
+    values: PUBLIC_PLAN_ORDER.map(() => "Included"),
+  },
+  {
+    feature: "QR logo and contact branding",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.publicContactBranding
+        ? "Included"
+        : "Not included"
+    ),
+  },
+  {
+    feature: "Import inventory",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.csvExcelImport
+        ? "Included"
+        : "Not included"
+    ),
+  },
+  {
+    feature: "Inventory scanner",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.scanner
+        ? "Included"
+        : "Not included"
+    ),
+  },
+  {
+    feature: "Excel and PDF export",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.excelExport
+        ? "Included"
+        : "Not included"
+    ),
+  },
+  {
+    feature: "Advanced reports",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.advancedReports
+        ? "Included"
+        : "Not included"
+    ),
+  },
+  {
+    feature: "Dashboard value analytics",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.dashboardAnalytics
+        ? "Included"
+        : "Basic overview"
+    ),
+  },
+  {
+    feature: "Custom low-stock threshold",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.customLowStockThreshold
+        ? "Included"
+        : "Fixed at 10"
+    ),
+  },
+  {
+    feature: "Help Center and onboarding",
+    values: PUBLIC_PLAN_ORDER.map(() => "Included"),
+  },
+  {
+    feature: "Dark, light, and system appearance",
+    values: PUBLIC_PLAN_ORDER.map(() => "Included"),
+  },
 ];
 
 function normalizePlan(plan: string | null | undefined): SubscriptionPlan {
@@ -326,49 +385,49 @@ export function hasSubscriptionCapability(
 export function getSubscriptionDepotLimit(
   subscription: Pick<UserSubscription, "plan" | "status">
 ) {
-  return getSubscriptionCapabilities(subscription).depotLimit || 1;
+  return getSubscriptionCapabilities(subscription).depotLimit ?? 1;
 }
 
 export function getSubscriptionSupplierLimit(
   subscription: Pick<UserSubscription, "plan" | "status">
 ) {
-  return PLAN_SUPPLIER_LIMITS[getEffectivePlan(subscription)];
+  return (
+    getSubscriptionCapabilities(subscription).supplierLimit ??
+    PLAN_SUPPLIER_LIMITS.free
+  );
 }
 
 export function getSubscriptionCategoryLimit(
   subscription: Pick<UserSubscription, "plan" | "status">
 ) {
-  return PLAN_CATEGORY_LIMITS[getEffectivePlan(subscription)];
+  return (
+    getSubscriptionCapabilities(subscription).categoryLimit ??
+    PLAN_CATEGORY_LIMITS.free
+  );
 }
 
 export function getSubscriptionPickListLimit(
   subscription: Pick<UserSubscription, "plan" | "status">
 ) {
-  return PLAN_ACTIVE_PICK_LIST_LIMITS[getEffectivePlan(subscription)];
+  return getSubscriptionCapabilities(subscription).activePickListLimit;
 }
 
 export function getUpgradePlanForCategoryLimit(
   plan: SubscriptionPlan
 ): UpgradePlan {
-  if (plan === "free") return "Standard";
-  if (plan === "standard") return "Pro";
-  return "Business";
+  return getUpgradePlanForCurrentPlan(plan);
 }
 
 export function getUpgradePlanForSupplierLimit(
   plan: SubscriptionPlan
 ): UpgradePlan {
-  if (plan === "free") return "Standard";
-  if (plan === "standard") return "Pro";
-  return "Business";
+  return getUpgradePlanForCurrentPlan(plan);
 }
 
 export function getUpgradePlanForPickListLimit(
   plan: SubscriptionPlan
 ): UpgradePlan {
-  if (plan === "free") return "Standard";
-  if (plan === "standard") return "Pro";
-  return "Business";
+  return getUpgradePlanForCurrentPlan(plan);
 }
 
 export function getEffectiveLowStockThreshold(
@@ -389,9 +448,35 @@ export function getEffectiveLowStockThreshold(
 export function getUpgradePlanForDepotLimit(
   plan: SubscriptionPlan
 ): UpgradePlan {
+  return getUpgradePlanForCurrentPlan(plan);
+}
+
+export function getUpgradePlanForCurrentPlan(
+  plan: SubscriptionPlan
+): UpgradePlan {
   if (plan === "free") return "Standard";
   if (plan === "standard") return "Pro";
-  return "Business";
+  return "Contact";
+}
+
+export function getUpgradeRequestHref(
+  plan: SubscriptionPlan,
+  source: string
+) {
+  const target = getUpgradePlanForCurrentPlan(plan);
+
+  if (target === "Contact") {
+    return `/contact?source=${encodeURIComponent(source)}`;
+  }
+
+  return `/request-plan?plan=${target.toLowerCase()}&source=${encodeURIComponent(
+    source
+  )}`;
+}
+
+export function getUpgradeActionLabel(plan: SubscriptionPlan) {
+  const target = getUpgradePlanForCurrentPlan(plan);
+  return target === "Contact" ? "Contact SydIN" : `Request ${target}`;
 }
 
 export function formatPlanName(plan: SubscriptionPlan) {
@@ -476,7 +561,14 @@ export async function getSubscriptionUsage(
 }
 
 export function getPlanLimitMessage(plan: SubscriptionPlan) {
+  const nextStep =
+    plan === "free"
+      ? "Request Standard"
+      : plan === "standard"
+        ? "Request Pro"
+        : "Contact SydIN";
+
   return `You reached the ${formatPlanName(
     plan
-  )} plan limit. Request Standard or Pro to add more items.`;
+  )} plan limit. Existing items remain available. ${nextStep} to add more.`;
 }

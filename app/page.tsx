@@ -14,8 +14,8 @@ const trustBadges = [
   "Photo inventory",
   "QR codes",
   "Stock history",
-  "Mobile ready",
-  "Private workspace",
+  "Advanced reports",
+  "Pick Lists",
 ];
 
 const storySections = [
@@ -51,12 +51,12 @@ const storySections = [
     visual: "qr",
   },
   {
-    eyebrow: "Reporting ready",
-    title: "Ready for reports, exports, and audits.",
+    eyebrow: "Operate",
+    title: "Use reports, exports, and Pick Lists in one workspace.",
     bullets: [
-      "Item history foundation",
-      "Export-ready structure",
-      "Clean inventory records",
+      "Review stock health and value",
+      "Export inventory records",
+      "Prepare orders and events",
     ],
     visual: "records",
   },

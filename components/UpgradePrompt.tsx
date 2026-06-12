@@ -37,11 +37,11 @@ function LockIcon({ className = "h-6 w-6" }: { className?: string }) {
 }
 
 function getRequestHref(requiredPlan: UpgradePlan, source: string) {
-  if (requiredPlan === "Business") {
+  if (requiredPlan === "Contact") {
     return `/contact?source=${encodeURIComponent(source)}`;
   }
 
-  return `/request-plan?plan=${requiredPlan}&source=${encodeURIComponent(source)}`;
+  return `/request-plan?plan=${requiredPlan.toLowerCase()}&source=${encodeURIComponent(source)}`;
 }
 
 function UpgradeActions({
@@ -54,7 +54,7 @@ function UpgradeActions({
         href={getRequestHref(requiredPlan, source)}
         className="glass-button min-h-12 flex-1 rounded-2xl px-5 py-3 text-center text-sm"
       >
-        {requiredPlan === "Business"
+        {requiredPlan === "Contact"
           ? "Contact SydIN"
           : `Request ${requiredPlan}`}
       </Link>
@@ -88,7 +88,7 @@ export function LockedFeaturePanel({
         </span>
         <div className="min-w-0">
           <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
-            {requiredPlan} feature
+            {requiredPlan === "Contact" ? "Plan capacity" : `${requiredPlan} feature`}
           </p>
           <h2 className="mt-2 text-2xl font-black tracking-tight text-theme-primary">
             {feature}
@@ -99,7 +99,9 @@ export function LockedFeaturePanel({
               Current: {currentPlan}
             </span>
             <span className="glass-badge text-xs font-bold">
-              Required: {requiredPlan}
+              {requiredPlan === "Contact"
+                ? "Next step: Contact SydIN"
+                : `Required: ${requiredPlan}`}
             </span>
           </div>
         </div>
@@ -190,7 +192,11 @@ export function UpgradeDialog({
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-accent">
               Required plan
             </p>
-            <p className="mt-2 font-black text-theme-primary">{prompt.requiredPlan}</p>
+            <p className="mt-2 font-black text-theme-primary">
+              {prompt.requiredPlan === "Contact"
+                ? "Contact SydIN"
+                : prompt.requiredPlan}
+            </p>
           </div>
         </div>
         <UpgradeActions

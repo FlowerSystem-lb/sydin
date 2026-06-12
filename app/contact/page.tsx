@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { MarketingPage, SectionIntro } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
+import PlanCtaLink from "@/components/PlanCtaLink";
 import {
   buildSupportMailtoUrl,
   buildSupportWhatsAppUrl,
@@ -90,19 +90,19 @@ export default function ContactPage() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
-                <Link
-                  href="/request-plan"
+                <PlanCtaLink
+                  plan="standard"
                   className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-white px-7 py-4 text-base font-black text-black shadow-[0_22px_70px_rgba(255,255,255,0.14)] transition hover:bg-slate-200"
                 >
-                  Request a Plan
-                </Link>
+                  Request Standard
+                </PlanCtaLink>
 
-                <Link
-                  href="/signup"
+                <PlanCtaLink
+                  plan="free"
                   className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-7 py-4 text-base font-black text-white transition hover:border-white/20 hover:bg-white/[0.1]"
                 >
                   Start Free
-                </Link>
+                </PlanCtaLink>
               </div>
             </div>
           </div>

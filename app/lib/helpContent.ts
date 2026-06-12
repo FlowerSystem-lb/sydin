@@ -23,7 +23,7 @@ export const QUICK_GUIDES: HelpGuide[] = [
   {
     title: "Stock movements",
     description:
-      "Use an item page to record stock in, stock out, adjustments, damaged, or lost quantities.",
+      "Record stock changes and see Pick List deductions labeled with the list number and title.",
     href: "/dashboard/inventory",
     action: "Choose an Item",
   },
@@ -72,7 +72,7 @@ export const QUICK_GUIDES: HelpGuide[] = [
   {
     title: "Business settings and QR privacy",
     description:
-      "Manage workspace branding and contact settings. Private inventory details remain protected from public QR pages.",
+      "Manage the logo and optional contact details shown on public QR pages. Private inventory details remain protected.",
     href: "/dashboard/settings",
     action: "Open Settings",
   },
@@ -117,7 +117,7 @@ export const TROUBLESHOOTING_ITEMS: HelpExpandableItem[] = [
   {
     title: "A feature is locked",
     body:
-      "Locked tools show the plan required to use them. Your existing inventory is not deleted when plans change, and basic Help Center access remains available on every plan.",
+      "Locked tools show the plan required to use them. Standard unlocks import, scanner, Excel/PDF export, advanced reports, and QR branding. Existing records remain available after plan changes.",
     href: "/dashboard",
     action: "Review Current Plan",
   },
@@ -161,7 +161,7 @@ export const FAQ_ITEMS: HelpExpandableItem[] = [
   {
     title: "How do exports work?",
     body:
-      "Available export formats depend on the active plan. CSV remains the basic portable format, while paid plans add richer Excel and PDF options where offered.",
+      "CSV remains available as the basic portable format. Standard and Pro add Excel and PDF export.",
     href: "/dashboard/inventory",
     action: "Open Export Tools",
   },

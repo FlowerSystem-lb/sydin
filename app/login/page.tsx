@@ -5,6 +5,10 @@ import Link from "next/link";
 import GoogleMark from "@/components/GoogleMark";
 import Wordmark from "@/components/Wordmark";
 import { supabase } from "@/app/lib/supabase";
+import {
+  buildAuthHref,
+} from "@/app/lib/authNavigation";
+import useAuthIntent from "@/components/useAuthIntent";
 
 export default function LoginPage() {
   const [email, setEmail] =
@@ -21,6 +25,7 @@ export default function LoginPage() {
     useState("");
   const [loginError, setLoginError] =
     useState("");
+  const { plan: planIntent, returnTo } = useAuthIntent();
 
   const handleGoogleLogin = async () => {
     if (googleLoading) return;
@@ -33,7 +38,7 @@ export default function LoginPage() {
         await supabase.auth.signInWithOAuth({
           provider: "google",
           options: {
-            redirectTo: `${window.location.origin}/dashboard`,
+            redirectTo: `${window.location.origin}${returnTo}`,
           },
         });
 
@@ -72,8 +77,7 @@ export default function LoginPage() {
         return;
       }
 
-      window.location.href =
-        "/dashboard";
+      window.location.href = returnTo;
     } catch {
       setLoginError("Login failed. Check your details and try again.");
     }
@@ -121,8 +125,11 @@ export default function LoginPage() {
             Welcome back
           </h1>
           <p className="mt-3 max-w-sm text-sm leading-6 text-slate-300 sm:text-base">
-            Sign in to manage inventory, stock movements, and your SydIN
-            workspace.
+            {planIntent === "free"
+              ? "Sign in to manage inventory, stock movements, and your SydIN workspace."
+              : `Sign in to continue to the ${
+                  planIntent === "standard" ? "Standard" : "Pro"
+                } plan request.`}
           </p>
         </div>
 
@@ -237,7 +244,7 @@ export default function LoginPage() {
         <p className="mt-7 border-t border-sky-200/10 pt-6 text-center text-sm text-slate-400">
           New to SydIN?{" "}
           <Link
-            href="/signup"
+            href={buildAuthHref("/signup", planIntent, returnTo)}
             className="font-bold text-sky-300 transition hover:text-cyan-200"
           >
             Create account

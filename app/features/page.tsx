@@ -9,10 +9,10 @@ import {
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
 
-const futureFeatures = [
-  "Future exports and reports",
-  "Future team/workspace features",
-  "Audit-friendly inventory records",
+const operationalFeatures = [
+  "CSV and Excel inventory import",
+  "Advanced reports and exports",
+  "Pick Lists for order preparation",
 ];
 
 export default function FeaturesPage() {
@@ -97,12 +97,12 @@ export default function FeaturesPage() {
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <SectionIntro
           eyebrow="Built forward"
-          title="A clean foundation for the next layer of operations."
-          text="SydIn is designed so exports, reporting, and team workflows can grow from records that are already structured."
+          title="Connected tools for daily inventory operations."
+          text="Import records, scan codes, review reports, and prepare Pick Lists without leaving the same inventory workspace."
         />
 
         <div className="mx-auto mt-10 grid max-w-7xl grid-cols-1 gap-4 md:grid-cols-3">
-          {futureFeatures.map((feature, index) => (
+          {operationalFeatures.map((feature, index) => (
             <Reveal key={feature} delay={index * 80}>
               <div className="rounded-[28px] border border-indigo-300/20 bg-indigo-500/10 p-6 text-center shadow-[0_24px_90px_rgba(0,0,0,0.25)] backdrop-blur-2xl">
                 <p className="text-xl font-black">

@@ -36,6 +36,8 @@ import {
   formatPlanName,
   getPlanLimitMessage,
   getSubscriptionUsage,
+  getUpgradeActionLabel,
+  getUpgradeRequestHref,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 
@@ -1290,10 +1292,15 @@ export default function AddItemPage() {
 
                 {isLimitError && (
                   <Link
-                    href="/request-plan"
+                    href={getUpgradeRequestHref(
+                      subscriptionUsage.subscription.plan,
+                      "item-limit"
+                    )}
                     className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-slate-200"
                   >
-                    Request a plan
+                    {getUpgradeActionLabel(
+                      subscriptionUsage.subscription.plan
+                    )}
                   </Link>
                 )}
               </div>

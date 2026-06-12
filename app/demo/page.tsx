@@ -7,6 +7,7 @@ import {
   SectionIntro,
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
+import PlanCtaLink from "@/components/PlanCtaLink";
 
 const demoItems = [
   {
@@ -52,12 +53,12 @@ export default function DemoPage() {
               </p>
 
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/signup"
+                <PlanCtaLink
+                  plan="free"
                   className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-white px-7 py-4 text-base font-black text-black shadow-[0_22px_70px_rgba(255,255,255,0.14)] transition hover:bg-slate-200"
                 >
                   Start Free
-                </Link>
+                </PlanCtaLink>
 
                 <Link
                   href="/features"

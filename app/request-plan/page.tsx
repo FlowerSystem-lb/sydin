@@ -92,7 +92,7 @@ function RequestPlanContent() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [selectedPlan, setSelectedPlan] = useState<PlanName>(
-    searchParams.get("plan") === "Pro" ? "Pro" : "Standard"
+    searchParams.get("plan")?.toLowerCase() === "pro" ? "Pro" : "Standard"
   );
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>("WhishMoney");
   const [message, setMessage] = useState("");
@@ -382,13 +382,6 @@ function RequestPlanContent() {
                         </button>
                       ))}
 
-                      <button
-                        type="button"
-                        disabled
-                        className="min-h-14 cursor-not-allowed rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-4 text-left text-base font-black text-slate-500"
-                      >
-                        Card payments coming soon
-                      </button>
                     </div>
                   </div>
 
@@ -604,7 +597,7 @@ function RequestPlanContent() {
                 may be lost.
               </div>
               <p className="mt-4 text-sm leading-6 text-slate-400">
-                Automatic crypto activation is coming later.
+                Activation remains manual after payment confirmation.
               </p>
               <button
                 type="button"
@@ -617,34 +610,6 @@ function RequestPlanContent() {
               </button>
             </article>
 
-            <article className="glass-card flex min-w-0 flex-col p-5 sm:p-6">
-              <div className="flex items-start gap-4">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/15 bg-white/[0.06] text-slate-300">
-                  <PaymentIcon method="card" />
-                </span>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-slate-400">
-                    Secure gateway
-                  </p>
-                  <h3 className="mt-1 text-2xl font-black text-white">
-                    Visa / Mastercard coming soon
-                  </h3>
-                </div>
-              </div>
-
-              <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-5">
-                <p className="text-sm leading-7 text-slate-300">
-                  Card payments will be processed through a secure payment
-                  gateway. SydIN will never ask for card number or CVV directly.
-                </p>
-              </div>
-
-              <div className="mt-auto pt-5">
-                <span className="glass-badge text-xs font-bold">
-                  No card details collected
-                </span>
-              </div>
-            </article>
           </div>
         </section>
       </section>

@@ -322,7 +322,7 @@ export default function SettingsPage() {
                 </h1>
 
                 <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
-                  Tune branding, QR page identity, and the low-stock signal for your inventory.
+                  Tune branding, public QR page identity, and the low-stock signal for your inventory.
                 </p>
               </div>
 
@@ -615,8 +615,9 @@ export default function SettingsPage() {
                       </p>
 
                       <p className="mt-1 text-sm leading-6 text-theme-muted">
-                        Public QR item pages can show contact fields when this
-                        is enabled.
+                        Public QR item pages show your saved logo and can show
+                        these contact fields when enabled. Private inventory,
+                        supplier, pricing, and Pick List data stay private.
                         {!canShowPublicContact &&
                           " You can turn off the existing setting, but Standard is required to enable it again."}
                       </p>
