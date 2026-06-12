@@ -5,6 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import Sidebar from "@/components/Sidebar";
+import { useTheme } from "@/components/ThemeProvider";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -20,6 +21,64 @@ import {
   getUserSubscription,
   type UserSubscription,
 } from "@/app/lib/subscription";
+import type { ThemePreference } from "@/app/lib/theme";
+
+const THEME_OPTIONS: Array<{
+  value: ThemePreference;
+  label: string;
+  description: string;
+}> = [
+  {
+    value: "dark",
+    label: "Dark",
+    description: "SydIN's original deep blue workspace.",
+  },
+  {
+    value: "light",
+    label: "Light",
+    description: "A bright, refined liquid-glass workspace.",
+  },
+  {
+    value: "system",
+    label: "System",
+    description: "Match this device and update automatically.",
+  },
+];
+
+function ThemePreview({ theme }: { theme: ThemePreference }) {
+  const isLight = theme === "light";
+
+  return (
+    <div
+      aria-hidden="true"
+      className={`relative h-24 overflow-hidden rounded-2xl border ${
+        isLight
+          ? "border-blue-200 bg-[#edf6ff]"
+          : theme === "dark"
+            ? "border-sky-300/20 bg-[#030817]"
+            : "border-theme bg-[linear-gradient(115deg,#030817_0_49%,#edf6ff_51%_100%)]"
+      }`}
+    >
+      <div
+        className={`absolute inset-x-3 top-3 h-3 rounded-full ${
+          isLight ? "bg-white/90" : "bg-white/10"
+        }`}
+      />
+      <div
+        className={`absolute bottom-3 left-3 top-9 w-1/4 rounded-xl ${
+          isLight ? "bg-blue-100" : "bg-sky-400/15"
+        }`}
+      />
+      <div
+        className={`absolute bottom-3 left-[34%] right-3 top-9 rounded-xl border ${
+          isLight
+            ? "border-blue-100 bg-white/80"
+            : "border-theme bg-theme-surface"
+        }`}
+      />
+    </div>
+  );
+}
 
 function getLogoExtension(fileName: string) {
   const extension = fileName.split(".").pop()?.toLowerCase();
@@ -32,6 +91,7 @@ function getLogoExtension(fileName: string) {
 }
 
 export default function SettingsPage() {
+  const { preference, resolvedTheme, setPreference } = useTheme();
   const [settings, setSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
   const [savedSettings, setSavedSettings] =
@@ -241,7 +301,7 @@ export default function SettingsPage() {
   };
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         planName={currentPlanName}
         businessName={settings.business_name}
@@ -250,42 +310,126 @@ export default function SettingsPage() {
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-8">
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Workspace settings
                 </p>
 
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
                   Business
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
                   Tune branding, QR page identity, and the low-stock signal for your inventory.
                 </p>
               </div>
 
               <Link
                 href="/dashboard"
-                className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 Back to Dashboard
               </Link>
             </div>
           </section>
 
+          <section
+            aria-labelledby="appearance-heading"
+            className="glass-panel p-5 sm:p-7 lg:p-8"
+          >
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-500">
+                  Appearance
+                </p>
+                <h2
+                  id="appearance-heading"
+                  className="mt-2 text-3xl font-bold tracking-tight text-theme-primary"
+                >
+                  Choose your workspace theme
+                </h2>
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-secondary">
+                  Your choice applies immediately and stays on this device.
+                </p>
+              </div>
+              <p
+                className="text-sm font-semibold text-theme-muted"
+                aria-live="polite"
+              >
+                Saved on this device.
+              </p>
+            </div>
+
+            <fieldset className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
+              <legend className="sr-only">Dashboard appearance</legend>
+              {THEME_OPTIONS.map((option) => {
+                const selected = preference === option.value;
+
+                return (
+                  <label
+                    key={option.value}
+                    className={`group cursor-pointer rounded-3xl border p-4 transition ${
+                      selected
+                        ? "border-theme-strong bg-theme-selected shadow-[0_16px_45px_rgba(14,116,229,0.12)]"
+                        : "border-theme bg-theme-surface hover:border-theme-strong"
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      name="appearance"
+                      value={option.value}
+                      checked={selected}
+                      onChange={() => setPreference(option.value)}
+                      className="peer sr-only"
+                    />
+                    <ThemePreview theme={option.value} />
+                    <span className="mt-4 flex items-start gap-3">
+                      <span
+                        className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
+                          selected
+                            ? "border-sky-500 bg-sky-500"
+                            : "border-theme-strong bg-theme-inset"
+                        }`}
+                      >
+                        {selected && (
+                          <span className="h-2 w-2 rounded-full bg-white" />
+                        )}
+                      </span>
+                      <span>
+                        <span className="block font-bold text-theme-primary">
+                          {option.label}
+                        </span>
+                        <span className="mt-1 block text-sm leading-5 text-theme-muted">
+                          {option.description}
+                        </span>
+                        {option.value === "system" && (
+                          <span className="mt-2 block text-xs font-semibold text-sky-600">
+                            Currently using{" "}
+                            {resolvedTheme === "light" ? "Light" : "Dark"} from
+                            your device.
+                          </span>
+                        )}
+                      </span>
+                    </span>
+                  </label>
+                );
+              })}
+            </fieldset>
+          </section>
+
           <form
             onSubmit={handleSave}
             aria-busy={saving}
-            className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7 lg:p-8"
+            className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7 lg:p-8"
           >
             {loading ? (
               <div className="grid grid-cols-1 gap-5">
                 {[1, 2, 3].map((item) => (
                   <div
                     key={item}
-                    className="h-24 overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]"
+                    className="h-24 overflow-hidden rounded-3xl border border-theme bg-theme-surface"
                   >
                     <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
                   </div>
@@ -294,8 +438,8 @@ export default function SettingsPage() {
             ) : (
               <>
                 <div className="grid grid-cols-1 gap-5 md:grid-cols-[180px_1fr]">
-                  <div className="rounded-3xl border border-white/10 bg-black/25 p-4">
-                    <p className="mb-4 text-sm font-semibold text-slate-400">
+                  <div className="rounded-3xl border border-theme bg-theme-inset p-4">
+                    <p className="mb-4 text-sm font-semibold text-theme-muted">
                       Logo preview
                     </p>
 
@@ -318,7 +462,7 @@ export default function SettingsPage() {
 
                   <div className="grid grid-cols-1 gap-5">
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
                         Business name
                       </label>
 
@@ -331,29 +475,29 @@ export default function SettingsPage() {
                             business_name: event.target.value,
                           }))
                         }
-                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
                         Business logo
                       </label>
 
                       {canUseCustomLogo ? (
-                        <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-5 transition hover:border-indigo-300/45 hover:bg-black/40">
+                        <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-theme-inset p-5 transition hover:border-indigo-300/45 hover:bg-theme-inset">
                           <input
                             type="file"
                             accept="image/*"
                             onChange={(event) =>
                               setLogoFile(event.target.files?.[0] || null)
                             }
-                            className="w-full cursor-pointer text-sm text-slate-300 file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-200 transition-colors hover:file:bg-indigo-500/30"
+                            className="w-full cursor-pointer text-sm text-theme-secondary file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-theme-accent transition-colors hover:file:bg-indigo-500/30"
                           />
 
                           {logoFile && (
-                            <p className="mt-4 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm text-slate-300">
+                            <p className="mt-4 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm text-theme-secondary">
                               Selected: {logoFile.name}
                             </p>
                           )}
@@ -378,7 +522,7 @@ export default function SettingsPage() {
 
                 <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-400">
+                    <label className="mb-2 block text-sm font-semibold text-theme-muted">
                       Low-stock threshold
                     </label>
 
@@ -397,11 +541,11 @@ export default function SettingsPage() {
                         }))
                       }
                       disabled={!canCustomizeThreshold}
-                      className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                      className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                       required
                     />
                     {!canCustomizeThreshold && (
-                      <p className="mt-2 text-xs leading-5 text-slate-500">
+                      <p className="mt-2 text-xs leading-5 text-theme-subtle">
                         Free uses a fixed threshold of 10. Your saved custom
                         value is preserved for a future upgrade.
                       </p>
@@ -409,7 +553,7 @@ export default function SettingsPage() {
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-400">
+                    <label className="mb-2 block text-sm font-semibold text-theme-muted">
                       Contact email
                     </label>
 
@@ -422,12 +566,12 @@ export default function SettingsPage() {
                           contact_email: event.target.value,
                         }))
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                      className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-400">
+                    <label className="mb-2 block text-sm font-semibold text-theme-muted">
                       Contact phone
                     </label>
 
@@ -440,12 +584,12 @@ export default function SettingsPage() {
                           contact_phone: event.target.value,
                         }))
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                      className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     />
                   </div>
 
                   <div>
-                    <label className="mb-2 block text-sm font-semibold text-slate-400">
+                    <label className="mb-2 block text-sm font-semibold text-theme-muted">
                       Contact website
                     </label>
 
@@ -458,7 +602,7 @@ export default function SettingsPage() {
                           contact_website: event.target.value,
                         }))
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                      className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     />
                   </div>
                 </div>
@@ -466,11 +610,11 @@ export default function SettingsPage() {
                 {canShowPublicContact || savedSettings.show_contact_publicly ? (
                   <label className="mt-6 flex cursor-pointer flex-col gap-4 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-base font-bold text-white">
+                      <p className="text-base font-bold text-theme-primary">
                         Show contact publicly
                       </p>
 
-                      <p className="mt-1 text-sm leading-6 text-slate-400">
+                      <p className="mt-1 text-sm leading-6 text-theme-muted">
                         Public QR item pages can show contact fields when this
                         is enabled.
                         {!canShowPublicContact &&
@@ -499,7 +643,7 @@ export default function SettingsPage() {
                         }
                         className="peer sr-only"
                       />
-                      <span className="block h-7 w-12 rounded-full border border-white/15 bg-black/35 transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
+                      <span className="block h-7 w-12 rounded-full border border-theme bg-[var(--sydin-input-bg)] transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
                       <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-cyan-100" />
                     </span>
                   </label>
@@ -520,8 +664,8 @@ export default function SettingsPage() {
                   <div
                     className={`mt-6 rounded-2xl border px-5 py-4 text-sm font-semibold ${
                       error
-                        ? "border-red-500/30 bg-red-500/10 text-red-200"
-                        : "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                        ? "border-red-500/30 bg-red-500/10 text-theme-danger"
+                        : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
                     }`}
                   >
                     {error || success}
@@ -531,7 +675,7 @@ export default function SettingsPage() {
                 <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                   <Link
                     href="/dashboard"
-                    className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-4 text-center text-base font-bold text-white transition hover:bg-white/[0.1]"
+                    className="rounded-2xl border border-theme bg-theme-surface px-6 py-4 text-center text-base font-bold text-theme-primary transition hover:bg-theme-hover"
                   >
                     Cancel
                   </Link>

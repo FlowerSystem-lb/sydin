@@ -55,8 +55,8 @@ function getFieldErrorClass(
   const row = validation.rows.find((item) => item.rowNumber === rowNumber);
 
   return row?.errors.some((error) => error.field === field)
-    ? "border-red-400/35 bg-red-500/10 text-red-100"
-    : "border-white/10 bg-white/[0.04] text-slate-300";
+    ? "border-red-400/35 bg-red-500/10 text-theme-danger"
+    : "border-theme bg-theme-surface text-theme-secondary";
 }
 
 function getPhaseFieldErrorClass(
@@ -74,8 +74,8 @@ function getPhaseFieldErrorClass(
   const row = validation.rows.find((item) => item.rowNumber === rowNumber);
 
   return row?.errors.some((error) => phaseFields.has(error.field))
-    ? "border-red-400/35 bg-red-500/10 text-red-100"
-    : "border-indigo-300/15 bg-indigo-500/[0.06] text-slate-300";
+    ? "border-red-400/35 bg-red-500/10 text-theme-danger"
+    : "border-indigo-300/15 bg-indigo-500/[0.06] text-theme-secondary";
 }
 
 export default function InventoryImportPage() {
@@ -399,7 +399,7 @@ export default function InventoryImportPage() {
   };
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         planName={currentPlanName}
         itemUsage={initialLoading ? "... / ... items" : itemUsageText}
@@ -407,28 +407,28 @@ export default function InventoryImportPage() {
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 sm:gap-8">
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <div className="flex items-center gap-3">
                   <Wordmark size="sm" />
-                  <span className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-indigo-200">
+                  <span className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
                     Import
                   </span>
                 </div>
 
-                <h1 className="mt-4 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mt-4 text-4xl font-bold tracking-tight text-theme-primary sm:text-5xl lg:text-6xl">
                   Import Inventory
                 </h1>
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400 sm:text-lg sm:leading-7">
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-theme-muted sm:text-lg sm:leading-7">
                   Review every row before it reaches your inventory.
                 </p>
               </div>
 
               <Link
                 href="/dashboard/inventory"
-                className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 Back to Inventory
               </Link>
@@ -445,7 +445,7 @@ export default function InventoryImportPage() {
             />
           ) : (
             <>
-              <section className="grid grid-cols-3 gap-2 rounded-[24px] border border-white/10 bg-white/[0.035] p-2 sm:gap-3 sm:p-3">
+              <section className="grid grid-cols-3 gap-2 rounded-[24px] border border-theme bg-theme-surface p-2 sm:gap-3 sm:p-3">
             {[
               ["1", "Upload", !parsedFile && !success],
               ["2", "Review", Boolean(parsedFile && !success)],
@@ -456,12 +456,12 @@ export default function InventoryImportPage() {
                 className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl px-2 py-3 text-center text-xs font-bold transition sm:text-sm ${
                   active
                     ? "bg-white text-black shadow-[0_16px_50px_rgba(255,255,255,0.1)]"
-                    : "bg-white/[0.035] text-slate-500"
+                    : "bg-theme-surface text-theme-subtle"
                 }`}
               >
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-xl text-xs font-black ${
-                    active ? "bg-black text-white" : "bg-white/[0.06]"
+                    active ? "bg-black text-theme-primary" : "bg-theme-surface"
                   }`}
                 >
                   {String(number)}
@@ -472,26 +472,26 @@ export default function InventoryImportPage() {
               </section>
 
           {initialLoading ? (
-            <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <section className="rounded-[32px] border border-theme bg-theme-surface p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
               <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-indigo-400/20" />
-              <h2 className="mt-5 text-xl font-bold text-white">
+              <h2 className="mt-5 text-xl font-bold text-theme-primary">
                 Preparing import checks
               </h2>
-              <p className="mt-2 text-sm text-slate-400">
+              <p className="mt-2 text-sm text-theme-muted">
                 Loading plan usage, depots, and existing SKUs.
               </p>
             </section>
           ) : success ? (
             <section className="rounded-[32px] border border-emerald-400/20 bg-emerald-500/[0.07] p-6 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-10">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-300/25 bg-emerald-500/15 text-2xl font-black text-emerald-200">
+              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-300/25 bg-emerald-500/15 text-2xl font-black text-theme-success">
                 {success.importedCount}
               </div>
 
-              <h2 className="mt-6 text-3xl font-bold tracking-tight text-white">
+              <h2 className="mt-6 text-3xl font-bold tracking-tight text-theme-primary">
                 Import complete
               </h2>
 
-              <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-slate-300">
+              <p className="mx-auto mt-3 max-w-xl text-base leading-7 text-theme-secondary">
                 Added {success.importedCount} inventory item
                 {success.importedCount === 1 ? "" : "s"} successfully.
                 {success.skippedEmptyRows > 0
@@ -517,7 +517,7 @@ export default function InventoryImportPage() {
                 <button
                   type="button"
                   onClick={resetImport}
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-4 text-base font-bold text-white transition hover:bg-white/[0.1]"
+                  className="rounded-2xl border border-theme bg-theme-surface px-6 py-4 text-base font-bold text-theme-primary transition hover:bg-theme-hover"
                 >
                   Import Another File
                 </button>
@@ -526,15 +526,15 @@ export default function InventoryImportPage() {
           ) : !parsedFile ? (
             <>
               <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_0.75fr]">
-                <div className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-7">
+                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-7">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-indigo-200">
+                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Templates
                     </p>
-                    <h2 className="mt-2 text-2xl font-bold text-white">
+                    <h2 className="mt-2 text-2xl font-bold text-theme-primary">
                       Start with the correct columns
                     </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                    <p className="mt-2 text-sm leading-6 text-theme-muted">
                       Name and Quantity are required. SKU, Category, Depot, and Notes are optional.
                     </p>
                   </div>
@@ -543,7 +543,7 @@ export default function InventoryImportPage() {
                     <button
                       type="button"
                       onClick={downloadInventoryCsvTemplate}
-                      className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                      className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
                     >
                       Download CSV Template
                     </button>
@@ -552,7 +552,7 @@ export default function InventoryImportPage() {
                       type="button"
                       onClick={handleExcelTemplateDownload}
                       disabled={isDownloadingExcel}
-                      className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-5 py-4 text-sm font-bold text-emerald-100 transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-5 py-4 text-sm font-bold text-theme-success transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {isDownloadingExcel
                         ? "Creating Template..."
@@ -561,32 +561,32 @@ export default function InventoryImportPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-7">
-                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-slate-500">
+                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-7">
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-subtle">
                     Import limits
                   </p>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                      <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                    <div className="rounded-2xl border border-theme bg-theme-inset p-4">
+                      <p className="text-xs uppercase tracking-[0.14em] text-theme-subtle">
                         File size
                       </p>
-                      <p className="mt-2 text-xl font-black text-white">
+                      <p className="mt-2 text-xl font-black text-theme-primary">
                         {formatFileSize(MAX_IMPORT_FILE_SIZE)}
                       </p>
                     </div>
 
-                    <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                      <p className="text-xs uppercase tracking-[0.14em] text-slate-500">
+                    <div className="rounded-2xl border border-theme bg-theme-inset p-4">
+                      <p className="text-xs uppercase tracking-[0.14em] text-theme-subtle">
                         Rows
                       </p>
-                      <p className="mt-2 text-xl font-black text-white">
+                      <p className="mt-2 text-xl font-black text-theme-primary">
                         {MAX_IMPORT_ROWS}
                       </p>
                     </div>
                   </div>
 
-                  <p className="mt-4 text-sm leading-6 text-slate-400">
+                  <p className="mt-4 text-sm leading-6 text-theme-muted">
                     Accepted formats: CSV and Excel (.xlsx). Images and private IDs are never imported.
                   </p>
                 </div>
@@ -613,24 +613,24 @@ export default function InventoryImportPage() {
                 className={`rounded-[32px] border border-dashed p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl transition sm:p-8 ${
                   isDragging
                     ? "border-indigo-300/60 bg-indigo-500/15"
-                    : "border-indigo-300/25 bg-white/[0.045]"
+                    : "border-indigo-300/25 bg-theme-surface"
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isParsing || Boolean(pageError)}
-                  className="flex min-h-[260px] w-full flex-col items-center justify-center rounded-[28px] border border-white/10 bg-black/25 px-5 py-10 text-center transition hover:border-indigo-300/35 hover:bg-black/35 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex min-h-[260px] w-full flex-col items-center justify-center rounded-[28px] border border-theme bg-theme-inset px-5 py-10 text-center transition hover:border-indigo-300/35 hover:bg-[var(--sydin-input-bg)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-indigo-300/25 bg-indigo-500/15 text-xl font-black text-indigo-100">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-indigo-300/25 bg-indigo-500/15 text-xl font-black text-theme-accent">
                     CSV
                   </span>
 
-                  <span className="mt-5 text-2xl font-bold text-white">
+                  <span className="mt-5 text-2xl font-bold text-theme-primary">
                     {isParsing ? "Reading file..." : "Drop a file or choose from device"}
                   </span>
 
-                  <span className="mt-3 max-w-lg text-sm leading-6 text-slate-400">
+                  <span className="mt-3 max-w-lg text-sm leading-6 text-theme-muted">
                     Your file is reviewed locally first. Nothing is imported until every row passes validation and you confirm.
                   </span>
 
@@ -650,7 +650,7 @@ export default function InventoryImportPage() {
                 />
 
                 {selectedFile && isParsing && (
-                  <p className="mt-4 text-center text-sm font-semibold text-indigo-200">
+                  <p className="mt-4 text-center text-sm font-semibold text-theme-accent">
                     Checking {selectedFile.name}
                   </p>
                 )}
@@ -658,16 +658,16 @@ export default function InventoryImportPage() {
             </>
           ) : validation ? (
             <>
-              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-7">
+              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-7">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-indigo-200">
+                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
                       File ready for review
                     </p>
-                    <h2 className="mt-2 break-words text-2xl font-bold text-white">
+                    <h2 className="mt-2 break-words text-2xl font-bold text-theme-primary">
                       {parsedFile.fileName}
                     </h2>
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-theme-muted">
                       {parsedFile.format} file | {parsedFile.totalRows} parsed row
                       {parsedFile.totalRows === 1 ? "" : "s"} | {parsedFile.skippedEmptyRows} empty skipped
                     </p>
@@ -676,7 +676,7 @@ export default function InventoryImportPage() {
                   <button
                     type="button"
                     onClick={resetImport}
-                    className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                    className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
                   >
                     Choose Another File
                   </button>
@@ -706,10 +706,10 @@ export default function InventoryImportPage() {
                               : "border-indigo-300/20 bg-indigo-500/10"
                       }`}
                     >
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-muted">
                         {String(label)}
                       </p>
-                      <p className="mt-2 text-2xl font-black text-white">
+                      <p className="mt-2 text-2xl font-black text-theme-primary">
                         {String(value)}
                       </p>
                     </div>
@@ -718,45 +718,45 @@ export default function InventoryImportPage() {
               </section>
 
               {parsedFile.ignoredItemCodeColumn && (
-                <section className="rounded-[24px] border border-amber-300/25 bg-amber-500/10 px-5 py-4 text-sm font-semibold leading-6 text-amber-100">
+                <section className="rounded-[24px] border border-amber-300/25 bg-amber-500/10 px-5 py-4 text-sm font-semibold leading-6 text-theme-warning">
                   The uploaded item code column was ignored. SydIN generates
                   item codes automatically when records are created.
                 </section>
               )}
 
               {validation.invalidRows.length > 0 && (
-                <section className="rounded-[28px] border border-red-400/25 bg-red-500/10 p-5 text-red-100 shadow-[0_22px_70px_rgba(0,0,0,0.22)]">
+                <section className="rounded-[28px] border border-red-400/25 bg-red-500/10 p-5 text-theme-danger shadow-[0_22px_70px_rgba(0,0,0,0.22)]">
                   <h2 className="text-lg font-bold">
                     Fix all row errors before importing
                   </h2>
-                  <p className="mt-2 text-sm leading-6 text-red-100/75">
+                  <p className="mt-2 text-sm leading-6 text-theme-danger/75">
                     No partial import will occur. Correct the source file, then upload it again.
                   </p>
                 </section>
               )}
 
-              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
+              <section className="rounded-[32px] border border-theme bg-theme-surface p-4 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-indigo-200">
+                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Row preview
                     </p>
-                    <h2 className="mt-1 text-2xl font-bold text-white">
+                    <h2 className="mt-1 text-2xl font-bold text-theme-primary">
                       Validation details
                     </h2>
                   </div>
 
                   {validation.rows.length > previewRows.length && (
-                    <p className="text-sm text-slate-400">
+                    <p className="text-sm text-theme-muted">
                       Showing first {previewRows.length} rows, with errors first
                     </p>
                   )}
                 </div>
 
-                <div className="hidden overflow-hidden rounded-2xl border border-white/10 md:block">
+                <div className="hidden overflow-hidden rounded-2xl border border-theme md:block">
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
-                      <thead className="bg-[#11172a] text-xs uppercase tracking-[0.12em] text-slate-400">
+                      <thead className="bg-[#11172a] text-xs uppercase tracking-[0.12em] text-theme-muted">
                         <tr>
                           {["Row", "Name", "SKU", "Category", "Quantity", "Depot", "Phase 4A", "Notes", "Status"].map(
                             (header) => (
@@ -771,9 +771,9 @@ export default function InventoryImportPage() {
                         {previewRows.map((row) => (
                           <tr
                             key={row.rowNumber}
-                            className="border-t border-white/10 bg-black/20 align-top"
+                            className="border-t border-theme bg-theme-inset align-top"
                           >
-                            <td className="px-4 py-4 font-black text-slate-400">
+                            <td className="px-4 py-4 font-black text-theme-muted">
                               {row.rowNumber}
                             </td>
                             {[
@@ -813,7 +813,7 @@ export default function InventoryImportPage() {
                                     ? ` (${row.values.custom_unit_label})`
                                     : ""}
                                 </p>
-                                <p className="mt-1 text-xs text-slate-400">
+                                <p className="mt-1 text-xs text-theme-muted">
                                   Cost:{" "}
                                   {row.values.cost_price === null
                                     ? "Optional"
@@ -823,7 +823,7 @@ export default function InventoryImportPage() {
                                     ? "Optional"
                                     : row.values.selling_price}
                                 </p>
-                                <p className="mt-1 break-all text-xs text-slate-400">
+                                <p className="mt-1 break-all text-xs text-theme-muted">
                                   Min:{" "}
                                   {row.values.min_stock_level === null
                                     ? "Default"
@@ -846,7 +846,7 @@ export default function InventoryImportPage() {
                             </td>
                             <td className="px-4 py-4">
                               {row.isValid ? (
-                                <span className="inline-flex rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200">
+                                <span className="inline-flex rounded-xl border border-emerald-400/20 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-theme-success">
                                   Ready
                                 </span>
                               ) : (
@@ -854,7 +854,7 @@ export default function InventoryImportPage() {
                                   {row.errors.map((error) => (
                                     <span
                                       key={`${error.field}-${error.message}`}
-                                      className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs font-semibold leading-5 text-red-200"
+                                      className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs font-semibold leading-5 text-theme-danger"
                                     >
                                       {error.message}
                                     </span>
@@ -875,19 +875,19 @@ export default function InventoryImportPage() {
                       key={row.rowNumber}
                       className={`rounded-[24px] border p-4 ${
                         row.isValid
-                          ? "border-white/10 bg-black/25"
+                          ? "border-theme bg-theme-inset"
                           : "border-red-400/25 bg-red-500/[0.07]"
                       }`}
                     >
                       <div className="flex items-center justify-between gap-3">
-                        <p className="text-sm font-black text-white">
+                        <p className="text-sm font-black text-theme-primary">
                           Row {row.rowNumber}
                         </p>
                         <span
                           className={`rounded-xl border px-3 py-1.5 text-xs font-bold ${
                             row.isValid
-                              ? "border-emerald-400/20 bg-emerald-500/10 text-emerald-200"
-                              : "border-red-400/20 bg-red-500/10 text-red-200"
+                              ? "border-emerald-400/20 bg-emerald-500/10 text-theme-success"
+                              : "border-red-400/20 bg-red-500/10 text-theme-danger"
                           }`}
                         >
                           {row.isValid ? "Ready" : "Needs attention"}
@@ -917,7 +917,7 @@ export default function InventoryImportPage() {
                               field
                             )}`}
                           >
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                               {label}
                             </p>
                             <p className="mt-1 break-words text-sm font-semibold">
@@ -933,7 +933,7 @@ export default function InventoryImportPage() {
                           row.rowNumber
                         )}`}
                       >
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-indigo-200">
+                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-accent">
                           Phase 4A details
                         </p>
                         <div className="mt-2 grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
@@ -978,7 +978,7 @@ export default function InventoryImportPage() {
                           {row.errors.map((error) => (
                             <p
                               key={`${error.field}-${error.message}`}
-                              className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs font-semibold leading-5 text-red-200"
+                              className="rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-xs font-semibold leading-5 text-theme-danger"
                             >
                               {error.message}
                             </p>
@@ -993,13 +993,13 @@ export default function InventoryImportPage() {
               <section className="rounded-[32px] border border-indigo-300/20 bg-indigo-500/[0.08] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.26)] sm:p-7">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Plan review
                     </p>
-                    <p className="mt-2 text-2xl font-black text-white">
+                    <p className="mt-2 text-2xl font-black text-theme-primary">
                       Current {usage.usedItems} + Import {validation.validRows.length} = {projectedItemCount} / {usage.subscription.item_limit}
                     </p>
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-theme-muted">
                       {currentPlanName} plan | The limit is checked again immediately before import.
                     </p>
                   </div>
@@ -1015,22 +1015,22 @@ export default function InventoryImportPage() {
                 </div>
 
                 {exceedsPlanLimit && (
-                  <p className="mt-4 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                  <p className="mt-4 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
                     {getPlanLimitMessage(usage.subscription.plan)}
                   </p>
                 )}
               </section>
 
               {pageError && (
-                <section className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200">
+                <section className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-theme-danger">
                   {pageError}
                 </section>
               )}
 
-              <section className="sticky bottom-0 z-20 -mx-4 flex flex-col-reverse gap-3 border-t border-white/10 bg-[#050713]/95 px-4 py-4 backdrop-blur-xl sm:mx-0 sm:flex-row sm:justify-end sm:rounded-[24px] sm:border sm:px-5">
+              <section className="sticky bottom-0 z-20 -mx-4 flex flex-col-reverse gap-3 border-t border-theme bg-[#050713]/95 px-4 py-4 backdrop-blur-xl sm:mx-0 sm:flex-row sm:justify-end sm:rounded-[24px] sm:border sm:px-5">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-4 text-center text-base font-bold text-white transition hover:bg-white/[0.1]"
+                  className="rounded-2xl border border-theme bg-theme-surface px-6 py-4 text-center text-base font-bold text-theme-primary transition hover:bg-theme-hover"
                 >
                   Cancel
                 </Link>
@@ -1055,7 +1055,7 @@ export default function InventoryImportPage() {
           ) : null}
 
           {(fileError || (pageError && !parsedFile)) && (
-            <section className="rounded-[24px] border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200 shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
+            <section className="rounded-[24px] border border-red-500/30 bg-red-500/10 px-5 py-4 text-sm font-semibold text-theme-danger shadow-[0_20px_60px_rgba(0,0,0,0.2)]">
               {fileError || pageError}
             </section>
           )}
@@ -1065,13 +1065,13 @@ export default function InventoryImportPage() {
       </main>
 
       {isImporting && validation && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
-          <div className="w-full max-w-md rounded-[30px] border border-white/10 bg-[#080b18]/95 p-7 text-center shadow-[0_30px_120px_rgba(0,0,0,0.6)]">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
+          <div className="w-full max-w-md rounded-[30px] border border-theme bg-[var(--sydin-surface-strong)] p-7 text-center shadow-[0_30px_120px_rgba(0,0,0,0.6)]">
             <div className="mx-auto h-14 w-14 animate-pulse rounded-3xl border border-indigo-300/25 bg-indigo-500/15" />
-            <h2 className="mt-5 text-2xl font-bold text-white">
+            <h2 className="mt-5 text-2xl font-bold text-theme-primary">
               Importing {validation.validRows.length} items...
             </h2>
-            <p className="mt-3 text-sm leading-6 text-slate-400">
+            <p className="mt-3 text-sm leading-6 text-theme-muted">
               Keep this page open while SydIN safely creates the inventory records.
             </p>
           </div>

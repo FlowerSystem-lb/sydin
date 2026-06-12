@@ -39,22 +39,22 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 
 function ExpandableHelpCard({ item }: { item: HelpExpandableItem }) {
   return (
-    <details className="group rounded-2xl border border-white/10 bg-black/20 open:border-cyan-300/20 open:bg-cyan-400/[0.06]">
-      <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-bold text-white outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+    <details className="group rounded-2xl border border-theme bg-theme-inset open:border-cyan-300/20 open:bg-cyan-400/[0.06]">
+      <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-bold text-theme-primary outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
         <span>{item.title}</span>
         <span
           aria-hidden="true"
-          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-lg text-cyan-100 transition group-open:rotate-45"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-theme bg-theme-surface text-lg text-theme-accent transition group-open:rotate-45"
         >
           +
         </span>
       </summary>
       <div className="border-t border-white/[0.07] px-5 pb-5 pt-4">
-        <p className="leading-7 text-slate-400">{item.body}</p>
+        <p className="leading-7 text-theme-muted">{item.body}</p>
         {item.href && item.action && (
           <Link
             href={item.href}
-            className="mt-4 inline-flex min-h-10 items-center rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-cyan-100 transition hover:bg-cyan-400/20"
+            className="mt-4 inline-flex min-h-10 items-center rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-theme-accent transition hover:bg-cyan-400/20"
           >
             {item.action}
           </Link>
@@ -156,7 +156,7 @@ export default function HelpCenterPage() {
   };
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         planName={currentPlanName}
         itemUsage={itemUsageText}
@@ -170,28 +170,28 @@ export default function HelpCenterPage() {
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Guidance and support
                 </p>
                 <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
                   Help Center
                 </h1>
-                <p className="mt-4 max-w-3xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-4 max-w-3xl text-base leading-7 text-theme-muted sm:text-lg">
                   How can we help? Follow the recommended setup steps, learn
                   each SydIN workflow, or contact the team directly.
                 </p>
               </div>
 
               <div className="rounded-2xl border border-cyan-300/15 bg-cyan-400/[0.07] px-5 py-4">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Current workspace
                 </p>
-                <p className="mt-2 max-w-xs truncate font-black text-white">
+                <p className="mt-2 max-w-xs truncate font-black text-theme-primary">
                   {loading
                     ? "Loading workspace..."
                     : businessSettings.business_name}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-slate-400">
+                <p className="mt-1 text-sm font-semibold text-theme-muted">
                   {currentPlanName} plan
                   {usage.subscription.plan === "pro"
                     ? " / Priority manual support"
@@ -204,7 +204,7 @@ export default function HelpCenterPage() {
           {error && (
             <div
               role="alert"
-              className="rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-4 text-sm font-semibold text-red-200"
+              className="rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-4 text-sm font-semibold text-theme-danger"
             >
               {error}
             </div>
@@ -213,30 +213,30 @@ export default function HelpCenterPage() {
           <section className="glass-card p-5 sm:p-7">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Recommended setup
                 </p>
                 <h2 className="mt-2 text-3xl font-black sm:text-4xl">
                   Getting Started
                 </h2>
-                <p className="mt-3 max-w-2xl leading-7 text-slate-400">
+                <p className="mt-3 max-w-2xl leading-7 text-theme-muted">
                   These steps are helpful suggestions, not requirements. Use
                   only the workflows that fit your business.
                 </p>
               </div>
 
-              <div className="min-w-52 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="min-w-52 rounded-2xl border border-theme bg-theme-inset p-4">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-bold text-slate-400">
+                  <span className="text-sm font-bold text-theme-muted">
                     Progress
                   </span>
-                  <span className="font-black text-white">
+                  <span className="font-black text-theme-primary">
                     {onboarding
                       ? `${onboarding.completedCount}/${onboarding.totalCount}`
                       : "..."}
                   </span>
                 </div>
-                <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.08]">
+                <div className="mt-3 h-2 overflow-hidden rounded-full bg-theme-surface">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-blue-500"
                     style={{
@@ -244,7 +244,7 @@ export default function HelpCenterPage() {
                     }}
                   />
                 </div>
-                <p className="mt-2 text-right text-xs font-black text-cyan-100">
+                <p className="mt-2 text-right text-xs font-black text-theme-accent">
                   {onboarding?.percentage || 0}%
                 </p>
               </div>
@@ -255,7 +255,7 @@ export default function HelpCenterPage() {
                 {[1, 2, 3, 4, 5].map((key) => (
                   <div
                     key={key}
-                    className="h-40 animate-pulse rounded-2xl border border-white/10 bg-white/[0.04]"
+                    className="h-40 animate-pulse rounded-2xl border border-theme bg-theme-surface"
                   />
                 ))}
               </div>
@@ -270,16 +270,16 @@ export default function HelpCenterPage() {
                           ? "border-emerald-300/20 bg-emerald-400/[0.08]"
                           : step.status === "unavailable"
                             ? "border-amber-300/20 bg-amber-400/[0.06]"
-                            : "border-white/10 bg-black/20"
+                            : "border-theme bg-theme-inset"
                       }`}
                     >
                       <span
                         className={`flex h-9 w-9 items-center justify-center rounded-xl border text-sm font-black ${
                           step.status === "completed"
-                            ? "border-emerald-300/25 bg-emerald-400/15 text-emerald-100"
+                            ? "border-emerald-300/25 bg-emerald-400/15 text-theme-success"
                             : step.status === "unavailable"
-                              ? "border-amber-300/25 bg-amber-400/10 text-amber-100"
-                              : "border-white/10 bg-white/[0.06] text-slate-300"
+                              ? "border-amber-300/25 bg-amber-400/10 text-theme-warning"
+                              : "border-theme bg-theme-surface text-theme-secondary"
                         }`}
                       >
                         {step.status === "completed"
@@ -288,10 +288,10 @@ export default function HelpCenterPage() {
                             ? "?"
                             : " "}
                       </span>
-                      <h3 className="mt-4 font-black text-white">
+                      <h3 className="mt-4 font-black text-theme-primary">
                         {step.title}
                       </h3>
-                      <p className="mt-2 text-xs leading-5 text-slate-500">
+                      <p className="mt-2 text-xs leading-5 text-theme-subtle">
                         {step.status === "unavailable"
                           ? "This status could not be checked right now."
                           : step.description}
@@ -299,7 +299,7 @@ export default function HelpCenterPage() {
                       {step.status !== "completed" && (
                         <Link
                           href={step.href}
-                          className="mt-auto pt-4 text-sm font-black text-cyan-100 transition hover:text-white"
+                          className="mt-auto pt-4 text-sm font-black text-theme-accent transition hover:text-theme-primary"
                         >
                           {step.action}
                         </Link>
@@ -311,7 +311,7 @@ export default function HelpCenterPage() {
                 {onboarding.nextStep ? (
                   <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-cyan-300/20 bg-cyan-400/[0.08] p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                      <p className="text-xs font-black uppercase tracking-[0.14em] text-cyan-300">
+                      <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                         Suggested next action
                       </p>
                       <p className="mt-2 text-lg font-black">
@@ -327,10 +327,10 @@ export default function HelpCenterPage() {
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-emerald-300/20 bg-emerald-400/[0.08] p-5">
-                    <p className="font-black text-emerald-100">
+                    <p className="font-black text-theme-success">
                       Recommended setup complete
                     </p>
-                    <p className="mt-2 text-sm text-slate-400">
+                    <p className="mt-2 text-sm text-theme-muted">
                       Continue with the tools that are useful for your daily
                       workflow.
                     </p>
@@ -338,14 +338,14 @@ export default function HelpCenterPage() {
                 )}
 
                 {onboarding.hasPartialError && (
-                  <p className="mt-4 text-sm text-amber-200">
+                  <p className="mt-4 text-sm text-theme-warning">
                     Some checklist statuses could not be checked. Your records
                     were not changed.
                   </p>
                 )}
               </>
             ) : (
-              <div className="mt-6 rounded-2xl border border-dashed border-white/10 px-5 py-10 text-center text-slate-500">
+              <div className="mt-6 rounded-2xl border border-dashed border-theme px-5 py-10 text-center text-theme-subtle">
                 Setup progress is temporarily unavailable. The guides below
                 remain ready to use.
               </div>
@@ -354,7 +354,7 @@ export default function HelpCenterPage() {
 
           <section>
             <div>
-              <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+              <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                 Learn SydIN
               </p>
               <h2 className="mt-2 text-3xl font-black sm:text-4xl">
@@ -369,12 +369,12 @@ export default function HelpCenterPage() {
                   className="glass-card flex min-h-52 flex-col p-5 sm:p-6"
                 >
                   <h3 className="text-xl font-black">{guide.title}</h3>
-                  <p className="mt-3 leading-7 text-slate-400">
+                  <p className="mt-3 leading-7 text-theme-muted">
                     {guide.description}
                   </p>
                   <Link
                     href={guide.href}
-                    className="mt-auto pt-5 text-sm font-black text-cyan-100 transition hover:text-white"
+                    className="mt-auto pt-5 text-sm font-black text-theme-accent transition hover:text-theme-primary"
                   >
                     {guide.action}
                   </Link>
@@ -384,17 +384,17 @@ export default function HelpCenterPage() {
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
               <article className="rounded-[28px] border border-sky-300/20 bg-sky-400/[0.08] p-5 sm:p-6">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-sky-300">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Optional workflow
                 </p>
                 <h3 className="mt-2 text-xl font-black">Import inventory</h3>
-                <p className="mt-3 leading-7 text-slate-400">
+                <p className="mt-3 leading-7 text-theme-muted">
                   Import is not part of the scored checklist because existing
                   items do not record how they were created.
                 </p>
                 <Link
                   href="/dashboard/inventory/import"
-                  className="mt-5 inline-flex text-sm font-black text-cyan-100"
+                  className="mt-5 inline-flex text-sm font-black text-theme-accent"
                 >
                   Open Import
                 </Link>
@@ -411,7 +411,7 @@ export default function HelpCenterPage() {
                     ? "Explore advanced tools"
                     : "Need more capacity?"}
                 </h3>
-                <p className="mt-3 leading-7 text-slate-400">
+                <p className="mt-3 leading-7 text-theme-muted">
                   {usage.subscription.plan === "pro"
                     ? "Use reports, analytics, Pick Lists, imports, exports, and advanced organization tools as your workflow grows."
                     : "Plan upgrades increase inventory capacity and unlock additional operational tools. Upgrading is optional."}
@@ -467,30 +467,30 @@ export default function HelpCenterPage() {
           <section className="glass-panel overflow-hidden p-5 sm:p-7 lg:p-8">
             <div className="grid gap-7 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Direct manual support
                 </p>
                 <h2 className="mt-2 text-3xl font-black sm:text-4xl">
                   Contact SydIN
                 </h2>
-                <p className="mt-4 leading-7 text-slate-400">
+                <p className="mt-4 leading-7 text-theme-muted">
                   Send an email or WhatsApp message for account and product
                   help. SydIN currently provides human support during early
                   access and does not promise live-chat or instant response
                   times.
                 </p>
-                <p className="mt-3 text-sm text-slate-500">
+                <p className="mt-3 text-sm text-theme-subtle">
                   Prefilled messages include only your business name and plan,
                   never inventory records or item details.
                 </p>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <article className="rounded-2xl border border-white/10 bg-black/20 p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
+                <article className="rounded-2xl border border-theme bg-theme-inset p-5">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-subtle">
                     Support email
                   </p>
-                  <p className="mt-3 break-all font-black text-white">
+                  <p className="mt-3 break-all font-black text-theme-primary">
                     {SYDIN_SUPPORT_EMAIL}
                   </p>
                   <div className="mt-5 grid gap-2">
@@ -505,7 +505,7 @@ export default function HelpCenterPage() {
                       onClick={() =>
                         void copyContact("email", SYDIN_SUPPORT_EMAIL)
                       }
-                      className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-bold"
+                      className="rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold"
                     >
                       {copied === "email" ? "Email Copied" : "Copy Email"}
                     </button>
@@ -516,7 +516,7 @@ export default function HelpCenterPage() {
                   <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-300">
                     WhatsApp
                   </p>
-                  <p className="mt-3 font-black text-white">
+                  <p className="mt-3 font-black text-theme-primary">
                     {SYDIN_WHATSAPP_DISPLAY}
                   </p>
                   <div className="mt-5 grid gap-2">
@@ -524,7 +524,7 @@ export default function HelpCenterPage() {
                       href={whatsappUrl}
                       target="_blank"
                       rel="noreferrer"
-                      className="rounded-xl border border-emerald-300/25 bg-emerald-400/15 px-4 py-3 text-center text-sm font-bold text-emerald-100 transition hover:bg-emerald-400/25"
+                      className="rounded-xl border border-emerald-300/25 bg-emerald-400/15 px-4 py-3 text-center text-sm font-bold text-theme-success transition hover:bg-emerald-400/25"
                     >
                       Message on WhatsApp
                     </a>
@@ -536,7 +536,7 @@ export default function HelpCenterPage() {
                           SYDIN_WHATSAPP_DISPLAY
                         )
                       }
-                      className="rounded-xl border border-white/10 bg-white/[0.05] px-4 py-3 text-sm font-bold"
+                      className="rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold"
                     >
                       {copied === "whatsapp"
                         ? "Number Copied"

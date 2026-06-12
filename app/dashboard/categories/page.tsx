@@ -30,7 +30,7 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 const inputClassName =
-  "w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3.5 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:opacity-60";
+  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-cyan-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:opacity-60";
 
 function CategoryForm({
   editing,
@@ -56,10 +56,10 @@ function CategoryForm({
     <form onSubmit={onSubmit} noValidate>
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+          <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
             {editing ? "Category details" : "New category"}
           </p>
-          <h2 className="mt-2 text-3xl font-black text-white">
+          <h2 className="mt-2 text-3xl font-black text-theme-primary">
             {editing ? "Edit Category" : "Add Category"}
           </h2>
         </div>
@@ -68,7 +68,7 @@ function CategoryForm({
           onClick={onCancel}
           disabled={saving}
           aria-label="Close category form"
-          className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-xl text-slate-400 transition hover:bg-white/[0.1] hover:text-white"
+          className="flex h-11 w-11 items-center justify-center rounded-2xl border border-theme bg-theme-surface text-xl text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
         >
           X
         </button>
@@ -76,8 +76,8 @@ function CategoryForm({
 
       <div className="mt-6 space-y-4">
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-300">
-            Category name <span className="text-cyan-300">*</span>
+          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+            Category name <span className="text-theme-accent">*</span>
           </label>
           <input
             autoFocus
@@ -92,13 +92,13 @@ function CategoryForm({
             }`}
           />
           {nameError && (
-            <p className="mt-2 text-sm font-semibold text-red-200">
+            <p className="mt-2 text-sm font-semibold text-theme-danger">
               Category name is required.
             </p>
           )}
         </div>
         <div>
-          <label className="mb-2 block text-sm font-semibold text-slate-300">
+          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
             Description
           </label>
           <textarea
@@ -112,7 +112,7 @@ function CategoryForm({
       </div>
 
       {error && (
-        <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+        <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
           {error}
         </div>
       )}
@@ -122,7 +122,7 @@ function CategoryForm({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-3.5 font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+          className="rounded-2xl border border-theme bg-theme-surface px-6 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
         >
           Cancel
         </button>
@@ -308,27 +308,27 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar planName={currentPlanName} />
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-cyan-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Inventory organization
                 </p>
                 <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
                   Categories
                 </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
                   Keep item classification clean, searchable, and consistent.
                 </p>
               </div>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 text-center font-bold text-white transition hover:bg-white/[0.1]"
+                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 text-center font-bold text-theme-primary transition hover:bg-theme-hover"
                 >
                   Inventory
                 </Link>
@@ -349,8 +349,8 @@ export default function CategoriesPage() {
               role={pageError ? "alert" : "status"}
               className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
                 pageError
-                  ? "border-red-400/25 bg-red-500/10 text-red-200"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                  ? "border-red-400/25 bg-red-500/10 text-theme-danger"
+                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
               }`}
             >
               {pageError || pageNotice}
@@ -371,7 +371,7 @@ export default function CategoriesPage() {
           <section className="glass-card p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
               <div className="flex-1">
-                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                <label className="mb-2 block text-sm font-semibold text-theme-muted">
                   Search categories
                 </label>
                 <input
@@ -382,7 +382,7 @@ export default function CategoriesPage() {
                   className={inputClassName}
                 />
               </div>
-              <p className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-bold text-slate-300">
+              <p className="rounded-2xl border border-theme bg-theme-inset px-4 py-3 text-sm font-bold text-theme-secondary">
                 {categories.length} / {categoryLimit} categories
               </p>
             </div>
@@ -402,28 +402,28 @@ export default function CategoriesPage() {
                   className="glass-card flex min-h-56 flex-col p-5 sm:p-6"
                 >
                   <div className="flex items-start justify-between gap-4">
-                    <h2 className="break-words text-2xl font-black text-white">
+                    <h2 className="break-words text-2xl font-black text-theme-primary">
                       {category.name}
                     </h2>
-                    <span className="shrink-0 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-bold text-cyan-100">
+                    <span className="shrink-0 rounded-full border border-cyan-300/20 bg-cyan-500/10 px-3 py-1.5 text-xs font-bold text-theme-accent">
                       {category.item_count || 0} items
                     </span>
                   </div>
-                  <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-slate-400">
+                  <p className="mt-4 whitespace-pre-wrap text-sm leading-6 text-theme-muted">
                     {category.description || "No description"}
                   </p>
                   <div className="mt-auto grid grid-cols-2 gap-3 pt-6">
                     <button
                       type="button"
                       onClick={() => openEditForm(category)}
-                      className="rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                      className="rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
                     >
                       Edit
                     </button>
                     <button
                       type="button"
                       onClick={() => setPendingDelete(category)}
-                      className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-red-100 transition hover:bg-red-500/20"
+                      className="rounded-xl border border-red-400/20 bg-red-500/10 px-4 py-3 text-sm font-bold text-theme-danger transition hover:bg-red-500/20"
                     >
                       Delete
                     </button>
@@ -433,10 +433,10 @@ export default function CategoriesPage() {
             </div>
           ) : categories.length === 0 ? (
             <section className="glass-card px-5 py-16 text-center">
-              <h2 className="text-2xl font-black text-white">
+              <h2 className="text-2xl font-black text-theme-primary">
                 Add your first category
               </h2>
-              <p className="mx-auto mt-3 max-w-lg text-slate-400">
+              <p className="mx-auto mt-3 max-w-lg text-theme-muted">
                 Create a clean category list before assigning categories to
                 inventory items.
               </p>
@@ -451,8 +451,8 @@ export default function CategoriesPage() {
             </section>
           ) : (
             <section className="glass-card px-5 py-14 text-center">
-              <h2 className="text-xl font-black text-white">No results</h2>
-              <p className="mt-2 text-sm text-slate-500">
+              <h2 className="text-xl font-black text-theme-primary">No results</h2>
+              <p className="mt-2 text-sm text-theme-subtle">
                 Try a different category name or description.
               </p>
             </section>
@@ -461,7 +461,7 @@ export default function CategoriesPage() {
       </main>
 
       {formOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="glass-modal my-8 w-full max-w-xl p-5 sm:p-7">
             <CategoryForm
               editing={Boolean(editingCategory)}
@@ -479,7 +479,7 @@ export default function CategoriesPage() {
       )}
 
       {pendingDelete && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
@@ -491,11 +491,11 @@ export default function CategoriesPage() {
             </p>
             <h2
               id="delete-category-title"
-              className="mt-3 break-words text-2xl font-black text-white"
+              className="mt-3 break-words text-2xl font-black text-theme-primary"
             >
               Delete {pendingDelete.name}?
             </h2>
-            <p className="mt-3 leading-7 text-slate-400">
+            <p className="mt-3 leading-7 text-theme-muted">
               {pendingDelete.item_count || 0} linked item
               {pendingDelete.item_count === 1 ? "" : "s"} will become
               uncategorized. Inventory items will not be deleted.
@@ -505,7 +505,7 @@ export default function CategoriesPage() {
                 type="button"
                 onClick={() => setPendingDelete(null)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold text-white"
+                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary"
               >
                 Cancel
               </button>
@@ -513,7 +513,7 @@ export default function CategoriesPage() {
                 type="button"
                 onClick={() => void handleDelete()}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger disabled:opacity-50"
               >
                 {deletingId ? "Deleting..." : "Delete Category"}
               </button>

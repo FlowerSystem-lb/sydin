@@ -82,7 +82,7 @@ export interface ParsedEditItemValues {
 }
 
 const inputClassName =
-  "w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg";
+  "w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg";
 const errorInputClassName =
   "border-red-400/50 bg-red-500/[0.08] focus:border-red-300/70 focus:shadow-[0_0_0_4px_rgba(248,113,113,0.12)]";
 
@@ -275,7 +275,7 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   if (!message) return null;
 
   return (
-    <p id={id} className="mt-2 text-sm font-semibold text-red-200">
+    <p id={id} className="mt-2 text-sm font-semibold text-theme-danger">
       {message}
     </p>
   );
@@ -292,11 +292,11 @@ function SectionTitle({
 }) {
   return (
     <div className="mb-5">
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-200">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-theme-accent">
         {eyebrow}
       </p>
-      <h3 className="mt-1 text-2xl font-black text-white">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-400">{description}</p>
+      <h3 className="mt-1 text-2xl font-black text-theme-primary">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-theme-muted">{description}</p>
     </div>
   );
 }
@@ -311,15 +311,15 @@ function DisclosureSection({
   children: ReactNode;
 }) {
   return (
-    <details className="group overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.035]">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 outline-none transition hover:bg-white/[0.04] focus-visible:bg-white/[0.06] [&::-webkit-details-marker]:hidden">
+    <details className="group overflow-hidden rounded-[26px] border border-theme bg-theme-surface">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 outline-none transition hover:bg-theme-surface focus-visible:bg-theme-surface [&::-webkit-details-marker]:hidden">
         <span>
-          <span className="block text-lg font-black text-white">{title}</span>
-          <span className="mt-1 block text-sm leading-5 text-slate-500">
+          <span className="block text-lg font-black text-theme-primary">{title}</span>
+          <span className="mt-1 block text-sm leading-5 text-theme-subtle">
             {summary}
           </span>
         </span>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-black/25 text-slate-300 transition group-open:rotate-180 group-open:text-indigo-100">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-inset text-theme-secondary transition group-open:rotate-180 group-open:text-theme-accent">
           <svg
             aria-hidden="true"
             className="h-5 w-5"
@@ -336,7 +336,7 @@ function DisclosureSection({
           </svg>
         </span>
       </summary>
-      <div className="border-t border-white/10 px-5 py-5">{children}</div>
+      <div className="border-t border-theme px-5 py-5">{children}</div>
     </details>
   );
 }
@@ -397,14 +397,14 @@ export default function EditItemForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-5">
-      <section className="rounded-[28px] border border-white/10 bg-white/[0.035] p-5">
+      <section className="rounded-[28px] border border-theme bg-theme-surface p-5">
         <SectionTitle
           eyebrow="Basic"
           title="Basic Information"
           description="Update the product identity, image, category, and location."
         />
 
-        <div className="grid grid-cols-1 gap-4 rounded-3xl border border-white/10 bg-black/20 p-4 md:grid-cols-[150px_1fr] md:items-center">
+        <div className="grid grid-cols-1 gap-4 rounded-3xl border border-theme bg-theme-inset p-4 md:grid-cols-[150px_1fr] md:items-center">
           {item.image ? (
             <div className="relative h-[140px] overflow-hidden rounded-2xl bg-[#f4f0e8]">
               <Image
@@ -417,7 +417,7 @@ export default function EditItemForm({
               />
             </div>
           ) : (
-            <div className="flex h-[140px] flex-col items-center justify-center rounded-2xl bg-[#f4f0e8] text-slate-500">
+            <div className="flex h-[140px] flex-col items-center justify-center rounded-2xl bg-[#f4f0e8] text-theme-subtle">
               <span className="text-xs font-black uppercase tracking-[0.16em]">
                 Image
               </span>
@@ -426,13 +426,13 @@ export default function EditItemForm({
           )}
 
           <div>
-            <p className="text-sm font-semibold text-slate-300">
+            <p className="text-sm font-semibold text-theme-secondary">
               Product photo
             </p>
-            <p className="mt-2 text-sm leading-6 text-slate-500">
+            <p className="mt-2 text-sm leading-6 text-theme-subtle">
               Replace the image only if you want a new product photo.
             </p>
-            <label className="mt-4 inline-flex cursor-pointer rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-4 py-3 text-sm font-bold text-indigo-100 transition hover:bg-indigo-500/25">
+            <label className="mt-4 inline-flex cursor-pointer rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-4 py-3 text-sm font-bold text-theme-accent transition hover:bg-indigo-500/25">
               Choose replacement
               <input
                 type="file"
@@ -445,7 +445,7 @@ export default function EditItemForm({
               />
             </label>
             {selectedImage && (
-              <p className="mt-3 break-words text-sm font-semibold text-indigo-100">
+              <p className="mt-3 break-words text-sm font-semibold text-theme-accent">
                 New image: {selectedImage.name}
               </p>
             )}
@@ -454,8 +454,8 @@ export default function EditItemForm({
 
         <div className="mt-5 grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
-              Product name <span className="text-indigo-300">*</span>
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+              Product name <span className="text-theme-accent">*</span>
             </label>
             <input
               type="text"
@@ -474,7 +474,7 @@ export default function EditItemForm({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Category
             </label>
             <CategorySelector
@@ -489,7 +489,7 @@ export default function EditItemForm({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Depot / Location
             </label>
             <div className="relative">
@@ -508,7 +508,7 @@ export default function EditItemForm({
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
                 <svg
                   aria-hidden="true"
                   className="h-5 w-5"
@@ -528,7 +528,7 @@ export default function EditItemForm({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Supplier
             </label>
             <div className="relative">
@@ -547,7 +547,7 @@ export default function EditItemForm({
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
                 <svg
                   aria-hidden="true"
                   className="h-5 w-5"
@@ -564,14 +564,14 @@ export default function EditItemForm({
                 </svg>
               </span>
             </div>
-            <p className="mt-2 text-xs leading-5 text-slate-500">
+            <p className="mt-2 text-xs leading-5 text-theme-subtle">
               Optional. Manage supplier records from the Suppliers page.
             </p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-[28px] border border-white/10 bg-white/[0.035] p-5">
+      <section className="rounded-[28px] border border-theme bg-theme-surface p-5">
         <SectionTitle
           eyebrow="Stock"
           title="Stock"
@@ -580,8 +580,8 @@ export default function EditItemForm({
 
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
-              Quantity <span className="text-indigo-300">*</span>
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+              Quantity <span className="text-theme-accent">*</span>
             </label>
             <input
               type="number"
@@ -614,8 +614,8 @@ export default function EditItemForm({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
-              Unit <span className="text-indigo-300">*</span>
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+              Unit <span className="text-theme-accent">*</span>
             </label>
             <div className="relative">
               <select
@@ -641,7 +641,7 @@ export default function EditItemForm({
                   </option>
                 ))}
               </select>
-              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
                 <svg
                   aria-hidden="true"
                   className="h-5 w-5"
@@ -663,8 +663,8 @@ export default function EditItemForm({
 
           {values.unitType === "custom" && (
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-slate-300">
-                Custom unit label <span className="text-indigo-300">*</span>
+              <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+                Custom unit label <span className="text-theme-accent">*</span>
               </label>
               <input
                 type="text"
@@ -688,7 +688,7 @@ export default function EditItemForm({
           )}
 
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Minimum stock level
             </label>
             <input
@@ -730,11 +730,11 @@ export default function EditItemForm({
       >
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Cost price
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-5 flex items-center text-sm font-black text-indigo-200">
+              <span className="pointer-events-none absolute inset-y-0 left-5 flex items-center text-sm font-black text-theme-accent">
                 {currencyCode}
               </span>
               <input
@@ -767,11 +767,11 @@ export default function EditItemForm({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Selling price
             </label>
             <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-5 flex items-center text-sm font-black text-indigo-200">
+              <span className="pointer-events-none absolute inset-y-0 left-5 flex items-center text-sm font-black text-theme-accent">
                 {currencyCode}
               </span>
               <input
@@ -806,10 +806,10 @@ export default function EditItemForm({
 
         <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div className="rounded-3xl border border-cyan-300/15 bg-cyan-500/[0.07] p-5">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-cyan-200">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
               Stock cost value
             </p>
-            <p className="mt-2 break-words text-2xl font-black text-white">
+            <p className="mt-2 break-words text-2xl font-black text-theme-primary">
               {formattedCostValue || "Not calculated"}
             </p>
           </div>
@@ -817,7 +817,7 @@ export default function EditItemForm({
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-200">
               Stock retail value
             </p>
-            <p className="mt-2 break-words text-2xl font-black text-white">
+            <p className="mt-2 break-words text-2xl font-black text-theme-primary">
               {formattedRetailValue || "Not calculated"}
             </p>
           </div>
@@ -830,26 +830,26 @@ export default function EditItemForm({
       >
         <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <div className="md:col-span-2">
-            <p className="mb-2 text-sm font-semibold text-slate-300">
+            <p className="mb-2 text-sm font-semibold text-theme-secondary">
               SydIN item code
             </p>
             <div className="flex min-h-[58px] items-center justify-between gap-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-5 py-4">
-              <span className="break-words font-black text-indigo-100">
+              <span className="break-words font-black text-theme-accent">
                 {itemCode || "Not generated yet"}
               </span>
-              <span className="rounded-xl border border-white/10 bg-black/25 px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-slate-400">
+              <span className="rounded-xl border border-theme bg-theme-inset px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
                 Read only
               </span>
             </div>
             {!itemCode && (
-              <p className="mt-2 text-xs leading-5 text-slate-500">
+              <p className="mt-2 text-xs leading-5 text-theme-subtle">
                 Older items may not have generated item codes yet.
               </p>
             )}
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               SKU
             </label>
             <input
@@ -860,13 +860,13 @@ export default function EditItemForm({
               autoCapitalize="characters"
               className={inputClassName}
             />
-            <p className="mt-2 text-xs leading-5 text-slate-500">
+            <p className="mt-2 text-xs leading-5 text-theme-subtle">
               Your internal or supplier stock code.
             </p>
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-slate-300">
+            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Barcode
             </label>
             <input
@@ -880,7 +880,7 @@ export default function EditItemForm({
               spellCheck={false}
               className={`${inputClassName} font-mono tracking-wide`}
             />
-            <p className="mt-2 text-xs leading-5 text-slate-500">
+            <p className="mt-2 text-xs leading-5 text-theme-subtle">
               Product or scanned code. Leading zeroes are preserved.
             </p>
           </div>
@@ -888,7 +888,7 @@ export default function EditItemForm({
       </DisclosureSection>
 
       <DisclosureSection title="Notes" summary="Internal team context">
-        <label className="mb-2 block text-sm font-semibold text-slate-300">
+        <label className="mb-2 block text-sm font-semibold text-theme-secondary">
           Internal notes
         </label>
         <textarea
@@ -900,17 +900,17 @@ export default function EditItemForm({
       </DisclosureSection>
 
       {error && (
-        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
+        <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
           {error}
         </div>
       )}
 
-      <div className="sticky bottom-0 z-10 -mx-5 mt-2 flex flex-col-reverse gap-3 border-t border-white/10 bg-[#080b18]/95 px-5 py-4 backdrop-blur-xl sm:static sm:mx-0 sm:flex-row sm:justify-end sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
+      <div className="sticky bottom-0 z-10 -mx-5 mt-2 flex flex-col-reverse gap-3 border-t border-theme bg-[var(--sydin-surface-strong)] px-5 py-4 backdrop-blur-xl sm:static sm:mx-0 sm:flex-row sm:justify-end sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
         <button
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50 sm:flex-none sm:px-7"
+          className="flex-1 rounded-2xl border border-theme bg-theme-surface py-4 text-base font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50 sm:flex-none sm:px-7"
         >
           Cancel
         </button>

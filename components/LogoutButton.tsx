@@ -38,7 +38,7 @@ export default function LogoutButton({
       <button
         type="button"
         onClick={handleLogout}
-        className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-300/15 bg-red-400/[0.07] text-red-200/80 transition hover:border-red-300/30 hover:bg-red-400/15 hover:text-red-100"
+        className="flex h-10 w-10 items-center justify-center rounded-xl border border-red-300/15 bg-red-400/[0.07] text-theme-danger/80 transition hover:border-red-300/30 hover:bg-red-400/15 hover:text-theme-danger"
         aria-label="Logout"
         title="Logout"
       >
@@ -53,8 +53,8 @@ export default function LogoutButton({
       onClick={handleLogout}
       className={
         variant === "compact"
-          ? "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-sky-200/10 bg-white/[0.035] px-2.5 py-2 text-xs font-semibold text-slate-400 transition hover:border-red-300/20 hover:bg-red-400/10 hover:text-red-100"
-          : "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-400/25 bg-red-500/15 px-5 py-3 text-sm font-bold text-red-200 transition hover:bg-red-500/25"
+          ? "inline-flex min-h-9 items-center gap-1.5 rounded-lg border border-sky-200/10 bg-theme-surface px-2.5 py-2 text-xs font-semibold text-theme-muted transition hover:border-red-300/20 hover:bg-red-400/10 hover:text-theme-danger"
+          : "inline-flex min-h-11 items-center justify-center gap-2 rounded-lg border border-red-400/25 bg-red-500/15 px-5 py-3 text-sm font-bold text-theme-danger transition hover:bg-red-500/25"
       }
     >
       {icon}

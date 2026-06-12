@@ -135,21 +135,21 @@ function SummaryCard({
   accent: string;
 }) {
   return (
-    <article className="rounded-[26px] border border-white/10 bg-black/20 p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
+    <article className="rounded-[26px] border border-theme bg-theme-inset p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <p className="text-sm font-semibold text-slate-400">{label}</p>
-          <p className="mt-3 break-words text-3xl font-black tracking-tight text-white">
+          <p className="text-sm font-semibold text-theme-muted">{label}</p>
+          <p className="mt-3 break-words text-3xl font-black tracking-tight text-theme-primary">
             {value}
           </p>
         </div>
         <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} text-white shadow-[0_14px_40px_rgba(99,102,241,0.2)]`}
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} text-theme-primary shadow-[0_14px_40px_rgba(99,102,241,0.2)]`}
         >
           <UiIcon name={icon} className="h-5 w-5" />
         </span>
       </div>
-      <p className="mt-4 text-xs leading-5 text-slate-500">{detail}</p>
+      <p className="mt-4 text-xs leading-5 text-theme-subtle">{detail}</p>
     </article>
   );
 }
@@ -165,13 +165,13 @@ function SectionHeading({
 }) {
   return (
     <div>
-      <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+      <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
         {eyebrow}
       </p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl">
+      <h2 className="mt-2 text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
         {title}
       </h2>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+      <p className="mt-2 max-w-3xl text-sm leading-6 text-theme-muted">
         {description}
       </p>
     </div>
@@ -194,28 +194,28 @@ function StockHealthTable({
   const visibleItems = typeof limit === "number" ? items.slice(0, limit) : items;
 
   return (
-    <article className="overflow-hidden rounded-[28px] border border-white/10 bg-black/20">
-      <div className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4">
-        <h3 className="text-lg font-black text-white">{title}</h3>
-        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-bold text-slate-300">
+    <article className="overflow-hidden rounded-[28px] border border-theme bg-theme-inset">
+      <div className="flex items-center justify-between gap-4 border-b border-theme px-5 py-4">
+        <h3 className="text-lg font-black text-theme-primary">{title}</h3>
+        <span className="rounded-full border border-theme bg-theme-surface px-3 py-1 text-xs font-bold text-theme-secondary">
           {items.length}
         </span>
       </div>
 
       {visibleItems.length === 0 ? (
         <div className="px-5 py-12 text-center">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-emerald-200">
+          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-theme-success">
             <UiIcon name="layers" className="h-6 w-6" />
           </span>
-          <p className="mt-4 font-bold text-white">Nothing to review</p>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-4 font-bold text-theme-primary">Nothing to review</p>
+          <p className="mt-1 text-sm text-theme-subtle">
             Your current stock does not have items in this report.
           </p>
         </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-[820px] w-full text-left text-sm">
-            <thead className="bg-white/[0.035] text-xs uppercase tracking-[0.12em] text-slate-500">
+            <thead className="bg-theme-surface text-xs uppercase tracking-[0.12em] text-theme-subtle">
               <tr>
                 <th className="px-5 py-3 font-bold">Item</th>
                 <th className="px-4 py-3 font-bold">Quantity</th>
@@ -227,10 +227,10 @@ function StockHealthTable({
             </thead>
             <tbody className="divide-y divide-white/[0.07]">
               {visibleItems.map((item) => (
-                <tr key={item.id} className="text-slate-300">
+                <tr key={item.id} className="text-theme-secondary">
                   <td className="px-5 py-4">
-                    <p className="font-bold text-white">{item.name}</p>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="font-bold text-theme-primary">{item.name}</p>
+                    <p className="mt-1 text-xs text-theme-subtle">
                       {item.item_code?.trim() || "No item code"}
                     </p>
                   </td>
@@ -255,7 +255,7 @@ function StockHealthTable({
                   <td className="px-5 py-4 text-right">
                     <Link
                       href={`/dashboard/inventory/${item.id}`}
-                      className="inline-flex min-h-9 items-center rounded-xl border border-sky-200/15 bg-sky-400/10 px-3 py-2 text-xs font-bold text-cyan-100 transition hover:border-sky-200/30 hover:bg-sky-400/15"
+                      className="inline-flex min-h-9 items-center rounded-xl border border-sky-200/15 bg-sky-400/10 px-3 py-2 text-xs font-bold text-theme-accent transition hover:border-sky-200/30 hover:bg-sky-400/15"
                     >
                       View item
                     </Link>
@@ -268,7 +268,7 @@ function StockHealthTable({
       )}
 
       {limit && items.length > limit && (
-        <p className="border-t border-white/10 px-5 py-3 text-xs text-slate-500">
+        <p className="border-t border-theme px-5 py-3 text-xs text-theme-subtle">
           Free reports show the first {limit} items. Standard unlocks complete
           lists and advanced analytics.
         </p>
@@ -293,14 +293,14 @@ function ValueBarChart({
   );
 
   return (
-    <article className="rounded-[28px] border border-white/10 bg-black/20 p-5 sm:p-6">
-      <h3 className="text-xl font-black text-white">{title}</h3>
-      <p className="mt-1 text-xs text-slate-500">
+    <article className="rounded-[28px] border border-theme bg-theme-inset p-5 sm:p-6">
+      <h3 className="text-xl font-black text-theme-primary">{title}</h3>
+      <p className="mt-1 text-xs text-theme-subtle">
         Current stock cost value, top six groups plus Other
       </p>
 
       {visibleGroups.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-white/10 px-4 py-10 text-center text-sm text-slate-500">
+        <div className="mt-6 rounded-2xl border border-dashed border-theme px-4 py-10 text-center text-sm text-theme-subtle">
           Add cost prices to populate this chart.
         </div>
       ) : (
@@ -317,11 +317,11 @@ function ValueBarChart({
                   <p className="min-w-0 truncate text-sm font-bold text-slate-200">
                     {group.label}
                   </p>
-                  <p className="shrink-0 text-xs font-black text-white">
+                  <p className="shrink-0 text-xs font-black text-theme-primary">
                     {formatCurrency(group.costValue, currencyCode)}
                   </p>
                 </div>
-                <div className="mt-2 h-3 overflow-hidden rounded-full border border-white/[0.06] bg-black/40">
+                <div className="mt-2 h-3 overflow-hidden rounded-full border border-theme bg-theme-inset">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-indigo-400 to-violet-500 shadow-[0_0_18px_rgba(99,102,241,0.42)]"
                     style={{ width: `${width}%` }}
@@ -347,22 +347,22 @@ function MovementChart({
   );
 
   return (
-    <article className="rounded-[28px] border border-white/10 bg-black/20 p-5 sm:p-6">
+    <article className="rounded-[28px] border border-theme bg-theme-inset p-5 sm:p-6">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h3 className="text-xl font-black text-white">
+          <h3 className="text-xl font-black text-theme-primary">
             Stock in vs stock out
           </h3>
-          <p className="mt-1 text-xs text-slate-500">
+          <p className="mt-1 text-xs text-theme-subtle">
             Adjustments and damaged stock are kept separate.
           </p>
         </div>
         <div className="flex gap-3 text-xs font-bold">
-          <span className="flex items-center gap-2 text-emerald-200">
+          <span className="flex items-center gap-2 text-theme-success">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
             Stock in
           </span>
-          <span className="flex items-center gap-2 text-rose-200">
+          <span className="flex items-center gap-2 text-theme-danger">
             <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
             Stock out
           </span>
@@ -370,7 +370,7 @@ function MovementChart({
       </div>
 
       {highestValue === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-white/10 px-4 py-12 text-center text-sm text-slate-500">
+        <div className="mt-6 rounded-2xl border border-dashed border-theme px-4 py-12 text-center text-sm text-theme-subtle">
           No stock in or stock out movements in this period.
         </div>
       ) : (
@@ -414,7 +414,7 @@ function MovementChart({
                       title={`Stock out ${formatNumber(bucket.stockOut)}`}
                     />
                   </div>
-                  <p className="mt-2 max-w-16 text-center text-[10px] font-semibold leading-4 text-slate-500">
+                  <p className="mt-2 max-w-16 text-center text-[10px] font-semibold leading-4 text-theme-subtle">
                     {bucket.label}
                   </p>
                 </div>
@@ -709,7 +709,7 @@ export default function ReportsPage() {
     : [];
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         addItemHref="/dashboard/add-item"
         planName={currentPlanName}
@@ -720,26 +720,26 @@ export default function ReportsPage() {
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-7">
-          <section className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_36%),rgba(255,255,255,0.045)] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_36%),rgba(255,255,255,0.045)] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-400/[0.08] px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-cyan-200">
+                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-400/[0.08] px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Private workspace
                   <span className="h-1 w-1 rounded-full bg-cyan-300" />
                   {currentPlanName}
                 </div>
-                <h1 className="mt-5 text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mt-5 text-4xl font-black tracking-tight text-theme-primary sm:text-5xl lg:text-6xl">
                   Reports
                 </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted">
                   Private inventory insights based on your current stock and
                   movement history.
                 </p>
               </div>
 
               {hasAdvancedReports && (
-                <div className="rounded-2xl border border-white/10 bg-black/20 p-3">
-                  <p className="px-1 text-xs font-bold uppercase tracking-[0.13em] text-slate-500">
+                <div className="rounded-2xl border border-theme bg-theme-inset p-3">
+                  <p className="px-1 text-xs font-bold uppercase tracking-[0.13em] text-theme-subtle">
                     Movement period
                   </p>
                   <div className="mt-2 grid grid-cols-3 gap-2">
@@ -755,8 +755,8 @@ export default function ReportsPage() {
                         }}
                         className={`min-h-10 rounded-xl border px-3 py-2 text-xs font-bold transition ${
                           datePreset === days
-                            ? "border-cyan-200/30 bg-cyan-400/15 text-white"
-                            : "border-white/10 bg-white/[0.04] text-slate-400 hover:bg-white/[0.08] hover:text-white"
+                            ? "border-cyan-200/30 bg-cyan-400/15 text-theme-primary"
+                            : "border-theme bg-theme-surface text-theme-muted hover:bg-theme-hover hover:text-theme-primary"
                         }`}
                       >
                         Last {days} days
@@ -767,14 +767,14 @@ export default function ReportsPage() {
               )}
             </div>
 
-            <div className="mt-6 rounded-2xl border border-indigo-300/15 bg-indigo-500/[0.07] px-4 py-3 text-sm leading-6 text-slate-400">
+            <div className="mt-6 rounded-2xl border border-indigo-300/15 bg-indigo-500/[0.07] px-4 py-3 text-sm leading-6 text-theme-muted">
               Current value reports are live snapshots. The date filter applies
               only to movement reports.
             </div>
           </section>
 
           {error && (
-            <div className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-5 py-4 text-sm font-semibold text-rose-200">
+            <div className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-5 py-4 text-sm font-semibold text-theme-danger">
               {error}
             </div>
           )}
@@ -784,13 +784,13 @@ export default function ReportsPage() {
               {[1, 2, 3, 4].map((item) => (
                 <div
                   key={item}
-                  className="h-40 animate-pulse rounded-[26px] border border-white/10 bg-white/[0.05]"
+                  className="h-40 animate-pulse rounded-[26px] border border-theme bg-theme-surface"
                 />
               ))}
             </div>
           ) : (
             <>
-              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                 <SectionHeading
                   eyebrow="Stock health"
                   title="Items needing attention"
@@ -840,7 +840,7 @@ export default function ReportsPage() {
                 />
               ) : (
                 <>
-                  <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                  <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                     <SectionHeading
                       eyebrow="Current value snapshot"
                       title="Inventory value"
@@ -854,7 +854,7 @@ export default function ReportsPage() {
                   </section>
 
                   {advancedAnalytics && (
-                    <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                    <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                       <SectionHeading
                         eyebrow="Value analysis"
                         title="Where inventory value sits"
@@ -886,13 +886,13 @@ export default function ReportsPage() {
                         ].map((report) => (
                           <article
                             key={report.title}
-                            className="rounded-[28px] border border-white/10 bg-black/20 p-5"
+                            className="rounded-[28px] border border-theme bg-theme-inset p-5"
                           >
-                            <h3 className="text-lg font-black text-white">
+                            <h3 className="text-lg font-black text-theme-primary">
                               {report.title}
                             </h3>
                             {report.items.length === 0 ? (
-                              <p className="mt-5 rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-slate-500">
+                              <p className="mt-5 rounded-2xl border border-dashed border-theme px-4 py-8 text-center text-sm text-theme-subtle">
                                 No matching price data yet.
                               </p>
                             ) : (
@@ -901,13 +901,13 @@ export default function ReportsPage() {
                                   <Link
                                     key={entry.item.id}
                                     href={`/dashboard/inventory/${entry.item.id}`}
-                                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3 transition hover:border-cyan-200/20 hover:bg-white/[0.06]"
+                                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-theme-surface px-4 py-3 transition hover:border-cyan-200/20 hover:bg-theme-hover"
                                   >
                                     <div className="min-w-0">
-                                      <p className="truncate text-sm font-bold text-white">
+                                      <p className="truncate text-sm font-bold text-theme-primary">
                                         {index + 1}. {entry.item.name}
                                       </p>
-                                      <p className="mt-1 text-xs text-slate-500">
+                                      <p className="mt-1 text-xs text-theme-subtle">
                                         {getInventoryQuantityLabel(
                                           entry.item.quantity,
                                           entry.item.unit_type,
@@ -915,7 +915,7 @@ export default function ReportsPage() {
                                         )}
                                       </p>
                                     </div>
-                                    <p className="shrink-0 text-xs font-black text-cyan-100">
+                                    <p className="shrink-0 text-xs font-black text-theme-accent">
                                       {formatCurrency(entry.value, currencyCode)}
                                     </p>
                                   </Link>
@@ -925,12 +925,12 @@ export default function ReportsPage() {
                           </article>
                         ))}
 
-                        <article className="rounded-[28px] border border-white/10 bg-black/20 p-5">
-                          <h3 className="text-lg font-black text-white">
+                        <article className="rounded-[28px] border border-theme bg-theme-inset p-5">
+                          <h3 className="text-lg font-black text-theme-primary">
                             Value by category
                           </h3>
                           {advancedAnalytics.valueByCategory.length === 0 ? (
-                            <p className="mt-5 rounded-2xl border border-dashed border-white/10 px-4 py-8 text-center text-sm text-slate-500">
+                            <p className="mt-5 rounded-2xl border border-dashed border-theme px-4 py-8 text-center text-sm text-theme-subtle">
                               Add cost prices to populate this report.
                             </p>
                           ) : (
@@ -939,18 +939,18 @@ export default function ReportsPage() {
                                 (group) => (
                                   <div
                                     key={group.label}
-                                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-white/[0.035] px-4 py-3"
+                                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-theme-surface px-4 py-3"
                                   >
                                     <div className="min-w-0">
-                                      <p className="truncate text-sm font-bold text-white">
+                                      <p className="truncate text-sm font-bold text-theme-primary">
                                         {group.label}
                                       </p>
-                                      <p className="mt-1 text-xs text-slate-500">
+                                      <p className="mt-1 text-xs text-theme-subtle">
                                         {group.itemCount} item
                                         {group.itemCount === 1 ? "" : "s"}
                                       </p>
                                     </div>
-                                    <p className="shrink-0 text-xs font-black text-cyan-100">
+                                    <p className="shrink-0 text-xs font-black text-theme-accent">
                                       {formatCurrency(
                                         group.costValue,
                                         currencyCode
@@ -966,7 +966,7 @@ export default function ReportsPage() {
                     </section>
                   )}
 
-                  <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                  <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                     <SectionHeading
                       eyebrow="Movement analytics"
                       title={`Last ${datePreset} days`}
@@ -974,7 +974,7 @@ export default function ReportsPage() {
                     />
 
                     {movementError && (
-                      <div className="mt-5 rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">
+                      <div className="mt-5 rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-theme-danger">
                         {movementError}
                       </div>
                     )}
@@ -984,7 +984,7 @@ export default function ReportsPage() {
                         {[1, 2, 3, 4, 5, 6].map((item) => (
                           <div
                             key={item}
-                            className="h-32 animate-pulse rounded-[24px] border border-white/10 bg-white/[0.05]"
+                            className="h-32 animate-pulse rounded-[24px] border border-theme bg-theme-surface"
                           />
                         ))}
                       </div>
@@ -1043,15 +1043,15 @@ export default function ReportsPage() {
                           <MovementChart buckets={movementAnalytics.buckets} />
                         </div>
 
-                        <article className="mt-5 overflow-hidden rounded-[28px] border border-white/10 bg-black/20">
-                          <div className="border-b border-white/10 px-5 py-4">
-                            <h3 className="text-xl font-black text-white">
+                        <article className="mt-5 overflow-hidden rounded-[28px] border border-theme bg-theme-inset">
+                          <div className="border-b border-theme px-5 py-4">
+                            <h3 className="text-xl font-black text-theme-primary">
                               Recent movement activity
                             </h3>
                           </div>
 
                           {movements.length === 0 ? (
-                            <div className="px-5 py-12 text-center text-sm text-slate-500">
+                            <div className="px-5 py-12 text-center text-sm text-theme-subtle">
                               No stock movements were recorded in this period.
                             </div>
                           ) : (
@@ -1071,10 +1071,10 @@ export default function ReportsPage() {
                                   >
                                     <div className="min-w-0">
                                       <div className="flex flex-wrap items-center gap-2">
-                                        <p className="font-bold text-white">
+                                        <p className="font-bold text-theme-primary">
                                           {item?.name || "Inventory item"}
                                         </p>
-                                        <span className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[11px] font-bold text-slate-300">
+                                        <span className="rounded-full border border-theme bg-theme-surface px-2.5 py-1 text-[11px] font-bold text-theme-secondary">
                                           {
                                             STOCK_MOVEMENT_LABELS[
                                               movement.movement_type as StockMovementType
@@ -1082,7 +1082,7 @@ export default function ReportsPage() {
                                           }
                                         </span>
                                       </div>
-                                      <p className="mt-1 text-xs text-slate-500">
+                                      <p className="mt-1 text-xs text-theme-subtle">
                                         {formatDateTime(movement.created_at)}
                                         {movement.notes
                                           ? ` · ${movement.notes}`
@@ -1093,8 +1093,8 @@ export default function ReportsPage() {
                                       <p
                                         className={`text-sm font-black ${
                                           signedDelta < 0
-                                            ? "text-rose-200"
-                                            : "text-emerald-200"
+                                            ? "text-theme-danger"
+                                            : "text-theme-success"
                                         }`}
                                       >
                                         {isAdjustment
@@ -1106,7 +1106,7 @@ export default function ReportsPage() {
                                       {item && (
                                         <Link
                                           href={`/dashboard/inventory/${item.id}`}
-                                          className="rounded-xl border border-white/10 bg-white/[0.05] px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-white/[0.1]"
+                                          className="rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-theme-hover"
                                         >
                                           View
                                         </Link>

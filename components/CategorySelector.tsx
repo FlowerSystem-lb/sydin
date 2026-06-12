@@ -48,7 +48,7 @@ export default function CategorySelector({
           onChange={(event) => setSearch(event.target.value)}
           disabled={disabled}
           placeholder="Filter categories"
-          className="mb-2 w-full rounded-xl border border-white/10 bg-black/25 px-4 py-2.5 text-sm text-white outline-none placeholder:text-slate-600 focus:border-cyan-300/50"
+          className="mb-2 w-full rounded-xl border border-theme bg-theme-inset px-4 py-2.5 text-sm text-theme-primary outline-none placeholder:text-theme-subtle focus:border-cyan-300/50"
         />
       )}
       <div className="relative">
@@ -57,7 +57,7 @@ export default function CategorySelector({
           value={value}
           onChange={(event) => onChange(event.target.value)}
           disabled={disabled}
-          className="w-full appearance-none rounded-2xl border border-white/10 bg-black/35 px-5 py-4 pr-12 text-base text-white outline-none transition focus:border-cyan-300/60 focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:opacity-60"
+          className="w-full appearance-none rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 pr-12 text-base text-theme-primary outline-none transition focus:border-cyan-300/60 focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:opacity-60"
         >
           <option value="">No category</option>
           {hasLegacyCategory && (
@@ -71,7 +71,7 @@ export default function CategorySelector({
             </option>
           ))}
         </select>
-        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-slate-500">
+        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
           <svg
             aria-hidden="true"
             className="h-5 w-5"
@@ -85,16 +85,16 @@ export default function CategorySelector({
         </span>
       </div>
       {hasLegacyCategory && (
-        <p className="mt-2 rounded-xl border border-amber-300/15 bg-amber-500/[0.07] px-3 py-2 text-xs leading-5 text-amber-100">
+        <p className="mt-2 rounded-xl border border-amber-300/15 bg-amber-500/[0.07] px-3 py-2 text-xs leading-5 text-theme-warning">
           Existing legacy category: <strong>{legacyCategory?.trim()}</strong>.
           Select a managed category or choose No category to clear it.
         </p>
       )}
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-theme-subtle">
         <span>Optional. Categories are managed separately.</span>
         <Link
           href="/dashboard/categories"
-          className="font-bold text-cyan-200 transition hover:text-white"
+          className="font-bold text-theme-accent transition hover:text-theme-primary"
         >
           Manage Categories
         </Link>

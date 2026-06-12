@@ -285,30 +285,30 @@ export default function DepotsPage() {
   };
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar planName={currentPlanName} />
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-8">
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Locations
                 </p>
 
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
                   Depots
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
                   Manage the places where inventory items live.
                 </p>
               </div>
 
               <Link
                 href="/dashboard/inventory"
-                className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 Back to Inventory
               </Link>
@@ -319,8 +319,8 @@ export default function DepotsPage() {
             <div
               className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
                 pageError
-                  ? "border-red-500/30 bg-red-500/10 text-red-200"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                  ? "border-red-500/30 bg-red-500/10 text-theme-danger"
+                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
               }`}
             >
               {pageError || pageNotice}
@@ -331,9 +331,9 @@ export default function DepotsPage() {
             <form
               onSubmit={handleCreateDepot}
               aria-busy={saving}
-              className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7"
+              className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                 New depot
               </p>
 
@@ -358,7 +358,7 @@ export default function DepotsPage() {
                 <>
                   <div className="mt-6 grid grid-cols-1 gap-5">
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
                         Name
                       </label>
 
@@ -366,13 +366,13 @@ export default function DepotsPage() {
                         type="text"
                         value={name}
                         onChange={(event) => setName(event.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                         required
                       />
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
                         Code
                       </label>
 
@@ -380,29 +380,29 @@ export default function DepotsPage() {
                         type="text"
                         value={code}
                         onChange={(event) => setCode(event.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                       />
                     </div>
 
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-400">
+                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
                         Notes
                       </label>
 
                       <textarea
                         value={notes}
                         onChange={(event) => setNotes(event.target.value)}
-                        className="min-h-[120px] w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="min-h-[120px] w-full resize-y rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                       />
                     </div>
 
                     <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-5 py-4">
                       <span>
-                        <span className="block text-sm font-bold text-white">
+                        <span className="block text-sm font-bold text-theme-primary">
                           Active
                         </span>
 
-                        <span className="mt-1 block text-xs text-slate-400">
+                        <span className="mt-1 block text-xs text-theme-muted">
                           Active depots appear in item forms.
                         </span>
                       </span>
@@ -427,10 +427,10 @@ export default function DepotsPage() {
               )}
             </form>
 
-            <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7">
+            <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                     Saved locations
                   </p>
 
@@ -439,7 +439,7 @@ export default function DepotsPage() {
                   </h2>
                 </div>
 
-                <span className="self-start rounded-full border border-indigo-300/25 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-indigo-100 sm:self-auto">
+                <span className="self-start rounded-full border border-indigo-300/25 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
                   {depots.length} {depots.length === 1 ? "depot" : "depots"}
                 </span>
               </div>
@@ -449,7 +449,7 @@ export default function DepotsPage() {
                   {[1, 2, 3].map((item) => (
                     <div
                       key={item}
-                      className="h-32 overflow-hidden rounded-[26px] border border-white/10 bg-white/[0.04]"
+                      className="h-32 overflow-hidden rounded-[26px] border border-theme bg-theme-surface"
                     >
                       <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
                     </div>
@@ -460,7 +460,7 @@ export default function DepotsPage() {
                   {depots.map((depot) => (
                     <div
                       key={depot.id}
-                      className="rounded-[26px] border border-white/10 bg-black/25 p-4 sm:p-5"
+                      className="rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
                     >
                       {editingId === depot.id ? (
                         <form
@@ -469,7 +469,7 @@ export default function DepotsPage() {
                         >
                           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                             <div>
-                              <label className="mb-2 block text-sm font-semibold text-slate-400">
+                              <label className="mb-2 block text-sm font-semibold text-theme-muted">
                                 Name
                               </label>
 
@@ -479,13 +479,13 @@ export default function DepotsPage() {
                                 onChange={(event) =>
                                   setEditName(event.target.value)
                                 }
-                                className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08]"
+                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface"
                                 required
                               />
                             </div>
 
                             <div>
-                              <label className="mb-2 block text-sm font-semibold text-slate-400">
+                              <label className="mb-2 block text-sm font-semibold text-theme-muted">
                                 Code
                               </label>
 
@@ -495,13 +495,13 @@ export default function DepotsPage() {
                                 onChange={(event) =>
                                   setEditCode(event.target.value)
                                 }
-                                className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08]"
+                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface"
                               />
                             </div>
                           </div>
 
                           <div>
-                            <label className="mb-2 block text-sm font-semibold text-slate-400">
+                            <label className="mb-2 block text-sm font-semibold text-theme-muted">
                               Notes
                             </label>
 
@@ -510,12 +510,12 @@ export default function DepotsPage() {
                               onChange={(event) =>
                                 setEditNotes(event.target.value)
                               }
-                              className="min-h-[100px] w-full resize-y rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08]"
+                              className="min-h-[100px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface"
                             />
                           </div>
 
                           <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-4 py-3">
-                            <span className="text-sm font-bold text-white">
+                            <span className="text-sm font-bold text-theme-primary">
                               Active
                             </span>
 
@@ -534,7 +534,7 @@ export default function DepotsPage() {
                               type="button"
                               onClick={cancelEditing}
                               disabled={saving}
-                              className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                              className="flex-1 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
                             >
                               Cancel
                             </button>
@@ -552,26 +552,26 @@ export default function DepotsPage() {
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="break-words text-2xl font-bold text-white">
+                              <h3 className="break-words text-2xl font-bold text-theme-primary">
                                 {depot.name}
                               </h3>
 
                               <span
                                 className={`rounded-full border px-3 py-1 text-xs font-bold ${
                                   depot.is_active
-                                    ? "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
-                                    : "border-slate-400/20 bg-white/[0.05] text-slate-400"
+                                    ? "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
+                                    : "border-slate-400/20 bg-theme-surface text-theme-muted"
                                 }`}
                               >
                                 {depot.is_active ? "Active" : "Inactive"}
                               </span>
                             </div>
 
-                            <p className="mt-2 text-sm font-semibold text-indigo-200">
+                            <p className="mt-2 text-sm font-semibold text-theme-accent">
                               {depot.code || "No code"}
                             </p>
 
-                            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-slate-400">
+                            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-theme-muted">
                               {depot.notes || "No notes added."}
                             </p>
                           </div>
@@ -589,7 +589,7 @@ export default function DepotsPage() {
                               type="button"
                               onClick={() => setPendingDeleteDepot(depot)}
                               disabled={deletingId === depot.id}
-                              className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-3 text-sm font-bold text-red-200 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                              className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-3 text-sm font-bold text-theme-danger transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {deletingId === depot.id ? "Deleting..." : "Delete"}
                             </button>
@@ -600,16 +600,16 @@ export default function DepotsPage() {
                   ))}
                 </div>
               ) : (
-                <div className="mt-6 rounded-[26px] border border-dashed border-indigo-300/25 bg-black/25 px-5 py-12 text-center">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-indigo-100">
+                <div className="mt-6 rounded-[26px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-12 text-center">
+                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-theme-accent">
                     0
                   </div>
 
-                  <h3 className="mt-5 text-2xl font-bold text-white">
+                  <h3 className="mt-5 text-2xl font-bold text-theme-primary">
                     No depots yet
                   </h3>
 
-                  <p className="mx-auto mt-2 max-w-md text-base leading-7 text-slate-400">
+                  <p className="mx-auto mt-2 max-w-md text-base leading-7 text-theme-muted">
                     Add your first location to assign inventory items to a depot.
                   </p>
                 </div>
@@ -620,20 +620,20 @@ export default function DepotsPage() {
       </main>
 
       {pendingDeleteDepot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-depot-title"
-            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[#080b18]/95 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
+            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
           >
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
               Delete depot
             </p>
-            <h2 id="delete-depot-title" className="mt-3 break-words text-2xl font-bold text-white">
+            <h2 id="delete-depot-title" className="mt-3 break-words text-2xl font-bold text-theme-primary">
               Delete {formatDepotLabel(pendingDeleteDepot)}?
             </h2>
-            <p className="mt-3 leading-7 text-slate-400">
+            <p className="mt-3 leading-7 text-theme-muted">
               Items assigned to this depot will become Unassigned. Inventory items will not be deleted.
             </p>
             <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
@@ -641,7 +641,7 @@ export default function DepotsPage() {
                 type="button"
                 onClick={() => setPendingDeleteDepot(null)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -649,7 +649,7 @@ export default function DepotsPage() {
                 type="button"
                 onClick={() => void handleDeleteDepot(pendingDeleteDepot)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deletingId === pendingDeleteDepot.id ? "Deleting..." : "Delete Depot"}
               </button>

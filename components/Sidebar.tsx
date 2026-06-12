@@ -320,7 +320,7 @@ export default function Sidebar({
 
   return (
     <>
-      <aside className="glass-sidebar fixed inset-y-0 left-0 z-40 hidden w-[280px] overflow-y-auto overflow-x-hidden p-4 text-white lg:flex lg:flex-col">
+      <aside className="glass-sidebar fixed inset-y-0 left-0 z-40 hidden w-[280px] overflow-y-auto overflow-x-hidden p-4 text-theme-primary lg:flex lg:flex-col">
         <div
           aria-hidden="true"
           className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/50 to-transparent"
@@ -329,21 +329,21 @@ export default function Sidebar({
         <div className="relative flex min-h-full flex-col">
           <Link
             href="/dashboard"
-            className="group flex items-center gap-3 rounded-lg border border-sky-200/10 bg-white/[0.035] p-3 transition hover:border-sky-200/20 hover:bg-white/[0.055]"
+            className="group flex items-center gap-3 rounded-lg border border-sky-200/10 bg-theme-surface p-3 transition hover:border-sky-200/20 hover:bg-theme-hover"
           >
             <BrandMark />
 
             <div className="min-w-0">
               <Wordmark />
 
-              <p className="truncate text-xs font-medium text-slate-400">
+              <p className="truncate text-xs font-medium text-theme-muted">
                 Inventory operations
               </p>
             </div>
           </Link>
 
           <div className="mb-2 mt-7 px-3">
-            <p className="text-xs font-bold uppercase text-slate-500">
+            <p className="text-xs font-bold uppercase text-theme-subtle">
               Workspace
             </p>
           </div>
@@ -362,15 +362,15 @@ export default function Sidebar({
                   aria-current={active ? "page" : undefined}
                   className={`group relative flex min-h-12 items-center gap-3 overflow-hidden rounded-lg border px-3 py-2.5 text-sm font-semibold transition ${
                     active
-                      ? "border-sky-300/25 bg-gradient-to-r from-sky-400/20 to-blue-500/15 text-white shadow-[0_10px_30px_rgba(14,116,229,0.12)]"
-                      : "border-transparent text-slate-400 hover:border-sky-200/10 hover:bg-white/[0.05] hover:text-white"
+                      ? "border-sky-300/25 bg-gradient-to-r from-sky-400/20 to-blue-500/15 text-theme-primary shadow-[0_10px_30px_rgba(14,116,229,0.12)]"
+                      : "border-transparent text-theme-muted hover:border-sky-200/10 hover:bg-theme-hover hover:text-theme-primary"
                   }`}
                 >
                   <span
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
                       active
-                        ? "bg-sky-300/15 text-cyan-100"
-                        : "bg-white/[0.035] text-slate-500 group-hover:bg-white/[0.07] group-hover:text-slate-200"
+                        ? "bg-sky-300/15 text-theme-accent"
+                        : "bg-theme-surface text-theme-subtle group-hover:bg-theme-hover group-hover:text-slate-200"
                     }`}
                   >
                     <ShellIcon name={link.icon} className="h-[18px] w-[18px]" />
@@ -387,7 +387,7 @@ export default function Sidebar({
           </nav>
 
           <div className="mb-2 mt-6 px-3">
-            <p className="text-xs font-bold uppercase text-slate-500">
+            <p className="text-xs font-bold uppercase text-theme-subtle">
               Resources
             </p>
           </div>
@@ -404,16 +404,16 @@ export default function Sidebar({
               className={`group relative flex min-h-12 items-center gap-3 overflow-hidden rounded-lg border px-3 py-2.5 text-sm font-semibold transition ${
                 pathname === helpLink.href ||
                 pathname.startsWith(`${helpLink.href}/`)
-                  ? "border-sky-300/25 bg-gradient-to-r from-sky-400/20 to-blue-500/15 text-white shadow-[0_10px_30px_rgba(14,116,229,0.12)]"
-                  : "border-transparent text-slate-400 hover:border-sky-200/10 hover:bg-white/[0.05] hover:text-white"
+                  ? "border-sky-300/25 bg-gradient-to-r from-sky-400/20 to-blue-500/15 text-theme-primary shadow-[0_10px_30px_rgba(14,116,229,0.12)]"
+                  : "border-transparent text-theme-muted hover:border-sky-200/10 hover:bg-theme-hover hover:text-theme-primary"
               }`}
             >
               <span
                 className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition ${
                   pathname === helpLink.href ||
                   pathname.startsWith(`${helpLink.href}/`)
-                    ? "bg-sky-300/15 text-cyan-100"
-                    : "bg-white/[0.035] text-slate-500 group-hover:bg-white/[0.07] group-hover:text-slate-200"
+                    ? "bg-sky-300/15 text-theme-accent"
+                    : "bg-theme-surface text-theme-subtle group-hover:bg-theme-hover group-hover:text-slate-200"
                 }`}
               >
                 <ShellIcon name="help" className="h-[18px] w-[18px]" />
@@ -435,11 +435,11 @@ export default function Sidebar({
           <div className="glass-card mt-auto rounded-2xl border-sky-200/15 bg-[#071a3a]/68 p-3.5">
             <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-xs font-bold uppercase text-sky-300">
+                <p className="text-xs font-bold uppercase text-theme-accent">
                   Workspace
                 </p>
 
-                <p className="mt-1 text-xs text-slate-500">
+                <p className="mt-1 text-xs text-theme-subtle">
                   Private account
                 </p>
               </div>
@@ -448,7 +448,7 @@ export default function Sidebar({
             </div>
 
             <div className="mt-4 flex items-center gap-3 border-t border-sky-200/10 pt-4">
-              <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-sky-200/20 bg-gradient-to-br from-sky-400/20 to-blue-600/20 text-sm font-black text-sky-100">
+              <div className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-sky-200/20 bg-gradient-to-br from-sky-400/20 to-blue-600/20 text-sm font-black text-theme-accent">
                 {displayBusinessLogoUrl ? (
                   <Image
                     src={displayBusinessLogoUrl}
@@ -463,11 +463,11 @@ export default function Sidebar({
               </div>
 
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-white">
+                <p className="truncate text-sm font-bold text-theme-primary">
                   {displayBusinessName}
                 </p>
 
-                <p className="mt-1 inline-flex rounded-full border border-sky-200/15 bg-sky-400/10 px-2 py-0.5 text-xs font-semibold text-sky-200">
+                <p className="mt-1 inline-flex rounded-full border border-sky-200/15 bg-sky-400/10 px-2 py-0.5 text-xs font-semibold text-theme-accent">
                   {displayPlanName
                     ? `${displayPlanName} plan`
                     : "Premium workspace"}
@@ -478,27 +478,27 @@ export default function Sidebar({
             {upgradePlan && (
               <Link
                 href={`/request-plan?plan=${upgradePlan}&source=sidebar`}
-                className="mt-3 inline-flex min-h-9 w-full items-center justify-center rounded-xl border border-cyan-200/20 bg-sky-400/10 px-3 py-2 text-xs font-bold text-cyan-100 transition hover:border-cyan-200/35 hover:bg-sky-400/15"
+                className="mt-3 inline-flex min-h-9 w-full items-center justify-center rounded-xl border border-cyan-200/20 bg-sky-400/10 px-3 py-2 text-xs font-bold text-theme-accent transition hover:border-cyan-200/35 hover:bg-sky-400/15"
               >
                 Upgrade to {upgradePlan}
               </Link>
             )}
 
             {displayItemUsage && (
-              <div className="mt-4 rounded-lg border border-sky-200/10 bg-[#020b20]/45 p-3">
+              <div className="mt-4 rounded-lg border border-sky-200/10 bg-theme-inset p-3">
                 <div className="flex items-center justify-between gap-3">
-                  <p className="text-xs font-semibold text-slate-400">
+                  <p className="text-xs font-semibold text-theme-muted">
                     Item usage
                   </p>
 
-                  <p className="text-xs font-bold text-white">
+                  <p className="text-xs font-bold text-theme-primary">
                     {displayItemUsage}
                   </p>
                 </div>
 
                 {usageMatch && (
                   <div
-                    className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-white/[0.07]"
+                    className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-theme-surface"
                     role="progressbar"
                     aria-label="Inventory item usage"
                     aria-valuemin={0}
@@ -517,13 +517,13 @@ export default function Sidebar({
         </div>
       </aside>
 
-      <header className="glass-nav sticky top-0 z-40 px-3 py-3 text-white sm:px-4 lg:hidden">
+      <header className="glass-nav sticky top-0 z-40 px-3 py-3 text-theme-primary sm:px-4 lg:hidden">
         <div className="flex items-center justify-between gap-3">
           <Link
             href="/dashboard"
             className="flex min-w-0 items-center gap-2.5"
           >
-            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-sky-200/20 bg-gradient-to-br from-sky-400/20 to-blue-600/20 text-xs font-black text-sky-100">
+            <div className="relative flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-sky-200/20 bg-gradient-to-br from-sky-400/20 to-blue-600/20 text-xs font-black text-theme-accent">
               {displayBusinessLogoUrl ? (
                 <Image
                   src={displayBusinessLogoUrl}
@@ -540,7 +540,7 @@ export default function Sidebar({
             <div className="min-w-0">
               <Wordmark size="sm" />
 
-              <p className="hidden max-w-48 truncate text-xs text-slate-400 sm:block">
+              <p className="hidden max-w-48 truncate text-xs text-theme-muted sm:block">
                 {displayBusinessName}
               </p>
             </div>
@@ -561,8 +561,8 @@ export default function Sidebar({
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition ${
                 pathname === helpLink.href ||
                 pathname.startsWith(`${helpLink.href}/`)
-                  ? "border-cyan-300/30 bg-cyan-400/15 text-cyan-100"
-                  : "border-white/10 bg-white/[0.05] text-slate-400 hover:text-white"
+                  ? "border-cyan-300/30 bg-cyan-400/15 text-theme-accent"
+                  : "border-theme bg-theme-surface text-theme-muted hover:text-theme-primary"
               }`}
             >
               <ShellIcon name="help" className="h-5 w-5" />
@@ -585,14 +585,14 @@ export default function Sidebar({
                 aria-current={active ? "page" : undefined}
                 className={`flex min-h-14 min-w-[76px] flex-1 flex-col items-center justify-center gap-1 rounded-lg border px-1 py-2 text-center text-xs font-semibold leading-tight transition sm:min-w-[88px] ${
                   active
-                    ? "border-sky-300/25 bg-sky-400/15 text-white"
-                    : "border-transparent bg-white/[0.035] text-slate-400"
+                    ? "border-sky-300/25 bg-sky-400/15 text-theme-primary"
+                    : "border-transparent bg-theme-surface text-theme-muted"
                 }`}
               >
                 <ShellIcon
                   name={link.icon}
                   className={`h-5 w-5 ${
-                    active ? "text-cyan-200" : "text-slate-500"
+                    active ? "text-theme-accent" : "text-theme-subtle"
                   }`}
                 />
                 <span className="max-w-full truncate">{link.mobileName}</span>

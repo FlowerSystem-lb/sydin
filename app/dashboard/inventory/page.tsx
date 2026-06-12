@@ -1331,7 +1331,7 @@ export default function InventoryPage() {
     usageLoading || (canExportExcel && (exportDisabled || isExportingExcel));
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         onAddItem={() => {
           setAddError("");
@@ -1347,18 +1347,18 @@ export default function InventoryPage() {
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8">
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Products
                 </p>
 
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
                   Inventory
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
                   Manage products, stock, categories, and item details.
                 </p>
               </div>
@@ -1368,7 +1368,7 @@ export default function InventoryPage() {
                   href="/dashboard/inventory/import"
                   className={`action-button px-5 py-3.5 text-center text-sm ${
                     !usageLoading && !planCapabilities.csvExcelImport
-                      ? "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                      ? "border-sky-300/15 bg-theme-surface text-theme-muted"
                       : ""
                   }`}
                 >
@@ -1398,7 +1398,7 @@ export default function InventoryPage() {
                   disabled={pdfExportDisabled}
                   className={`action-button px-5 py-3.5 text-center text-sm ${
                     !usageLoading && !canExportPdf
-                      ? "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                      ? "border-sky-300/15 bg-theme-surface text-theme-muted"
                       : ""
                   }`}
                 >
@@ -1418,7 +1418,7 @@ export default function InventoryPage() {
                   disabled={excelExportDisabled}
                   className={`action-button px-5 py-3.5 text-center text-sm ${
                     !usageLoading && !canExportExcel
-                      ? "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                      ? "border-sky-300/15 bg-theme-surface text-theme-muted"
                       : ""
                   }`}
                 >
@@ -1447,8 +1447,8 @@ export default function InventoryPage() {
             <div
               className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
                 pageError
-                  ? "border-red-500/30 bg-red-500/10 text-red-200"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                  ? "border-red-500/30 bg-red-500/10 text-theme-danger"
+                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
               }`}
             >
               {pageError || pageNotice}
@@ -1456,17 +1456,17 @@ export default function InventoryPage() {
           )}
 
           {/* Search and Filters */}
-          <section className="rounded-[28px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_22px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5">
+          <section className="rounded-[28px] border border-theme bg-theme-surface p-4 shadow-[0_22px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5">
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div className="flex-1">
-                  <label className="mb-3 block text-sm font-semibold text-slate-400">
+                  <label className="mb-3 block text-sm font-semibold text-theme-muted">
                     Search inventory
                   </label>
 
                   <div className="relative">
                     <svg
-                      className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
+                      className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-theme-subtle"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1488,7 +1488,7 @@ export default function InventoryPage() {
                           e.target.value
                         )
                       }
-                      className="w-full rounded-2xl border border-white/10 bg-black/35 py-4 pl-14 pr-5 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                      className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] py-4 pl-14 pr-5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     />
                   </div>
                 </div>
@@ -1501,7 +1501,7 @@ export default function InventoryPage() {
                     className={`action-button px-4 py-3 text-sm ${
                       canUseScanner
                         ? "action-button-primary"
-                        : "border-sky-300/15 bg-white/[0.035] text-slate-400"
+                        : "border-sky-300/15 bg-theme-surface text-theme-muted"
                     }`}
                   >
                     {!usageLoading && !canUseScanner ? (
@@ -1514,7 +1514,7 @@ export default function InventoryPage() {
                     )}
                   </button>
 
-                  <p className="rounded-2xl border border-white/10 bg-black/25 px-4 py-3 text-sm font-bold text-slate-300">
+                  <p className="rounded-2xl border border-theme bg-theme-inset px-4 py-3 text-sm font-bold text-theme-secondary">
                     Showing {visibleItems.length} of {items.length} items
                   </p>
 
@@ -1522,7 +1522,7 @@ export default function InventoryPage() {
                     <button
                       type="button"
                       onClick={resetInventoryControls}
-                      className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                      className="rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
                     >
                       Clear Filters
                     </button>
@@ -1532,14 +1532,14 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
                     Depot
                   </label>
 
                   <select
                     value={depotFilter}
                     onChange={(e) => setDepotFilter(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                   >
                     <option value="all">All depots</option>
                     <option value="unassigned">Unassigned</option>
@@ -1555,7 +1555,7 @@ export default function InventoryPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
                     Category
                   </label>
 
@@ -1564,7 +1564,7 @@ export default function InventoryPage() {
                     onChange={(event) =>
                       setCategoryFilter(event.target.value)
                     }
-                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                   >
                     <option value="all">All categories</option>
                     <option value="uncategorized">Uncategorized</option>
@@ -1577,14 +1577,14 @@ export default function InventoryPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
                     Stock
                   </label>
 
                   <select
                     value={stockFilter}
                     onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                   >
                     <option value="all">All stock</option>
                     <option value="low">Low stock only</option>
@@ -1592,14 +1592,14 @@ export default function InventoryPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
                     Sort
                   </label>
 
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-sm font-semibold text-white outline-none transition focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                   >
                     <option value="newest">Newest</option>
                     <option value="name-az">Name A-Z</option>
@@ -1617,7 +1617,7 @@ export default function InventoryPage() {
               {[1, 2, 3, 4].map((item) => (
                 <div
                   key={item}
-                  className="h-[460px] overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_24px_80px_rgba(0,0,0,0.24)]"
+                  className="h-[460px] overflow-hidden rounded-[30px] border border-theme bg-theme-surface shadow-[0_24px_80px_rgba(0,0,0,0.24)]"
                 >
                   <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
                 </div>
@@ -1646,10 +1646,10 @@ export default function InventoryPage() {
                     );
                   }
                 }}
-                className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.055] shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-indigo-300/35 hover:bg-white/[0.075] focus:outline-none focus:ring-4 focus:ring-indigo-400/20"
+                className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[30px] border border-theme bg-theme-surface shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-indigo-300/35 hover:bg-white/[0.075] focus:outline-none focus:ring-4 focus:ring-indigo-400/20"
               >
                 {item.image ? (
-                  <div className="flex h-[220px] w-full items-center justify-center overflow-hidden border-b border-white/10 bg-[#f4f0e8] p-4 md:h-[240px] xl:h-[250px]">
+                  <div className="flex h-[220px] w-full items-center justify-center overflow-hidden border-b border-theme bg-[#f4f0e8] p-4 md:h-[240px] xl:h-[250px]">
                     <div className="relative h-full w-full">
                       <Image
                         src={item.image}
@@ -1662,7 +1662,7 @@ export default function InventoryPage() {
                     </div>
                   </div>
                 ) : (
-                  <div className="flex h-[220px] w-full items-center justify-center border-b border-white/10 bg-[#f4f0e8] p-5 text-slate-500 md:h-[240px] xl:h-[250px]">
+                  <div className="flex h-[220px] w-full items-center justify-center border-b border-theme bg-[#f4f0e8] p-5 text-theme-subtle md:h-[240px] xl:h-[250px]">
                     <div className="flex h-full w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center">
                       <span className="text-sm font-black uppercase tracking-[0.16em]">
                         Image
@@ -1679,47 +1679,47 @@ export default function InventoryPage() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
                       {item.item_code && (
-                        <p className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-indigo-200">
+                        <p className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
                           {item.item_code}
                         </p>
                       )}
 
-                      <h2 className="break-words text-2xl font-bold tracking-tight text-white">
+                      <h2 className="break-words text-2xl font-bold tracking-tight text-theme-primary">
                         {item.name}
                       </h2>
 
                       <div className="mt-3 flex flex-wrap gap-2">
                         {item.sku && (
-                          <span className="max-w-full break-all rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
+                          <span className="max-w-full break-all rounded-full border border-theme bg-theme-surface px-3 py-1 text-xs font-semibold text-theme-secondary">
                             SKU {item.sku}
                           </span>
                         )}
 
                         {item.barcode && (
-                          <span className="max-w-full break-all rounded-full border border-cyan-300/15 bg-cyan-500/[0.08] px-3 py-1 font-mono text-xs font-semibold text-cyan-100">
+                          <span className="max-w-full break-all rounded-full border border-cyan-300/15 bg-cyan-500/[0.08] px-3 py-1 font-mono text-xs font-semibold text-theme-accent">
                             {item.barcode}
                           </span>
                         )}
 
-                        <span className="rounded-full border border-white/10 bg-white/[0.06] px-3 py-1 text-xs font-semibold text-slate-300">
+                        <span className="rounded-full border border-theme bg-theme-surface px-3 py-1 text-xs font-semibold text-theme-secondary">
                           {getCategoryLabel(item)}
                         </span>
 
                         {getDepotForItem(item) && (
-                          <span className="rounded-full border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-indigo-100">
+                          <span className="rounded-full border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-theme-accent">
                             Depot {formatDepotLabel(getDepotForItem(item))}
                           </span>
                         )}
 
                         {getSupplierForItem(item) && (
-                          <span className="rounded-full border border-sky-300/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-sky-100">
+                          <span className="rounded-full border border-sky-300/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-theme-accent">
                             Supplier {getSupplierForItem(item)?.name}
                           </span>
                         )}
                       </div>
                     </div>
 
-                    <span className="max-w-[42%] shrink-0 break-words rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-3 py-2 text-right text-base font-black text-indigo-100">
+                    <span className="max-w-[42%] shrink-0 break-words rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-3 py-2 text-right text-base font-black text-theme-accent">
                       {getInventoryQuantityLabel(
                         item.quantity,
                         item.unit_type,
@@ -1737,7 +1737,7 @@ export default function InventoryPage() {
 
                     {item.min_stock_level !== null &&
                       item.min_stock_level !== undefined && (
-                        <span className="rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-2 text-xs font-bold text-amber-100">
+                        <span className="rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-2 text-xs font-bold text-theme-warning">
                           Min: {item.min_stock_level}
                         </span>
                       )}
@@ -1751,13 +1751,13 @@ export default function InventoryPage() {
                       {item.cost_price !== null &&
                         item.cost_price !== undefined && (
                           <div className="rounded-2xl border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-cyan-200">
+                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
                               Cost
                             </p>
-                            <p className="mt-1 text-sm font-black text-white">
+                            <p className="mt-1 text-sm font-black text-theme-primary">
                               {getItemPrice(item.cost_price)}
                             </p>
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs text-theme-subtle">
                               Stock {getItemValue(item, item.cost_price)}
                             </p>
                           </div>
@@ -1769,10 +1769,10 @@ export default function InventoryPage() {
                             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-200">
                               Selling
                             </p>
-                            <p className="mt-1 text-sm font-black text-white">
+                            <p className="mt-1 text-sm font-black text-theme-primary">
                               {getItemPrice(item.selling_price)}
                             </p>
-                            <p className="mt-1 text-xs text-slate-500">
+                            <p className="mt-1 text-xs text-theme-subtle">
                               Stock {getItemValue(item, item.selling_price)}
                             </p>
                           </div>
@@ -1800,7 +1800,7 @@ export default function InventoryPage() {
                         setPendingDeleteItem(item);
                       }}
                       disabled={deletingId === item.id}
-                      className="min-h-[52px] flex-1 rounded-2xl border border-red-400/25 bg-red-500/15 py-3 text-base font-bold text-red-200 transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
+                      className="min-h-[52px] flex-1 rounded-2xl border border-red-400/25 bg-red-500/15 py-3 text-base font-bold text-theme-danger transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       {deletingId === item.id ? "Deleting..." : "Delete"}
                     </button>
@@ -1814,19 +1814,19 @@ export default function InventoryPage() {
           {/* Empty State */}
           {!loadingItems && visibleItems.length ===
             0 && (
-            <div className="mt-2 flex flex-col items-center justify-center rounded-[32px] border border-dashed border-indigo-300/25 bg-white/[0.045] px-4 py-20 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-300/20 bg-indigo-500/15 text-indigo-200">
+            <div className="mt-2 flex flex-col items-center justify-center rounded-[32px] border border-dashed border-indigo-300/25 bg-theme-surface px-4 py-20 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
                 <UiIcon
                   name={items.length === 0 ? "box" : "search"}
                   className="h-9 w-9"
                 />
               </div>
 
-              <h2 className="mb-3 text-2xl font-bold text-white md:text-3xl">
+              <h2 className="mb-3 text-2xl font-bold text-theme-primary md:text-3xl">
                 {items.length === 0 ? "No inventory items yet" : "No items found"}
               </h2>
 
-              <p className="max-w-md text-lg text-slate-400">
+              <p className="max-w-md text-lg text-theme-muted">
                 {items.length === 0
                   ? "Add your first product to start tracking stock, categories, and item details."
                   : "No products match the current search or filters."}
@@ -1854,19 +1854,19 @@ export default function InventoryPage() {
       </main>
 
       {isScannerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/85 p-4 backdrop-blur-xl">
-          <div className="my-8 w-full max-w-2xl overflow-hidden rounded-[32px] border border-white/10 bg-[#080b18]/95 shadow-[0_30px_120px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5 sm:p-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+          <div className="my-8 w-full max-w-2xl overflow-hidden rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-theme p-5 sm:p-6">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Inventory scanner
                 </p>
 
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white">
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary">
                   Scan Item
                 </h2>
 
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
+                <p className="mt-2 max-w-md text-sm leading-6 text-theme-muted">
                   Scan a SydIn QR code or product barcode.
                 </p>
               </div>
@@ -1874,7 +1874,7 @@ export default function InventoryPage() {
               <button
                 type="button"
                 onClick={closeScanner}
-                className="shrink-0 rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white"
+                className="shrink-0 rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
                 aria-label="Close scanner"
               >
                 <svg
@@ -1903,13 +1903,13 @@ export default function InventoryPage() {
                 />
               </div>
 
-              <div className="mt-4 rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3">
+              <div className="mt-4 rounded-2xl border border-theme bg-theme-surface px-4 py-3">
                 {scannerError ? (
-                  <p className="text-sm font-semibold text-red-200">
+                  <p className="text-sm font-semibold text-theme-danger">
                     {scannerError}
                   </p>
                 ) : (
-                  <p className="text-sm font-semibold text-slate-300">
+                  <p className="text-sm font-semibold text-theme-secondary">
                     {isScannerStarting
                       ? "Starting camera..."
                       : scannerStatus || "Point the camera at a code."}
@@ -1921,7 +1921,7 @@ export default function InventoryPage() {
                 <button
                   type="button"
                   onClick={closeScanner}
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3 text-base font-bold text-white transition hover:bg-white/[0.1]"
+                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-base font-bold text-theme-primary transition hover:bg-theme-hover"
                 >
                   Close
                 </button>
@@ -1964,11 +1964,11 @@ export default function InventoryPage() {
 
       {/* Add Item Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/80 p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#080b18]/90 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
             <div className="flex items-center justify-between mb-8">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   New product
                 </p>
 
@@ -1984,7 +1984,7 @@ export default function InventoryPage() {
                   setImageError("");
                 }}
                 disabled={isAdding}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-50"
+                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
               >
                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -1994,19 +1994,19 @@ export default function InventoryPage() {
 
             <form onSubmit={handleAddItem} className="flex flex-col gap-5 sm:gap-6">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">Product Image</label>
-                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/30 p-4 transition hover:border-indigo-300/45 hover:bg-black/40">
+                <label className="mb-2 block text-sm font-semibold text-theme-muted">Product Image</label>
+                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-theme-inset p-4 transition hover:border-indigo-300/45 hover:bg-theme-inset">
                   <div className="grid grid-cols-1 gap-4 md:grid-cols-[190px_1fr] md:items-center">
-                    <label className="group flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-3xl border border-white/10 bg-white/[0.05] px-5 py-6 text-center transition hover:border-indigo-300/45 hover:bg-white/[0.08]">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-2xl font-black text-indigo-100 transition group-hover:bg-indigo-500/30">
+                    <label className="group flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface px-5 py-6 text-center transition hover:border-indigo-300/45 hover:bg-theme-hover">
+                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-2xl font-black text-theme-accent transition group-hover:bg-indigo-500/30">
                         +
                       </span>
 
-                      <span className="mt-4 text-base font-black text-white">
+                      <span className="mt-4 text-base font-black text-theme-primary">
                         Take or upload photo
                       </span>
 
-                      <span className="mt-2 max-w-[210px] text-sm leading-5 text-slate-400">
+                      <span className="mt-2 max-w-[210px] text-sm leading-5 text-theme-muted">
                         JPG, PNG, or WebP up to 5MB.
                       </span>
 
@@ -2021,7 +2021,7 @@ export default function InventoryPage() {
                       />
                     </label>
 
-                    <div className="min-h-[170px] rounded-3xl border border-white/10 bg-black/25 p-4">
+                    <div className="min-h-[170px] rounded-3xl border border-theme bg-theme-inset p-4">
                       {image && imagePreviewUrl ? (
                         <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-[140px_1fr] sm:items-center">
                           <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f0e8]">
@@ -2036,15 +2036,15 @@ export default function InventoryPage() {
                           </div>
 
                           <div>
-                            <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                            <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                               Selected image
                             </p>
 
-                            <p className="mt-2 break-words text-base font-semibold text-white">
+                            <p className="mt-2 break-words text-base font-semibold text-theme-primary">
                               {image.name}
                             </p>
 
-                            <p className="mt-1 text-sm text-slate-400">
+                            <p className="mt-1 text-sm text-theme-muted">
                               {formatFileSize(image.size)}
                             </p>
 
@@ -2052,19 +2052,19 @@ export default function InventoryPage() {
                               type="button"
                               onClick={clearAddImage}
                               disabled={isAdding}
-                              className="mt-4 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-60"
+                              className="mt-4 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
                             >
                               Remove image
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex h-full min-h-[138px] flex-col justify-center rounded-2xl border border-white/5 bg-white/[0.03] px-4 py-5">
-                          <p className="text-base font-semibold text-white">
+                        <div className="flex h-full min-h-[138px] flex-col justify-center rounded-2xl border border-white/5 bg-theme-surface px-4 py-5">
+                          <p className="text-base font-semibold text-theme-primary">
                             No image selected
                           </p>
 
-                          <p className="mt-2 text-sm leading-6 text-slate-500">
+                          <p className="mt-2 text-sm leading-6 text-theme-subtle">
                             Add a product photo before saving if you want visual inventory records.
                           </p>
                         </div>
@@ -2073,7 +2073,7 @@ export default function InventoryPage() {
                   </div>
 
                   {imageError && (
-                    <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                    <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
                       {imageError}
                     </p>
                   )}
@@ -2082,26 +2082,26 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Product Name</label>
+                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Product Name</label>
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     required
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">SKU</label>
+                  <label className="mb-2 block text-sm font-semibold text-theme-muted">SKU</label>
                   <input
                     type="text"
                     value={sku}
                     onChange={(e) => setSku(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Quantity</label>
+                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Quantity</label>
                   <input
                     type="number"
                     min="0"
@@ -2117,12 +2117,12 @@ export default function InventoryPage() {
                         e.target.value.startsWith("-") ? "" : e.target.value
                       )
                     }
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                     required
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Category</label>
+                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Category</label>
                   <CategorySelector
                     categories={categories}
                     value={selectedCategoryId}
@@ -2132,11 +2132,11 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">Depot</label>
+                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Depot</label>
                   <select
                     value={selectedDepotId}
                     onChange={(e) => setSelectedDepotId(e.target.value)}
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                   >
                     <option value="">Unassigned</option>
                     {activeDepots.map((depot) => (
@@ -2151,7 +2151,7 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-slate-400">
+                  <label className="mb-2 block text-sm font-semibold text-theme-muted">
                     Supplier
                   </label>
                   <select
@@ -2159,7 +2159,7 @@ export default function InventoryPage() {
                     onChange={(event) =>
                       setSelectedSupplierId(event.target.value)
                     }
-                    className="w-full rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                   >
                     <option value="">No supplier</option>
                     {suppliers.map((supplier) => (
@@ -2172,17 +2172,17 @@ export default function InventoryPage() {
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">Notes</label>
+                <label className="mb-2 block text-sm font-semibold text-theme-muted">Notes</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="min-h-[110px] w-full resize-y rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                  className="min-h-[110px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                 />
               </div>
 
               <div className="mt-2 flex flex-col gap-3 sm:flex-row">
                 {addError && (
-                  <div className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
+                  <div className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
                     <p>{addError}</p>
 
                     {isLimitError && (
@@ -2207,7 +2207,7 @@ export default function InventoryPage() {
                     setImageError("");
                   }}
                   disabled={isAdding}
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                  className="flex-1 rounded-2xl border border-theme bg-theme-surface py-4 text-base font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -2225,20 +2225,20 @@ export default function InventoryPage() {
       )}
 
       {pendingDeleteItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-item-title"
-            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[#080b18]/95 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
+            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
           >
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
               Delete inventory item
             </p>
-            <h2 id="delete-item-title" className="mt-3 break-words text-2xl font-bold text-white">
+            <h2 id="delete-item-title" className="mt-3 break-words text-2xl font-bold text-theme-primary">
               Delete {pendingDeleteItem.name}?
             </h2>
-            <p className="mt-3 leading-7 text-slate-400">
+            <p className="mt-3 leading-7 text-theme-muted">
               This removes the item from inventory. This action cannot be undone.
             </p>
             <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
@@ -2246,7 +2246,7 @@ export default function InventoryPage() {
                 type="button"
                 onClick={() => setPendingDeleteItem(null)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -2254,7 +2254,7 @@ export default function InventoryPage() {
                 type="button"
                 onClick={() => void deleteItem(pendingDeleteItem.id)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {deletingId === pendingDeleteItem.id ? "Deleting..." : "Delete Item"}
               </button>
@@ -2265,17 +2265,17 @@ export default function InventoryPage() {
 
       {/* Edit Item Modal */}
       {isEditModalOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/80 p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#080b18]/95 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Product details
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Edit Item</h2>
 
-                <p className="mt-2 text-slate-400">
+                <p className="mt-2 text-theme-muted">
                   Update stock, pricing, tracking codes, and product details.
                 </p>
               </div>
@@ -2284,7 +2284,7 @@ export default function InventoryPage() {
                 type="button"
                 onClick={() => closeEditModal()}
                 disabled={isEditing}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-50"
+                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
               >
                 <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />

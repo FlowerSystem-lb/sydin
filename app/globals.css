@@ -10,11 +10,22 @@
   --sydin-surface: rgba(9, 27, 61, 0.68);
   --sydin-surface-soft: rgba(15, 38, 79, 0.48);
   --sydin-surface-strong: rgba(8, 24, 54, 0.9);
+  --sydin-ui-surface: rgba(255, 255, 255, 0.055);
+  --sydin-surface-inset: rgba(0, 5, 20, 0.28);
+  --sydin-surface-hover: rgba(255, 255, 255, 0.09);
+  --sydin-surface-selected: rgba(56, 189, 248, 0.14);
+  --sydin-overlay: rgba(2, 3, 10, 0.86);
+  --sydin-ui-border: rgba(255, 255, 255, 0.1);
+  --sydin-ui-border-strong: rgba(255, 255, 255, 0.2);
   --sydin-border: rgba(147, 197, 253, 0.18);
   --sydin-border-strong: rgba(125, 211, 252, 0.34);
   --sydin-text: #f7fbff;
-  --sydin-text-muted: #a9bad3;
-  --sydin-text-subtle: #7185a3;
+  --sydin-text-secondary: #cbd5e1;
+  --sydin-text-muted: #94a3b8;
+  --sydin-text-subtle: #64748b;
+  --sydin-input-bg: rgba(2, 12, 34, 0.58);
+  --sydin-input-focus: rgba(3, 19, 48, 0.78);
+  --sydin-disabled: rgba(100, 116, 139, 0.46);
   --sydin-blue: #38bdf8;
   --sydin-blue-strong: #2563eb;
   --sydin-blue-deep: #1d4ed8;
@@ -22,6 +33,15 @@
   --sydin-focus: rgba(56, 189, 248, 0.3);
   --sydin-shadow: 0 24px 70px rgba(0, 5, 20, 0.36);
   --sydin-shadow-soft: 0 12px 36px rgba(0, 5, 20, 0.24);
+  --sydin-success-surface: rgba(16, 185, 129, 0.12);
+  --sydin-success-text: #a7f3d0;
+  --sydin-warning-surface: rgba(245, 158, 11, 0.13);
+  --sydin-warning-text: #fde68a;
+  --sydin-danger-surface: rgba(225, 29, 72, 0.15);
+  --sydin-danger-text: #fecdd3;
+  --sydin-info-surface: rgba(56, 189, 248, 0.12);
+  --sydin-info-text: #bae6fd;
+  --sydin-accent-text: #bae6fd;
   --sydin-radius-panel: 24px;
   --sydin-radius-control: 14px;
 }
@@ -36,11 +56,22 @@
   --sydin-surface: rgba(255, 255, 255, 0.76);
   --sydin-surface-soft: rgba(255, 255, 255, 0.6);
   --sydin-surface-strong: rgba(255, 255, 255, 0.92);
+  --sydin-ui-surface: rgba(255, 255, 255, 0.68);
+  --sydin-surface-inset: rgba(203, 213, 225, 0.3);
+  --sydin-surface-hover: rgba(255, 255, 255, 0.9);
+  --sydin-surface-selected: rgba(14, 165, 233, 0.12);
+  --sydin-overlay: rgba(15, 23, 42, 0.48);
+  --sydin-ui-border: rgba(29, 78, 216, 0.14);
+  --sydin-ui-border-strong: rgba(2, 132, 199, 0.28);
   --sydin-border: rgba(29, 78, 216, 0.14);
   --sydin-border-strong: rgba(2, 132, 199, 0.28);
   --sydin-text: #07152e;
-  --sydin-text-muted: #40536e;
+  --sydin-text-secondary: #334155;
+  --sydin-text-muted: #52647c;
   --sydin-text-subtle: #64748b;
+  --sydin-input-bg: rgba(255, 255, 255, 0.76);
+  --sydin-input-focus: rgba(255, 255, 255, 0.96);
+  --sydin-disabled: rgba(100, 116, 139, 0.34);
   --sydin-blue: #0284c7;
   --sydin-blue-strong: #2563eb;
   --sydin-blue-deep: #1d4ed8;
@@ -48,6 +79,15 @@
   --sydin-focus: rgba(2, 132, 199, 0.2);
   --sydin-shadow: 0 22px 60px rgba(30, 64, 175, 0.14);
   --sydin-shadow-soft: 0 10px 30px rgba(30, 64, 175, 0.1);
+  --sydin-success-surface: rgba(5, 150, 105, 0.1);
+  --sydin-success-text: #047857;
+  --sydin-warning-surface: rgba(217, 119, 6, 0.1);
+  --sydin-warning-text: #92400e;
+  --sydin-danger-surface: rgba(225, 29, 72, 0.09);
+  --sydin-danger-text: #be123c;
+  --sydin-info-surface: rgba(2, 132, 199, 0.09);
+  --sydin-info-text: #0369a1;
+  --sydin-accent-text: #0369a1;
 }
 
 @theme inline {
@@ -58,6 +98,23 @@
   --color-sydin-surface: var(--sydin-surface);
   --color-sydin-border: var(--sydin-border);
   --color-sydin-muted: var(--sydin-text-muted);
+  --color-theme-primary: var(--sydin-text);
+  --color-theme-secondary: var(--sydin-text-secondary);
+  --color-theme-muted: var(--sydin-text-muted);
+  --color-theme-subtle: var(--sydin-text-subtle);
+  --color-theme: var(--sydin-ui-border);
+  --color-theme-strong: var(--sydin-ui-border-strong);
+  --color-theme-border: var(--sydin-border);
+  --color-theme-border-strong: var(--sydin-border-strong);
+  --color-theme-surface: var(--sydin-ui-surface);
+  --color-theme-inset: var(--sydin-surface-inset);
+  --color-theme-hover: var(--sydin-surface-hover);
+  --color-theme-selected: var(--sydin-surface-selected);
+  --color-theme-accent: var(--sydin-accent-text);
+  --color-theme-success: var(--sydin-success-text);
+  --color-theme-warning: var(--sydin-warning-text);
+  --color-theme-danger: var(--sydin-danger-text);
+  --color-theme-info: var(--sydin-info-text);
   --font-sans:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
@@ -118,6 +175,104 @@ canvas {
 .sydin-shell {
   background: var(--sydin-bg-deep);
   color: var(--sydin-text);
+}
+
+.dashboard-theme {
+  min-width: 0;
+  background: var(--sydin-bg-deep);
+  color: var(--sydin-text);
+}
+
+.text-theme-primary {
+  color: var(--sydin-text);
+}
+
+.text-theme-secondary {
+  color: var(--sydin-text-secondary);
+}
+
+.text-theme-muted {
+  color: var(--sydin-text-muted);
+}
+
+.text-theme-subtle {
+  color: var(--sydin-text-subtle);
+}
+
+.border-theme {
+  border-color: var(--sydin-ui-border);
+}
+
+.border-theme-strong {
+  border-color: var(--sydin-ui-border-strong);
+}
+
+.bg-theme-surface {
+  background-color: var(--sydin-ui-surface);
+}
+
+.bg-theme-inset {
+  background-color: var(--sydin-surface-inset);
+}
+
+.bg-theme-selected {
+  background-color: var(--sydin-surface-selected);
+}
+
+.theme-overlay {
+  background-color: var(--sydin-overlay);
+}
+
+.theme-control {
+  border-color: var(--sydin-border);
+  background: var(--sydin-input-bg);
+  color: var(--sydin-text);
+}
+
+.theme-control::placeholder {
+  color: var(--sydin-text-subtle);
+}
+
+.theme-control:focus {
+  border-color: var(--sydin-blue);
+  background: var(--sydin-input-focus);
+  box-shadow: 0 0 0 4px var(--sydin-focus);
+  outline: none;
+}
+
+.theme-control:disabled {
+  background: var(--sydin-disabled);
+}
+
+.theme-secondary-button {
+  border-color: var(--sydin-border);
+  background: var(--sydin-surface-soft);
+  color: var(--sydin-text);
+}
+
+.theme-secondary-button:hover {
+  border-color: var(--sydin-border-strong);
+  background: var(--sydin-surface-hover);
+}
+
+.theme-status-success {
+  background: var(--sydin-success-surface);
+  color: var(--sydin-success-text);
+}
+
+.theme-status-warning {
+  background: var(--sydin-warning-surface);
+  color: var(--sydin-warning-text);
+}
+
+.theme-status-danger {
+  background: var(--sydin-danger-surface);
+  color: var(--sydin-danger-text);
+}
+
+.theme-status-info {
+  background: var(--sydin-info-surface);
+  color: var(--sydin-info-text);
 }
 
 .liquid-bg {
@@ -215,6 +370,13 @@ canvas {
     0 16px 42px rgba(0, 5, 20, 0.24);
 }
 
+[data-theme="light"] .dashboard-theme .glass-nav {
+  background: rgba(248, 251, 255, 0.9);
+  box-shadow:
+    inset 0 -1px 0 rgba(30, 64, 175, 0.05),
+    0 14px 38px rgba(30, 64, 175, 0.1);
+}
+
 .glass-sidebar {
   border-width: 0 1px 0 0;
   border-radius: 0;
@@ -224,6 +386,15 @@ canvas {
   box-shadow:
     inset -1px 0 0 rgba(255, 255, 255, 0.035),
     22px 0 54px rgba(0, 5, 20, 0.26);
+}
+
+[data-theme="light"] .dashboard-theme .glass-sidebar {
+  background:
+    linear-gradient(180deg, rgba(248, 251, 255, 0.96), rgba(235, 245, 255, 0.94)),
+    var(--sydin-surface-strong);
+  box-shadow:
+    inset -1px 0 0 rgba(30, 64, 175, 0.04),
+    18px 0 48px rgba(30, 64, 175, 0.1);
 }
 
 .glass-modal {
@@ -294,7 +465,7 @@ canvas {
   padding: 0.8rem 0.95rem;
   border: 1px solid var(--sydin-border);
   border-radius: var(--sydin-radius-control);
-  background: rgba(2, 12, 34, 0.58);
+  background: var(--sydin-input-bg);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.045),
     0 8px 24px rgba(0, 5, 20, 0.12);
@@ -316,7 +487,7 @@ canvas {
 
 .glass-input:focus {
   border-color: var(--sydin-blue);
-  background: rgba(3, 19, 48, 0.78);
+  background: var(--sydin-input-focus);
   box-shadow:
     0 0 0 4px var(--sydin-focus),
     inset 0 1px 0 rgba(255, 255, 255, 0.06);
@@ -329,7 +500,7 @@ canvas {
 }
 
 select.glass-input {
-  color-scheme: dark;
+  color-scheme: inherit;
 }
 
 select.glass-input option {
@@ -355,7 +526,7 @@ select.glass-input option {
 
 .glass-table th {
   border-bottom: 1px solid var(--sydin-border);
-  background: rgba(2, 12, 34, 0.42);
+  background: var(--sydin-surface-inset);
   color: var(--sydin-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
@@ -392,7 +563,7 @@ select.glass-input option {
   border: 1px solid var(--sydin-border);
   border-radius: 999px;
   background: rgba(56, 189, 248, 0.1);
-  color: #bae6fd;
+  color: var(--sydin-info-text);
 }
 
 .brand-chip {

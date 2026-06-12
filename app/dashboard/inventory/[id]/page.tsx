@@ -150,18 +150,18 @@ function DetailCard({
 }) {
   const toneClass =
     accent === "indigo"
-      ? "border-indigo-300/20 bg-indigo-500/10 text-indigo-100"
+      ? "border-indigo-300/20 bg-indigo-500/10 text-theme-accent"
       : accent === "cyan"
-        ? "border-cyan-300/20 bg-cyan-500/10 text-cyan-100"
+        ? "border-cyan-300/20 bg-cyan-500/10 text-theme-accent"
         : accent === "violet"
           ? "border-violet-300/20 bg-violet-500/10 text-violet-100"
           : accent === "amber"
-            ? "border-amber-300/20 bg-amber-500/10 text-amber-100"
-            : "border-white/10 bg-black/25 text-white";
+            ? "border-amber-300/20 bg-amber-500/10 text-theme-warning"
+            : "border-theme bg-theme-inset text-theme-primary";
 
   return (
     <div className={`rounded-2xl border p-4 ${toneClass}`}>
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-slate-500">
+      <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-subtle">
         {label}
       </p>
       <p
@@ -172,7 +172,7 @@ function DetailCard({
         {value}
       </p>
       {detail && (
-        <p className="mt-2 text-xs leading-5 text-slate-500">{detail}</p>
+        <p className="mt-2 text-xs leading-5 text-theme-subtle">{detail}</p>
       )}
     </div>
   );
@@ -740,7 +740,7 @@ export default function ItemDetailsPage() {
   );
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         planName={formatPlanName(subscription.plan)}
         businessName={businessSettings.business_name}
@@ -749,18 +749,18 @@ export default function ItemDetailsPage() {
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Product record
                 </p>
 
-                <h1 className="mt-2 text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+                <h1 className="mt-2 text-4xl font-bold tracking-tight text-theme-primary sm:text-5xl lg:text-6xl">
                   {item?.name || "Item Details"}
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
                   Review item metadata, stock levels, image, notes, history, and public QR access.
                 </p>
               </div>
@@ -768,7 +768,7 @@ export default function ItemDetailsPage() {
               <div className="flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-center text-base font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
                 >
                   Back to Inventory
                 </Link>
@@ -778,7 +778,7 @@ export default function ItemDetailsPage() {
                     <button
                       type="button"
                       onClick={openMovementModal}
-                      className="rounded-2xl border border-emerald-300/25 bg-emerald-500/15 px-5 py-4 text-base font-bold text-emerald-100 transition hover:border-emerald-300/45 hover:bg-emerald-500/25"
+                      className="rounded-2xl border border-emerald-300/25 bg-emerald-500/15 px-5 py-4 text-base font-bold text-theme-success transition hover:border-emerald-300/45 hover:bg-emerald-500/25"
                     >
                       Record Movement
                     </button>
@@ -795,7 +795,7 @@ export default function ItemDetailsPage() {
                       type="button"
                       onClick={() => setIsDeleteDialogOpen(true)}
                       disabled={isDeleting}
-                      className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-4 text-base font-bold text-red-200 transition hover:bg-red-500/25 disabled:opacity-50"
+                      className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-4 text-base font-bold text-theme-danger transition hover:bg-red-500/25 disabled:opacity-50"
                     >
                       {isDeleting ? "Deleting..." : "Delete Item"}
                     </button>
@@ -806,36 +806,36 @@ export default function ItemDetailsPage() {
           </section>
 
           {pageNotice && (
-            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-5 py-4 text-sm font-semibold text-emerald-200">
+            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-5 py-4 text-sm font-semibold text-theme-success">
               {pageNotice}
             </div>
           )}
 
           {loading && (
             <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
+              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-theme bg-theme-surface shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
                 <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
               </div>
 
-              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
+              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-theme bg-theme-surface shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
                 <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
               </div>
             </div>
           )}
 
           {!loading && authMissing && (
-            <div className="rounded-[32px] border border-red-500/30 bg-red-500/10 p-8 text-center text-red-200">
+            <div className="rounded-[32px] border border-red-500/30 bg-red-500/10 p-8 text-center text-theme-danger">
               Please login to view this item.
             </div>
           )}
 
           {!loading && !authMissing && (error || !item) && (
-            <div className="rounded-[32px] border border-white/10 bg-white/[0.045] p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <div className="rounded-[32px] border border-theme bg-theme-surface p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
               <h2 className="text-3xl font-bold">
                 Item not found
               </h2>
 
-              <p className="mx-auto mt-3 max-w-md text-slate-400">
+              <p className="mx-auto mt-3 max-w-md text-theme-muted">
                 {error || "This item does not exist or you do not have access to it."}
               </p>
 
@@ -851,7 +851,7 @@ export default function ItemDetailsPage() {
           {!loading && item && (
             <>
               <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-6">
+              <section className="rounded-[32px] border border-theme bg-theme-surface p-4 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-6">
                 <div className="flex min-h-[360px] items-center justify-center rounded-[28px] bg-[#f4f0e8] p-5 sm:min-h-[460px]">
                   {item.image ? (
                     <div className="relative h-[320px] w-full sm:h-[420px]">
@@ -865,7 +865,7 @@ export default function ItemDetailsPage() {
                       />
                     </div>
                   ) : (
-                    <div className="flex min-h-[300px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-slate-500">
+                    <div className="flex min-h-[300px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-theme-subtle">
                       <span className="text-sm font-black uppercase tracking-[0.18em]">
                         Image
                       </span>
@@ -879,14 +879,14 @@ export default function ItemDetailsPage() {
               </section>
 
               <section className="flex flex-col gap-6">
-                <div className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                         Product
                       </p>
 
-                      <h2 className="mt-2 break-words text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                      <h2 className="mt-2 break-words text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
                         {item.name}
                       </h2>
                     </div>
@@ -916,14 +916,14 @@ export default function ItemDetailsPage() {
                   <section className="mt-5 rounded-[26px] border border-indigo-300/15 bg-indigo-500/[0.07] p-4 sm:p-5">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                           Stock & Unit
                         </p>
-                        <h3 className="mt-1 text-2xl font-black text-white">
+                        <h3 className="mt-1 text-2xl font-black text-theme-primary">
                           {itemQuantityLabel}
                         </h3>
                       </div>
-                      <span className="self-start rounded-full border border-white/10 bg-black/25 px-3 py-2 text-xs font-bold text-slate-300 sm:self-auto">
+                      <span className="self-start rounded-full border border-theme bg-theme-inset px-3 py-2 text-xs font-bold text-theme-secondary sm:self-auto">
                         Unit: {itemUnitLabel}
                       </span>
                     </div>
@@ -953,11 +953,11 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-5 rounded-[26px] border border-white/10 bg-black/20 p-4 sm:p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-sky-200">
+                  <section className="mt-5 rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Private Supplier
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                    <p className="mt-2 text-sm leading-6 text-theme-muted">
                       This supplier information is visible only inside your authenticated workspace.
                     </p>
                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -979,11 +979,11 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-5 rounded-[26px] border border-white/10 bg-black/20 p-4 sm:p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                  <section className="mt-5 rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Pricing & Value
                     </p>
-                    <p className="mt-2 text-sm leading-6 text-slate-400">
+                    <p className="mt-2 text-sm leading-6 text-theme-muted">
                       Private values are visible only inside the authenticated dashboard.
                     </p>
 
@@ -1011,8 +1011,8 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-5 rounded-[26px] border border-white/10 bg-black/20 p-4 sm:p-5">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-indigo-200">
+                  <section className="mt-5 rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5">
+                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Tracking Codes
                     </p>
 
@@ -1044,23 +1044,23 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <div className="mt-5 rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <p className="text-sm font-semibold text-slate-500">
+                  <div className="mt-5 rounded-2xl border border-theme bg-theme-inset p-4">
+                    <p className="text-sm font-semibold text-theme-subtle">
                       Notes
                     </p>
 
-                    <p className="mt-2 whitespace-pre-wrap break-words text-base leading-7 text-slate-300">
+                    <p className="mt-2 whitespace-pre-wrap break-words text-base leading-7 text-theme-secondary">
                       {item.notes || "No notes added yet."}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                     Item QR Code
                   </p>
 
-                  <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-indigo-300/25 bg-black/25 p-5 text-center sm:p-6">
+                  <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-indigo-300/25 bg-theme-inset p-5 text-center sm:p-6">
                     <div className="mb-5 flex flex-col items-center gap-3">
                       <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_18px_55px_rgba(99,102,241,0.28)]">
                         {businessSettings.business_logo_url ? (
@@ -1076,7 +1076,7 @@ export default function ItemDetailsPage() {
                         )}
                       </div>
 
-                      <p className="text-sm font-bold text-indigo-100">
+                      <p className="text-sm font-bold text-theme-accent">
                         {businessSettings.business_name}
                       </p>
                     </div>
@@ -1094,7 +1094,7 @@ export default function ItemDetailsPage() {
                           level="M"
                         />
                       ) : (
-                        <div className="flex h-[180px] w-[180px] items-center justify-center text-sm font-semibold text-slate-500">
+                        <div className="flex h-[180px] w-[180px] items-center justify-center text-sm font-semibold text-theme-subtle">
                           Public link unavailable
                         </div>
                       )}
@@ -1104,16 +1104,16 @@ export default function ItemDetailsPage() {
                       Item QR Code
                     </h3>
 
-                    <p className="mt-2 text-slate-400">
+                    <p className="mt-2 text-theme-muted">
                       Scan to open this public item page.
                     </p>
 
-                    <p className="mt-2 text-sm text-indigo-200">
+                    <p className="mt-2 text-sm text-theme-accent">
                       This QR opens the public item page.
                     </p>
 
                     {qrUrl && (
-                      <p className="mt-3 max-w-full break-all rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs text-slate-400">
+                      <p className="mt-3 max-w-full break-all rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-xs text-theme-muted">
                         {qrUrl}
                       </p>
                     )}
@@ -1123,7 +1123,7 @@ export default function ItemDetailsPage() {
                         type="button"
                         onClick={copyQrLink}
                         disabled={!qrUrl}
-                        className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                        className="flex-1 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
                       >
                         {copyLabel}
                       </button>
@@ -1142,19 +1142,19 @@ export default function ItemDetailsPage() {
               </section>
               </div>
 
-              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
                       Stock activity
                     </p>
 
-                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
                       Stock Movements
                     </h2>
                   </div>
 
-                  <span className="self-start rounded-full border border-emerald-300/25 bg-emerald-500/15 px-4 py-2 text-sm font-bold text-emerald-100 sm:self-auto">
+                  <span className="self-start rounded-full border border-emerald-300/25 bg-emerald-500/15 px-4 py-2 text-sm font-bold text-theme-success sm:self-auto">
                     {stockMovements.length}{" "}
                     {stockMovements.length === 1 ? "movement" : "movements"}
                   </span>
@@ -1165,18 +1165,18 @@ export default function ItemDetailsPage() {
                     {stockMovements.map((movement) => (
                       <div
                         key={movement.id}
-                        className="rounded-[26px] border border-white/10 bg-black/25 p-4 sm:p-5"
+                        className="rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
                       >
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                           <div className="flex items-start gap-4">
-                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/25 bg-emerald-500/15 text-sm font-black text-emerald-100">
+                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/25 bg-emerald-500/15 text-sm font-black text-theme-success">
                               {STOCK_MOVEMENT_LABELS[
                                 movement.movement_type
                               ].charAt(0)}
                             </div>
 
                             <div>
-                              <h3 className="text-xl font-bold text-white">
+                              <h3 className="text-xl font-bold text-theme-primary">
                                 {
                                   STOCK_MOVEMENT_LABELS[
                                     movement.movement_type
@@ -1184,12 +1184,12 @@ export default function ItemDetailsPage() {
                                 }
                               </h3>
 
-                              <p className="mt-1 text-sm font-medium text-slate-400">
+                              <p className="mt-1 text-sm font-medium text-theme-muted">
                                 {formatCreatedDate(movement.created_at)}
                               </p>
 
                               {movement.notes && (
-                                <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words text-sm leading-6 text-slate-300">
+                                <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words text-sm leading-6 text-theme-secondary">
                                   {movement.notes}
                                 </p>
                               )}
@@ -1197,8 +1197,8 @@ export default function ItemDetailsPage() {
                           </div>
 
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[520px]">
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 Before
                               </p>
 
@@ -1207,17 +1207,17 @@ export default function ItemDetailsPage() {
                               </p>
                             </div>
 
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 Change
                               </p>
 
                               <p
                                 className={`mt-2 text-2xl font-black ${
                                   movement.quantity_delta < 0
-                                    ? "text-red-200"
+                                    ? "text-theme-danger"
                                     : movement.quantity_delta > 0
-                                      ? "text-emerald-200"
+                                      ? "text-theme-success"
                                       : "text-slate-200"
                                 }`}
                               >
@@ -1225,12 +1225,12 @@ export default function ItemDetailsPage() {
                               </p>
                             </div>
 
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 After
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-indigo-100">
+                              <p className="mt-2 text-2xl font-black text-theme-accent">
                                 {movement.quantity_after}
                               </p>
                             </div>
@@ -1240,16 +1240,16 @@ export default function ItemDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-6 rounded-[26px] border border-dashed border-emerald-300/25 bg-black/25 px-5 py-12 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-lg font-black text-emerald-100">
+                  <div className="mt-6 rounded-[26px] border border-dashed border-emerald-300/25 bg-theme-inset px-5 py-12 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-lg font-black text-theme-success">
                       0
                     </div>
 
-                    <h3 className="mt-5 text-2xl font-bold text-white">
+                    <h3 className="mt-5 text-2xl font-bold text-theme-primary">
                       No stock movements yet
                     </h3>
 
-                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-slate-400">
+                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-theme-muted">
                       Stock in, stock out, adjustments, and damaged or lost
                       activity will appear here.
                     </p>
@@ -1257,19 +1257,19 @@ export default function ItemDetailsPage() {
                 )}
               </section>
 
-              <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                       Audit trail
                     </p>
 
-                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
                       Item History
                     </h2>
                   </div>
 
-                  <span className="self-start rounded-full border border-indigo-300/25 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-indigo-100 sm:self-auto">
+                  <span className="self-start rounded-full border border-indigo-300/25 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
                     {history.length} {history.length === 1 ? "entry" : "entries"}
                   </span>
                 </div>
@@ -1279,28 +1279,28 @@ export default function ItemDetailsPage() {
                     {history.map((entry) => (
                       <div
                         key={entry.id}
-                        className="relative rounded-[26px] border border-white/10 bg-black/25 p-4 sm:p-5"
+                        className="relative rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
                       >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                           <div className="flex items-start gap-4">
-                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 text-sm font-black text-indigo-100">
+                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 text-sm font-black text-theme-accent">
                               {formatAction(entry.action).charAt(0)}
                             </div>
 
                             <div>
-                              <h3 className="text-xl font-bold text-white">
+                              <h3 className="text-xl font-bold text-theme-primary">
                                 {formatAction(entry.action)}
                               </h3>
 
-                              <p className="mt-1 text-sm font-medium text-slate-400">
+                              <p className="mt-1 text-sm font-medium text-theme-muted">
                                 {formatCreatedDate(entry.created_at)}
                               </p>
                             </div>
                           </div>
 
                           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-w-[340px]">
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 Old quantity
                               </p>
 
@@ -1309,12 +1309,12 @@ export default function ItemDetailsPage() {
                               </p>
                             </div>
 
-                            <div className="rounded-2xl border border-white/10 bg-white/[0.045] p-4">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 New quantity
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-indigo-100">
+                              <p className="mt-2 text-2xl font-black text-theme-accent">
                                 {formatQuantity(entry.new_quantity)}
                               </p>
                             </div>
@@ -1324,16 +1324,16 @@ export default function ItemDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-6 rounded-[26px] border border-dashed border-indigo-300/25 bg-black/25 px-5 py-12 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-indigo-100">
+                  <div className="mt-6 rounded-[26px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-12 text-center">
+                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-theme-accent">
                       0
                     </div>
 
-                    <h3 className="mt-5 text-2xl font-bold text-white">
+                    <h3 className="mt-5 text-2xl font-bold text-theme-primary">
                       No history yet
                     </h3>
 
-                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-slate-400">
+                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-theme-muted">
                       Create, edit, and delete activity for this item will appear here as the record changes.
                     </p>
                   </div>
@@ -1345,8 +1345,8 @@ export default function ItemDetailsPage() {
       </main>
 
       {isMovementModalOpen && item && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/80 p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#080b18]/90 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
@@ -1357,9 +1357,9 @@ export default function ItemDetailsPage() {
                   Record Movement
                 </h2>
 
-                <p className="mt-3 text-sm leading-6 text-slate-400">
+                <p className="mt-3 text-sm leading-6 text-theme-muted">
                   Current quantity:{" "}
-                  <span className="font-bold text-indigo-100">
+                  <span className="font-bold text-theme-accent">
                     {item.quantity}
                   </span>
                 </p>
@@ -1369,7 +1369,7 @@ export default function ItemDetailsPage() {
                 type="button"
                 onClick={() => closeMovementModal()}
                 disabled={isRecordingMovement}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-50"
+                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
               >
                 <svg
                   className="h-8 w-8"
@@ -1392,7 +1392,7 @@ export default function ItemDetailsPage() {
               className="flex flex-col gap-5 sm:gap-6"
             >
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                <label className="mb-2 block text-sm font-semibold text-theme-muted">
                   Movement Type
                 </label>
 
@@ -1406,7 +1406,7 @@ export default function ItemDetailsPage() {
                       className={`rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
                         movementType === type
                           ? "border-emerald-300/60 bg-emerald-500/15 shadow-[0_0_0_4px_rgba(16,185,129,0.1)]"
-                          : "border-white/10 bg-white/[0.045] hover:border-white/20 hover:bg-white/[0.08]"
+                          : "border-theme bg-theme-surface hover:border-theme-strong hover:bg-theme-hover"
                       }`}
                       aria-pressed={movementType === type}
                     >
@@ -1414,19 +1414,19 @@ export default function ItemDetailsPage() {
                         <span
                           className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-black ${
                             movementType === type
-                              ? "border-emerald-300/35 bg-emerald-400/20 text-emerald-100"
-                              : "border-white/10 bg-black/25 text-slate-300"
+                              ? "border-emerald-300/35 bg-emerald-400/20 text-theme-success"
+                              : "border-theme bg-theme-inset text-theme-secondary"
                           }`}
                         >
                           {STOCK_MOVEMENT_LABELS[type].charAt(0)}
                         </span>
 
                         <span className="min-w-0">
-                          <span className="block text-base font-bold text-white">
+                          <span className="block text-base font-bold text-theme-primary">
                             {STOCK_MOVEMENT_LABELS[type]}
                           </span>
 
-                          <span className="mt-1 block text-sm leading-5 text-slate-400">
+                          <span className="mt-1 block text-sm leading-5 text-theme-muted">
                             {movementHelperText[type]}
                           </span>
                         </span>
@@ -1438,13 +1438,13 @@ export default function ItemDetailsPage() {
 
               <div className="grid grid-cols-1 gap-5 md:grid-cols-[0.8fr_1.2fr] md:items-start">
                 <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                <label className="mb-2 block text-sm font-semibold text-theme-muted">
                   {movementType === "adjustment"
                     ? "Final Quantity"
                     : "Quantity"}
                 </label>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-1 transition focus-within:border-emerald-300/60 focus-within:bg-white/[0.06] focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]">
+                  <div className="rounded-2xl border border-theme bg-theme-inset p-1 transition focus-within:border-emerald-300/60 focus-within:bg-theme-surface focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]">
                     <input
                       type="number"
                       min="0"
@@ -1453,7 +1453,7 @@ export default function ItemDetailsPage() {
                       value={movementQuantity}
                       onChange={(e) => setMovementQuantity(e.target.value)}
                       disabled={isRecordingMovement}
-                      className="w-full rounded-[14px] bg-transparent px-4 py-4 text-2xl font-black text-white outline-none placeholder:text-slate-600 disabled:opacity-50"
+                      className="w-full rounded-[14px] bg-transparent px-4 py-4 text-2xl font-black text-theme-primary outline-none placeholder:text-theme-subtle disabled:opacity-50"
                       placeholder="0"
                       required
                     />
@@ -1461,22 +1461,22 @@ export default function ItemDetailsPage() {
                 </div>
 
                 <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4">
-                  <p className="text-sm font-bold text-emerald-100">
+                  <p className="text-sm font-bold text-theme-success">
                     {STOCK_MOVEMENT_LABELS[movementType]}
                   </p>
 
-                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                  <p className="mt-2 text-sm leading-6 text-theme-secondary">
                     {movementHelperText[movementType]}
                   </p>
 
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                     Current quantity: {item.quantity}
                   </p>
                 </div>
               </div>
 
               <div>
-                <label className="mb-2 block text-sm font-semibold text-slate-400">
+                <label className="mb-2 block text-sm font-semibold text-theme-muted">
                   Notes
                 </label>
 
@@ -1484,13 +1484,13 @@ export default function ItemDetailsPage() {
                   value={movementNotes}
                   onChange={(e) => setMovementNotes(e.target.value)}
                   disabled={isRecordingMovement}
-                  className="min-h-[120px] w-full resize-y rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-4 text-base text-white outline-none transition focus:border-emerald-300/60 focus:bg-white/[0.08] focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
+                  className="min-h-[120px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition focus:border-emerald-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
                   placeholder="Optional reason, order note, or context"
                 />
               </div>
 
               {movementError && (
-                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
+                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
                   {movementError}
                 </div>
               )}
@@ -1500,7 +1500,7 @@ export default function ItemDetailsPage() {
                   type="button"
                   onClick={() => closeMovementModal()}
                   disabled={isRecordingMovement}
-                  className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] py-4 text-base font-bold text-white transition hover:bg-white/[0.1] disabled:opacity-50"
+                  className="flex-1 rounded-2xl border border-theme bg-theme-surface py-4 text-base font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -1519,16 +1519,16 @@ export default function ItemDetailsPage() {
       )}
 
       {isEditModalOpen && item && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-[#02030a]/80 p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-white/10 bg-[#080b18]/95 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
+        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Product details
                 </p>
 
                 <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Edit Item</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Update stock, pricing, tracking codes, and product details.
                 </p>
               </div>
@@ -1537,7 +1537,7 @@ export default function ItemDetailsPage() {
                 type="button"
                 onClick={() => closeEditModal()}
                 disabled={isEditing}
-                className="rounded-2xl border border-white/10 bg-white/[0.05] p-2 text-slate-400 transition hover:bg-white/[0.09] hover:text-white disabled:opacity-50"
+                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
               >
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
@@ -1567,20 +1567,20 @@ export default function ItemDetailsPage() {
       )}
 
       {isDeleteDialogOpen && item && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-detail-item-title"
-            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[#080b18]/95 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
+            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
           >
             <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
               Delete inventory item
             </p>
-            <h2 id="delete-detail-item-title" className="mt-3 break-words text-2xl font-bold text-white">
+            <h2 id="delete-detail-item-title" className="mt-3 break-words text-2xl font-bold text-theme-primary">
               Delete {item.name}?
             </h2>
-            <p className="mt-3 leading-7 text-slate-400">
+            <p className="mt-3 leading-7 text-theme-muted">
               This removes the item from inventory. This action cannot be undone.
             </p>
             <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
@@ -1588,7 +1588,7 @@ export default function ItemDetailsPage() {
                 type="button"
                 onClick={() => setIsDeleteDialogOpen(false)}
                 disabled={isDeleting}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold text-white transition hover:bg-white/[0.1] disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
               </button>
@@ -1596,7 +1596,7 @@ export default function ItemDetailsPage() {
                 type="button"
                 onClick={() => void deleteItem()}
                 disabled={isDeleting}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 {isDeleting ? "Deleting..." : "Delete Item"}
               </button>

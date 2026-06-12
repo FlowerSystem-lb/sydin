@@ -345,7 +345,7 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         addItemHref="/dashboard/add-item"
         planName={currentPlanName}
@@ -356,23 +356,23 @@ export default function DashboardPage() {
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.04] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div className="max-w-3xl">
-                <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-white/10 bg-white/[0.05] px-4 py-2 text-sm font-semibold text-slate-300">
+                <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-theme bg-theme-surface px-4 py-2 text-sm font-semibold text-theme-secondary">
                   <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_22px_rgba(52,211,153,0.8)]" />
                   Live inventory overview
                 </div>
 
-                <p className="text-lg font-medium text-slate-400">
+                <p className="text-lg font-medium text-theme-muted">
                   Welcome back to {businessSettings.business_name}
                 </p>
 
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-white sm:text-6xl lg:text-7xl">
+                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
                   Dashboard
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
+                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
                   Monitor stock health, recently added products, and inventory movement signals from one polished workspace.
                 </p>
               </div>
@@ -394,7 +394,7 @@ export default function DashboardPage() {
 
                 <Link
                   href="/dashboard/add-item"
-                  className="rounded-2xl border border-indigo-400/30 bg-indigo-500/15 px-5 py-4 text-center text-base font-bold text-white transition hover:border-indigo-300/60 hover:bg-indigo-500/25"
+                  className="rounded-2xl border border-indigo-400/30 bg-indigo-500/15 px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-indigo-300/60 hover:bg-indigo-500/25"
                 >
                   Add Item
                 </Link>
@@ -403,31 +403,31 @@ export default function DashboardPage() {
           </section>
 
           {error && (
-            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-red-200">
+            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
               {error}
             </div>
           )}
 
           <section className="glass-card p-5 sm:p-6">
             {loading ? (
-              <div className="h-32 animate-pulse rounded-2xl bg-white/[0.05]" />
+              <div className="h-32 animate-pulse rounded-2xl bg-theme-surface" />
             ) : onboarding ? (
               <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                 <div className="min-w-0">
-                  <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                  <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                     Getting started
                   </p>
-                  <h2 className="mt-2 text-2xl font-black text-white">
+                  <h2 className="mt-2 text-2xl font-black text-theme-primary">
                     {onboarding.completedCount} of {onboarding.totalCount}{" "}
                     recommended steps complete
                   </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
                     {onboarding.nextStep
                       ? `Next suggestion: ${onboarding.nextStep.title}. These setup steps are optional and can be completed in any order.`
                       : "Your recommended setup is complete. Visit the Help Center whenever you need a guide or support contact."}
                   </p>
                   {onboarding.hasPartialError && (
-                    <p className="mt-2 text-xs font-semibold text-amber-200">
+                    <p className="mt-2 text-xs font-semibold text-theme-warning">
                       Some setup statuses could not be checked right now.
                     </p>
                   )}
@@ -436,12 +436,12 @@ export default function DashboardPage() {
                 <div className="flex min-w-0 flex-col gap-3 sm:flex-row lg:min-w-[420px] lg:items-center">
                   <div className="flex-1 rounded-2xl border border-cyan-300/15 bg-cyan-400/[0.07] p-4">
                     <div className="flex items-center justify-between gap-4 text-sm font-bold">
-                      <span className="text-slate-400">Setup progress</span>
-                      <span className="text-cyan-100">
+                      <span className="text-theme-muted">Setup progress</span>
+                      <span className="text-theme-accent">
                         {onboarding.percentage}%
                       </span>
                     </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-white/[0.08]">
+                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-theme-surface">
                       <div
                         className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-blue-500"
                         style={{ width: `${onboarding.percentage}%` }}
@@ -461,7 +461,7 @@ export default function DashboardPage() {
                   </Link>
                   <Link
                     href="/dashboard/help"
-                    className="min-h-12 rounded-2xl border border-white/10 bg-white/[0.05] px-5 py-3 text-center text-sm font-bold text-white transition hover:bg-white/[0.1]"
+                    className="min-h-12 rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-center text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
                   >
                     View Guide
                   </Link>
@@ -470,10 +470,10 @@ export default function DashboardPage() {
             ) : (
               <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <h2 className="text-xl font-black text-white">
+                  <h2 className="text-xl font-black text-theme-primary">
                     Need help getting started?
                   </h2>
-                  <p className="mt-2 text-sm text-slate-400">
+                  <p className="mt-2 text-sm text-theme-muted">
                     Setup progress is unavailable, but all guides and support
                     contacts remain accessible.
                   </p>
@@ -488,24 +488,24 @@ export default function DashboardPage() {
             )}
           </section>
 
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Subscription
                 </p>
 
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
                   {loading ? (
-                    <span className="inline-block h-9 w-64 max-w-full animate-pulse rounded-2xl bg-white/[0.08]" />
+                    <span className="inline-block h-9 w-64 max-w-full animate-pulse rounded-2xl bg-theme-surface" />
                   ) : (
                     `Current plan: ${currentPlanName}`
                   )}
                 </h2>
 
-                <p className="mt-3 text-base text-slate-400">
+                <p className="mt-3 text-base text-theme-muted">
                   {loading ? (
-                    <span className="inline-block h-5 w-40 animate-pulse rounded-full bg-white/[0.08]" />
+                    <span className="inline-block h-5 w-40 animate-pulse rounded-full bg-theme-surface" />
                   ) : (
                     `Usage: ${itemUsageText}`
                   )}
@@ -514,16 +514,16 @@ export default function DashboardPage() {
 
               <div className="min-w-0 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-4 lg:min-w-[320px]">
                 <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-bold text-indigo-100">
+                  <span className="text-sm font-bold text-theme-accent">
                     Item usage
                   </span>
 
-                  <span className="text-sm font-black text-white">
+                  <span className="text-sm font-black text-theme-primary">
                     {loading ? "..." : `${usagePercent}%`}
                   </span>
                 </div>
 
-                <div className="mt-3 h-3 overflow-hidden rounded-full bg-black/35">
+                <div className="mt-3 h-3 overflow-hidden rounded-full bg-[var(--sydin-input-bg)]">
                   <div
                     className="h-full rounded-full bg-gradient-to-r from-indigo-300 via-violet-400 to-fuchsia-400 transition-all"
                     style={{
@@ -532,14 +532,14 @@ export default function DashboardPage() {
                   />
                 </div>
 
-                <p className="mt-3 text-xs font-semibold text-slate-500">
+                <p className="mt-3 text-xs font-semibold text-theme-subtle">
                   Add item limits are enforced from your current plan.
                 </p>
 
                 {upgradePlan && (
                   <Link
                     href={`/request-plan?plan=${upgradePlan}&source=dashboard-plan`}
-                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-indigo-200/25 bg-white/[0.06] px-4 py-2.5 text-sm font-bold text-indigo-100 transition hover:border-indigo-200/40 hover:bg-white/[0.1]"
+                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-indigo-200/25 bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-accent transition hover:border-indigo-200/40 hover:bg-theme-hover"
                   >
                     Request {upgradePlan}
                   </Link>
@@ -552,29 +552,29 @@ export default function DashboardPage() {
             {summaryCards.map((card) => (
               <div
                 key={card.label}
-                className="group rounded-[28px] border border-white/10 bg-white/[0.055] p-5 shadow-[0_22px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-indigo-300/30 hover:bg-white/[0.075] sm:p-6"
+                className="group rounded-[28px] border border-theme bg-theme-surface p-5 shadow-[0_22px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-indigo-300/30 hover:bg-white/[0.075] sm:p-6"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
-                    <p className="text-sm font-semibold text-slate-400">
+                    <p className="text-sm font-semibold text-theme-muted">
                       {card.label}
                     </p>
 
-                    <p className="mt-4 text-5xl font-bold tracking-tight text-white">
+                    <p className="mt-4 text-5xl font-bold tracking-tight text-theme-primary">
                       {loading ? (
-                        <span className="block h-12 w-24 animate-pulse rounded-2xl bg-white/[0.08]" />
+                        <span className="block h-12 w-24 animate-pulse rounded-2xl bg-theme-surface" />
                       ) : (
                         card.value.toLocaleString()
                       )}
                     </p>
                   </div>
 
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-white shadow-[0_18px_55px_rgba(99,102,241,0.28)]`}>
+                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-theme-primary shadow-[0_18px_55px_rgba(99,102,241,0.28)]`}>
                     <UiIcon name={card.icon} className="h-6 w-6" />
                   </div>
                 </div>
 
-                <p className="mt-5 text-sm text-slate-500">
+                <p className="mt-5 text-sm text-theme-subtle">
                   {card.detail}
                 </p>
               </div>
@@ -589,21 +589,21 @@ export default function DashboardPage() {
             loading={loading}
           />
 
-          <section className="rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
+          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                   Latest activity
                 </p>
 
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+                <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
                   Recent Items
                 </h2>
               </div>
 
               <Link
                 href="/dashboard/inventory"
-                className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3 text-center text-sm font-bold text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 View Inventory
               </Link>
@@ -615,15 +615,15 @@ export default function DashboardPage() {
                   {[1, 2, 3].map((item) => (
                     <div
                       key={item}
-                      className="min-h-[116px] overflow-hidden rounded-3xl border border-white/10 bg-white/[0.04]"
+                      className="min-h-[116px] overflow-hidden rounded-3xl border border-theme bg-theme-surface"
                     >
                       <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
                     </div>
                   ))}
                 </div>
               ) : recentItems.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-black/25 px-5 py-14 text-center">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-indigo-200">
+                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-14 text-center">
+                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
                     <UiIcon name="box" className="h-8 w-8" />
                   </div>
 
@@ -631,7 +631,7 @@ export default function DashboardPage() {
                     No inventory yet
                   </h3>
 
-                  <p className="mx-auto mt-3 max-w-md text-slate-400">
+                  <p className="mx-auto mt-3 max-w-md text-theme-muted">
                     Add your first product and your dashboard will start showing live inventory signals.
                   </p>
 
@@ -647,7 +647,7 @@ export default function DashboardPage() {
                   {recentItems.map((item) => (
                     <div
                       key={item.id}
-                      className="flex flex-col gap-4 rounded-3xl border border-white/10 bg-black/25 p-4 transition hover:border-indigo-300/25 hover:bg-white/[0.055] sm:flex-row sm:items-center"
+                      className="flex flex-col gap-4 rounded-3xl border border-theme bg-theme-inset p-4 transition hover:border-indigo-300/25 hover:bg-theme-hover sm:flex-row sm:items-center"
                     >
                       <div className="flex h-[132px] shrink-0 items-center justify-center rounded-3xl bg-[#f4f0e8] p-4 sm:h-24 sm:w-24">
                         {item.image ? (
@@ -662,7 +662,7 @@ export default function DashboardPage() {
                             />
                           </div>
                         ) : (
-                          <div className="flex h-full w-full flex-col items-center justify-center rounded-2xl border border-slate-300/30 bg-white/35 text-center text-slate-500">
+                          <div className="flex h-full w-full flex-col items-center justify-center rounded-2xl border border-slate-300/30 bg-white/35 text-center text-theme-subtle">
                             <span className="text-xs font-black uppercase tracking-[0.16em]">
                               Image
                             </span>
@@ -675,11 +675,11 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="min-w-0 flex-1">
-                        <h3 className="text-2xl font-bold tracking-tight text-white break-words">
+                        <h3 className="text-2xl font-bold tracking-tight text-theme-primary break-words">
                           {item.name}
                         </h3>
 
-                        <p className="mt-1 text-slate-400 break-words">
+                        <p className="mt-1 text-theme-muted break-words">
                           {resolveCategoryDisplay(
                             item,
                             categories.find(
@@ -691,7 +691,7 @@ export default function DashboardPage() {
                       </div>
 
                       <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                        <span className="rounded-2xl border border-white/10 bg-white/[0.06] px-4 py-3 text-lg font-bold text-white">
+                        <span className="rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-lg font-bold text-theme-primary">
                           Qty {item.quantity}
                         </span>
 

@@ -54,7 +54,7 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 };
 
 const inputClassName =
-  "w-full rounded-2xl border border-white/10 bg-black/35 px-4 py-3.5 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-cyan-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-cyan-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:cursor-not-allowed disabled:opacity-60";
 
 const statusLabels: Record<PickListStatus, string> = {
   draft: "Draft",
@@ -65,9 +65,9 @@ const statusLabels: Record<PickListStatus, string> = {
 
 const statusClasses: Record<PickListStatus, string> = {
   draft: "border-slate-300/20 bg-slate-400/10 text-slate-200",
-  preparing: "border-cyan-300/25 bg-cyan-400/10 text-cyan-100",
-  completed: "border-emerald-300/25 bg-emerald-400/10 text-emerald-100",
-  cancelled: "border-red-300/20 bg-red-400/10 text-red-200",
+  preparing: "border-cyan-300/25 bg-cyan-400/10 text-theme-accent",
+  completed: "border-emerald-300/25 bg-emerald-400/10 text-theme-success",
+  cancelled: "border-red-300/20 bg-red-400/10 text-theme-danger",
 };
 
 function formatDate(value: string | null) {
@@ -111,7 +111,7 @@ function ModalCloseButton({
       onClick={onClick}
       disabled={disabled}
       aria-label={label}
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.05] text-xl text-slate-400 transition hover:bg-white/[0.1] hover:text-white disabled:opacity-50"
+      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-surface text-xl text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
     >
       X
     </button>
@@ -563,7 +563,7 @@ export default function PickListDetailPage() {
 
   if (loading) {
     return (
-      <div className="liquid-bg min-h-screen text-white">
+      <div className="liquid-bg min-h-screen text-theme-primary">
         <Sidebar
           planName={currentPlanName}
           itemUsage={itemUsageText}
@@ -582,7 +582,7 @@ export default function PickListDetailPage() {
 
   if (!detail) {
     return (
-      <div className="liquid-bg min-h-screen text-white">
+      <div className="liquid-bg min-h-screen text-theme-primary">
         <Sidebar
           planName={currentPlanName}
           itemUsage={itemUsageText}
@@ -591,7 +591,7 @@ export default function PickListDetailPage() {
         <main className="px-4 py-10 sm:px-6 lg:pl-[312px] lg:pr-8">
           <section className="glass-panel mx-auto max-w-2xl p-7 text-center">
             <h1 className="text-3xl font-black">Pick List unavailable</h1>
-            <p className="mt-3 leading-7 text-slate-400">
+            <p className="mt-3 leading-7 text-theme-muted">
               {pageError ||
                 "This Pick List does not exist or you do not have access to it."}
             </p>
@@ -608,7 +608,7 @@ export default function PickListDetailPage() {
   }
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-white">
+    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
       <Sidebar
         planName={currentPlanName}
         itemUsage={itemUsageText}
@@ -623,11 +623,11 @@ export default function PickListDetailPage() {
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
                     href="/dashboard/pick-lists"
-                    className="text-sm font-bold text-cyan-200 transition hover:text-white"
+                    className="text-sm font-bold text-theme-accent transition hover:text-theme-primary"
                   >
                     Pick Lists
                   </Link>
-                  <span className="text-slate-600">/</span>
+                  <span className="text-theme-subtle">/</span>
                   <span
                     className={`rounded-full border px-3 py-1.5 text-xs font-black ${statusClasses[detail.status]}`}
                   >
@@ -638,13 +638,13 @@ export default function PickListDetailPage() {
                 <h1 className="mt-4 break-words text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
                   {detail.title}
                 </h1>
-                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-slate-400">
+                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-theme-muted">
                   <span>{detail.customer_name || "No customer name"}</span>
                   <span>{formatDate(detail.due_date)}</span>
                   <span>{detail.items.length} items</span>
                 </div>
                 {detail.notes && (
-                  <p className="mt-5 max-w-3xl whitespace-pre-wrap leading-7 text-slate-300">
+                  <p className="mt-5 max-w-3xl whitespace-pre-wrap leading-7 text-theme-secondary">
                     {detail.notes}
                   </p>
                 )}
@@ -657,7 +657,7 @@ export default function PickListDetailPage() {
                       type="button"
                       onClick={openMetadata}
                       disabled={Boolean(busyAction)}
-                      className="rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold transition hover:bg-white/[0.1] disabled:opacity-50"
+                      className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover disabled:opacity-50"
                     >
                       Edit Details
                     </button>
@@ -674,7 +674,7 @@ export default function PickListDetailPage() {
                         type="button"
                         onClick={() => void handleStartPreparing()}
                         disabled={Boolean(busyAction)}
-                        className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-3.5 font-bold text-cyan-100 transition hover:bg-cyan-400/20 disabled:opacity-50"
+                        className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-3.5 font-bold text-theme-accent transition hover:bg-cyan-400/20 disabled:opacity-50"
                       >
                         {busyAction === "start"
                           ? "Starting..."
@@ -686,7 +686,7 @@ export default function PickListDetailPage() {
                         type="button"
                         onClick={openCompletion}
                         disabled={Boolean(busyAction)}
-                        className="rounded-2xl border border-emerald-300/30 bg-emerald-400/15 px-5 py-3.5 font-bold text-emerald-100 transition hover:bg-emerald-400/25 disabled:opacity-50"
+                        className="rounded-2xl border border-emerald-300/30 bg-emerald-400/15 px-5 py-3.5 font-bold text-theme-success transition hover:bg-emerald-400/25 disabled:opacity-50"
                       >
                         Complete
                       </button>
@@ -695,7 +695,7 @@ export default function PickListDetailPage() {
                       type="button"
                       onClick={() => setCancelOpen(true)}
                       disabled={Boolean(busyAction)}
-                      className="rounded-2xl border border-red-300/20 bg-red-400/10 px-5 py-3.5 font-bold text-red-200 transition hover:bg-red-400/20 disabled:opacity-50"
+                      className="rounded-2xl border border-red-300/20 bg-red-400/10 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-400/20 disabled:opacity-50"
                     >
                       Cancel List
                     </button>
@@ -710,8 +710,8 @@ export default function PickListDetailPage() {
               role={pageError ? "alert" : "status"}
               className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
                 pageError
-                  ? "border-red-400/25 bg-red-500/10 text-red-200"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-emerald-200"
+                  ? "border-red-400/25 bg-red-500/10 text-theme-danger"
+                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
               }`}
             >
               {pageError || pageNotice}
@@ -729,7 +729,7 @@ export default function PickListDetailPage() {
               <h2 className="text-xl font-black">
                 This Pick List is read-only
               </h2>
-              <p className="mt-2 leading-7 text-slate-400">
+              <p className="mt-2 leading-7 text-theme-muted">
                 {detail.status === "completed"
                   ? detail.completion_stock_action === "deducted"
                     ? "It was completed and inventory stock was deducted atomically."
@@ -742,19 +742,19 @@ export default function PickListDetailPage() {
           <section className="glass-card p-5 sm:p-6">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Preparation progress
                 </p>
                 <h2 className="mt-2 text-3xl font-black">
                   {progress.prepared} / {progress.required} prepared
                 </h2>
               </div>
-              <span className="text-3xl font-black text-cyan-100">
+              <span className="text-3xl font-black text-theme-accent">
                 {progress.percent}%
               </span>
             </div>
             <div
-              className="mt-5 h-3 overflow-hidden rounded-full bg-white/[0.07]"
+              className="mt-5 h-3 overflow-hidden rounded-full bg-theme-surface"
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={100}
@@ -765,7 +765,7 @@ export default function PickListDetailPage() {
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
-            <p className="mt-3 text-sm text-slate-500">
+            <p className="mt-3 text-sm text-theme-subtle">
               Draft and preparing quantities do not reserve or deduct stock.
             </p>
           </section>
@@ -774,7 +774,7 @@ export default function PickListDetailPage() {
             <section className="space-y-4">
               <div className="flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                  <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                     Line items
                   </p>
                   <h2 className="mt-2 text-3xl font-black">Preparation Items</h2>
@@ -783,7 +783,7 @@ export default function PickListDetailPage() {
                   <button
                     type="button"
                     onClick={openAddItem}
-                    className="rounded-xl border border-white/10 bg-white/[0.06] px-4 py-3 text-sm font-bold transition hover:bg-white/[0.1]"
+                    className="rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold transition hover:bg-theme-hover"
                   >
                     Add Item
                   </button>
@@ -813,7 +813,7 @@ export default function PickListDetailPage() {
                             {item.item_name_snapshot}
                           </h3>
                           {hasShortage && editable && (
-                            <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-bold text-amber-100">
+                            <span className="rounded-full border border-amber-300/20 bg-amber-400/10 px-3 py-1 text-xs font-bold text-theme-warning">
                               {item.inventory
                                 ? "Insufficient stock"
                                 : "Inventory link missing"}
@@ -822,24 +822,24 @@ export default function PickListDetailPage() {
                         </div>
                         <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
                           {item.item_code_snapshot && (
-                            <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-slate-300">
+                            <span className="rounded-full border border-theme bg-theme-surface px-3 py-1.5 text-theme-secondary">
                               Code {item.item_code_snapshot}
                             </span>
                           )}
                           {item.sku_snapshot && (
-                            <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-slate-300">
+                            <span className="rounded-full border border-theme bg-theme-surface px-3 py-1.5 text-theme-secondary">
                               SKU {item.sku_snapshot}
                             </span>
                           )}
-                          <span className="rounded-full border border-cyan-300/15 bg-cyan-400/[0.08] px-3 py-1.5 text-cyan-100">
+                          <span className="rounded-full border border-cyan-300/15 bg-cyan-400/[0.08] px-3 py-1.5 text-theme-accent">
                             {item.unit_label_snapshot || "Unit"}
                           </span>
                         </div>
-                        <p className="mt-4 text-sm font-semibold text-slate-400">
+                        <p className="mt-4 text-sm font-semibold text-theme-muted">
                           Current stock:{" "}
                           <span
                             className={
-                              hasShortage ? "text-amber-200" : "text-white"
+                              hasShortage ? "text-theme-warning" : "text-theme-primary"
                             }
                           >
                             {item.inventory
@@ -855,8 +855,8 @@ export default function PickListDetailPage() {
 
                       {!editable && (
                         <div className="grid min-w-full grid-cols-2 gap-3 sm:min-w-[320px]">
-                          <div className="rounded-2xl border border-white/10 bg-black/20 p-4">
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                          <div className="rounded-2xl border border-theme bg-theme-inset p-4">
+                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                               Required
                             </p>
                             <p className="mt-2 text-2xl font-black">
@@ -864,10 +864,10 @@ export default function PickListDetailPage() {
                             </p>
                           </div>
                           <div className="rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.08] p-4">
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-slate-500">
+                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                               Prepared
                             </p>
-                            <p className="mt-2 text-2xl font-black text-emerald-100">
+                            <p className="mt-2 text-2xl font-black text-theme-success">
                               {item.prepared_quantity}
                             </p>
                           </div>
@@ -876,9 +876,9 @@ export default function PickListDetailPage() {
                     </div>
 
                     {editable && (
-                      <div className="mt-6 grid gap-4 border-t border-white/10 pt-5 lg:grid-cols-[180px_1fr]">
+                      <div className="mt-6 grid gap-4 border-t border-theme pt-5 lg:grid-cols-[180px_1fr]">
                         <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-400">
+                          <label className="mb-2 block text-sm font-semibold text-theme-muted">
                             Required quantity
                           </label>
                           <input
@@ -899,7 +899,7 @@ export default function PickListDetailPage() {
                         </div>
 
                         <div>
-                          <label className="mb-2 block text-sm font-semibold text-slate-400">
+                          <label className="mb-2 block text-sm font-semibold text-theme-muted">
                             Prepared quantity
                           </label>
                           <div className="flex flex-col gap-2 sm:flex-row">
@@ -917,7 +917,7 @@ export default function PickListDetailPage() {
                                 savingLineId === item.id ||
                                 item.prepared_quantity <= 0
                               }
-                              className="h-12 rounded-xl border border-white/10 bg-white/[0.06] px-4 text-xl font-black disabled:opacity-40"
+                              className="h-12 rounded-xl border border-theme bg-theme-surface px-4 text-xl font-black disabled:opacity-40"
                             >
                               -
                             </button>
@@ -950,7 +950,7 @@ export default function PickListDetailPage() {
                                 savingLineId === item.id ||
                                 item.prepared_quantity >= item.required_quantity
                               }
-                              className="h-12 rounded-xl border border-white/10 bg-white/[0.06] px-4 text-xl font-black disabled:opacity-40"
+                              className="h-12 rounded-xl border border-theme bg-theme-surface px-4 text-xl font-black disabled:opacity-40"
                             >
                               +
                             </button>
@@ -965,7 +965,7 @@ export default function PickListDetailPage() {
                                 savingLineId === item.id ||
                                 item.prepared_quantity === item.required_quantity
                               }
-                              className="min-h-12 flex-1 rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-emerald-100 disabled:opacity-40"
+                              className="min-h-12 flex-1 rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-theme-success disabled:opacity-40"
                             >
                               Mark Prepared
                             </button>
@@ -973,7 +973,7 @@ export default function PickListDetailPage() {
                         </div>
 
                         <div className="lg:col-span-2">
-                          <label className="mb-2 block text-sm font-semibold text-slate-400">
+                          <label className="mb-2 block text-sm font-semibold text-theme-muted">
                             Line notes
                           </label>
                           <textarea
@@ -996,7 +996,7 @@ export default function PickListDetailPage() {
                             type="button"
                             onClick={() => setPendingRemove(item)}
                             disabled={savingLineId === item.id}
-                            className="rounded-xl border border-red-300/20 bg-red-400/10 px-5 py-3 text-sm font-bold text-red-200 disabled:opacity-50"
+                            className="rounded-xl border border-red-300/20 bg-red-400/10 px-5 py-3 text-sm font-bold text-theme-danger disabled:opacity-50"
                           >
                             Remove
                           </button>
@@ -1015,7 +1015,7 @@ export default function PickListDetailPage() {
                     )}
 
                     {!editable && item.notes && (
-                      <p className="mt-5 whitespace-pre-wrap border-t border-white/10 pt-5 text-sm leading-6 text-slate-400">
+                      <p className="mt-5 whitespace-pre-wrap border-t border-theme pt-5 text-sm leading-6 text-theme-muted">
                         {item.notes}
                       </p>
                     )}
@@ -1028,7 +1028,7 @@ export default function PickListDetailPage() {
               <h2 className="text-3xl font-black">
                 {editable ? "Add preparation items" : "No line items"}
               </h2>
-              <p className="mx-auto mt-3 max-w-xl leading-7 text-slate-400">
+              <p className="mx-auto mt-3 max-w-xl leading-7 text-theme-muted">
                 {editable
                   ? "Search your private inventory and add everything needed for this order, event, or project."
                   : "This Pick List was closed without any saved line items."}
@@ -1048,12 +1048,12 @@ export default function PickListDetailPage() {
       </main>
 
       {metadataOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="glass-modal my-8 w-full max-w-2xl p-5 sm:p-7">
             <form onSubmit={handleMetadataSave}>
               <div className="flex items-start justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                  <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                     Pick List details
                   </p>
                   <h2 className="mt-2 text-3xl font-black">Edit Details</h2>
@@ -1067,7 +1067,7 @@ export default function PickListDetailPage() {
 
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-slate-300">
+                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
                     Title
                   </label>
                   <input
@@ -1083,7 +1083,7 @@ export default function PickListDetailPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-300">
+                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
                     Customer name
                   </label>
                   <input
@@ -1099,7 +1099,7 @@ export default function PickListDetailPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-slate-300">
+                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
                     Due / event date
                   </label>
                   <input
@@ -1116,7 +1116,7 @@ export default function PickListDetailPage() {
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-slate-300">
+                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
                     Notes
                   </label>
                   <textarea
@@ -1134,7 +1134,7 @@ export default function PickListDetailPage() {
               </div>
 
               {metadataError && (
-                <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
                   {metadataError}
                 </div>
               )}
@@ -1144,7 +1144,7 @@ export default function PickListDetailPage() {
                   type="button"
                   onClick={() => setMetadataOpen(false)}
                   disabled={busyAction === "metadata"}
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-3.5 font-bold disabled:opacity-50"
+                  className="rounded-2xl border border-theme bg-theme-surface px-6 py-3.5 font-bold disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -1165,15 +1165,15 @@ export default function PickListDetailPage() {
       )}
 
       {addOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="glass-modal my-8 max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-y-auto p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.17em] text-cyan-300">
+                <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Private inventory
                 </p>
                 <h2 className="mt-2 text-3xl font-black">Add Item</h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Search by name, code, SKU, barcode, category, or supplier.
                 </p>
               </div>
@@ -1185,7 +1185,7 @@ export default function PickListDetailPage() {
             </div>
 
             <div className="mt-6">
-              <label className="mb-2 block text-sm font-semibold text-slate-300">
+              <label className="mb-2 block text-sm font-semibold text-theme-secondary">
                 Search inventory
               </label>
               <input
@@ -1207,18 +1207,18 @@ export default function PickListDetailPage() {
                     className={`w-full rounded-2xl border p-4 text-left transition ${
                       selectedInventoryId === item.id
                         ? "border-cyan-300/35 bg-cyan-400/12"
-                        : "border-white/10 bg-black/20 hover:bg-white/[0.06]"
+                        : "border-theme bg-theme-inset hover:bg-theme-hover"
                     }`}
                   >
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
-                        <p className="font-black text-white">{item.name}</p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="font-black text-theme-primary">{item.name}</p>
+                        <p className="mt-1 text-xs text-theme-subtle">
                           {[item.item_code, item.sku]
                             .filter(Boolean)
                             .join(" / ") || "No code or SKU"}
                         </p>
-                        <p className="mt-2 text-xs font-semibold text-slate-400">
+                        <p className="mt-2 text-xs font-semibold text-theme-muted">
                           {item.category_id
                             ? categoryNames.get(item.category_id) ||
                               "Uncategorized"
@@ -1230,7 +1230,7 @@ export default function PickListDetailPage() {
                             : "No supplier"}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-full border border-white/10 bg-white/[0.05] px-3 py-1.5 text-xs font-bold text-white">
+                      <span className="shrink-0 rounded-full border border-theme bg-theme-surface px-3 py-1.5 text-xs font-bold text-theme-primary">
                         {getInventoryQuantityLabel(
                           item.quantity,
                           item.unit_type,
@@ -1241,23 +1241,23 @@ export default function PickListDetailPage() {
                   </button>
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-white/10 px-5 py-10 text-center text-sm text-slate-500">
+                <div className="rounded-2xl border border-dashed border-theme px-5 py-10 text-center text-sm text-theme-subtle">
                   No available inventory items match this search.
                 </div>
               )}
             </div>
 
-            <form onSubmit={handleAddItem} className="mt-6 border-t border-white/10 pt-6">
+            <form onSubmit={handleAddItem} className="mt-6 border-t border-theme pt-6">
               {selectedInventory ? (
                 <>
                   <div className="rounded-2xl border border-cyan-300/20 bg-cyan-400/[0.08] p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-cyan-300">
+                    <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                       Selected item
                     </p>
                     <p className="mt-2 text-xl font-black">
                       {selectedInventory.name}
                     </p>
-                    <p className="mt-1 text-sm text-slate-400">
+                    <p className="mt-1 text-sm text-theme-muted">
                       Current stock:{" "}
                       {getInventoryQuantityLabel(
                         selectedInventory.quantity,
@@ -1275,7 +1275,7 @@ export default function PickListDetailPage() {
 
                   <div className="mt-4 grid gap-4 sm:grid-cols-[180px_1fr]">
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-300">
+                      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
                         Required quantity
                       </label>
                       <input
@@ -1289,7 +1289,7 @@ export default function PickListDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="mb-2 block text-sm font-semibold text-slate-300">
+                      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
                         Line notes
                       </label>
                       <input
@@ -1303,13 +1303,13 @@ export default function PickListDetailPage() {
                   </div>
                 </>
               ) : (
-                <p className="text-sm font-semibold text-slate-500">
+                <p className="text-sm font-semibold text-theme-subtle">
                   Select an inventory item to continue.
                 </p>
               )}
 
               {addError && (
-                <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+                <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
                   {addError}
                 </div>
               )}
@@ -1319,7 +1319,7 @@ export default function PickListDetailPage() {
                   type="button"
                   onClick={() => setAddOpen(false)}
                   disabled={busyAction === "add-item"}
-                  className="rounded-2xl border border-white/10 bg-white/[0.06] px-6 py-3.5 font-bold disabled:opacity-50"
+                  className="rounded-2xl border border-theme bg-theme-surface px-6 py-3.5 font-bold disabled:opacity-50"
                 >
                   Cancel
                 </button>
@@ -1339,7 +1339,7 @@ export default function PickListDetailPage() {
       )}
 
       {cancelOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
@@ -1352,7 +1352,7 @@ export default function PickListDetailPage() {
             <h2 id="cancel-pick-list-title" className="mt-3 text-2xl font-black">
               Cancel {detail.title}?
             </h2>
-            <p className="mt-3 leading-7 text-slate-400">
+            <p className="mt-3 leading-7 text-theme-muted">
               Stock will not change. The Pick List will become permanently
               read-only and cannot be reopened.
             </p>
@@ -1361,7 +1361,7 @@ export default function PickListDetailPage() {
                 type="button"
                 onClick={() => setCancelOpen(false)}
                 disabled={busyAction === "cancel"}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold disabled:opacity-50"
               >
                 Keep Active
               </button>
@@ -1369,7 +1369,7 @@ export default function PickListDetailPage() {
                 type="button"
                 onClick={() => void handleCancel()}
                 disabled={busyAction === "cancel"}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger disabled:opacity-50"
               >
                 {busyAction === "cancel" ? "Cancelling..." : "Cancel Pick List"}
               </button>
@@ -1379,7 +1379,7 @@ export default function PickListDetailPage() {
       )}
 
       {pendingRemove && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-[#02030a]/85 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
@@ -1395,7 +1395,7 @@ export default function PickListDetailPage() {
             >
               Remove {pendingRemove.item_name_snapshot}?
             </h2>
-            <p className="mt-3 leading-7 text-slate-400">
+            <p className="mt-3 leading-7 text-theme-muted">
               This only removes the line from this Pick List. Inventory stock
               will not change.
             </p>
@@ -1404,7 +1404,7 @@ export default function PickListDetailPage() {
                 type="button"
                 onClick={() => setPendingRemove(null)}
                 disabled={busyAction === "remove"}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold disabled:opacity-50"
               >
                 Keep Item
               </button>
@@ -1412,7 +1412,7 @@ export default function PickListDetailPage() {
                 type="button"
                 onClick={() => void handleRemove()}
                 disabled={busyAction === "remove"}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-red-100 disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger disabled:opacity-50"
               >
                 {busyAction === "remove" ? "Removing..." : "Remove Item"}
               </button>
@@ -1422,7 +1422,7 @@ export default function PickListDetailPage() {
       )}
 
       {completeOpen && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#02030a]/90 p-4 backdrop-blur-xl">
+        <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
@@ -1440,7 +1440,7 @@ export default function PickListDetailPage() {
                 >
                   Complete Pick List
                 </h2>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Completion is permanent. Choose how inventory should be
                   handled.
                 </p>
@@ -1460,13 +1460,13 @@ export default function PickListDetailPage() {
                 className={`rounded-2xl border p-4 text-left transition ${
                   deductStock
                     ? "border-emerald-300/35 bg-emerald-400/12"
-                    : "border-white/10 bg-black/20"
+                    : "border-theme bg-theme-inset"
                 }`}
               >
-                <p className="font-black text-white">
+                <p className="font-black text-theme-primary">
                   Complete and deduct stock
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Recommended. Deduct every required quantity atomically and
                   create stock-out movements.
                 </p>
@@ -1478,13 +1478,13 @@ export default function PickListDetailPage() {
                 className={`rounded-2xl border p-4 text-left transition ${
                   !deductStock
                     ? "border-cyan-300/35 bg-cyan-400/12"
-                    : "border-white/10 bg-black/20"
+                    : "border-theme bg-theme-inset"
                 }`}
               >
-                <p className="font-black text-white">
+                <p className="font-black text-theme-primary">
                   Complete without deducting
                 </p>
-                <p className="mt-2 text-sm leading-6 text-slate-400">
+                <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Close the Pick List as prepared while leaving inventory
                   quantities unchanged.
                 </p>
@@ -1506,13 +1506,13 @@ export default function PickListDetailPage() {
                     className={`rounded-2xl border p-4 ${
                       deductStock && shortage
                         ? "border-amber-300/25 bg-amber-400/[0.08]"
-                        : "border-white/10 bg-black/20"
+                        : "border-theme bg-theme-inset"
                     }`}
                   >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-black">{item.item_name_snapshot}</p>
-                        <p className="mt-1 text-xs text-slate-500">
+                        <p className="mt-1 text-xs text-theme-subtle">
                           Required {item.required_quantity} / Prepared{" "}
                           {item.prepared_quantity}
                         </p>
@@ -1520,8 +1520,8 @@ export default function PickListDetailPage() {
                       <p
                         className={`text-sm font-bold ${
                           deductStock && shortage
-                            ? "text-amber-200"
-                            : "text-slate-300"
+                            ? "text-theme-warning"
+                            : "text-theme-secondary"
                         }`}
                       >
                         {!deductStock
@@ -1537,13 +1537,13 @@ export default function PickListDetailPage() {
             </div>
 
             {!allPrepared && (
-              <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-100">
+              <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-theme-warning">
                 Every line must be fully prepared before completion.
               </div>
             )}
 
             {deductStock && shortages.length > 0 && (
-              <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-amber-100">
+              <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-theme-warning">
                 {shortages.length} line{shortages.length === 1 ? "" : "s"}{" "}
                 cannot be deducted with current stock. Adjust inventory or
                 choose completion without deduction.
@@ -1551,7 +1551,7 @@ export default function PickListDetailPage() {
             )}
 
             {completionError && (
-              <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-red-200">
+              <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
                 {completionError}
               </div>
             )}
@@ -1561,7 +1561,7 @@ export default function PickListDetailPage() {
                 type="button"
                 onClick={() => setCompleteOpen(false)}
                 disabled={busyAction === "complete"}
-                className="flex-1 rounded-2xl border border-white/10 bg-white/[0.06] px-5 py-3.5 font-bold disabled:opacity-50"
+                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold disabled:opacity-50"
               >
                 Continue Preparing
               </button>
@@ -1573,7 +1573,7 @@ export default function PickListDetailPage() {
                   !allPrepared ||
                   (deductStock && shortages.length > 0)
                 }
-                className="flex-1 rounded-2xl border border-emerald-300/30 bg-emerald-400/20 px-5 py-3.5 font-bold text-emerald-100 disabled:cursor-not-allowed disabled:opacity-40"
+                className="flex-1 rounded-2xl border border-emerald-300/30 bg-emerald-400/20 px-5 py-3.5 font-bold text-theme-success disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busyAction === "complete"
                   ? "Completing..."

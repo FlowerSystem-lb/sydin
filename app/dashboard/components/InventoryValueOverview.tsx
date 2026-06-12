@@ -139,23 +139,23 @@ export default function InventoryValueOverview({
   );
 
   return (
-    <section className="rounded-[32px] border border-white/10 bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.15),_transparent_38%),rgba(255,255,255,0.045)] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
+    <section className="rounded-[32px] border border-theme bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.15),_transparent_38%),rgba(255,255,255,0.045)] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
             Business overview
           </p>
-          <h2 className="mt-2 text-3xl font-bold tracking-tight text-white sm:text-4xl">
+          <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
             Inventory Value Overview
           </h2>
-          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-400 sm:text-base">
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-theme-muted sm:text-base">
             Values are calculated from current quantities and the prices saved
             on each item. Missing prices are excluded rather than treated as
             zero.
           </p>
         </div>
         {!loading && !isLocked && (
-          <span className="w-fit rounded-full border border-indigo-300/20 bg-indigo-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-indigo-100">
+          <span className="w-fit rounded-full border border-indigo-300/20 bg-indigo-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
             Currency: {normalizeCurrencyCode(currencyCode, "USD")}
           </span>
         )}
@@ -167,7 +167,7 @@ export default function InventoryValueOverview({
             {[1, 2, 3, 4, 5, 6].map((item) => (
               <div
                 key={item}
-                className="h-40 animate-pulse rounded-[26px] border border-white/10 bg-white/[0.05]"
+                className="h-40 animate-pulse rounded-[26px] border border-theme bg-theme-surface"
               />
             ))}
           </div>
@@ -185,54 +185,54 @@ export default function InventoryValueOverview({
               {valueCards.map((card) => (
                 <article
                   key={card.label}
-                  className="rounded-[26px] border border-white/10 bg-black/20 p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)]"
+                  className="rounded-[26px] border border-theme bg-theme-inset p-5 shadow-[0_18px_55px_rgba(0,0,0,0.2)]"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="min-w-0">
-                      <p className="text-sm font-semibold text-slate-400">
+                      <p className="text-sm font-semibold text-theme-muted">
                         {card.label}
                       </p>
-                      <p className="mt-3 break-words text-3xl font-black tracking-tight text-white sm:text-4xl">
+                      <p className="mt-3 break-words text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
                         {card.value}
                       </p>
                     </div>
                     <span
-                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-white shadow-[0_14px_40px_rgba(99,102,241,0.24)]`}
+                      className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-theme-primary shadow-[0_14px_40px_rgba(99,102,241,0.24)]`}
                     >
                       <UiIcon name={card.icon} className="h-5 w-5" />
                     </span>
                   </div>
-                  <p className="mt-4 text-xs leading-5 text-slate-500">
+                  <p className="mt-4 text-xs leading-5 text-theme-subtle">
                     {card.detail}
                   </p>
                 </article>
               ))}
             </div>
 
-            <div className="mt-5 rounded-[28px] border border-white/10 bg-black/25 p-5 sm:p-6">
+            <div className="mt-5 rounded-[28px] border border-theme bg-theme-inset p-5 sm:p-6">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-cyan-300">
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
                     Category analysis
                   </p>
-                  <h3 className="mt-2 text-2xl font-bold text-white">
+                  <h3 className="mt-2 text-2xl font-bold text-theme-primary">
                     Stock value by category
                   </h3>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-theme-subtle">
                   Ranked by recorded stock cost value
                 </p>
               </div>
 
               {!analytics.hasCostPriceData ? (
                 <div className="mt-6 rounded-3xl border border-dashed border-indigo-300/25 bg-indigo-500/[0.06] px-5 py-12 text-center">
-                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-indigo-100">
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
                     <UiIcon name="layers" className="h-7 w-7" />
                   </span>
-                  <h4 className="mt-5 text-xl font-bold text-white">
+                  <h4 className="mt-5 text-xl font-bold text-theme-primary">
                     Add cost prices to see inventory value analytics.
                   </h4>
-                  <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-slate-400">
+                  <p className="mx-auto mt-2 max-w-lg text-sm leading-6 text-theme-muted">
                     Category values will appear here as soon as at least one
                     inventory item has a cost price.
                   </p>
@@ -252,28 +252,28 @@ export default function InventoryValueOverview({
                       <div key={category.category}>
                         <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                           <div className="flex min-w-0 items-center gap-3">
-                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/[0.06] text-xs font-black text-indigo-200">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-theme bg-theme-surface text-xs font-black text-theme-accent">
                               {index + 1}
                             </span>
                             <p className="truncate text-sm font-bold text-slate-200">
                               {category.category}
                             </p>
                           </div>
-                          <p className="pl-10 text-sm font-black text-white sm:pl-0">
+                          <p className="pl-10 text-sm font-black text-theme-primary sm:pl-0">
                             {formatCompactCurrency(
                               category.costValue,
                               currencyCode
                             )}
                           </p>
                         </div>
-                        <div className="mt-2 h-3 overflow-hidden rounded-full border border-white/[0.06] bg-black/40">
+                        <div className="mt-2 h-3 overflow-hidden rounded-full border border-theme bg-theme-inset">
                           <div
                             className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-indigo-400 to-violet-500 shadow-[0_0_20px_rgba(99,102,241,0.5)]"
                             style={{ width: `${width}%` }}
                           />
                         </div>
                         {category.retailValue > 0 && (
-                          <p className="mt-1.5 text-right text-[11px] font-semibold text-slate-500">
+                          <p className="mt-1.5 text-right text-[11px] font-semibold text-theme-subtle">
                             Retail{" "}
                             {formatCompactCurrency(
                               category.retailValue,
