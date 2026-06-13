@@ -8,6 +8,12 @@ import Sidebar from "@/components/Sidebar";
 import { useTheme } from "@/components/ThemeProvider";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
+  FormField,
+  Input,
+  SectionCard,
+  SectionHeader,
+} from "@/components/ui";
+import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
@@ -335,32 +341,23 @@ export default function SettingsPage() {
             </div>
           </section>
 
-          <section
+          <SectionCard
             aria-labelledby="appearance-heading"
-            className="glass-panel p-5 sm:p-7 lg:p-8"
           >
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-sky-500">
-                  Appearance
-                </p>
-                <h2
-                  id="appearance-heading"
-                  className="mt-2 text-3xl font-bold tracking-tight text-theme-primary"
+            <SectionHeader
+              id="appearance-heading"
+              eyebrow="Appearance"
+              title="Choose your workspace theme"
+              description="Your choice applies immediately and stays on this device."
+              action={
+                <p
+                  className="supporting-body font-semibold text-theme-muted"
+                  aria-live="polite"
                 >
-                  Choose your workspace theme
-                </h2>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-secondary">
-                  Your choice applies immediately and stays on this device.
+                  Saved on this device.
                 </p>
-              </div>
-              <p
-                className="text-sm font-semibold text-theme-muted"
-                aria-live="polite"
-              >
-                Saved on this device.
-              </p>
-            </div>
+              }
+            />
 
             <fieldset className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
               <legend className="sr-only">Dashboard appearance</legend>
@@ -370,7 +367,7 @@ export default function SettingsPage() {
                 return (
                   <label
                     key={option.value}
-                    className={`group cursor-pointer rounded-3xl border p-4 transition ${
+                    className={`group cursor-pointer rounded-xl border p-4 transition ${
                       selected
                         ? "border-theme-strong bg-theme-selected shadow-[0_16px_45px_rgba(14,116,229,0.12)]"
                         : "border-theme bg-theme-surface hover:border-theme-strong"
@@ -417,7 +414,7 @@ export default function SettingsPage() {
                 );
               })}
             </fieldset>
-          </section>
+          </SectionCard>
 
           <form
             onSubmit={handleSave}
@@ -461,12 +458,9 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 gap-5">
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                        Business name
-                      </label>
-
-                      <input
+                    <FormField label="Business name" htmlFor="business-name">
+                      <Input
+                        id="business-name"
                         type="text"
                         value={settings.business_name}
                         onChange={(event) =>
@@ -475,10 +469,9 @@ export default function SettingsPage() {
                             business_name: event.target.value,
                           }))
                         }
-                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
                         required
                       />
-                    </div>
+                    </FormField>
 
                     <div>
                       <label className="mb-2 block text-sm font-semibold text-theme-muted">

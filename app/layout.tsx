@@ -2,9 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "SydIn - Visual Inventory Management Software",
+  title: "SydIN - Visual Inventory Management Software",
   description:
-    "SydIn helps small businesses track inventory with photos, QR item pages, stock history, and a clean private workspace.",
+    "SydIN helps small businesses track inventory with photos, QR item pages, stock history, and a clean private workspace.",
 };
 
 export default function RootLayout({

@@ -109,7 +109,7 @@ export function MarketingLogo() {
       <BrandMark />
 
       <div className="min-w-0">
-        <Wordmark size="sm" />
+        <Wordmark size="sm" variant="dark-background" />
 
         <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
           Visual inventory

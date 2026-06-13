@@ -5,6 +5,10 @@ import Image from "next/image";
 import Link from "next/link";
 import Sidebar from "@/components/Sidebar";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import {
+  PageHeader,
+  buttonClassName,
+} from "@/components/ui";
 import InventoryValueOverview, {
   type InventoryCategoryValue,
   type InventoryValueAnalytics,
@@ -359,51 +363,40 @@ export default function DashboardPage() {
 
       <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-              <div className="max-w-3xl">
-                <div className="mb-5 inline-flex items-center gap-3 rounded-full border border-theme bg-theme-surface px-4 py-2 text-sm font-semibold text-theme-secondary">
-                  <span className="h-2 w-2 rounded-full bg-emerald-400 shadow-[0_0_22px_rgba(52,211,153,0.8)]" />
-                  Live inventory overview
-                </div>
-
-                <p className="text-lg font-medium text-theme-muted">
-                  Welcome back to {businessSettings.business_name}
-                </p>
-
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
-                  Dashboard
-                </h1>
-
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
-                  Monitor stock health, recently added products, and inventory movement signals from one polished workspace.
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
+          <PageHeader
+            eyebrow={`Welcome back to ${businessSettings.business_name}`}
+            title="Dashboard"
+            description="Monitor stock health, recently added products, and inventory movement signals from one workspace."
+            meta={
+              <span className="ui-badge ui-badge-info mb-2">
+                Inventory overview
+              </span>
+            }
+            actions={
+              <>
                 <Link
                   href="/dashboard/reports"
-                  className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-4 text-center text-base font-bold text-cyan-50 transition hover:border-cyan-200/45 hover:bg-cyan-400/15"
+                  className={buttonClassName({ variant: "secondary" })}
                 >
                   View Reports
                 </Link>
 
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-2xl bg-white px-5 py-4 text-center text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                  className={buttonClassName({ variant: "primary" })}
                 >
                   View Inventory
                 </Link>
 
                 <Link
                   href="/dashboard/add-item"
-                  className="rounded-2xl border border-indigo-400/30 bg-indigo-500/15 px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-indigo-300/60 hover:bg-indigo-500/25"
+                  className={buttonClassName({ variant: "ghost" })}
                 >
                   Add Item
                 </Link>
-              </div>
-            </div>
-          </section>
+              </>
+            }
+          />
 
           {error && (
             <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
@@ -556,7 +549,7 @@ export default function DashboardPage() {
               <Link
                 key={card.label}
                 href={card.href}
-                className="group rounded-[28px] border border-theme bg-theme-surface p-5 shadow-[0_22px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl transition duration-300 hover:-translate-y-1 hover:border-indigo-300/30 hover:bg-white/[0.075] sm:p-6"
+                className="ui-card ui-card-interactive group p-5 sm:p-6"
               >
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -564,7 +557,7 @@ export default function DashboardPage() {
                       {card.label}
                     </p>
 
-                    <p className="mt-4 text-5xl font-bold tracking-tight text-theme-primary">
+                    <p className="mt-3 text-3xl font-bold tracking-tight text-theme-primary">
                       {loading ? (
                         <span className="block h-12 w-24 animate-pulse rounded-2xl bg-theme-surface" />
                       ) : (
@@ -573,7 +566,7 @@ export default function DashboardPage() {
                     </p>
                   </div>
 
-                  <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${card.accent} text-theme-primary shadow-[0_18px_55px_rgba(99,102,241,0.28)]`}>
+                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${card.accent} text-white shadow-[var(--shadow-subtle)]`}>
                     <UiIcon name={card.icon} className="h-6 w-6" />
                   </div>
                 </div>

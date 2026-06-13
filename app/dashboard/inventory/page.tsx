@@ -10,6 +10,7 @@ import {
 } from "@zxing/browser";
 import Sidebar from "@/components/Sidebar";
 import UiIcon from "@/components/UiIcon";
+import { Button, DialogShell } from "@/components/ui";
 import CategorySelector from "@/components/CategorySelector";
 import {
   getCategoriesForUser,
@@ -2232,42 +2233,36 @@ export default function InventoryPage() {
       )}
 
       {pendingDeleteItem && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-item-title"
-            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
-          >
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
-              Delete inventory item
-            </p>
-            <h2 id="delete-item-title" className="mt-3 break-words text-2xl font-bold text-theme-primary">
-              Delete {pendingDeleteItem.name}?
-            </h2>
-            <p className="mt-3 leading-7 text-theme-muted">
-              This removes the item from inventory. This action cannot be undone.
-            </p>
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
-              <button
-                type="button"
+        <DialogShell
+          title={`Delete ${pendingDeleteItem.name}?`}
+          description="This removes the item from inventory. This action cannot be undone."
+          eyebrow="Delete inventory item"
+          tone="danger"
+          onClose={() => setPendingDeleteItem(null)}
+          closeDisabled={deletingId !== null}
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setPendingDeleteItem(null)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
+                className="sm:min-w-28"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => void deleteItem(pendingDeleteItem.id)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                loading={deletingId === pendingDeleteItem.id}
+                loadingLabel="Deleting..."
+                className="sm:min-w-32"
               >
-                {deletingId === pendingDeleteItem.id ? "Deleting..." : "Delete Item"}
-              </button>
-            </div>
-          </div>
-        </div>
+                Delete Item
+              </Button>
+            </>
+          }
+        />
       )}
 
       {/* Edit Item Modal */}

@@ -9,7 +9,13 @@ export type UiIconName =
   | "sheet"
   | "plus"
   | "scan"
-  | "search";
+  | "search"
+  | "close"
+  | "check"
+  | "info"
+  | "menu"
+  | "chevron-down"
+  | "trash";
 
 export default function UiIcon({
   name,
@@ -25,7 +31,7 @@ export default function UiIcon({
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
-      strokeWidth="1.8"
+      strokeWidth="1.75"
       strokeLinecap="round"
       strokeLinejoin="round"
     >
@@ -93,6 +99,22 @@ export default function UiIcon({
         <>
           <circle cx="11" cy="11" r="7" />
           <path d="m20 20-4-4" />
+        </>
+      )}
+      {name === "close" && <path d="m6 6 12 12M18 6 6 18" />}
+      {name === "check" && <path d="m5 12 4 4L19 6" />}
+      {name === "info" && (
+        <>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 11v5M12 8h.01" />
+        </>
+      )}
+      {name === "menu" && <path d="M4 7h16M4 12h16M4 17h16" />}
+      {name === "chevron-down" && <path d="m6 9 6 6 6-6" />}
+      {name === "trash" && (
+        <>
+          <path d="M4 7h16M9 7V4h6v3M7 7l1 13h8l1-13" />
+          <path d="M10 11v5M14 11v5" />
         </>
       )}
     </svg>
