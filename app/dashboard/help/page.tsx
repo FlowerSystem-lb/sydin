@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
 import {
   FAQ_ITEMS,
   QUICK_GUIDES,
@@ -130,7 +129,6 @@ export default function HelpCenterPage() {
   }, []);
 
   const currentPlanName = formatPlanName(usage.subscription.plan);
-  const itemUsageText = `${usage.usedItems} / ${usage.subscription.item_limit} items`;
   const mailtoUrl = buildSupportMailtoUrl({
     businessName: businessSettings.business_name,
     planName: currentPlanName,
@@ -156,16 +154,8 @@ export default function HelpCenterPage() {
   };
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
-      <Sidebar
-        planName={currentPlanName}
-        itemUsage={itemUsageText}
-        businessName={businessSettings.business_name}
-        businessLogoUrl={businessSettings.business_logo_url}
-        addItemHref="/dashboard/add-item"
-      />
-
-      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+    <div className="contents">
+      <main>
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

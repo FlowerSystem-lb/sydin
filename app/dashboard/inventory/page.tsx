@@ -8,7 +8,6 @@ import {
   BrowserMultiFormatReader,
   type IScannerControls,
 } from "@zxing/browser";
-import Sidebar from "@/components/Sidebar";
 import UiIcon from "@/components/UiIcon";
 import { Button, DialogShell } from "@/components/ui";
 import CategorySelector from "@/components/CategorySelector";
@@ -57,6 +56,10 @@ import {
 } from "@/app/lib/businessSettings";
 import { exportInventoryExcel } from "@/app/lib/inventoryExcelExport";
 import { exportInventoryPdf } from "@/app/lib/inventoryPdfExport";
+import {
+  SCANNER_REQUEST_EVENT,
+  SCANNER_REQUEST_STORAGE_KEY,
+} from "@/app/lib/scannerNavigation";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -526,7 +529,7 @@ export default function InventoryPage() {
     setScannerStatus("");
   }, [stopScanner]);
 
-  const openScanner = () => {
+  const openScanner = useCallback(() => {
     if (!canUseScanner) {
       setLockedFeature({
         feature: "Inventory scanner",
@@ -544,7 +547,47 @@ export default function InventoryPage() {
     setScannerStatus("Starting camera...");
     scannerMatchedRef.current = false;
     setIsScannerOpen(true);
-  };
+  }, [canUseScanner]);
+
+  useEffect(() => {
+    const handleScannerRequest = () => {
+      if (usageLoading) {
+        try {
+          window.sessionStorage.setItem(
+            SCANNER_REQUEST_STORAGE_KEY,
+            "true"
+          );
+        } catch {
+          // The inventory page remains usable without storage access.
+        }
+        return;
+      }
+
+      openScanner();
+    };
+
+    let pendingRequest = false;
+    try {
+      pendingRequest =
+        window.sessionStorage.getItem(SCANNER_REQUEST_STORAGE_KEY) === "true";
+    } catch {
+      pendingRequest = false;
+    }
+
+    if (pendingRequest && !usageLoading) {
+      try {
+        window.sessionStorage.removeItem(SCANNER_REQUEST_STORAGE_KEY);
+      } catch {
+        // Opening the scanner does not depend on clearing the hint.
+      }
+      window.requestAnimationFrame(openScanner);
+    }
+
+    window.addEventListener(SCANNER_REQUEST_EVENT, handleScannerRequest);
+    return () => {
+      window.removeEventListener(SCANNER_REQUEST_EVENT, handleScannerRequest);
+    };
+  }, [openScanner, usageLoading]);
 
   const handleScannedText = useCallback((scannedValue: string) => {
     const scannedText = scannedValue.trim();
@@ -1326,7 +1369,6 @@ export default function InventoryPage() {
   });
 
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
-  const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
   const exportDisabled = loadingItems || items.length === 0;
   const pdfExportDisabled =
     usageLoading || (canExportPdf && (exportDisabled || isExportingPdf));
@@ -1334,21 +1376,8 @@ export default function InventoryPage() {
     usageLoading || (canExportExcel && (exportDisabled || isExportingExcel));
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
-      <Sidebar
-        onAddItem={() => {
-          setAddError("");
-          setImageError("");
-          setIsLimitError(false);
-          setIsModalOpen(true);
-        }}
-        planName={currentPlanName}
-        itemUsage={usageLoading ? "... / ... items" : itemUsageText}
-        businessName={businessSettings.business_name}
-        businessLogoUrl={businessSettings.business_logo_url}
-      />
-
-      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+    <div className="contents">
+      <main>
         <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8">
           <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">

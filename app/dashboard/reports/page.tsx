@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
@@ -446,7 +445,6 @@ export default function ReportsPage() {
   const [movementError, setMovementError] = useState("");
 
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
-  const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
@@ -709,16 +707,8 @@ export default function ReportsPage() {
     : [];
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
-      <Sidebar
-        addItemHref="/dashboard/add-item"
-        planName={currentPlanName}
-        itemUsage={itemUsageText}
-        businessName={businessSettings.business_name}
-        businessLogoUrl={businessSettings.business_logo_url}
-      />
-
-      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+    <div className="contents">
+      <main>
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-7">
           <section className="rounded-[32px] border border-theme bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_36%),rgba(255,255,255,0.045)] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">

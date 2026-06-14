@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import Wordmark from "@/components/Wordmark";
 import {
@@ -182,7 +181,6 @@ export default function InventoryImportPage() {
   const exceedsPlanLimit =
     projectedItemCount > usage.subscription.item_limit;
   const currentPlanName = formatPlanName(usage.subscription.plan);
-  const itemUsageText = `${usage.usedItems} / ${usage.subscription.item_limit} items`;
   const canImport = hasSubscriptionCapability(
     usage.subscription,
     "csvExcelImport"
@@ -401,13 +399,8 @@ export default function InventoryImportPage() {
   };
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
-      <Sidebar
-        planName={currentPlanName}
-        itemUsage={initialLoading ? "... / ... items" : itemUsageText}
-      />
-
-      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+    <div className="contents">
+      <main>
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 sm:gap-8">
           <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

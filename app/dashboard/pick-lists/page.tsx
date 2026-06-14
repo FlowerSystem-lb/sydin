@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   createPickList,
@@ -285,7 +284,6 @@ export default function PickListsPage() {
     pickListLimit !== null && activeCount >= pickListLimit;
   const currentPlanName = formatPlanName(usage.subscription.plan);
   const requiredPlan = getUpgradePlanForPickListLimit(usage.subscription.plan);
-  const itemUsageText = `${usage.usedItems} / ${usage.subscription.item_limit} items`;
 
   const visibleLists = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
@@ -353,14 +351,8 @@ export default function PickListsPage() {
   ];
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
-      <Sidebar
-        planName={currentPlanName}
-        itemUsage={itemUsageText}
-        addItemHref="/dashboard/add-item"
-      />
-
-      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+    <div className="contents">
+      <main>
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

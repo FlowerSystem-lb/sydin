@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
+import DashboardShell from "@/components/dashboard/DashboardShell";
 import ThemeProvider from "@/components/ThemeProvider";
 
 export default function DashboardLayout({
@@ -12,8 +13,11 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
 
-  const [loading, setLoading] =
-    useState(true);
+  const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<{
+    id: string;
+    email?: string | null;
+  } | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -28,6 +32,10 @@ export default function DashboardLayout({
           return;
         }
 
+        setUser({
+          id: session.user.id,
+          email: session.user.email,
+        });
         setLoading(false);
       })
       .catch(() => {
@@ -61,5 +69,13 @@ export default function DashboardLayout({
     );
   }
 
-  return <ThemeProvider>{children}</ThemeProvider>;
+  if (!user) return null;
+
+  return (
+    <ThemeProvider>
+      <DashboardShell userId={user.id} email={user.email}>
+        {children}
+      </DashboardShell>
+    </ThemeProvider>
+  );
 }

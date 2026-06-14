@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import Sidebar from "@/components/Sidebar";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
   PageHeader,
@@ -352,16 +351,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
-      <Sidebar
-        addItemHref="/dashboard/add-item"
-        planName={currentPlanName}
-        itemUsage={itemUsageText}
-        businessName={businessSettings.business_name}
-        businessLogoUrl={businessSettings.business_logo_url}
-      />
-
-      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+    <div className="contents">
+      <main>
         <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
           <PageHeader
             eyebrow={`Welcome back to ${businessSettings.business_name}`}

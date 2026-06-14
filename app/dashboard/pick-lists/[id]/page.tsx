@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import Sidebar from "@/components/Sidebar";
 import {
   addPickListItem,
   cancelPickList,
@@ -31,12 +30,6 @@ import {
   getInventoryUnitLabel,
 } from "@/app/lib/inventoryItemModel";
 import {
-  FALLBACK_SUBSCRIPTION,
-  formatPlanName,
-  getSubscriptionUsage,
-  type SubscriptionUsage,
-} from "@/app/lib/subscription";
-import {
   getSuppliersForUser,
   type Supplier,
 } from "@/app/lib/suppliers";
@@ -47,11 +40,6 @@ interface LineDraft {
   prepared: string;
   notes: string;
 }
-
-const DEFAULT_USAGE: SubscriptionUsage = {
-  subscription: FALLBACK_SUBSCRIPTION,
-  usedItems: 0,
-};
 
 const inputClassName =
   "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-cyan-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:cursor-not-allowed disabled:opacity-60";
@@ -130,7 +118,6 @@ export default function PickListDetailPage() {
   >([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
   const [userId, setUserId] = useState("");
   const [lineDrafts, setLineDrafts] = useState<Record<number, LineDraft>>({});
   const [loading, setLoading] = useState(validPickListId);
@@ -200,13 +187,11 @@ export default function PickListDetailPage() {
             loadedInventory,
             loadedCategories,
             loadedSuppliers,
-            loadedUsage,
           ] = await Promise.all([
             getPickListDetail(user.id, pickListId),
             getPickListInventoryItems(user.id),
             getCategoriesForUser(user.id).catch(() => []),
             getSuppliersForUser(user.id).catch(() => []),
-            getSubscriptionUsage(user.id),
           ]);
 
           if (!isActive) return;
@@ -215,7 +200,6 @@ export default function PickListDetailPage() {
           setInventoryItems(loadedInventory);
           setCategories(loadedCategories);
           setSuppliers(loadedSuppliers);
-          setUsage(loadedUsage);
           setLineDrafts(createLineDrafts(loadedDetail?.items || []));
         } catch (error) {
           if (!isActive) return;
@@ -235,8 +219,6 @@ export default function PickListDetailPage() {
     };
   }, [pickListId, validPickListId]);
 
-  const currentPlanName = formatPlanName(usage.subscription.plan);
-  const itemUsageText = `${usage.usedItems} / ${usage.subscription.item_limit} items`;
   const editable =
     detail?.status === "draft" || detail?.status === "preparing";
   const progress = getPickListProgress(detail?.items || []);
@@ -563,13 +545,8 @@ export default function PickListDetailPage() {
 
   if (loading) {
     return (
-      <div className="liquid-bg min-h-screen text-theme-primary">
-        <Sidebar
-          planName={currentPlanName}
-          itemUsage={itemUsageText}
-          addItemHref="/dashboard/add-item"
-        />
-        <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+      <div className="contents">
+        <main>
           <div className="mx-auto max-w-[1400px] space-y-6">
             <div className="glass-panel h-64 animate-pulse" />
             <div className="glass-card h-40 animate-pulse" />
@@ -582,13 +559,8 @@ export default function PickListDetailPage() {
 
   if (!detail) {
     return (
-      <div className="liquid-bg min-h-screen text-theme-primary">
-        <Sidebar
-          planName={currentPlanName}
-          itemUsage={itemUsageText}
-          addItemHref="/dashboard/add-item"
-        />
-        <main className="px-4 py-10 sm:px-6 lg:pl-[312px] lg:pr-8">
+      <div className="contents">
+        <main>
           <section className="glass-panel mx-auto max-w-2xl p-7 text-center">
             <h1 className="text-3xl font-black">Pick List unavailable</h1>
             <p className="mt-3 leading-7 text-theme-muted">
@@ -608,14 +580,8 @@ export default function PickListDetailPage() {
   }
 
   return (
-    <div className="liquid-bg min-h-screen overflow-x-hidden text-theme-primary">
-      <Sidebar
-        planName={currentPlanName}
-        itemUsage={itemUsageText}
-        addItemHref="/dashboard/add-item"
-      />
-
-      <main className="px-4 py-6 sm:px-6 lg:pl-[312px] lg:pr-8 lg:py-8">
+    <div className="contents">
+      <main>
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
