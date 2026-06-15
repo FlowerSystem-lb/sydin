@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { DialogShell } from "@/components/ui";
+import { DialogShell, Select } from "@/components/ui";
 import {
   recordStockMovement,
   STOCK_MOVEMENT_LABELS,
@@ -132,31 +132,27 @@ function StockMovementDialogContent({
     >
       <form onSubmit={handleSubmit} className="grid gap-5">
         <div>
-          <label
-            htmlFor="movement-item"
-            className="mb-2 block text-sm font-bold text-theme-secondary"
-          >
-            Inventory item
-          </label>
-          <select
+          <Select
             id="movement-item"
+            label="Inventory item"
             value={itemId}
-            onChange={(event) => {
-              setItemId(event.target.value);
+            onChange={(value) => {
+              setItemId(value);
               setError("");
             }}
             disabled={saving}
-            className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-indigo-300/60 focus:ring-4 focus:ring-indigo-400/10"
-            required
-          >
-            <option value="">Choose an item</option>
-            {items.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-                {item.sku ? ` · ${item.sku}` : ""} · {item.quantity} in stock
-              </option>
-            ))}
-          </select>
+            placeholder="Choose an item"
+            searchable
+            searchPlaceholder="Search inventory items"
+            options={items.map((item) => ({
+              value: String(item.id),
+              label: item.name,
+              description: `${item.sku ? `${item.sku} · ` : ""}${
+                item.quantity
+              } in stock`,
+              keywords: item.sku || "",
+            }))}
+          />
         </div>
 
         <fieldset>

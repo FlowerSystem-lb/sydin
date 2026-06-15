@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Category } from "@/app/lib/categories";
+import Select from "@/components/ui/Select";
 
 interface CategorySelectorProps {
   categories: Category[];
@@ -23,67 +23,39 @@ export default function CategorySelector({
   className = "",
   id,
 }: CategorySelectorProps) {
-  const [search, setSearch] = useState("");
-  const normalizedSearch = search.trim().toLowerCase();
-  const visibleCategories = useMemo(
-    () =>
-      normalizedSearch
-        ? categories.filter(
-            (category) =>
-              String(category.id) === value ||
-              category.name.toLowerCase().includes(normalizedSearch)
-          )
-        : categories,
-    [categories, normalizedSearch, value]
-  );
   const hasLegacyCategory =
     value === "legacy" && Boolean(legacyCategory?.trim());
+  const options = [
+    { value: "", label: "No category" },
+    ...(hasLegacyCategory
+      ? [
+          {
+            value: "legacy",
+            label: `Legacy: ${legacyCategory?.trim()}`,
+          },
+        ]
+      : []),
+    ...categories.map((category) => ({
+      value: String(category.id),
+      label: category.name,
+      description: category.description || undefined,
+    })),
+  ];
 
   return (
     <div className={className}>
-      {categories.length > 8 && (
-        <input
-          type="search"
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-          disabled={disabled}
-          placeholder="Filter categories"
-          className="mb-2 w-full rounded-xl border border-theme bg-theme-inset px-4 py-2.5 text-sm text-theme-primary outline-none placeholder:text-theme-subtle focus:border-cyan-300/50"
-        />
-      )}
-      <div className="relative">
-        <select
-          id={id}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          disabled={disabled}
-          className="w-full appearance-none rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 pr-12 text-base text-theme-primary outline-none transition focus:border-cyan-300/60 focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:opacity-60"
-        >
-          <option value="">No category</option>
-          {hasLegacyCategory && (
-            <option value="legacy">
-              Legacy: {legacyCategory?.trim()}
-            </option>
-          )}
-          {visibleCategories.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
-        <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-          <svg
-            aria-hidden="true"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="m6 9 6 6 6-6" />
-          </svg>
-        </span>
-      </div>
+      <Select
+        id={id}
+        value={value}
+        options={options}
+        onChange={onChange}
+        ariaLabel="Category"
+        placeholder="No category"
+        searchable={categories.length > 8}
+        searchPlaceholder="Search categories"
+        disabled={disabled}
+        buttonClassName="min-h-14 rounded-2xl px-5 text-base"
+      />
       {hasLegacyCategory && (
         <p className="mt-2 rounded-xl border border-amber-300/15 bg-amber-500/[0.07] px-3 py-2 text-xs leading-5 text-theme-warning">
           Existing legacy category: <strong>{legacyCategory?.trim()}</strong>.

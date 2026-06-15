@@ -3,6 +3,7 @@
 import Image from "next/image";
 import type { FormEvent, ReactNode } from "react";
 import CategorySelector from "@/components/CategorySelector";
+import Select from "@/components/ui/Select";
 import type { Category } from "@/app/lib/categories";
 import { formatDepotLabel, type Depot } from "@/app/lib/depots";
 import {
@@ -492,78 +493,44 @@ export default function EditItemForm({
             <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Depot / Location
             </label>
-            <div className="relative">
-              <select
+            <Select
                 value={values.depotId}
-                onChange={(event) =>
-                  onValueChange("depotId", event.target.value)
+                onChange={(value) =>
+                  onValueChange("depotId", value)
                 }
                 disabled={saving}
-                className={`${inputClassName} appearance-none pr-12`}
-              >
-                <option value="">Unassigned</option>
-                {depots.map((depot) => (
-                  <option key={depot.id} value={depot.id}>
-                    {formatDepotLabel(depot)}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-                <svg
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </span>
-            </div>
+                searchable={depots.length > 8}
+                placeholder="Unassigned"
+                options={[
+                  { value: "", label: "Unassigned" },
+                  ...depots.map((depot) => ({
+                    value: String(depot.id),
+                    label: formatDepotLabel(depot),
+                  })),
+                ]}
+              />
           </div>
 
           <div>
             <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Supplier
             </label>
-            <div className="relative">
-              <select
+            <Select
                 value={values.supplierId}
-                onChange={(event) =>
-                  onValueChange("supplierId", event.target.value)
+                onChange={(value) =>
+                  onValueChange("supplierId", value)
                 }
                 disabled={saving}
-                className={`${inputClassName} appearance-none pr-12`}
-              >
-                <option value="">No supplier</option>
-                {suppliers.map((supplier) => (
-                  <option key={supplier.id} value={supplier.id}>
-                    {supplier.name}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-                <svg
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </span>
-            </div>
+                searchable={suppliers.length > 8}
+                placeholder="No supplier"
+                options={[
+                  { value: "", label: "No supplier" },
+                  ...suppliers.map((supplier) => ({
+                    value: String(supplier.id),
+                    label: supplier.name,
+                  })),
+                ]}
+              />
             <p className="mt-2 text-xs leading-5 text-theme-subtle">
               Optional. Manage supplier records from the Suppliers page.
             </p>
@@ -617,11 +584,10 @@ export default function EditItemForm({
             <label className="mb-2 block text-sm font-semibold text-theme-secondary">
               Unit <span className="text-theme-accent">*</span>
             </label>
-            <div className="relative">
-              <select
+            <Select
                 value={values.unitType}
-                onChange={(event) => {
-                  const nextUnit = event.target.value as InventoryUnitType;
+                onChange={(value) => {
+                  const nextUnit = value as InventoryUnitType;
                   onValueChange("unitType", nextUnit);
                   onFieldErrorClear("unitType");
 
@@ -630,34 +596,12 @@ export default function EditItemForm({
                   }
                 }}
                 disabled={saving}
-                aria-invalid={Boolean(fieldErrors.unitType)}
-                className={`${inputClassName} appearance-none pr-12 ${
-                  fieldErrors.unitType ? errorInputClassName : ""
-                }`}
-              >
-                {INVENTORY_UNIT_TYPES.map((unit) => (
-                  <option key={unit} value={unit}>
-                    {INVENTORY_UNIT_LABELS[unit]}
-                  </option>
-                ))}
-              </select>
-              <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-                <svg
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="m6 9 6 6 6-6"
-                  />
-                </svg>
-              </span>
-            </div>
+                error={fieldErrors.unitType}
+                options={INVENTORY_UNIT_TYPES.map((unit) => ({
+                  value: unit,
+                  label: INVENTORY_UNIT_LABELS[unit],
+                }))}
+              />
             <FieldError id="edit-unit-error" message={fieldErrors.unitType} />
           </div>
 

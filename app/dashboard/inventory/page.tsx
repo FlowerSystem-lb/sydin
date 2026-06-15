@@ -11,7 +11,7 @@ import {
 import UiIcon from "@/components/UiIcon";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import StockMovementDialog from "@/components/inventory/StockMovementDialog";
-import { Button, DialogShell } from "@/components/ui";
+import { Button, DialogShell, Select } from "@/components/ui";
 import CategorySelector from "@/components/CategorySelector";
 import {
   getCategoriesForUser,
@@ -1573,80 +1573,63 @@ export default function InventoryPage() {
 
               <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
                 <div>
-                  <label className="sr-only">
-                    Depot
-                  </label>
-
-                  <select
+                  <Select
+                    ariaLabel="Depot"
                     value={depotFilter}
-                    onChange={(e) => setDepotFilter(e.target.value)}
-                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
-                  >
-                    <option value="all">All depots</option>
-                    <option value="unassigned">Unassigned</option>
-                    {depotFilterOptions.map((depot) => (
-                      <option
-                        key={depot.id}
-                        value={depot.id}
-                      >
-                        {formatDepotLabel(depot)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setDepotFilter}
+                    searchable={depotFilterOptions.length > 8}
+                    options={[
+                      { value: "all", label: "All depots" },
+                      { value: "unassigned", label: "Unassigned" },
+                      ...depotFilterOptions.map((depot) => ({
+                        value: String(depot.id),
+                        label: formatDepotLabel(depot),
+                      })),
+                    ]}
+                  />
                 </div>
 
                 <div>
-                  <label className="sr-only">
-                    Category
-                  </label>
-
-                  <select
+                  <Select
+                    ariaLabel="Category"
                     value={categoryFilter}
-                    onChange={(event) =>
-                      setCategoryFilter(event.target.value)
-                    }
-                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
-                  >
-                    <option value="all">All categories</option>
-                    <option value="uncategorized">Uncategorized</option>
-                    {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
-                        {category.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setCategoryFilter}
+                    searchable={categories.length > 8}
+                    options={[
+                      { value: "all", label: "All categories" },
+                      { value: "uncategorized", label: "Uncategorized" },
+                      ...categories.map((category) => ({
+                        value: String(category.id),
+                        label: category.name,
+                      })),
+                    ]}
+                  />
                 </div>
 
                 <div>
-                  <label className="sr-only">
-                    Stock
-                  </label>
-
-                  <select
+                  <Select
+                    ariaLabel="Stock"
                     value={stockFilter}
-                    onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
-                  >
-                    <option value="all">All stock</option>
-                    <option value="low">Low stock only</option>
-                  </select>
+                    onChange={(value) => setStockFilter(value as StockFilter)}
+                    options={[
+                      { value: "all", label: "All stock" },
+                      { value: "low", label: "Low stock only" },
+                    ]}
+                  />
                 </div>
 
                 <div>
-                  <label className="sr-only">
-                    Sort
-                  </label>
-
-                  <select
+                  <Select
+                    ariaLabel="Sort"
                     value={sortBy}
-                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
-                  >
-                    <option value="newest">Newest</option>
-                    <option value="name-az">Name A-Z</option>
-                    <option value="quantity-asc">Quantity low-high</option>
-                    <option value="quantity-desc">Quantity high-low</option>
-                  </select>
+                    onChange={(value) => setSortBy(value as SortOption)}
+                    options={[
+                      { value: "newest", label: "Newest" },
+                      { value: "name-az", label: "Name A-Z" },
+                      { value: "quantity-asc", label: "Quantity low-high" },
+                      { value: "quantity-desc", label: "Quantity high-low" },
+                    ]}
+                  />
                 </div>
               </div>
             </div>
@@ -2013,42 +1996,39 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Depot</label>
-                  <select
+                  <Select
+                    label="Depot"
                     value={selectedDepotId}
-                    onChange={(e) => setSelectedDepotId(e.target.value)}
-                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                  >
-                    <option value="">Unassigned</option>
-                    {activeDepots.map((depot) => (
-                      <option
-                        key={depot.id}
-                        value={depot.id}
-                      >
-                        {formatDepotLabel(depot)}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedDepotId}
+                    searchable={activeDepots.length > 8}
+                    placeholder="Unassigned"
+                    options={[
+                      { value: "", label: "Unassigned" },
+                      ...activeDepots.map((depot) => ({
+                        value: String(depot.id),
+                        label: formatDepotLabel(depot),
+                      })),
+                    ]}
+                    buttonClassName="min-h-14 rounded-2xl px-5 text-base"
+                  />
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                    Supplier
-                  </label>
-                  <select
+                  <Select
+                    label="Supplier"
                     value={selectedSupplierId}
-                    onChange={(event) =>
-                      setSelectedSupplierId(event.target.value)
-                    }
-                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
-                  >
-                    <option value="">No supplier</option>
-                    {suppliers.map((supplier) => (
-                      <option key={supplier.id} value={supplier.id}>
-                        {supplier.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={setSelectedSupplierId}
+                    searchable={suppliers.length > 8}
+                    placeholder="No supplier"
+                    options={[
+                      { value: "", label: "No supplier" },
+                      ...suppliers.map((supplier) => ({
+                        value: String(supplier.id),
+                        label: supplier.name,
+                      })),
+                    ]}
+                    buttonClassName="min-h-14 rounded-2xl px-5 text-base"
+                  />
                 </div>
               </div>
 

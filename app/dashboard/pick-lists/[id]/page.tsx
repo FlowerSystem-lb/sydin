@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import ContextBackButton from "@/components/navigation/ContextBackButton";
 import {
   addPickListItem,
   cancelPickList,
@@ -586,6 +587,11 @@ export default function PickListDetailPage() {
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div className="min-w-0">
+                <ContextBackButton
+                  fallbackHref="/dashboard/pick-lists"
+                  label="Back to Pick Lists"
+                  className="mb-4"
+                />
                 <div className="flex flex-wrap items-center gap-3">
                   <Link
                     href="/dashboard/pick-lists"

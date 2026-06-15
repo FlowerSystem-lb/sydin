@@ -6,6 +6,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
 import CategorySelector from "@/components/CategorySelector";
+import ContextBackButton from "@/components/navigation/ContextBackButton";
+import Select from "@/components/ui/Select";
 import {
   getCategoriesForUser,
   type Category,
@@ -270,6 +272,7 @@ export default function AddItemPage() {
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [usageLoading, setUsageLoading] = useState(true);
+  const [backLabel, setBackLabel] = useState("Back to Inventory");
 
   useEffect(() => {
     let isActive = true;
@@ -305,9 +308,17 @@ export default function AddItemPage() {
               setDepots(loadedDepots);
               setSuppliers(loadedSuppliers);
               setCategories(loadedCategories);
-              const requestedCategoryId = new URLSearchParams(
+              const navigationParams = new URLSearchParams(
                 window.location.search
-              ).get("category");
+              );
+              const requestedCategoryId = navigationParams.get("category");
+              if (
+                navigationParams
+                  .get("returnTo")
+                  ?.startsWith("/dashboard/categories")
+              ) {
+                setBackLabel("Back to Categories");
+              }
               if (
                 requestedCategoryId &&
                 loadedCategories.some(
@@ -564,7 +575,14 @@ export default function AddItemPage() {
         });
       }
 
-      router.push("/dashboard/inventory");
+      const returnTo = new URLSearchParams(window.location.search).get(
+        "returnTo"
+      );
+      router.push(
+        returnTo?.startsWith("/dashboard") && !returnTo.startsWith("//")
+          ? returnTo
+          : "/dashboard/inventory"
+      );
     } catch (error) {
       setFormError(
         error instanceof Error
@@ -606,12 +624,10 @@ export default function AddItemPage() {
                 </p>
               </div>
 
-              <Link
-                href="/dashboard/inventory"
-                className="rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
-              >
-                Back to Inventory
-              </Link>
+              <ContextBackButton
+                fallbackHref="/dashboard/inventory"
+                label={backLabel}
+              />
             </div>
           </section>
 
@@ -800,40 +816,21 @@ export default function AddItemPage() {
                   >
                     Depot / Location
                   </label>
-                  <div className="relative">
-                    <select
-                      id="depot"
-                      value={selectedDepotId}
-                      onChange={(event) =>
-                        setSelectedDepotId(event.target.value)
-                      }
-                      disabled={loading}
-                      className={`${inputClassName} appearance-none pr-12`}
-                    >
-                      <option value="">Unassigned</option>
-                      {depots.map((depot) => (
-                        <option key={depot.id} value={depot.id}>
-                          {formatDepotLabel(depot)}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-                      <svg
-                        aria-hidden="true"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m6 9 6 6 6-6"
-                        />
-                      </svg>
-                    </span>
-                  </div>
+                  <Select
+                    id="depot"
+                    value={selectedDepotId}
+                    onChange={setSelectedDepotId}
+                    disabled={loading}
+                    searchable={depots.length > 8}
+                    placeholder="Unassigned"
+                    options={[
+                      { value: "", label: "Unassigned" },
+                      ...depots.map((depot) => ({
+                        value: String(depot.id),
+                        label: formatDepotLabel(depot),
+                      })),
+                    ]}
+                  />
                   <p className="mt-2 text-xs leading-5 text-theme-subtle">
                     Leave unassigned if the location is not decided yet.
                   </p>
@@ -899,13 +896,11 @@ export default function AddItemPage() {
                   >
                     Unit <span className="text-theme-accent">*</span>
                   </label>
-                  <div className="relative">
-                    <select
+                  <Select
                       id="unit-type"
                       value={unitType}
-                      onChange={(event) => {
-                        const nextUnit = event.target
-                          .value as InventoryUnitType;
+                      onChange={(value) => {
+                        const nextUnit = value as InventoryUnitType;
                         setUnitType(nextUnit);
                         clearFieldError("unitType");
 
@@ -914,37 +909,12 @@ export default function AddItemPage() {
                         }
                       }}
                       disabled={loading}
-                      aria-invalid={Boolean(fieldErrors.unitType)}
-                      aria-describedby={
-                        fieldErrors.unitType ? "unit-type-error" : undefined
-                      }
-                      className={`${inputClassName} appearance-none pr-12 ${
-                        fieldErrors.unitType ? errorInputClassName : ""
-                      }`}
-                    >
-                      {INVENTORY_UNIT_TYPES.map((unit) => (
-                        <option key={unit} value={unit}>
-                          {INVENTORY_UNIT_LABELS[unit]}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-                      <svg
-                        aria-hidden="true"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m6 9 6 6 6-6"
-                        />
-                      </svg>
-                    </span>
-                  </div>
+                      error={fieldErrors.unitType}
+                      options={INVENTORY_UNIT_TYPES.map((unit) => ({
+                        value: unit,
+                        label: INVENTORY_UNIT_LABELS[unit],
+                      }))}
+                    />
                   <FieldError
                     id="unit-type-error"
                     message={fieldErrors.unitType}
@@ -1068,27 +1038,21 @@ export default function AddItemPage() {
               >
                 Supplier
               </label>
-              <div className="relative">
-                <select
+              <Select
                   id="supplier"
                   value={selectedSupplierId}
-                  onChange={(event) =>
-                    setSelectedSupplierId(event.target.value)
-                  }
+                  onChange={setSelectedSupplierId}
                   disabled={loading}
-                  className={`${inputClassName} appearance-none pr-12`}
-                >
-                  <option value="">No supplier</option>
-                  {suppliers.map((supplier) => (
-                    <option key={supplier.id} value={supplier.id}>
-                      {supplier.name}
-                    </option>
-                  ))}
-                </select>
-                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-                  <UiIcon name="chevron-down" className="h-5 w-5" />
-                </span>
-              </div>
+                  searchable={suppliers.length > 8}
+                  placeholder="No supplier"
+                  options={[
+                    { value: "", label: "No supplier" },
+                    ...suppliers.map((supplier) => ({
+                      value: String(supplier.id),
+                      label: supplier.name,
+                    })),
+                  ]}
+                />
             </DisclosureSection>
 
             <DisclosureSection

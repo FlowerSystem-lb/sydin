@@ -7,7 +7,7 @@ import QRCode from "react-qr-code";
 import UiIcon from "@/components/UiIcon";
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
-import { DialogShell } from "@/components/ui";
+import { DialogShell, Select } from "@/components/ui";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -741,26 +741,16 @@ export default function QrCenterPage() {
                   {label}
                 </label>
               ))}
-              <label className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                <span className="block text-xs font-bold text-theme-secondary">
-                  QR size
-                </span>
-                <select
-                  value={settings.qrSize}
-                  onChange={(event) =>
-                    updateSettings({
-                      qrSize: event.target.value as QrLabelSize,
-                    })
-                  }
-                  className="mt-1 w-full bg-transparent text-sm font-semibold text-theme-primary outline-none"
-                >
-                  {qrSizeOptions.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <Select
+                label="QR size"
+                value={settings.qrSize}
+                onChange={(value) =>
+                  updateSettings({
+                    qrSize: value as QrLabelSize,
+                  })
+                }
+                options={qrSizeOptions}
+              />
             </div>
           </fieldset>
 

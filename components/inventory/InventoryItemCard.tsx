@@ -22,6 +22,7 @@ export default function InventoryItemCard({
   onAdjust,
   onEdit,
   onDelete,
+  detailsHref,
 }: {
   item: CompactInventoryItem;
   itemCode?: string | null;
@@ -33,12 +34,14 @@ export default function InventoryItemCard({
   onAdjust: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  detailsHref?: string;
 }) {
   const router = useRouter();
-  const detailsHref = `/dashboard/inventory/${item.id}`;
+  const resolvedDetailsHref =
+    detailsHref || `/dashboard/inventory/${item.id}`;
 
   const openDetails = () => {
-    router.push(detailsHref);
+    router.push(resolvedDetailsHref);
   };
 
   return (

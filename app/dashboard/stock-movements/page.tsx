@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import UiIcon from "@/components/UiIcon";
+import Select from "@/components/ui/Select";
 import StockMovementDialog, {
   type MovementInventoryItem,
 } from "@/components/inventory/StockMovementDialog";
@@ -208,44 +209,42 @@ export default function StockMovementsPage() {
               className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-indigo-300/60 focus:ring-4 focus:ring-indigo-400/10"
             />
           </label>
-          <select
-            aria-label="Movement type"
+          <Select
+            ariaLabel="Movement type"
             value={movementFilter}
-            onChange={(event) =>
-              setMovementFilter(event.target.value as MovementFilter)
+            onChange={(value) =>
+              setMovementFilter(value as MovementFilter)
             }
-            className="rounded-xl border border-theme bg-theme-inset px-3 py-2.5 text-sm text-theme-primary outline-none focus:border-indigo-300/60"
-          >
-            <option value="all">All movement types</option>
-            {Object.entries(STOCK_MOVEMENT_LABELS).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Depot"
+            options={[
+              { value: "all", label: "All movement types" },
+              ...Object.entries(STOCK_MOVEMENT_LABELS).map(
+                ([value, label]) => ({ value, label })
+              ),
+            ]}
+          />
+          <Select
+            ariaLabel="Depot"
             value={depotFilter}
-            onChange={(event) => setDepotFilter(event.target.value)}
-            className="rounded-xl border border-theme bg-theme-inset px-3 py-2.5 text-sm text-theme-primary outline-none focus:border-indigo-300/60"
-          >
-            <option value="all">All depots</option>
-            <option value="unassigned">Unassigned</option>
-            {depots.map((depot) => (
-              <option key={depot.id} value={depot.id}>
-                {formatDepotLabel(depot)}
-              </option>
-            ))}
-          </select>
-          <select
-            aria-label="Date sorting"
+            onChange={setDepotFilter}
+            searchable={depots.length > 8}
+            options={[
+              { value: "all", label: "All depots" },
+              { value: "unassigned", label: "Unassigned" },
+              ...depots.map((depot) => ({
+                value: String(depot.id),
+                label: formatDepotLabel(depot),
+              })),
+            ]}
+          />
+          <Select
+            ariaLabel="Date sorting"
             value={dateSort}
-            onChange={(event) => setDateSort(event.target.value as DateSort)}
-            className="rounded-xl border border-theme bg-theme-inset px-3 py-2.5 text-sm text-theme-primary outline-none focus:border-indigo-300/60"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
+            onChange={(value) => setDateSort(value as DateSort)}
+            options={[
+              { value: "newest", label: "Newest first" },
+              { value: "oldest", label: "Oldest first" },
+            ]}
+          />
         </section>
 
         <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">

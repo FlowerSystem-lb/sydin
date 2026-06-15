@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import UiIcon from "@/components/UiIcon";
-import { DialogShell } from "@/components/ui";
+import { DialogShell, Select } from "@/components/ui";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   createCategory,
@@ -68,6 +69,11 @@ type WorkspaceSelection =
 type ItemView = "list" | "cards-2" | "cards-3" | "table";
 type StockFilter = "all" | "low" | "healthy";
 type SortOption = "updated" | "name" | "quantity-asc" | "quantity-desc";
+interface AssignmentSnapshot {
+  id: number;
+  categoryId: number | null;
+  categoryName: string | null;
+}
 
 const EMPTY_FORM: CategoryInput = { name: "", description: "" };
 const VIEW_STORAGE_KEY = "sydin:category-item-view";
@@ -213,6 +219,19 @@ export default function CategoriesPage() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Category | null>(null);
+  const [assignOpen, setAssignOpen] = useState(false);
+  const [assignConfirming, setAssignConfirming] = useState(false);
+  const [assignSearch, setAssignSearch] = useState("");
+  const [assignSelectedIds, setAssignSelectedIds] = useState<Set<number>>(
+    new Set()
+  );
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState("");
+  const [undoAssignment, setUndoAssignment] = useState<
+    AssignmentSnapshot[] | null
+  >(null);
+  const [undoing, setUndoing] = useState(false);
+  const [contextReady, setContextReady] = useState(false);
 
   const loadWorkspace = async (knownUserId: string) => {
     const [
@@ -311,6 +330,49 @@ export default function CategoriesPage() {
         if (!active) return;
         setUserId(user.id);
         await loadWorkspace(user.id);
+        const params = new URLSearchParams(window.location.search);
+        const requestedCategory = Number(params.get("category"));
+        const requestedFilter = params.get("filter");
+        if (Number.isInteger(requestedCategory) && requestedCategory > 0) {
+          setSelection({ type: "category", id: requestedCategory });
+          setMobileDetailOpen(true);
+        } else if (
+          requestedFilter === "all" ||
+          requestedFilter === "uncategorized" ||
+          requestedFilter === "low" ||
+          requestedFilter === "recent"
+        ) {
+          setSelection({ type: requestedFilter });
+        }
+        setItemSearch(params.get("search") || "");
+        const requestedStock = params.get("stock");
+        if (
+          requestedStock === "all" ||
+          requestedStock === "low" ||
+          requestedStock === "healthy"
+        ) {
+          setStockFilter(requestedStock);
+        }
+        setDepotFilter(params.get("depot") || "all");
+        const requestedSort = params.get("sort");
+        if (
+          requestedSort === "updated" ||
+          requestedSort === "name" ||
+          requestedSort === "quantity-asc" ||
+          requestedSort === "quantity-desc"
+        ) {
+          setSortBy(requestedSort);
+        }
+        const requestedView = params.get("view");
+        if (
+          requestedView === "list" ||
+          requestedView === "cards-2" ||
+          requestedView === "cards-3" ||
+          requestedView === "table"
+        ) {
+          setItemView(requestedView);
+        }
+        setContextReady(true);
         if (active) setLoading(false);
       })
       .catch((error) => {
@@ -444,6 +506,39 @@ export default function CategoriesPage() {
     }
   };
 
+  const currentContext = useMemo(() => {
+    const params = new URLSearchParams();
+    if (selection.type === "category") {
+      params.set("category", String(selection.id));
+    } else {
+      params.set("filter", selection.type);
+    }
+    if (itemSearch) params.set("search", itemSearch);
+    if (stockFilter !== "all") params.set("stock", stockFilter);
+    if (depotFilter !== "all") params.set("depot", depotFilter);
+    if (sortBy !== "updated") params.set("sort", sortBy);
+    params.set("view", itemView);
+    return `/dashboard/categories?${params.toString()}`;
+  }, [
+    depotFilter,
+    itemSearch,
+    itemView,
+    selection,
+    sortBy,
+    stockFilter,
+  ]);
+  const contextualAddItemHref = `${addItemHref}${
+    addItemHref.includes("?") ? "&" : "?"
+  }returnTo=${encodeURIComponent(currentContext)}`;
+
+  useEffect(() => {
+    if (!contextReady) return;
+    const frame = window.requestAnimationFrame(() => {
+      window.history.replaceState({}, "", currentContext);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [contextReady, currentContext]);
+
   const openCreateForm = () => {
     setEditingCategory(null);
     setFormValues(EMPTY_FORM);
@@ -555,13 +650,143 @@ export default function CategoriesPage() {
     categories.find((category) => category.id === item.category_id)?.name ||
     item.category?.trim() ||
     "Uncategorized";
+  const assignmentCandidates = items.filter(
+    (item) => item.category_id !== selectedCategory?.id
+  );
+  const normalizedAssignSearch = assignSearch.trim().toLowerCase();
+  const visibleAssignmentCandidates = assignmentCandidates.filter((item) =>
+    [
+      item.name,
+      item.sku,
+      item.item_code,
+      getCategoryLabel(item),
+      formatDepotLabel(getDepot(item)),
+    ]
+      .filter(Boolean)
+      .join(" ")
+      .toLowerCase()
+      .includes(normalizedAssignSearch)
+  );
+  const selectedAssignmentItems = assignmentCandidates.filter((item) =>
+    assignSelectedIds.has(item.id)
+  );
+  const movedItemCount = selectedAssignmentItems.filter(
+    (item) => item.category_id || item.category?.trim()
+  ).length;
+
+  const openAssignment = () => {
+    setAssignSearch("");
+    setAssignSelectedIds(new Set());
+    setAssignError("");
+    setAssignConfirming(false);
+    setAssignOpen(true);
+  };
+
+  const toggleAssignmentItem = (itemId: number) => {
+    setAssignSelectedIds((current) => {
+      const next = new Set(current);
+      if (next.has(itemId)) next.delete(itemId);
+      else next.add(itemId);
+      return next;
+    });
+  };
+
+  const selectVisibleAssignmentItems = () => {
+    setAssignSelectedIds((current) => {
+      const next = new Set(current);
+      const allSelected =
+        visibleAssignmentCandidates.length > 0 &&
+        visibleAssignmentCandidates.every((item) => next.has(item.id));
+      visibleAssignmentCandidates.forEach((item) => {
+        if (allSelected) next.delete(item.id);
+        else next.add(item.id);
+      });
+      return next;
+    });
+  };
+
+  const assignExistingItems = async () => {
+    if (
+      !selectedCategory ||
+      !userId ||
+      assigning ||
+      selectedAssignmentItems.length === 0
+    ) {
+      return;
+    }
+
+    const snapshot = selectedAssignmentItems.map((item) => ({
+      id: item.id,
+      categoryId: item.category_id,
+      categoryName: item.category,
+    }));
+
+    try {
+      setAssigning(true);
+      setAssignError("");
+      const { error } = await supabase
+        .from("inventory")
+        .update({
+          category_id: selectedCategory.id,
+          category: selectedCategory.name,
+        })
+        .eq("user_id", userId)
+        .in(
+          "id",
+          selectedAssignmentItems.map((item) => item.id)
+        );
+      if (error) throw error;
+
+      await loadWorkspace(userId);
+      setAssignOpen(false);
+      setAssignConfirming(false);
+      setAssignSelectedIds(new Set());
+      setUndoAssignment(snapshot);
+      setPageNotice(
+        `${snapshot.length} item${snapshot.length === 1 ? "" : "s"} moved to ${selectedCategory.name}.`
+      );
+    } catch {
+      setAssignError("We could not update the selected items. Please try again.");
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const undoLastAssignment = async () => {
+    if (!undoAssignment || !userId || undoing) return;
+
+    try {
+      setUndoing(true);
+      await Promise.all(
+        undoAssignment.map(async (item) => {
+          const { error } = await supabase
+            .from("inventory")
+            .update({
+              category_id: item.categoryId,
+              category: item.categoryName,
+            })
+            .eq("user_id", userId)
+            .eq("id", item.id);
+          if (error) throw error;
+        })
+      );
+      await loadWorkspace(userId);
+      setUndoAssignment(null);
+      setPageNotice("Category assignment undone.");
+    } catch {
+      setPageError("We could not undo the category assignment.");
+    } finally {
+      setUndoing(false);
+    }
+  };
   const openItemAction = (
     item: CategoryInventoryItem,
     action?: "edit" | "stock" | "delete"
   ) => {
-    router.push(
-      `/dashboard/inventory/${item.id}${action ? `?action=${action}` : ""}`
-    );
+    const params = new URLSearchParams();
+    if (action) params.set("action", action);
+    params.set("returnTo", currentContext);
+    router.push(`/dashboard/inventory/${item.id}?${params.toString()}`);
   };
 
   const smartFilters: {
@@ -592,7 +817,9 @@ export default function CategoriesPage() {
       className="flex min-w-0 flex-col gap-3 rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center"
     >
       <Link
-        href={`/dashboard/inventory/${item.id}`}
+        href={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+          currentContext
+        )}`}
         className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-theme bg-theme-inset text-theme-accent">
@@ -628,7 +855,9 @@ export default function CategoriesPage() {
           Edit
         </button>
         <Link
-          href={`/dashboard/inventory/${item.id}#history`}
+          href={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+            currentContext
+          )}#history`}
           className="rounded-lg border border-theme px-3 py-2 text-xs font-bold text-theme-secondary hover:bg-theme-hover"
         >
           History
@@ -641,16 +870,26 @@ export default function CategoriesPage() {
     <main className="min-w-0">
       <div className="mx-auto w-full max-w-[1600px]">
         {(pageError || pageNotice) && (
-          <p
+          <div
             role={pageError ? "alert" : "status"}
-            className={`mb-3 rounded-xl border px-4 py-3 text-sm font-semibold ${
+            className={`mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm font-semibold ${
               pageError
                 ? "border-red-400/25 bg-red-500/10 text-theme-danger"
                 : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
             }`}
           >
-            {pageError || pageNotice}
-          </p>
+            <span>{pageError || pageNotice}</span>
+            {!pageError && undoAssignment && (
+              <button
+                type="button"
+                onClick={() => void undoLastAssignment()}
+                disabled={undoing}
+                className="rounded-lg border border-emerald-400/30 bg-white/70 px-3 py-1.5 text-xs font-black text-emerald-800 disabled:opacity-50"
+              >
+                {undoing ? "Undoing..." : "Undo"}
+              </button>
+            )}
+          </div>
         )}
 
         {!loading && limitReached && (
@@ -913,7 +1152,7 @@ export default function CategoriesPage() {
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <Link
-                    href={addItemHref}
+                    href={contextualAddItemHref}
                     className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white"
                   >
                     <UiIcon name="plus" className="h-4 w-4" />
@@ -921,6 +1160,13 @@ export default function CategoriesPage() {
                   </Link>
                   {selectedCategory && (
                     <>
+                      <button
+                        type="button"
+                        onClick={openAssignment}
+                        className="rounded-xl border border-indigo-300/40 bg-indigo-500/10 px-4 py-2.5 text-sm font-bold text-theme-accent hover:bg-indigo-500/15"
+                      >
+                        Add Existing Items
+                      </button>
                       <button
                         type="button"
                         onClick={() => openEditForm(selectedCategory)}
@@ -986,45 +1232,43 @@ export default function CategoriesPage() {
                       className={`${inputClassName} py-2.5 pl-9`}
                     />
                   </label>
-                  <select
+                  <Select
                     value={stockFilter}
-                    onChange={(event) =>
-                      setStockFilter(event.target.value as StockFilter)
+                    onChange={(value) =>
+                      setStockFilter(value as StockFilter)
                     }
+                    options={[
+                      { value: "all", label: "All stock" },
+                      { value: "low", label: "Low stock" },
+                      { value: "healthy", label: "Healthy stock" },
+                    ]}
                     aria-label="Filter by stock status"
-                    className={`${inputClassName} py-2.5`}
-                  >
-                    <option value="all">All stock</option>
-                    <option value="low">Low stock</option>
-                    <option value="healthy">Healthy stock</option>
-                  </select>
-                  <select
+                  />
+                  <Select
                     value={depotFilter}
-                    onChange={(event) => setDepotFilter(event.target.value)}
-                    aria-label="Filter by depot"
-                    className={`${inputClassName} py-2.5`}
-                  >
-                    <option value="all">All depots</option>
-                    <option value="unassigned">Unassigned</option>
-                    {depots.map((depot) => (
-                      <option key={depot.id} value={depot.id}>
-                        {formatDepotLabel(depot)}
-                      </option>
-                    ))}
-                  </select>
-                  <select
+                    onChange={setDepotFilter}
+                    ariaLabel="Filter by depot"
+                    searchable={depots.length > 8}
+                    options={[
+                      { value: "all", label: "All depots" },
+                      { value: "unassigned", label: "Unassigned" },
+                      ...depots.map((depot) => ({
+                        value: String(depot.id),
+                        label: formatDepotLabel(depot),
+                      })),
+                    ]}
+                  />
+                  <Select
                     value={sortBy}
-                    onChange={(event) =>
-                      setSortBy(event.target.value as SortOption)
-                    }
-                    aria-label="Sort items"
-                    className={`${inputClassName} py-2.5`}
-                  >
-                    <option value="updated">Recently updated</option>
-                    <option value="name">Name A-Z</option>
-                    <option value="quantity-asc">Quantity low-high</option>
-                    <option value="quantity-desc">Quantity high-low</option>
-                  </select>
+                    onChange={(value) => setSortBy(value as SortOption)}
+                    ariaLabel="Sort items"
+                    options={[
+                      { value: "updated", label: "Recently updated" },
+                      { value: "name", label: "Name A-Z" },
+                      { value: "quantity-asc", label: "Quantity low-high" },
+                      { value: "quantity-desc", label: "Quantity high-low" },
+                    ]}
+                  />
                 </div>
 
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 border-t border-theme pt-3">
@@ -1090,12 +1334,40 @@ export default function CategoriesPage() {
                       : "Try changing the item search or filters."}
                   </p>
                   {selectionItems.length === 0 && (
-                    <Link
-                      href={addItemHref}
-                      className="mt-5 inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white"
-                    >
-                      Add Item
-                    </Link>
+                    <div className="mt-5 flex flex-wrap justify-center gap-2">
+                      {selectedCategory ? (
+                        <>
+                          <Link
+                            href={contextualAddItemHref}
+                            className="inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white"
+                          >
+                            Add New Item
+                          </Link>
+                          <button
+                            type="button"
+                            onClick={openAssignment}
+                            className="rounded-xl border border-indigo-300/40 bg-white px-4 py-2.5 text-sm font-bold text-indigo-700"
+                          >
+                            Add Existing Items
+                          </button>
+                        </>
+                      ) : selection.type === "low" ||
+                        selection.type === "recent" ? (
+                        <Link
+                          href="/dashboard/inventory"
+                          className="inline-flex rounded-xl border border-theme bg-white px-4 py-2.5 text-sm font-bold text-theme-primary"
+                        >
+                          View Inventory
+                        </Link>
+                      ) : (
+                        <Link
+                          href={contextualAddItemHref}
+                          className="inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white"
+                        >
+                          Add New Item
+                        </Link>
+                      )}
+                    </div>
                   )}
                 </div>
               ) : itemView === "list" ? (
@@ -1123,7 +1395,9 @@ export default function CategoriesPage() {
                         >
                           <td className="px-4 py-3">
                             <Link
-                              href={`/dashboard/inventory/${item.id}`}
+                              href={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+                                currentContext
+                              )}`}
                               className="font-bold text-theme-primary hover:text-theme-accent"
                             >
                               {item.name}
@@ -1150,7 +1424,9 @@ export default function CategoriesPage() {
                           </td>
                           <td className="px-4 py-3 text-right">
                             <Link
-                              href={`/dashboard/inventory/${item.id}`}
+                              href={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+                                currentContext
+                              )}`}
                               className="font-bold text-theme-accent"
                             >
                               Open
@@ -1188,6 +1464,9 @@ export default function CategoriesPage() {
                       onAdjust={() => openItemAction(item, "stock")}
                       onEdit={() => openItemAction(item, "edit")}
                       onDelete={() => openItemAction(item, "delete")}
+                      detailsHref={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+                        currentContext
+                      )}`}
                     />
                   ))}
                 </div>
@@ -1196,6 +1475,205 @@ export default function CategoriesPage() {
           </section>
         </div>
       </div>
+
+      <DialogShell
+        open={assignOpen}
+        title={
+          assignConfirming
+            ? `Move items to ${selectedCategory?.name || "category"}?`
+            : "Add Existing Items"
+        }
+        eyebrow="Category assignment"
+        description={
+          assignConfirming
+            ? `${selectedAssignmentItems.length} selected item${
+                selectedAssignmentItems.length === 1 ? "" : "s"
+              }. Items currently assigned elsewhere will be moved.`
+            : `Choose inventory items to add to ${
+                selectedCategory?.name || "this category"
+              }.`
+        }
+        onClose={() => {
+          if (!assigning) setAssignOpen(false);
+        }}
+        closeDisabled={assigning}
+        className="max-w-3xl"
+      >
+        {assignConfirming ? (
+          <div>
+            <p className="rounded-xl border border-amber-300/35 bg-amber-500/10 px-4 py-3 text-sm leading-6 text-theme-secondary">
+              Move <strong>{selectedAssignmentItems.length}</strong> selected
+              item{selectedAssignmentItems.length === 1 ? "" : "s"} to{" "}
+              <strong>{selectedCategory?.name}</strong>?{" "}
+              {movedItemCount > 0 && (
+                <>
+                  <strong>{movedItemCount}</strong> currently belong to another
+                  category and will be moved.
+                </>
+              )}
+            </p>
+            <div className="mt-4 max-h-56 space-y-2 overflow-y-auto">
+              {selectedAssignmentItems.map((item) => (
+                <div
+                  key={item.id}
+                  className="flex items-center justify-between gap-3 rounded-xl border border-theme bg-theme-inset px-3 py-2.5"
+                >
+                  <span className="min-w-0 truncate text-sm font-bold text-theme-primary">
+                    {item.name}
+                  </span>
+                  <span className="shrink-0 text-xs text-theme-muted">
+                    {getCategoryLabel(item)} → {selectedCategory?.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+            {assignError && (
+              <p className="mt-4 text-sm font-semibold text-theme-danger">
+                {assignError}
+              </p>
+            )}
+            <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setAssignConfirming(false)}
+                disabled={assigning}
+                className="rounded-xl border border-theme px-5 py-3 text-sm font-bold text-theme-primary"
+              >
+                Back
+              </button>
+              <button
+                type="button"
+                onClick={() => void assignExistingItems()}
+                disabled={assigning}
+                className="rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+              >
+                {assigning ? "Moving Items..." : "Confirm Move"}
+              </button>
+            </div>
+          </div>
+        ) : (
+          <div>
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <label className="relative flex-1">
+                <span className="sr-only">Search inventory items</span>
+                <UiIcon
+                  name="search"
+                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
+                />
+                <input
+                  type="search"
+                  value={assignSearch}
+                  onChange={(event) => setAssignSearch(event.target.value)}
+                  placeholder="Search name, SKU, category, or depot"
+                  className={`${inputClassName} pl-9`}
+                />
+              </label>
+              <button
+                type="button"
+                onClick={selectVisibleAssignmentItems}
+                disabled={visibleAssignmentCandidates.length === 0}
+                className="rounded-xl border border-theme px-4 py-3 text-sm font-bold text-theme-primary disabled:opacity-50"
+              >
+                Select Visible
+              </button>
+              <button
+                type="button"
+                onClick={() => setAssignSelectedIds(new Set())}
+                disabled={assignSelectedIds.size === 0}
+                className="rounded-xl border border-theme px-4 py-3 text-sm font-bold text-theme-secondary disabled:opacity-50"
+              >
+                Clear
+              </button>
+            </div>
+            <p className="mt-3 text-xs font-bold text-theme-muted">
+              {assignSelectedIds.size} selected
+            </p>
+            <div className="mt-3 max-h-[26rem] space-y-2 overflow-y-auto pr-1">
+              {loading ? (
+                [1, 2, 3].map((key) => (
+                  <div
+                    key={key}
+                    className="h-16 animate-pulse rounded-xl bg-theme-inset"
+                  />
+                ))
+              ) : visibleAssignmentCandidates.length > 0 ? (
+                visibleAssignmentCandidates.map((item) => (
+                  <label
+                    key={item.id}
+                    className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 ${
+                      assignSelectedIds.has(item.id)
+                        ? "border-indigo-300/50 bg-indigo-500/10"
+                        : "border-theme bg-theme-surface hover:bg-theme-hover"
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={assignSelectedIds.has(item.id)}
+                      onChange={() => toggleAssignmentItem(item.id)}
+                      className="h-4 w-4 accent-indigo-600"
+                    />
+                    <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-theme bg-theme-inset">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt=""
+                          fill
+                          sizes="48px"
+                          className="object-contain p-1"
+                        />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-theme-subtle">
+                          <UiIcon name="box" className="h-5 w-5" />
+                        </span>
+                      )}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-bold text-theme-primary">
+                        {item.name}
+                      </span>
+                      <span className="mt-0.5 block truncate text-xs text-theme-muted">
+                        {item.item_code || item.sku || "No identifier"} ·{" "}
+                        {getCategoryLabel(item)} ·{" "}
+                        {formatDepotLabel(getDepot(item))}
+                      </span>
+                    </span>
+                    <span className="shrink-0 text-xs font-bold text-theme-secondary">
+                      {getInventoryQuantityLabel(
+                        item.quantity,
+                        item.unit_type,
+                        item.custom_unit_label
+                      )}
+                    </span>
+                  </label>
+                ))
+              ) : (
+                <div className="rounded-xl border border-dashed border-theme px-4 py-10 text-center text-sm text-theme-muted">
+                  {assignmentCandidates.length === 0
+                    ? "Every inventory item is already in this category."
+                    : "No inventory items match this search."}
+                </div>
+              )}
+            </div>
+            <div className="mt-5 flex flex-col-reverse gap-2 border-t border-theme pt-4 sm:flex-row sm:justify-end">
+              <button
+                type="button"
+                onClick={() => setAssignOpen(false)}
+                className="rounded-xl border border-theme px-5 py-3 text-sm font-bold text-theme-primary"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => setAssignConfirming(true)}
+                disabled={assignSelectedIds.size === 0}
+                className="rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+              >
+                Review Move ({assignSelectedIds.size})
+              </button>
+            </div>
+          </div>
+        )}
+      </DialogShell>
 
       <DialogShell
         open={formOpen}

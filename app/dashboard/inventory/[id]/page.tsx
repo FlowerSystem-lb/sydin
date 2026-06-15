@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import BrandMark from "@/components/BrandMark";
+import ContextBackButton from "@/components/navigation/ContextBackButton";
 import {
   getCategoriesForUser,
   resolveCategoryDisplay,
@@ -231,6 +232,7 @@ export default function ItemDetailsPage() {
   const [movementNotes, setMovementNotes] = useState("");
   const [movementError, setMovementError] = useState("");
   const [isRecordingMovement, setIsRecordingMovement] = useState(false);
+  const [backLabel, setBackLabel] = useState("Back to Inventory");
 
   const fetchHistory = async (userId: string, historyItemId: number) => {
     const { data, error: historyError } = await supabase
@@ -281,6 +283,13 @@ export default function ItemDetailsPage() {
 
     const action = new URLSearchParams(window.location.search).get("action");
     const frame = window.requestAnimationFrame(() => {
+      if (
+        new URLSearchParams(window.location.search)
+          .get("returnTo")
+          ?.startsWith("/dashboard/categories")
+      ) {
+        setBackLabel("Back to Categories");
+      }
       if (action === "edit") {
         setEditValues(createEditItemFormValues(item));
         setEditFieldErrors({});
@@ -298,10 +307,15 @@ export default function ItemDetailsPage() {
       }
 
       if (action) {
+        const params = new URLSearchParams(window.location.search);
+        params.delete("action");
+        const query = params.toString();
         window.history.replaceState(
           {},
           "",
-          `${window.location.pathname}${window.location.hash}`
+          `${window.location.pathname}${query ? `?${query}` : ""}${
+            window.location.hash
+          }`
         );
       }
     });
@@ -792,12 +806,11 @@ export default function ItemDetailsPage() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row">
-                <Link
-                  href="/dashboard/inventory"
-                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
-                >
-                  Back to Inventory
-                </Link>
+                <ContextBackButton
+                  fallbackHref="/dashboard/inventory"
+                  label={backLabel}
+                  className="min-h-14 rounded-2xl px-5 py-4 text-base"
+                />
 
                 {item && (
                   <>
