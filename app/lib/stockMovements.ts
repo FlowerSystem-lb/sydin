@@ -8,6 +8,7 @@ export type StockMovementType =
 
 export interface StockMovement {
   id: number;
+  item_id?: number;
   movement_type: StockMovementType;
   quantity_delta: number;
   quantity_before: number;
@@ -38,6 +39,10 @@ export function formatStockMovementNotes(notes: string | null) {
 function normalizeMovement(data: Partial<StockMovement>): StockMovement {
   return {
     id: Number(data.id),
+    item_id:
+      data.item_id === null || data.item_id === undefined
+        ? undefined
+        : Number(data.item_id),
     movement_type: (data.movement_type || "adjustment") as StockMovementType,
     quantity_delta: Number(data.quantity_delta || 0),
     quantity_before: Number(data.quantity_before || 0),
@@ -45,6 +50,28 @@ function normalizeMovement(data: Partial<StockMovement>): StockMovement {
     notes: data.notes || null,
     created_at: data.created_at || "",
   };
+}
+
+export async function getRecentStockMovements(
+  userId: string,
+  limit = 100
+) {
+  const { data, error } = await supabase
+    .from("stock_movements")
+    .select(
+      "id, item_id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at"
+    )
+    .eq("user_id", userId)
+    .order("created_at", {
+      ascending: false,
+    })
+    .limit(Math.max(1, Math.min(limit, 250)));
+
+  if (error) {
+    throw error;
+  }
+
+  return ((data || []) as Partial<StockMovement>[]).map(normalizeMovement);
 }
 
 export async function getStockMovementsForItem(

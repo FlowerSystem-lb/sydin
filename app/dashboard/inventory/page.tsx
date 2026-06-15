@@ -10,6 +10,7 @@ import {
 } from "@zxing/browser";
 import UiIcon from "@/components/UiIcon";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
+import StockMovementDialog from "@/components/inventory/StockMovementDialog";
 import { Button, DialogShell } from "@/components/ui";
 import CategorySelector from "@/components/CategorySelector";
 import {
@@ -319,6 +320,7 @@ export default function InventoryPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [pendingDeleteItem, setPendingDeleteItem] = useState<Item | null>(null);
+  const [movementItem, setMovementItem] = useState<Item | null>(null);
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
@@ -1682,6 +1684,7 @@ export default function InventoryPage() {
                   }
                   lowStock={isItemLowStock(item)}
                   deleting={deletingId === item.id}
+                  onAdjust={() => setMovementItem(item)}
                   onEdit={() => openEditModal(item)}
                   onDelete={() => setPendingDeleteItem(item)}
                 />
@@ -2139,6 +2142,17 @@ export default function InventoryPage() {
           }
         />
       )}
+
+      <StockMovementDialog
+        open={Boolean(movementItem)}
+        items={items}
+        initialItemId={movementItem?.id}
+        onClose={() => setMovementItem(null)}
+        onRecorded={async () => {
+          setPageNotice("Stock movement recorded successfully.");
+          await fetchItems();
+        }}
+      />
 
       {/* Edit Item Modal */}
       {isEditModalOpen && selectedItem && (

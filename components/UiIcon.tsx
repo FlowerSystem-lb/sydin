@@ -30,7 +30,9 @@ export type UiIconName =
   | "more"
   | "usage"
   | "appearance"
-  | "logout";
+  | "logout"
+  | "movement"
+  | "qr";
 
 export default function UiIcon({
   name,
@@ -212,6 +214,20 @@ export default function UiIcon({
         <>
           <path d="M10 17l5-5-5-5M15 12H3" />
           <path d="M14 3h4a3 3 0 0 1 3 3v12a3 3 0 0 1-3 3h-4" />
+        </>
+      )}
+      {name === "movement" && (
+        <>
+          <path d="M4 7h13M14 4l3 3-3 3" />
+          <path d="M20 17H7M10 14l-3 3 3 3" />
+        </>
+      )}
+      {name === "qr" && (
+        <>
+          <rect x="3" y="3" width="6" height="6" rx="1" />
+          <rect x="15" y="3" width="6" height="6" rx="1" />
+          <rect x="3" y="15" width="6" height="6" rx="1" />
+          <path d="M15 15h2v2h-2zM19 15h2v4h-2M15 19h2v2h-2M19 21h2" />
         </>
       )}
     </svg>

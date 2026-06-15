@@ -19,6 +19,7 @@ export default function InventoryItemCard({
   depotLabel,
   lowStock,
   deleting,
+  onAdjust,
   onEdit,
   onDelete,
 }: {
@@ -29,6 +30,7 @@ export default function InventoryItemCard({
   depotLabel?: string | null;
   lowStock: boolean;
   deleting: boolean;
+  onAdjust: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
@@ -101,6 +103,15 @@ export default function InventoryItemCard({
             >
               <UiIcon name="file" className="h-4 w-4" />
               View details
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={onAdjust}
+              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+            >
+              <UiIcon name="movement" className="h-4 w-4" />
+              Adjust stock
             </button>
             <button
               type="button"
