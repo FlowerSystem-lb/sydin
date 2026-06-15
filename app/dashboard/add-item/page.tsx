@@ -305,6 +305,17 @@ export default function AddItemPage() {
               setDepots(loadedDepots);
               setSuppliers(loadedSuppliers);
               setCategories(loadedCategories);
+              const requestedCategoryId = new URLSearchParams(
+                window.location.search
+              ).get("category");
+              if (
+                requestedCategoryId &&
+                loadedCategories.some(
+                  (category) => String(category.id) === requestedCategoryId
+                )
+              ) {
+                setSelectedCategoryId(requestedCategoryId);
+              }
               setCurrencyCode(loadedCurrency);
               setUsageLoading(false);
             }

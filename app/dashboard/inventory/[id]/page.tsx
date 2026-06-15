@@ -277,6 +277,39 @@ export default function ItemDetailsPage() {
   }, [item?.public_id]);
 
   useEffect(() => {
+    if (!item) return;
+
+    const action = new URLSearchParams(window.location.search).get("action");
+    const frame = window.requestAnimationFrame(() => {
+      if (action === "edit") {
+        setEditValues(createEditItemFormValues(item));
+        setEditFieldErrors({});
+        setEditImage(null);
+        setEditError("");
+        setIsEditModalOpen(true);
+      } else if (action === "stock") {
+        setMovementType("stock_in");
+        setMovementQuantity("");
+        setMovementNotes("");
+        setMovementError("");
+        setIsMovementModalOpen(true);
+      } else if (action === "delete") {
+        setIsDeleteDialogOpen(true);
+      }
+
+      if (action) {
+        window.history.replaceState(
+          {},
+          "",
+          `${window.location.pathname}${window.location.hash}`
+        );
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [item]);
+
+  useEffect(() => {
     let isActive = true;
 
     const loadItem = async () => {
@@ -1135,7 +1168,10 @@ export default function ItemDetailsPage() {
               </section>
               </div>
 
-              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+              <section
+                id="history"
+                className="scroll-mt-24 rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7"
+              >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">

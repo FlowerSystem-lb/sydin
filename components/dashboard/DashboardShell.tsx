@@ -42,6 +42,7 @@ import {
 import { cx } from "@/components/ui/utils";
 
 const SIDEBAR_STORAGE_KEY = "sydin:sidebar-collapsed";
+const SIDEBAR_ROUTE_EVENT = "sydin:sidebar-route-collapse";
 
 const DEFAULT_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
@@ -170,6 +171,7 @@ export default function DashboardShell({
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const accountTriggerRef = useRef<HTMLButtonElement>(null);
   const [collapsed, setCollapsed] = useState(false);
+  const [routeCollapsed, setRouteCollapsed] = useState<boolean | null>(null);
   const [tabletDrawerOpen, setTabletDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -190,6 +192,19 @@ export default function DashboardShell({
     });
 
     return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  useEffect(() => {
+    const handleRouteCollapse = (event: Event) => {
+      const customEvent = event as CustomEvent<{
+        collapsed: boolean | null;
+      }>;
+      setRouteCollapsed(customEvent.detail?.collapsed ?? null);
+    };
+
+    window.addEventListener(SIDEBAR_ROUTE_EVENT, handleRouteCollapse);
+    return () =>
+      window.removeEventListener(SIDEBAR_ROUTE_EVENT, handleRouteCollapse);
   }, []);
 
   useEffect(() => {
@@ -266,6 +281,11 @@ export default function DashboardShell({
   );
 
   const toggleCollapsed = () => {
+    if (routeCollapsed !== null) {
+      setRouteCollapsed((current) => !current);
+      return;
+    }
+
     setCollapsed((current) => {
       const next = !current;
       try {
@@ -276,6 +296,7 @@ export default function DashboardShell({
       return next;
     });
   };
+  const effectiveCollapsed = routeCollapsed ?? collapsed;
 
   const requestScanner = useCallback(() => {
     if (pathname === "/dashboard/inventory") {
@@ -338,13 +359,13 @@ export default function DashboardShell({
     <div
       className={cx(
         "dashboard-shell liquid-bg min-h-screen text-theme-primary",
-        collapsed && "dashboard-shell-collapsed"
+        effectiveCollapsed && "dashboard-shell-collapsed"
       )}
     >
       <aside
         className={cx(
           "dashboard-sidebar glass-navigation",
-          collapsed && "dashboard-sidebar-collapsed"
+          effectiveCollapsed && "dashboard-sidebar-collapsed"
         )}
       >
         <div className="dashboard-sidebar-header">
@@ -360,10 +381,10 @@ export default function DashboardShell({
             />
           </Link>
           <IconButton
-            label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             icon={
               <UiIcon
-                name={collapsed ? "chevron-right" : "chevron-left"}
+                name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
                 className="h-4 w-4"
               />
             }
@@ -374,7 +395,7 @@ export default function DashboardShell({
         </div>
 
         <div className="dashboard-sidebar-scroll">
-          <NavigationGroups pathname={pathname} compact={collapsed} />
+          <NavigationGroups pathname={pathname} compact={effectiveCollapsed} />
         </div>
 
         <div
