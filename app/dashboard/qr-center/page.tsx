@@ -7,9 +7,27 @@ import QRCode from "react-qr-code";
 import UiIcon from "@/components/UiIcon";
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
+import { DialogShell } from "@/components/ui";
 import {
-  SCANNER_REQUEST_STORAGE_KEY,
-} from "@/app/lib/scannerNavigation";
+  DEFAULT_BUSINESS_SETTINGS,
+  getOrCreateBusinessSettings,
+  type BusinessSettings,
+} from "@/app/lib/businessSettings";
+import {
+  exportQrLabelsPdf,
+  type QrLabelBranding,
+  type QrLabelLayout,
+  type QrLabelSettings,
+  type QrLabelSize,
+} from "@/app/lib/qrLabelPdf";
+import { SCANNER_REQUEST_STORAGE_KEY } from "@/app/lib/scannerNavigation";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionCapabilities,
+  getUserSubscription,
+  type UserSubscription,
+} from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
 
 interface QrInventoryItem {
@@ -21,6 +39,29 @@ interface QrInventoryItem {
   public_id?: string | null;
 }
 
+const LABEL_SETTINGS_KEY = "sydin:qr-label-settings";
+const DEFAULT_LABEL_SETTINGS: QrLabelSettings = {
+  layout: "2x2",
+  branding: "sydin",
+  showName: true,
+  showIdentifier: true,
+  showUrl: false,
+  qrSize: "medium",
+};
+
+const layoutOptions: { value: QrLabelLayout; label: string }[] = [
+  { value: "single", label: "Single label" },
+  { value: "2x2", label: "2 × 2" },
+  { value: "3x3", label: "3 × 3" },
+  { value: "a4-grid", label: "A4 grid" },
+];
+
+const qrSizeOptions: { value: QrLabelSize; label: string }[] = [
+  { value: "small", label: "Small" },
+  { value: "medium", label: "Medium" },
+  { value: "large", label: "Large" },
+];
+
 function slugify(value: string) {
   return (
     value
@@ -28,6 +69,68 @@ function slugify(value: string) {
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "") || "item"
+  );
+}
+
+function readStoredSettings() {
+  try {
+    const stored = window.localStorage.getItem(LABEL_SETTINGS_KEY);
+    if (!stored) return DEFAULT_LABEL_SETTINGS;
+
+    return {
+      ...DEFAULT_LABEL_SETTINGS,
+      ...(JSON.parse(stored) as Partial<QrLabelSettings>),
+    };
+  } catch {
+    return DEFAULT_LABEL_SETTINGS;
+  }
+}
+
+function getLayoutGrid(layout: QrLabelLayout) {
+  if (layout === "single") return "qr-print-grid-single";
+  if (layout === "2x2") return "qr-print-grid-2x2";
+  if (layout === "3x3") return "qr-print-grid-3x3";
+  return "qr-print-grid-a4";
+}
+
+function LabelBrand({
+  branding,
+  businessSettings,
+  businessLogoError,
+  onBusinessLogoError,
+}: {
+  branding: QrLabelBranding;
+  businessSettings: BusinessSettings;
+  businessLogoError: boolean;
+  onBusinessLogoError: () => void;
+}) {
+  if (branding === "none") return null;
+
+  if (
+    branding === "business" &&
+    businessSettings.business_logo_url &&
+    !businessLogoError
+  ) {
+    return (
+      <span className="relative block h-8 w-28">
+        <Image
+          src={businessSettings.business_logo_url}
+          alt={businessSettings.business_name}
+          fill
+          unoptimized
+          sizes="112px"
+          className="object-contain"
+          onError={onBusinessLogoError}
+        />
+      </span>
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <SydINMark size="sm" />
+      <SydINWordmark size="sm" variant="light-background" />
+    </span>
   );
 }
 
@@ -40,6 +143,16 @@ export default function QrCenterPage() {
   const [origin, setOrigin] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settings, setSettings] = useState(DEFAULT_LABEL_SETTINGS);
+  const [exportingPdf, setExportingPdf] = useState(false);
+  const [businessLogoError, setBusinessLogoError] = useState(false);
+  const [businessSettings, setBusinessSettings] = useState(
+    DEFAULT_BUSINESS_SETTINGS
+  );
+  const [subscription, setSubscription] =
+    useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
 
   useEffect(() => {
     let active = true;
@@ -49,17 +162,25 @@ export default function QrCenterPage() {
       .then(async ({ data: { user } }) => {
         if (!user) throw new Error("Please sign in again to use QR Center.");
 
-        const { data, error: itemError } = await supabase
-          .from("inventory")
-          .select("id, name, image, sku, item_code, public_id")
-          .eq("user_id", user.id)
-          .order("name", { ascending: true });
+        const [{ data, error: itemError }, loadedSettings, loadedSubscription] =
+          await Promise.all([
+            supabase
+              .from("inventory")
+              .select("id, name, image, sku, item_code, public_id")
+              .eq("user_id", user.id)
+              .order("name", { ascending: true }),
+            getOrCreateBusinessSettings(user.id),
+            getUserSubscription(user.id),
+          ]);
 
         if (itemError) throw itemError;
         if (!active) return;
 
         setOrigin(window.location.origin);
+        setSettings(readStoredSettings());
         setItems((data || []) as QrInventoryItem[]);
+        setBusinessSettings(loadedSettings);
+        setSubscription(loadedSubscription);
         setLoading(false);
       })
       .catch((loadError) => {
@@ -77,6 +198,15 @@ export default function QrCenterPage() {
     };
   }, []);
 
+  const capabilities = getSubscriptionCapabilities(subscription);
+  const canUseBusinessLogo =
+    capabilities.customBusinessLogo &&
+    Boolean(businessSettings.business_logo_url);
+  const effectiveBranding: QrLabelBranding =
+    settings.branding === "business" &&
+    (!canUseBusinessLogo || businessLogoError)
+      ? "sydin"
+      : settings.branding;
   const normalizedSearch = search.trim().toLowerCase();
   const visibleItems = items.filter((item) =>
     [item.name, item.sku, item.item_code]
@@ -93,6 +223,22 @@ export default function QrCenterPage() {
     [items, selectedIds]
   );
   const selectedItem = printableItems[0] || null;
+  const selectedCount = printableItems.length;
+
+  const updateSettings = (next: Partial<QrLabelSettings>) => {
+    setSettings((current) => {
+      const updated = { ...current, ...next };
+      try {
+        window.localStorage.setItem(
+          LABEL_SETTINGS_KEY,
+          JSON.stringify(updated)
+        );
+      } catch {
+        // Label settings still apply for this session.
+      }
+      return updated;
+    });
+  };
 
   const toggleItem = (itemId: number) => {
     setSelectedIds((current) => {
@@ -120,12 +266,14 @@ export default function QrCenterPage() {
   const getQrUrl = (item: QrInventoryItem) =>
     item.public_id ? `${origin}/item/${item.public_id}` : "";
 
+  const getQrSvg = (itemId: number) =>
+    qrRefs.current.get(itemId)?.querySelector("svg")?.outerHTML || "";
+
   const downloadQr = (item: QrInventoryItem) => {
-    const svg = qrRefs.current.get(item.id)?.querySelector("svg");
+    const svg = getQrSvg(item.id);
     if (!svg) return;
 
-    const source = new XMLSerializer().serializeToString(svg);
-    const blob = new Blob([source], {
+    const blob = new Blob([svg], {
       type: "image/svg+xml;charset=utf-8",
     });
     const url = URL.createObjectURL(blob);
@@ -134,6 +282,73 @@ export default function QrCenterPage() {
     link.download = `${slugify(item.name)}-qr.svg`;
     link.click();
     URL.revokeObjectURL(url);
+  };
+
+  const getBrandLogoUrl = () => {
+    if (effectiveBranding === "sydin") {
+      return `${origin}/email/sydin-logo.png`;
+    }
+    if (
+      effectiveBranding === "business" &&
+      canUseBusinessLogo &&
+      !businessLogoError
+    ) {
+      return businessSettings.business_logo_url;
+    }
+    return "";
+  };
+
+  const downloadPdf = async () => {
+    if (selectedCount === 0 || exportingPdf) return;
+
+    try {
+      setExportingPdf(true);
+      setError("");
+      const pdfItems = printableItems.map((item) => ({
+        id: item.id,
+        name: item.name,
+        identifier: item.sku || item.item_code || "",
+        publicUrl: getQrUrl(item),
+        qrSvg: getQrSvg(item.id),
+      }));
+
+      if (pdfItems.some((item) => !item.qrSvg)) {
+        throw new Error("QR labels are still preparing. Try again.");
+      }
+
+      await exportQrLabelsPdf({
+        items: pdfItems,
+        settings: { ...settings, branding: effectiveBranding },
+        logoUrl: getBrandLogoUrl(),
+      });
+      setNotice("QR label PDF downloaded.");
+    } catch (exportError) {
+      setError(
+        exportError instanceof Error
+          ? exportError.message
+          : "We could not create the QR label PDF."
+      );
+    } finally {
+      setExportingPdf(false);
+    }
+  };
+
+  const printLabels = () => {
+    if (selectedCount === 0) return;
+
+    document.body.classList.add("qr-label-printing");
+    const cleanup = () => {
+      document.body.classList.remove("qr-label-printing");
+      window.removeEventListener("afterprint", cleanup);
+    };
+    window.addEventListener("afterprint", cleanup);
+    window.requestAnimationFrame(() => {
+      try {
+        window.print();
+      } finally {
+        window.setTimeout(cleanup, 0);
+      }
+    });
   };
 
   const openExistingScanner = () => {
@@ -145,10 +360,41 @@ export default function QrCenterPage() {
     router.push("/dashboard/inventory");
   };
 
+  const renderLabel = (item: QrInventoryItem, print = false) => (
+    <article
+      key={item.id}
+      className={`qr-label-card qr-label-size-${settings.qrSize} ${
+        print ? "qr-label-card-print" : ""
+      }`}
+    >
+      <LabelBrand
+        branding={effectiveBranding}
+        businessSettings={businessSettings}
+        businessLogoError={businessLogoError}
+        onBusinessLogoError={() => setBusinessLogoError(true)}
+      />
+      <div
+        ref={(node) => {
+          if (node) qrRefs.current.set(item.id, node);
+        }}
+        className="qr-label-code"
+      >
+        <QRCode value={getQrUrl(item)} size={220} level="M" />
+      </div>
+      {settings.showName && <h3>{item.name}</h3>}
+      {settings.showIdentifier && (item.sku || item.item_code) && (
+        <p>{item.sku || item.item_code}</p>
+      )}
+      {settings.showUrl && (
+        <small>{getQrUrl(item).replace(/^https?:\/\//, "")}</small>
+      )}
+    </article>
+  );
+
   return (
     <main>
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4 print:block">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5 print:hidden">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
+        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
             Operations
           </p>
@@ -156,21 +402,25 @@ export default function QrCenterPage() {
             QR Center
           </h1>
           <p className="mt-1 text-sm leading-6 text-theme-muted">
-            Generate public SydIN item labels or open the existing inventory
+            Create clean QR label documents or open the existing inventory
             scanner.
           </p>
         </section>
 
-        {error && (
+        {(error || notice) && (
           <p
-            role="alert"
-            className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger print:hidden"
+            role={error ? "alert" : "status"}
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+              error
+                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
+                : "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
+            }`}
           >
-            {error}
+            {error || notice}
           </p>
         )}
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)] print:hidden">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
           <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_12px_36px_rgba(15,23,42,0.07)] sm:p-5">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
@@ -181,24 +431,45 @@ export default function QrCenterPage() {
                   Select one or more items with public item links.
                 </p>
               </div>
-              <div className="flex gap-2">
-                <button
-                  type="button"
-                  onClick={selectAllVisible}
-                  disabled={visibleItems.length === 0}
-                  className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
-                >
-                  Select visible
-                </button>
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  disabled={printableItems.length === 0}
-                  className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-3 py-2.5 text-xs font-bold text-white disabled:opacity-50"
-                >
-                  Print selected ({printableItems.length})
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={selectAllVisible}
+                disabled={visibleItems.length === 0}
+                className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
+              >
+                Select visible
+              </button>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-theme bg-theme-inset p-3">
+              {selectedCount === 0 ? (
+                <p className="text-sm text-theme-muted">
+                  Select one or more items to create printable labels.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                  <p className="text-sm font-bold text-theme-primary">
+                    {selectedCount}{" "}
+                    {selectedCount === 1 ? "item selected" : "items selected"}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedIds(new Set())}
+                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
+                    >
+                      Clear Selection
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSettingsOpen(true)}
+                      className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-xs font-bold text-white"
+                    >
+                      Create Labels
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
 
             <label className="relative mt-4 block">
@@ -227,7 +498,6 @@ export default function QrCenterPage() {
               ) : visibleItems.length > 0 ? (
                 visibleItems.map((item) => {
                   const selected = selectedIds.has(item.id);
-
                   return (
                     <label
                       key={item.id}
@@ -284,39 +554,42 @@ export default function QrCenterPage() {
 
           <div className="grid gap-4">
             <section className="rounded-[22px] border border-theme bg-theme-surface p-5 shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
-              <h2 className="text-xl font-black text-theme-primary">
-                QR Preview
-              </h2>
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-black text-theme-primary">
+                  Label Preview
+                </h2>
+                <span className="rounded-full border border-theme bg-theme-inset px-3 py-1 text-xs font-bold text-theme-secondary">
+                  {layoutOptions.find((option) => option.value === settings.layout)
+                    ?.label || "2 × 2"}
+                </span>
+              </div>
               {selectedItem ? (
-                <div className="mt-4 text-center">
-                  <div
-                    ref={(node) => {
-                      if (node) qrRefs.current.set(selectedItem.id, node);
-                    }}
-                    className="mx-auto w-fit rounded-2xl border border-slate-200 bg-white p-4"
-                  >
-                    <QRCode
-                      value={getQrUrl(selectedItem)}
-                      size={190}
-                      level="M"
-                    />
+                <div className="mt-4">
+                  {renderLabel(selectedItem)}
+                  <div className="mt-4 grid gap-2 sm:grid-cols-3">
+                    <button
+                      type="button"
+                      onClick={() => downloadQr(selectedItem)}
+                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
+                    >
+                      Download QR
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => void downloadPdf()}
+                      disabled={exportingPdf}
+                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
+                    >
+                      {exportingPdf ? "Creating..." : "Download PDF"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={printLabels}
+                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
+                    >
+                      {selectedCount === 1 ? "Print Label" : "Print Labels"}
+                    </button>
                   </div>
-                  <p className="mt-3 font-bold text-theme-primary">
-                    {selectedItem.name}
-                  </p>
-                  <p className="mt-1 text-xs text-theme-subtle">
-                    {selectedItem.sku ||
-                      selectedItem.item_code ||
-                      "SydIN inventory item"}
-                  </p>
-                  <button
-                    type="button"
-                    onClick={() => downloadQr(selectedItem)}
-                    className="mt-4 inline-flex items-center gap-2 rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary hover:bg-theme-hover"
-                  >
-                    <UiIcon name="download" className="h-4 w-4" />
-                    Download QR
-                  </button>
                 </div>
               ) : (
                 <div className="mt-4 rounded-xl border border-dashed border-theme bg-theme-inset px-4 py-10 text-center">
@@ -325,7 +598,7 @@ export default function QrCenterPage() {
                     className="mx-auto h-8 w-8 text-theme-accent"
                   />
                   <p className="mt-3 text-sm text-theme-muted">
-                    Select an item to preview its QR code.
+                    Select an item to preview its label.
                   </p>
                 </div>
               )}
@@ -336,8 +609,7 @@ export default function QrCenterPage() {
                 Scan QR Code
               </h2>
               <p className="mt-2 text-sm leading-6 text-theme-muted">
-                Open the existing SydIN ZXing scanner. Valid public item QR
-                codes open the matching item details page.
+                Open the existing SydIN ZXing scanner.
               </p>
               <button
                 type="button"
@@ -350,33 +622,167 @@ export default function QrCenterPage() {
             </section>
           </div>
         </div>
-
-        <section className="hidden print:grid print:grid-cols-2 print:gap-4">
-          {printableItems.map((item) => (
-            <article
-              key={item.id}
-              className="break-inside-avoid rounded-xl border border-slate-300 bg-white p-5 text-center text-slate-950"
-            >
-              <div className="mb-3 flex items-center justify-center gap-2">
-                <SydINMark size="sm" />
-                <SydINWordmark size="sm" variant="light-background" />
-              </div>
-              <div
-                ref={(node) => {
-                  if (node) qrRefs.current.set(item.id, node);
-                }}
-                className="mx-auto w-fit"
-              >
-                <QRCode value={getQrUrl(item)} size={180} level="M" />
-              </div>
-              <h2 className="mt-3 text-lg font-bold">{item.name}</h2>
-              <p className="mt-1 text-xs text-slate-600">
-                {item.sku || item.item_code || "SydIN inventory item"}
-              </p>
-            </article>
-          ))}
-        </section>
       </div>
+
+      <section
+        className={`qr-print-root ${getLayoutGrid(settings.layout)}`}
+        aria-hidden="true"
+      >
+        {printableItems.map((item) => renderLabel(item, true))}
+      </section>
+
+      <DialogShell
+        open={settingsOpen}
+        title="Create Labels"
+        eyebrow="Label settings"
+        description={`${selectedCount} ${
+          selectedCount === 1 ? "item" : "items"
+        } selected`}
+        onClose={() => setSettingsOpen(false)}
+        className="max-w-2xl"
+      >
+        <div className="grid gap-5">
+          <fieldset>
+            <legend className="mb-2 text-sm font-bold text-theme-secondary">
+              Layout
+            </legend>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {layoutOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  aria-pressed={settings.layout === option.value}
+                  onClick={() => updateSettings({ layout: option.value })}
+                  className={`rounded-xl border px-3 py-3 text-sm font-bold ${
+                    settings.layout === option.value
+                      ? "border-indigo-300/60 bg-indigo-500/15 text-theme-accent ring-4 ring-indigo-400/10"
+                      : "border-theme bg-theme-surface text-theme-secondary"
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend className="mb-2 text-sm font-bold text-theme-secondary">
+              Branding
+            </legend>
+            <div className="grid gap-2 sm:grid-cols-3">
+              {(
+                [
+                  ["sydin", "SydIN logo"],
+                  ["business", "Business logo"],
+                  ["none", "No logo"],
+                ] as [QrLabelBranding, string][]
+              ).map(([value, label]) => {
+                const businessDisabled =
+                  value === "business" && !canUseBusinessLogo;
+                return (
+                  <button
+                    key={value}
+                    type="button"
+                    disabled={businessDisabled}
+                    aria-pressed={settings.branding === value}
+                    onClick={() => updateSettings({ branding: value })}
+                    className={`rounded-xl border px-3 py-3 text-sm font-bold ${
+                      settings.branding === value
+                        ? "border-indigo-300/60 bg-indigo-500/15 text-theme-accent ring-4 ring-indigo-400/10"
+                        : "border-theme bg-theme-surface text-theme-secondary"
+                    } disabled:cursor-not-allowed disabled:opacity-45`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
+            {!canUseBusinessLogo && (
+              <p className="mt-2 text-xs leading-5 text-theme-muted">
+                Business-logo labels require an active Standard or Pro plan and
+                a logo in Settings. Current plan:{" "}
+                <strong>{formatPlanName(subscription.plan)}</strong>.
+              </p>
+            )}
+            {businessLogoError && (
+              <p className="mt-2 text-xs text-theme-danger">
+                The business logo could not be loaded. SydIN branding will be
+                used instead.
+              </p>
+            )}
+          </fieldset>
+
+          <fieldset>
+            <legend className="mb-2 text-sm font-bold text-theme-secondary">
+              Content
+            </legend>
+            <div className="grid gap-2 sm:grid-cols-2">
+              {[
+                ["showName", "Show item name"],
+                ["showIdentifier", "Show SKU or item code"],
+                ["showUrl", "Show short public URL"],
+              ].map(([field, label]) => (
+                <label
+                  key={field}
+                  className="flex cursor-pointer items-center gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-3 text-sm font-semibold text-theme-primary"
+                >
+                  <input
+                    type="checkbox"
+                    checked={Boolean(
+                      settings[field as keyof QrLabelSettings]
+                    )}
+                    onChange={(event) =>
+                      updateSettings({
+                        [field]: event.target.checked,
+                      } as Partial<QrLabelSettings>)
+                    }
+                    className="h-4 w-4 accent-indigo-600"
+                  />
+                  {label}
+                </label>
+              ))}
+              <label className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                <span className="block text-xs font-bold text-theme-secondary">
+                  QR size
+                </span>
+                <select
+                  value={settings.qrSize}
+                  onChange={(event) =>
+                    updateSettings({
+                      qrSize: event.target.value as QrLabelSize,
+                    })
+                  }
+                  className="mt-1 w-full bg-transparent text-sm font-semibold text-theme-primary outline-none"
+                >
+                  {qrSizeOptions.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+          </fieldset>
+
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+            <button
+              type="button"
+              onClick={() => void downloadPdf()}
+              disabled={exportingPdf}
+              className="rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
+            >
+              {exportingPdf ? "Creating PDF..." : "Download PDF"}
+            </button>
+            <button
+              type="button"
+              onClick={printLabels}
+              className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-3 text-sm font-bold text-white"
+            >
+              {selectedCount === 1 ? "Print Label" : "Print Labels"}
+            </button>
+          </div>
+        </div>
+      </DialogShell>
     </main>
   );
 }
