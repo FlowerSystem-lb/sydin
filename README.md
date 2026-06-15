@@ -54,3 +54,19 @@ Before Microsoft sign-in can work in a deployed environment:
 
 Google and Microsoft use the same existing SydIN `redirectTo` destination and
 Supabase session handling. Enterprise SSO is intentionally not configured.
+
+## Email Verification Codes
+
+Email/password signup verifies new accounts with a numeric Supabase email OTP.
+In the Supabase Auth email template for confirming signup, include the token
+value (for example, `{{ .Token }}`) so the message sends the verification code
+instead of relying only on a confirmation link. Keep email confirmation enabled
+for the Supabase email provider.
+
+The public SydIN email logo is available at:
+
+`/email/sydin-logo.png`
+
+Production email templates can reference:
+
+`https://sydin.vercel.app/email/sydin-logo.png`

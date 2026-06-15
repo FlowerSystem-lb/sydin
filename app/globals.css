@@ -3098,6 +3098,190 @@ select.glass-input option {
   font-weight: 700;
 }
 
+.signup-form-wrap {
+  margin-top: clamp(2rem, 5vh, 4.5rem);
+}
+
+.signup-heading h1 {
+  font-size: clamp(2.35rem, 3.8vw, 3.65rem);
+}
+
+.signup-password-help,
+.auth-verification-help {
+  color: #858ca2;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.auth-verification {
+  width: 100%;
+  padding-top: clamp(0.5rem, 2vh, 1.5rem);
+  text-align: center;
+}
+
+.auth-verification-badge {
+  display: grid;
+  width: 3.35rem;
+  height: 3.35rem;
+  margin-inline: auto;
+  place-items: center;
+  border: 1px solid rgba(99, 92, 255, 0.18);
+  border-radius: 16px;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(145deg, #25cff4, #675cff, #a52cff) border-box;
+  color: #5d62ff;
+  box-shadow: 0 15px 35px rgba(82, 94, 225, 0.14);
+}
+
+.auth-verification-eyebrow {
+  margin-top: 1.25rem;
+  color: #4c6fff;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.auth-verification h1 {
+  margin-top: 0.55rem;
+  color: var(--login-navy);
+  letter-spacing: -0.05em;
+  font-size: clamp(2.3rem, 4vw, 3.5rem);
+  font-weight: 760;
+  line-height: 1;
+}
+
+.auth-verification > p:not(.auth-verification-eyebrow) {
+  max-width: 26rem;
+  margin: 1rem auto 0;
+  color: var(--login-copy);
+  font-size: 0.9rem;
+  line-height: 1.65;
+}
+
+.auth-verification > p strong {
+  color: #313750;
+  overflow-wrap: anywhere;
+}
+
+.auth-verification-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1.75rem;
+  text-align: left;
+}
+
+.auth-verification-form > label {
+  color: #242941;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.auth-code-input {
+  width: 100%;
+  min-height: 4.5rem;
+  border: 1px solid #d9deea;
+  border-radius: 13px;
+  outline: none;
+  background: #fcfdff;
+  padding: 0.8rem 1rem;
+  color: var(--login-navy);
+  text-align: center;
+  font-size: 1.65rem;
+  font-weight: 760;
+  letter-spacing: 0.45em;
+  text-indent: 0.45em;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    background-color 180ms ease;
+}
+
+.auth-code-input:focus {
+  border-color: rgba(57, 119, 255, 0.65);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(57, 119, 255, 0.11);
+}
+
+.auth-code-input:disabled {
+  cursor: not-allowed;
+  background: #f5f6fa;
+}
+
+.auth-verification-form .login-submit {
+  margin-top: 0.5rem;
+}
+
+.auth-verification-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  margin-top: 1.25rem;
+}
+
+.auth-verification-actions button {
+  border-radius: 8px;
+  padding: 0.35rem;
+  color: #426dff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.auth-verification-actions button:last-child {
+  color: #6f768c;
+}
+
+.auth-verification-actions button:disabled {
+  cursor: not-allowed;
+  color: #a4a9b8;
+}
+
+.auth-verification-actions button:focus-visible {
+  outline: 3px solid rgba(57, 119, 255, 0.24);
+  outline-offset: 2px;
+}
+
+.auth-verification-success {
+  padding-top: clamp(3rem, 11vh, 8rem);
+}
+
+.auth-verification-success .auth-verification-badge {
+  border-color: rgba(41, 190, 150, 0.24);
+  background: linear-gradient(145deg, #31d6be, #4d79ff);
+  color: #ffffff;
+}
+
+.auth-verification-progress {
+  display: block;
+  width: min(100%, 18rem);
+  height: 0.35rem;
+  margin: 2rem auto 0;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e9ecf4;
+}
+
+.auth-verification-progress i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #25cff4, #675cff, #a52cff);
+  transform-origin: left;
+  animation: auth-verification-progress 900ms ease forwards;
+}
+
+@keyframes auth-verification-progress {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .login-legal {
   display: flex;
   align-items: center;
@@ -3725,7 +3909,8 @@ select.glass-input option {
 
   .login-form-options > a:hover,
   .login-signup-copy a:hover,
-  .login-legal a:hover {
+  .login-legal a:hover,
+  .auth-verification-actions button:hover {
     color: #244fff;
   }
 }
@@ -3792,8 +3977,16 @@ select.glass-input option {
     margin-block: 2.5rem 1.5rem;
   }
 
+  .signup-form-wrap {
+    margin-block: 1.75rem 1.25rem;
+  }
+
   .login-heading h1 {
     font-size: clamp(2.55rem, 13vw, 3.35rem);
+  }
+
+  .signup-heading h1 {
+    font-size: clamp(2.25rem, 11vw, 3rem);
   }
 
   .login-heading p {
@@ -3812,6 +4005,23 @@ select.glass-input option {
 
   .login-legal {
     padding-bottom: 0.25rem;
+  }
+
+  .auth-verification {
+    padding-top: 0.25rem;
+  }
+
+  .auth-verification h1 {
+    font-size: clamp(2.25rem, 11vw, 3rem);
+  }
+
+  .auth-code-input {
+    min-height: 4.15rem;
+    font-size: 1.45rem;
+  }
+
+  .auth-verification-success {
+    padding-top: 4rem;
   }
 
   .login-visual {
@@ -3874,5 +4084,9 @@ select.glass-input option {
   .login-checkbox > span,
   .login-submit {
     transition: none;
+  }
+
+  .auth-verification-progress i {
+    animation: none;
   }
 }

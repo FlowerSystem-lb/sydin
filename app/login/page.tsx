@@ -3,11 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import type { Provider } from "@supabase/supabase-js";
+import AuthPageShell from "@/components/auth/AuthPageShell";
 import GoogleMark from "@/components/GoogleMark";
 import MicrosoftMark from "@/components/MicrosoftMark";
-import SydINLoginVisual from "@/components/auth/SydINLoginVisual";
-import SydINMark from "@/components/brand/SydINMark";
-import Wordmark from "@/components/Wordmark";
 import UiIcon from "@/components/UiIcon";
 import { supabase } from "@/app/lib/supabase";
 import { buildAuthHref } from "@/app/lib/authNavigation";
@@ -137,181 +135,155 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="login-page">
-      <section className="login-auth-panel">
-        <div className="login-auth-inner">
-          <header className="login-auth-header">
-            <Link href="/" className="login-brand" aria-label="SydIN home">
-              <SydINMark size="md" />
-              <Wordmark size="md" variant="light-background" />
-            </Link>
+    <AuthPageShell>
+      <div className="login-form-wrap">
+        <div className="login-heading">
+          <h1>
+            Welcome <span>back</span>
+          </h1>
+          <p>Sign in to access your SydIN workspace.</p>
+        </div>
 
-            <Link href="/" className="login-back-link">
-              <UiIcon name="chevron-left" className="h-4 w-4" />
-              Back to Home
-            </Link>
-          </header>
+        <div className="login-oauth-stack">
+          <button
+            type="button"
+            onClick={() => void handleOAuthLogin("google")}
+            disabled={busy}
+            aria-busy={oauthProvider === "google"}
+            className="login-provider-button"
+          >
+            <GoogleMark />
+            <span>
+              {oauthProvider === "google"
+                ? "Connecting to Google..."
+                : "Continue with Google"}
+            </span>
+          </button>
 
-          <div className="login-form-wrap">
-            <div className="login-heading">
-              <h1>
-                Welcome <span>back</span>
-              </h1>
-              <p>Sign in to access your SydIN workspace.</p>
-            </div>
+          <button
+            type="button"
+            onClick={() => void handleOAuthLogin("azure")}
+            disabled={busy}
+            aria-busy={oauthProvider === "azure"}
+            className="login-provider-button login-provider-microsoft"
+          >
+            <span className="login-provider-icon">
+              <MicrosoftMark />
+            </span>
+            <span>
+              {oauthProvider === "azure"
+                ? "Connecting to Microsoft..."
+                : "Continue with Microsoft"}
+            </span>
+          </button>
+        </div>
 
-            <div className="login-oauth-stack">
-              <button
-                type="button"
-                onClick={() => void handleOAuthLogin("google")}
+        {oauthError && (
+          <div role="alert" className="login-alert">
+            <UiIcon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
+            <span>{oauthError}</span>
+          </div>
+        )}
+
+        <div className="login-divider" aria-hidden="true">
+          <span />
+          <p>OR</p>
+          <span />
+        </div>
+
+        <form onSubmit={handleLogin} className="login-form">
+          <div className="login-field">
+            <label htmlFor="login-email">Email address</label>
+            <div className="login-input-wrap">
+              <input
+                id="login-email"
+                type="email"
+                required
+                autoComplete="email"
+                placeholder="Enter your email"
+                value={email}
                 disabled={busy}
-                aria-busy={oauthProvider === "google"}
-                className="login-provider-button"
-              >
-                <GoogleMark />
-                <span>
-                  {oauthProvider === "google"
-                    ? "Connecting to Google..."
-                    : "Continue with Google"}
-                </span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => void handleOAuthLogin("azure")}
-                disabled={busy}
-                aria-busy={oauthProvider === "azure"}
-                className="login-provider-button login-provider-microsoft"
-              >
-                <span className="login-provider-icon">
-                  <MicrosoftMark />
-                </span>
-                <span>
-                  {oauthProvider === "azure"
-                    ? "Connecting to Microsoft..."
-                    : "Continue with Microsoft"}
-                </span>
-              </button>
+                onChange={(event) => setEmail(event.target.value)}
+              />
+              <span aria-hidden="true" className="login-field-icon">
+                @
+              </span>
             </div>
-
-            {oauthError && (
-              <div role="alert" className="login-alert">
-                <UiIcon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
-                <span>{oauthError}</span>
-              </div>
-            )}
-
-            <div className="login-divider" aria-hidden="true">
-              <span />
-              <p>OR</p>
-              <span />
-            </div>
-
-            <form onSubmit={handleLogin} className="login-form">
-              <div className="login-field">
-                <label htmlFor="login-email">Email address</label>
-                <div className="login-input-wrap">
-                  <input
-                    id="login-email"
-                    type="email"
-                    required
-                    autoComplete="email"
-                    placeholder="Enter your email"
-                    value={email}
-                    disabled={busy}
-                    onChange={(event) => setEmail(event.target.value)}
-                  />
-                  <span aria-hidden="true" className="login-field-icon">
-                    @
-                  </span>
-                </div>
-              </div>
-
-              <div className="login-field">
-                <label htmlFor="login-password">Password</label>
-                <div className="login-input-wrap">
-                  <input
-                    id="login-password"
-                    type={showPassword ? "text" : "password"}
-                    required
-                    autoComplete="current-password"
-                    placeholder="Enter your password"
-                    value={password}
-                    disabled={busy}
-                    onChange={(event) => setPassword(event.target.value)}
-                  />
-                  <button
-                    type="button"
-                    className="login-password-toggle"
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                    aria-pressed={showPassword}
-                    onClick={() => setShowPassword((visible) => !visible)}
-                  >
-                    {showPassword ? "Hide" : "Show"}
-                  </button>
-                </div>
-              </div>
-
-              <div className="login-form-options">
-                <label className="login-checkbox">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    disabled={busy}
-                    onChange={(event) => setRememberMe(event.target.checked)}
-                  />
-                  <span aria-hidden="true">
-                    <UiIcon name="check" className="h-3 w-3" />
-                  </span>
-                  Remember me
-                </label>
-
-                <Link href="/contact?topic=password-help">
-                  Forgot password?
-                </Link>
-              </div>
-
-              {loginError && (
-                <div role="alert" className="login-alert">
-                  <UiIcon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{loginError}</span>
-                </div>
-              )}
-
-              <button
-                type="submit"
-                disabled={busy}
-                aria-busy={loading}
-                className="login-submit"
-              >
-                {loading ? (
-                  <>
-                    <span className="login-spinner" />
-                    Signing in...
-                  </>
-                ) : (
-                  "Sign In"
-                )}
-              </button>
-            </form>
-
-            <p className="login-signup-copy">
-              Don&apos;t have an account?{" "}
-              <Link href={buildAuthHref("/signup", planIntent, returnTo)}>
-                Create one
-              </Link>
-            </p>
           </div>
 
-          <footer className="login-legal">
-            <Link href="/terms">Terms of Service</Link>
-            <span aria-hidden="true">•</span>
-            <Link href="/privacy">Privacy Policy</Link>
-          </footer>
-        </div>
-      </section>
+          <div className="login-field">
+            <label htmlFor="login-password">Password</label>
+            <div className="login-input-wrap">
+              <input
+                id="login-password"
+                type={showPassword ? "text" : "password"}
+                required
+                autoComplete="current-password"
+                placeholder="Enter your password"
+                value={password}
+                disabled={busy}
+                onChange={(event) => setPassword(event.target.value)}
+              />
+              <button
+                type="button"
+                className="login-password-toggle"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                aria-pressed={showPassword}
+                onClick={() => setShowPassword((visible) => !visible)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
+          </div>
 
-      <SydINLoginVisual />
-    </main>
+          <div className="login-form-options">
+            <label className="login-checkbox">
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                disabled={busy}
+                onChange={(event) => setRememberMe(event.target.checked)}
+              />
+              <span aria-hidden="true">
+                <UiIcon name="check" className="h-3 w-3" />
+              </span>
+              Remember me
+            </label>
+
+            <Link href="/contact?topic=password-help">Forgot password?</Link>
+          </div>
+
+          {loginError && (
+            <div role="alert" className="login-alert">
+              <UiIcon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
+              <span>{loginError}</span>
+            </div>
+          )}
+
+          <button
+            type="submit"
+            disabled={busy}
+            aria-busy={loading}
+            className="login-submit"
+          >
+            {loading ? (
+              <>
+                <span className="login-spinner" />
+                Signing in...
+              </>
+            ) : (
+              "Sign In"
+            )}
+          </button>
+        </form>
+
+        <p className="login-signup-copy">
+          Don&apos;t have an account?{" "}
+          <Link href={buildAuthHref("/signup", planIntent, returnTo)}>
+            Create one
+          </Link>
+        </p>
+      </div>
+    </AuthPageShell>
   );
 }
