@@ -9,6 +9,7 @@ import {
   type IScannerControls,
 } from "@zxing/browser";
 import UiIcon from "@/components/UiIcon";
+import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import { Button, DialogShell } from "@/components/ui";
 import CategorySelector from "@/components/CategorySelector";
 import {
@@ -37,7 +38,6 @@ import EditItemForm, {
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import {
   calculateInventoryValue,
-  formatInventoryPrice,
   getEffectiveItemLowStockThreshold,
   getInventoryQuantityLabel,
   normalizeCurrencyCode,
@@ -1276,15 +1276,6 @@ export default function InventoryPage() {
       : effectiveLowStockThreshold;
   const isItemLowStock = (item: Item) =>
     item.quantity <= getLowStockThresholdForItem(item);
-  const getItemPrice = (value: unknown) =>
-    formatInventoryPrice(value, editCurrencyCode);
-  const getItemValue = (item: Item, price: unknown) => {
-    const value = calculateInventoryValue(item.quantity, price);
-
-    return value === null
-      ? null
-      : formatInventoryPrice(value, editCurrencyCode);
-  };
   const normalizedSearch = search.trim().toLowerCase();
   const depotFilterOptions = depots.filter(
     (depot) =>
@@ -1374,105 +1365,146 @@ export default function InventoryPage() {
     usageLoading || (canExportPdf && (exportDisabled || isExportingPdf));
   const excelExportDisabled =
     usageLoading || (canExportExcel && (exportDisabled || isExportingExcel));
+  const totalQuantity = items.reduce(
+    (total, item) => total + Number(item.quantity || 0),
+    0
+  );
+  const lowStockCount = items.filter(isItemLowStock).length;
+  const assignedDepotCount = new Set(
+    items
+      .map((item) => item.depot_id)
+      .filter((depotId): depotId is number => typeof depotId === "number")
+  ).size;
 
   return (
     <div className="contents">
       <main>
-        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-8">
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
+        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
+          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                   Products
                 </p>
 
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
                   Inventory
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
-                  Manage products, stock, categories, and item details.
+                <p className="mt-1 text-sm leading-6 text-theme-muted">
+                  Find, filter, and manage products without losing your place.
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center xl:justify-end">
-                <Link
-                  href="/dashboard/inventory/import"
-                  className={`action-button px-5 py-3.5 text-center text-sm ${
-                    !usageLoading && !planCapabilities.csvExcelImport
-                      ? "border-sky-300/15 bg-theme-surface text-theme-muted"
-                      : ""
-                  }`}
-                >
-                  {!usageLoading && !planCapabilities.csvExcelImport ? (
-                    <LockedActionLabel>Import</LockedActionLabel>
-                  ) : (
-                    <>
-                      <UiIcon name="upload" />
-                      Import
-                    </>
-                  )}
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={exportInventoryCsv}
-                  disabled={exportDisabled}
-                  className="action-button px-5 py-3.5 text-center text-sm"
-                >
-                  <UiIcon name="file" />
-                  Export CSV
-                </button>
-
-                <button
-                  type="button"
-                  onClick={exportInventoryReportPdf}
-                  disabled={pdfExportDisabled}
-                  className={`action-button px-5 py-3.5 text-center text-sm ${
-                    !usageLoading && !canExportPdf
-                      ? "border-sky-300/15 bg-theme-surface text-theme-muted"
-                      : ""
-                  }`}
-                >
-                  {!usageLoading && !canExportPdf ? (
-                    <LockedActionLabel>Export PDF</LockedActionLabel>
-                  ) : (
-                    <>
-                      <UiIcon name="download" />
-                      {isExportingPdf ? "Exporting PDF..." : "Export PDF"}
-                    </>
-                  )}
-                </button>
-
-                <button
-                  type="button"
-                  onClick={exportInventoryReportExcel}
-                  disabled={excelExportDisabled}
-                  className={`action-button px-5 py-3.5 text-center text-sm ${
-                    !usageLoading && !canExportExcel
-                      ? "border-sky-300/15 bg-theme-surface text-theme-muted"
-                      : ""
-                  }`}
-                >
-                  {!usageLoading && !canExportExcel ? (
-                    <LockedActionLabel>Export Excel</LockedActionLabel>
-                  ) : (
-                    <>
-                      <UiIcon name="sheet" />
-                      {isExportingExcel ? "Exporting Excel..." : "Export Excel"}
-                    </>
-                  )}
-                </button>
-
+              <div className="flex flex-wrap items-center gap-2">
                 <Link
                   href="/dashboard/add-item"
-                  className="action-button action-button-primary px-5 py-3.5 text-center text-sm"
+                  className="action-button action-button-primary px-4 py-2.5 text-sm"
                 >
                   <UiIcon name="plus" />
                   Add Item
                 </Link>
+
+                <button
+                  type="button"
+                  onClick={openScanner}
+                  disabled={usageLoading}
+                  className={`action-button px-4 py-2.5 text-sm ${
+                    canUseScanner
+                      ? ""
+                      : "border-sky-300/15 bg-theme-surface text-theme-muted"
+                  }`}
+                >
+                  {!usageLoading && !canUseScanner ? (
+                    <LockedActionLabel>Scan</LockedActionLabel>
+                  ) : (
+                    <>
+                      <UiIcon name="scan" />
+                      Scan
+                    </>
+                  )}
+                </button>
+
+                <details className="group relative">
+                  <summary className="action-button cursor-pointer list-none px-4 py-2.5 text-sm [&::-webkit-details-marker]:hidden">
+                    <UiIcon name="more" />
+                    More
+                  </summary>
+                  <div className="absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+                    <Link
+                      href="/dashboard/inventory/import"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-slate-50"
+                    >
+                      <UiIcon name="upload" className="h-4 w-4" />
+                      {!usageLoading && !planCapabilities.csvExcelImport ? (
+                        <LockedActionLabel>Import</LockedActionLabel>
+                      ) : (
+                        "Import inventory"
+                      )}
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={exportInventoryCsv}
+                      disabled={exportDisabled}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      <UiIcon name="file" className="h-4 w-4" />
+                      Export CSV
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportInventoryReportPdf}
+                      disabled={pdfExportDisabled}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      <UiIcon name="download" className="h-4 w-4" />
+                      {!usageLoading && !canExportPdf
+                        ? "Export PDF (locked)"
+                        : isExportingPdf
+                          ? "Exporting PDF..."
+                          : "Export PDF"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={exportInventoryReportExcel}
+                      disabled={excelExportDisabled}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      <UiIcon name="sheet" className="h-4 w-4" />
+                      {!usageLoading && !canExportExcel
+                        ? "Export Excel (locked)"
+                        : isExportingExcel
+                          ? "Exporting Excel..."
+                          : "Export Excel"}
+                    </button>
+                  </div>
+                </details>
               </div>
             </div>
+          </section>
+
+          <section
+            aria-label="Inventory summary"
+            className="grid grid-cols-2 overflow-hidden rounded-[20px] border border-theme bg-theme-surface shadow-[0_10px_30px_rgba(15,23,42,0.06)] md:grid-cols-4"
+          >
+            {[
+              ["Items", items.length.toLocaleString()],
+              ["Quantity", totalQuantity.toLocaleString()],
+              ["Low stock", lowStockCount.toLocaleString()],
+              ["Locations", assignedDepotCount.toLocaleString()],
+            ].map(([label, value]) => (
+              <div
+                key={label}
+                className="border-b border-r border-theme px-4 py-3 last:border-r-0 md:border-b-0"
+              >
+                <p className="text-[11px] font-bold uppercase tracking-[0.13em] text-theme-subtle">
+                  {label}
+                </p>
+                <p className="mt-1 text-xl font-black text-theme-primary">
+                  {loadingItems ? "—" : value}
+                </p>
+              </div>
+            ))}
           </section>
 
           {(pageNotice || pageError) && (
@@ -1487,18 +1519,16 @@ export default function InventoryPage() {
             </div>
           )}
 
-          {/* Search and Filters */}
-          <section className="rounded-[28px] border border-theme bg-theme-surface p-4 shadow-[0_22px_70px_rgba(0,0,0,0.25)] backdrop-blur-xl sm:p-5">
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-4">
+            <div className="flex flex-col gap-3">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
-                  <label className="mb-3 block text-sm font-semibold text-theme-muted">
+                  <label htmlFor="inventory-search" className="sr-only">
                     Search inventory
                   </label>
-
                   <div className="relative">
                     <svg
-                      className="pointer-events-none absolute left-5 top-1/2 h-5 w-5 -translate-y-1/2 text-theme-subtle"
+                      className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-theme-subtle"
                       fill="none"
                       viewBox="0 0 24 24"
                       stroke="currentColor"
@@ -1512,41 +1542,18 @@ export default function InventoryPage() {
                     </svg>
 
                     <input
+                      id="inventory-search"
                       type="text"
-                      placeholder="Search name, SKU, supplier, depot, or notes..."
+                      placeholder="Search items, SKU, barcode, depot..."
                       value={search}
-                      onChange={(e) =>
-                        setSearch(
-                          e.target.value
-                        )
-                      }
-                      className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] py-4 pl-14 pr-5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                      onChange={(event) => setSearch(event.target.value)}
+                      className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] py-3 pl-12 pr-4 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <button
-                    type="button"
-                    onClick={openScanner}
-                    disabled={usageLoading}
-                    className={`action-button px-4 py-3 text-sm ${
-                      canUseScanner
-                        ? "action-button-primary"
-                        : "border-sky-300/15 bg-theme-surface text-theme-muted"
-                    }`}
-                  >
-                    {!usageLoading && !canUseScanner ? (
-                      <LockedActionLabel>Scan</LockedActionLabel>
-                    ) : (
-                      <>
-                        <UiIcon name="scan" />
-                        Scan
-                      </>
-                    )}
-                  </button>
-
-                  <p className="rounded-2xl border border-theme bg-theme-inset px-4 py-3 text-sm font-bold text-theme-secondary">
+                <div className="flex items-center gap-2">
+                  <p className="whitespace-nowrap rounded-xl border border-theme bg-theme-inset px-3 py-2.5 text-xs font-bold text-theme-secondary">
                     Showing {visibleItems.length} of {items.length} items
                   </p>
 
@@ -1554,24 +1561,24 @@ export default function InventoryPage() {
                     <button
                       type="button"
                       onClick={resetInventoryControls}
-                      className="rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
+                      className="whitespace-nowrap rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary transition hover:bg-theme-hover"
                     >
-                      Clear Filters
+                      Clear
                     </button>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
+                  <label className="sr-only">
                     Depot
                   </label>
 
                   <select
                     value={depotFilter}
                     onChange={(e) => setDepotFilter(e.target.value)}
-                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
                   >
                     <option value="all">All depots</option>
                     <option value="unassigned">Unassigned</option>
@@ -1587,7 +1594,7 @@ export default function InventoryPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
+                  <label className="sr-only">
                     Category
                   </label>
 
@@ -1596,7 +1603,7 @@ export default function InventoryPage() {
                     onChange={(event) =>
                       setCategoryFilter(event.target.value)
                     }
-                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
                   >
                     <option value="all">All categories</option>
                     <option value="uncategorized">Uncategorized</option>
@@ -1609,14 +1616,14 @@ export default function InventoryPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
+                  <label className="sr-only">
                     Stock
                   </label>
 
                   <select
                     value={stockFilter}
                     onChange={(e) => setStockFilter(e.target.value as StockFilter)}
-                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
                   >
                     <option value="all">All stock</option>
                     <option value="low">Low stock only</option>
@@ -1624,14 +1631,14 @@ export default function InventoryPage() {
                 </div>
 
                 <div>
-                  <label className="mb-2 block text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
+                  <label className="sr-only">
                     Sort
                   </label>
 
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                    className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 py-2.5 text-xs font-semibold text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-sm"
                   >
                     <option value="newest">Newest</option>
                     <option value="name-az">Name A-Z</option>
@@ -1645,200 +1652,39 @@ export default function InventoryPage() {
 
           {/* Items */}
           {loadingItems ? (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
-              {[1, 2, 3, 4].map((item) => (
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+              {[1, 2, 3, 4, 5].map((item) => (
                 <div
                   key={item}
-                  className="h-[460px] overflow-hidden rounded-[30px] border border-theme bg-theme-surface shadow-[0_24px_80px_rgba(0,0,0,0.24)]"
+                  className="aspect-[4/5] overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_14px_36px_rgba(15,23,42,0.08)]"
                 >
-                  <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+                  <div className="h-full animate-pulse bg-theme-inset" />
                 </div>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {visibleItems.map((item) => (
-                <div
-                key={item.id}
-                role="link"
-                tabIndex={0}
-                onClick={() =>
-                  router.push(
-                    `/dashboard/inventory/${item.id}`
-                  )
-                }
-                onKeyDown={(e) => {
-                  if (
-                    e.key === "Enter" ||
-                    e.key === " "
-                  ) {
-                    e.preventDefault();
-                    router.push(
-                      `/dashboard/inventory/${item.id}`
-                    );
+                <InventoryItemCard
+                  key={item.id}
+                  item={item}
+                  itemCode={item.item_code}
+                  quantityLabel={getInventoryQuantityLabel(
+                    item.quantity,
+                    item.unit_type,
+                    item.custom_unit_label
+                  )}
+                  categoryLabel={getCategoryLabel(item)}
+                  depotLabel={
+                    getDepotForItem(item)
+                      ? formatDepotLabel(getDepotForItem(item))
+                      : null
                   }
-                }}
-                className="group flex h-full cursor-pointer flex-col overflow-hidden rounded-[30px] border border-theme bg-theme-surface shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-xl transition duration-300 hover:-translate-y-1.5 hover:border-indigo-300/35 hover:bg-white/[0.075] focus:outline-none focus:ring-4 focus:ring-indigo-400/20"
-              >
-                {item.image ? (
-                  <div className="flex h-[220px] w-full items-center justify-center overflow-hidden border-b border-theme bg-[#f4f0e8] p-4 md:h-[240px] xl:h-[250px]">
-                    <div className="relative h-full w-full">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        loading="lazy"
-                        sizes="(min-width: 1280px) 33vw, (min-width: 768px) 50vw, 100vw"
-                        className="object-contain transition-transform duration-500 group-hover:scale-[1.02]"
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <div className="flex h-[220px] w-full items-center justify-center border-b border-theme bg-[#f4f0e8] p-5 text-theme-subtle md:h-[240px] xl:h-[250px]">
-                    <div className="flex h-full w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center">
-                      <span className="text-sm font-black uppercase tracking-[0.16em]">
-                        Image
-                      </span>
-
-                      <span className="mt-2 text-sm font-semibold">
-                        Not added
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                <div className="flex flex-1 flex-col p-5 sm:p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="min-w-0">
-                      {item.item_code && (
-                        <p className="mb-2 text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
-                          {item.item_code}
-                        </p>
-                      )}
-
-                      <h2 className="break-words text-2xl font-bold tracking-tight text-theme-primary">
-                        {item.name}
-                      </h2>
-
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        {item.sku && (
-                          <span className="max-w-full break-all rounded-full border border-theme bg-theme-surface px-3 py-1 text-xs font-semibold text-theme-secondary">
-                            SKU {item.sku}
-                          </span>
-                        )}
-
-                        {item.barcode && (
-                          <span className="max-w-full break-all rounded-full border border-cyan-300/15 bg-cyan-500/[0.08] px-3 py-1 font-mono text-xs font-semibold text-theme-accent">
-                            {item.barcode}
-                          </span>
-                        )}
-
-                        <span className="rounded-full border border-theme bg-theme-surface px-3 py-1 text-xs font-semibold text-theme-secondary">
-                          {getCategoryLabel(item)}
-                        </span>
-
-                        {getDepotForItem(item) && (
-                          <span className="rounded-full border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-semibold text-theme-accent">
-                            Depot {formatDepotLabel(getDepotForItem(item))}
-                          </span>
-                        )}
-
-                        {getSupplierForItem(item) && (
-                          <span className="rounded-full border border-sky-300/20 bg-sky-500/10 px-3 py-1 text-xs font-semibold text-theme-accent">
-                            Supplier {getSupplierForItem(item)?.name}
-                          </span>
-                        )}
-                      </div>
-                    </div>
-
-                    <span className="max-w-[42%] shrink-0 break-words rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-3 py-2 text-right text-base font-black text-theme-accent">
-                      {getInventoryQuantityLabel(
-                        item.quantity,
-                        item.unit_type,
-                        item.custom_unit_label
-                      )}
-                    </span>
-                  </div>
-
-                  <div className="mt-5 flex flex-wrap items-center gap-2">
-                    {isItemLowStock(item) && (
-                      <span className="rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
-                       Low Stock
-                      </span>
-                    )}
-
-                    {item.min_stock_level !== null &&
-                      item.min_stock_level !== undefined && (
-                        <span className="rounded-full border border-amber-300/20 bg-amber-500/10 px-3 py-2 text-xs font-bold text-theme-warning">
-                          Min: {item.min_stock_level}
-                        </span>
-                      )}
-                  </div>
-
-                  {(item.cost_price !== null &&
-                    item.cost_price !== undefined) ||
-                  (item.selling_price !== null &&
-                    item.selling_price !== undefined) ? (
-                    <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {item.cost_price !== null &&
-                        item.cost_price !== undefined && (
-                          <div className="rounded-2xl border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
-                              Cost
-                            </p>
-                            <p className="mt-1 text-sm font-black text-theme-primary">
-                              {getItemPrice(item.cost_price)}
-                            </p>
-                            <p className="mt-1 text-xs text-theme-subtle">
-                              Stock {getItemValue(item, item.cost_price)}
-                            </p>
-                          </div>
-                        )}
-
-                      {item.selling_price !== null &&
-                        item.selling_price !== undefined && (
-                          <div className="rounded-2xl border border-violet-300/15 bg-violet-500/[0.07] p-3">
-                            <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-violet-200">
-                              Selling
-                            </p>
-                            <p className="mt-1 text-sm font-black text-theme-primary">
-                              {getItemPrice(item.selling_price)}
-                            </p>
-                            <p className="mt-1 text-xs text-theme-subtle">
-                              Stock {getItemValue(item, item.selling_price)}
-                            </p>
-                          </div>
-                        )}
-                    </div>
-                  ) : null}
-
-                  {/* Actions */}
-                  <div className="mt-auto flex gap-3 pt-6">
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        openEditModal(
-                          item
-                        );
-                      }}
-                      className="min-h-[52px] flex-1 rounded-2xl bg-white/90 py-3 text-base font-bold text-black transition hover:bg-white"
-                    >
-                      Edit
-                    </button>
-
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPendingDeleteItem(item);
-                      }}
-                      disabled={deletingId === item.id}
-                      className="min-h-[52px] flex-1 rounded-2xl border border-red-400/25 bg-red-500/15 py-3 text-base font-bold text-theme-danger transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {deletingId === item.id ? "Deleting..." : "Delete"}
-                    </button>
-                  </div>
-                </div>
-                </div>
+                  lowStock={isItemLowStock(item)}
+                  deleting={deletingId === item.id}
+                  onEdit={() => openEditModal(item)}
+                  onDelete={() => setPendingDeleteItem(item)}
+                />
               ))}
             </div>
           )}
@@ -1846,19 +1692,19 @@ export default function InventoryPage() {
           {/* Empty State */}
           {!loadingItems && visibleItems.length ===
             0 && (
-            <div className="mt-2 flex flex-col items-center justify-center rounded-[32px] border border-dashed border-indigo-300/25 bg-theme-surface px-4 py-20 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
-              <div className="mb-6 flex h-20 w-20 items-center justify-center rounded-3xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
+            <div className="flex flex-col items-center justify-center rounded-[24px] border border-dashed border-indigo-300/25 bg-theme-surface px-4 py-14 text-center shadow-[0_14px_40px_rgba(15,23,42,0.07)]">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
                 <UiIcon
                   name={items.length === 0 ? "box" : "search"}
-                  className="h-9 w-9"
+                  className="h-6 w-6"
                 />
               </div>
 
-              <h2 className="mb-3 text-2xl font-bold text-theme-primary md:text-3xl">
+              <h2 className="mb-2 text-xl font-bold text-theme-primary">
                 {items.length === 0 ? "No inventory items yet" : "No items found"}
               </h2>
 
-              <p className="max-w-md text-lg text-theme-muted">
+              <p className="max-w-md text-sm leading-6 text-theme-muted">
                 {items.length === 0
                   ? "Add your first product to start tracking stock, categories, and item details."
                   : "No products match the current search or filters."}

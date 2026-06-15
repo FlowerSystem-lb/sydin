@@ -60,7 +60,7 @@ type FieldName =
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 const inputClassName =
-  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-lg";
+  "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base";
 const errorInputClassName =
   "border-red-400/50 bg-red-500/[0.08] focus:border-red-300/70 focus:shadow-[0_0_0_4px_rgba(248,113,113,0.12)]";
 
@@ -169,14 +169,14 @@ function SectionHeading({
   description: string;
 }) {
   return (
-    <div className="mb-6">
+    <div className="mb-4">
       <p className="text-xs font-bold uppercase tracking-[0.18em] text-theme-accent">
         {eyebrow}
       </p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
+      <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary sm:text-2xl">
         {title}
       </h2>
-      <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
+      <p className="mt-1 max-w-2xl text-sm leading-5 text-theme-muted">
         {description}
       </p>
     </div>
@@ -197,21 +197,21 @@ function DisclosureSection({
   children: ReactNode;
 }) {
   return (
-    <details className="group overflow-hidden rounded-[28px] border border-theme bg-theme-surface shadow-[0_20px_70px_rgba(0,0,0,0.2)]">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 outline-none transition hover:bg-theme-surface focus-visible:bg-theme-surface sm:px-6 [&::-webkit-details-marker]:hidden">
+    <details className="group overflow-hidden rounded-[18px] border border-theme bg-theme-surface">
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 outline-none transition hover:bg-theme-hover focus-visible:ring-4 focus-visible:ring-indigo-400/20 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
-          <span className="block text-xs font-bold uppercase tracking-[0.18em] text-theme-accent">
+          <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-theme-accent">
             {eyebrow}
           </span>
-          <span className="mt-1 block text-xl font-black text-theme-primary">
+          <span className="mt-0.5 block text-base font-black text-theme-primary">
             {title}
           </span>
-          <span className="mt-1 block text-sm leading-5 text-theme-subtle">
+          <span className="mt-0.5 block truncate text-xs leading-5 text-theme-subtle">
             {summary}
           </span>
         </span>
 
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-inset text-theme-secondary transition group-open:rotate-180 group-open:border-indigo-300/30 group-open:text-theme-accent">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-theme bg-theme-inset text-theme-secondary transition group-open:rotate-180 group-open:border-indigo-300/30 group-open:text-theme-accent">
           <svg
             aria-hidden="true"
             className="h-5 w-5"
@@ -229,8 +229,8 @@ function DisclosureSection({
         </span>
       </summary>
 
-      <div className="border-t border-theme px-5 py-6 sm:px-6">
-        <p className="mb-6 max-w-2xl text-sm leading-6 text-theme-muted">
+      <div className="border-t border-theme px-4 py-4">
+        <p className="mb-4 max-w-2xl text-xs leading-5 text-theme-muted">
           {description}
         </p>
         {children}
@@ -579,25 +579,25 @@ export default function AddItemPage() {
   return (
     <div className="contents">
       <main>
-        <div className="mx-auto flex w-full max-w-[1100px] flex-col gap-8">
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mx-auto flex w-full max-w-[920px] flex-col gap-4">
+          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                   New product
                 </p>
-                <h1 className="mt-2 text-4xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
                   Add Item
                 </h1>
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-theme-muted sm:mt-4 sm:text-lg sm:leading-7">
-                  Create a clear, complete inventory record in a few quick
-                  steps.
+                <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted">
+                  Add the essentials now. Optional details can be filled in
+                  only when you need them.
                 </p>
               </div>
 
               <Link
                 href="/dashboard/inventory"
-                className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
+                className="rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 Back to Inventory
               </Link>
@@ -608,15 +608,15 @@ export default function AddItemPage() {
             onSubmit={handleSubmit}
             aria-busy={loading}
             noValidate
-            className="flex flex-col gap-5"
+            className="flex flex-col gap-3"
           >
-            <section className="rounded-[28px] border border-indigo-300/20 bg-indigo-500/10 p-4 shadow-[0_20px_70px_rgba(0,0,0,0.2)] backdrop-blur-xl sm:p-5">
+            <section className="rounded-[18px] border border-indigo-300/20 bg-indigo-500/10 px-4 py-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-[0.18em] text-theme-accent">
+                  <p className="text-xs font-bold text-theme-secondary">
                     Current plan
                   </p>
-                  <p className="mt-1 text-2xl font-black text-theme-primary">
+                  <p className="mt-0.5 text-lg font-black text-theme-primary">
                     {usageLoading ? (
                       <span className="block h-8 w-28 animate-pulse rounded-2xl bg-theme-surface" />
                     ) : (
@@ -625,30 +625,30 @@ export default function AddItemPage() {
                   </p>
                 </div>
 
-                <div className="rounded-2xl border border-theme bg-theme-inset px-4 py-3 text-sm font-black text-theme-primary">
+                <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2 text-xs font-black text-theme-primary">
                   {usageLoading ? "Checking usage..." : itemUsageText}
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-2xl sm:p-7 lg:p-8">
+            <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_12px_36px_rgba(15,23,42,0.07)] sm:p-5">
               <SectionHeading
                 eyebrow="Step 1"
                 title="Basic Information"
                 description="Start with the details your team uses to recognize and locate this product."
               />
 
-              <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-theme-inset p-4 transition hover:border-indigo-300/45 hover:bg-theme-inset sm:p-5">
-                <div className="grid grid-cols-1 gap-4 lg:grid-cols-[220px_1fr] lg:items-center">
-                  <label className="group flex min-h-[190px] cursor-pointer flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface px-5 py-6 text-center transition hover:border-indigo-300/45 hover:bg-theme-hover">
-                    <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-theme-accent transition group-hover:bg-indigo-500/30">
-                      <UiIcon name="upload" className="h-7 w-7" />
+              <div className="rounded-2xl border border-dashed border-indigo-300/25 bg-theme-inset p-3 transition hover:border-indigo-300/45">
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-[160px_1fr] sm:items-center">
+                  <label className="group flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-theme bg-theme-surface px-4 py-4 text-center transition hover:border-indigo-300/45 hover:bg-theme-hover">
+                    <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-300/25 bg-indigo-500/20 text-theme-accent transition group-hover:bg-indigo-500/30">
+                      <UiIcon name="upload" className="h-5 w-5" />
                     </span>
-                    <span className="mt-4 text-lg font-black text-theme-primary">
-                      Take or upload photo
+                    <span className="mt-2 text-sm font-black text-theme-primary">
+                      Add product photo
                     </span>
-                    <span className="mt-2 max-w-[220px] text-sm leading-5 text-theme-muted">
-                      Use your camera or choose a JPG, PNG, or WebP up to 5MB.
+                    <span className="mt-1 text-xs leading-5 text-theme-muted">
+                      JPG, PNG, or WebP · 5MB max
                     </span>
                     <input
                       type="file"
@@ -662,17 +662,17 @@ export default function AddItemPage() {
                     />
                   </label>
 
-                  <div className="min-h-[190px] rounded-3xl border border-theme bg-theme-inset p-4">
+                  <div className="min-h-[132px] rounded-2xl border border-theme bg-theme-inset p-3">
                     {image && imagePreviewUrl ? (
-                      <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-[160px_1fr] sm:items-center">
-                        <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f0e8]">
+                      <div className="grid h-full grid-cols-[96px_1fr] items-center gap-3">
+                        <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f4f0e8]">
                           <Image
                             src={imagePreviewUrl}
                             alt="Selected product preview"
                             fill
                             unoptimized
-                            sizes="140px"
-                            className="object-contain p-3"
+                            sizes="96px"
+                            className="object-contain p-2"
                           />
                         </div>
 
@@ -686,22 +686,39 @@ export default function AddItemPage() {
                           <p className="mt-1 text-sm text-theme-muted">
                             {formatFileSize(image.size)}
                           </p>
-                          <button
-                            type="button"
-                            onClick={clearImage}
-                            disabled={loading}
-                            className="mt-4 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
-                          >
-                            Remove image
-                          </button>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            <label className="cursor-pointer rounded-lg border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover">
+                              Replace
+                              <input
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={(event) =>
+                                  handleImageChange(
+                                    event.target.files?.[0] || null
+                                  )
+                                }
+                                disabled={loading}
+                                className="sr-only"
+                              />
+                            </label>
+                            <button
+                              type="button"
+                              onClick={clearImage}
+                              disabled={loading}
+                              className="rounded-lg border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
+                            >
+                              Remove
+                            </button>
+                          </div>
                         </div>
                       </div>
                     ) : (
-                      <div className="flex h-full min-h-[158px] flex-col justify-center rounded-2xl border border-white/5 bg-theme-surface px-4 py-5">
-                        <p className="text-base font-semibold text-theme-primary">
+                      <div className="flex h-full min-h-[106px] flex-col justify-center rounded-xl bg-theme-surface px-4 py-4">
+                        <p className="text-sm font-semibold text-theme-primary">
                           No product photo yet
                         </p>
-                        <p className="mt-2 max-w-md text-sm leading-6 text-theme-subtle">
+                        <p className="mt-1 max-w-md text-xs leading-5 text-theme-subtle">
                           Photos make inventory faster to identify, but you can
                           save the item without one.
                         </p>
@@ -717,7 +734,7 @@ export default function AddItemPage() {
                 )}
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="md:col-span-2">
                   <label
                     htmlFor="product-name"
@@ -813,14 +830,14 @@ export default function AddItemPage() {
               </div>
             </section>
 
-            <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-2xl sm:p-7 lg:p-8">
+            <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_12px_36px_rgba(15,23,42,0.07)] sm:p-5">
               <SectionHeading
                 eyebrow="Step 2"
                 title="Stock"
                 description="Set the opening quantity, how this item is counted, and an optional low-stock target."
               />
 
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label
                     htmlFor="quantity"
@@ -862,52 +879,6 @@ export default function AddItemPage() {
                     id="quantity-error"
                     message={fieldErrors.quantity}
                   />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="supplier"
-                    className="mb-2 block text-sm font-semibold text-theme-secondary"
-                  >
-                    Supplier
-                  </label>
-                  <div className="relative">
-                    <select
-                      id="supplier"
-                      value={selectedSupplierId}
-                      onChange={(event) =>
-                        setSelectedSupplierId(event.target.value)
-                      }
-                      disabled={loading}
-                      className={`${inputClassName} appearance-none pr-12`}
-                    >
-                      <option value="">No supplier</option>
-                      {suppliers.map((supplier) => (
-                        <option key={supplier.id} value={supplier.id}>
-                          {supplier.name}
-                        </option>
-                      ))}
-                    </select>
-                    <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
-                      <svg
-                        aria-hidden="true"
-                        className="h-5 w-5"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="m6 9 6 6 6-6"
-                        />
-                      </svg>
-                    </span>
-                  </div>
-                  <p className="mt-2 text-xs leading-5 text-theme-subtle">
-                    Optional. Create suppliers from the Suppliers page first.
-                  </p>
                 </div>
 
                 <div>
@@ -1005,69 +976,125 @@ export default function AddItemPage() {
                   </div>
                 )}
 
-                <div className="md:col-span-2">
-                  <label
-                    htmlFor="min-stock-level"
-                    className="mb-2 block text-sm font-semibold text-theme-secondary"
-                  >
-                    Minimum stock level
-                  </label>
-                  <input
-                    id="min-stock-level"
-                    type="number"
-                    min="0"
-                    step="1"
-                    inputMode="numeric"
-                    value={minStockLevel}
-                    onKeyDown={(event) => {
-                      if (["-", "+", "e", "E", "."].includes(event.key)) {
-                        event.preventDefault();
-                      }
-                    }}
-                    onChange={(event) => {
-                      setMinStockLevel(
-                        event.target.value.startsWith("-")
-                          ? ""
-                          : event.target.value
-                      );
-                      clearFieldError("minStockLevel");
-                    }}
-                    disabled={loading}
-                    aria-invalid={Boolean(fieldErrors.minStockLevel)}
-                    aria-describedby={
-                      fieldErrors.minStockLevel
-                        ? "min-stock-level-error"
-                        : "min-stock-level-help"
-                    }
-                    placeholder="Use business default"
-                    className={`${inputClassName} ${
-                      fieldErrors.minStockLevel ? errorInputClassName : ""
-                    }`}
-                  />
-                  <FieldError
-                    id="min-stock-level-error"
-                    message={fieldErrors.minStockLevel}
-                  />
-                  {!fieldErrors.minStockLevel && (
-                    <p
-                      id="min-stock-level-help"
-                      className="mt-2 text-xs leading-5 text-theme-subtle"
-                    >
-                      Leave empty to use the existing business low-stock
-                      threshold.
-                    </p>
-                  )}
-                </div>
               </div>
             </section>
 
             <DisclosureSection
               eyebrow="Optional"
-              title="Pricing & Value"
-              summary={`Track cost and selling value in ${currencyCode}`}
+              title="Stock alert"
+              summary={
+                minStockLevel
+                  ? `Alert at or below ${minStockLevel} units`
+                  : "Use the business low-stock threshold"
+              }
+              description="Set an item-specific minimum only when this product needs a different low-stock target."
+            >
+              <label
+                htmlFor="min-stock-level"
+                className="mb-2 block text-sm font-semibold text-theme-secondary"
+              >
+                Minimum stock level
+              </label>
+              <input
+                id="min-stock-level"
+                type="number"
+                min="0"
+                step="1"
+                inputMode="numeric"
+                value={minStockLevel}
+                onKeyDown={(event) => {
+                  if (["-", "+", "e", "E", "."].includes(event.key)) {
+                    event.preventDefault();
+                  }
+                }}
+                onChange={(event) => {
+                  setMinStockLevel(
+                    event.target.value.startsWith("-")
+                      ? ""
+                      : event.target.value
+                  );
+                  clearFieldError("minStockLevel");
+                }}
+                disabled={loading}
+                aria-invalid={Boolean(fieldErrors.minStockLevel)}
+                aria-describedby={
+                  fieldErrors.minStockLevel
+                    ? "min-stock-level-error"
+                    : "min-stock-level-help"
+                }
+                placeholder="Use business default"
+                className={`${inputClassName} ${
+                  fieldErrors.minStockLevel ? errorInputClassName : ""
+                }`}
+              />
+              <FieldError
+                id="min-stock-level-error"
+                message={fieldErrors.minStockLevel}
+              />
+              {!fieldErrors.minStockLevel && (
+                <p
+                  id="min-stock-level-help"
+                  className="mt-2 text-xs leading-5 text-theme-subtle"
+                >
+                  Leave empty to use the existing business low-stock threshold.
+                </p>
+              )}
+            </DisclosureSection>
+
+            <DisclosureSection
+              eyebrow="Optional"
+              title="Supplier"
+              summary={
+                suppliers.find(
+                  (supplier) => String(supplier.id) === selectedSupplierId
+                )?.name || "No supplier selected"
+              }
+              description="Link this item to an existing supplier record."
+            >
+              <label
+                htmlFor="supplier"
+                className="mb-2 block text-sm font-semibold text-theme-secondary"
+              >
+                Supplier
+              </label>
+              <div className="relative">
+                <select
+                  id="supplier"
+                  value={selectedSupplierId}
+                  onChange={(event) =>
+                    setSelectedSupplierId(event.target.value)
+                  }
+                  disabled={loading}
+                  className={`${inputClassName} appearance-none pr-12`}
+                >
+                  <option value="">No supplier</option>
+                  {suppliers.map((supplier) => (
+                    <option key={supplier.id} value={supplier.id}>
+                      {supplier.name}
+                    </option>
+                  ))}
+                </select>
+                <span className="pointer-events-none absolute inset-y-0 right-4 flex items-center text-theme-subtle">
+                  <UiIcon name="chevron-down" className="h-5 w-5" />
+                </span>
+              </div>
+            </DisclosureSection>
+
+            <DisclosureSection
+              eyebrow="Optional"
+              title="Pricing"
+              summary={
+                costPrice || sellingPrice
+                  ? `Cost${costPrice ? ` ${currencyCode} ${costPrice}` : ""}${
+                      sellingPrice
+                        ? ` · Selling ${currencyCode} ${sellingPrice}`
+                        : ""
+                    }`
+                  : `No prices added · ${currencyCode}`
+              }
               description="Prices stay on the private inventory record. Stock values below are previews and are not stored separately."
             >
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div>
                   <label
                     htmlFor="cost-price"
@@ -1157,27 +1184,27 @@ export default function AddItemPage() {
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-3xl border border-cyan-300/15 bg-cyan-500/[0.07] p-5">
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <div className="rounded-2xl border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                     Stock cost value
                   </p>
-                  <p className="mt-2 break-words text-2xl font-black text-theme-primary">
+                  <p className="mt-1 break-words text-base font-black text-theme-primary">
                     {formattedCostValue || "Not calculated"}
                   </p>
-                  <p className="mt-2 text-xs leading-5 text-theme-subtle">
+                  <p className="mt-1 text-[11px] leading-4 text-theme-subtle">
                     Quantity multiplied by cost price.
                   </p>
                 </div>
 
-                <div className="rounded-3xl border border-violet-300/15 bg-violet-500/[0.07] p-5">
+                <div className="rounded-2xl border border-violet-300/15 bg-violet-500/[0.07] p-3">
                   <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-200">
                     Stock retail value
                   </p>
-                  <p className="mt-2 break-words text-2xl font-black text-theme-primary">
+                  <p className="mt-1 break-words text-base font-black text-theme-primary">
                     {formattedRetailValue || "Not calculated"}
                   </p>
-                  <p className="mt-2 text-xs leading-5 text-theme-subtle">
+                  <p className="mt-1 text-[11px] leading-4 text-theme-subtle">
                     Quantity multiplied by selling price.
                   </p>
                 </div>
@@ -1187,7 +1214,13 @@ export default function AddItemPage() {
             <DisclosureSection
               eyebrow="Optional"
               title="Tracking Codes"
-              summary="Item code, SKU, and product barcode"
+              summary={
+                sku || barcode
+                  ? `${sku ? `SKU ${sku}` : ""}${
+                      sku && barcode ? " · " : ""
+                    }${barcode ? `Barcode ${barcode}` : ""}`
+                  : "SKU and barcode not added"
+              }
               description="Each code has a different role. Add only the codes your business already uses."
             >
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
@@ -1258,7 +1291,13 @@ export default function AddItemPage() {
             <DisclosureSection
               eyebrow="Optional"
               title="Notes"
-              summary="Add internal context for your team"
+              summary={
+                notes.trim()
+                  ? `${notes.trim().slice(0, 64)}${
+                      notes.trim().length > 64 ? "…" : ""
+                    }`
+                  : "No internal notes"
+              }
               description="Use notes for product details, handling instructions, or other private inventory context."
             >
               <label
@@ -1273,7 +1312,7 @@ export default function AddItemPage() {
                 onChange={(event) => setNotes(event.target.value)}
                 disabled={loading}
                 placeholder="Add private details about this item..."
-                className={`${inputClassName} min-h-[140px] resize-y`}
+                className={`${inputClassName} min-h-[110px] resize-y`}
               />
             </DisclosureSection>
 
@@ -1300,7 +1339,7 @@ export default function AddItemPage() {
               </div>
             )}
 
-            <div className="sticky bottom-0 z-20 -mx-4 mt-2 flex flex-col-reverse gap-3 border-t border-theme bg-[#050713]/95 px-4 py-4 shadow-[0_-18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl sm:mx-0 sm:flex-row sm:items-center sm:justify-between sm:rounded-[24px] sm:border sm:px-5">
+            <div className="mt-1 flex flex-col-reverse gap-3 rounded-[18px] border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
               <p className="hidden text-sm text-theme-subtle sm:block">
                 Required fields are marked with an asterisk.
               </p>
@@ -1308,7 +1347,7 @@ export default function AddItemPage() {
               <div className="flex flex-col-reverse gap-3 sm:flex-row">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-2xl border border-theme bg-theme-surface px-6 py-4 text-center text-base font-bold text-theme-primary transition hover:bg-theme-hover"
+                  className="rounded-xl border border-theme bg-theme-surface px-5 py-3 text-center text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
                 >
                   Cancel
                 </Link>
@@ -1316,7 +1355,7 @@ export default function AddItemPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="min-w-[170px] rounded-2xl bg-white px-7 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-w-[160px] rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(79,70,229,0.22)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Saving item..." : "Save Item"}
                 </button>
