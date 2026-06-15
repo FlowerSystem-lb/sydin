@@ -35,13 +35,15 @@ export default function SydINWordmark({
   return (
     <span
       aria-label={label}
-      className={`inline-flex items-baseline whitespace-nowrap font-extrabold leading-none tracking-[-0.045em] ${sizeClasses[size]} ${sydColorClasses[variant]} ${className}`}
+      className={`inline-flex items-baseline whitespace-nowrap leading-none tracking-[-0.045em] ${sizeClasses[size]} ${sydColorClasses[variant]} ${className}`}
     >
-      <span aria-hidden="true">Syd</span>
+      <span aria-hidden="true" className="font-[520]">
+        Syd
+      </span>
       <span
         aria-hidden="true"
-        className={`ml-[0.04em] text-[0.92em] ${
-          monochrome ? "text-current" : "text-[#12b8d6]"
+        className={`ml-[0.04em] text-[0.92em] font-semibold ${
+          monochrome ? "text-current" : "sydin-wordmark-in"
         }`}
       >
         IN

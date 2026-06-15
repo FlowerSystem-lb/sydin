@@ -1,8 +1,9 @@
 import Link from "next/link";
-import BrandMark from "@/components/BrandMark";
+import SydINMark from "@/components/brand/SydINMark";
 import PlanCtaLink from "@/components/PlanCtaLink";
 import Wordmark from "@/components/Wordmark";
 import Reveal from "@/components/Reveal";
+import UiIcon from "@/components/UiIcon";
 import {
   PLAN_DEFINITIONS,
   PUBLIC_PLAN_ORDER,
@@ -76,7 +77,7 @@ export const featureCards = [
   },
   {
     title: "Mobile workflow",
-    text: "Use SydIn comfortably on phone, tablet, and desktop when work happens away from the desk.",
+    text: "Use SydIN comfortably on phone, tablet, and desktop when work happens away from the desk.",
   },
   {
     title: "Reports and Pick Lists",
@@ -89,7 +90,7 @@ export function MarketingPage({
   children,
 }: MarketingPageProps) {
   return (
-    <main className="liquid-bg relative min-h-screen overflow-hidden text-white">
+    <main className="marketing-site relative min-h-screen overflow-hidden">
       <MarketingHeader active={active} />
 
       {children}
@@ -103,18 +104,11 @@ export function MarketingLogo() {
   return (
     <Link
       href="/"
-      className="flex min-w-0 items-center gap-3"
-      aria-label="SydIn home"
+      className="marketing-logo flex min-w-0 items-center gap-2.5"
+      aria-label="SydIN home"
     >
-      <BrandMark />
-
-      <div className="min-w-0">
-        <Wordmark size="sm" variant="dark-background" />
-
-        <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
-          Visual inventory
-        </p>
-      </div>
+      <SydINMark size="md" />
+      <Wordmark size="sm" variant="light-background" />
     </Link>
   );
 }
@@ -125,24 +119,24 @@ export function MarketingHeader({
   active: MarketingSection;
 }) {
   return (
-    <header className="glass-nav relative z-20">
-      <div className="border-b border-white/10 bg-white/[0.035] px-4 py-2 text-center text-xs font-semibold text-indigo-100 sm:text-sm">
-        Launch offer: Start free with up to 50 items
+    <header className="marketing-header relative z-20">
+      <div className="marketing-announcement px-4 py-2 text-center text-xs font-semibold sm:text-sm">
+        Start free with up to 50 inventory items
       </div>
 
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <MarketingLogo />
 
-          <nav className="hidden items-center gap-2 md:flex">
+          <nav className="hidden items-center gap-1 md:flex">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
-                className={`rounded-2xl px-4 py-3 text-sm font-bold transition ${
+                className={`marketing-nav-link px-4 py-2.5 text-sm font-semibold ${
                   active === link.key
-                    ? "bg-white text-black"
-                    : "text-slate-300 hover:bg-white/[0.07] hover:text-white"
+                    ? "marketing-nav-link-active"
+                    : ""
                 }`}
               >
                 {link.label}
@@ -153,14 +147,14 @@ export function MarketingHeader({
           <div className="hidden shrink-0 items-center gap-2 md:flex">
             <Link
               href="/login"
-              className="action-button px-4 py-3 text-sm"
+              className="marketing-button marketing-button-secondary px-4 py-2.5 text-sm"
             >
               Sign in
             </Link>
 
             <PlanCtaLink
               plan="free"
-              className="action-button action-button-primary px-5 py-3 text-sm font-black"
+              className="marketing-button marketing-button-primary px-5 py-2.5 text-sm"
             >
               Start Free
             </PlanCtaLink>
@@ -170,27 +164,27 @@ export function MarketingHeader({
         <div className="grid grid-cols-2 gap-2 md:hidden">
           <Link
             href="/login"
-            className="action-button min-h-11 px-3 py-2.5 text-sm"
+            className="marketing-button marketing-button-secondary min-h-11 px-3 py-2.5 text-sm"
           >
             Sign in
           </Link>
           <PlanCtaLink
             plan="free"
-            className="action-button action-button-primary min-h-11 px-3 py-2.5 text-sm"
+            className="marketing-button marketing-button-primary min-h-11 px-3 py-2.5 text-sm"
           >
             Start Free
           </PlanCtaLink>
         </div>
 
-        <nav className="grid grid-cols-2 gap-2 sm:grid-cols-4 md:hidden">
+        <nav className="grid grid-cols-4 gap-1 md:hidden">
           {navLinks.map((link) => (
             <Link
               key={link.href}
               href={link.href}
-              className={`min-h-11 rounded-2xl px-2 py-3 text-center text-xs font-bold transition ${
+              className={`marketing-nav-link min-h-11 px-2 py-3 text-center text-xs font-semibold ${
                 active === link.key
-                  ? "bg-white text-black"
-                  : "bg-white/[0.06] text-slate-300"
+                  ? "marketing-nav-link-active"
+                  : ""
               }`}
             >
               {link.label}
@@ -204,30 +198,30 @@ export function MarketingHeader({
 
 export function MarketingFooter() {
   return (
-    <footer className="border-t border-white/10 bg-black/20 px-4 py-10 sm:px-6 lg:px-8">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+    <footer className="marketing-footer px-4 py-10 sm:px-6 lg:px-8">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <MarketingLogo />
 
-        <div className="flex flex-wrap gap-3 text-sm font-semibold text-slate-400">
-          <Link href="/features" className="hover:text-white">
+        <div className="flex flex-wrap gap-x-5 gap-y-3 text-sm font-medium">
+          <Link href="/features">
             Features
           </Link>
-          <Link href="/pricing" className="hover:text-white">
+          <Link href="/pricing">
             Pricing
           </Link>
-          <Link href="/demo" className="hover:text-white">
+          <Link href="/demo">
             Demo
           </Link>
-          <Link href="/contact" className="hover:text-white">
+          <Link href="/contact">
             Contact
           </Link>
-          <Link href="/privacy" className="hover:text-white">
+          <Link href="/privacy">
             Privacy
           </Link>
-          <Link href="/terms" className="hover:text-white">
+          <Link href="/terms">
             Terms
           </Link>
-          <Link href="/login" className="hover:text-white">
+          <Link href="/login">
             Sign in
           </Link>
         </div>
@@ -248,15 +242,15 @@ export function SectionIntro({
         align === "center" ? "text-center" : "text-left"
       }`}
     >
-      <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-300">
+      <p className="marketing-eyebrow">
         {eyebrow}
       </p>
 
-      <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl lg:text-5xl">
+      <h2 className="marketing-section-title mt-3">
         {title}
       </h2>
 
-      <p className="mt-4 text-base leading-7 text-slate-400 sm:text-lg">
+      <p className="marketing-section-copy mt-4">
         {text}
       </p>
     </Reveal>
@@ -276,14 +270,14 @@ export function CTAButtons({
     >
       <PlanCtaLink
         plan="free"
-        className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-white px-7 py-4 text-base font-black text-black shadow-[0_22px_70px_rgba(255,255,255,0.14)] transition hover:bg-slate-200"
+        className="marketing-button marketing-button-primary min-h-13 px-7 py-3.5 text-base"
       >
         Start Free
       </PlanCtaLink>
 
       <Link
         href="/demo"
-        className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-7 py-4 text-base font-black text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+        className="marketing-button marketing-button-secondary min-h-13 px-7 py-3.5 text-base"
       >
         View Demo
       </Link>
@@ -293,65 +287,76 @@ export function CTAButtons({
 
 export function DashboardPreview() {
   return (
-    <div className="relative overflow-hidden rounded-[32px] border border-white/10 bg-white/[0.055] p-4 shadow-[0_34px_130px_rgba(0,0,0,0.45)] backdrop-blur-2xl sm:p-5">
-      <div className="rounded-[26px] border border-white/10 bg-[#060918]/90 p-4 sm:p-5">
-        <div className="flex items-center justify-between gap-4 border-b border-white/10 pb-4">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-indigo-300">
-              SydIn workspace
-            </p>
-            <p className="mt-1 text-xl font-black">
-              Inventory overview
-            </p>
-          </div>
-
-          <div className="rounded-2xl bg-white px-4 py-3 text-xs font-black text-black">
-            Add Item
-          </div>
-        </div>
-
-        <div className="mt-5 grid grid-cols-2 gap-3">
-          {[
-            ["Total Items", "128"],
-            ["Low Stock", "9"],
-            ["QR Item Page", "Ready"],
-            ["History", "Tracked"],
-          ].map(([label, value]) => (
-            <div
-              key={label}
-              className="rounded-2xl border border-white/10 bg-white/[0.06] p-4"
+    <div className="marketing-product-frame">
+      <div className="marketing-product-app">
+        <aside className="marketing-product-rail">
+          <SydINMark size="md" />
+          {["dashboard", "box", "scan", "reports"].map((icon, index) => (
+            <span
+              key={icon}
+              className={index === 0 ? "marketing-product-rail-active" : ""}
             >
-              <p className="text-xs font-semibold text-slate-500">
-                {label}
-              </p>
-              <p className="mt-2 text-2xl font-black text-white">
-                {value}
-              </p>
-            </div>
+              <UiIcon
+                name={icon as "dashboard" | "box" | "scan" | "reports"}
+                className="h-4 w-4"
+              />
+            </span>
           ))}
-        </div>
+        </aside>
 
-        <div className="mt-3 rounded-3xl border border-white/10 bg-black/25 p-4">
-          <div className="grid grid-cols-[96px_1fr] gap-4">
-            <div className="flex h-28 items-center justify-center rounded-2xl bg-[#f4f0e8] p-3">
-              <div className="h-full w-full rounded-xl bg-gradient-to-br from-indigo-200 via-fuchsia-200 to-emerald-100" />
+        <div className="marketing-product-main">
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <p className="text-xs font-semibold text-slate-500">
+                Inventory overview
+              </p>
+              <p className="mt-1 text-lg font-bold text-slate-950">
+                Good morning, North Studio
+              </p>
             </div>
+            <span className="marketing-product-add">
+              <UiIcon name="plus" className="h-4 w-4" />
+              Add item
+            </span>
+          </div>
 
-            <div className="min-w-0">
-              <p className="text-lg font-black">
-                Studio storage box
-              </p>
-              <p className="mt-1 text-sm text-slate-400">
-                SKU BOX-014 - Category Supplies
-              </p>
-              <div className="mt-4 flex flex-wrap gap-2">
-                <span className="rounded-full border border-indigo-300/25 bg-indigo-500/15 px-3 py-1 text-xs font-bold text-indigo-100">
-                  Qty 42
-                </span>
-                <span className="rounded-full border border-emerald-300/25 bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-100">
-                  QR ready
-                </span>
+          <div className="mt-5 grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {[
+              ["Items", "128"],
+              ["Quantity", "1,246"],
+              ["Low stock", "9"],
+              ["Value", "$18.4K"],
+            ].map(([label, value], index) => (
+              <div key={label} className="marketing-product-stat">
+                <span className={`marketing-product-dot marketing-product-dot-${index + 1}`} />
+                <p className="mt-4 text-2xl font-bold text-slate-950">{value}</p>
+                <p className="mt-1 text-xs text-slate-500">{label}</p>
               </div>
+            ))}
+          </div>
+
+          <div className="marketing-product-list mt-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-slate-950">Restock priorities</p>
+                <p className="mt-1 text-xs text-slate-500">Items at or below minimum stock</p>
+              </div>
+              <span className="text-xs font-semibold text-blue-600">View report</span>
+            </div>
+            <div className="mt-4 grid gap-2">
+              {[
+                ["Studio storage box", "BOX-014", "4 left"],
+                ["Ceramic planter", "RET-104", "7 left"],
+              ].map(([name, code, stock]) => (
+                <div key={code} className="marketing-product-row">
+                  <span className="marketing-product-thumb" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-semibold text-slate-900">{name}</span>
+                    <span className="block text-xs text-slate-500">{code}</span>
+                  </span>
+                  <span className="marketing-product-stock">{stock}</span>
+                </div>
+              ))}
             </div>
           </div>
         </div>
@@ -391,15 +396,15 @@ export function PricingCards({
       {pricingPlans.map((plan, index) => (
         <Reveal key={plan.name} delay={index * 80}>
           <div
-            className={`flex h-full flex-col rounded-[30px] border p-6 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-2xl ${
+            className={`marketing-pricing-card flex h-full flex-col p-6 ${
               plan.featured
-                ? "border-indigo-300/35 bg-indigo-500/15"
-                : "border-white/10 bg-white/[0.045]"
+                ? "marketing-pricing-card-featured"
+                : ""
             }`}
           >
             <div className="mb-5 flex min-h-7 items-center justify-between gap-3">
               {plan.featured ? (
-                <span className="self-start rounded-full border border-indigo-300/30 bg-white/[0.08] px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-indigo-100">
+                <span className="marketing-plan-badge">
                   Most popular
                 </span>
               ) : (
@@ -407,22 +412,22 @@ export function PricingCards({
               )}
 
               {!plan.available && (
-                <span className="rounded-full border border-white/10 bg-white/[0.05] px-3 py-1 text-xs font-black uppercase tracking-[0.14em] text-slate-400">
+                <span className="marketing-plan-badge">
                   Future
                 </span>
               )}
             </div>
 
-            <h3 className="text-2xl font-black">
+            <h3 className="text-2xl font-bold text-slate-950">
               {plan.name}
             </h3>
 
-            <p className="mt-3 text-sm leading-6 text-slate-400">
+            <p className="mt-3 text-sm leading-6 text-slate-600">
               {plan.description}
             </p>
 
             <div className="mt-6 flex items-end gap-1">
-              <span className="text-5xl font-black">
+              <span className="text-5xl font-bold text-slate-950">
                 {plan.priceMonthly === null ? "Custom" : `$${plan.priceMonthly}`}
               </span>
               {plan.priceMonthly !== null && (
@@ -436,9 +441,9 @@ export function PricingCards({
               {plan.highlights.map((feature) => (
                 <li
                   key={feature}
-                  className="flex gap-3 text-slate-300"
+                  className="flex gap-3 text-slate-600"
                 >
-                  <span className="mt-1 h-2 w-2 shrink-0 rounded-full bg-indigo-300" />
+                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
                   <span>{feature}</span>
                 </li>
               ))}
@@ -447,10 +452,10 @@ export function PricingCards({
             {plan.available ? (
               <PlanCtaLink
                 plan={plan.id}
-                className={`mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl px-5 py-3 text-sm font-black transition ${
+                className={`marketing-button mt-8 min-h-12 px-5 py-3 text-sm ${
                   plan.featured
-                    ? "bg-white text-black hover:bg-slate-200"
-                    : "border border-white/10 bg-white/[0.06] text-white hover:bg-white/[0.1]"
+                    ? "marketing-button-primary"
+                    : "marketing-button-secondary"
                 }`}
               >
                 {plan.ctaLabel}
@@ -471,17 +476,17 @@ export function MarketingCTA() {
   return (
     <section className="px-4 py-16 sm:px-6 lg:px-8">
       <Reveal>
-        <div className="mx-auto max-w-7xl overflow-hidden rounded-[36px] border border-white/10 bg-[radial-gradient(circle_at_top_left,_rgba(99,102,241,0.24),_transparent_34%),rgba(255,255,255,0.055)] px-5 py-14 text-center shadow-[0_34px_130px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:px-8 lg:px-12">
-          <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-300">
+        <div className="marketing-cta mx-auto max-w-7xl overflow-hidden px-5 py-14 text-center sm:px-8 lg:px-12">
+          <p className="marketing-eyebrow marketing-eyebrow-on-dark">
             Start with clarity
           </p>
 
-          <h2 className="mx-auto mt-3 max-w-3xl text-3xl font-black tracking-tight sm:text-5xl">
+          <h2 className="mx-auto mt-3 max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-5xl">
             Start managing inventory with more confidence.
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-400 sm:text-lg">
-            Inventory management for small businesses - with photos, QR codes, and history.
+          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+            Smart inventory, clear operations, and a workspace your team can learn quickly.
           </p>
 
           <CTAButtons align="center" />

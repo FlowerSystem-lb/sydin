@@ -499,12 +499,12 @@ export default function DashboardShell({
       </header>
 
       <div className="dashboard-desktop-toolbar">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.12em] text-[var(--text-subtle)]">
-            Dashboard
-          </p>
-          <p className="text-sm font-bold text-[var(--text-primary)]">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-bold text-[var(--text-primary)]">
             {currentItem.label}
+          </p>
+          <p className="truncate text-xs text-[var(--text-subtle)]">
+            {businessSettings.business_name}
           </p>
         </div>
         {quickAddVisible && (

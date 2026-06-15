@@ -53,7 +53,7 @@ export default function Reveal({
     <div
       ref={ref}
       className={`sydin-reveal ${visible ? "sydin-reveal-visible" : ""} ${className}`}
-      style={{ transitionDelay: `${delay}ms` }}
+      style={{ "--reveal-delay": `${delay}ms` } as React.CSSProperties}
     >
       {children}
     </div>
