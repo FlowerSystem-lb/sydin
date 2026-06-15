@@ -1,256 +1,317 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import type { Provider } from "@supabase/supabase-js";
 import GoogleMark from "@/components/GoogleMark";
+import MicrosoftMark from "@/components/MicrosoftMark";
+import SydINLoginVisual from "@/components/auth/SydINLoginVisual";
+import SydINMark from "@/components/brand/SydINMark";
 import Wordmark from "@/components/Wordmark";
+import UiIcon from "@/components/UiIcon";
 import { supabase } from "@/app/lib/supabase";
-import {
-  buildAuthHref,
-} from "@/app/lib/authNavigation";
+import { buildAuthHref } from "@/app/lib/authNavigation";
 import useAuthIntent from "@/components/useAuthIntent";
 
+type OAuthProvider = Extract<Provider, "google" | "azure">;
+
+const oauthLabels: Record<OAuthProvider, string> = {
+  google: "Google",
+  azure: "Microsoft",
+};
+
+function getOAuthRedirectError(search: string) {
+  const params = new URLSearchParams(search);
+  const oauthCode = params.get("error");
+  const oauthDescription = params.get("error_description");
+
+  if (!oauthCode && !oauthDescription) return "";
+
+  const cancelled =
+    oauthCode === "access_denied" ||
+    /cancel|denied/i.test(oauthDescription || "");
+
+  return cancelled
+    ? "Sign-in was cancelled. You can try again whenever you are ready."
+    : oauthDescription || "Social sign-in could not be completed.";
+}
+
 export default function LoginPage() {
-  const [email, setEmail] =
-    useState("");
-
-  const [password, setPassword] =
-    useState("");
-
-  const [loading, setLoading] =
-    useState(false);
-  const [googleLoading, setGoogleLoading] =
-    useState(false);
-  const [oauthError, setOauthError] =
-    useState("");
-  const [loginError, setLoginError] =
-    useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [oauthProvider, setOauthProvider] =
+    useState<OAuthProvider | null>(null);
+  const [oauthError, setOauthError] = useState("");
+  const [loginError, setLoginError] = useState("");
+  const oauthStartingRef = useRef(false);
   const { plan: planIntent, returnTo } = useAuthIntent();
+  const busy = loading || oauthProvider !== null;
 
-  const handleGoogleLogin = async () => {
-    if (googleLoading) return;
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.has("error") && !params.has("error_description")) return;
+
+    const redirectError = getOAuthRedirectError(window.location.search);
+    const errorTimer = window.setTimeout(() => {
+      setOauthError(redirectError);
+    }, 0);
+
+    params.delete("error");
+    params.delete("error_code");
+    params.delete("error_description");
+    const cleanSearch = params.toString();
+    window.history.replaceState(
+      {},
+      "",
+      `${window.location.pathname}${cleanSearch ? `?${cleanSearch}` : ""}`
+    );
+
+    return () => window.clearTimeout(errorTimer);
+  }, []);
+
+  const handleOAuthLogin = async (provider: OAuthProvider) => {
+    if (busy || oauthStartingRef.current) return;
+    oauthStartingRef.current = true;
 
     try {
-      setGoogleLoading(true);
+      setOauthProvider(provider);
       setOauthError("");
+      setLoginError("");
 
-      const { error } =
-        await supabase.auth.signInWithOAuth({
-          provider: "google",
-          options: {
-            redirectTo: `${window.location.origin}${returnTo}`,
-          },
-        });
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          ...(provider === "azure" ? { scopes: "email" } : {}),
+          redirectTo: `${window.location.origin}${returnTo}`,
+        },
+      });
 
       if (error) {
         setOauthError(
-          "Google sign-in could not start. Please try again."
+          `${oauthLabels[provider]} sign-in could not start. ${error.message}`
         );
-        setGoogleLoading(false);
+        setOauthProvider(null);
+        oauthStartingRef.current = false;
       }
     } catch {
       setOauthError(
-        "Google sign-in could not start. Please try again."
+        `${oauthLabels[provider]} sign-in could not start. Please try again.`
       );
-      setGoogleLoading(false);
+      setOauthProvider(null);
+      oauthStartingRef.current = false;
     }
   };
 
-  const handleLogin = async (
-    e: React.FormEvent
-  ) => {
-    e.preventDefault();
+  const handleLogin = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (busy) return;
 
     try {
       setLoading(true);
       setLoginError("");
+      setOauthError("");
+      window.localStorage.setItem(
+        "sydin:remember-login",
+        rememberMe ? "true" : "false"
+      );
 
-      const { error } =
-        await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
       if (error) {
         setLoginError(error.message);
-        setLoading(false);
         return;
       }
 
       window.location.href = returnTo;
     } catch {
       setLoginError("Login failed. Check your details and try again.");
+    } finally {
+      setLoading(false);
     }
-
-    setLoading(false);
   };
 
   return (
-    <main className="liquid-bg relative flex min-h-[100svh] items-center justify-center overflow-hidden px-4 py-8 text-white sm:px-6 sm:py-12">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 overflow-hidden"
-      >
-        <div className="sydin-float-slow absolute left-[-12rem] top-[8%] hidden h-52 w-[34rem] -rotate-12 rounded-[46%] bg-sky-400/10 blur-3xl sm:block" />
-        <div className="sydin-float-slower absolute bottom-[4%] right-[-14rem] hidden h-64 w-[38rem] rotate-12 rounded-[44%] bg-blue-500/10 blur-3xl sm:block" />
-        <div className="absolute left-1/2 top-1/2 hidden h-[34rem] w-[34rem] -translate-x-1/2 -translate-y-1/2 rounded-[44%] border border-sky-300/[0.05] sm:block" />
-      </div>
+    <main className="login-page">
+      <section className="login-auth-panel">
+        <div className="login-auth-inner">
+          <header className="login-auth-header">
+            <Link href="/" className="login-brand" aria-label="SydIN home">
+              <SydINMark size="md" />
+              <Wordmark size="md" variant="light-background" />
+            </Link>
 
-      <form
-        onSubmit={handleLogin}
-        className="glass-panel relative z-10 w-full max-w-[500px] overflow-hidden border-sky-200/20 bg-[#071a3a]/75 p-5 shadow-[0_32px_100px_rgba(0,4,18,0.52)] sm:p-8"
-      >
-        <div
-          aria-hidden="true"
-          className="absolute inset-x-12 top-0 h-px bg-gradient-to-r from-transparent via-cyan-200/60 to-transparent"
-        />
+            <Link href="/" className="login-back-link">
+              <UiIcon name="chevron-left" className="h-4 w-4" />
+              Back to Home
+            </Link>
+          </header>
 
-        <div className="flex items-center justify-between gap-4">
-          <Link href="/" aria-label="SydIN home">
-            <Wordmark size="lg" />
-          </Link>
-          <Link
-            href="/"
-            className="glass-button glass-button-secondary min-h-10 shrink-0 px-3 py-2 text-xs sm:px-4 sm:text-sm"
-          >
-            Back to Home
-          </Link>
-        </div>
-
-        <div className="mb-7 mt-8">
-          <p className="text-xs font-bold uppercase text-sky-300">
-            Secure workspace
-          </p>
-          <h1 className="mt-2 text-3xl font-bold text-white sm:text-4xl">
-            Welcome back
-          </h1>
-          <p className="mt-3 max-w-sm text-sm leading-6 text-slate-300 sm:text-base">
-            {planIntent === "free"
-              ? "Sign in to manage inventory, stock movements, and your SydIN workspace."
-              : `Sign in to continue to the ${
-                  planIntent === "standard" ? "Standard" : "Pro"
-                } plan request.`}
-          </p>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <button
-            type="button"
-            onClick={handleGoogleLogin}
-            disabled={googleLoading}
-            aria-busy={googleLoading}
-            className="flex min-h-14 w-full items-center justify-center gap-3 rounded-lg border border-white/70 bg-white px-5 py-3.5 text-sm font-bold text-slate-950 shadow-[0_12px_36px_rgba(191,219,254,0.14)] transition hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-60 sm:text-base"
-          >
-            <GoogleMark />
-            {googleLoading ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-slate-400 border-t-blue-600" />
-                Connecting...
-              </>
-            ) : (
-              "Continue with Google"
-            )}
-          </button>
-
-          {oauthError && (
-            <div
-              role="alert"
-              className="flex items-start gap-3 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-medium leading-6 text-red-100"
-            >
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-300" />
-              {oauthError}
+          <div className="login-form-wrap">
+            <div className="login-heading">
+              <h1>
+                Welcome <span>back</span>
+              </h1>
+              <p>Sign in to access your SydIN workspace.</p>
             </div>
-          )}
 
-          <div className="flex items-center gap-3 py-1 text-xs font-semibold uppercase text-slate-500">
-            <span className="h-px flex-1 bg-sky-200/10" />
-            Or use email
-            <span className="h-px flex-1 bg-sky-200/10" />
-          </div>
-        </div>
+            <div className="login-oauth-stack">
+              <button
+                type="button"
+                onClick={() => void handleOAuthLogin("google")}
+                disabled={busy}
+                aria-busy={oauthProvider === "google"}
+                className="login-provider-button"
+              >
+                <GoogleMark />
+                <span>
+                  {oauthProvider === "google"
+                    ? "Connecting to Google..."
+                    : "Continue with Google"}
+                </span>
+              </button>
 
-        <div className="mt-5 flex flex-col gap-5">
-          <div>
-            <label
-              htmlFor="login-email"
-              className="mb-2 block text-sm font-semibold text-slate-200"
-            >
-              Email address
-            </label>
-            <input
-              id="login-email"
-              type="email"
-              required
-              autoComplete="email"
-              aria-label="Email"
-              placeholder="you@company.com"
-              value={email}
-              onChange={(e) =>
-                setEmail(e.target.value)
-              }
-              className="glass-input min-h-14 rounded-lg border-sky-200/15 bg-[#020b20]/65 px-4 py-3.5 text-base text-white placeholder:text-slate-600"
-            />
-          </div>
-
-          <div>
-            <label
-              htmlFor="login-password"
-              className="mb-2 block text-sm font-semibold text-slate-200"
-            >
-              Password
-            </label>
-            <input
-              id="login-password"
-              type="password"
-              required
-              autoComplete="current-password"
-              aria-label="Password"
-              placeholder="Enter your password"
-              value={password}
-              onChange={(e) =>
-                setPassword(e.target.value)
-              }
-              className="glass-input min-h-14 rounded-lg border-sky-200/15 bg-[#020b20]/65 px-4 py-3.5 text-base text-white placeholder:text-slate-600"
-            />
-          </div>
-
-          {loginError && (
-            <div
-              role="alert"
-              className="flex items-start gap-3 rounded-lg border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-medium leading-6 text-red-100"
-            >
-              <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-red-300" />
-              {loginError}
+              <button
+                type="button"
+                onClick={() => void handleOAuthLogin("azure")}
+                disabled={busy}
+                aria-busy={oauthProvider === "azure"}
+                className="login-provider-button login-provider-microsoft"
+              >
+                <span className="login-provider-icon">
+                  <MicrosoftMark />
+                </span>
+                <span>
+                  {oauthProvider === "azure"
+                    ? "Connecting to Microsoft..."
+                    : "Continue with Microsoft"}
+                </span>
+              </button>
             </div>
-          )}
 
-          <button
-            type="submit"
-            disabled={loading}
-            aria-busy={loading}
-            className="glass-button min-h-14 w-full rounded-lg px-5 py-3.5 text-base shadow-[0_16px_42px_rgba(37,99,235,0.28)] disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                Signing in...
-              </>
-            ) : (
-              "Sign In"
+            {oauthError && (
+              <div role="alert" className="login-alert">
+                <UiIcon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{oauthError}</span>
+              </div>
             )}
-          </button>
-        </div>
 
-        <p className="mt-7 border-t border-sky-200/10 pt-6 text-center text-sm text-slate-400">
-          New to SydIN?{" "}
-          <Link
-            href={buildAuthHref("/signup", planIntent, returnTo)}
-            className="font-bold text-sky-300 transition hover:text-cyan-200"
-          >
-            Create account
-          </Link>
-        </p>
-      </form>
+            <div className="login-divider" aria-hidden="true">
+              <span />
+              <p>OR</p>
+              <span />
+            </div>
+
+            <form onSubmit={handleLogin} className="login-form">
+              <div className="login-field">
+                <label htmlFor="login-email">Email address</label>
+                <div className="login-input-wrap">
+                  <input
+                    id="login-email"
+                    type="email"
+                    required
+                    autoComplete="email"
+                    placeholder="Enter your email"
+                    value={email}
+                    disabled={busy}
+                    onChange={(event) => setEmail(event.target.value)}
+                  />
+                  <span aria-hidden="true" className="login-field-icon">
+                    @
+                  </span>
+                </div>
+              </div>
+
+              <div className="login-field">
+                <label htmlFor="login-password">Password</label>
+                <div className="login-input-wrap">
+                  <input
+                    id="login-password"
+                    type={showPassword ? "text" : "password"}
+                    required
+                    autoComplete="current-password"
+                    placeholder="Enter your password"
+                    value={password}
+                    disabled={busy}
+                    onChange={(event) => setPassword(event.target.value)}
+                  />
+                  <button
+                    type="button"
+                    className="login-password-toggle"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    aria-pressed={showPassword}
+                    onClick={() => setShowPassword((visible) => !visible)}
+                  >
+                    {showPassword ? "Hide" : "Show"}
+                  </button>
+                </div>
+              </div>
+
+              <div className="login-form-options">
+                <label className="login-checkbox">
+                  <input
+                    type="checkbox"
+                    checked={rememberMe}
+                    disabled={busy}
+                    onChange={(event) => setRememberMe(event.target.checked)}
+                  />
+                  <span aria-hidden="true">
+                    <UiIcon name="check" className="h-3 w-3" />
+                  </span>
+                  Remember me
+                </label>
+
+                <Link href="/contact?topic=password-help">
+                  Forgot password?
+                </Link>
+              </div>
+
+              {loginError && (
+                <div role="alert" className="login-alert">
+                  <UiIcon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
+                  <span>{loginError}</span>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={busy}
+                aria-busy={loading}
+                className="login-submit"
+              >
+                {loading ? (
+                  <>
+                    <span className="login-spinner" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
+              </button>
+            </form>
+
+            <p className="login-signup-copy">
+              Don&apos;t have an account?{" "}
+              <Link href={buildAuthHref("/signup", planIntent, returnTo)}>
+                Create one
+              </Link>
+            </p>
+          </div>
+
+          <footer className="login-legal">
+            <Link href="/terms">Terms of Service</Link>
+            <span aria-hidden="true">•</span>
+            <Link href="/privacy">Privacy Policy</Link>
+          </footer>
+        </div>
+      </section>
+
+      <SydINLoginVisual />
     </main>
   );
 }

@@ -34,3 +34,23 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Microsoft Sign-In Configuration
+
+The login page uses Supabase OAuth with the `azure` provider and requests the
+`email` scope. No Microsoft client secrets or Supabase service-role credentials
+belong in client code.
+
+Before Microsoft sign-in can work in a deployed environment:
+
+1. In Microsoft Entra, register the SydIN web application.
+2. Add the Supabase Azure callback URL shown in the Supabase provider settings
+   as an allowed web redirect URI.
+3. Create a client secret for the Entra application.
+4. In Supabase Dashboard, enable the Azure provider and enter the Entra client
+   ID and client secret.
+5. Add every allowed SydIN post-auth URL to the Supabase Authentication redirect
+   URL allow list, including local development and production dashboard URLs.
+
+Google and Microsoft use the same existing SydIN `redirectTo` destination and
+Supabase session handling. Enterprise SSO is intentionally not configured.
