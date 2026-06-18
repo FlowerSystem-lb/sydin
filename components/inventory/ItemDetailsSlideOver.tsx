@@ -147,11 +147,13 @@ function DetailField({
 export default function ItemDetailsSlideOver({
   itemId,
   returnTo,
+  initialTab = "details",
   onClose,
   onItemUpdated,
 }: {
   itemId: number;
   returnTo?: string;
+  initialTab?: ItemDetailsTab;
   onClose: () => void;
   onItemUpdated?: (
     item: SlideOverInventoryItem,
@@ -170,7 +172,7 @@ export default function ItemDetailsSlideOver({
   const closeTimerRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
   const [closing, setClosing] = useState(false);
-  const [tab, setTab] = useState<ItemDetailsTab>("details");
+  const [tab, setTab] = useState<ItemDetailsTab>(initialTab);
   const [menuOpen, setMenuOpen] = useState(false);
   const [item, setItem] = useState<SlideOverInventoryItem | null>(null);
   const [history, setHistory] = useState<InventoryHistoryEntry[]>([]);

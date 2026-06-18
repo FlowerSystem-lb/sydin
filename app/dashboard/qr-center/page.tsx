@@ -180,10 +180,23 @@ export default function QrCenterPage() {
         if (itemError) throw itemError;
         if (!active) return;
 
+        const query = new URLSearchParams(window.location.search);
+        const requestedIds = (query.get("items") || "")
+          .split(",")
+          .map((id) => Number(id))
+          .filter((id) => Number.isInteger(id) && id > 0);
+        const loadedItems = (data || []) as QrInventoryItem[];
+        const loadedItemIds = new Set(loadedItems.map((item) => item.id));
+
         setOrigin(window.location.origin);
         setSettings(readStoredSettings());
-        setItems((data || []) as QrInventoryItem[]);
-        setSearch(new URLSearchParams(window.location.search).get("search") || "");
+        setItems(loadedItems);
+        setSearch(query.get("search") || "");
+        if (requestedIds.length > 0) {
+          setSelectedIds(
+            new Set(requestedIds.filter((id) => loadedItemIds.has(id)))
+          );
+        }
         setBusinessSettings(loadedSettings);
         setSubscription(loadedSubscription);
         setLoading(false);

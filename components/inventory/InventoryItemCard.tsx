@@ -28,9 +28,12 @@ export default function InventoryItemCard({
   depotLabel,
   lowStock,
   deleting,
+  selectable = false,
+  selected = false,
   onAdjust,
   onEdit,
   onDelete,
+  onToggleSelected,
   onOpenDetails,
   onHistory,
   onCreateQrLabel,
@@ -43,9 +46,12 @@ export default function InventoryItemCard({
   depotLabel?: string | null;
   lowStock: boolean;
   deleting: boolean;
+  selectable?: boolean;
+  selected?: boolean;
   onAdjust: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onToggleSelected?: () => void;
   onOpenDetails?: () => void;
   onHistory?: () => void;
   onCreateQrLabel?: () => void;
@@ -60,13 +66,18 @@ export default function InventoryItemCard({
     detailsHref || `/dashboard/inventory/${item.id}`;
 
   const openDetails = useCallback(() => {
+    if (selectable) {
+      onToggleSelected?.();
+      return;
+    }
+
     if (onOpenDetails) {
       onOpenDetails();
       return;
     }
 
     router.push(resolvedDetailsHref);
-  }, [onOpenDetails, resolvedDetailsHref, router]);
+  }, [onOpenDetails, onToggleSelected, resolvedDetailsHref, router, selectable]);
 
   const positionMenu = useCallback(() => {
     const trigger = menuButtonRef.current;
@@ -150,9 +161,10 @@ export default function InventoryItemCard({
 
   return (
     <article
-      role="link"
+      role={selectable ? "checkbox" : "button"}
       tabIndex={0}
       aria-label={`View ${item.name}`}
+      aria-checked={selectable ? selected : undefined}
       onClick={openDetails}
       onKeyDown={(event) => {
         if (event.key === "Enter" || event.key === " ") {
@@ -160,9 +172,29 @@ export default function InventoryItemCard({
           openDetails();
         }
       }}
-      className="group relative min-w-0 cursor-pointer overflow-visible rounded-[22px] border border-theme bg-theme-surface shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_18px_42px_rgba(67,56,202,0.12)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none"
+      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-[22px] border bg-theme-surface shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_18px_42px_rgba(67,56,202,0.12)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
+        selectable && selected
+          ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/35"
+          : "border-theme"
+      }`}
     >
       <div className="relative aspect-[4/3] overflow-hidden rounded-t-[21px] border-b border-theme bg-[#f5f7fb]">
+        {selectable && (
+          <label
+            className="absolute left-3 top-3 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white focus-within:ring-4 focus-within:ring-cyan-300/25"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <span className="sr-only">
+              {selected ? "Deselect" : "Select"} {item.name}
+            </span>
+            <input
+              type="checkbox"
+              checked={selected}
+              onChange={onToggleSelected}
+              className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+            />
+          </label>
+        )}
         {item.image ? (
           <Image
             src={item.image}
@@ -193,6 +225,7 @@ export default function InventoryItemCard({
           aria-label={`Actions for ${item.name}`}
           aria-haspopup="menu"
           aria-expanded={menuOpen}
+          data-item-actions={item.id}
           onClick={toggleMenu}
           onKeyDown={(event) => event.stopPropagation()}
           className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-600 shadow-sm outline-none transition hover:bg-white hover:text-slate-950 focus-visible:ring-4 focus-visible:ring-indigo-400/20"
@@ -248,7 +281,7 @@ export default function InventoryItemCard({
                 className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
               >
                 <UiIcon name="clock" className="h-4 w-4" />
-                History
+                Activity
               </button>
             )}
             {onCreateQrLabel && (
