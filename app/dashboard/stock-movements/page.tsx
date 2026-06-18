@@ -3,6 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import UiIcon from "@/components/UiIcon";
+import ItemDetailsSlideOver, {
+  type SlideOverInventoryItem,
+} from "@/components/inventory/ItemDetailsSlideOver";
 import Select from "@/components/ui/Select";
 import StockMovementDialog, {
   type MovementInventoryItem,
@@ -51,6 +54,7 @@ export default function StockMovementsPage() {
   const [dateSort, setDateSort] = useState<DateSort>("newest");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [initialItemId, setInitialItemId] = useState<number | null>(null);
+  const [detailsItemId, setDetailsItemId] = useState<number | null>(null);
 
   const loadData = async () => {
     const {
@@ -150,6 +154,44 @@ export default function StockMovementsPage() {
         new Date(first.created_at).getTime();
       return dateSort === "newest" ? delta : -delta;
     });
+
+  const currentContext = useMemo(() => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    if (movementFilter !== "all") params.set("type", movementFilter);
+    if (depotFilter !== "all") params.set("depot", depotFilter);
+    if (dateSort !== "newest") params.set("sort", dateSort);
+    const query = params.toString();
+    return `/dashboard/stock-movements${query ? `?${query}` : ""}`;
+  }, [dateSort, depotFilter, movementFilter, search]);
+
+  const handleSlideOverItemUpdated = (
+    updatedItem: SlideOverInventoryItem,
+    movement?: StockMovement
+  ) => {
+    setItems((current) =>
+      current.map((item) =>
+        item.id === updatedItem.id
+          ? {
+              ...item,
+              name: updatedItem.name,
+              quantity: updatedItem.quantity,
+              image: updatedItem.image,
+              sku: updatedItem.sku || null,
+              depot_id: updatedItem.depot_id ?? null,
+              item_code: updatedItem.item_code || null,
+            }
+          : item
+      )
+    );
+    if (movement) {
+      setMovements((current) => [
+        { ...movement, item_id: updatedItem.id },
+        ...current,
+      ]);
+    }
+    setNotice("Stock movement recorded successfully.");
+  };
 
   return (
     <main>
@@ -290,9 +332,19 @@ export default function StockMovementsPage() {
                         )}
                       </div>
                       <div className="min-w-0">
-                        <p className="truncate font-bold text-theme-primary">
-                          {item?.name || "Inventory item"}
-                        </p>
+                        {item ? (
+                          <button
+                            type="button"
+                            onClick={() => setDetailsItemId(item.id)}
+                            className="block max-w-full truncate text-left font-bold text-theme-primary hover:text-theme-accent"
+                          >
+                            {item.name}
+                          </button>
+                        ) : (
+                          <p className="truncate font-bold text-theme-primary">
+                            Inventory item
+                          </p>
+                        )}
                         <p className="mt-0.5 truncate text-xs text-theme-subtle">
                           {STOCK_MOVEMENT_LABELS[movement.movement_type]} ·{" "}
                           {formatDepotLabel(depot)}
@@ -357,6 +409,15 @@ export default function StockMovementsPage() {
           )}
         </section>
       </div>
+
+      {detailsItemId && (
+        <ItemDetailsSlideOver
+          itemId={detailsItemId}
+          returnTo={currentContext}
+          onClose={() => setDetailsItemId(null)}
+          onItemUpdated={handleSlideOverItemUpdated}
+        />
+      )}
 
       <StockMovementDialog
         open={dialogOpen}

@@ -160,12 +160,12 @@ function DetailCard({
             : "border-theme bg-theme-inset text-theme-primary";
 
   return (
-    <div className={`rounded-2xl border p-4 ${toneClass}`}>
+    <div className={`rounded-xl border p-3 ${toneClass}`}>
       <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-subtle">
         {label}
       </p>
       <p
-        className={`mt-2 break-words text-lg font-black ${
+        className={`mt-2 break-normal text-base font-black leading-snug ${
           monospace ? "font-mono tracking-wide" : ""
         }`}
       >
@@ -215,6 +215,7 @@ export default function ItemDetailsPage() {
   const [authMissing, setAuthMissing] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [routeEditMode, setRouteEditMode] = useState(false);
   const [editValues, setEditValues] = useState<EditItemFormValues>(
     createEmptyEditItemFormValues
   );
@@ -295,18 +296,21 @@ export default function ItemDetailsPage() {
         setEditFieldErrors({});
         setEditImage(null);
         setEditError("");
-        setIsEditModalOpen(true);
+        setIsEditModalOpen(false);
+        setRouteEditMode(true);
       } else if (action === "stock") {
+        setRouteEditMode(false);
         setMovementType("stock_in");
         setMovementQuantity("");
         setMovementNotes("");
         setMovementError("");
         setIsMovementModalOpen(true);
       } else if (action === "delete") {
+        setRouteEditMode(false);
         setIsDeleteDialogOpen(true);
       }
 
-      if (action) {
+      if (action && action !== "edit") {
         const params = new URLSearchParams(window.location.search);
         params.delete("action");
         const query = params.toString();
@@ -432,6 +436,20 @@ export default function ItemDetailsPage() {
     setEditFieldErrors({});
     setEditImage(null);
     setEditError("");
+  };
+
+  const closeRouteEditPage = (force = false) => {
+    if (isEditing && !force) return;
+    if (!item) return;
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete("action");
+    const query = params.toString();
+    setRouteEditMode(false);
+    closeEditModal(true);
+    router.replace(
+      `/dashboard/inventory/${item.id}${query ? `?${query}` : ""}`
+    );
   };
 
   const updateEditValue = <Field extends keyof EditItemFormValues>(
@@ -636,7 +654,11 @@ export default function ItemDetailsPage() {
 
       setItem(updatedRecord);
       await fetchHistory(user.id, item.id);
-      closeEditModal(true);
+      if (routeEditMode) {
+        closeRouteEditPage(true);
+      } else {
+        closeEditModal(true);
+      }
     } catch {
       setEditError("Something went wrong while updating this item.");
     } finally {
@@ -788,28 +810,28 @@ export default function ItemDetailsPage() {
   return (
     <div className="contents">
       <main>
-        <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-5">
+          <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
                   Product record
                 </p>
 
-                <h1 className="mt-2 text-4xl font-bold tracking-tight text-theme-primary sm:text-5xl lg:text-6xl">
+                <h1 className="mt-1 break-normal text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
                   {item?.name || "Item Details"}
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
+                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
                   Review item metadata, stock levels, image, notes, history, and public QR access.
                 </p>
               </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
                 <ContextBackButton
                   fallbackHref="/dashboard/inventory"
                   label={backLabel}
-                  className="min-h-14 rounded-2xl px-5 py-4 text-base"
+                  className="min-h-10 rounded-xl px-3.5 py-2 text-sm"
                 />
 
                 {item && (
@@ -817,7 +839,7 @@ export default function ItemDetailsPage() {
                     <button
                       type="button"
                       onClick={openMovementModal}
-                      className="rounded-2xl border border-emerald-300/25 bg-emerald-500/15 px-5 py-4 text-base font-bold text-theme-success transition hover:border-emerald-300/45 hover:bg-emerald-500/25"
+                      className="min-h-10 rounded-xl border border-emerald-300/25 bg-emerald-500/15 px-3.5 py-2 text-sm font-bold text-theme-success transition hover:border-emerald-300/45 hover:bg-emerald-500/25"
                     >
                       Record Movement
                     </button>
@@ -825,7 +847,7 @@ export default function ItemDetailsPage() {
                     <button
                       type="button"
                       onClick={openEditModal}
-                      className="rounded-2xl bg-white px-5 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                      className="min-h-10 rounded-xl bg-white px-3.5 py-2 text-sm font-bold text-black shadow-[0_10px_28px_rgba(255,255,255,0.1)] transition hover:bg-slate-200"
                     >
                       Edit Item
                     </button>
@@ -834,7 +856,7 @@ export default function ItemDetailsPage() {
                       type="button"
                       onClick={() => setIsDeleteDialogOpen(true)}
                       disabled={isDeleting}
-                      className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-4 text-base font-bold text-theme-danger transition hover:bg-red-500/25 disabled:opacity-50"
+                      className="min-h-10 rounded-xl border border-red-400/25 bg-red-500/15 px-3.5 py-2 text-sm font-bold text-theme-danger transition hover:bg-red-500/25 disabled:opacity-50"
                     >
                       {isDeleting ? "Deleting..." : "Delete Item"}
                     </button>
@@ -887,19 +909,65 @@ export default function ItemDetailsPage() {
             </div>
           )}
 
-          {!loading && item && (
+          {!loading && item && routeEditMode && (
+            <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+              <div className="mb-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
+                    Product Details
+                  </p>
+                  <h1 className="mt-1 truncate text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
+                    Edit Item
+                  </h1>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
+                    Update product identity, stock, pricing, tracking codes, and private notes.
+                  </p>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => closeRouteEditPage()}
+                  disabled={isEditing}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-theme bg-theme-surface px-3.5 py-2 text-sm font-bold text-theme-secondary transition hover:bg-theme-hover hover:text-theme-primary disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <span aria-hidden="true">‹</span>
+                  Back to Item Details
+                </button>
+              </div>
+
+              <EditItemForm
+                item={item}
+                values={editValues}
+                fieldErrors={editFieldErrors}
+                depots={editDepotOptions}
+                categories={categories}
+                suppliers={suppliers}
+                currencyCode={editCurrencyCode}
+                selectedImage={editImage}
+                saving={isEditing}
+                error={editError}
+                onValueChange={updateEditValue}
+                onFieldErrorClear={clearEditFieldError}
+                onImageChange={setEditImage}
+                onCancel={() => closeRouteEditPage()}
+                onSubmit={handleUpdateItem}
+              />
+            </section>
+          )}
+
+          {!loading && item && !routeEditMode && (
             <>
-              <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <section className="rounded-[32px] border border-theme bg-theme-surface p-4 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-6">
-                <div className="flex min-h-[360px] items-center justify-center rounded-[28px] bg-[#f4f0e8] p-5 sm:min-h-[460px]">
+              <div className="grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+              <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-4">
+                <div className="flex min-h-[260px] items-center justify-center rounded-[18px] bg-[#f4f0e8] p-4 sm:min-h-[320px]">
                   {item.image ? (
-                    <div className="relative h-[320px] w-full sm:h-[420px]">
+                    <div className="relative h-[240px] w-full sm:h-[300px]">
                       <Image
                         src={item.image}
                         alt={item.name}
                         fill
                         priority
-                        sizes="(min-width: 1280px) 55vw, 100vw"
+                        sizes="(min-width: 1280px) 42vw, 100vw"
                         className="object-contain"
                       />
                     </div>
@@ -918,14 +986,14 @@ export default function ItemDetailsPage() {
               </section>
 
               <section className="flex flex-col gap-6">
-                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+                <div className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
                   <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                     <div>
-                      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
                         Product
                       </p>
 
-                      <h2 className="mt-2 break-words text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
+                      <h2 className="mt-1 break-normal text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
                         {item.name}
                       </h2>
                     </div>
@@ -937,7 +1005,7 @@ export default function ItemDetailsPage() {
                     )}
                   </div>
 
-                  <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
                     <DetailCard
                       label="Category"
                       value={resolveCategoryDisplay(item, assignedCategory)}
@@ -952,13 +1020,13 @@ export default function ItemDetailsPage() {
                     />
                   </div>
 
-                  <section className="mt-5 rounded-[26px] border border-indigo-300/15 bg-indigo-500/[0.07] p-4 sm:p-5">
+                  <section className="mt-4 rounded-[18px] border border-indigo-300/15 bg-indigo-500/[0.07] p-4">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
                         <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                           Stock & Unit
                         </p>
-                        <h3 className="mt-1 text-2xl font-black text-theme-primary">
+                        <h3 className="mt-1 text-xl font-black text-theme-primary">
                           {itemQuantityLabel}
                         </h3>
                       </div>
@@ -967,7 +1035,7 @@ export default function ItemDetailsPage() {
                       </span>
                     </div>
 
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <DetailCard
                         label="Current stock"
                         value={itemQuantityLabel}
@@ -992,7 +1060,7 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-5 rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5">
+                  <section className="mt-4 rounded-[18px] border border-theme bg-theme-inset p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Private Supplier
                     </p>
@@ -1018,7 +1086,7 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-5 rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5">
+                  <section className="mt-4 rounded-[18px] border border-theme bg-theme-inset p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Pricing & Value
                     </p>
@@ -1050,7 +1118,7 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-5 rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5">
+                  <section className="mt-4 rounded-[18px] border border-theme bg-theme-inset p-4">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Tracking Codes
                     </p>
@@ -1088,14 +1156,14 @@ export default function ItemDetailsPage() {
                       Notes
                     </p>
 
-                    <p className="mt-2 whitespace-pre-wrap break-words text-base leading-7 text-theme-secondary">
+                    <p className="mt-2 whitespace-pre-wrap break-normal text-sm leading-6 text-theme-secondary">
                       {item.notes || "No notes added yet."}
                     </p>
                   </div>
                 </div>
 
-                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                <div className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
                     Item QR Code
                   </p>
 
@@ -1183,15 +1251,15 @@ export default function ItemDetailsPage() {
 
               <section
                 id="history"
-                className="scroll-mt-24 rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7"
+                className="scroll-mt-24 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
                       Stock activity
                     </p>
 
-                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
                       Stock Movements
                     </h2>
                   </div>
@@ -1207,7 +1275,7 @@ export default function ItemDetailsPage() {
                     {stockMovements.map((movement) => (
                       <div
                         key={movement.id}
-                        className="rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
+                        className="rounded-[18px] border border-theme bg-theme-inset p-4"
                       >
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
                           <div className="flex items-start gap-4">
@@ -1231,7 +1299,7 @@ export default function ItemDetailsPage() {
                               </p>
 
                               {movement.notes && (
-                                <p className="mt-3 max-w-2xl whitespace-pre-wrap break-words text-sm leading-6 text-theme-secondary">
+                                <p className="mt-3 max-w-2xl whitespace-pre-wrap break-normal text-sm leading-6 text-theme-secondary">
                                   {formatStockMovementNotes(movement.notes)}
                                 </p>
                               )}
@@ -1282,7 +1350,7 @@ export default function ItemDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-6 rounded-[26px] border border-dashed border-emerald-300/25 bg-theme-inset px-5 py-12 text-center">
+                  <div className="mt-5 rounded-[18px] border border-dashed border-emerald-300/25 bg-theme-inset px-5 py-8 text-center">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-lg font-black text-theme-success">
                       0
                     </div>
@@ -1299,14 +1367,14 @@ export default function ItemDetailsPage() {
                 )}
               </section>
 
-              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+              <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
                       Audit trail
                     </p>
 
-                    <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
+                    <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
                       Item History
                     </h2>
                   </div>
@@ -1321,7 +1389,7 @@ export default function ItemDetailsPage() {
                     {history.map((entry) => (
                       <div
                         key={entry.id}
-                        className="relative rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
+                        className="relative rounded-[18px] border border-theme bg-theme-inset p-4"
                       >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                           <div className="flex items-start gap-4">
@@ -1366,7 +1434,7 @@ export default function ItemDetailsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="mt-6 rounded-[26px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-12 text-center">
+                  <div className="mt-5 rounded-[18px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-8 text-center">
                     <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-theme-accent">
                       0
                     </div>

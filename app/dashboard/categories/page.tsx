@@ -4,6 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ItemDetailsSlideOver, {
+  type SlideOverInventoryItem,
+} from "@/components/inventory/ItemDetailsSlideOver";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import UiIcon from "@/components/UiIcon";
 import { DialogShell, Select } from "@/components/ui";
@@ -232,6 +235,7 @@ export default function CategoriesPage() {
   >(null);
   const [undoing, setUndoing] = useState(false);
   const [contextReady, setContextReady] = useState(false);
+  const [detailsItemId, setDetailsItemId] = useState<number | null>(null);
 
   const loadWorkspace = async (knownUserId: string) => {
     const [
@@ -789,6 +793,30 @@ export default function CategoriesPage() {
     router.push(`/dashboard/inventory/${item.id}?${params.toString()}`);
   };
 
+  const handleSlideOverItemUpdated = (updatedItem: SlideOverInventoryItem) => {
+    setItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === updatedItem.id
+          ? {
+              ...item,
+              name: updatedItem.name,
+              category: updatedItem.category,
+              category_id: updatedItem.category_id ?? null,
+              quantity: updatedItem.quantity,
+              image: updatedItem.image,
+              sku: updatedItem.sku,
+              item_code: updatedItem.item_code,
+              unit_type: updatedItem.unit_type,
+              custom_unit_label: updatedItem.custom_unit_label,
+              min_stock_level: updatedItem.min_stock_level ?? null,
+              depot_id: updatedItem.depot_id ?? null,
+            }
+          : item
+      )
+    );
+    setPageNotice("Stock movement recorded successfully.");
+  };
+
   const smartFilters: {
     type: WorkspaceSelection["type"];
     label: string;
@@ -816,11 +844,10 @@ export default function CategoriesPage() {
       key={item.id}
       className="flex min-w-0 flex-col gap-3 rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center"
     >
-      <Link
-        href={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
-          currentContext
-        )}`}
-        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20"
+      <button
+        type="button"
+        onClick={() => setDetailsItemId(item.id)}
+        className="flex min-w-0 flex-1 items-center gap-3 rounded-xl text-left outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20"
       >
         <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-theme bg-theme-inset text-theme-accent">
           <UiIcon name="box" className="h-5 w-5" />
@@ -838,7 +865,7 @@ export default function CategoriesPage() {
             )}
           </span>
         </span>
-      </Link>
+      </button>
       <div className="flex flex-wrap gap-2">
         <button
           type="button"
@@ -1394,14 +1421,13 @@ export default function CategoriesPage() {
                           className="border-t border-theme text-theme-secondary"
                         >
                           <td className="px-4 py-3">
-                            <Link
-                              href={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
-                                currentContext
-                              )}`}
-                              className="font-bold text-theme-primary hover:text-theme-accent"
+                            <button
+                              type="button"
+                              onClick={() => setDetailsItemId(item.id)}
+                              className="text-left font-bold text-theme-primary hover:text-theme-accent"
                             >
                               {item.name}
-                            </Link>
+                            </button>
                             <p className="text-xs text-theme-subtle">
                               {item.item_code || item.sku || "No identifier"}
                             </p>
@@ -1423,14 +1449,13 @@ export default function CategoriesPage() {
                             )}
                           </td>
                           <td className="px-4 py-3 text-right">
-                            <Link
-                              href={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
-                                currentContext
-                              )}`}
+                            <button
+                              type="button"
+                              onClick={() => setDetailsItemId(item.id)}
                               className="font-bold text-theme-accent"
                             >
                               Open
-                            </Link>
+                            </button>
                           </td>
                         </tr>
                       ))}
@@ -1461,6 +1486,7 @@ export default function CategoriesPage() {
                       }
                       lowStock={isItemLowStock(item)}
                       deleting={false}
+                      onOpenDetails={() => setDetailsItemId(item.id)}
                       onAdjust={() => openItemAction(item, "stock")}
                       onEdit={() => openItemAction(item, "edit")}
                       onDelete={() => openItemAction(item, "delete")}
@@ -1475,6 +1501,15 @@ export default function CategoriesPage() {
           </section>
         </div>
       </div>
+
+      {detailsItemId && (
+        <ItemDetailsSlideOver
+          itemId={detailsItemId}
+          returnTo={currentContext}
+          onClose={() => setDetailsItemId(null)}
+          onItemUpdated={handleSlideOverItemUpdated}
+        />
+      )}
 
       <DialogShell
         open={assignOpen}

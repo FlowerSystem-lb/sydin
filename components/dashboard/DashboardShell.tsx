@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
 import UiIcon from "@/components/UiIcon";
@@ -48,6 +48,35 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
+
+function getDashboardPageContext(pathname: string, action?: string | null) {
+  if (pathname === "/dashboard/add-item") {
+    return {
+      label: "Inventory / Add Item",
+      shortLabel: "Add Item",
+    };
+  }
+
+  if (/^\/dashboard\/inventory\/[^/]+$/.test(pathname)) {
+    if (action === "edit") {
+      return {
+        label: "Inventory / Edit Item",
+        shortLabel: "Edit Item",
+      };
+    }
+
+    return {
+      label: "Inventory / Item Details",
+      shortLabel: "Item Details",
+    };
+  }
+
+  const navigationItem = getDashboardNavigationItem(pathname);
+  return {
+    label: navigationItem.label,
+    shortLabel: navigationItem.shortLabel || navigationItem.label,
+  };
+}
 
 interface DashboardShellProps {
   children: React.ReactNode;
@@ -168,6 +197,7 @@ export default function DashboardShell({
 }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const accountTriggerRef = useRef<HTMLButtonElement>(null);
   const [collapsed, setCollapsed] = useState(false);
@@ -252,7 +282,10 @@ export default function DashboardShell({
     };
   }, [accountMenuOpen]);
 
-  const currentItem = getDashboardNavigationItem(pathname);
+  const currentPage = getDashboardPageContext(
+    pathname,
+    searchParams.get("action")
+  );
   const planName = formatPlanName(usage.subscription.plan);
   const itemLimit = usage.subscription.item_limit;
   const usagePercent =
@@ -482,7 +515,7 @@ export default function DashboardShell({
         />
         <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-bold text-[var(--text-primary)]">
-            {currentItem.label}
+            {currentPage.label}
           </p>
           <p className="truncate text-xs text-[var(--text-subtle)]">
             {businessSettings.business_name}
@@ -504,7 +537,7 @@ export default function DashboardShell({
           <SydINMark size="md" />
         </Link>
         <p className="min-w-0 flex-1 truncate text-sm font-bold text-[var(--text-primary)]">
-          {currentItem.shortLabel || currentItem.label}
+          {currentPage.shortLabel}
         </p>
         {quickAddVisible ? (
           <Link
@@ -522,7 +555,7 @@ export default function DashboardShell({
       <div className="dashboard-desktop-toolbar">
         <div className="min-w-0">
           <p className="truncate text-sm font-bold text-[var(--text-primary)]">
-            {currentItem.label}
+            {currentPage.label}
           </p>
           <p className="truncate text-xs text-[var(--text-subtle)]">
             {businessSettings.business_name}

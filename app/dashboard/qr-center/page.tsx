@@ -5,6 +5,9 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import UiIcon from "@/components/UiIcon";
+import ItemDetailsSlideOver, {
+  type SlideOverInventoryItem,
+} from "@/components/inventory/ItemDetailsSlideOver";
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
 import { DialogShell, Select } from "@/components/ui";
@@ -153,6 +156,7 @@ export default function QrCenterPage() {
   );
   const [subscription, setSubscription] =
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
+  const [detailsItemId, setDetailsItemId] = useState<number | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -179,6 +183,7 @@ export default function QrCenterPage() {
         setOrigin(window.location.origin);
         setSettings(readStoredSettings());
         setItems((data || []) as QrInventoryItem[]);
+        setSearch(new URLSearchParams(window.location.search).get("search") || "");
         setBusinessSettings(loadedSettings);
         setSubscription(loadedSubscription);
         setLoading(false);
@@ -224,6 +229,30 @@ export default function QrCenterPage() {
   );
   const selectedItem = printableItems[0] || null;
   const selectedCount = printableItems.length;
+  const currentContext = useMemo(() => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    const query = params.toString();
+    return `/dashboard/qr-center${query ? `?${query}` : ""}`;
+  }, [search]);
+
+  const handleSlideOverItemUpdated = (updatedItem: SlideOverInventoryItem) => {
+    setItems((currentItems) =>
+      currentItems.map((item) =>
+        item.id === updatedItem.id
+          ? {
+              ...item,
+              name: updatedItem.name,
+              image: updatedItem.image,
+              sku: updatedItem.sku || null,
+              item_code: updatedItem.item_code || null,
+              public_id: updatedItem.public_id || null,
+            }
+          : item
+      )
+    );
+    setNotice("Stock movement recorded successfully.");
+  };
 
   const updateSettings = (next: Partial<QrLabelSettings>) => {
     setSettings((current) => {
@@ -499,13 +528,13 @@ export default function QrCenterPage() {
                 visibleItems.map((item) => {
                   const selected = selectedIds.has(item.id);
                   return (
-                    <label
+                    <div
                       key={item.id}
-                      className={`flex cursor-pointer items-center gap-3 rounded-xl border p-3 transition ${
+                      className={`flex items-center gap-3 rounded-xl border p-3 transition ${
                         selected
                           ? "border-indigo-300/60 bg-indigo-500/10 ring-4 ring-indigo-400/10"
                           : "border-theme bg-theme-surface hover:bg-theme-hover"
-                      } ${!item.public_id ? "cursor-not-allowed opacity-55" : ""}`}
+                      } ${!item.public_id ? "opacity-55" : ""}`}
                     >
                       <input
                         type="checkbox"
@@ -532,16 +561,28 @@ export default function QrCenterPage() {
                           </span>
                         )}
                       </span>
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-bold text-theme-primary">
+                      <span className="min-w-0 flex-1">
+                        <button
+                          type="button"
+                          onClick={() => setDetailsItemId(item.id)}
+                          className="block max-w-full truncate text-left text-sm font-bold text-theme-primary hover:text-theme-accent"
+                        >
                           {item.name}
-                        </span>
+                        </button>
                         <span className="mt-0.5 block truncate text-xs text-theme-subtle">
                           {item.sku || item.item_code || "No identifier"}
                           {!item.public_id ? " · QR unavailable" : ""}
                         </span>
                       </span>
-                    </label>
+                      <button
+                        type="button"
+                        onClick={() => setDetailsItemId(item.id)}
+                        className="shrink-0 rounded-lg border border-theme bg-theme-surface p-2 text-theme-secondary hover:bg-theme-hover hover:text-theme-primary"
+                        aria-label={`Open details for ${item.name}`}
+                      >
+                        <UiIcon name="chevron-right" className="h-4 w-4" />
+                      </button>
+                    </div>
                   );
                 })
               ) : (
@@ -630,6 +671,15 @@ export default function QrCenterPage() {
       >
         {printableItems.map((item) => renderLabel(item, true))}
       </section>
+
+      {detailsItemId && (
+        <ItemDetailsSlideOver
+          itemId={detailsItemId}
+          returnTo={currentContext}
+          onClose={() => setDetailsItemId(null)}
+          onItemUpdated={handleSlideOverItemUpdated}
+        />
+      )}
 
       <DialogShell
         open={settingsOpen}

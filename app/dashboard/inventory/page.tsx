@@ -9,6 +9,9 @@ import {
   type IScannerControls,
 } from "@zxing/browser";
 import UiIcon from "@/components/UiIcon";
+import ItemDetailsSlideOver, {
+  type SlideOverInventoryItem,
+} from "@/components/inventory/ItemDetailsSlideOver";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import StockMovementDialog from "@/components/inventory/StockMovementDialog";
 import { Button, DialogShell, Select } from "@/components/ui";
@@ -39,6 +42,9 @@ import EditItemForm, {
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import {
   calculateInventoryValue,
+  DEFAULT_INVENTORY_UNIT_TYPE,
+  INVENTORY_UNIT_LABELS,
+  INVENTORY_UNIT_TYPES,
   getEffectiveItemLowStockThreshold,
   getInventoryQuantityLabel,
   normalizeCurrencyCode,
@@ -289,8 +295,16 @@ export default function InventoryPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [name, setName] = useState("");
   const [sku, setSku] = useState("");
+  const [barcode, setBarcode] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [quantity, setQuantity] = useState("");
+  const [unitType, setUnitType] = useState<InventoryUnitType>(
+    DEFAULT_INVENTORY_UNIT_TYPE
+  );
+  const [customUnitLabel, setCustomUnitLabel] = useState("");
+  const [minStockLevel, setMinStockLevel] = useState("");
+  const [costPrice, setCostPrice] = useState("");
+  const [sellingPrice, setSellingPrice] = useState("");
   const [notes, setNotes] = useState("");
   const [image, setImage] = useState<File | null>(null);
   const [imageError, setImageError] = useState("");
@@ -301,6 +315,21 @@ export default function InventoryPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [isAdding, setIsAdding] = useState(false);
   const [addError, setAddError] = useState("");
+  const [addCreateAnother, setAddCreateAnother] = useState(false);
+  const [addFieldErrors, setAddFieldErrors] = useState<
+    Partial<
+      Record<
+        | "name"
+        | "quantity"
+        | "unitType"
+        | "customUnitLabel"
+        | "costPrice"
+        | "sellingPrice"
+        | "minStockLevel",
+        string
+      >
+    >
+  >({});
   const [isLimitError, setIsLimitError] = useState(false);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
@@ -321,6 +350,8 @@ export default function InventoryPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [pendingDeleteItem, setPendingDeleteItem] = useState<Item | null>(null);
   const [movementItem, setMovementItem] = useState<Item | null>(null);
+  const [detailsItemId, setDetailsItemId] = useState<number | null>(null);
+  const [inventoryContextReady, setInventoryContextReady] = useState(false);
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
@@ -470,6 +501,38 @@ export default function InventoryPage() {
     };
   }, []);
 
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const params = new URLSearchParams(window.location.search);
+      setSearch(params.get("search") || "");
+
+      const requestedDepot = params.get("depot");
+      if (requestedDepot) setDepotFilter(requestedDepot);
+
+      const requestedCategory = params.get("category");
+      if (requestedCategory) setCategoryFilter(requestedCategory);
+
+      const requestedStock = params.get("stock");
+      if (requestedStock === "all" || requestedStock === "low") {
+        setStockFilter(requestedStock);
+      }
+
+      const requestedSort = params.get("sort");
+      if (
+        requestedSort === "newest" ||
+        requestedSort === "name-az" ||
+        requestedSort === "quantity-asc" ||
+        requestedSort === "quantity-desc"
+      ) {
+        setSortBy(requestedSort);
+      }
+
+      setInventoryContextReady(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   const imagePreviewUrl = useMemo(
     () => (image ? URL.createObjectURL(image) : ""),
     [image]
@@ -505,6 +568,16 @@ export default function InventoryPage() {
   const clearAddImage = () => {
     setImage(null);
     setImageError("");
+  };
+
+  const clearAddFieldError = (field: keyof typeof addFieldErrors) => {
+    setAddFieldErrors((currentErrors) => {
+      if (!currentErrors[field]) return currentErrors;
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[field];
+      return nextErrors;
+    });
   };
 
   const stopScanner = useCallback(() => {
@@ -713,7 +786,7 @@ export default function InventoryPage() {
         }
 
         scannerControlsRef.current = controls;
-        setScannerStatus("Scan a SydIn QR code or product barcode.");
+        setScannerStatus("Scan a SydIN QR code or product barcode.");
       } catch (error) {
         if (!isActive) return;
 
@@ -742,25 +815,70 @@ export default function InventoryPage() {
     setIsLimitError(false);
 
     const trimmedName = name.trim();
-    const quantityValue = Number(quantity);
+    const trimmedCustomUnitLabel = customUnitLabel.trim();
+    const quantityValue = quantity === "" ? null : Number(quantity);
+    const costPriceValue = costPrice === "" ? null : Number(costPrice);
+    const sellingPriceValue =
+      sellingPrice === "" ? null : Number(sellingPrice);
+    const minStockLevelValue =
+      minStockLevel === "" ? null : Number(minStockLevel);
+    const nextFieldErrors: typeof addFieldErrors = {};
 
     if (!trimmedName) {
-      setAddError("Add a product name before saving.");
-      return;
+      nextFieldErrors.name = "Product name is required.";
     }
 
     if (
-      quantity === "" ||
-      Number.isNaN(quantityValue) ||
+      quantityValue === null ||
+      !Number.isFinite(quantityValue) ||
+      !Number.isInteger(quantityValue) ||
       quantityValue < 0
     ) {
-      setAddError("Enter a quantity of 0 or more before saving.");
+      nextFieldErrors.quantity = "Enter a whole quantity of 0 or more.";
+    }
+
+    if (!INVENTORY_UNIT_TYPES.includes(unitType)) {
+      nextFieldErrors.unitType = "Choose a valid unit.";
+    }
+
+    if (unitType === "custom" && !trimmedCustomUnitLabel) {
+      nextFieldErrors.customUnitLabel = "Add a label for the custom unit.";
+    }
+
+    if (
+      costPriceValue !== null &&
+      (!Number.isFinite(costPriceValue) || costPriceValue < 0)
+    ) {
+      nextFieldErrors.costPrice = "Cost price must be 0 or more.";
+    }
+
+    if (
+      sellingPriceValue !== null &&
+      (!Number.isFinite(sellingPriceValue) || sellingPriceValue < 0)
+    ) {
+      nextFieldErrors.sellingPrice = "Selling price must be 0 or more.";
+    }
+
+    if (
+      minStockLevelValue !== null &&
+      (!Number.isFinite(minStockLevelValue) ||
+        !Number.isInteger(minStockLevelValue) ||
+        minStockLevelValue < 0)
+    ) {
+      nextFieldErrors.minStockLevel =
+        "Minimum stock must be a whole number of 0 or more.";
+    }
+
+    if (Object.keys(nextFieldErrors).length > 0) {
+      setAddFieldErrors(nextFieldErrors);
+      setAddError("Review the highlighted fields before saving.");
       return;
     }
 
     try {
       setIsAdding(true);
       setAddError("");
+      setAddFieldErrors({});
       setImageError("");
       setPageError("");
       setPageNotice("");
@@ -811,6 +929,7 @@ export default function InventoryPage() {
       const newItem = {
         name: trimmedName,
         sku: sku.trim(),
+        barcode: barcode.trim() || null,
         category:
           categories.find(
             (category) => String(category.id) === selectedCategoryId
@@ -818,7 +937,13 @@ export default function InventoryPage() {
         category_id: selectedCategoryId
           ? Number(selectedCategoryId)
           : null,
-        quantity: quantityValue,
+        quantity: quantityValue as number,
+        unit_type: unitType,
+        custom_unit_label:
+          unitType === "custom" ? trimmedCustomUnitLabel : null,
+        cost_price: costPriceValue,
+        selling_price: sellingPriceValue,
+        min_stock_level: minStockLevelValue,
         notes,
         image: imageUrl,
         depot_id: selectedDepotId ? Number(selectedDepotId) : null,
@@ -848,17 +973,26 @@ export default function InventoryPage() {
       }
 
       setPageNotice("Item added successfully.");
-      setIsModalOpen(false);
+      const shouldCreateAnother = addCreateAnother;
+      setIsModalOpen(shouldCreateAnother);
       setName("");
       setSku("");
+      setBarcode("");
       setSelectedCategoryId("");
       setQuantity("");
+      setUnitType(DEFAULT_INVENTORY_UNIT_TYPE);
+      setCustomUnitLabel("");
+      setMinStockLevel("");
+      setCostPrice("");
+      setSellingPrice("");
       setNotes("");
       setImage(null);
       setImageError("");
+      setAddFieldErrors({});
       setSelectedDepotId("");
       setSelectedSupplierId("");
       await fetchItems();
+      setAddCreateAnother(false);
     } catch (error) {
       setAddError(
         error instanceof Error
@@ -1256,6 +1390,22 @@ export default function InventoryPage() {
   };
 
   const activeDepots = depots.filter((depot) => depot.is_active);
+  const quickAddHasDraft = Boolean(
+    name.trim() ||
+      sku.trim() ||
+      barcode.trim() ||
+      selectedCategoryId ||
+      quantity ||
+      unitType !== DEFAULT_INVENTORY_UNIT_TYPE ||
+      customUnitLabel.trim() ||
+      minStockLevel ||
+      costPrice ||
+      sellingPrice ||
+      notes.trim() ||
+      image ||
+      selectedDepotId ||
+      selectedSupplierId
+  );
   const editDepotOptions = depots.filter(
     (depot) =>
       depot.is_active ||
@@ -1361,6 +1511,44 @@ export default function InventoryPage() {
     return secondItem.id - firstItem.id;
   });
 
+  const currentContext = useMemo(() => {
+    const params = new URLSearchParams();
+    if (search.trim()) params.set("search", search.trim());
+    if (depotFilter !== "all") params.set("depot", depotFilter);
+    if (categoryFilter !== "all") params.set("category", categoryFilter);
+    if (stockFilter !== "all") params.set("stock", stockFilter);
+    if (sortBy !== "newest") params.set("sort", sortBy);
+    const query = params.toString();
+    return `/dashboard/inventory${query ? `?${query}` : ""}`;
+  }, [categoryFilter, depotFilter, search, sortBy, stockFilter]);
+
+  useEffect(() => {
+    if (!inventoryContextReady) return;
+    const frame = window.requestAnimationFrame(() => {
+      window.history.replaceState({}, "", currentContext);
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [currentContext, inventoryContextReady]);
+
+  const handleSlideOverItemUpdated = async (
+    updatedItem: SlideOverInventoryItem
+  ) => {
+    setItems((currentItems) =>
+      currentItems.map((item) => {
+        if (item.id !== updatedItem.id) return item;
+
+        return {
+          ...item,
+          ...updatedItem,
+          category: updatedItem.category || item.category,
+          sku: updatedItem.sku || undefined,
+          notes: updatedItem.notes || undefined,
+        };
+      })
+    );
+    setPageNotice("Stock movement recorded successfully.");
+  };
+
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
   const exportDisabled = loadingItems || items.length === 0;
   const pdfExportDisabled =
@@ -1399,13 +1587,14 @@ export default function InventoryPage() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Link
-                  href="/dashboard/add-item"
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
                   className="action-button action-button-primary px-4 py-2.5 text-sm"
                 >
                   <UiIcon name="plus" />
                   Add Item
-                </Link>
+                </button>
 
                 <button
                   type="button"
@@ -1667,9 +1856,21 @@ export default function InventoryPage() {
                   }
                   lowStock={isItemLowStock(item)}
                   deleting={deletingId === item.id}
+                  onOpenDetails={() => setDetailsItemId(item.id)}
+                  onHistory={() =>
+                    router.push(
+                      `/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+                        currentContext
+                      )}#history`
+                    )
+                  }
+                  onCreateQrLabel={() => router.push("/dashboard/qr-center")}
                   onAdjust={() => setMovementItem(item)}
                   onEdit={() => openEditModal(item)}
                   onDelete={() => setPendingDeleteItem(item)}
+                  detailsHref={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+                    currentContext
+                  )}`}
                 />
               ))}
             </div>
@@ -1697,12 +1898,13 @@ export default function InventoryPage() {
               </p>
 
               {items.length === 0 ? (
-                <Link
-                  href="/dashboard/add-item"
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(true)}
                   className="mt-6 rounded-2xl bg-white px-5 py-3 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
                 >
                   Add your first item
-                </Link>
+                </button>
               ) : (
                 <button
                   type="button"
@@ -1731,7 +1933,7 @@ export default function InventoryPage() {
                 </h2>
 
                 <p className="mt-2 max-w-md text-sm leading-6 text-theme-muted">
-                  Scan a SydIn QR code or product barcode.
+                  Scan a SydIN QR code or product barcode.
                 </p>
               </div>
 
@@ -1828,15 +2030,20 @@ export default function InventoryPage() {
 
       {/* Add Item Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
-            <div className="flex items-center justify-between mb-8">
+        <div className="quick-add-overlay">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quick-add-title"
+            className="quick-add-dialog"
+          >
+            <div className="quick-add-header">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  New product
+                <p className="quick-add-eyebrow">
+                  Quick add
                 </p>
 
-                <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Add Item</h2>
+                <h2 id="quick-add-title" className="quick-add-title">Add Item</h2>
               </div>
 
               <button
@@ -1845,33 +2052,30 @@ export default function InventoryPage() {
                   if (isAdding) return;
                   setIsModalOpen(false);
                   setAddError("");
+                  setAddFieldErrors({});
                   setImageError("");
                 }}
                 disabled={isAdding}
-                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
+                className="quick-add-close"
+                aria-label="Close quick add"
               >
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                <UiIcon name="close" className="h-5 w-5" />
               </button>
             </div>
 
-            <form onSubmit={handleAddItem} className="flex flex-col gap-5 sm:gap-6">
+            <form onSubmit={handleAddItem} className="quick-add-form">
+              <div className="quick-add-scroll">
               <div>
-                <label className="mb-2 block text-sm font-semibold text-theme-muted">Product Image</label>
-                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-theme-inset p-4 transition hover:border-indigo-300/45 hover:bg-theme-inset">
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-[190px_1fr] md:items-center">
-                    <label className="group flex min-h-[170px] cursor-pointer flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface px-5 py-6 text-center transition hover:border-indigo-300/45 hover:bg-theme-hover">
-                      <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/20 text-2xl font-black text-theme-accent transition group-hover:bg-indigo-500/30">
+                <label className="mb-2 block text-xs font-bold text-theme-secondary">Product image</label>
+                <div className="rounded-xl border border-theme bg-theme-inset p-3">
+                  <div className="grid grid-cols-[88px_1fr] gap-3 items-center">
+                    <label className="group relative flex h-[84px] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-xl border border-theme bg-theme-surface px-2 py-2 text-center transition hover:border-indigo-300/45 hover:bg-theme-hover">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg border border-indigo-300/25 bg-indigo-500/20 text-base font-black text-theme-accent transition group-hover:bg-indigo-500/30">
                         +
                       </span>
 
-                      <span className="mt-4 text-base font-black text-theme-primary">
-                        Take or upload photo
-                      </span>
-
-                      <span className="mt-2 max-w-[210px] text-sm leading-5 text-theme-muted">
-                        JPG, PNG, or WebP up to 5MB.
+                      <span className="mt-1 text-xs font-black text-theme-primary">
+                        Add photo
                       </span>
 
                       <input
@@ -1885,30 +2089,30 @@ export default function InventoryPage() {
                       />
                     </label>
 
-                    <div className="min-h-[170px] rounded-3xl border border-theme bg-theme-inset p-4">
+                    <div className="min-h-[84px] rounded-xl border border-theme bg-theme-surface p-3">
                       {image && imagePreviewUrl ? (
-                        <div className="grid h-full grid-cols-1 gap-4 sm:grid-cols-[140px_1fr] sm:items-center">
-                          <div className="relative aspect-square overflow-hidden rounded-2xl bg-[#f4f0e8]">
+                        <div className="grid h-full grid-cols-[72px_1fr] gap-3 items-center">
+                          <div className="relative aspect-square overflow-hidden rounded-lg bg-[#f4f0e8]">
                             <Image
                               src={imagePreviewUrl}
                               alt="Selected product preview"
                               fill
                               unoptimized
-                              sizes="140px"
-                              className="object-contain p-3"
+                              sizes="72px"
+                              className="object-contain p-1.5"
                             />
                           </div>
 
-                          <div>
+                          <div className="min-w-0">
                             <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                               Selected image
                             </p>
 
-                            <p className="mt-2 break-words text-base font-semibold text-theme-primary">
+                            <p className="mt-1 truncate text-sm font-semibold text-theme-primary">
                               {image.name}
                             </p>
 
-                            <p className="mt-1 text-sm text-theme-muted">
+                            <p className="mt-1 text-xs text-theme-muted">
                               {formatFileSize(image.size)}
                             </p>
 
@@ -1916,20 +2120,20 @@ export default function InventoryPage() {
                               type="button"
                               onClick={clearAddImage}
                               disabled={isAdding}
-                              className="mt-4 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
+                              className="mt-2 text-xs font-bold text-theme-accent disabled:opacity-60"
                             >
                               Remove image
                             </button>
                           </div>
                         </div>
                       ) : (
-                        <div className="flex h-full min-h-[138px] flex-col justify-center rounded-2xl border border-white/5 bg-theme-surface px-4 py-5">
-                          <p className="text-base font-semibold text-theme-primary">
+                        <div className="flex h-full min-h-[58px] flex-col justify-center">
+                          <p className="text-sm font-semibold text-theme-primary">
                             No image selected
                           </p>
 
-                          <p className="mt-2 text-sm leading-6 text-theme-subtle">
-                            Add a product photo before saving if you want visual inventory records.
+                          <p className="mt-1 text-xs leading-5 text-theme-subtle">
+                            JPG, PNG, or WebP - 5MB max.
                           </p>
                         </div>
                       )}
@@ -1937,25 +2141,31 @@ export default function InventoryPage() {
                   </div>
 
                   {imageError && (
-                    <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
+                    <p className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm font-semibold text-theme-danger">
                       {imageError}
                     </p>
                   )}
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Product Name</label>
+                  <label className="mb-1.5 block text-xs font-bold text-theme-secondary">Product name <span className="text-theme-accent">*</span></label>
                   <input
                     type="text"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      clearAddFieldError("name");
+                    }}
+                    className="quick-add-input"
                     required
                   />
+                  {addFieldErrors.name && (
+                    <p className="quick-add-error">{addFieldErrors.name}</p>
+                  )}
                 </div>
-                <div>
+                <div className="hidden">
                   <label className="mb-2 block text-sm font-semibold text-theme-muted">SKU</label>
                   <input
                     type="text"
@@ -1965,28 +2175,78 @@ export default function InventoryPage() {
                   />
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Quantity</label>
+                  <label className="mb-1.5 block text-xs font-bold text-theme-secondary">Quantity <span className="text-theme-accent">*</span></label>
                   <input
                     type="number"
                     min="0"
+                    step="1"
                     inputMode="numeric"
                     value={quantity}
                     onKeyDown={(e) => {
-                      if (["-", "+", "e", "E"].includes(e.key)) {
+                      if (["-", "+", "e", "E", "."].includes(e.key)) {
                         e.preventDefault();
                       }
                     }}
-                    onChange={(e) =>
+                    onChange={(e) => {
                       setQuantity(
                         e.target.value.startsWith("-") ? "" : e.target.value
-                      )
-                    }
-                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                      );
+                      clearAddFieldError("quantity");
+                    }}
+                    className="quick-add-input"
                     required
                   />
+                  {addFieldErrors.quantity && (
+                    <p className="quick-add-error">{addFieldErrors.quantity}</p>
+                  )}
                 </div>
                 <div>
-                  <label className="mb-2 block text-sm font-semibold text-theme-muted">Category</label>
+                  <label className="mb-1.5 block text-xs font-bold text-theme-secondary">Unit of measure <span className="text-theme-accent">*</span></label>
+                  <Select
+                    value={unitType}
+                    onChange={(value) => {
+                      const nextUnit = value as InventoryUnitType;
+                      setUnitType(nextUnit);
+                      clearAddFieldError("unitType");
+                      if (nextUnit !== "custom") {
+                        clearAddFieldError("customUnitLabel");
+                      }
+                    }}
+                    disabled={isAdding}
+                    error={addFieldErrors.unitType}
+                    options={INVENTORY_UNIT_TYPES.map((unit) => ({
+                      value: unit,
+                      label: INVENTORY_UNIT_LABELS[unit],
+                    }))}
+                  />
+                  {addFieldErrors.unitType && (
+                    <p className="quick-add-error">{addFieldErrors.unitType}</p>
+                  )}
+                </div>
+                {unitType === "custom" && (
+                  <div className="md:col-span-2">
+                    <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                      Custom unit label <span className="text-theme-accent">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={customUnitLabel}
+                      onChange={(e) => {
+                        setCustomUnitLabel(e.target.value);
+                        clearAddFieldError("customUnitLabel");
+                      }}
+                      className="quick-add-input"
+                      placeholder="e.g. Roll, Bottle, Tray"
+                    />
+                    {addFieldErrors.customUnitLabel && (
+                      <p className="quick-add-error">
+                        {addFieldErrors.customUnitLabel}
+                      </p>
+                    )}
+                  </div>
+                )}
+                <div>
+                  <label className="mb-1.5 block text-xs font-bold text-theme-secondary">Category</label>
                   <CategorySelector
                     categories={categories}
                     value={selectedCategoryId}
@@ -1996,8 +2256,8 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="md:col-span-2">
+                  <label className="mb-1.5 block text-xs font-bold text-theme-secondary">Depot / Location</label>
                   <Select
-                    label="Depot"
                     value={selectedDepotId}
                     onChange={setSelectedDepotId}
                     searchable={activeDepots.length > 8}
@@ -2009,11 +2269,10 @@ export default function InventoryPage() {
                         label: formatDepotLabel(depot),
                       })),
                     ]}
-                    buttonClassName="min-h-14 rounded-2xl px-5 text-base"
                   />
                 </div>
 
-                <div className="md:col-span-2">
+                <div className="hidden md:col-span-2">
                   <Select
                     label="Supplier"
                     value={selectedSupplierId}
@@ -2032,7 +2291,7 @@ export default function InventoryPage() {
                 </div>
               </div>
 
-              <div>
+              <div className="hidden">
                 <label className="mb-2 block text-sm font-semibold text-theme-muted">Notes</label>
                 <textarea
                   value={notes}
@@ -2041,9 +2300,197 @@ export default function InventoryPage() {
                 />
               </div>
 
+              <details className="quick-add-more">
+                <summary>
+                  <span>
+                    <strong>More details</strong>
+                    <small>
+                      {[
+                        minStockLevel ? `Alert ${minStockLevel}` : "",
+                        selectedSupplierId ? "Supplier" : "",
+                        costPrice || sellingPrice ? "Pricing" : "",
+                        sku || barcode ? "Codes" : "",
+                        notes.trim() ? "Notes" : "",
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") ||
+                        "Stock alert, supplier, pricing, codes, notes"}
+                    </small>
+                  </span>
+                  <UiIcon name="chevron-down" className="h-4 w-4" />
+                </summary>
+                <div className="quick-add-more-body">
+                  <div className="quick-add-subsection">
+                    <p>Stock</p>
+                    <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                      Minimum stock threshold
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="1"
+                      inputMode="numeric"
+                      value={minStockLevel}
+                      onKeyDown={(event) => {
+                        if (["-", "+", "e", "E", "."].includes(event.key)) {
+                          event.preventDefault();
+                        }
+                      }}
+                      onChange={(event) => {
+                        setMinStockLevel(
+                          event.target.value.startsWith("-")
+                            ? ""
+                            : event.target.value
+                        );
+                        clearAddFieldError("minStockLevel");
+                      }}
+                      disabled={isAdding}
+                      placeholder="Use business default"
+                      className="quick-add-input"
+                    />
+                    {addFieldErrors.minStockLevel && (
+                      <p className="quick-add-error">
+                        {addFieldErrors.minStockLevel}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="quick-add-subsection">
+                    <p>Supplier</p>
+                    <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                      Supplier
+                    </label>
+                    <Select
+                      value={selectedSupplierId}
+                      onChange={setSelectedSupplierId}
+                      searchable={suppliers.length > 8}
+                      placeholder="No supplier"
+                      options={[
+                        { value: "", label: "No supplier" },
+                        ...suppliers.map((supplier) => ({
+                          value: String(supplier.id),
+                          label: supplier.name,
+                        })),
+                      ]}
+                    />
+                  </div>
+
+                  <div className="quick-add-subsection">
+                    <p>Pricing</p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                          Cost price
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={costPrice}
+                          onChange={(event) => {
+                            setCostPrice(
+                              event.target.value.startsWith("-")
+                                ? ""
+                                : event.target.value
+                            );
+                            clearAddFieldError("costPrice");
+                          }}
+                          disabled={isAdding}
+                          placeholder="0.00"
+                          className="quick-add-input"
+                        />
+                        {addFieldErrors.costPrice && (
+                          <p className="quick-add-error">
+                            {addFieldErrors.costPrice}
+                          </p>
+                        )}
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                          Selling price
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          step="0.01"
+                          inputMode="decimal"
+                          value={sellingPrice}
+                          onChange={(event) => {
+                            setSellingPrice(
+                              event.target.value.startsWith("-")
+                                ? ""
+                                : event.target.value
+                            );
+                            clearAddFieldError("sellingPrice");
+                          }}
+                          disabled={isAdding}
+                          placeholder="0.00"
+                          className="quick-add-input"
+                        />
+                        {addFieldErrors.sellingPrice && (
+                          <p className="quick-add-error">
+                            {addFieldErrors.sellingPrice}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="quick-add-subsection">
+                    <p>Tracking codes</p>
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                          SKU
+                        </label>
+                        <input
+                          type="text"
+                          value={sku}
+                          onChange={(event) => setSku(event.target.value)}
+                          disabled={isAdding}
+                          autoCapitalize="characters"
+                          placeholder="e.g. FLOWER-RED-01"
+                          className="quick-add-input"
+                        />
+                      </div>
+                      <div>
+                        <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                          Barcode
+                        </label>
+                        <input
+                          type="text"
+                          value={barcode}
+                          onChange={(event) => setBarcode(event.target.value)}
+                          disabled={isAdding}
+                          autoComplete="off"
+                          spellCheck={false}
+                          placeholder="0012345678905"
+                          className="quick-add-input font-mono"
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="quick-add-subsection">
+                    <p>Notes</p>
+                    <label className="mb-1.5 block text-xs font-bold text-theme-secondary">
+                      Internal notes
+                    </label>
+                    <textarea
+                      value={notes}
+                      onChange={(event) => setNotes(event.target.value)}
+                      disabled={isAdding}
+                      placeholder="Add private details about this item..."
+                      className="quick-add-input min-h-[88px] resize-y"
+                    />
+                  </div>
+                </div>
+              </details>
+
               <div className="mt-2 flex flex-col gap-3 sm:flex-row">
                 {addError && (
-                  <div className="w-full rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
+                  <div className="w-full rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-theme-danger">
                     <p>{addError}</p>
 
                     {isLimitError && (
@@ -2052,7 +2499,7 @@ export default function InventoryPage() {
                           subscriptionUsage.subscription.plan,
                           "item-limit"
                         )}
-                        className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-slate-200"
+                        className="mt-3 inline-flex min-h-10 items-center justify-center rounded-xl bg-white px-4 py-2 text-sm font-black text-black transition hover:bg-slate-200"
                       >
                         {getUpgradeActionLabel(
                           subscriptionUsage.subscription.plan
@@ -2062,27 +2509,51 @@ export default function InventoryPage() {
                   </div>
                 )}
               </div>
+              </div>
 
-              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
+              <div className="quick-add-footer">
+                <Link
+                  href="/dashboard/add-item"
+                  onClick={(event) => {
+                    if (!quickAddHasDraft) return;
+                    const discard = window.confirm(
+                      "Open the full form and discard this quick add draft?"
+                    );
+                    if (!discard) event.preventDefault();
+                  }}
+                  className="quick-add-full-link"
+                >
+                  Open full form
+                </Link>
                 <button
                   type="button"
                   onClick={() => {
                     if (isAdding) return;
                     setIsModalOpen(false);
                     setAddError("");
+                    setAddFieldErrors({});
                     setImageError("");
                   }}
                   disabled={isAdding}
-                  className="flex-1 rounded-2xl border border-theme bg-theme-surface py-4 text-base font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+                  className="quick-add-secondary"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
+                  onClick={() => setAddCreateAnother(false)}
                   disabled={isAdding}
-                  className="flex-1 rounded-2xl bg-white py-4 text-base font-bold text-black transition hover:bg-slate-200 disabled:opacity-50"
+                  className="quick-add-primary"
                 >
-                  {isAdding ? "Saving..." : "Save Item"}
+                  {isAdding ? "Adding..." : "Add Item"}
+                </button>
+                <button
+                  type="submit"
+                  onClick={() => setAddCreateAnother(true)}
+                  disabled={isAdding}
+                  className="quick-add-split"
+                >
+                  Add & create another
                 </button>
               </div>
             </form>
@@ -2133,6 +2604,15 @@ export default function InventoryPage() {
           await fetchItems();
         }}
       />
+
+      {detailsItemId && (
+        <ItemDetailsSlideOver
+          itemId={detailsItemId}
+          returnTo={currentContext}
+          onClose={() => setDetailsItemId(null)}
+          onItemUpdated={handleSlideOverItemUpdated}
+        />
+      )}
 
       {/* Edit Item Modal */}
       {isEditModalOpen && selectedItem && (

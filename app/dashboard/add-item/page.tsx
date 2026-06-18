@@ -62,7 +62,7 @@ type FieldName =
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 const inputClassName =
-  "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60 sm:text-base";
+  "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 const errorInputClassName =
   "border-red-400/50 bg-red-500/[0.08] focus:border-red-300/70 focus:shadow-[0_0_0_4px_rgba(248,113,113,0.12)]";
 
@@ -608,14 +608,14 @@ export default function AddItemPage() {
   return (
     <div className="contents">
       <main>
-        <div className="mx-auto flex w-full max-w-[920px] flex-col gap-4">
-          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-3">
+          <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                   New product
                 </p>
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary">
                   Add Item
                 </h1>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted">
@@ -627,6 +627,7 @@ export default function AddItemPage() {
               <ContextBackButton
                 fallbackHref="/dashboard/inventory"
                 label={backLabel}
+                className="min-h-10 rounded-xl px-3.5 py-2 text-sm"
               />
             </div>
           </section>
@@ -637,13 +638,13 @@ export default function AddItemPage() {
             noValidate
             className="flex flex-col gap-3"
           >
-            <section className="rounded-[18px] border border-indigo-300/20 bg-indigo-500/10 px-4 py-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
+            <section className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3.5 py-2.5">
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
                   <p className="text-xs font-bold text-theme-secondary">
                     Current plan
                   </p>
-                  <p className="mt-0.5 text-lg font-black text-theme-primary">
+                  <p className="text-sm font-black text-theme-primary">
                     {usageLoading ? (
                       <span className="block h-8 w-28 animate-pulse rounded-2xl bg-theme-surface" />
                     ) : (
@@ -652,13 +653,13 @@ export default function AddItemPage() {
                   </p>
                 </div>
 
-                <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2 text-xs font-black text-theme-primary">
+                <div className="rounded-lg border border-theme bg-theme-inset px-2.5 py-1.5 text-xs font-black text-theme-primary">
                   {usageLoading ? "Checking usage..." : itemUsageText}
                 </div>
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_12px_36px_rgba(15,23,42,0.07)] sm:p-5">
+            <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_12px_34px_rgba(15,23,42,0.07)]">
               <SectionHeading
                 eyebrow="Step 1"
                 title="Basic Information"
@@ -667,7 +668,7 @@ export default function AddItemPage() {
 
               <div className="rounded-2xl border border-dashed border-indigo-300/25 bg-theme-inset p-3 transition hover:border-indigo-300/45">
                 <div className="grid grid-cols-1 gap-3 sm:grid-cols-[160px_1fr] sm:items-center">
-                  <label className="group flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-2xl border border-theme bg-theme-surface px-4 py-4 text-center transition hover:border-indigo-300/45 hover:bg-theme-hover">
+                  <label className="group flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-xl border border-theme bg-theme-surface px-4 py-4 text-center transition hover:border-indigo-300/45 hover:bg-theme-hover">
                     <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-300/25 bg-indigo-500/20 text-theme-accent transition group-hover:bg-indigo-500/30">
                       <UiIcon name="upload" className="h-5 w-5" />
                     </span>
@@ -675,7 +676,7 @@ export default function AddItemPage() {
                       Add product photo
                     </span>
                     <span className="mt-1 text-xs leading-5 text-theme-muted">
-                      JPG, PNG, or WebP · 5MB max
+                      JPG, PNG, or WebP - 5MB max
                     </span>
                     <input
                       type="file"
@@ -689,7 +690,7 @@ export default function AddItemPage() {
                     />
                   </label>
 
-                  <div className="min-h-[132px] rounded-2xl border border-theme bg-theme-inset p-3">
+                  <div className="min-h-[132px] rounded-xl border border-theme bg-theme-inset p-3">
                     {image && imagePreviewUrl ? (
                       <div className="grid h-full grid-cols-[96px_1fr] items-center gap-3">
                         <div className="relative aspect-square overflow-hidden rounded-xl bg-[#f4f0e8]">
@@ -755,7 +756,7 @@ export default function AddItemPage() {
                 </div>
 
                 {imageError && (
-                  <p className="mt-4 rounded-2xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
+                  <p className="mt-3 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
                     {imageError}
                   </p>
                 )}
@@ -838,7 +839,7 @@ export default function AddItemPage() {
               </div>
             </section>
 
-            <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_12px_36px_rgba(15,23,42,0.07)] sm:p-5">
+            <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_12px_34px_rgba(15,23,42,0.07)]">
               <SectionHeading
                 eyebrow="Step 2"
                 title="Stock"

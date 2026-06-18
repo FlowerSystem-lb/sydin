@@ -2,6 +2,15 @@
 
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type MouseEvent as ReactMouseEvent,
+} from "react";
 import UiIcon from "@/components/UiIcon";
 
 export interface CompactInventoryItem {
@@ -22,6 +31,9 @@ export default function InventoryItemCard({
   onAdjust,
   onEdit,
   onDelete,
+  onOpenDetails,
+  onHistory,
+  onCreateQrLabel,
   detailsHref,
 }: {
   item: CompactInventoryItem;
@@ -34,15 +46,107 @@ export default function InventoryItemCard({
   onAdjust: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onOpenDetails?: () => void;
+  onHistory?: () => void;
+  onCreateQrLabel?: () => void;
   detailsHref?: string;
 }) {
   const router = useRouter();
+  const menuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const resolvedDetailsHref =
     detailsHref || `/dashboard/inventory/${item.id}`;
 
-  const openDetails = () => {
+  const openDetails = useCallback(() => {
+    if (onOpenDetails) {
+      onOpenDetails();
+      return;
+    }
+
     router.push(resolvedDetailsHref);
+  }, [onOpenDetails, resolvedDetailsHref, router]);
+
+  const positionMenu = useCallback(() => {
+    const trigger = menuButtonRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const menuWidth = 232;
+    const menuHeight = 292;
+    const viewportPadding = 12;
+    const left = Math.min(
+      Math.max(rect.right - menuWidth, viewportPadding),
+      window.innerWidth - menuWidth - viewportPadding
+    );
+    const wouldClipBottom =
+      rect.bottom + menuHeight + viewportPadding > window.innerHeight;
+    const top = wouldClipBottom
+      ? Math.max(viewportPadding, rect.top - menuHeight - 8)
+      : rect.bottom + 8;
+
+    setMenuStyle({
+      left,
+      top,
+      width: menuWidth,
+    });
+  }, []);
+
+  const toggleMenu = (event: ReactMouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    positionMenu();
+    setMenuOpen((current) => !current);
   };
+
+  const closeMenu = useCallback(() => {
+    setMenuOpen(false);
+  }, []);
+
+  const runMenuAction = (action: () => void) => {
+    closeMenu();
+    action();
+  };
+
+  useEffect(() => {
+    if (!menuOpen) return;
+
+    positionMenu();
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+
+      if (
+        menuRef.current?.contains(target) ||
+        menuButtonRef.current?.contains(target)
+      ) {
+        return;
+      }
+
+      closeMenu();
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        closeMenu();
+        menuButtonRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("touchstart", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", closeMenu);
+    window.addEventListener("scroll", closeMenu, true);
+
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("touchstart", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", closeMenu);
+      window.removeEventListener("scroll", closeMenu, true);
+    };
+  }, [closeMenu, menuOpen, positionMenu]);
 
   return (
     <article
@@ -56,7 +160,7 @@ export default function InventoryItemCard({
           openDetails();
         }
       }}
-      className="group relative min-w-0 cursor-pointer overflow-visible rounded-[22px] border border-theme bg-theme-surface shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_18px_42px_rgba(67,56,202,0.12)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20"
+      className="group relative min-w-0 cursor-pointer overflow-visible rounded-[22px] border border-theme bg-theme-surface shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_18px_42px_rgba(67,56,202,0.12)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none"
     >
       <div className="relative aspect-[4/3] overflow-hidden rounded-t-[21px] border-b border-theme bg-[#f5f7fb]">
         {item.image ? (
@@ -66,7 +170,7 @@ export default function InventoryItemCard({
             fill
             loading="lazy"
             sizes="(min-width: 1536px) 20vw, (min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
-            className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.025]"
+            className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">
@@ -83,26 +187,34 @@ export default function InventoryItemCard({
           </span>
         )}
 
-        <details
-          className="group/menu absolute right-3 top-3"
-          onClick={(event) => event.stopPropagation()}
+        <button
+          ref={menuButtonRef}
+          type="button"
+          aria-label={`Actions for ${item.name}`}
+          aria-haspopup="menu"
+          aria-expanded={menuOpen}
+          onClick={toggleMenu}
           onKeyDown={(event) => event.stopPropagation()}
+          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-600 shadow-sm outline-none transition hover:bg-white hover:text-slate-950 focus-visible:ring-4 focus-visible:ring-indigo-400/20"
         >
-          <summary
-            aria-label={`Actions for ${item.name}`}
-            className="flex h-9 w-9 cursor-pointer list-none items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-600 shadow-sm outline-none transition hover:bg-white hover:text-slate-950 focus-visible:ring-4 focus-visible:ring-indigo-400/20 [&::-webkit-details-marker]:hidden"
-          >
-            <UiIcon name="more" className="h-5 w-5" />
-          </summary>
-          <div
-            role="menu"
-            className="absolute right-0 z-30 mt-2 w-44 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]"
-          >
+          <UiIcon name="more" className="h-5 w-5" />
+        </button>
+
+        {menuOpen &&
+          createPortal(
+            <div
+              ref={menuRef}
+              role="menu"
+              style={menuStyle}
+              onClick={(event) => event.stopPropagation()}
+              onKeyDown={(event) => event.stopPropagation()}
+              className="fixed z-[120] overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
+            >
             <button
               type="button"
               role="menuitem"
-              onClick={openDetails}
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+              onClick={() => runMenuAction(openDetails)}
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
             >
               <UiIcon name="file" className="h-4 w-4" />
               View details
@@ -110,8 +222,8 @@ export default function InventoryItemCard({
             <button
               type="button"
               role="menuitem"
-              onClick={onAdjust}
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+              onClick={() => runMenuAction(onAdjust)}
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
             >
               <UiIcon name="movement" className="h-4 w-4" />
               Adjust stock
@@ -119,24 +231,51 @@ export default function InventoryItemCard({
             <button
               type="button"
               role="menuitem"
-              onClick={onEdit}
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+              onClick={() => runMenuAction(onEdit)}
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
             >
               <UiIcon name="appearance" className="h-4 w-4" />
               Edit
             </button>
+            {(onHistory || onCreateQrLabel) && (
+              <div className="my-1 border-t border-slate-200" />
+            )}
+            {onHistory && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => runMenuAction(onHistory)}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+              >
+                <UiIcon name="clock" className="h-4 w-4" />
+                History
+              </button>
+            )}
+            {onCreateQrLabel && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => runMenuAction(onCreateQrLabel)}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+              >
+                <UiIcon name="qr" className="h-4 w-4" />
+                Create QR / Label
+              </button>
+            )}
+            <div className="my-1 border-t border-slate-200" />
             <button
               type="button"
               role="menuitem"
-              onClick={onDelete}
+              onClick={() => runMenuAction(onDelete)}
               disabled={deleting}
-              className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               <UiIcon name="trash" className="h-4 w-4" />
               {deleting ? "Deleting..." : "Delete"}
             </button>
-          </div>
-        </details>
+            </div>,
+            document.body
+          )}
       </div>
 
       <div className="p-4">
