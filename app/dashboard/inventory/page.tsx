@@ -62,7 +62,14 @@ import {
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { exportInventoryExcel } from "@/app/lib/inventoryExcelExport";
-import { exportInventoryPdf } from "@/app/lib/inventoryPdfExport";
+import {
+  exportInventoryPdf,
+  type InventoryPdfBrandingMode,
+  type InventoryPdfGroupBy,
+  type InventoryPdfIncludeSettings,
+  type InventoryPdfReportType,
+  type InventoryPdfScope,
+} from "@/app/lib/inventoryPdfExport";
 import {
   SCANNER_REQUEST_EVENT,
   SCANNER_REQUEST_STORAGE_KEY,
@@ -115,6 +122,13 @@ type ItemDetailsTarget = {
   tab: "details" | "activity" | "alerts";
 } | null;
 type BulkDialogMode = "edit" | "move" | "delete" | null;
+type PdfSettings = {
+  reportType: InventoryPdfReportType;
+  scope: InventoryPdfScope;
+  groupBy: InventoryPdfGroupBy;
+  brandingMode: InventoryPdfBrandingMode;
+  include: InventoryPdfIncludeSettings;
+};
 type LockedFeature = {
   feature: string;
   benefit: string;
@@ -124,6 +138,24 @@ type LockedFeature = {
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
+const PDF_SETTINGS_STORAGE_KEY = "sydin:inventory-pdf-settings";
+const DEFAULT_PDF_SETTINGS: PdfSettings = {
+  reportType: "summary",
+  scope: "all",
+  groupBy: "none",
+  brandingMode: "sydin",
+  include: {
+    images: true,
+    sku: true,
+    barcode: false,
+    category: true,
+    depot: true,
+    supplier: true,
+    minStock: true,
+    pricing: true,
+    notes: true,
+  },
+};
 
 const CSV_HEADERS = [
   "Name",
@@ -324,6 +356,10 @@ export default function InventoryPage() {
   const [pageError, setPageError] = useState("");
   const [pageNotice, setPageNotice] = useState("");
   const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [isPdfSettingsOpen, setIsPdfSettingsOpen] = useState(false);
+  const [pdfSettings, setPdfSettings] =
+    useState<PdfSettings>(DEFAULT_PDF_SETTINGS);
+  const [pdfExportStatus, setPdfExportStatus] = useState("");
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [isScannerStarting, setIsScannerStarting] = useState(false);
@@ -397,7 +433,7 @@ export default function InventoryPage() {
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
-  const canUseScanner = planCapabilities.scanner;
+  const canUseScanner = Boolean(planCapabilities.scanner);
   const canExportPdf = planCapabilities.pdfExport !== "none";
   const canExportExcel = planCapabilities.excelExport;
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
@@ -550,6 +586,21 @@ export default function InventoryPage() {
           window.localStorage.getItem("sydin:inventory-filters-open") ===
             "true"
         );
+        const storedPdfSettings = window.localStorage.getItem(
+          PDF_SETTINGS_STORAGE_KEY
+        );
+        if (storedPdfSettings) {
+          const parsed = JSON.parse(storedPdfSettings) as Partial<PdfSettings>;
+          setPdfSettings({
+            ...DEFAULT_PDF_SETTINGS,
+            ...parsed,
+            scope: "all",
+            include: {
+              ...DEFAULT_PDF_SETTINGS.include,
+              ...(parsed.include || {}),
+            },
+          });
+        }
       } catch {
         setFiltersOpen(false);
       }
@@ -604,6 +655,21 @@ export default function InventoryPage() {
       return next;
     });
   };
+
+  useEffect(() => {
+    try {
+      const storedSettings: Partial<PdfSettings> = {
+        ...pdfSettings,
+      };
+      delete storedSettings.scope;
+      window.localStorage.setItem(
+        PDF_SETTINGS_STORAGE_KEY,
+        JSON.stringify(storedSettings)
+      );
+    } catch {
+      // Export preferences are non-critical.
+    }
+  }, [pdfSettings]);
 
   const imagePreviewUrl = useMemo(
     () => (image ? URL.createObjectURL(image) : ""),
@@ -1328,7 +1394,40 @@ export default function InventoryPage() {
     }
   };
 
-  const exportInventoryReportPdf = async (itemsToExport = items) => {
+  const getPdfScopeItems = (scope: InventoryPdfScope) => {
+    if (scope === "selected") return selectedItems;
+    if (scope === "filtered") return visibleItems;
+    return items;
+  };
+
+  const getPdfScopeLabel = (scope: InventoryPdfScope, itemCount: number) => {
+    if (scope === "selected") {
+      return `${itemCount} selected item${itemCount === 1 ? "" : "s"}`;
+    }
+
+    if (scope === "filtered") {
+      const parts = [
+        search.trim() ? `Search: ${search.trim()}` : "",
+        depotFilter !== "all"
+          ? activeFilterChips.find((chip) => chip.label.startsWith("Depot:"))
+              ?.label || "Depot filter"
+          : "",
+        categoryFilter !== "all"
+          ? activeFilterChips.find((chip) => chip.label.startsWith("Category:"))
+              ?.label || "Category filter"
+          : "",
+        stockFilter === "low" ? "Low-stock items" : "",
+      ].filter(Boolean);
+
+      return parts.length > 0
+        ? parts.join(" | ")
+        : "Current inventory filters";
+    }
+
+    return "All inventory";
+  };
+
+  const openPdfSettings = (scope: InventoryPdfScope = "all") => {
     if (!canExportPdf) {
       setLockedFeature({
         feature: "PDF inventory export",
@@ -1340,14 +1439,58 @@ export default function InventoryPage() {
       return;
     }
 
-    if (loadingItems || itemsToExport.length === 0 || isExportingPdf) return;
+    setPdfExportStatus("");
+    setPdfSettings((current) => ({
+      ...current,
+      scope,
+    }));
+    setIsPdfSettingsOpen(true);
+  };
+
+  const updatePdfInclude = (
+    key: keyof InventoryPdfIncludeSettings,
+    value: boolean
+  ) => {
+    setPdfSettings((current) => ({
+      ...current,
+      include: {
+        ...current.include,
+        [key]: value,
+      },
+    }));
+  };
+
+  const exportInventoryReportPdf = async (
+    overrideScope?: InventoryPdfScope
+  ) => {
+    if (!canExportPdf) {
+      setLockedFeature({
+        feature: "PDF inventory export",
+        benefit:
+          "Create a polished, branded PDF inventory report for sharing and review.",
+        requiredPlan: "Standard",
+        source: "pdf-export",
+      });
+      return;
+    }
+
+    const resolvedScope = overrideScope || pdfSettings.scope;
+    const itemsToExport = getPdfScopeItems(resolvedScope);
+
+    if (loadingItems || isExportingPdf) return;
+
+    if (resolvedScope === "selected" && itemsToExport.length === 0) {
+      setPdfExportStatus("Select one or more items before exporting.");
+      return;
+    }
 
     try {
       setIsExportingPdf(true);
       setPageError("");
       setPageNotice("");
+      setPdfExportStatus("Preparing PDF...");
 
-      await exportInventoryPdf({
+      const filename = await exportInventoryPdf({
         items: itemsToExport.map((item) => ({
           id: item.id,
           name: item.name,
@@ -1366,26 +1509,52 @@ export default function InventoryPage() {
           depotLabel: formatDepotLabel(
             depots.find((depot) => depot.id === item.depot_id)
           ),
+          supplierLabel:
+            suppliers.find((supplier) => supplier.id === item.supplier_id)
+              ?.name || "",
         })),
         branding: {
           businessName:
             businessSettings.business_name ||
             DEFAULT_BUSINESS_SETTINGS.business_name,
           businessLogoUrl: businessSettings.business_logo_url,
-          contactEmail: businessSettings.contact_email,
-          contactPhone: businessSettings.contact_phone,
-          contactWebsite: businessSettings.contact_website,
+          contactEmail:
+            planCapabilities.publicContactBranding &&
+            businessSettings.show_contact_publicly
+              ? businessSettings.contact_email
+              : "",
+          contactPhone:
+            planCapabilities.publicContactBranding &&
+            businessSettings.show_contact_publicly
+              ? businessSettings.contact_phone
+              : "",
+          contactWebsite:
+            planCapabilities.publicContactBranding &&
+            businessSettings.show_contact_publicly
+              ? businessSettings.contact_website
+              : "",
         },
         lowStockThreshold: effectiveLowStockThreshold,
         currencyCode: editCurrencyCode,
+        reportType: pdfSettings.reportType,
+        scope: resolvedScope,
+        scopeLabel: getPdfScopeLabel(resolvedScope, itemsToExport.length),
+        groupBy: pdfSettings.groupBy,
+        include: pdfSettings.include,
+        brandingMode: pdfSettings.brandingMode,
+        allowBusinessLogo: planCapabilities.customBusinessLogo,
+        onProgress: setPdfExportStatus,
       });
 
       setPageNotice(
-        `PDF report exported for ${itemsToExport.length} inventory item${
+        `${filename} exported for ${itemsToExport.length} inventory item${
           itemsToExport.length === 1 ? "" : "s"
         }.`
       );
+      setPdfExportStatus("PDF downloaded.");
+      setIsPdfSettingsOpen(false);
     } catch {
+      setPdfExportStatus("");
       setPageError("We could not export your PDF report. Please try again.");
     } finally {
       setIsExportingPdf(false);
@@ -1956,7 +2125,7 @@ export default function InventoryPage() {
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
   const exportDisabled = loadingItems || items.length === 0;
   const pdfExportDisabled =
-    usageLoading || (canExportPdf && (exportDisabled || isExportingPdf));
+    usageLoading || (canExportPdf && (loadingItems || isExportingPdf));
   const excelExportDisabled =
     usageLoading || (canExportExcel && (exportDisabled || isExportingExcel));
   const totalQuantity = items.reduce(
@@ -1969,6 +2138,20 @@ export default function InventoryPage() {
       .map((item) => item.depot_id)
       .filter((depotId): depotId is number => typeof depotId === "number")
   ).size;
+  const pdfScopeItemCount = getPdfScopeItems(pdfSettings.scope).length;
+  const canSelectPdfScope = selectedItems.length > 0;
+  const businessLogoAvailable = Boolean(
+    businessSettings.business_logo_url && planCapabilities.customBusinessLogo
+  );
+  const pdfReportTypeOptions: {
+    value: InventoryPdfReportType;
+    label: string;
+  }[] = [
+    { value: "summary", label: "Inventory Summary" },
+    { value: "detailed", label: "Detailed Inventory" },
+    { value: "low-stock", label: "Low Stock Report" },
+    { value: "valuation", label: "Inventory Valuation" },
+  ];
 
   return (
     <div className="contents">
@@ -2048,7 +2231,9 @@ export default function InventoryPage() {
                     </button>
                     <button
                       type="button"
-                      onClick={() => void exportInventoryReportPdf()}
+                      onClick={() =>
+                        openPdfSettings(hasActiveFilters ? "filtered" : "all")
+                      }
                       disabled={pdfExportDisabled}
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
                     >
@@ -2339,7 +2524,7 @@ export default function InventoryPage() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => void exportInventoryReportPdf(selectedItems)}
+                        onClick={() => openPdfSettings("selected")}
                         disabled={selectedItems.length === 0 || isExportingPdf}
                         className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
                       >
@@ -3104,6 +3289,187 @@ export default function InventoryPage() {
             </form>
           </div>
         </div>
+      )}
+
+      {isPdfSettingsOpen && (
+        <DialogShell
+          title="Export inventory PDF"
+          eyebrow="Business report"
+          description="Choose the report format, scope, branding, and fields for this PDF."
+          onClose={() => {
+            if (!isExportingPdf) setIsPdfSettingsOpen(false);
+          }}
+          closeDisabled={isExportingPdf}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setIsPdfSettingsOpen(false)}
+                disabled={isExportingPdf}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => void exportInventoryReportPdf()}
+                disabled={
+                  isExportingPdf ||
+                  (pdfSettings.scope === "selected" && !canSelectPdfScope)
+                }
+                loading={isExportingPdf}
+                loadingLabel="Generating..."
+              >
+                Generate PDF
+              </Button>
+            </>
+          }
+        >
+          <div className="grid gap-4" aria-live="polite">
+            {pdfExportStatus && (
+              <div className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-theme-accent">
+                {pdfExportStatus}
+              </div>
+            )}
+
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Report type
+                <Select
+                  value={pdfSettings.reportType}
+                  onChange={(value) =>
+                    setPdfSettings((current) => ({
+                      ...current,
+                      reportType: value as InventoryPdfReportType,
+                    }))
+                  }
+                  options={pdfReportTypeOptions}
+                />
+              </label>
+
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Scope
+                <Select
+                  value={pdfSettings.scope}
+                  onChange={(value) => {
+                    if (value === "selected" && !canSelectPdfScope) {
+                      setPdfExportStatus(
+                        "Select one or more items before using selected-items scope."
+                      );
+                      return;
+                    }
+
+                    setPdfSettings((current) => ({
+                      ...current,
+                      scope: value as InventoryPdfScope,
+                    }));
+                    setPdfExportStatus("");
+                  }}
+                  options={[
+                    { value: "all", label: `All inventory (${items.length})` },
+                    {
+                      value: "filtered",
+                      label: `Current filters (${visibleItems.length})`,
+                    },
+                    ...(canSelectPdfScope
+                      ? [
+                          {
+                            value: "selected",
+                            label: `Selected items (${selectedItems.length})`,
+                          },
+                        ]
+                      : []),
+                  ]}
+                />
+                <span className="text-xs font-semibold text-theme-subtle">
+                  {pdfScopeItemCount} item
+                  {pdfScopeItemCount === 1 ? "" : "s"} in this export
+                </span>
+              </label>
+
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Group by
+                <Select
+                  value={pdfSettings.groupBy}
+                  onChange={(value) =>
+                    setPdfSettings((current) => ({
+                      ...current,
+                      groupBy: value as InventoryPdfGroupBy,
+                    }))
+                  }
+                  options={[
+                    { value: "none", label: "None" },
+                    { value: "category", label: "Category" },
+                    { value: "depot", label: "Depot / location" },
+                  ]}
+                />
+              </label>
+
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Branding
+                <Select
+                  value={pdfSettings.brandingMode}
+                  onChange={(value) =>
+                    setPdfSettings((current) => ({
+                      ...current,
+                      brandingMode: value as InventoryPdfBrandingMode,
+                    }))
+                  }
+                  options={[
+                    {
+                      value: "business",
+                      label: businessLogoAvailable
+                        ? "Business logo"
+                        : "Business logo (falls back to SydIN)",
+                    },
+                    { value: "sydin", label: "SydIN logo" },
+                    { value: "none", label: "No logo" },
+                  ]}
+                />
+              </label>
+            </div>
+
+            <fieldset className="rounded-2xl border border-theme bg-theme-inset p-3">
+              <legend className="px-1 text-sm font-black text-theme-primary">
+                Include
+              </legend>
+              <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                {(
+                  [
+                    ["images", "Product images"],
+                    ["sku", "SKU / item code"],
+                    ["barcode", "Barcode"],
+                    ["category", "Category"],
+                    ["depot", "Depot / location"],
+                    ["supplier", "Supplier"],
+                    ["minStock", "Minimum stock"],
+                    ["pricing", "Pricing"],
+                    ["notes", "Notes"],
+                  ] as const
+                ).map(([key, label]) => (
+                  <label
+                    key={key}
+                    className="flex items-center gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2 text-sm font-semibold text-theme-primary"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={pdfSettings.include[key]}
+                      onChange={(event) =>
+                        updatePdfInclude(key, event.target.checked)
+                      }
+                      className="h-4 w-4 accent-cyan-600"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <p className="text-xs leading-5 text-theme-subtle">
+              Name, image, SKU, barcode, prices, quantity, category, depot,
+              supplier, notes, and stock status come from the loaded inventory
+              dataset. Internal private IDs are not printed.
+            </p>
+          </div>
+        </DialogShell>
       )}
 
       {bulkDialogMode === "edit" && (
