@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -117,6 +124,7 @@ type DepotFilter = "all" | "unassigned" | string;
 type CategoryFilter = "all" | "uncategorized" | string;
 type StockFilter = "all" | "low";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
+type ViewMode = "grid" | "list" | "table";
 type ItemDetailsTarget = {
   id: number;
   tab: "details" | "activity" | "alerts";
@@ -178,6 +186,79 @@ const CSV_HEADERS = [
   "Barcode",
   "Supplier Name",
 ];
+
+function InventoryActionMenu({
+  label,
+  buttonClassName,
+  menuClassName,
+  children,
+}: {
+  label: string;
+  buttonClassName: string;
+  menuClassName?: string;
+  children: ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  const menuRootRef = useRef<HTMLDivElement | null>(null);
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: MouseEvent | TouchEvent) => {
+      const target = event.target as Node;
+      if (menuRootRef.current?.contains(target)) return;
+      setOpen(false);
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return;
+      setOpen(false);
+      buttonRef.current?.focus();
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("touchstart", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("touchstart", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={menuRootRef} className="relative">
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        onClick={() => setOpen((current) => !current)}
+        className={buttonClassName}
+      >
+        <UiIcon name="more" />
+        {label}
+      </button>
+      {open && (
+        <div
+          role="menu"
+          onClick={(event) => {
+            const action = (event.target as HTMLElement).closest("a,button");
+            if (action) setOpen(false);
+          }}
+          className={
+            menuClassName ||
+            "absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]"
+          }
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
 
 function escapeCsvValue(value: string | number | null | undefined) {
   const stringValue = String(value ?? "");
@@ -315,6 +396,7 @@ export default function InventoryPage() {
     useState<CategoryFilter>("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(
@@ -325,6 +407,8 @@ export default function InventoryPage() {
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [bulkError, setBulkError] = useState("");
   const [bulkNotice, setBulkNotice] = useState("");
+  const [bulkConfirmed, setBulkConfirmed] = useState(false);
+  const [bulkDeleteConfirmed, setBulkDeleteConfirmed] = useState(false);
   const [bulkCategoryMode, setBulkCategoryMode] =
     useState<"keep" | "set" | "clear">("keep");
   const [bulkCategoryId, setBulkCategoryId] = useState("");
@@ -633,6 +717,15 @@ export default function InventoryPage() {
         requestedSort === "quantity-desc"
       ) {
         setSortBy(requestedSort);
+      }
+
+      const requestedView = params.get("view");
+      if (
+        requestedView === "grid" ||
+        requestedView === "list" ||
+        requestedView === "table"
+      ) {
+        setViewMode(requestedView);
       }
 
       setInventoryContextReady(true);
@@ -1707,12 +1800,49 @@ export default function InventoryPage() {
     return changes;
   };
 
-  const applyBulkEdit = async () => {
+  const getBulkClearWarnings = () =>
+    [
+      bulkCategoryMode === "clear" ? "category" : "",
+      bulkDepotMode === "clear" ? "depot/location" : "",
+      bulkSupplierMode === "clear" ? "supplier" : "",
+      bulkMinStockMode === "clear" ? "minimum stock threshold" : "",
+      bulkCostMode === "clear" ? "cost price" : "",
+      bulkSellingMode === "clear" ? "selling price" : "",
+    ].filter(Boolean);
+
+  const getBulkDestinationSummary = () =>
+    [
+      bulkCategoryMode === "set"
+        ? `Category: ${
+            categories.find((category) => String(category.id) === bulkCategoryId)
+              ?.name || "Uncategorized"
+          }`
+        : bulkCategoryMode === "clear"
+          ? "Category: clear value"
+          : "",
+      bulkDepotMode === "set"
+        ? `Depot/location: ${
+            formatDepotLabel(
+              activeDepots.find((depot) => String(depot.id) === bulkDepotId) ||
+                null
+            ) || "Unassigned"
+          }`
+        : bulkDepotMode === "clear"
+          ? "Depot/location: clear value"
+          : "",
+    ].filter(Boolean);
+
+  const applyBulkEdit = async (action: "edit" | "move" = "edit") => {
     if (bulkSubmitting || selectedItems.length === 0) return;
 
     const changes = getBulkChangeSummary();
     if (changes.length === 0) {
       setBulkError("Choose at least one field to update.");
+      return;
+    }
+
+    if (!bulkConfirmed) {
+      setBulkError("Review the summary and confirm before applying changes.");
       return;
     }
 
@@ -1771,12 +1901,12 @@ export default function InventoryPage() {
 
       await fetchItems();
       setBulkNotice(
-        `Updated ${successCount} item${successCount === 1 ? "" : "s"}${
+        `${action === "move" ? "Moved" : "Updated"} ${successCount} item${successCount === 1 ? "" : "s"}${
           failureCount ? `; ${failureCount} failed` : ""
         }.`
       );
       setPageNotice(
-        `Bulk edit updated ${successCount} item${
+        `${action === "move" ? "Move updated" : "Bulk edit updated"} ${successCount} item${
           successCount === 1 ? "" : "s"
         }.`
       );
@@ -1790,6 +1920,11 @@ export default function InventoryPage() {
 
   const applyBulkDelete = async () => {
     if (bulkSubmitting || selectedItems.length === 0) return;
+
+    if (!bulkDeleteConfirmed) {
+      setBulkError("Confirm that you understand selected items will be deleted.");
+      return;
+    }
 
     try {
       setBulkSubmitting(true);
@@ -1852,6 +1987,9 @@ export default function InventoryPage() {
   };
 
   const activeDepots = depots.filter((depot) => depot.is_active);
+  const bulkChangeSummary = getBulkChangeSummary();
+  const bulkClearWarnings = getBulkClearWarnings();
+  const bulkDestinationSummary = getBulkDestinationSummary();
   const quickAddHasDraft = Boolean(
     name.trim() ||
       sku.trim() ||
@@ -1949,6 +2087,12 @@ export default function InventoryPage() {
     setSortBy("newest");
   };
 
+  const clearInventoryFilters = () => {
+    setDepotFilter("all");
+    setCategoryFilter("all");
+    setStockFilter("all");
+  };
+
   const toggleSelectionMode = () => {
     setSelectionMode((current) => {
       const next = !current;
@@ -1984,6 +2128,8 @@ export default function InventoryPage() {
   const resetBulkDraft = () => {
     setBulkError("");
     setBulkNotice("");
+    setBulkConfirmed(false);
+    setBulkDeleteConfirmed(false);
     setBulkCategoryMode("keep");
     setBulkCategoryId("");
     setBulkDepotMode("keep");
@@ -2091,9 +2237,10 @@ export default function InventoryPage() {
     if (categoryFilter !== "all") params.set("category", categoryFilter);
     if (stockFilter !== "all") params.set("stock", stockFilter);
     if (sortBy !== "newest") params.set("sort", sortBy);
+    if (viewMode !== "grid") params.set("view", viewMode);
     const query = params.toString();
     return `/dashboard/inventory${query ? `?${query}` : ""}`;
-  }, [categoryFilter, depotFilter, search, sortBy, stockFilter]);
+  }, [categoryFilter, depotFilter, search, sortBy, stockFilter, viewMode]);
 
   useEffect(() => {
     if (!inventoryContextReady) return;
@@ -2156,7 +2303,11 @@ export default function InventoryPage() {
   return (
     <div className="contents">
       <main>
-        <div className="mx-auto flex w-full max-w-[1600px] flex-col gap-4">
+        <div
+          className={`mx-auto flex w-full max-w-[1600px] flex-col gap-4 ${
+            selectionMode ? "pb-36 sm:pb-0" : ""
+          }`}
+        >
           <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
@@ -2203,14 +2354,13 @@ export default function InventoryPage() {
                   )}
                 </button>
 
-                <details className="group relative">
-                  <summary className="action-button cursor-pointer list-none px-4 py-2.5 text-sm [&::-webkit-details-marker]:hidden">
-                    <UiIcon name="more" />
-                    More
-                  </summary>
-                  <div className="absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+                <InventoryActionMenu
+                  label="More"
+                  buttonClassName="action-button px-4 py-2.5 text-sm"
+                >
                     <Link
                       href="/dashboard/inventory/import"
+                      role="menuitem"
                       className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-slate-50"
                     >
                       <UiIcon name="upload" className="h-4 w-4" />
@@ -2222,6 +2372,7 @@ export default function InventoryPage() {
                     </Link>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => exportInventoryCsv()}
                       disabled={exportDisabled}
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
@@ -2231,6 +2382,7 @@ export default function InventoryPage() {
                     </button>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() =>
                         openPdfSettings(hasActiveFilters ? "filtered" : "all")
                       }
@@ -2246,6 +2398,7 @@ export default function InventoryPage() {
                     </button>
                     <button
                       type="button"
+                      role="menuitem"
                       onClick={() => void exportInventoryReportExcel()}
                       disabled={excelExportDisabled}
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
@@ -2257,8 +2410,7 @@ export default function InventoryPage() {
                           ? "Exporting Excel..."
                           : "Export Excel"}
                     </button>
-                  </div>
-                </details>
+                </InventoryActionMenu>
               </div>
             </div>
           </section>
@@ -2359,6 +2511,16 @@ export default function InventoryPage() {
                       { value: "quantity-desc", label: "Quantity high-low" },
                     ]}
                   />
+                  <Select
+                    ariaLabel="View"
+                    value={viewMode}
+                    onChange={(value) => setViewMode(value as ViewMode)}
+                    options={[
+                      { value: "grid", label: "Grid view" },
+                      { value: "list", label: "List view" },
+                      { value: "table", label: "Table view" },
+                    ]}
+                  />
                   <button
                     type="button"
                     onClick={toggleSelectionMode}
@@ -2439,6 +2601,23 @@ export default function InventoryPage() {
                   />
                 </div>
 
+                <div className="flex gap-2 sm:col-span-3 sm:justify-end">
+                  <button
+                    type="button"
+                    onClick={clearInventoryFilters}
+                    disabled={!activeFilterCount}
+                    className="min-h-10 flex-1 rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+                  >
+                    Clear
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setFiltersOpen(false)}
+                    className="min-h-10 flex-1 rounded-xl bg-white px-3 py-2 text-xs font-black text-black transition hover:bg-slate-200 sm:flex-none"
+                  >
+                    Apply
+                  </button>
+                </div>
               </div>
               )}
             </div>
@@ -2446,12 +2625,13 @@ export default function InventoryPage() {
 
           {selectionMode && (
             <section
-              className="sticky top-2 z-20 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_14px_36px_rgba(15,23,42,0.12)]"
+              className="fixed inset-x-3 bottom-3 z-40 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:top-2 sm:bottom-auto sm:z-20 sm:shadow-[0_14px_36px_rgba(15,23,42,0.12)]"
               aria-live="polite"
             >
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap items-center gap-2">
                   <p className="rounded-xl bg-cyan-500/10 px-3 py-2 text-sm font-black text-theme-accent">
+                    <span className="sr-only">Selected inventory item count: </span>
                     {selectedItems.length} selected
                   </p>
                   {hiddenSelectedCount > 0 && (
@@ -2509,13 +2689,14 @@ export default function InventoryPage() {
                   >
                     Create labels
                   </button>
-                  <details className="relative">
-                    <summary className="cursor-pointer list-none rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary [&::-webkit-details-marker]:hidden">
-                      More
-                    </summary>
-                    <div className="absolute right-0 z-30 mt-2 w-48 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]">
+                  <InventoryActionMenu
+                    label="More"
+                    buttonClassName="inline-flex items-center gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover"
+                    menuClassName="absolute bottom-full right-0 z-50 mb-2 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)] sm:bottom-auto sm:top-full sm:mb-0 sm:mt-2"
+                  >
                       <button
                         type="button"
+                        role="menuitem"
                         onClick={() => exportInventoryCsv(selectedItems)}
                         disabled={selectedItems.length === 0}
                         className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
@@ -2524,6 +2705,7 @@ export default function InventoryPage() {
                       </button>
                       <button
                         type="button"
+                        role="menuitem"
                         onClick={() => openPdfSettings("selected")}
                         disabled={selectedItems.length === 0 || isExportingPdf}
                         className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
@@ -2532,22 +2714,32 @@ export default function InventoryPage() {
                       </button>
                       <button
                         type="button"
+                        role="menuitem"
                         onClick={() => void exportInventoryReportExcel(selectedItems)}
                         disabled={selectedItems.length === 0 || isExportingExcel}
                         className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
                       >
-                        Export selected Excel
+                          Export selected Excel
                       </button>
                       <button
                         type="button"
+                        role="menuitem"
+                        onClick={clearSelection}
+                        disabled={selectedItems.length === 0}
+                        className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Clear selection
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
                         onClick={() => openBulkDialog("delete")}
                         disabled={selectedItems.length === 0}
                         className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
                       >
-                        Delete selected
+                          Delete selected
                       </button>
-                    </div>
-                  </details>
+                  </InventoryActionMenu>
                 </div>
               </div>
             </section>
@@ -2565,7 +2757,7 @@ export default function InventoryPage() {
                 </div>
               ))}
             </div>
-          ) : (
+          ) : viewMode === "grid" ? (
             <div className="grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
               {visibleItems.map((item) => (
                 <InventoryItemCard
@@ -2604,6 +2796,281 @@ export default function InventoryPage() {
                 />
               ))}
             </div>
+          ) : viewMode === "list" ? (
+            <div className="grid gap-2">
+              {visibleItems.map((item) => {
+                const selected = selectedItemIds.has(item.id);
+                const quantityLabel = getInventoryQuantityLabel(
+                  item.quantity,
+                  item.unit_type,
+                  item.custom_unit_label
+                );
+                const depot = getDepotForItem(item);
+
+                return (
+                  <div
+                    key={item.id}
+                    role={selectionMode ? "checkbox" : "button"}
+                    tabIndex={0}
+                    aria-checked={selectionMode ? selected : undefined}
+                    aria-label={`${selectionMode ? "Select" : "View"} ${item.name}`}
+                    onClick={() =>
+                      selectionMode
+                        ? toggleItemSelection(item.id)
+                        : setDetailsItem({ id: item.id, tab: "details" })
+                    }
+                    onKeyDown={(event) => {
+                      if (event.key !== "Enter" && event.key !== " ") return;
+                      event.preventDefault();
+                      if (selectionMode) {
+                        toggleItemSelection(item.id);
+                        return;
+                      }
+                      setDetailsItem({ id: item.id, tab: "details" });
+                    }}
+                    className={`grid cursor-pointer grid-cols-[auto_3.25rem_minmax(0,1fr)] items-center gap-3 rounded-2xl border bg-theme-surface p-3 text-left shadow-[0_8px_24px_rgba(15,23,42,0.06)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_3.5rem_minmax(0,1fr)_auto] ${
+                      selected
+                        ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/30"
+                        : "border-theme"
+                    }`}
+                  >
+                    {selectionMode ? (
+                      <input
+                        type="checkbox"
+                        checked={selected}
+                        onChange={() => toggleItemSelection(item.id)}
+                        onClick={(event) => event.stopPropagation()}
+                        aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
+                        className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                      />
+                    ) : (
+                      <span className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    <div className="relative h-12 w-12 overflow-hidden rounded-xl border border-theme bg-theme-inset">
+                      {item.image ? (
+                        <Image
+                          src={item.image}
+                          alt=""
+                          fill
+                          sizes="48px"
+                          className="object-contain p-1.5"
+                        />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-theme-subtle">
+                          <UiIcon name="box" className="h-5 w-5" />
+                        </span>
+                      )}
+                    </div>
+                    <div className="min-w-0">
+                      <div className="flex min-w-0 flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-black text-theme-primary">
+                          {item.name}
+                        </p>
+                        {isItemLowStock(item) && (
+                          <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[11px] font-bold text-red-600">
+                            Low
+                          </span>
+                        )}
+                      </div>
+                      <p className="mt-1 truncate text-xs font-semibold text-theme-muted">
+                        {[item.item_code || item.sku, getCategoryLabel(item), depot ? formatDepotLabel(depot) : ""]
+                          .filter(Boolean)
+                          .join(" | ")}
+                      </p>
+                    </div>
+                    <div className="col-span-3 flex items-center justify-between gap-2 sm:col-span-1 sm:justify-end">
+                      <span className="rounded-xl border border-theme bg-theme-inset px-2.5 py-1.5 text-xs font-black text-theme-primary">
+                        {quantityLabel}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          setDetailsItem({ id: item.id, tab: "activity" });
+                        }}
+                        className="rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover"
+                      >
+                        Activity
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <>
+              <div className="grid gap-2 md:hidden">
+                {visibleItems.map((item) => {
+                  const selected = selectedItemIds.has(item.id);
+                  return (
+                    <div
+                      key={item.id}
+                      role={selectionMode ? "checkbox" : "button"}
+                      tabIndex={0}
+                      aria-checked={selectionMode ? selected : undefined}
+                      onClick={() =>
+                        selectionMode
+                          ? toggleItemSelection(item.id)
+                          : setDetailsItem({ id: item.id, tab: "details" })
+                      }
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") return;
+                        event.preventDefault();
+                        if (selectionMode) {
+                          toggleItemSelection(item.id);
+                          return;
+                        }
+                        setDetailsItem({ id: item.id, tab: "details" });
+                      }}
+                      className={`flex items-center gap-3 rounded-2xl border bg-theme-surface p-3 text-left ${
+                        selected
+                          ? "border-cyan-300 bg-cyan-500/[0.08]"
+                          : "border-theme"
+                      }`}
+                    >
+                      {selectionMode && (
+                        <input
+                          type="checkbox"
+                          checked={selected}
+                          onChange={() => toggleItemSelection(item.id)}
+                          onClick={(event) => event.stopPropagation()}
+                          aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
+                          className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+                        />
+                      )}
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-black text-theme-primary">
+                          {item.name}
+                        </span>
+                        <span className="block truncate text-xs font-semibold text-theme-muted">
+                          {getCategoryLabel(item)}
+                        </span>
+                      </span>
+                      <span className="text-xs font-black text-theme-primary">
+                        {getInventoryQuantityLabel(
+                          item.quantity,
+                          item.unit_type,
+                          item.custom_unit_label
+                        )}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:block">
+                <div className="overflow-x-auto">
+                  <table className="min-w-full table-fixed text-left text-sm">
+                    <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                      <tr>
+                        <th className="w-12 px-4 py-3">
+                          <span className="sr-only">Select</span>
+                        </th>
+                        <th className="px-4 py-3">Item</th>
+                        <th className="px-4 py-3">Category</th>
+                        <th className="px-4 py-3">Depot</th>
+                        <th className="px-4 py-3 text-right">Quantity</th>
+                        <th className="px-4 py-3 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-[var(--border-divider)]">
+                      {visibleItems.map((item) => {
+                        const selected = selectedItemIds.has(item.id);
+                        const depot = getDepotForItem(item);
+                        return (
+                          <tr
+                            key={item.id}
+                            tabIndex={0}
+                            aria-selected={selectionMode ? selected : undefined}
+                            onClick={() =>
+                              selectionMode
+                                ? toggleItemSelection(item.id)
+                                : setDetailsItem({ id: item.id, tab: "details" })
+                            }
+                            onKeyDown={(event) => {
+                              if (event.key !== "Enter" && event.key !== " ") return;
+                              event.preventDefault();
+                              if (selectionMode) {
+                                toggleItemSelection(item.id);
+                                return;
+                              }
+                              setDetailsItem({ id: item.id, tab: "details" });
+                            }}
+                            className={`cursor-pointer transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 ${
+                              selected ? "bg-cyan-500/[0.08]" : ""
+                            }`}
+                          >
+                            <td className="px-4 py-3">
+                              {selectionMode && (
+                                <input
+                                  type="checkbox"
+                                  checked={selected}
+                                  onChange={() => toggleItemSelection(item.id)}
+                                  onClick={(event) => event.stopPropagation()}
+                                  aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
+                                  className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                                />
+                              )}
+                            </td>
+                            <td className="px-4 py-3">
+                              <div className="flex min-w-0 items-center gap-3">
+                                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-theme bg-theme-inset">
+                                  {item.image ? (
+                                    <Image
+                                      src={item.image}
+                                      alt=""
+                                      fill
+                                      sizes="40px"
+                                      className="object-contain p-1"
+                                    />
+                                  ) : (
+                                    <span className="flex h-full items-center justify-center text-theme-subtle">
+                                      <UiIcon name="box" className="h-4 w-4" />
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate font-black text-theme-primary">
+                                    {item.name}
+                                  </p>
+                                  <p className="truncate text-xs font-semibold text-theme-muted">
+                                    {item.item_code || item.sku || "Inventory item"}
+                                  </p>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-theme-secondary">
+                              {getCategoryLabel(item)}
+                            </td>
+                            <td className="px-4 py-3 text-theme-secondary">
+                              {depot ? formatDepotLabel(depot) : "Unassigned"}
+                            </td>
+                            <td className="px-4 py-3 text-right font-black text-theme-primary">
+                              {getInventoryQuantityLabel(
+                                item.quantity,
+                                item.unit_type,
+                                item.custom_unit_label
+                              )}
+                            </td>
+                            <td className="px-4 py-3 text-right">
+                              <button
+                                type="button"
+                                onClick={(event) => {
+                                  event.stopPropagation();
+                                  setDetailsItem({ id: item.id, tab: "activity" });
+                                }}
+                                className="rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover"
+                              >
+                                Activity
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </>
           )}
 
           {/* Empty State */}
@@ -3494,7 +3961,11 @@ export default function InventoryPage() {
               </Button>
               <Button
                 onClick={() => void applyBulkEdit()}
-                disabled={bulkSubmitting || selectedItems.length === 0}
+                disabled={
+                  bulkSubmitting ||
+                  selectedItems.length === 0 ||
+                  !bulkConfirmed
+                }
                 loading={bulkSubmitting}
                 loadingLabel="Applying..."
               >
@@ -3514,6 +3985,38 @@ export default function InventoryPage() {
                 {bulkNotice}
               </div>
             )}
+
+            <div className="rounded-2xl border border-theme bg-theme-inset p-3 text-sm text-theme-secondary">
+              <p className="font-black text-theme-primary">
+                Review before applying
+              </p>
+              <p className="mt-1">
+                {selectedItems.length} selected item
+                {selectedItems.length === 1 ? "" : "s"} will be updated.
+              </p>
+              <p className="mt-2 font-semibold">
+                Changes:{" "}
+                {bulkChangeSummary.length > 0
+                  ? bulkChangeSummary.join(", ")
+                  : "Choose fields below"}
+              </p>
+              {bulkClearWarnings.length > 0 && (
+                <p className="mt-2 rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
+                  Clearing: {bulkClearWarnings.join(", ")}.
+                </p>
+              )}
+              <label className="mt-3 flex items-start gap-2 text-xs font-bold text-theme-primary">
+                <input
+                  type="checkbox"
+                  checked={bulkConfirmed}
+                  onChange={(event) => setBulkConfirmed(event.target.checked)}
+                  disabled={bulkSubmitting || bulkChangeSummary.length === 0}
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                />
+                Confirm these enabled fields should change for the selected
+                items.
+              </label>
+            </div>
 
             <div className="grid gap-3">
               <label className="flex items-center gap-2 text-sm font-bold text-theme-primary">
@@ -3832,11 +4335,12 @@ export default function InventoryPage() {
                 Cancel
               </Button>
               <Button
-                onClick={() => void applyBulkEdit()}
+                onClick={() => void applyBulkEdit("move")}
                 disabled={
                   bulkSubmitting ||
                   selectedItems.length === 0 ||
-                  (bulkCategoryMode === "keep" && bulkDepotMode === "keep")
+                  (bulkCategoryMode === "keep" && bulkDepotMode === "keep") ||
+                  !bulkConfirmed
                 }
                 loading={bulkSubmitting}
                 loadingLabel="Moving..."
@@ -3852,6 +4356,35 @@ export default function InventoryPage() {
                 {bulkError}
               </div>
             )}
+            <div className="rounded-2xl border border-theme bg-theme-inset p-3 text-sm text-theme-secondary">
+              <p className="font-black text-theme-primary">
+                Review move destination
+              </p>
+              <p className="mt-1">
+                {selectedItems.length} selected item
+                {selectedItems.length === 1 ? "" : "s"} will keep the same
+                item records and move to the destination below.
+              </p>
+              <p className="mt-2 font-semibold">
+                Destination:{" "}
+                {bulkDestinationSummary.length > 0
+                  ? bulkDestinationSummary.join(", ")
+                  : "Choose category, depot/location, or both"}
+              </p>
+              <label className="mt-3 flex items-start gap-2 text-xs font-bold text-theme-primary">
+                <input
+                  type="checkbox"
+                  checked={bulkConfirmed}
+                  onChange={(event) => setBulkConfirmed(event.target.checked)}
+                  disabled={
+                    bulkSubmitting ||
+                    (bulkCategoryMode === "keep" && bulkDepotMode === "keep")
+                  }
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                />
+                Confirm this move for the selected items.
+              </label>
+            </div>
             <div className="grid gap-3">
               <label className="flex items-center gap-2 text-sm font-bold text-theme-primary">
                 <input
@@ -3953,7 +4486,11 @@ export default function InventoryPage() {
               <Button
                 variant="danger"
                 onClick={() => void applyBulkDelete()}
-                disabled={bulkSubmitting || selectedItems.length === 0}
+                disabled={
+                  bulkSubmitting ||
+                  selectedItems.length === 0 ||
+                  !bulkDeleteConfirmed
+                }
                 loading={bulkSubmitting}
                 loadingLabel="Deleting..."
               >
@@ -3972,6 +4509,19 @@ export default function InventoryPage() {
               This uses the same permanent delete behavior as deleting one item.
               There is no trash or soft-delete recovery in this workflow.
             </p>
+            <label className="flex items-start gap-2 rounded-xl border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs font-bold text-theme-danger">
+              <input
+                type="checkbox"
+                checked={bulkDeleteConfirmed}
+                onChange={(event) =>
+                  setBulkDeleteConfirmed(event.target.checked)
+                }
+                disabled={bulkSubmitting}
+                className="mt-0.5 h-4 w-4 rounded border-red-300 text-red-600 focus:ring-red-300"
+              />
+              Confirm deletion of {selectedItems.length} selected item
+              {selectedItems.length === 1 ? "" : "s"}.
+            </label>
             <ul className="max-h-44 overflow-y-auto rounded-xl border border-theme bg-theme-inset p-3 text-sm text-theme-secondary">
               {selectedItems.slice(0, 8).map((item) => (
                 <li key={item.id} className="py-1 font-semibold">
