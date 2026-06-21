@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
+  addPickListItem,
   createPickList,
   getPickListErrorMessage,
   getPickListsForUser,
@@ -224,6 +225,7 @@ export default function PickListsPage() {
   const [formError, setFormError] = useState("");
   const [formOpen, setFormOpen] = useState(false);
   const [formValues, setFormValues] = useState<PickListInput>(EMPTY_FORM);
+  const [selectedHandoffIds, setSelectedHandoffIds] = useState<number[]>([]);
 
   const loadLists = async (knownUserId: string) => {
     const [loadedLists, loadedUsage] = await Promise.all([
@@ -274,6 +276,28 @@ export default function PickListsPage() {
     return () => {
       isActive = false;
     };
+  }, []);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      const requestedIds = new URLSearchParams(window.location.search)
+        .get("items")
+        ?.split(",")
+        .map((id) => Number(id))
+        .filter((id) => Number.isInteger(id) && id > 0);
+
+      if (!requestedIds?.length) return;
+      setSelectedHandoffIds(requestedIds);
+      setFormValues({
+        ...EMPTY_FORM,
+        title: "Selected inventory pick list",
+        notes:
+          "Created from selected Inventory items. Review quantities before picking.",
+      });
+      setFormOpen(true);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
   }, []);
 
   const activeCount = lists.filter((list) =>
@@ -333,6 +357,16 @@ export default function PickListsPage() {
         formValues,
         pickListLimit
       );
+
+      if (selectedHandoffIds.length > 0) {
+        for (const itemId of selectedHandoffIds) {
+          await addPickListItem(userId, created.id, {
+            inventoryItemId: itemId,
+            requiredQuantity: 1,
+            notes: "Added from Inventory selection. Adjust quantity as needed.",
+          }).catch(() => undefined);
+        }
+      }
 
       router.push(`/dashboard/pick-lists/${created.id}`);
     } catch (error) {
@@ -438,6 +472,15 @@ export default function PickListsPage() {
             </div>
           </section>
 
+          {selectedHandoffIds.length > 0 && formOpen && (
+            <div className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-4 text-sm font-semibold text-theme-accent">
+              {selectedHandoffIds.length} selected Inventory item
+              {selectedHandoffIds.length === 1 ? "" : "s"} will be added with
+              quantity 1. Review quantities before picking; stock will not be
+              deducted.
+            </div>
+          )}
+
           {loading ? (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {[1, 2, 3].map((key) => (
@@ -537,7 +580,7 @@ export default function PickListsPage() {
               </h2>
               <p className="mx-auto mt-3 max-w-xl leading-7 text-theme-muted">
                 Add the items needed for an order or event, track preparation,
-                and choose whether to deduct stock at completion.
+                and create a pick sheet without changing inventory stock.
               </p>
               {!limitReached && (
                 <button

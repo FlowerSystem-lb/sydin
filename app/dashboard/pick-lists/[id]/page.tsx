@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
 import {
   addPickListItem,
@@ -108,6 +108,7 @@ function ModalCloseButton({
 }
 
 export default function PickListDetailPage() {
+  const router = useRouter();
   const params = useParams();
   const rawId = params.id;
   const pickListId = Number(Array.isArray(rawId) ? rawId[0] : rawId);
@@ -149,7 +150,6 @@ export default function PickListDetailPage() {
 
   const [cancelOpen, setCancelOpen] = useState(false);
   const [completeOpen, setCompleteOpen] = useState(false);
-  const [deductStock, setDeductStock] = useState(true);
   const [completionError, setCompletionError] = useState("");
   const [pendingRemove, setPendingRemove] = useState<PickListItem | null>(null);
 
@@ -502,7 +502,6 @@ export default function PickListDetailPage() {
   };
 
   const openCompletion = () => {
-    setDeductStock(true);
     setCompletionError("");
     setCompleteOpen(true);
   };
@@ -517,31 +516,98 @@ export default function PickListDetailPage() {
       return;
     }
 
-    if (deductStock && shortages.length > 0) {
-      setCompletionError(
-        "Resolve the stock shortages or complete without deducting stock."
-      );
-      return;
-    }
-
     try {
       setBusyAction("complete");
       setCompletionError("");
       setPageError("");
-      await completePickList(detail.id, deductStock);
+      await completePickList(detail.id, false);
       await refreshWorkspace(userId);
       setCompleteOpen(false);
-      setPageNotice(
-        deductStock
-          ? "Pick List completed and stock deducted."
-          : "Pick List completed without changing stock."
-      );
+      setPageNotice("Pick List completed without changing stock.");
     } catch (error) {
       setCompletionError(getPickListErrorMessage(error));
       await refreshWorkspace(userId).catch(() => undefined);
     } finally {
       setBusyAction("");
     }
+  };
+
+  const pickedItems = (detail?.items || []).filter(
+    (item) => item.prepared_quantity > 0 && item.inventory_item_id
+  );
+
+  const openQrCenterForPickedItems = () => {
+    const ids = pickedItems
+      .map((item) => item.inventory_item_id)
+      .filter((id): id is number => Boolean(id));
+    if (ids.length === 0) {
+      setPageError("Prepare at least one linked item before creating QR labels.");
+      return;
+    }
+    const params = new URLSearchParams({ items: ids.join(",") });
+    router.push(`/dashboard/qr-center?${params.toString()}`);
+  };
+
+  const exportPickListCsv = () => {
+    if (!detail) return;
+
+    const headers = [
+      "Picked",
+      "Item",
+      "Code/SKU",
+      "Available Quantity",
+      "Required Quantity",
+      "Prepared Quantity",
+      "Unit",
+      "Status",
+      "Notes",
+    ];
+    const rows = detail.items.map((item) => {
+      const available = item.inventory?.quantity ?? 0;
+      const shortage = available < item.required_quantity;
+      const status =
+        available <= 0
+          ? "No stock"
+          : shortage
+            ? "Not enough"
+            : item.prepared_quantity > 0
+              ? "Ready"
+              : "Not picked";
+
+      return [
+        "",
+        item.item_name_snapshot,
+        item.item_code_snapshot || item.sku_snapshot || "",
+        available,
+        item.required_quantity,
+        item.prepared_quantity,
+        item.unit_label_snapshot || "",
+        status,
+        item.notes || "",
+      ];
+    });
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row
+          .map((value) => {
+            const text = String(value ?? "");
+            return /[",\r\n]/.test(text)
+              ? `"${text.replace(/"/g, '""')}"`
+              : text;
+          })
+          .join(",")
+      )
+      .join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${detail.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "pick-list"}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+    setPageNotice("Pick sheet CSV exported. Inventory was not changed.");
   };
 
   if (loading) {
@@ -623,6 +689,28 @@ export default function PickListDetailPage() {
               </div>
 
               <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:max-w-xl xl:justify-end">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover"
+                >
+                  Print Pick Sheet
+                </button>
+                <button
+                  type="button"
+                  onClick={exportPickListCsv}
+                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover"
+                >
+                  Export CSV
+                </button>
+                <button
+                  type="button"
+                  onClick={openQrCenterForPickedItems}
+                  disabled={pickedItems.length === 0}
+                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  QR Labels
+                </button>
                 {editable && (
                   <>
                     <button
@@ -1413,8 +1501,8 @@ export default function PickListDetailPage() {
                   Complete Pick List
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-theme-muted">
-                  Completion is permanent. Choose how inventory should be
-                  handled.
+                  Completion is permanent. In this v1, completion marks
+                  operational progress only and does not deduct inventory.
                 </p>
               </div>
               <ModalCloseButton
@@ -1424,50 +1512,19 @@ export default function PickListDetailPage() {
               />
             </div>
 
-            <div className="mt-6 grid gap-3 sm:grid-cols-2">
-              <button
-                type="button"
-                onClick={() => setDeductStock(true)}
-                disabled={busyAction === "complete"}
-                className={`rounded-2xl border p-4 text-left transition ${
-                  deductStock
-                    ? "border-emerald-300/35 bg-emerald-400/12"
-                    : "border-theme bg-theme-inset"
-                }`}
-              >
-                <p className="font-black text-theme-primary">
-                  Complete and deduct stock
-                </p>
-                <p className="mt-2 text-sm leading-6 text-theme-muted">
-                  Recommended. Deduct every required quantity atomically and
-                  create stock-out movements.
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setDeductStock(false)}
-                disabled={busyAction === "complete"}
-                className={`rounded-2xl border p-4 text-left transition ${
-                  !deductStock
-                    ? "border-cyan-300/35 bg-cyan-400/12"
-                    : "border-theme bg-theme-inset"
-                }`}
-              >
+            <div className="mt-6 rounded-2xl border border-cyan-300/35 bg-cyan-400/12 p-4">
                 <p className="font-black text-theme-primary">
                   Complete without deducting
                 </p>
                 <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Close the Pick List as prepared while leaving inventory
-                  quantities unchanged.
+                  quantities unchanged. Stock deduction after picking is a
+                  future workflow and is intentionally unavailable here.
                 </p>
-              </button>
             </div>
 
             <div className="mt-6 space-y-3">
               {detail.items.map((item) => {
-                const afterQuantity = item.inventory
-                  ? item.inventory.quantity - item.required_quantity
-                  : null;
                 const shortage =
                   !item.inventory ||
                   item.inventory.quantity < item.required_quantity;
@@ -1476,7 +1533,7 @@ export default function PickListDetailPage() {
                   <div
                     key={item.id}
                     className={`rounded-2xl border p-4 ${
-                      deductStock && shortage
+                      shortage
                         ? "border-amber-300/25 bg-amber-400/[0.08]"
                         : "border-theme bg-theme-inset"
                     }`}
@@ -1491,16 +1548,14 @@ export default function PickListDetailPage() {
                       </div>
                       <p
                         className={`text-sm font-bold ${
-                          deductStock && shortage
+                          shortage
                             ? "text-theme-warning"
                             : "text-theme-secondary"
                         }`}
                       >
-                        {!deductStock
-                          ? "No stock change"
-                          : !item.inventory
-                            ? "Inventory unavailable"
-                            : `${item.inventory.quantity} -> ${afterQuantity}`}
+                        {!item.inventory
+                          ? "Inventory unavailable"
+                          : `No stock change (${item.inventory.quantity} available)`}
                       </p>
                     </div>
                   </div>
@@ -1514,11 +1569,11 @@ export default function PickListDetailPage() {
               </div>
             )}
 
-            {deductStock && shortages.length > 0 && (
+            {shortages.length > 0 && (
               <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-theme-warning">
                 {shortages.length} line{shortages.length === 1 ? "" : "s"}{" "}
-                cannot be deducted with current stock. Adjust inventory or
-                choose completion without deduction.
+                has a current stock shortage. You can still complete this v1
+                pick list because inventory quantities are not deducted.
               </div>
             )}
 
@@ -1542,16 +1597,13 @@ export default function PickListDetailPage() {
                 onClick={() => void handleComplete()}
                 disabled={
                   busyAction === "complete" ||
-                  !allPrepared ||
-                  (deductStock && shortages.length > 0)
+                  !allPrepared
                 }
                 className="flex-1 rounded-2xl border border-emerald-300/30 bg-emerald-400/20 px-5 py-3.5 font-bold text-theme-success disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {busyAction === "complete"
                   ? "Completing..."
-                  : deductStock
-                    ? "Complete and Deduct Stock"
-                    : "Complete Without Deducting"}
+                  : "Complete Without Deducting"}
               </button>
             </div>
           </div>

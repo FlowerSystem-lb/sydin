@@ -2169,6 +2169,13 @@ export default function InventoryPage() {
     router.push(`/dashboard/stock-counts${query ? `?${query}` : ""}`);
   };
 
+  const openPickListForItems = (ids: number[]) => {
+    const params = new URLSearchParams();
+    if (ids.length > 0) params.set("items", ids.join(","));
+    const query = params.toString();
+    router.push(`/dashboard/pick-lists${query ? `?${query}` : ""}`);
+  };
+
   const searchMatchedItems = items.filter((item) => {
     if (!normalizedSearch) return true;
 
@@ -2740,6 +2747,19 @@ export default function InventoryPage() {
                         className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
                       >
                         Count selected
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() =>
+                          openPickListForItems(
+                            selectedItems.map((item) => item.id)
+                          )
+                        }
+                        disabled={selectedItems.length === 0}
+                        className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Create pick list
                       </button>
                       <button
                         type="button"
