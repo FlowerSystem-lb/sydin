@@ -59,6 +59,14 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "primary",
   },
   {
+    label: "Purchase Orders",
+    shortLabel: "POs",
+    href: "/dashboard/purchase-orders",
+    icon: "file",
+    section: "operations",
+    mobilePlacement: "more",
+  },
+  {
     label: "Stock Movements",
     shortLabel: "Movements",
     href: "/dashboard/stock-movements",
