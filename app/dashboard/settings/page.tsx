@@ -418,6 +418,25 @@ export default function SettingsPage() {
     settings.contact_phone,
     settings.contact_website,
   ].filter((value) => value.trim()).length;
+  const contactStatus =
+    contactCount === 0
+      ? "Contact details missing"
+      : contactCount === 3
+        ? "Contact details configured"
+        : "Contact details partial";
+  const contactTone =
+    contactCount === 0 ? "neutral" : contactCount === 3 ? "success" : "info";
+  const publicContactStatus = canShowPublicContact
+    ? settings.show_contact_publicly
+      ? "Public contact enabled"
+      : "Public contact off"
+    : savedSettings.show_contact_publicly
+      ? "Public contact preserved"
+      : "Public contact locked";
+  const reportBrandingStatus =
+    canUseCustomLogo && settings.business_logo_url
+      ? "Business logo ready"
+      : "SydIN fallback active";
   const effectiveLowStockThreshold = canCustomizeThreshold
     ? settings.low_stock_threshold
     : FREE_LOW_STOCK_THRESHOLD;
@@ -852,98 +871,339 @@ export default function SettingsPage() {
 
   const renderBrandingPanel = () => (
     <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
-      <SettingCard
-        title="Company logo"
-        description="Logo uploads use the existing business logo storage flow and plan rules."
-        action={<StatusChip tone={settings.business_logo_url ? "success" : "neutral"}>{logoStatus}</StatusChip>}
-      >
-        <div className="grid gap-4 md:grid-cols-[180px_1fr]">
-          <div className="rounded-xl border border-theme bg-theme-surface p-3">
-            <p className="mb-3 text-sm font-semibold text-theme-muted">
-              Logo preview
-            </p>
-            <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border border-indigo-300/20 bg-indigo-500/10">
-              {settings.business_logo_url ? (
-                <div className="relative h-full w-full">
-                  <Image
-                    src={settings.business_logo_url}
-                    alt={settings.business_name}
-                    fill
-                    sizes="180px"
-                    className="object-contain p-4"
-                  />
-                </div>
-              ) : (
-                <BrandMark className="h-16 w-16 rounded-2xl" />
-              )}
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
+        <div className="grid gap-4">
+          <SettingCard
+            title="Brand identity"
+            description="Used on reports, exports, QR labels, and public item pages where your plan supports business branding."
+            action={<Badge tone="accent">{currentPlanName} plan</Badge>}
+          >
+            <div className="flex flex-wrap gap-2">
+              <StatusChip
+                tone={settings.business_name.trim() ? "success" : "warning"}
+              >
+                {workspaceStatus}
+              </StatusChip>
+              <StatusChip
+                tone={settings.business_logo_url ? "success" : "neutral"}
+              >
+                {logoStatus}
+              </StatusChip>
+              <StatusChip tone={contactTone}>{contactStatus}</StatusChip>
+              <StatusChip tone={canUseCustomLogo ? "success" : "neutral"}>
+                {canUseCustomLogo
+                  ? "Logo available on plan"
+                  : "Logo locked on plan"}
+              </StatusChip>
             </div>
-          </div>
+            <div className="mt-4 flex flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <div>
+                <p className="text-sm font-black text-theme-primary">
+                  {settings.business_name || DEFAULT_BUSINESS_SETTINGS.business_name}
+                </p>
+                <p className="mt-1 text-xs leading-5 text-theme-muted">
+                  Business name and contact fields are edited in Workspace.
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => switchSection("workspace")}
+              >
+                Edit in Workspace
+              </Button>
+            </div>
+          </SettingCard>
 
-          <div>
-            {canUseCustomLogo ? (
-              <div className="rounded-xl border border-dashed border-indigo-300/25 bg-theme-surface p-4 transition hover:border-indigo-300/45 hover:bg-theme-hover">
-                <label className="grid gap-2 text-sm font-bold text-theme-primary">
-                  Business logo
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) =>
-                      setLogoFile(event.target.files?.[0] || null)
+          <SettingCard
+            title="Logo"
+            description="Upload or change the company logo using the existing business logo storage flow and plan rules."
+            action={
+              <StatusChip
+                tone={settings.business_logo_url ? "success" : "neutral"}
+              >
+                {logoStatus}
+              </StatusChip>
+            }
+          >
+            <div className="grid gap-4 md:grid-cols-[180px_1fr]">
+              <div className="rounded-xl border border-theme bg-theme-surface p-3">
+                <p className="mb-3 text-sm font-semibold text-theme-muted">
+                  Current logo
+                </p>
+                <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border border-indigo-300/20 bg-indigo-500/10">
+                  {settings.business_logo_url ? (
+                    <div className="relative h-full w-full">
+                      <Image
+                        src={settings.business_logo_url}
+                        alt={`Business logo for ${settings.business_name}`}
+                        fill
+                        sizes="180px"
+                        className="object-contain p-4"
+                      />
+                    </div>
+                  ) : (
+                    <BrandMark className="h-16 w-16 rounded-2xl" />
+                  )}
+                </div>
+              </div>
+
+              <div>
+                {canUseCustomLogo ? (
+                  <div className="rounded-xl border border-dashed border-indigo-300/25 bg-theme-surface p-4 transition hover:border-indigo-300/45 hover:bg-theme-hover">
+                    <label
+                      htmlFor="business-logo-upload"
+                      className="grid gap-2 text-sm font-bold text-theme-primary"
+                    >
+                      Upload business logo
+                      <input
+                        id="business-logo-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={(event) =>
+                          setLogoFile(event.target.files?.[0] || null)
+                        }
+                        className="w-full cursor-pointer text-sm text-theme-secondary file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-theme-accent transition-colors hover:file:bg-indigo-500/30"
+                      />
+                    </label>
+                    <p className="mt-3 text-xs leading-5 text-theme-subtle">
+                      Choose a replacement logo, then save settings. Existing
+                      logo removal is not exposed in v1.
+                    </p>
+
+                    {logoFile && (
+                      <p className="mt-3 rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-secondary">
+                        Selected: {logoFile.name}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <LockedFeaturePanel
+                    feature="Custom business logo"
+                    benefit={
+                      settings.business_logo_url
+                        ? "Your existing logo is preserved and remains visible. Upgrade before replacing it with a new file."
+                        : "Add your business logo to the workspace, exports, and public inventory identity."
                     }
-                    className="w-full cursor-pointer text-sm text-theme-secondary file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-theme-accent transition-colors hover:file:bg-indigo-500/30"
+                    currentPlan={currentPlanName}
+                    requiredPlan="Standard"
+                    source="business-logo"
+                    compact
                   />
-                </label>
-
-                {logoFile && (
-                  <p className="mt-3 rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-secondary">
-                    Selected: {logoFile.name}
-                  </p>
                 )}
               </div>
-            ) : (
-              <LockedFeaturePanel
-                feature="Custom business logo"
-                benefit={
-                  settings.business_logo_url
-                    ? "Your existing logo is preserved and remains visible. Upgrade before replacing it with a new file."
-                    : "Add your business logo to the workspace, exports, and public inventory identity."
-                }
-                currentPlan={currentPlanName}
-                requiredPlan="Standard"
-                source="business-logo"
-                compact
-              />
-            )}
-          </div>
-        </div>
-      </SettingCard>
+            </div>
+          </SettingCard>
 
-      <SettingCard
-        title="Report identity"
-        description="Reports can use business branding when your plan allows it and a logo is configured."
-        action={<StatusChip tone="info">Reports Hub</StatusChip>}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Business logo in reports
-            </p>
-            <p className="mt-1 text-sm font-black text-theme-primary">
-              {canUseCustomLogo && settings.business_logo_url
-                ? "Available"
-                : "Falls back to SydIN branding"}
-            </p>
-          </div>
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Template colors
-            </p>
-            <p className="mt-1 text-sm text-theme-muted">
-              <StatusChip>Future</StatusChip>
-            </p>
-          </div>
+          <SettingCard
+            title="Public contact branding"
+            description="Public contact details are shown only when enabled and supported by the current plan."
+            action={
+              <StatusChip
+                tone={
+                  canShowPublicContact && settings.show_contact_publicly
+                    ? "success"
+                    : canShowPublicContact
+                      ? "info"
+                      : "neutral"
+                }
+              >
+                {publicContactStatus}
+              </StatusChip>
+            }
+          >
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ["Email", settings.contact_email],
+                ["Phone", settings.contact_phone],
+                ["Website", settings.contact_website],
+              ].map(([label, value]) => (
+                <div
+                  key={label}
+                  className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
+                >
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    {label}
+                  </p>
+                  <p className="mt-1 break-words text-sm font-black text-theme-primary">
+                    {value || "Not set"}
+                  </p>
+                </div>
+              ))}
+            </div>
+
+            {canShowPublicContact || savedSettings.show_contact_publicly ? (
+              <label className="mt-4 flex cursor-pointer flex-col gap-3 rounded-xl border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+                <span>
+                  <span className="block text-sm font-black text-theme-primary">
+                    Show contact on public item pages
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-theme-muted">
+                    Applies to public QR/item pages. Private workspace data
+                    stays private.
+                    {!canShowPublicContact &&
+                      " You can turn off the existing setting, but Standard is required to enable it again."}
+                  </span>
+                </span>
+                <span className="relative shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={settings.show_contact_publicly}
+                    onChange={(event) =>
+                      setSettings((current) => {
+                        if (!canShowPublicContact && event.target.checked) {
+                          return current;
+                        }
+
+                        return {
+                          ...current,
+                          show_contact_publicly: event.target.checked,
+                        };
+                      })
+                    }
+                    className="peer sr-only"
+                  />
+                  <span className="block h-7 w-12 rounded-full border border-theme bg-[var(--sydin-input-bg)] transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
+                  <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-cyan-100" />
+                </span>
+              </label>
+            ) : (
+              <div className="mt-4">
+                <LockedFeaturePanel
+                  feature="Public contact branding"
+                  benefit="Show business contact details on public QR item pages with Standard or Pro."
+                  currentPlan={currentPlanName}
+                  requiredPlan="Standard"
+                  source="public-contact-branding"
+                  compact
+                />
+              </div>
+            )}
+          </SettingCard>
         </div>
-      </SettingCard>
+
+        <div className="grid gap-4">
+          <SettingCard
+            title="Brand preview"
+            description="Static preview of the identity customers may see in report headers and public item pages."
+          >
+            <div className="overflow-hidden rounded-xl border border-theme bg-theme-surface">
+              <div className="flex items-center gap-3 border-b border-theme px-4 py-3">
+                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-theme bg-theme-inset">
+                  {settings.business_logo_url ? (
+                    <Image
+                      src={settings.business_logo_url}
+                      alt={`Business logo for ${settings.business_name}`}
+                      fill
+                      sizes="48px"
+                      className="object-contain p-1.5"
+                    />
+                  ) : (
+                    <BrandMark compact className="border-0 shadow-none" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-black text-theme-primary">
+                    {settings.business_name ||
+                      DEFAULT_BUSINESS_SETTINGS.business_name}
+                  </p>
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    Report header preview
+                  </p>
+                </div>
+              </div>
+              <div className="grid gap-2 px-4 py-3 text-xs leading-5 text-theme-muted">
+                {settings.contact_email && (
+                  <p className="break-words">Email: {settings.contact_email}</p>
+                )}
+                {settings.contact_phone && (
+                  <p className="break-words">Phone: {settings.contact_phone}</p>
+                )}
+                {settings.contact_website && (
+                  <p className="break-words">
+                    Website: {settings.contact_website}
+                  </p>
+                )}
+                {contactCount === 0 && (
+                  <p>No public contact details configured yet.</p>
+                )}
+              </div>
+            </div>
+          </SettingCard>
+
+          <SettingCard
+            title="Report branding"
+            description="PDF report dialogs can use Business logo, SydIN logo, or No logo. Business logo falls back safely when unavailable."
+            action={<StatusChip tone="info">{reportBrandingStatus}</StatusChip>}
+          >
+            <div className="grid gap-2">
+              <Link
+                href="/dashboard/reports"
+                className={buttonClassName({ size: "sm" })}
+              >
+                Open Reports Hub
+              </Link>
+              <p className="text-xs leading-5 text-theme-subtle">
+                Report contact details appear only when public contact branding
+                is enabled and supported by your plan.
+              </p>
+            </div>
+          </SettingCard>
+
+          <SettingCard
+            title="Public item identity"
+            description="QR Center and public item pages use the saved business name, logo, and enabled contact details."
+            action={
+              <Link
+                href="/dashboard/qr-center"
+                className={buttonClassName({ variant: "secondary", size: "sm" })}
+              >
+                Open QR Center
+              </Link>
+            }
+          >
+            <div className="flex flex-wrap gap-2">
+              <StatusChip>{contactStatus}</StatusChip>
+              <StatusChip
+                tone={
+                  settings.show_contact_publicly && canShowPublicContact
+                    ? "success"
+                    : "neutral"
+                }
+              >
+                {publicContactStatus}
+              </StatusChip>
+            </div>
+          </SettingCard>
+
+          <section
+            aria-label="Future brand controls"
+            className="rounded-xl border border-theme bg-theme-inset p-3"
+          >
+            <p className="text-sm font-black text-theme-primary">
+              Future brand controls
+            </p>
+            <div className="mt-3 grid gap-2">
+              {[
+                "Report template colors",
+                "Custom email sender",
+                "Branded customer portal",
+              ].map((item) => (
+                <div
+                  key={item}
+                  className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
+                >
+                  <span className="text-sm font-bold text-theme-primary">
+                    {item}
+                  </span>
+                  <StatusChip>Future</StatusChip>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </div>
 
       {renderNotice()}
       <SaveBar saving={saving} onCancel={resetBusinessFields} />
