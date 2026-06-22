@@ -67,6 +67,13 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
+    label: "Receiving",
+    href: "/dashboard/receiving",
+    icon: "movement",
+    section: "operations",
+    mobilePlacement: "more",
+  },
+  {
     label: "Stock Movements",
     shortLabel: "Movements",
     href: "/dashboard/stock-movements",

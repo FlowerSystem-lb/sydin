@@ -2183,6 +2183,13 @@ export default function InventoryPage() {
     router.push(`/dashboard/purchase-orders${query ? `?${query}` : ""}`);
   };
 
+  const openReceivingForItems = (ids: number[]) => {
+    const params = new URLSearchParams();
+    if (ids.length > 0) params.set("items", ids.join(","));
+    const query = params.toString();
+    router.push(`/dashboard/receiving${query ? `?${query}` : ""}`);
+  };
+
   const searchMatchedItems = items.filter((item) => {
     if (!normalizedSearch) return true;
 
@@ -2780,6 +2787,19 @@ export default function InventoryPage() {
                         className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
                       >
                         Create purchase order
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() =>
+                          openReceivingForItems(
+                            selectedItems.map((item) => item.id)
+                          )
+                        }
+                        disabled={selectedItems.length === 0}
+                        className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
+                      >
+                        Receive stock
                       </button>
                       <button
                         type="button"
