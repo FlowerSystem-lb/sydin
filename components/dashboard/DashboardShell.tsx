@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
+import GlobalSearchDialog from "@/components/dashboard/GlobalSearchDialog";
 import UiIcon from "@/components/UiIcon";
 import {
   Badge,
@@ -200,11 +201,16 @@ export default function DashboardShell({
   const searchParams = useSearchParams();
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const accountTriggerRef = useRef<HTMLButtonElement>(null);
+  const lastSearchTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
+  const tabletSearchTriggerRef = useRef<HTMLButtonElement>(null);
+  const mobileSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const [collapsed, setCollapsed] = useState(false);
   const [routeCollapsed, setRouteCollapsed] = useState<boolean | null>(null);
   const [tabletDrawerOpen, setTabletDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [businessSettings, setBusinessSettings] = useState(
     DEFAULT_BUSINESS_SETTINGS
   );
@@ -282,6 +288,31 @@ export default function DashboardShell({
     };
   }, [accountMenuOpen]);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key.toLowerCase() !== "k" || (!event.metaKey && !event.ctrlKey)) {
+        return;
+      }
+
+      const target = event.target as HTMLElement | null;
+      const editableTarget =
+        target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.tagName === "SELECT" ||
+          target.isContentEditable);
+
+      if (editableTarget) return;
+
+      event.preventDefault();
+      lastSearchTriggerRef.current = null;
+      setGlobalSearchOpen(true);
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
+
   const currentPage = getDashboardPageContext(
     pathname,
     searchParams.get("action")
@@ -344,6 +375,18 @@ export default function DashboardShell({
     }
     router.push("/dashboard/inventory");
   }, [pathname, router]);
+
+  const openGlobalSearch = (trigger: HTMLButtonElement | null) => {
+    lastSearchTriggerRef.current = trigger;
+    setGlobalSearchOpen(true);
+  };
+
+  const closeGlobalSearch = () => {
+    setGlobalSearchOpen(false);
+    window.requestAnimationFrame(() => {
+      lastSearchTriggerRef.current?.focus();
+    });
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -521,6 +564,16 @@ export default function DashboardShell({
             {businessSettings.business_name}
           </p>
         </div>
+        <button
+          ref={tabletSearchTriggerRef}
+          type="button"
+          onClick={(event) => openGlobalSearch(event.currentTarget)}
+          className="ui-icon-button ui-icon-button-md"
+          aria-label="Open global search"
+          title="Search"
+        >
+          <UiIcon name="search" className="h-5 w-5" />
+        </button>
         {quickAddVisible && (
           <Link
             href="/dashboard/add-item"
@@ -539,6 +592,16 @@ export default function DashboardShell({
         <p className="min-w-0 flex-1 truncate text-sm font-bold text-[var(--text-primary)]">
           {currentPage.shortLabel}
         </p>
+        <button
+          ref={mobileSearchTriggerRef}
+          type="button"
+          onClick={(event) => openGlobalSearch(event.currentTarget)}
+          className="ui-icon-button ui-icon-button-md"
+          aria-label="Open global search"
+          title="Search"
+        >
+          <UiIcon name="search" className="h-5 w-5" />
+        </button>
         {quickAddVisible ? (
           <Link
             href="/dashboard/add-item"
@@ -561,6 +624,32 @@ export default function DashboardShell({
             {businessSettings.business_name}
           </p>
         </div>
+        <button
+          ref={desktopSearchTriggerRef}
+          type="button"
+          onClick={(event) => openGlobalSearch(event.currentTarget)}
+          className="hidden min-h-10 min-w-[22rem] max-w-[32rem] flex-1 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 text-sm font-semibold text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/15 xl:flex"
+          aria-label="Open global search"
+        >
+          <span className="flex min-w-0 items-center gap-2">
+            <UiIcon name="search" className="h-4 w-4 shrink-0" />
+            <span className="truncate">
+              Search items, categories, suppliers, movements...
+            </span>
+          </span>
+          <span className="rounded-md border border-theme bg-theme-inset px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-theme-subtle">
+            Ctrl K
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={(event) => openGlobalSearch(event.currentTarget)}
+          className="ui-icon-button ui-icon-button-md xl:hidden"
+          aria-label="Open global search"
+          title="Search"
+        >
+          <UiIcon name="search" className="h-5 w-5" />
+        </button>
         {quickAddVisible && (
           <Link
             href="/dashboard/add-item"
@@ -734,6 +823,13 @@ export default function DashboardShell({
           </Button>
         </div>
       </SheetShell>
+
+      <GlobalSearchDialog
+        open={globalSearchOpen}
+        userId={userId}
+        pathname={pathname}
+        onClose={closeGlobalSearch}
+      />
     </div>
   );
 }
