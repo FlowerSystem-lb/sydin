@@ -89,7 +89,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "operations",
     label: "Operations",
-    description: "Workflow modules and v1 persistence notes",
+    description: "Workflow modules and draft history notes",
     icon: "movement",
   },
   {
@@ -1273,7 +1273,7 @@ export default function SettingsPage() {
       </SettingCard>
       <SettingCard
         title="Report defaults"
-        description="Branding follows the existing business settings and plan capabilities. Saved report definitions and scheduled reports need future persistence."
+        description="Branding follows the existing business settings and plan capabilities. Saved report templates and scheduled reports are planned later."
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
@@ -1374,7 +1374,7 @@ export default function SettingsPage() {
     <div className="grid gap-4">
       <SettingCard
         title="Operations workflows"
-        description="Operational modules keep their existing v1 behavior. This section gives a compact control-center map without changing persistence."
+        description="Operational modules keep their existing v1 behavior. This section gives a compact control-center map without changing workflow storage."
       >
         <div className="grid gap-2 md:grid-cols-2">
           <ModuleLink
@@ -1386,7 +1386,7 @@ export default function SettingsPage() {
           <ModuleLink
             href="/dashboard/stock-counts"
             label="Stock Counts"
-            description="Browser-local count workflow in v1"
+            description="Device draft count workflow in v1"
             icon="check"
           />
           <ModuleLink
@@ -1398,7 +1398,7 @@ export default function SettingsPage() {
           <ModuleLink
             href="/dashboard/purchase-orders"
             label="Purchase Orders"
-            description="Browser-local PO drafts in v1"
+            description="Device draft PO workflow in v1"
             icon="file"
           />
           <ModuleLink
@@ -1410,8 +1410,8 @@ export default function SettingsPage() {
         </div>
       </SettingCard>
       <SettingCard
-        title="v1 persistence notes"
-        description="Stock movement records are persisted. Stock count sessions and purchase order history remain workflow-local until a future persistence phase."
+        title="v1 workflow notes"
+        description="Stock movement records are saved. Stock count sessions and purchase order history stay on this device until cloud-saved history is added later."
         action={<StatusChip>v1 workflow</StatusChip>}
       />
     </div>
@@ -2094,7 +2094,7 @@ export default function SettingsPage() {
     <div className="grid gap-4">
       <SettingCard
         title="Data movement"
-        description="Use existing import and export surfaces. Settings v1 does not add backup jobs, destructive tools, or schema changes."
+        description="Use existing import and export surfaces. Settings v1 does not add backup jobs or destructive data tools."
       >
         <div className="grid gap-2 md:grid-cols-2">
           <ModuleLink

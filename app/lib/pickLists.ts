@@ -538,7 +538,7 @@ export function getPickListErrorMessage(error: unknown) {
     normalized.includes("pick_lists") ||
     normalized.includes("pick_list_items")
   ) {
-    return "Pick List storage is not ready yet. Apply the Phase 7 SQL migration, then try again.";
+    return "Pick Lists are not available in this workspace yet. Contact support if this keeps happening.";
   }
 
   if (pickListError?.code === "23505" || normalized.includes("duplicate")) {

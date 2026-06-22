@@ -167,7 +167,7 @@ export function getCategoryErrorMessage(error: unknown) {
     text.includes("category_id") ||
     text.includes("categories")
   ) {
-    return "Category storage is not ready yet. Run the Phase 6A SQL migration, then try again.";
+    return "Categories are not available in this workspace yet. Contact support if this keeps happening.";
   }
 
   return "We could not save this category. Please try again.";

@@ -392,7 +392,7 @@ export default function PurchaseOrdersPage() {
           setStep(parsed.step);
         }
         setDraftRestored(true);
-        setNotice("Restored a browser-only purchase order draft.");
+        setNotice("Restored a purchase order draft saved on this device.");
       });
     } catch {
       window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -445,7 +445,7 @@ export default function PurchaseOrdersPage() {
         setNotice(
           `Added ${handoffLines.length} selected Inventory item${
             handoffLines.length === 1 ? "" : "s"
-          } to this browser-only purchase order draft.`
+          } to this purchase order draft.`
         );
         return [...current, ...handoffLines];
       });
@@ -787,8 +787,9 @@ export default function PurchaseOrdersPage() {
                 Purchase Orders
               </h1>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Prepare supplier orders from inventory data. This v1 keeps stock
-                unchanged and stores drafts in this browser session only.
+                Create supplier order drafts from inventory items or custom
+                lines, then print or export them. Purchase orders do not change
+                stock.
               </p>
             </div>
             <div className="flex flex-col gap-2 sm:flex-row">
@@ -840,15 +841,16 @@ export default function PurchaseOrdersPage() {
           </div>
         </section>
 
-        <section className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold leading-6 text-theme-warning">
-          This purchase order draft is saved on this browser only. Creating,
-          printing, or exporting it does not change inventory and does not create
-          stock movements.
+        <section className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-4 py-3 text-sm font-semibold leading-6 text-theme-accent">
+          Purchase order drafts are saved in this browser for now. Export a PDF
+          or CSV before closing the tab. Stock increases only through Receiving
+          or Stock Movements.
         </section>
 
         {draftRestored && (
           <section className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-theme-accent">
-            Browser draft restored. Clear draft or restart when you are finished.
+            Device draft restored. Export it, clear it, or restart when you are
+            finished.
           </section>
         )}
 
@@ -926,7 +928,7 @@ export default function PurchaseOrdersPage() {
                 value={details.status}
                 onChange={(value) => updateDetails("status", value)}
                 options={STATUS_OPTIONS}
-                description="Ready and sent statuses need persistent PO storage."
+                description="Ready and sent are draft labels for this order."
               />
               <label className="grid gap-1 text-sm font-bold text-theme-primary">
                 Internal reference
@@ -967,13 +969,13 @@ export default function PurchaseOrdersPage() {
                 </div>
               ) : (
                 <p className="mt-3 text-sm leading-6 text-theme-muted">
-                  No saved suppliers loaded. Use free text for this browser-only
+                  No saved suppliers loaded. Use free text for this device
                   draft.
                 </p>
               )}
               <div className="mt-4 rounded-xl border border-theme bg-theme-surface p-3 text-xs font-semibold leading-5 text-theme-secondary">
-                Saved purchase orders require a future Phase 3.1 database
-                migration. This screen does not create tables or SQL.
+                This workflow creates exportable purchase orders today.
+                Cloud-saved purchase order history is planned for a later update.
               </div>
             </aside>
           </section>
@@ -1351,7 +1353,7 @@ export default function PurchaseOrdersPage() {
                   </div>
                 </>
               ) : (
-                <div className="px-5 py-14 text-center">
+                <div className="px-5 py-12 text-center">
                   <UiIcon
                     name="file"
                     className="mx-auto h-8 w-8 text-theme-accent"
@@ -1360,8 +1362,23 @@ export default function PurchaseOrdersPage() {
                     No purchase order lines
                   </h2>
                   <p className="mt-2 text-sm text-theme-muted">
-                    Add inventory, low-stock items, or a custom line.
+                    Start by adding inventory items or a custom line.
                   </p>
+                  <div className="mx-auto mt-5 flex max-w-md flex-col justify-center gap-2 sm:flex-row">
+                    <Button onClick={addInventoryLine} disabled={!selectedInventoryItemId}>
+                      Add Item
+                    </Button>
+                    <Button variant="secondary" onClick={addCustomLine}>
+                      Add Custom Line
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={addLowStockItems}
+                      disabled={lowStockCandidates.length === 0}
+                    >
+                      Add Low Stock
+                    </Button>
+                  </div>
                 </div>
               )}
             </section>
@@ -1407,7 +1424,7 @@ export default function PurchaseOrdersPage() {
               </section>
             ) : (
               <section className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 p-4 text-sm font-semibold text-theme-success">
-                Purchase order is ready for browser-local output.
+                Purchase order is ready to print or export.
               </section>
             )}
 
@@ -1510,10 +1527,9 @@ export default function PurchaseOrdersPage() {
               )}
 
               <div className="mt-4 rounded-xl border border-theme bg-theme-inset p-4 text-sm font-semibold leading-6 text-theme-secondary">
-                Save draft, mark ready, and mark sent are not enabled in v1
-                because no purchase-order persistence schema exists. Receiving
-                inventory remains a future workflow and would need explicit
-                stock-in movements.
+                Save draft, mark ready, and mark sent stay inside this device
+                draft for now. Export before closing the tab. Receiving stock
+                must be finalized separately to record stock-in movements.
               </div>
             </div>
 
@@ -1663,8 +1679,8 @@ export default function PurchaseOrdersPage() {
       {confirmClearDraft && (
         <DialogShell
           title="Clear purchase order draft?"
-          eyebrow="Browser-only draft"
-          description="This clears the local draft in this browser session. Inventory quantities and stock movements are not affected."
+          eyebrow="Device draft"
+          description="This clears the draft saved in this browser. Inventory quantities and stock movements are not affected."
           tone="danger"
           onClose={() => setConfirmClearDraft(false)}
           footer={

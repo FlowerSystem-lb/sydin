@@ -398,7 +398,7 @@ export default function StockCountsPage() {
             }))
         );
         setDraftRestored(true);
-        setNotice("Restored a browser-only stock count draft.");
+        setNotice("Restored a stock count draft saved on this device.");
       });
     } catch {
       window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -724,14 +724,13 @@ export default function StockCountsPage() {
           <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
               <div className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 px-4 py-3 text-sm text-theme-accent">
-                This v1 draft is saved in sessionStorage on this browser only
-                until finalized or cleared. SydIN will not create stock count
-                records until a database-backed session schema is added.
+                Your count draft stays on this device while you work. Review
+                differences before finalizing to record stock adjustments.
               </div>
               {draftRestored && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-theme-warning">
-                  A local browser draft was restored. Review it before
-                  continuing or clear it to restart.
+                  A stock count draft saved on this device was restored. Review
+                  it before continuing or clear it to restart.
                 </p>
               )}
               {setupError && (
@@ -854,17 +853,18 @@ export default function StockCountsPage() {
                 </div>
               </div>
               <p className="text-xs leading-5 text-theme-muted">
-                {scopeLabel}. Quantity changes are finalized only through the
-                existing stock movement adjustment path.
+                {scopeLabel}. Finalizing records stock adjustments through Stock
+                Movements.
               </p>
               {items.length === 0 && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
-                  Inventory is empty. Add items before starting a count.
+                  Choose a scope to begin counting inventory. Add inventory
+                  items first if this workspace is empty.
                 </p>
               )}
               {scope !== "all" && scopedItems.length === 0 && items.length > 0 && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
-                  No items match this scope.
+                  Choose a different scope to begin counting inventory.
                 </p>
               )}
             </aside>
@@ -1030,7 +1030,7 @@ export default function StockCountsPage() {
                                 }`}
                               >
                                 {difference === 0
-                                  ? "Matched"
+                                  ? "No difference"
                                   : formatSigned(difference)}
                               </span>
                             )}
@@ -1149,7 +1149,7 @@ export default function StockCountsPage() {
                           {counted === null
                             ? "Uncounted"
                             : difference === 0
-                              ? "Matched"
+                              ? "No difference"
                               : formatSigned(difference)}
                         </p>
                       </div>
@@ -1168,7 +1168,8 @@ export default function StockCountsPage() {
                     No count rows match
                   </h2>
                   <p className="mt-2 text-sm text-theme-muted">
-                    Adjust the search or count filter.
+                    Choose a scope to begin counting inventory, or adjust the
+                    search and count filter.
                   </p>
                 </div>
               )}
@@ -1205,9 +1206,9 @@ export default function StockCountsPage() {
               {[
                 ["Counted", countedDetails.length],
                 ["Uncounted", uncountedCount],
-                ["Matched", matchedCount],
-                ["Positive", positiveDetails.length],
-                ["Negative", negativeDetails.length],
+                ["No difference", matchedCount],
+                ["Count higher", positiveDetails.length],
+                ["Count lower", negativeDetails.length],
                 ["Net diff", formatSigned(netDifference)],
               ].map(([label, value]) => (
                 <div
@@ -1234,8 +1235,8 @@ export default function StockCountsPage() {
                   Differences
                 </h2>
                 <p className="mt-1 text-sm text-theme-muted">
-                  Only rows with a counted quantity different from the expected
-                  snapshot will create adjustment movements.
+                  Review differences before finalizing. Only rows where counted
+                  quantity differs from current stock will create adjustments.
                 </p>
               </div>
               {differenceDetails.length > 0 ? (
@@ -1280,7 +1281,9 @@ export default function StockCountsPage() {
                               {formatSigned(difference)}
                             </td>
                             <td className="px-4 py-3 text-theme-secondary">
-                              {difference > 0 ? "Increase stock" : "Reduce stock"}
+                              {difference > 0
+                                ? "Count is higher than current stock"
+                                : "Count is lower than current stock"}
                             </td>
                             <td className="px-4 py-3 text-theme-muted">
                               {row.note || "Stock count adjustment"}
@@ -1302,7 +1305,7 @@ export default function StockCountsPage() {
                   </h2>
                   <p className="mt-2 text-sm text-theme-muted">
                     Finalizing will record no stock movements and close this
-                    local draft.
+                    device draft.
                   </p>
                 </div>
               )}
@@ -1317,8 +1320,8 @@ export default function StockCountsPage() {
                     disabled={finalizing}
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
                   />
-                  Confirm finalized differences should be recorded as stock
-                  movement adjustments.
+                  Finalizing will record reviewed differences as stock movement
+                  adjustments.
                 </label>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Button
@@ -1415,8 +1418,8 @@ export default function StockCountsPage() {
       {confirmClearDraft && (
         <DialogShell
           title="Clear stock count draft?"
-          eyebrow="Browser-only draft"
-          description="This clears the local draft for this browser session. Finalized stock movements are not affected."
+          eyebrow="Device draft"
+          description="This clears the stock count draft saved in this browser. Finalized stock movements are not affected."
           tone="danger"
           onClose={() => setConfirmClearDraft(false)}
           footer={

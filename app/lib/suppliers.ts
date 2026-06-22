@@ -133,7 +133,7 @@ export function getSupplierErrorMessage(error: unknown) {
     supplierError?.code === "42P01" ||
     text.includes("suppliers")
   ) {
-    return "Supplier storage is not ready yet. Run the Phase 4C SQL migration, then try again.";
+    return "Suppliers are not available in this workspace yet. Contact support if this keeps happening.";
   }
 
   return "We could not save this supplier. Please try again.";

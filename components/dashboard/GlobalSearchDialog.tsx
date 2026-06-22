@@ -146,7 +146,7 @@ const QUICK_ACTIONS: SearchResult[] = [
     id: "action-purchase-order",
     group: "Operations",
     title: "Create purchase order",
-    subtitle: "Build a browser-local purchase order draft",
+    subtitle: "Build and export a purchase order draft",
     chip: "Page",
     href: "/dashboard/purchase-orders",
     keywords: "purchase order po supplier order",

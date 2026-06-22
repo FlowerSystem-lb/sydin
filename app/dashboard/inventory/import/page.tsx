@@ -753,7 +753,7 @@ export default function InventoryImportPage() {
                     <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
                       <thead className="bg-[#11172a] text-xs uppercase tracking-[0.12em] text-theme-muted">
                         <tr>
-                          {["Row", "Name", "SKU", "Category", "Quantity", "Depot", "Phase 4A", "Notes", "Status"].map(
+                          {["Row", "Name", "SKU", "Category", "Quantity", "Depot", "Item details", "Notes", "Status"].map(
                             (header) => (
                               <th key={header} className="px-4 py-4 font-bold">
                                 {header}
@@ -929,7 +929,7 @@ export default function InventoryImportPage() {
                         )}`}
                       >
                         <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-accent">
-                          Phase 4A details
+                          Item details
                         </p>
                         <div className="mt-2 grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
                           <p>

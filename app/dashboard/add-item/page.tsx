@@ -124,10 +124,10 @@ function getSaveErrorMessage(error: {
 }) {
   const errorText = `${error.message || ""} ${error.details || ""}`.toLowerCase();
   if (errorText.includes("supplier")) {
-    return "The supplier could not be linked. Confirm the Phase 4C migration is applied and choose one of your own suppliers.";
+    return "The supplier could not be linked. Choose one of your own suppliers or contact support if this keeps happening.";
   }
   if (errorText.includes("category")) {
-    return "The category could not be linked. Run the Phase 6A migration and choose one of your own categories.";
+    return "The category could not be linked. Choose one of your own categories or contact support if this keeps happening.";
   }
 
   const phaseFields = [
@@ -145,7 +145,7 @@ function getSaveErrorMessage(error: {
     error.code === "42703" ||
     phaseFields.some((field) => errorText.includes(field))
   ) {
-    return "The Phase 4A inventory fields are not available yet. Apply the approved database migration, then try again.";
+    return "Some item detail fields are not available in this workspace yet. Contact support if this keeps happening.";
   }
 
   return "We could not save this item. Please try again.";

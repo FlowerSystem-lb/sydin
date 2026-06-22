@@ -569,7 +569,7 @@ export default function ReceivingPage() {
             : "receive"
         );
         setDraftRestored(true);
-        setNotice("Restored a browser-only receiving draft.");
+        setNotice("Restored a receiving draft saved on this device.");
       });
     } catch {
       window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
@@ -611,7 +611,7 @@ export default function ReceivingPage() {
         setNotice(
           `Added ${handoffLines.length} selected Inventory item${
             handoffLines.length === 1 ? "" : "s"
-          } to this browser-only receiving draft.`
+          } to this receiving draft.`
         );
       });
     }
@@ -689,7 +689,7 @@ export default function ReceivingPage() {
     if (details.source === "purchase_order_draft") {
       if (poDraftLines.length === 0) {
         setSetupError(
-          "No browser-local purchase order draft lines are available to receive."
+          "No purchase order draft lines are available to receive on this device."
         );
         return;
       }
@@ -711,7 +711,7 @@ export default function ReceivingPage() {
             "po-draft",
             detail.quantity,
             detail.line.unitCost,
-            detail.line.note || "Loaded from browser-local purchase order draft."
+            detail.line.note || "Loaded from purchase order draft."
           )
         )
       );
@@ -767,7 +767,7 @@ export default function ReceivingPage() {
           "po-draft",
           detail.quantity,
           detail.line.unitCost,
-          detail.line.note || "Loaded from browser-local purchase order draft."
+          detail.line.note || "Loaded from purchase order draft."
         )
       ),
       "Added {count} purchase order draft line(s).",
@@ -956,8 +956,8 @@ export default function ReceivingPage() {
                 Receiving
               </h1>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Receive supplier deliveries, browser-local purchase order drafts,
-                returns, and manual restocks through auditable stock-in movements.
+                Receive supplier deliveries, purchase order drafts, returns, and
+                manual restocks. Inventory changes after receiving is finalized.
               </p>
             </div>
             <div className="grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
@@ -1004,14 +1004,14 @@ export default function ReceivingPage() {
           <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
               <div className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 px-4 py-3 text-sm text-theme-accent">
-                This receiving draft is saved on this browser only until
-                finalized. Finalizing creates stock-in movements and does not
-                directly overwrite inventory quantity.
+                Receiving drafts are saved in this browser for now. Finalizing
+                will record stock-in movements and update inventory through the
+                existing stock movement workflow.
               </div>
               {draftRestored && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-theme-warning">
-                  A local browser receiving draft was restored. Review it before
-                  finalizing or clear it to restart.
+                  A receiving draft saved on this device was restored. Review it
+                  before finalizing or clear it to restart.
                 </p>
               )}
               {setupError && (
@@ -1154,20 +1154,21 @@ export default function ReceivingPage() {
                 </div>
               </div>
               <p className="text-xs leading-5 text-theme-muted">
-                Saved receiving sessions require a future database migration. V1
-                uses browser draft recovery and creates only stock-in movements.
+                Receiving history is tracked through Stock Movements today.
+                Cloud-saved receiving sessions are planned for a later update.
               </p>
               {details.source === "purchase_order_draft" &&
                 (poDraftLines.length > 0 ? (
                   <p className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-theme-accent">
-                    Current browser-local purchase order draft has{" "}
+                    Current purchase order draft has{" "}
                     {poDraftLines.length} receivable line
                     {poDraftLines.length === 1 ? "" : "s"}.
                   </p>
                 ) : (
                   <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
-                    Saved purchase order receiving requires persistent purchase
-                    orders in a future migration.
+                    No purchase order draft lines are available on this device.
+                    You can add inventory items or manual receiving lines
+                    instead.
                   </p>
                 ))}
               {items.length === 0 && (
@@ -1566,8 +1567,24 @@ export default function ReceivingPage() {
                     No receiving rows match
                   </h2>
                   <p className="mt-2 text-sm text-theme-muted">
-                    Add inventory items or adjust the search and filter.
+                    Add items from inventory, a purchase order draft, or create a
+                    manual receiving line.
                   </p>
+                  <div className="mx-auto mt-5 flex max-w-md flex-col justify-center gap-2 sm:flex-row">
+                    <Button variant="secondary" onClick={addInventoryLine}>
+                      Add item
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      onClick={addPurchaseOrderLines}
+                      disabled={poDraftLines.length === 0}
+                    >
+                      Add PO draft
+                    </Button>
+                    <Button variant="secondary" onClick={addLowStockLines}>
+                      Add low stock
+                    </Button>
+                  </div>
                 </div>
               )}
             </section>
@@ -1738,7 +1755,8 @@ export default function ReceivingPage() {
                     No received quantities
                   </h2>
                   <p className="mt-2 text-sm text-theme-muted">
-                    Finalizing will record no stock movements.
+                    No stock-in movements will be recorded until received
+                    quantities are entered.
                   </p>
                 </div>
               )}
@@ -1754,8 +1772,8 @@ export default function ReceivingPage() {
                     disabled={finalizing}
                     className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
                   />
-                  Confirm received quantities should be recorded as stock-in
-                  movement deltas. Zero rows will be skipped.
+                  Finalizing will record stock-in movements for received
+                  quantities. Zero rows will be skipped.
                 </label>
                 <div className="flex flex-col gap-2 sm:flex-row">
                   <Button
@@ -1851,8 +1869,8 @@ export default function ReceivingPage() {
       {confirmClearDraft && (
         <DialogShell
           title="Clear receiving draft?"
-          eyebrow="Browser-only draft"
-          description="This clears the local receiving draft for this browser session. Finalized stock movements are not affected."
+          eyebrow="Device draft"
+          description="This clears the receiving draft saved in this browser. Finalized stock movements are not affected."
           tone="danger"
           onClose={() => setConfirmClearDraft(false)}
           footer={

@@ -174,7 +174,7 @@ const OPERATION_REPORTS: ReportCard[] = [
   {
     id: "stock-counts",
     name: "Stock Counts",
-    description: "Start or continue browser-local count workflows.",
+    description: "Open a draft workflow to count and review inventory.",
     category: "operations",
     source: "Stock Counts",
     formats: ["Workflow"],
@@ -182,12 +182,12 @@ const OPERATION_REPORTS: ReportCard[] = [
     href: "/dashboard/stock-counts",
     hrefLabel: "Open Stock Counts",
     icon: "check",
-    note: "Historical count sessions are not persisted in v1.",
+    note: "Saved count history is planned later.",
   },
   {
     id: "purchase-orders",
     name: "Purchase Orders",
-    description: "Create and export a browser-local purchase order draft.",
+    description: "Create and export a purchase order draft.",
     category: "operations",
     source: "Purchase Orders",
     formats: ["Workflow"],
@@ -195,7 +195,7 @@ const OPERATION_REPORTS: ReportCard[] = [
     href: "/dashboard/purchase-orders",
     hrefLabel: "Open Purchase Orders",
     icon: "file",
-    note: "Saved purchase order history needs future persistence.",
+    note: "Saved purchase order history is planned later.",
   },
   {
     id: "receiving",
@@ -894,8 +894,8 @@ export default function ReportsPage() {
                   Saved reports
                 </h2>
                 <p className="mt-0.5 text-xs leading-5 text-theme-muted">
-                  Saved definitions are not persisted yet. Generate reports from
-                  live data when needed.
+                  Saved report templates are planned later. Generate reports
+                  from live data when needed.
                 </p>
               </div>
             </div>
@@ -908,8 +908,7 @@ export default function ReportsPage() {
                   Scheduled email reports
                 </h2>
                 <p className="mt-0.5 text-xs leading-5 text-theme-muted">
-                  Scheduling will need dedicated persistence and delivery
-                  controls in a later phase.
+                  Scheduled delivery controls are planned for a later update.
                 </p>
               </div>
             </div>
