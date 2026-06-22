@@ -143,6 +143,45 @@ function slugifyFilename(value: string) {
   );
 }
 
+function fitTextToWidth(document: jsPDF, value: string, maxWidth: number) {
+  const text = value.trim();
+
+  if (!text || document.getTextWidth(text) <= maxWidth) return text;
+
+  const suffix = "...";
+  let fitted = text;
+
+  while (
+    fitted.length > 0 &&
+    document.getTextWidth(`${fitted}${suffix}`) > maxWidth
+  ) {
+    fitted = fitted.slice(0, -1).trimEnd();
+  }
+
+  return fitted ? `${fitted}${suffix}` : suffix;
+}
+
+function wrapTextToLines(
+  document: jsPDF,
+  value: string,
+  maxWidth: number,
+  maxLines: number
+) {
+  const lines = document.splitTextToSize(value.trim(), maxWidth) as string[];
+
+  if (lines.length <= maxLines) return lines;
+
+  const visibleLines = lines.slice(0, Math.max(1, maxLines));
+  const lastIndex = visibleLines.length - 1;
+  visibleLines[lastIndex] = fitTextToWidth(
+    document,
+    visibleLines[lastIndex],
+    maxWidth
+  );
+
+  return visibleLines;
+}
+
 function getImageFormat(url: string, contentType: string | null): ImageFormat | null {
   const normalizedContentType = (contentType || "").toLowerCase();
   const normalizedUrl = url.toLowerCase();
@@ -446,6 +485,12 @@ function getGroupLabel(groupBy: InventoryPdfGroupBy, item: PreparedItem) {
   return "Inventory";
 }
 
+function getGroupMetadataLabel(groupBy: InventoryPdfGroupBy) {
+  if (groupBy === "category") return "Grouped by category";
+  if (groupBy === "depot") return "Grouped by depot/location";
+  return "";
+}
+
 function groupItems(items: PreparedItem[], groupBy: InventoryPdfGroupBy) {
   if (groupBy === "none") {
     return [{ key: "inventory", label: "Inventory", items }];
@@ -500,7 +545,12 @@ function drawSydinMark(document: jsPDF, x: number, y: number, size: number) {
     y + size * 0.12
   );
   document.setDrawColor(20, 217, 255);
-  document.line(x + size * 0.82, y + size * 0.2, x + size * 0.82, y + size * 0.78);
+  document.line(
+    x + size * 0.82,
+    y + size * 0.2,
+    x + size * 0.82,
+    y + size * 0.78
+  );
   document.setFillColor(99, 102, 241);
   document.roundedRect(
     x + size * 0.38,
@@ -524,7 +574,11 @@ function drawSydinWordmark(
   drawSydinMark(document, x, y - size * 0.7, size * 0.9);
   document.setFont("helvetica", "bold");
   document.setFontSize(size);
-  document.setTextColor(options.dark ? 255 : 15, options.dark ? 255 : 23, options.dark ? 255 : 42);
+  document.setTextColor(
+    options.dark ? 255 : 15,
+    options.dark ? 255 : 23,
+    options.dark ? 255 : 42
+  );
   document.text("SydIN", x + size * 1.08, y);
 }
 
@@ -534,7 +588,7 @@ function drawHeader({
   margin,
   businessName,
   reportTitle,
-  scopeLabel,
+  metadataLines,
   generatedAt,
   brandingMode,
   logo,
@@ -546,7 +600,7 @@ function drawHeader({
   margin: number;
   businessName: string;
   reportTitle: string;
-  scopeLabel: string;
+  metadataLines: string[];
   generatedAt: Date;
   brandingMode: InventoryPdfBrandingMode;
   logo: PdfImageData | null;
@@ -554,70 +608,95 @@ function drawHeader({
   pageNumber: number;
 }) {
   const compact = pageNumber > 1;
-  const headerHeight = compact ? 22 : 34;
+  const headerHeight = compact ? 20 : 32;
 
   document.setFillColor(15, 23, 42);
   document.rect(0, 0, pageWidth, headerHeight, "F");
 
   let textX = margin;
+  const rightWidth = compact ? 66 : 80;
+  const rightX = pageWidth - margin;
 
   if (brandingMode === "business" && logo) {
     try {
-      const logoSize = getContainedImageSize(logo.width, logo.height, 20, 14);
+      const logoSize = getContainedImageSize(
+        logo.width,
+        logo.height,
+        compact ? 16 : 20,
+        compact ? 10 : 13
+      );
       document.addImage(
         logo.dataUrl,
         logo.format,
         margin,
-        compact ? 4 : 8,
+        compact ? 5 : 7,
         logoSize.width,
         logoSize.height
       );
-      textX = margin + 26;
+      textX = margin + (compact ? 22 : 26);
     } catch {
       textX = margin;
     }
   } else if (brandingMode === "sydin") {
-    drawSydinWordmark(document, margin, compact ? 14 : 18, {
+    drawSydinWordmark(document, margin, compact ? 13 : 17, {
       dark: true,
       size: compact ? 8.5 : 10,
     });
     textX = margin + (compact ? 30 : 36);
   }
 
-  document.setFont("helvetica", "bold");
-  document.setFontSize(compact ? 10 : 12);
-  document.setTextColor(255, 255, 255);
-  document.text(businessName, textX, compact ? 9 : 12);
+  const leftMaxWidth = Math.max(45, rightX - rightWidth - textX - 6);
 
-  document.setFontSize(compact ? 12 : 17);
-  document.text(reportTitle, textX, compact ? 17 : 23);
+  document.setFont("helvetica", "bold");
+  document.setFontSize(compact ? 9.5 : 11.5);
+  document.setTextColor(255, 255, 255);
+  document.text(
+    fitTextToWidth(document, businessName, leftMaxWidth),
+    textX,
+    compact ? 9 : 12
+  );
 
   if (!compact && contactLine) {
     document.setFont("helvetica", "normal");
     document.setFontSize(7.5);
     document.setTextColor(203, 213, 225);
-    document.text(contactLine, textX, 30);
+    document.text(
+      fitTextToWidth(document, contactLine, leftMaxWidth),
+      textX,
+      20
+    );
   }
 
   document.setFont("helvetica", "bold");
-  document.setFontSize(8);
-  document.setTextColor(226, 232, 240);
-  document.text(scopeLabel, pageWidth - margin, compact ? 10 : 13, {
-    align: "right",
-  });
+  document.setFontSize(compact ? 12 : 15.5);
+  document.setTextColor(255, 255, 255);
+  document.text(
+    fitTextToWidth(document, reportTitle, rightWidth),
+    rightX,
+    compact ? 9 : 11,
+    {
+      align: "right",
+    }
+  );
 
   document.setFont("helvetica", "normal");
   document.setFontSize(7);
   document.setTextColor(203, 213, 225);
-  document.text(`Generated ${formatDateForDisplay(generatedAt)}`, pageWidth - margin, compact ? 17 : 22, {
-    align: "right",
-  });
+  const headerMetadata = [
+    ...metadataLines.slice(0, compact ? 1 : 3),
+    `Generated ${formatDateForDisplay(generatedAt)}`,
+  ];
 
-  if (!compact) {
-    document.text("Generated by SydIN", pageWidth - margin, 30, {
-      align: "right",
-    });
-  }
+  headerMetadata.forEach((line, index) => {
+    document.text(
+      fitTextToWidth(document, line, rightWidth),
+      rightX,
+      compact ? 15 + index * 4 : 17 + index * 4,
+      {
+        align: "right",
+      }
+    );
+  });
 }
 
 function drawFooter({
@@ -738,23 +817,33 @@ function drawAttentionBanner({
   document.text(text, x + 4, y + 6.4);
 }
 
+function getItemDetailLines(
+  item: PreparedItem,
+  include: InventoryPdfIncludeSettings,
+  reportType: InventoryPdfReportType
+) {
+  const tracking = [
+    item.itemCode ? `Code: ${item.itemCode}` : "",
+    include.sku && item.sku ? `SKU: ${item.sku}` : "",
+    include.barcode && item.barcode ? `Barcode: ${item.barcode}` : "",
+  ].filter(Boolean);
+  const details = [];
+
+  if (tracking.length > 0) details.push(tracking.join("  |  "));
+  if (include.notes && item.notes?.trim() && reportType !== "valuation") {
+    details.push(`Notes: ${item.notes.trim()}`);
+  }
+
+  return details;
+}
+
 function buildItemText(
   item: PreparedItem,
   include: InventoryPdfIncludeSettings,
   reportType: InventoryPdfReportType
 ) {
   const lines = [item.name];
-  const tracking = [
-    item.itemCode ? `Code: ${item.itemCode}` : "",
-    include.sku && item.sku ? `SKU: ${item.sku}` : "",
-    include.barcode && item.barcode ? `Barcode: ${item.barcode}` : "",
-  ].filter(Boolean);
-
-  if (tracking.length > 0) lines.push(tracking.join("  |  "));
-
-  if (include.notes && item.notes?.trim() && reportType !== "valuation") {
-    lines.push(`Notes: ${item.notes.trim()}`);
-  }
+  lines.push(...getItemDetailLines(item, include, reportType));
 
   return lines.join("\n");
 }
@@ -1021,7 +1110,16 @@ export async function exportInventoryPdf({
     : new Map<number, PdfImageData>();
   const totals = getTotals(preparedItems);
   const groups = groupItems(preparedItems, groupBy);
-  const tableStartY = totals.lowStockCount > 0 ? 74 : 61;
+  const metadataLines = [
+    resolvedScopeLabel,
+    getGroupMetadataLabel(groupBy),
+    `${totals.itemCount.toLocaleString()} item${
+      totals.itemCount === 1 ? "" : "s"
+    } | ${normalizedCurrency}`,
+  ].filter(Boolean);
+  const metricY = 38;
+  const attentionY = 58;
+  const tableStartY = totals.lowStockCount > 0 ? 72 : 58;
 
   drawHeader({
     document,
@@ -1029,7 +1127,7 @@ export async function exportInventoryPdf({
     margin,
     businessName,
     reportTitle,
-    scopeLabel: resolvedScopeLabel,
+    metadataLines,
     generatedAt,
     brandingMode: resolvedBrandingMode,
     logo,
@@ -1041,7 +1139,7 @@ export async function exportInventoryPdf({
     document,
     cards: metricCardsForReport(reportType, totals, normalizedCurrency),
     x: margin,
-    y: 41,
+    y: metricY,
     width: pageWidth - margin * 2,
   });
 
@@ -1054,7 +1152,7 @@ export async function exportInventoryPdf({
     drawAttentionBanner({
       document,
       x: margin,
-      y: 61,
+      y: attentionY,
       width: pageWidth - margin * 2,
       text: bannerText,
     });
@@ -1084,7 +1182,7 @@ export async function exportInventoryPdf({
       const remainingSpace = pageHeight - nextY - 38;
       if (groupBy !== "none" && remainingSpace < 34) {
         document.addPage();
-        nextY = 30;
+        nextY = 28;
       }
 
       if (groupBy !== "none") {
@@ -1107,7 +1205,7 @@ export async function exportInventoryPdf({
         margin: {
           left: margin,
           right: margin,
-          top: 28,
+          top: 26,
           bottom: 18,
         },
         showHead: "everyPage",
@@ -1143,14 +1241,14 @@ export async function exportInventoryPdf({
               margin,
               businessName,
               reportTitle,
-              scopeLabel: resolvedScopeLabel,
+              metadataLines,
               generatedAt,
               brandingMode: resolvedBrandingMode,
               logo,
               contactLine,
               pageNumber,
             });
-            if (data.settings?.margin) data.settings.margin.top = 28;
+            if (data.settings?.margin) data.settings.margin.top = 26;
           }
         },
         didParseCell: (data: CellHookData) => {
@@ -1166,13 +1264,14 @@ export async function exportInventoryPdf({
           if (data.column.dataKey === "item") {
             data.cell.styles.fontStyle = "bold";
             if (resolvedInclude.images) {
-            data.cell.styles.cellPadding = {
-              top: 2.4,
-              right: 2.4,
-              bottom: 2.4,
-              left: item && itemThumbnails.has(item.id) ? 18 : 2.4,
-            };
-          }
+              data.cell.styles.minCellHeight = 20;
+              data.cell.styles.cellPadding = {
+                top: 2.4,
+                right: 2.4,
+                bottom: 2.4,
+                left: item && itemThumbnails.has(item.id) ? 19 : 2.4,
+              };
+            }
           }
 
           if (data.column.dataKey === "status" && item) {
@@ -1198,6 +1297,40 @@ export async function exportInventoryPdf({
 
           if (!thumbnail) return;
 
+          const backgroundColor: [number, number, number] =
+            item.status === "Out of stock"
+              ? [254, 242, 242]
+              : item.status === "Low stock"
+                ? [255, 247, 237]
+                : data.row.index % 2 === 1
+                  ? [248, 250, 252]
+                  : [255, 255, 255];
+          const textX = data.cell.x + 19;
+          const textY = data.cell.y + 5;
+          const textWidth = Math.max(12, data.cell.width - 22);
+          const bodyFontSize = orientation === "landscape" ? 7.8 : 7.2;
+          const detailLines = getItemDetailLines(
+            item,
+            resolvedInclude,
+            reportType
+          );
+          const detailLineHeight = 3.1;
+          const nameLineHeight = 3.3;
+          const availableNameHeight = Math.max(
+            nameLineHeight,
+            data.cell.height - 5 - detailLines.length * detailLineHeight
+          );
+          const maxNameLines = Math.max(
+            1,
+            Math.floor(availableNameHeight / nameLineHeight)
+          );
+          const nameLines = wrapTextToLines(
+            document,
+            item.name || "Unnamed item",
+            textWidth,
+            maxNameLines
+          );
+
           try {
             const size = getContainedImageSize(
               thumbnail.width,
@@ -1206,6 +1339,14 @@ export async function exportInventoryPdf({
               12
             );
 
+            document.setFillColor(...backgroundColor);
+            document.rect(
+              data.cell.x + 16,
+              data.cell.y + 1,
+              Math.max(1, data.cell.width - 17),
+              Math.max(1, data.cell.height - 2),
+              "F"
+            );
             document.addImage(
               thumbnail.dataUrl,
               thumbnail.format,
@@ -1214,6 +1355,41 @@ export async function exportInventoryPdf({
               size.width,
               size.height
             );
+
+            document.setFont("helvetica", "bold");
+            document.setFontSize(bodyFontSize);
+            document.setTextColor(15, 23, 42);
+            document.text(nameLines, textX, textY, {
+              maxWidth: textWidth,
+              baseline: "top",
+            });
+
+            if (detailLines.length > 0) {
+              const detailY = textY + nameLines.length * nameLineHeight;
+              const maxDetailLines = Math.max(
+                1,
+                Math.floor(
+                  (data.cell.height - (detailY - data.cell.y) - 2) /
+                    detailLineHeight
+                )
+              );
+              const visibleDetails = detailLines.slice(0, maxDetailLines);
+
+              document.setFont("helvetica", "normal");
+              document.setFontSize(Math.max(6.4, bodyFontSize - 0.5));
+              document.setTextColor(100, 116, 139);
+              visibleDetails.forEach((line, index) => {
+                document.text(
+                  fitTextToWidth(document, line, textWidth),
+                  textX,
+                  detailY + index * detailLineHeight,
+                  {
+                    maxWidth: textWidth,
+                    baseline: "top",
+                  }
+                );
+              });
+            }
           } catch {
             // A rejected thumbnail should not block the business report.
           }
