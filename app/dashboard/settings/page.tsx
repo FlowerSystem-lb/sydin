@@ -1432,31 +1432,191 @@ export default function SettingsPage() {
   );
 
   const renderEmailPanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Email identity"
-        description="Authentication email is handled by the existing Supabase Auth setup. Custom senders and notification templates are not implemented in Settings v1."
-        action={<StatusChip>Future</StatusChip>}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Account email
-            </p>
-            <p className="mt-1 break-words text-sm font-black text-theme-primary">
-              {userEmail || "Email unavailable"}
-            </p>
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+      <div className="grid gap-4">
+        <SettingCard
+          title="Current email setup"
+          description="Account verification and password-related emails are handled by SydIN's authentication provider. Custom sender controls are not active in Settings v1."
+          action={<StatusChip tone="success">Auth email active</StatusChip>}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Account email
+              </p>
+              <p className="mt-1 break-words text-sm font-black text-theme-primary">
+                {userEmail || "Email unavailable"}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                Used for sign-in, verification, and account access emails.
+              </p>
+            </div>
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Custom sender
+              </p>
+              <p className="mt-1 text-sm font-black text-theme-primary">
+                Not configured
+              </p>
+              <div className="mt-2">
+                <StatusChip>Custom sender future</StatusChip>
+              </div>
+            </div>
           </div>
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Custom sender
-            </p>
-            <p className="mt-1 text-sm text-theme-muted">
-              Future. No SMTP, domain, or delivery settings were added.
-            </p>
+        </SettingCard>
+
+        <SettingCard
+          title="Business contact email"
+          description="The saved business contact email is used for public contact branding when enabled and allowed by your plan."
+          action={
+            <StatusChip tone={settings.contact_email ? "success" : "neutral"}>
+              {settings.contact_email
+                ? "Business email configured"
+                : "Business email missing"}
+            </StatusChip>
+          }
+        >
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Public contact email
+              </p>
+              <p className="mt-1 break-words text-sm font-black text-theme-primary">
+                {settings.contact_email || "Not set"}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                Public contact display is controlled in Branding and Workspace.
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:min-w-40">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => switchSection("workspace")}
+              >
+                Edit Workspace
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                onClick={() => switchSection("branding")}
+              >
+                Review Branding
+              </Button>
+            </div>
           </div>
-        </div>
-      </SettingCard>
+        </SettingCard>
+
+        <SettingCard
+          title="Report emails"
+          description="Manual PDF and CSV exports are available today from Reports. Scheduled email reports need notification preferences and delivery controls in a later phase."
+          action={<StatusChip tone="info">Manual reports</StatusChip>}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-sm font-black text-theme-primary">
+                Available today
+              </p>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                Generate inventory PDFs and stock movement CSV files manually.
+              </p>
+            </div>
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-sm font-black text-theme-primary">
+                Scheduled delivery
+              </p>
+              <div className="mt-2">
+                <StatusChip>Future</StatusChip>
+              </div>
+            </div>
+          </div>
+          <div className="mt-3">
+            <Link
+              href="/dashboard/reports"
+              className={buttonClassName({ size: "sm" })}
+            >
+              Open Reports Hub
+            </Link>
+          </div>
+        </SettingCard>
+      </div>
+
+      <div className="grid gap-4">
+        <SettingCard
+          title="Notification preferences"
+          description="Automated alerts are not active yet. These notification types are listed as future planning targets, not functional toggles."
+          action={<StatusChip>Notifications future</StatusChip>}
+        >
+          <div className="grid gap-2">
+            {[
+              ["Low-stock alerts", "Email when items reach low-stock rules"],
+              ["Stock movement alerts", "Notify on stock in, out, or adjustments"],
+              ["Receiving confirmations", "Summaries after receiving workflows"],
+              ["Pick list updates", "Changes to pick list status or handoff"],
+              ["Report emails", "Scheduled report delivery"],
+            ].map(([title, description]) => (
+              <div
+                key={title}
+                className="flex items-start justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
+              >
+                <span className="min-w-0">
+                  <span className="block text-sm font-black text-theme-primary">
+                    {title}
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-5 text-theme-muted">
+                    {description}
+                  </span>
+                </span>
+                <StatusChip>Future</StatusChip>
+              </div>
+            ))}
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Sender identity"
+          description="Branded sending addresses, reply-to controls, and domain verification will require a future email provider integration."
+          action={<StatusChip>Custom sender future</StatusChip>}
+        >
+          <div className="grid gap-2">
+            {[
+              "Branded email sender",
+              "Custom reply-to address",
+              "Domain verification",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
+              >
+                <span className="text-sm font-bold text-theme-primary">
+                  {item}
+                </span>
+                <StatusChip>Future</StatusChip>
+              </div>
+            ))}
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Operational context"
+          description="Stock movement history is available today. Email alerts for operational events are intentionally not enabled in this phase."
+          action={
+            <Link
+              href="/dashboard/stock-movements"
+              className={buttonClassName({ variant: "secondary", size: "sm" })}
+            >
+              Open Movements
+            </Link>
+          }
+        >
+          <div className="flex flex-wrap gap-2">
+            <StatusChip tone="success">Stock history available</StatusChip>
+            <StatusChip>Workflow emails future</StatusChip>
+          </div>
+        </SettingCard>
+      </div>
     </div>
   );
 
