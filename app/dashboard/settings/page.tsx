@@ -1374,60 +1374,262 @@ export default function SettingsPage() {
   );
 
   const renderBillingPanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Current plan"
-        description="Plan status and limits are read from existing subscription logic."
-        action={<Badge tone="accent">{currentPlanName} plan</Badge>}
-      >
-        <div className="grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Status
-            </p>
-            <p className="mt-1 text-sm font-black text-theme-primary">
-              {subscription.status || "active"}
-            </p>
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
+      <div className="grid gap-4">
+        <SettingCard
+          title="Current plan"
+          description="Your plan controls access to branding, reporting, imports, scanner tools, and workspace limits."
+          action={<Badge tone="accent">{currentPlanName} plan</Badge>}
+        >
+          <div className="grid gap-3 sm:grid-cols-3">
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Plan
+              </p>
+              <p className="mt-1 text-sm font-black text-theme-primary">
+                {currentPlanName}
+              </p>
+              <div className="mt-2">
+                <StatusChip>Current plan</StatusChip>
+              </div>
+            </div>
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Status
+              </p>
+              <p className="mt-1 text-sm font-black text-theme-primary">
+                {subscription.status || "active"}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                Read from existing subscription data.
+              </p>
+            </div>
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Item limit
+              </p>
+              <p className="mt-1 text-sm font-black text-theme-primary">
+                {subscription.item_limit.toLocaleString()}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                Usage count remains in the dashboard account area.
+              </p>
+            </div>
           </div>
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Item limit
-            </p>
-            <p className="mt-1 text-sm font-black text-theme-primary">
-              {subscription.item_limit.toLocaleString()}
-            </p>
+          <div className="mt-4 flex flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="text-sm font-black text-theme-primary">
+                Manual early-access plan changes
+              </p>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                SydIN currently uses plan requests and manual activation. No
+                checkout or billing portal is exposed in Settings v1.
+              </p>
+            </div>
+            <Link
+              href={upgradeHref}
+              className={buttonClassName({ size: "sm" })}
+            >
+              {upgradeLabel}
+            </Link>
           </div>
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Billing
-            </p>
-            <p className="mt-1 text-sm text-theme-muted">
-              Manual plan activation. No Stripe settings in v1.
-            </p>
+        </SettingCard>
+
+        <SettingCard
+          title="Included capabilities"
+          description="Feature availability is based on the current workspace plan and the existing entitlement checks."
+        >
+          <div className="grid gap-2 md:grid-cols-2">
+            {[
+              [
+                "Business logo",
+                "Used in branding and exports",
+                planCapabilities.customBusinessLogo,
+                "Logo included",
+                "Logo locked",
+              ],
+              [
+                "Public contact branding",
+                "Contact details on public item pages",
+                planCapabilities.publicContactBranding,
+                "Public branding included",
+                "Public branding locked",
+              ],
+              [
+                "Custom low-stock threshold",
+                "Workspace low-stock rule",
+                planCapabilities.customLowStockThreshold,
+                "Low-stock threshold included",
+                "Low-stock threshold locked",
+              ],
+              [
+                "PDF and report exports",
+                "Inventory reports and export branding",
+                planCapabilities.pdfExport === "basic",
+                "PDF export included",
+                "PDF export locked",
+              ],
+              [
+                "Inventory import",
+                "CSV/Excel import workflow",
+                planCapabilities.csvExcelImport,
+                "Import included",
+                "Import locked",
+              ],
+              [
+                "Scanner",
+                "Barcode scanner workflow",
+                planCapabilities.scanner,
+                "Scanner included",
+                "Scanner locked",
+              ],
+            ].map(([title, description, included, includedLabel, lockedLabel]) => (
+              <div
+                key={String(title)}
+                className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-black text-theme-primary">
+                      {title}
+                    </p>
+                    <p className="mt-0.5 text-xs leading-5 text-theme-muted">
+                      {description}
+                    </p>
+                  </div>
+                  <StatusChip tone={included ? "success" : "neutral"}>
+                    {included ? includedLabel : lockedLabel}
+                  </StatusChip>
+                </div>
+              </div>
+            ))}
           </div>
-        </div>
-        <div className="mt-4">
-          <Link href={upgradeHref} className={buttonClassName({ size: "sm" })}>
-            {upgradeLabel}
-          </Link>
-        </div>
-      </SettingCard>
-      <SettingCard
-        title="Plan capabilities"
-        description="Feature availability follows the existing subscription plan definitions."
-      >
-        <div className="flex flex-wrap gap-2">
-          <StatusChip tone={planCapabilities.customBusinessLogo ? "success" : "neutral"}>
-            Logo branding {planCapabilities.customBusinessLogo ? "available" : "upgrade"}
-          </StatusChip>
-          <StatusChip tone={planCapabilities.csvExcelImport ? "success" : "neutral"}>
-            Import {planCapabilities.csvExcelImport ? "available" : "upgrade"}
-          </StatusChip>
-          <StatusChip tone={planCapabilities.advancedReports ? "success" : "neutral"}>
-            Advanced reports {planCapabilities.advancedReports ? "available" : "upgrade"}
-          </StatusChip>
-        </div>
-      </SettingCard>
+        </SettingCard>
+
+        <SettingCard
+          title="Plan-related settings"
+          description="Jump to the existing settings and modules affected by your current plan."
+        >
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => switchSection("branding")}
+            >
+              Review Branding
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => switchSection("inventory")}
+            >
+              Review Inventory
+            </Button>
+            <Link
+              href="/dashboard/reports"
+              className={buttonClassName({ variant: "secondary", size: "sm" })}
+            >
+              Open Reports Hub
+            </Link>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => switchSection("workspace")}
+            >
+              Review Workspace
+            </Button>
+          </div>
+        </SettingCard>
+      </div>
+
+      <div className="grid gap-4">
+        <SettingCard
+          title="Plan-gated features"
+          description="Locked items are available on higher plans through the existing manual request flow."
+          action={<StatusChip>Based on plan</StatusChip>}
+        >
+          <div className="grid gap-2">
+            {[
+              [
+                "Branding",
+                planCapabilities.customBusinessLogo &&
+                  planCapabilities.publicContactBranding,
+              ],
+              ["Import and scanner", planCapabilities.csvExcelImport && planCapabilities.scanner],
+              ["Advanced reports", planCapabilities.advancedReports],
+              ["Dashboard value analytics", planCapabilities.dashboardAnalytics],
+              ["Priority manual support", planCapabilities.priorityManualSupport],
+            ].map(([label, available]) => (
+              <div
+                key={String(label)}
+                className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
+              >
+                <span className="text-sm font-bold text-theme-primary">
+                  {label}
+                </span>
+                <StatusChip tone={available ? "success" : "neutral"}>
+                  {available ? "Included" : "Higher plan"}
+                </StatusChip>
+              </div>
+            ))}
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Usage and limits"
+          description="Item limit is available today. Detailed metering and billing history need a later billing system."
+          action={<StatusChip>Usage tracking future</StatusChip>}
+        >
+          <div className="grid gap-3">
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Current item limit
+              </p>
+              <p className="mt-1 text-sm font-black text-theme-primary">
+                {subscription.item_limit.toLocaleString()} items
+              </p>
+            </div>
+            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-sm font-black text-theme-primary">
+                Future usage controls
+              </p>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                Usage metering, billing history, and seat billing are not
+                implemented in Settings v1.
+              </p>
+            </div>
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Billing management"
+          description="Billing management is not exposed in Settings v1. Invoices, payment methods, checkout, and subscription portals are future billing controls."
+          action={<StatusChip>Billing management future</StatusChip>}
+        >
+          <div className="grid gap-2">
+            {[
+              "Invoices",
+              "Payment methods",
+              "Checkout and upgrades",
+              "Billing history",
+              "Seat and team billing",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
+              >
+                <span className="text-sm font-bold text-theme-primary">
+                  {item}
+                </span>
+                <StatusChip>Future</StatusChip>
+              </div>
+            ))}
+          </div>
+        </SettingCard>
+      </div>
     </div>
   );
 
