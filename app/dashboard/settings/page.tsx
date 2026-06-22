@@ -77,7 +77,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "reports",
     label: "Reports",
-    description: "Report defaults and future scheduling",
+    description: "Report defaults and scheduling roadmap",
     icon: "reports",
   },
   {
@@ -148,8 +148,6 @@ const inputClassName =
   "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 const valueTextClassName =
   "min-w-0 truncate text-sm font-black text-theme-primary";
-const labelTextClassName =
-  "min-w-0 truncate text-sm font-bold text-theme-primary";
 const mutedTextClassName = "min-w-0 text-xs leading-5 text-theme-muted";
 
 function ThemePreview({ theme }: { theme: ThemePreference }) {
@@ -273,6 +271,35 @@ function SettingCard({
       </div>
       {children && <div className="mt-4 min-w-0">{children}</div>}
     </article>
+  );
+}
+
+function RoadmapCard({
+  title,
+  description,
+  items,
+}: {
+  title: string;
+  description: string;
+  items: string[];
+}) {
+  return (
+    <SettingCard
+      title={title}
+      description={description}
+      action={<StatusChip tone="info">Roadmap</StatusChip>}
+    >
+      <div className="flex min-w-0 flex-wrap gap-2">
+        {items.map((item) => (
+          <span
+            key={item}
+            className="inline-flex min-h-8 max-w-full items-center rounded-full border border-theme bg-theme-surface px-2.5 py-1 text-xs font-bold text-theme-secondary"
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+    </SettingCard>
   );
 }
 
@@ -1221,31 +1248,15 @@ export default function SettingsPage() {
             </div>
           </SettingCard>
 
-          <section
-            aria-label="Future brand controls"
-            className="rounded-xl border border-theme bg-theme-inset p-3"
-          >
-            <p className="text-sm font-black text-theme-primary">
-              Future brand controls
-            </p>
-            <div className="mt-3 grid gap-2">
-              {[
-                "Report template colors",
-                "Custom email sender",
-                "Branded customer portal",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
-                >
-                  <span className="text-sm font-bold text-theme-primary">
-                    {item}
-                  </span>
-                  <StatusChip>Future</StatusChip>
-                </div>
-              ))}
-            </div>
-          </section>
+          <RoadmapCard
+            title="Branding roadmap"
+            description="Later branding controls are grouped here so the active logo, contact, and report identity settings stay easy to scan."
+            items={[
+              "Report template colors",
+              "Custom email sender",
+              "Branded customer portal",
+            ]}
+          />
         </div>
       </div>
 
@@ -1268,12 +1279,12 @@ export default function SettingsPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           <StatusChip tone="success">PDF inventory reports</StatusChip>
           <StatusChip tone="success">CSV movement export</StatusChip>
-          <StatusChip>Saved reports future</StatusChip>
+          <StatusChip tone="info">Saved reports roadmap</StatusChip>
         </div>
       </SettingCard>
       <SettingCard
         title="Report defaults"
-        description="Branding follows the existing business settings and plan capabilities. Saved report templates and scheduled reports are planned later."
+        description="Branding follows the existing business settings and plan capabilities. Scheduling and saved templates are grouped as roadmap items below."
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
@@ -1286,14 +1297,24 @@ export default function SettingsPage() {
           </div>
           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
             <p className="text-sm font-black text-theme-primary">
-              Scheduling
+              Current workflow
             </p>
             <p className="mt-1 text-xs leading-5 text-theme-muted">
-              Future. No email or delivery jobs are configured in Settings v1.
+              Generate reports manually from Reports Hub. No delivery jobs are
+              configured in Settings v1.
             </p>
           </div>
         </div>
       </SettingCard>
+      <RoadmapCard
+        title="Reports roadmap"
+        description="Planned report automation is summarized here without adding inactive controls to the current Settings surface."
+        items={[
+          "Saved report templates",
+          "Scheduled email delivery",
+          "Delivery preferences",
+        ]}
+      />
     </div>
   );
 
@@ -1410,9 +1431,9 @@ export default function SettingsPage() {
         </div>
       </SettingCard>
       <SettingCard
-        title="v1 workflow notes"
-        description="Stock movement records are saved. Stock count sessions and purchase order history stay on this device until cloud-saved history is added later."
-        action={<StatusChip>v1 workflow</StatusChip>}
+        title="Workflow notes"
+        description="Stock movement records are saved. Stock count sessions and purchase order history stay on this device in the current workflow."
+        action={<StatusChip>Current workflow</StatusChip>}
       />
     </div>
   );
@@ -1624,8 +1645,8 @@ export default function SettingsPage() {
 
         <SettingCard
           title="Usage and limits"
-          description="Item limit is available today. Detailed metering and billing history need a later billing system."
-          action={<StatusChip>Usage tracking future</StatusChip>}
+          description="Item limit is available today. Detailed billing management is grouped in the roadmap summary below."
+          action={<StatusChip tone="success">Limit visible</StatusChip>}
         >
           <div className="grid gap-3">
             <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
@@ -1636,43 +1657,21 @@ export default function SettingsPage() {
                 {subscription.item_limit.toLocaleString()} items
               </p>
             </div>
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-sm font-black text-theme-primary">
-                Future usage controls
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
-                Usage metering, billing history, and seat billing are not
-                implemented in Settings v1.
-              </p>
-            </div>
           </div>
         </SettingCard>
 
-        <SettingCard
-          title="Billing management"
-          description="Billing management is not exposed in Settings v1. Invoices, payment methods, checkout, and subscription portals are future billing controls."
-          action={<StatusChip>Billing management future</StatusChip>}
-        >
-          <div className="grid gap-2">
-            {[
-              "Invoices",
-              "Payment methods",
-              "Checkout and upgrades",
-              "Billing history",
-              "Seat and team billing",
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
-              >
-                <span className="text-sm font-bold text-theme-primary">
-                  {item}
-                </span>
-                <StatusChip>Future</StatusChip>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
+        <RoadmapCard
+          title="Billing management roadmap"
+          description="Invoices, payment methods, checkout, and billing history remain planned billing-system work, separate from the current manual plan request flow."
+          items={[
+            "Invoices",
+            "Payment methods",
+            "Checkout and upgrades",
+            "Billing history",
+            "Seat and team billing",
+            "Usage metering",
+          ]}
+        />
       </div>
     </div>
   );
@@ -1710,7 +1709,7 @@ export default function SettingsPage() {
                 className={`mt-1 ${valueTextClassName}`}
               />
               <div className="mt-2">
-                <StatusChip>Custom sender future</StatusChip>
+                <StatusChip tone="info">Roadmap item</StatusChip>
               </div>
             </div>
           </div>
@@ -1781,9 +1780,9 @@ export default function SettingsPage() {
               <p className="text-sm font-black text-theme-primary">
                 Scheduled delivery
               </p>
-              <div className="mt-2">
-                <StatusChip>Future</StatusChip>
-              </div>
+              <p className="mt-1 text-xs leading-5 text-theme-muted">
+                Summarized in the notification roadmap below.
+              </p>
             </div>
           </div>
           <div className="mt-3">
@@ -1798,62 +1797,20 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-4">
-        <SettingCard
-          title="Notification preferences"
-          description="Automated alerts are not active yet. These notification types are listed as future planning targets, not functional toggles."
-          action={<StatusChip>Notifications future</StatusChip>}
-        >
-          <div className="grid gap-2">
-            {[
-              ["Low-stock alerts", "Email when items reach low-stock rules"],
-              ["Stock movement alerts", "Notify on stock in, out, or adjustments"],
-              ["Receiving confirmations", "Summaries after receiving workflows"],
-              ["Pick list updates", "Changes to pick list status or handoff"],
-              ["Report emails", "Scheduled report delivery"],
-            ].map(([title, description]) => (
-              <div
-                key={title}
-                className="flex items-start justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
-              >
-                <span className="min-w-0">
-                  <span className={`block ${valueTextClassName}`}>
-                    {title}
-                  </span>
-                  <span
-                    className={`mt-0.5 block ${mutedTextClassName}`}
-                  >
-                    {description}
-                  </span>
-                </span>
-                <StatusChip>Future</StatusChip>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Sender identity"
-          description="Branded sending addresses, reply-to controls, and domain verification will require a future email provider integration."
-          action={<StatusChip>Custom sender future</StatusChip>}
-        >
-          <div className="grid gap-2">
-            {[
-              "Branded email sender",
-              "Custom reply-to address",
-              "Domain verification",
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
-              >
-                <span className={labelTextClassName}>
-                  {item}
-                </span>
-                <StatusChip>Future</StatusChip>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
+        <RoadmapCard
+          title="Notification roadmap"
+          description="Automated alerts and sender customization are planned as a later email-provider phase, not inactive Settings toggles."
+          items={[
+            "Low-stock alerts",
+            "Stock movement alerts",
+            "Receiving confirmations",
+            "Pick list updates",
+            "Scheduled report emails",
+            "Branded sender",
+            "Reply-to controls",
+            "Domain verification",
+          ]}
+        />
 
         <SettingCard
           title="Operational context"
@@ -1869,7 +1826,7 @@ export default function SettingsPage() {
         >
           <div className="flex flex-wrap gap-2">
             <StatusChip tone="success">Stock history available</StatusChip>
-            <StatusChip>Workflow emails future</StatusChip>
+            <StatusChip tone="info">Workflow email roadmap</StatusChip>
           </div>
         </SettingCard>
       </div>
@@ -2015,56 +1972,21 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-4">
-        <SettingCard
-          title="Session and device controls"
-          description="Advanced controls such as MFA and session management require a later security phase."
-          action={<StatusChip>Session controls future</StatusChip>}
-        >
-          <div className="grid gap-2">
-            {[
-              "Multi-factor authentication",
-              "Active sessions",
-              "Trusted devices",
-              "Sign out of all devices",
-              "Security notifications",
-            ].map((item) => (
-              <div
-                key={item}
-                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
-              >
-                <span className={labelTextClassName}>
-                  {item}
-                </span>
-                <StatusChip>Future</StatusChip>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Team and audit controls"
-          description="Team roles, approval flows, and audit logs are not implemented in Settings v1."
-          action={<StatusChip>Team roles future</StatusChip>}
-        >
-          <div className="grid gap-2">
-            {[
-              ["Team roles and permissions", "Future"],
-              ["Audit log", "Future"],
-              ["Approval flows", "Future"],
-              ["Provider linking and unlinking", "Future"],
-            ].map(([label, status]) => (
-              <div
-                key={label}
-                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
-              >
-                <span className={labelTextClassName}>
-                  {label}
-                </span>
-                <StatusChip>{status}</StatusChip>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
+        <RoadmapCard
+          title="Advanced security roadmap"
+          description="Advanced security controls are grouped here so the current account, sign-in, and data protection summaries stay focused."
+          items={[
+            "Multi-factor authentication",
+            "Active sessions",
+            "Trusted devices",
+            "Sign out of all devices",
+            "Security notifications",
+            "Team roles",
+            "Audit log",
+            "Approval flows",
+            "Provider management",
+          ]}
+        />
 
         <SettingCard
           title="Data protection"
@@ -2117,10 +2039,15 @@ export default function SettingsPage() {
           />
         </div>
       </SettingCard>
-      <SettingCard
-        title="Backups"
-        description="Workspace backups, audit snapshots, and destructive data tools need a later dedicated design."
-        action={<StatusChip>Future</StatusChip>}
+      <RoadmapCard
+        title="Advanced data tools roadmap"
+        description="Backup, restore, and audit snapshot concepts are grouped here without adding destructive tools to Settings."
+        items={[
+          "Workspace backups",
+          "Restore points",
+          "Audit snapshots",
+          "Advanced exports",
+        ]}
       />
     </div>
   );
@@ -2181,8 +2108,8 @@ export default function SettingsPage() {
                 </h1>
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
                   Manage the workspace details SydIN already supports, with
-                  clear placeholders for future branding, billing, email, team,
-                  security, and data controls.
+                  compact roadmap summaries for later branding, billing,
+                  email, team, security, and data controls.
                 </p>
               </div>
               <div className="flex flex-wrap gap-2">
