@@ -3,38 +3,42 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
-import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import { Button, DialogShell, Select } from "@/components/ui";
+import {
+  DEFAULT_BUSINESS_SETTINGS,
+  getOrCreateBusinessSettings,
+  type BusinessSettings,
+} from "@/app/lib/businessSettings";
 import {
   getCategoriesForUser,
   resolveCategoryDisplay,
   type Category,
 } from "@/app/lib/categories";
 import {
-  DEFAULT_BUSINESS_SETTINGS,
-  getOrCreateBusinessSettings,
-  type BusinessSettings,
-} from "@/app/lib/businessSettings";
-import { getDepotsForUser, type Depot } from "@/app/lib/depots";
+  formatDepotLabel,
+  getDepotsForUser,
+  type Depot,
+} from "@/app/lib/depots";
+import {
+  exportInventoryPdf,
+  type InventoryPdfBrandingMode,
+  type InventoryPdfGroupBy,
+  type InventoryPdfIncludeSettings,
+  type InventoryPdfReportType,
+} from "@/app/lib/inventoryPdfExport";
 import {
   formatInventoryPrice,
   getInventoryQuantityLabel,
   normalizeCurrencyCode,
+  normalizeInventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
 import {
   getInventoryValueTotals,
   getLowStockReport,
-  getMovementTimeBuckets,
   getMovementTotals,
   getOutOfStockReport,
-  getPriceDataCoverage,
-  getRankedValueItems,
-  groupInventoryValues,
-  normalizeReportNumber,
-  summarizeTopValueGroups,
-  type GroupedInventoryValue,
   type InventoryReportItem,
   type ReportStockMovement,
-  type StockHealthReportItem,
 } from "@/app/lib/inventoryReports";
 import {
   formatStockMovementNotes,
@@ -43,7 +47,6 @@ import {
 } from "@/app/lib/stockMovements";
 import {
   FALLBACK_SUBSCRIPTION,
-  formatPlanName,
   getEffectiveLowStockThreshold,
   getSubscriptionCapabilities,
   getSubscriptionUsage,
@@ -52,529 +55,353 @@ import {
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
 import { supabase } from "@/app/lib/supabase";
 
-type DatePreset = 7 | 30 | 90;
+type ReportCategory = "all" | "inventory" | "operations" | "valuation" | "activity";
+type ReportAction = "inventory-pdf" | "movement-csv" | "route";
+type MovementFilter = "all" | StockMovementType;
+
+interface ReportInventoryItem extends InventoryReportItem {
+  image?: string | null;
+  sku?: string | null;
+  notes?: string | null;
+  public_id?: string | null;
+  barcode?: string | null;
+}
+
+interface ReportCard {
+  id: string;
+  name: string;
+  description: string;
+  category: Exclude<ReportCategory, "all">;
+  source: string;
+  formats: string[];
+  action: ReportAction;
+  reportType?: InventoryPdfReportType;
+  href?: string;
+  hrefLabel?: string;
+  icon: UiIconName;
+  note?: string;
+}
 
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
 
-function getDateRange(days: DatePreset) {
-  const endDate = new Date();
-  const startDate = new Date(
-    Date.UTC(
-      endDate.getUTCFullYear(),
-      endDate.getUTCMonth(),
-      endDate.getUTCDate()
-    )
-  );
-  startDate.setUTCDate(startDate.getUTCDate() - (days - 1));
+const DEFAULT_INCLUDE: InventoryPdfIncludeSettings = {
+  images: true,
+  sku: true,
+  barcode: false,
+  category: true,
+  depot: true,
+  supplier: true,
+  minStock: true,
+  pricing: true,
+  notes: true,
+};
 
-  return { startDate, endDate };
-}
+const INVENTORY_REPORTS: ReportCard[] = [
+  {
+    id: "inventory-summary",
+    name: "Inventory Summary",
+    description: "Overview of item count, quantities, low stock, and value.",
+    category: "inventory",
+    source: "Inventory",
+    formats: ["PDF"],
+    action: "inventory-pdf",
+    reportType: "summary",
+    icon: "box",
+  },
+  {
+    id: "detailed-inventory",
+    name: "Detailed Inventory",
+    description: "Full item list with optional images, pricing, codes, depot, and supplier.",
+    category: "inventory",
+    source: "Inventory",
+    formats: ["PDF", "CSV"],
+    action: "inventory-pdf",
+    reportType: "detailed",
+    icon: "sheet",
+  },
+  {
+    id: "low-stock",
+    name: "Low Stock Report",
+    description: "Items at or below their effective minimum stock threshold.",
+    category: "inventory",
+    source: "Inventory",
+    formats: ["PDF"],
+    action: "inventory-pdf",
+    reportType: "low-stock",
+    icon: "alert",
+  },
+  {
+    id: "valuation",
+    name: "Inventory Valuation",
+    description: "Cost and potential retail valuation from current inventory pricing.",
+    category: "valuation",
+    source: "Inventory",
+    formats: ["PDF"],
+    action: "inventory-pdf",
+    reportType: "valuation",
+    icon: "reports",
+  },
+];
 
-function formatNumber(value: number) {
-  return normalizeReportNumber(value).toLocaleString("en-US", {
-    maximumFractionDigits: 2,
-  });
-}
+const OPERATION_REPORTS: ReportCard[] = [
+  {
+    id: "stock-movements",
+    name: "Stock Movements",
+    description: "Audit trail of stock in, stock out, adjustments, receiving, and counts.",
+    category: "activity",
+    source: "Stock movements",
+    formats: ["CSV"],
+    action: "movement-csv",
+    href: "/dashboard/stock-movements",
+    hrefLabel: "Open movements",
+    icon: "movement",
+  },
+  {
+    id: "pick-lists",
+    name: "Pick Lists",
+    description: "Open saved pick lists and export pick sheets from the module.",
+    category: "operations",
+    source: "Pick Lists",
+    formats: ["Module"],
+    action: "route",
+    href: "/dashboard/pick-lists",
+    hrefLabel: "Open Pick Lists",
+    icon: "picklists",
+  },
+  {
+    id: "stock-counts",
+    name: "Stock Counts",
+    description: "Start or continue browser-local count workflows.",
+    category: "operations",
+    source: "Stock Counts",
+    formats: ["Workflow"],
+    action: "route",
+    href: "/dashboard/stock-counts",
+    hrefLabel: "Open Stock Counts",
+    icon: "check",
+    note: "Historical count sessions are not persisted in v1.",
+  },
+  {
+    id: "purchase-orders",
+    name: "Purchase Orders",
+    description: "Create and export a browser-local purchase order draft.",
+    category: "operations",
+    source: "Purchase Orders",
+    formats: ["Workflow"],
+    action: "route",
+    href: "/dashboard/purchase-orders",
+    hrefLabel: "Open Purchase Orders",
+    icon: "file",
+    note: "Saved purchase order history needs future persistence.",
+  },
+  {
+    id: "receiving",
+    name: "Receiving",
+    description: "Receive stock and create auditable stock-in movement records.",
+    category: "operations",
+    source: "Receiving",
+    formats: ["Workflow"],
+    action: "route",
+    href: "/dashboard/receiving",
+    hrefLabel: "Open Receiving",
+    icon: "upload",
+    note: "Receiving history is represented through Stock Movements in v1.",
+  },
+];
 
-function formatSignedNumber(value: number) {
-  const normalizedValue = normalizeReportNumber(value);
-  return `${normalizedValue > 0 ? "+" : ""}${formatNumber(normalizedValue)}`;
-}
+const REPORTS = [...INVENTORY_REPORTS, ...OPERATION_REPORTS];
 
 function formatCurrency(value: number, currencyCode: string) {
-  const normalizedValue = normalizeReportNumber(value);
-  const normalizedCurrency = normalizeCurrencyCode(currencyCode, "USD");
-
-  if (normalizedValue >= 0) {
-    return (
-      formatInventoryPrice(normalizedValue, normalizedCurrency) ||
-      `${normalizedCurrency} 0.00`
-    );
-  }
-
-  try {
-    return new Intl.NumberFormat("en-US", {
-      style: "currency",
-      currency: normalizedCurrency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(normalizedValue);
-  } catch {
-    return `${normalizedCurrency} ${normalizedValue.toFixed(2)}`;
-  }
+  return (
+    formatInventoryPrice(value, normalizeCurrencyCode(currencyCode, "USD")) ||
+    `${normalizeCurrencyCode(currencyCode, "USD")} ${value.toFixed(2)}`
+  );
 }
 
-function formatDateTime(value: string) {
-  const date = new Date(value);
-
-  if (Number.isNaN(date.getTime())) return "Date unavailable";
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
-  }).format(date);
+function csvEscape(value: string | number | null | undefined) {
+  const text = String(value ?? "");
+  return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 
-function SummaryCard({
+function downloadCsv(filename: string, rows: Array<Array<string | number | null | undefined>>) {
+  const csv = rows.map((row) => row.map(csvEscape).join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const downloadUrl = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+
+  link.href = downloadUrl;
+  link.download = filename;
+  link.style.display = "none";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(downloadUrl);
+}
+
+function SummaryTile({
   label,
   value,
   detail,
-  icon,
-  accent,
 }: {
   label: string;
   value: string;
   detail: string;
-  icon: UiIconName;
-  accent: string;
 }) {
   return (
-    <article className="rounded-[26px] border border-theme bg-theme-inset p-5 shadow-[0_18px_60px_rgba(0,0,0,0.22)]">
-      <div className="flex items-start justify-between gap-4">
-        <div className="min-w-0">
-          <p className="text-sm font-semibold text-theme-muted">{label}</p>
-          <p className="mt-3 break-words text-3xl font-black tracking-tight text-theme-primary">
-            {value}
-          </p>
-        </div>
-        <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${accent} text-theme-primary shadow-[0_14px_40px_rgba(99,102,241,0.2)]`}
-        >
-          <UiIcon name={icon} className="h-5 w-5" />
-        </span>
-      </div>
-      <p className="mt-4 text-xs leading-5 text-theme-subtle">{detail}</p>
-    </article>
-  );
-}
-
-function SectionHeading({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
-  return (
-    <div>
-      <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
-        {eyebrow}
+    <div className="rounded-xl border border-theme bg-theme-inset p-3">
+      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+        {label}
       </p>
-      <h2 className="mt-2 text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
-        {title}
-      </h2>
-      <p className="mt-2 max-w-3xl text-sm leading-6 text-theme-muted">
-        {description}
-      </p>
+      <p className="mt-1 text-2xl font-black text-theme-primary">{value}</p>
+      <p className="mt-1 text-xs text-theme-muted">{detail}</p>
     </div>
   );
 }
 
-function StockHealthTable({
-  title,
-  items,
-  depots,
-  suppliers,
-  limit,
-}: {
-  title: string;
-  items: StockHealthReportItem[];
-  depots: Map<number, string>;
-  suppliers: Map<number, string>;
-  limit?: number;
-}) {
-  const visibleItems = typeof limit === "number" ? items.slice(0, limit) : items;
-
+function FormatChip({ label }: { label: string }) {
   return (
-    <article className="overflow-hidden rounded-[28px] border border-theme bg-theme-inset">
-      <div className="flex items-center justify-between gap-4 border-b border-theme px-5 py-4">
-        <h3 className="text-lg font-black text-theme-primary">{title}</h3>
-        <span className="rounded-full border border-theme bg-theme-surface px-3 py-1 text-xs font-bold text-theme-secondary">
-          {items.length}
-        </span>
-      </div>
-
-      {visibleItems.length === 0 ? (
-        <div className="px-5 py-12 text-center">
-          <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-400/10 text-theme-success">
-            <UiIcon name="layers" className="h-6 w-6" />
-          </span>
-          <p className="mt-4 font-bold text-theme-primary">Nothing to review</p>
-          <p className="mt-1 text-sm text-theme-subtle">
-            Your current stock does not have items in this report.
-          </p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="min-w-[820px] w-full text-left text-sm">
-            <thead className="bg-theme-surface text-xs uppercase tracking-[0.12em] text-theme-subtle">
-              <tr>
-                <th className="px-5 py-3 font-bold">Item</th>
-                <th className="px-4 py-3 font-bold">Quantity</th>
-                <th className="px-4 py-3 font-bold">Threshold</th>
-                <th className="px-4 py-3 font-bold">Depot</th>
-                <th className="px-4 py-3 font-bold">Supplier</th>
-                <th className="px-5 py-3 text-right font-bold">Action</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/[0.07]">
-              {visibleItems.map((item) => (
-                <tr key={item.id} className="text-theme-secondary">
-                  <td className="px-5 py-4">
-                    <p className="font-bold text-theme-primary">{item.name}</p>
-                    <p className="mt-1 text-xs text-theme-subtle">
-                      {item.item_code?.trim() || "No item code"}
-                    </p>
-                  </td>
-                  <td className="px-4 py-4 font-semibold">
-                    {getInventoryQuantityLabel(
-                      item.normalizedQuantity,
-                      item.unit_type,
-                      item.custom_unit_label
-                    )}
-                  </td>
-                  <td className="px-4 py-4">{formatNumber(item.threshold)}</td>
-                  <td className="px-4 py-4">
-                    {item.depot_id
-                      ? depots.get(item.depot_id) || "Unassigned"
-                      : "Unassigned"}
-                  </td>
-                  <td className="px-4 py-4">
-                    {item.supplier_id
-                      ? suppliers.get(item.supplier_id) || "No supplier"
-                      : "No supplier"}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <Link
-                      href={`/dashboard/inventory/${item.id}`}
-                      className="inline-flex min-h-9 items-center rounded-xl border border-sky-200/15 bg-sky-400/10 px-3 py-2 text-xs font-bold text-theme-accent transition hover:border-sky-200/30 hover:bg-sky-400/15"
-                    >
-                      View item
-                    </Link>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {limit && items.length > limit && (
-        <p className="border-t border-theme px-5 py-3 text-xs text-theme-subtle">
-          Free reports show the first {limit} items. Standard unlocks complete
-          lists and advanced analytics.
-        </p>
-      )}
-    </article>
-  );
-}
-
-function ValueBarChart({
-  title,
-  groups,
-  currencyCode,
-}: {
-  title: string;
-  groups: GroupedInventoryValue[];
-  currencyCode: string;
-}) {
-  const visibleGroups = summarizeTopValueGroups(groups, 6);
-  const highestValue = Math.max(
-    ...visibleGroups.map((group) => group.costValue),
-    0
-  );
-
-  return (
-    <article className="rounded-[28px] border border-theme bg-theme-inset p-5 sm:p-6">
-      <h3 className="text-xl font-black text-theme-primary">{title}</h3>
-      <p className="mt-1 text-xs text-theme-subtle">
-        Current stock cost value, top six groups plus Other
-      </p>
-
-      {visibleGroups.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-theme px-4 py-10 text-center text-sm text-theme-subtle">
-          Add cost prices to populate this chart.
-        </div>
-      ) : (
-        <div className="mt-6 space-y-4">
-          {visibleGroups.map((group) => {
-            const width =
-              highestValue > 0
-                ? Math.max((group.costValue / highestValue) * 100, 2)
-                : 0;
-
-            return (
-              <div key={group.label}>
-                <div className="flex items-center justify-between gap-3">
-                  <p className="min-w-0 truncate text-sm font-bold text-slate-200">
-                    {group.label}
-                  </p>
-                  <p className="shrink-0 text-xs font-black text-theme-primary">
-                    {formatCurrency(group.costValue, currencyCode)}
-                  </p>
-                </div>
-                <div className="mt-2 h-3 overflow-hidden rounded-full border border-theme bg-theme-inset">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-indigo-400 to-violet-500 shadow-[0_0_18px_rgba(99,102,241,0.42)]"
-                    style={{ width: `${width}%` }}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-    </article>
-  );
-}
-
-function MovementChart({
-  buckets,
-}: {
-  buckets: ReturnType<typeof getMovementTimeBuckets>;
-}) {
-  const highestValue = Math.max(
-    ...buckets.flatMap((bucket) => [bucket.stockIn, bucket.stockOut]),
-    0
-  );
-
-  return (
-    <article className="rounded-[28px] border border-theme bg-theme-inset p-5 sm:p-6">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h3 className="text-xl font-black text-theme-primary">
-            Stock in vs stock out
-          </h3>
-          <p className="mt-1 text-xs text-theme-subtle">
-            Adjustments and damaged stock are kept separate.
-          </p>
-        </div>
-        <div className="flex gap-3 text-xs font-bold">
-          <span className="flex items-center gap-2 text-theme-success">
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />
-            Stock in
-          </span>
-          <span className="flex items-center gap-2 text-theme-danger">
-            <span className="h-2.5 w-2.5 rounded-full bg-rose-400" />
-            Stock out
-          </span>
-        </div>
-      </div>
-
-      {highestValue === 0 ? (
-        <div className="mt-6 rounded-2xl border border-dashed border-theme px-4 py-12 text-center text-sm text-theme-subtle">
-          No stock in or stock out movements in this period.
-        </div>
-      ) : (
-        <div className="mt-7 overflow-x-auto pb-2">
-          <div
-            className="grid min-w-max items-end gap-2"
-            style={{
-              gridTemplateColumns: `repeat(${buckets.length}, minmax(34px, 1fr))`,
-            }}
-          >
-            {buckets.map((bucket) => {
-              const stockInHeight =
-                highestValue > 0 ? (bucket.stockIn / highestValue) * 150 : 0;
-              const stockOutHeight =
-                highestValue > 0 ? (bucket.stockOut / highestValue) * 150 : 0;
-
-              return (
-                <div
-                  key={bucket.key}
-                  className="flex w-14 flex-col items-center sm:w-16"
-                >
-                  <div className="flex h-40 items-end gap-1">
-                    <div
-                      className="w-3 rounded-t-md bg-gradient-to-t from-emerald-600 to-emerald-300"
-                      style={{
-                        height: `${Math.max(
-                          stockInHeight,
-                          bucket.stockIn > 0 ? 3 : 0
-                        )}px`,
-                      }}
-                      title={`Stock in ${formatNumber(bucket.stockIn)}`}
-                    />
-                    <div
-                      className="w-3 rounded-t-md bg-gradient-to-t from-rose-600 to-rose-300"
-                      style={{
-                        height: `${Math.max(
-                          stockOutHeight,
-                          bucket.stockOut > 0 ? 3 : 0
-                        )}px`,
-                      }}
-                      title={`Stock out ${formatNumber(bucket.stockOut)}`}
-                    />
-                  </div>
-                  <p className="mt-2 max-w-16 text-center text-[10px] font-semibold leading-4 text-theme-subtle">
-                    {bucket.label}
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-    </article>
+    <span className="rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-theme-secondary">
+      {label}
+    </span>
   );
 }
 
 export default function ReportsPage() {
-  const [userId, setUserId] = useState("");
-  const [items, setItems] = useState<InventoryReportItem[]>([]);
+  const [items, setItems] = useState<ReportInventoryItem[]>([]);
+  const [movements, setMovements] = useState<ReportStockMovement[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [movements, setMovements] = useState<ReportStockMovement[]>([]);
-  const [subscriptionUsage, setSubscriptionUsage] =
-    useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [businessSettings, setBusinessSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
-  const [datePreset, setDatePreset] = useState<DatePreset>(30);
+  const [subscriptionUsage, setSubscriptionUsage] =
+    useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [loading, setLoading] = useState(true);
-  const [movementLoading, setMovementLoading] = useState(true);
   const [error, setError] = useState("");
-  const [movementError, setMovementError] = useState("");
+  const [notice, setNotice] = useState("");
+  const [activeCategory, setActiveCategory] = useState<ReportCategory>("all");
+  const [reportSearch, setReportSearch] = useState("");
+  const [inventoryDialogReport, setInventoryDialogReport] =
+    useState<ReportCard | null>(null);
+  const [movementDialogOpen, setMovementDialogOpen] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const [exportStatus, setExportStatus] = useState("");
+  const [inventoryGroupBy, setInventoryGroupBy] =
+    useState<InventoryPdfGroupBy>("none");
+  const [inventoryBranding, setInventoryBranding] =
+    useState<InventoryPdfBrandingMode>("sydin");
+  const [inventoryInclude, setInventoryInclude] =
+    useState<InventoryPdfIncludeSettings>(DEFAULT_INCLUDE);
+  const [movementStartDate, setMovementStartDate] = useState("");
+  const [movementEndDate, setMovementEndDate] = useState("");
+  const [movementType, setMovementType] = useState<MovementFilter>("all");
+  const [movementSearch, setMovementSearch] = useState("");
 
-  const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
-  const hasAdvancedReports = planCapabilities.advancedReports;
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
     subscriptionUsage.subscription,
     businessSettings.low_stock_threshold
   );
-  const currencyCode = businessSettings.currency_code || "USD";
+  const currencyCode = normalizeCurrencyCode(
+    businessSettings.currency_code,
+    "USD"
+  );
 
   useEffect(() => {
-    let isActive = true;
+    let active = true;
 
-    supabase.auth
-      .getUser()
-      .then(async ({ data: { user }, error: userError }) => {
-        if (!isActive) return;
+    async function loadReportsData() {
+      const {
+        data: { user },
+        error: userError,
+      } = await supabase.auth.getUser();
 
-        if (userError || !user) {
-          setError("We could not confirm your session. Please sign in again.");
-          setLoading(false);
-          return;
-        }
+      if (userError || !user) {
+        throw new Error("Please sign in again to view reports.");
+      }
 
-        const [inventoryResult, usage, settings] = await Promise.all([
-          supabase
-            .from("inventory")
-            .select(
-              "id, name, item_code, category, category_id, quantity, unit_type, custom_unit_label, cost_price, selling_price, min_stock_level, depot_id, supplier_id"
-            )
-            .eq("user_id", user.id)
-            .order("name", { ascending: true }),
-          getSubscriptionUsage(user.id),
-          getOrCreateBusinessSettings(user.id),
-        ]);
+      const [
+        inventoryResult,
+        movementResult,
+        loadedDepots,
+        loadedSuppliers,
+        loadedCategories,
+        settings,
+        usage,
+      ] = await Promise.all([
+        supabase
+          .from("inventory")
+          .select(
+            "id, name, item_code, category, category_id, quantity, image, sku, notes, public_id, unit_type, custom_unit_label, cost_price, selling_price, min_stock_level, depot_id, supplier_id, barcode"
+          )
+          .eq("user_id", user.id)
+          .order("name", { ascending: true }),
+        supabase
+          .from("stock_movements")
+          .select(
+            "id, item_id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at"
+          )
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(250),
+        getDepotsForUser(user.id).catch(() => []),
+        getSuppliersForUser(user.id).catch(() => []),
+        getCategoriesForUser(user.id).catch(() => []),
+        getOrCreateBusinessSettings(user.id),
+        getSubscriptionUsage(user.id),
+      ]);
 
-        if (!isActive) return;
+      if (inventoryResult.error) throw inventoryResult.error;
+      if (movementResult.error) throw movementResult.error;
+      if (!active) return;
 
-        if (inventoryResult.error) {
-          setError(
-            "We could not load your report data. Refresh the page and try again."
-          );
-          setLoading(false);
-          return;
-        }
+      setItems((inventoryResult.data || []) as ReportInventoryItem[]);
+      setMovements((movementResult.data || []) as ReportStockMovement[]);
+      setDepots(loadedDepots);
+      setSuppliers(loadedSuppliers);
+      setCategories(loadedCategories);
+      setBusinessSettings(settings);
+      setSubscriptionUsage(usage);
+      setLoading(false);
+    }
 
-        setUserId(user.id);
-        setItems((inventoryResult.data || []) as InventoryReportItem[]);
-        setSubscriptionUsage(usage);
-        setBusinessSettings(settings);
-
-        const [loadedDepots, loadedSuppliers, loadedCategories] =
-          await Promise.all([
-          getDepotsForUser(user.id),
-          getSuppliersForUser(user.id),
-          getCategoriesForUser(user.id),
-        ]);
-
-        if (!isActive) return;
-        setDepots(loadedDepots);
-        setSuppliers(loadedSuppliers);
-        setCategories(loadedCategories);
-
-        setLoading(false);
-      })
-      .catch(() => {
-        if (!isActive) return;
-        setError(
-          "We could not load your reports workspace. Refresh the page and try again."
-        );
-        setLoading(false);
-      });
+    loadReportsData().catch((loadError) => {
+      if (!active) return;
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "We could not load the Reports Hub."
+      );
+      setLoading(false);
+    });
 
     return () => {
-      isActive = false;
+      active = false;
     };
   }, []);
 
-  useEffect(() => {
-    if (!userId || !hasAdvancedReports) return;
-
-    let isActive = true;
-    const { startDate, endDate } = getDateRange(datePreset);
-
-    supabase
-      .from("stock_movements")
-      .select(
-        "id, item_id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at"
-      )
-      .eq("user_id", userId)
-      .gte("created_at", startDate.toISOString())
-      .lte("created_at", endDate.toISOString())
-      .order("created_at", { ascending: false })
-      .then(({ data, error: fetchError }) => {
-        if (!isActive) return;
-
-        if (fetchError) {
-          setMovementError(
-            "Movement analytics could not be loaded for this period."
-          );
-          setMovements([]);
-        } else {
-          setMovements((data || []) as ReportStockMovement[]);
-        }
-
-        setMovementLoading(false);
-      });
-
-    return () => {
-      isActive = false;
-    };
-  }, [datePreset, hasAdvancedReports, userId]);
-
-  const depotNames = useMemo(
-    () => new Map(depots.map((depot) => [depot.id, depot.name])),
+  const depotById = useMemo(
+    () => new Map(depots.map((depot) => [depot.id, depot])),
     [depots]
   );
-  const supplierNames = useMemo(
-    () =>
-      new Map(suppliers.map((supplier) => [supplier.id, supplier.name])),
+  const supplierById = useMemo(
+    () => new Map(suppliers.map((supplier) => [supplier.id, supplier])),
     [suppliers]
   );
-  const categoryNames = useMemo(
+  const categoryById = useMemo(
     () => new Map(categories.map((category) => [category.id, category])),
     [categories]
   );
-  const itemsById = useMemo(
+  const itemById = useMemo(
     () => new Map(items.map((item) => [item.id, item])),
     [items]
   );
+
   const lowStockItems = useMemo(
     () =>
       getLowStockReport(
@@ -588,537 +415,722 @@ export default function ReportsPage() {
       planCapabilities.customLowStockThreshold,
     ]
   );
-  const outOfStockItems = useMemo(
-    () => getOutOfStockReport(items),
-    [items]
-  );
+  const outOfStockItems = useMemo(() => getOutOfStockReport(items), [items]);
+  const totals = useMemo(() => getInventoryValueTotals(items), [items]);
+  const movementTotals = useMemo(() => getMovementTotals(movements), [movements]);
 
-  const advancedAnalytics = useMemo(() => {
-    if (!hasAdvancedReports) return null;
+  const reportCategories: Array<{ id: ReportCategory; label: string }> = [
+    { id: "all", label: "All" },
+    { id: "inventory", label: "Inventory" },
+    { id: "operations", label: "Operations" },
+    { id: "valuation", label: "Financial / Valuation" },
+    { id: "activity", label: "Activity" },
+  ];
 
-    const totals = getInventoryValueTotals(items);
-    const coverage = getPriceDataCoverage(items);
-    const topCostItems = getRankedValueItems(items, "cost");
-    const topRetailItems = getRankedValueItems(items, "retail");
-    const costPricedItems = items.filter(
-      (item) =>
-        item.cost_price !== null &&
-        item.cost_price !== undefined &&
-        item.cost_price !== "" &&
-        Number.isFinite(Number(item.cost_price)) &&
-        Number(item.cost_price) >= 0
-    );
-    const valueByDepot = groupInventoryValues(costPricedItems, (item) =>
-      item.depot_id
-        ? depotNames.get(item.depot_id) || "Unassigned"
-        : "Unassigned"
-    );
-    const valueBySupplier = groupInventoryValues(
-      costPricedItems,
-      (item) =>
-        item.supplier_id
-          ? supplierNames.get(item.supplier_id) || "No supplier"
-          : "No supplier"
-    );
-    const valueByCategory = groupInventoryValues(
-      costPricedItems,
-      (item) =>
-        resolveCategoryDisplay(
-          item,
-          item.category_id
-            ? categoryNames.get(item.category_id) || null
-            : null
-        )
-    );
+  const normalizedReportSearch = reportSearch.trim().toLowerCase();
+  const visibleReports = REPORTS.filter((report) => {
+    const matchesCategory =
+      activeCategory === "all" || report.category === activeCategory;
+    const matchesSearch =
+      !normalizedReportSearch ||
+      [report.name, report.description, report.source, report.formats.join(" ")]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedReportSearch);
 
-    return {
-      ...totals,
-      ...coverage,
-      topCostItems,
-      topRetailItems,
-      valueByDepot,
-      valueBySupplier,
-      valueByCategory,
-    };
+    return matchesCategory && matchesSearch;
+  });
+
+  const getCategoryLabel = (item: ReportInventoryItem) =>
+    resolveCategoryDisplay(item, item.category_id ? categoryById.get(item.category_id) : null);
+  const getDepotLabel = (item: ReportInventoryItem) =>
+    formatDepotLabel(item.depot_id ? depotById.get(item.depot_id) : null);
+  const getSupplierLabel = (item: ReportInventoryItem) =>
+    item.supplier_id ? supplierById.get(item.supplier_id)?.name || "" : "";
+
+  const exportInventoryReport = async () => {
+    if (!inventoryDialogReport?.reportType || exporting) return;
+
+    if (items.length === 0) {
+      setExportStatus("Add inventory items before exporting a report.");
+      return;
+    }
+
+    try {
+      setExporting(true);
+      setExportStatus("Preparing PDF...");
+
+      const filename = await exportInventoryPdf({
+        items: items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          sku: item.sku || undefined,
+          category: getCategoryLabel(item),
+          quantity: Number(item.quantity || 0),
+          notes: item.notes || undefined,
+          image: item.image || undefined,
+          depotLabel: getDepotLabel(item),
+          supplierLabel: getSupplierLabel(item),
+          itemCode: item.item_code,
+          unitType: normalizeInventoryUnitType(item.unit_type),
+          customUnitLabel: item.custom_unit_label,
+          costPrice: item.cost_price,
+          sellingPrice: item.selling_price,
+          minStockLevel: item.min_stock_level,
+          barcode: item.barcode,
+        })),
+        branding: {
+          businessName:
+            businessSettings.business_name ||
+            DEFAULT_BUSINESS_SETTINGS.business_name,
+          businessLogoUrl: businessSettings.business_logo_url,
+          contactEmail:
+            planCapabilities.publicContactBranding &&
+            businessSettings.show_contact_publicly
+              ? businessSettings.contact_email
+              : "",
+          contactPhone:
+            planCapabilities.publicContactBranding &&
+            businessSettings.show_contact_publicly
+              ? businessSettings.contact_phone
+              : "",
+          contactWebsite:
+            planCapabilities.publicContactBranding &&
+            businessSettings.show_contact_publicly
+              ? businessSettings.contact_website
+              : "",
+        },
+        lowStockThreshold: effectiveLowStockThreshold,
+        currencyCode,
+        reportType: inventoryDialogReport.reportType,
+        scope: "all",
+        scopeLabel: "All inventory",
+        groupBy: inventoryGroupBy,
+        include: inventoryInclude,
+        brandingMode: inventoryBranding,
+        allowBusinessLogo: planCapabilities.customBusinessLogo,
+        onProgress: setExportStatus,
+      });
+
+      setNotice(`${filename} exported.`);
+      setInventoryDialogReport(null);
+      setExportStatus("");
+    } catch {
+      setExportStatus("We could not export this inventory report.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const exportDetailedInventoryCsv = () => {
+    if (items.length === 0) {
+      setNotice("Add inventory items before exporting CSV.");
+      return;
+    }
+
+    downloadCsv("sydin-detailed-inventory.csv", [
+      [
+        "Name",
+        "Item Code",
+        "SKU",
+        "Barcode",
+        "Category",
+        "Depot",
+        "Supplier",
+        "Quantity",
+        "Unit",
+        "Cost Price",
+        "Selling Price",
+        "Minimum Stock",
+        "Notes",
+      ],
+      ...items.map((item) => [
+        item.name,
+        item.item_code,
+        item.sku,
+        item.barcode,
+        getCategoryLabel(item),
+        getDepotLabel(item),
+        getSupplierLabel(item),
+        Number(item.quantity || 0),
+        normalizeInventoryUnitType(item.unit_type),
+        item.cost_price,
+        item.selling_price,
+        item.min_stock_level,
+        item.notes,
+      ]),
+    ]);
+    setNotice("Detailed inventory CSV exported.");
+  };
+
+  const movementRows = useMemo(() => {
+    const start = movementStartDate
+      ? new Date(`${movementStartDate}T00:00:00`)
+      : null;
+    const end = movementEndDate ? new Date(`${movementEndDate}T23:59:59`) : null;
+    const normalizedSearch = movementSearch.trim().toLowerCase();
+
+    return movements.filter((movement) => {
+      const item = itemById.get(movement.item_id);
+      const movementDate = new Date(movement.created_at);
+      const matchesStart = !start || movementDate >= start;
+      const matchesEnd = !end || movementDate <= end;
+      const matchesType =
+        movementType === "all" || movement.movement_type === movementType;
+      const matchesSearch =
+        !normalizedSearch ||
+        [
+          item?.name,
+          item?.item_code,
+          item?.sku,
+          STOCK_MOVEMENT_LABELS[movement.movement_type],
+          movement.notes,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedSearch);
+
+      return matchesStart && matchesEnd && matchesType && matchesSearch;
+    });
   }, [
-    depotNames,
-    categoryNames,
-    hasAdvancedReports,
-    items,
-    supplierNames,
+    itemById,
+    movementEndDate,
+    movementSearch,
+    movementStartDate,
+    movementType,
+    movements,
   ]);
 
-  const movementAnalytics = useMemo(() => {
-    const range = getDateRange(datePreset);
+  const exportStockMovementsCsv = () => {
+    if (movements.length === 0) {
+      setExportStatus("No stock movements are available to export.");
+      return;
+    }
 
-    return {
-      totals: getMovementTotals(movements),
-      buckets: getMovementTimeBuckets({
-        movements,
-        ...range,
-        bucketSize: datePreset === 90 ? "week" : "day",
+    downloadCsv("sydin-stock-movements.csv", [
+      [
+        "Date",
+        "Item",
+        "Item Code",
+        "SKU",
+        "Movement Type",
+        "Quantity Delta",
+        "Quantity Before",
+        "Quantity After",
+        "Unit",
+        "Reason / Note",
+      ],
+      ...movementRows.map((movement) => {
+        const item = itemById.get(movement.item_id);
+        return [
+          movement.created_at,
+          item?.name || "Inventory item",
+          item?.item_code,
+          item?.sku,
+          STOCK_MOVEMENT_LABELS[movement.movement_type],
+          movement.quantity_delta,
+          movement.quantity_before,
+          movement.quantity_after,
+          item
+            ? getInventoryQuantityLabel(
+                1,
+                item.unit_type,
+                item.custom_unit_label
+              ).replace(/^1\s*/, "")
+            : "",
+          formatStockMovementNotes(movement.notes),
+        ];
       }),
-    };
-  }, [datePreset, movements]);
+    ]);
+    setNotice(`Stock movements CSV exported with ${movementRows.length} row${movementRows.length === 1 ? "" : "s"}.`);
+    setMovementDialogOpen(false);
+    setExportStatus("");
+  };
 
-  const summaryCards = advancedAnalytics
-    ? [
-        {
-          label: "Total stock cost value",
-          value: formatCurrency(
-            advancedAnalytics.totalCostValue,
-            currencyCode
-          ),
-          detail: "Current quantity multiplied by recorded cost price",
-          icon: "layers" as UiIconName,
-          accent: "from-cyan-300 to-indigo-500",
-        },
-        {
-          label: "Total retail value",
-          value: formatCurrency(
-            advancedAnalytics.totalRetailValue,
-            currencyCode
-          ),
-          detail: "Potential retail value, not completed sales",
-          icon: "box" as UiIconName,
-          accent: "from-indigo-400 to-violet-500",
-        },
-        {
-          label: "Estimated margin value",
-          value: formatCurrency(
-            advancedAnalytics.estimatedMarginValue,
-            currencyCode
-          ),
-          detail: "Potential retail value minus current stock cost value",
-          icon: "sheet" as UiIconName,
-          accent:
-            advancedAnalytics.estimatedMarginValue < 0
-              ? "from-rose-400 to-fuchsia-500"
-              : "from-emerald-300 to-cyan-500",
-        },
-        {
-          label: "Items with price data",
-          value: advancedAnalytics.itemsWithPriceData.toLocaleString(),
-          detail: `${advancedAnalytics.costPriceItems} cost priced, ${advancedAnalytics.retailPriceItems} retail priced`,
-          icon: "file" as UiIconName,
-          accent: "from-violet-400 to-sky-400",
-        },
-      ]
-    : [];
+  const openReport = (report: ReportCard) => {
+    setNotice("");
+    setExportStatus("");
+    if (report.action === "inventory-pdf") {
+      setInventoryDialogReport(report);
+    } else if (report.action === "movement-csv") {
+      setMovementDialogOpen(true);
+    }
+  };
 
   return (
-    <div className="contents">
-      <main>
-        <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-7">
-          <section className="rounded-[32px] border border-theme bg-[radial-gradient(circle_at_top_right,_rgba(56,189,248,0.14),_transparent_36%),rgba(255,255,255,0.045)] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.36)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-              <div className="max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full border border-cyan-200/15 bg-cyan-400/[0.08] px-3 py-1.5 text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
-                  Private workspace
-                  <span className="h-1 w-1 rounded-full bg-cyan-300" />
-                  {currentPlanName}
-                </div>
-                <h1 className="mt-5 text-4xl font-black tracking-tight text-theme-primary sm:text-5xl lg:text-6xl">
-                  Reports
-                </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted">
-                  Private inventory insights based on your current stock and
-                  movement history.
-                </p>
-              </div>
-
-              {hasAdvancedReports && (
-                <div className="rounded-2xl border border-theme bg-theme-inset p-3">
-                  <p className="px-1 text-xs font-bold uppercase tracking-[0.13em] text-theme-subtle">
-                    Movement period
-                  </p>
-                  <div className="mt-2 grid grid-cols-3 gap-2">
-                    {([7, 30, 90] as DatePreset[]).map((days) => (
-                      <button
-                        key={days}
-                        type="button"
-                        onClick={() => {
-                          if (days === datePreset) return;
-                          setMovementLoading(true);
-                          setMovementError("");
-                          setDatePreset(days);
-                        }}
-                        className={`min-h-10 rounded-xl border px-3 py-2 text-xs font-bold transition ${
-                          datePreset === days
-                            ? "border-cyan-200/30 bg-cyan-400/15 text-theme-primary"
-                            : "border-theme bg-theme-surface text-theme-muted hover:bg-theme-hover hover:text-theme-primary"
-                        }`}
-                      >
-                        Last {days} days
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+    <main>
+      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4">
+        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
+                Insights
+              </p>
+              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
+                Reports
+              </h1>
+              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
+                Generate inventory, operations, and valuation reports.
+              </p>
             </div>
+            <Button
+              onClick={() => setInventoryDialogReport(INVENTORY_REPORTS[0])}
+              leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
+              disabled={loading}
+            >
+              New report
+            </Button>
+          </div>
+        </section>
 
-            <div className="mt-6 rounded-2xl border border-indigo-300/15 bg-indigo-500/[0.07] px-4 py-3 text-sm leading-6 text-theme-muted">
-              Current value reports are live snapshots. The date filter applies
-              only to movement reports.
-            </div>
-          </section>
+        {(notice || error) && (
+          <p
+            role={error ? "alert" : "status"}
+            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
+              error
+                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
+                : "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
+            }`}
+          >
+            {error || notice}
+          </p>
+        )}
 
-          {error && (
-            <div className="rounded-2xl border border-rose-400/25 bg-rose-500/10 px-5 py-4 text-sm font-semibold text-theme-danger">
-              {error}
-            </div>
-          )}
+        <section className="grid gap-3 rounded-[18px] border border-theme bg-theme-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
+          <SummaryTile
+            label="Inventory items"
+            value={items.length.toLocaleString()}
+            detail="Current workspace items"
+          />
+          <SummaryTile
+            label="Low stock"
+            value={lowStockItems.length.toLocaleString()}
+            detail={`${outOfStockItems.length.toLocaleString()} out of stock`}
+          />
+          <SummaryTile
+            label="Cost value"
+            value={formatCurrency(totals.totalCostValue, currencyCode)}
+            detail="Current stock cost"
+          />
+          <SummaryTile
+            label="Movements"
+            value={movementTotals.movementCount.toLocaleString()}
+            detail="Latest 250 movement records"
+          />
+        </section>
 
-          {loading ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {[1, 2, 3, 4].map((item) => (
-                <div
-                  key={item}
-                  className="h-40 animate-pulse rounded-[26px] border border-theme bg-theme-surface"
-                />
+        <section className="rounded-[18px] border border-theme bg-theme-surface p-3">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex flex-wrap gap-2">
+              {reportCategories.map((category) => (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setActiveCategory(category.id)}
+                  className={`min-h-10 rounded-xl border px-3 py-2 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/15 ${
+                    activeCategory === category.id
+                      ? "border-cyan-300/30 bg-cyan-500/10 text-theme-accent"
+                      : "border-theme bg-theme-inset text-theme-secondary hover:bg-theme-hover"
+                  }`}
+                >
+                  {category.label}
+                </button>
               ))}
             </div>
-          ) : (
-            <>
-              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-                <SectionHeading
-                  eyebrow="Stock health"
-                  title="Items needing attention"
-                  description="Low-stock thresholds follow your current plan. Out-of-stock items are shown separately so the two reports stay actionable."
-                />
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <SummaryCard
-                    label="Low-stock items"
-                    value={lowStockItems.length.toLocaleString()}
-                    detail="Above zero and at or below the effective threshold"
-                    icon="alert"
-                    accent="from-amber-300 to-orange-500"
-                  />
-                  <SummaryCard
-                    label="Out-of-stock items"
-                    value={outOfStockItems.length.toLocaleString()}
-                    detail="Items with zero or lower recorded quantity"
-                    icon="alert"
-                    accent="from-rose-400 to-red-500"
-                  />
-                </div>
-                <div className="mt-5 grid grid-cols-1 gap-5">
-                  <StockHealthTable
-                    title="Low-stock report"
-                    items={lowStockItems}
-                    depots={depotNames}
-                    suppliers={supplierNames}
-                    limit={hasAdvancedReports ? undefined : 5}
-                  />
-                  <StockHealthTable
-                    title="Out-of-stock report"
-                    items={outOfStockItems}
-                    depots={depotNames}
-                    suppliers={supplierNames}
-                    limit={hasAdvancedReports ? undefined : 5}
-                  />
-                </div>
-              </section>
+            <label className="relative w-full lg:max-w-sm">
+              <span className="sr-only">Search reports</span>
+              <UiIcon
+                name="search"
+                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
+              />
+              <input
+                type="search"
+                value={reportSearch}
+                onChange={(event) => setReportSearch(event.target.value)}
+                placeholder="Search reports"
+                className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+              />
+            </label>
+          </div>
+        </section>
 
-              {!hasAdvancedReports ? (
-                <LockedFeaturePanel
-                  feature="Unlock value and movement reports with Standard."
-                  benefit="See current stock cost and potential retail value, depot and supplier analysis, movement summaries, focused charts, complete report lists, and date filters. Values stay private inside your dashboard."
-                  currentPlan={currentPlanName}
-                  requiredPlan="Standard"
-                  source="reports-center"
-                />
-              ) : (
-                <>
-                  <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-                    <SectionHeading
-                      eyebrow="Current value snapshot"
-                      title="Inventory value"
-                      description="Missing prices are excluded. A recorded zero remains a real zero. Estimated margin is potential retail value minus current stock cost value, not completed earnings."
-                    />
-                    <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                      {summaryCards.map((card) => (
-                        <SummaryCard key={card.label} {...card} />
+        {loading ? (
+          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {[1, 2, 3, 4, 5, 6].map((item) => (
+              <div
+                key={item}
+                className="h-44 animate-pulse rounded-[18px] border border-theme bg-theme-surface"
+              />
+            ))}
+          </section>
+        ) : (
+          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+            {visibleReports.map((report) => {
+              const isWorkflowShortcut = report.action === "route";
+
+              return (
+                <article
+                  key={report.id}
+                  className={`flex flex-col rounded-[18px] border border-theme bg-theme-surface shadow-[0_10px_30px_rgba(15,23,42,0.06)] ${
+                    isWorkflowShortcut ? "min-h-0 p-3" : "min-h-52 p-4"
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <span
+                      className={`grid shrink-0 place-items-center rounded-xl border border-theme bg-theme-inset text-theme-accent ${
+                        isWorkflowShortcut ? "h-9 w-9" : "h-11 w-11"
+                      }`}
+                    >
+                      <UiIcon
+                        name={report.icon}
+                        className={isWorkflowShortcut ? "h-4 w-4" : "h-5 w-5"}
+                      />
+                    </span>
+                    <div className="flex flex-wrap justify-end gap-1.5">
+                      {report.formats.map((format) => (
+                        <FormatChip key={format} label={format} />
                       ))}
                     </div>
-                  </section>
+                  </div>
 
-                  {advancedAnalytics && (
-                    <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-                      <SectionHeading
-                        eyebrow="Value analysis"
-                        title="Where inventory value sits"
-                        description="Cost value is grouped from current item assignments. Unassigned depots, missing suppliers, and blank categories remain visible."
-                      />
-                      <div className="mt-6 grid grid-cols-1 gap-5 xl:grid-cols-2">
-                        <ValueBarChart
-                          title="Stock value by depot"
-                          groups={advancedAnalytics.valueByDepot}
-                          currencyCode={currencyCode}
-                        />
-                        <ValueBarChart
-                          title="Stock value by supplier"
-                          groups={advancedAnalytics.valueBySupplier}
-                          currencyCode={currencyCode}
-                        />
-                      </div>
+                  <div className={isWorkflowShortcut ? "mt-2" : "mt-4"}>
+                    <h2
+                      className={`font-black text-theme-primary ${
+                        isWorkflowShortcut ? "text-base" : "text-lg"
+                      }`}
+                    >
+                      {report.name}
+                    </h2>
+                    <p
+                      className={`mt-1 text-sm text-theme-muted ${
+                        isWorkflowShortcut ? "leading-5" : "leading-6"
+                      }`}
+                    >
+                      {report.description}
+                    </p>
+                  </div>
 
-                      <div className="mt-5 grid grid-cols-1 gap-5 xl:grid-cols-3">
-                        {[
-                          {
-                            title: "Top stock cost value items",
-                            items: advancedAnalytics.topCostItems,
-                          },
-                          {
-                            title: "Top potential retail value items",
-                            items: advancedAnalytics.topRetailItems,
-                          },
-                        ].map((report) => (
-                          <article
-                            key={report.title}
-                            className="rounded-[28px] border border-theme bg-theme-inset p-5"
-                          >
-                            <h3 className="text-lg font-black text-theme-primary">
-                              {report.title}
-                            </h3>
-                            {report.items.length === 0 ? (
-                              <p className="mt-5 rounded-2xl border border-dashed border-theme px-4 py-8 text-center text-sm text-theme-subtle">
-                                No matching price data yet.
-                              </p>
-                            ) : (
-                              <div className="mt-4 space-y-2">
-                                {report.items.map((entry, index) => (
-                                  <Link
-                                    key={entry.item.id}
-                                    href={`/dashboard/inventory/${entry.item.id}`}
-                                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-theme-surface px-4 py-3 transition hover:border-cyan-200/20 hover:bg-theme-hover"
-                                  >
-                                    <div className="min-w-0">
-                                      <p className="truncate text-sm font-bold text-theme-primary">
-                                        {index + 1}. {entry.item.name}
-                                      </p>
-                                      <p className="mt-1 text-xs text-theme-subtle">
-                                        {getInventoryQuantityLabel(
-                                          entry.item.quantity,
-                                          entry.item.unit_type,
-                                          entry.item.custom_unit_label
-                                        )}
-                                      </p>
-                                    </div>
-                                    <p className="shrink-0 text-xs font-black text-theme-accent">
-                                      {formatCurrency(entry.value, currencyCode)}
-                                    </p>
-                                  </Link>
-                                ))}
-                              </div>
-                            )}
-                          </article>
-                        ))}
-
-                        <article className="rounded-[28px] border border-theme bg-theme-inset p-5">
-                          <h3 className="text-lg font-black text-theme-primary">
-                            Value by category
-                          </h3>
-                          {advancedAnalytics.valueByCategory.length === 0 ? (
-                            <p className="mt-5 rounded-2xl border border-dashed border-theme px-4 py-8 text-center text-sm text-theme-subtle">
-                              Add cost prices to populate this report.
-                            </p>
-                          ) : (
-                            <div className="mt-4 space-y-2">
-                              {advancedAnalytics.valueByCategory.map(
-                                (group) => (
-                                  <div
-                                    key={group.label}
-                                    className="flex items-center justify-between gap-3 rounded-2xl border border-white/[0.07] bg-theme-surface px-4 py-3"
-                                  >
-                                    <div className="min-w-0">
-                                      <p className="truncate text-sm font-bold text-theme-primary">
-                                        {group.label}
-                                      </p>
-                                      <p className="mt-1 text-xs text-theme-subtle">
-                                        {group.itemCount} item
-                                        {group.itemCount === 1 ? "" : "s"}
-                                      </p>
-                                    </div>
-                                    <p className="shrink-0 text-xs font-black text-theme-accent">
-                                      {formatCurrency(
-                                        group.costValue,
-                                        currencyCode
-                                      )}
-                                    </p>
-                                  </div>
-                                )
-                              )}
-                            </div>
-                          )}
-                        </article>
-                      </div>
-                    </section>
+                  <div
+                    className={`flex flex-wrap items-center gap-2 text-xs ${
+                      isWorkflowShortcut ? "mt-2" : "mt-3"
+                    }`}
+                  >
+                    <span className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      {isWorkflowShortcut ? report.source : `Source: ${report.source}`}
+                    </span>
+                    {report.note && (
+                      <span className="inline-flex min-h-6 items-center rounded-full border border-theme bg-theme-inset px-2.5 text-[11px] font-bold text-theme-subtle">
+                        v1 workflow
+                      </span>
+                    )}
+                  </div>
+                  {report.note && (
+                    <p className="mt-1 text-xs leading-5 text-theme-subtle">
+                      {report.note}
+                    </p>
                   )}
 
-                  <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_24px_80px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-                    <SectionHeading
-                      eyebrow="Movement analytics"
-                      title={`Last ${datePreset} days`}
-                      description="Stock in, stock out, damaged or lost quantities, and signed adjustments remain separate."
-                    />
-
-                    {movementError && (
-                      <div className="mt-5 rounded-2xl border border-rose-400/25 bg-rose-500/10 px-4 py-3 text-sm text-theme-danger">
-                        {movementError}
-                      </div>
-                    )}
-
-                    {movementLoading ? (
-                      <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-3 xl:grid-cols-6">
-                        {[1, 2, 3, 4, 5, 6].map((item) => (
-                          <div
-                            key={item}
-                            className="h-32 animate-pulse rounded-[24px] border border-theme bg-theme-surface"
-                          />
-                        ))}
-                      </div>
+                  <div
+                    className={`flex flex-col gap-2 sm:flex-row ${
+                      isWorkflowShortcut ? "mt-3" : "mt-auto pt-4"
+                    }`}
+                  >
+                    {report.action === "route" && report.href ? (
+                      <Link
+                        href={report.href}
+                        className="ui-button ui-button-primary ui-button-sm"
+                      >
+                        {report.hrefLabel || "Open"}
+                      </Link>
                     ) : (
-                      <>
-                        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-                          <SummaryCard
-                            label="Movement count"
-                            value={movementAnalytics.totals.movementCount.toLocaleString()}
-                            detail="All movement records in this period"
-                            icon="clock"
-                            accent="from-violet-400 to-sky-400"
-                          />
-                          <SummaryCard
-                            label="Stock in"
-                            value={formatNumber(movementAnalytics.totals.stockIn)}
-                            detail="Recorded stock-in quantity"
-                            icon="upload"
-                            accent="from-emerald-300 to-cyan-500"
-                          />
-                          <SummaryCard
-                            label="Stock out"
-                            value={formatNumber(movementAnalytics.totals.stockOut)}
-                            detail="Recorded stock-out quantity"
-                            icon="download"
-                            accent="from-sky-300 to-indigo-500"
-                          />
-                          <SummaryCard
-                            label="Damaged / lost"
-                            value={formatNumber(
-                              movementAnalytics.totals.damagedLost
-                            )}
-                            detail="Kept separate from stock out"
-                            icon="alert"
-                            accent="from-rose-400 to-red-500"
-                          />
-                          <SummaryCard
-                            label="Adjustments"
-                            value={movementAnalytics.totals.adjustmentCount.toLocaleString()}
-                            detail="Adjustment record count"
-                            icon="sheet"
-                            accent="from-amber-300 to-orange-500"
-                          />
-                          <SummaryCard
-                            label="Net adjustment"
-                            value={formatSignedNumber(
-                              movementAnalytics.totals.netAdjustment
-                            )}
-                            detail="Signed quantity delta from adjustments"
-                            icon="layers"
-                            accent="from-indigo-400 to-violet-500"
-                          />
-                        </div>
-
-                        <div className="mt-5">
-                          <MovementChart buckets={movementAnalytics.buckets} />
-                        </div>
-
-                        <article className="mt-5 overflow-hidden rounded-[28px] border border-theme bg-theme-inset">
-                          <div className="border-b border-theme px-5 py-4">
-                            <h3 className="text-xl font-black text-theme-primary">
-                              Recent movement activity
-                            </h3>
-                          </div>
-
-                          {movements.length === 0 ? (
-                            <div className="px-5 py-12 text-center text-sm text-theme-subtle">
-                              No stock movements were recorded in this period.
-                            </div>
-                          ) : (
-                            <div className="divide-y divide-white/[0.07]">
-                              {movements.slice(0, 12).map((movement) => {
-                                const item = itemsById.get(movement.item_id);
-                                const isAdjustment =
-                                  movement.movement_type === "adjustment";
-                                const signedDelta = normalizeReportNumber(
-                                  movement.quantity_delta
-                                );
-
-                                return (
-                                  <div
-                                    key={movement.id}
-                                    className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:justify-between"
-                                  >
-                                    <div className="min-w-0">
-                                      <div className="flex flex-wrap items-center gap-2">
-                                        <p className="font-bold text-theme-primary">
-                                          {item?.name || "Inventory item"}
-                                        </p>
-                                        <span className="rounded-full border border-theme bg-theme-surface px-2.5 py-1 text-[11px] font-bold text-theme-secondary">
-                                          {
-                                            STOCK_MOVEMENT_LABELS[
-                                              movement.movement_type as StockMovementType
-                                            ]
-                                          }
-                                        </span>
-                                      </div>
-                                      <p className="mt-1 text-xs text-theme-subtle">
-                                        {formatDateTime(movement.created_at)}
-                                        {movement.notes
-                                          ? ` · ${formatStockMovementNotes(
-                                              movement.notes
-                                            )}`
-                                          : ""}
-                                      </p>
-                                    </div>
-                                    <div className="flex shrink-0 items-center gap-3">
-                                      <p
-                                        className={`text-sm font-black ${
-                                          signedDelta < 0
-                                            ? "text-theme-danger"
-                                            : "text-theme-success"
-                                        }`}
-                                      >
-                                        {isAdjustment
-                                          ? formatSignedNumber(signedDelta)
-                                          : formatNumber(
-                                              Math.abs(signedDelta)
-                                            )}
-                                      </p>
-                                      {item && (
-                                        <Link
-                                          href={`/dashboard/inventory/${item.id}`}
-                                          className="rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-slate-200 transition hover:bg-theme-hover"
-                                        >
-                                          View
-                                        </Link>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          )}
-                        </article>
-                      </>
+                      <Button onClick={() => openReport(report)}>Generate</Button>
                     )}
-                  </section>
-                </>
-              )}
+                    {report.href && report.action !== "route" && (
+                      <Link
+                        href={report.href}
+                        className="ui-button ui-button-secondary ui-button-md"
+                      >
+                        {report.hrefLabel || "Open source page"}
+                      </Link>
+                    )}
+                    {report.id === "detailed-inventory" && (
+                      <Button
+                        variant="secondary"
+                        onClick={exportDetailedInventoryCsv}
+                      >
+                        Export CSV
+                      </Button>
+                    )}
+                  </div>
+                </article>
+              );
+            })}
+            {visibleReports.length === 0 && (
+              <div className="rounded-[18px] border border-dashed border-theme bg-theme-surface px-5 py-14 text-center md:col-span-2 xl:col-span-3">
+                <UiIcon
+                  name="search"
+                  className="mx-auto h-8 w-8 text-theme-accent"
+                />
+                <h2 className="mt-4 text-xl font-bold text-theme-primary">
+                  No reports match
+                </h2>
+                <p className="mt-2 text-sm text-theme-muted">
+                  Adjust the category or search text.
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        <section className="rounded-[18px] border border-theme bg-theme-surface p-3">
+          <div className="grid gap-2 md:grid-cols-2">
+            <div className="flex items-start gap-3 rounded-xl border border-theme bg-theme-inset px-3 py-2.5">
+              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-theme-accent">
+                Future
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-sm font-black text-theme-primary">
+                  Saved reports
+                </h2>
+                <p className="mt-0.5 text-xs leading-5 text-theme-muted">
+                  Saved definitions are not persisted yet. Generate reports from
+                  live data when needed.
+                </p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-theme bg-theme-inset px-3 py-2.5">
+              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-theme-accent">
+                Future
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-sm font-black text-theme-primary">
+                  Scheduled email reports
+                </h2>
+                <p className="mt-0.5 text-xs leading-5 text-theme-muted">
+                  Scheduling will need dedicated persistence and delivery
+                  controls in a later phase.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      {inventoryDialogReport && (
+        <DialogShell
+          title={inventoryDialogReport.name}
+          eyebrow="Inventory report"
+          description="Generate a PDF from current inventory data. Reports Hub v1 exports all inventory for this workspace."
+          onClose={() => {
+            if (!exporting) setInventoryDialogReport(null);
+          }}
+          closeDisabled={exporting}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setInventoryDialogReport(null)}
+                disabled={exporting}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={() => void exportInventoryReport()}
+                loading={exporting}
+                loadingLabel="Generating..."
+              >
+                Generate PDF
+              </Button>
             </>
-          )}
-        </div>
-      </main>
-    </div>
+          }
+        >
+          <div className="grid gap-4">
+            {exportStatus && (
+              <p className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+                {exportStatus}
+              </p>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Report type
+                <Select
+                  value={inventoryDialogReport.reportType || "summary"}
+                  onChange={(value) =>
+                    setInventoryDialogReport((current) =>
+                      current
+                        ? {
+                            ...current,
+                            reportType: value as InventoryPdfReportType,
+                          }
+                        : current
+                    )
+                  }
+                  options={[
+                    { value: "summary", label: "Inventory Summary" },
+                    { value: "detailed", label: "Detailed Inventory" },
+                    { value: "low-stock", label: "Low Stock Report" },
+                    { value: "valuation", label: "Inventory Valuation" },
+                  ]}
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Group by
+                <Select
+                  value={inventoryGroupBy}
+                  onChange={(value) =>
+                    setInventoryGroupBy(value as InventoryPdfGroupBy)
+                  }
+                  options={[
+                    { value: "none", label: "None" },
+                    { value: "category", label: "Category" },
+                    { value: "depot", label: "Depot/location" },
+                  ]}
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Branding
+                <Select
+                  value={inventoryBranding}
+                  onChange={(value) =>
+                    setInventoryBranding(value as InventoryPdfBrandingMode)
+                  }
+                  options={[
+                    {
+                      value: "business",
+                      label: planCapabilities.customBusinessLogo
+                        ? "Business logo"
+                        : "Business logo (falls back to SydIN)",
+                    },
+                    { value: "sydin", label: "SydIN logo" },
+                    { value: "none", label: "No logo" },
+                  ]}
+                />
+              </label>
+              <div className="rounded-xl border border-theme bg-theme-inset p-3 text-sm text-theme-muted">
+                <p className="font-bold text-theme-primary">Scope</p>
+                <p className="mt-1">
+                  All inventory. Selected-items scope stays in Inventory where
+                  selection context exists.
+                </p>
+              </div>
+            </div>
+            <fieldset className="grid gap-2 rounded-xl border border-theme bg-theme-inset p-3">
+              <legend className="px-1 text-sm font-black text-theme-primary">
+                Include
+              </legend>
+              <div className="grid gap-2 sm:grid-cols-2">
+                {(
+                  [
+                    ["images", "Images"],
+                    ["sku", "SKU/code"],
+                    ["barcode", "Barcode"],
+                    ["category", "Category"],
+                    ["depot", "Depot/location"],
+                    ["supplier", "Supplier"],
+                    ["minStock", "Minimum stock"],
+                    ["pricing", "Pricing"],
+                    ["notes", "Notes"],
+                  ] as Array<[keyof InventoryPdfIncludeSettings, string]>
+                ).map(([key, label]) => (
+                  <label
+                    key={key}
+                    className="flex min-h-11 items-center gap-3 rounded-xl border border-theme bg-theme-surface px-3 text-sm font-bold text-theme-primary"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={inventoryInclude[key]}
+                      onChange={(event) =>
+                        setInventoryInclude((current) => ({
+                          ...current,
+                          [key]: event.target.checked,
+                        }))
+                      }
+                      className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                    />
+                    {label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+          </div>
+        </DialogShell>
+      )}
+
+      {movementDialogOpen && (
+        <DialogShell
+          title="Stock Movements Report"
+          eyebrow="Activity report"
+          description="Export a CSV audit trail from the latest stock movements loaded into the Reports Hub."
+          onClose={() => setMovementDialogOpen(false)}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setMovementDialogOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={exportStockMovementsCsv}>Export CSV</Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            {exportStatus && (
+              <p className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+                {exportStatus}
+              </p>
+            )}
+            <div className="grid gap-3 sm:grid-cols-2">
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Start date
+                <input
+                  type="date"
+                  value={movementStartDate}
+                  onChange={(event) => setMovementStartDate(event.target.value)}
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                End date
+                <input
+                  type="date"
+                  value={movementEndDate}
+                  onChange={(event) => setMovementEndDate(event.target.value)}
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Movement type
+                <Select
+                  value={movementType}
+                  onChange={(value) => setMovementType(value as MovementFilter)}
+                  options={[
+                    { value: "all", label: "All movement types" },
+                    ...Object.entries(STOCK_MOVEMENT_LABELS).map(
+                      ([value, label]) => ({ value, label })
+                    ),
+                  ]}
+                />
+              </label>
+              <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
+                Item or reason
+                <input
+                  type="search"
+                  value={movementSearch}
+                  onChange={(event) => setMovementSearch(event.target.value)}
+                  placeholder="Search item, code, or note"
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                />
+              </label>
+            </div>
+            <p className="rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm font-semibold text-theme-secondary">
+              {movementRows.length} row{movementRows.length === 1 ? "" : "s"} match
+              these filters.
+            </p>
+          </div>
+        </DialogShell>
+      )}
+    </main>
   );
 }
