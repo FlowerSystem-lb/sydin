@@ -146,6 +146,11 @@ const THEME_OPTIONS: Array<{
 
 const inputClassName =
   "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
+const valueTextClassName =
+  "min-w-0 truncate text-sm font-black text-theme-primary";
+const labelTextClassName =
+  "min-w-0 truncate text-sm font-bold text-theme-primary";
+const mutedTextClassName = "min-w-0 text-xs leading-5 text-theme-muted";
 
 function ThemePreview({ theme }: { theme: ThemePreference }) {
   const isLight = theme === "light";
@@ -216,10 +221,31 @@ function StatusChip({
 
   return (
     <span
-      className={`inline-flex min-h-7 items-center rounded-full border px-2.5 text-xs font-bold ${toneClass}`}
+      className={`inline-flex min-h-7 max-w-full items-center rounded-full border px-2.5 text-xs font-bold whitespace-normal ${toneClass}`}
     >
       {children}
     </span>
+  );
+}
+
+function LongSettingValue({
+  value,
+  fallback = "Not set",
+  prefix = "",
+  className = valueTextClassName,
+}: {
+  value: string | null | undefined;
+  fallback?: string;
+  prefix?: string;
+  className?: string;
+}) {
+  const displayValue = value || fallback;
+  const accessibleValue = `${prefix}${displayValue}`;
+
+  return (
+    <p className={className} title={accessibleValue} aria-label={accessibleValue}>
+      {accessibleValue}
+    </p>
   );
 }
 
@@ -235,7 +261,7 @@ function SettingCard({
   action?: React.ReactNode;
 }) {
   return (
-    <article className="rounded-xl border border-theme bg-theme-inset p-4">
+    <article className="min-w-0 rounded-xl border border-theme bg-theme-inset p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h3 className="text-base font-black text-theme-primary">{title}</h3>
@@ -243,9 +269,9 @@ function SettingCard({
             {description}
           </p>
         </div>
-        {action && <div className="shrink-0">{action}</div>}
+        {action && <div className="min-w-0 sm:shrink-0">{action}</div>}
       </div>
-      {children && <div className="mt-4">{children}</div>}
+      {children && <div className="mt-4 min-w-0">{children}</div>}
     </article>
   );
 }
@@ -672,7 +698,7 @@ export default function SettingsPage() {
         action={<StatusChip>{contactCount} of 3 filled</StatusChip>}
       >
         <div className="grid gap-4 md:grid-cols-3">
-          <label className="grid gap-2 text-sm font-bold text-theme-primary">
+          <label className="grid min-w-0 gap-2 text-sm font-bold text-theme-primary">
             Contact email
             <input
               type="email"
@@ -686,7 +712,7 @@ export default function SettingsPage() {
               className={inputClassName}
             />
           </label>
-          <label className="grid gap-2 text-sm font-bold text-theme-primary">
+          <label className="grid min-w-0 gap-2 text-sm font-bold text-theme-primary">
             Contact phone
             <input
               type="tel"
@@ -700,7 +726,7 @@ export default function SettingsPage() {
               className={inputClassName}
             />
           </label>
-          <label className="grid gap-2 text-sm font-bold text-theme-primary">
+          <label className="grid min-w-0 gap-2 text-sm font-bold text-theme-primary">
             Contact website
             <input
               type="url"
@@ -718,11 +744,11 @@ export default function SettingsPage() {
 
         {canShowPublicContact || savedSettings.show_contact_publicly ? (
           <label className="mt-4 flex cursor-pointer flex-col gap-3 rounded-xl border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
-            <span>
-              <span className="block text-sm font-black text-theme-primary">
+            <span className="min-w-0">
+              <span className={`block ${valueTextClassName}`}>
                 Show contact publicly
               </span>
-              <span className="mt-1 block text-xs leading-5 text-theme-muted">
+              <span className={`mt-1 block ${mutedTextClassName}`}>
                 Public QR item pages can show these contact fields. Private
                 inventory, supplier, pricing, and Pick List data stay private.
                 {!canShowPublicContact &&
@@ -778,15 +804,17 @@ export default function SettingsPage() {
         action={<StatusChip tone={userEmail ? "success" : "warning"}>Session</StatusChip>}
       >
         <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+          <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
               Email
             </p>
-            <p className="mt-1 break-words text-sm font-black text-theme-primary">
-              {userEmail || "Email unavailable"}
-            </p>
+            <LongSettingValue
+              value={userEmail}
+              fallback="Email unavailable"
+              className={`mt-1 ${valueTextClassName}`}
+            />
           </div>
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+          <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
               Account actions
             </p>
@@ -896,12 +924,13 @@ export default function SettingsPage() {
                   : "Logo locked on plan"}
               </StatusChip>
             </div>
-            <div className="mt-4 flex flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-black text-theme-primary">
-                  {settings.business_name || DEFAULT_BUSINESS_SETTINGS.business_name}
+            <div className="mt-4 flex min-w-0 flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+              <div className="min-w-0">
+                <p className={valueTextClassName}>
+                  {settings.business_name ||
+                    DEFAULT_BUSINESS_SETTINGS.business_name}
                 </p>
-                <p className="mt-1 text-xs leading-5 text-theme-muted">
+                <p className={`mt-1 ${mutedTextClassName}`}>
                   Business name and contact fields are edited in Workspace.
                 </p>
               </div>
@@ -973,7 +1002,11 @@ export default function SettingsPage() {
                     </p>
 
                     {logoFile && (
-                      <p className="mt-3 rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-secondary">
+                      <p
+                        className="mt-3 min-w-0 truncate rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-secondary"
+                        title={`Selected: ${logoFile.name}`}
+                        aria-label={`Selected: ${logoFile.name}`}
+                      >
                         Selected: {logoFile.name}
                       </p>
                     )}
@@ -1021,25 +1054,26 @@ export default function SettingsPage() {
               ].map(([label, value]) => (
                 <div
                   key={label}
-                  className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
+                  className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
                 >
                   <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                     {label}
                   </p>
-                  <p className="mt-1 break-words text-sm font-black text-theme-primary">
-                    {value || "Not set"}
-                  </p>
+                  <LongSettingValue
+                    value={value}
+                    className={`mt-1 ${valueTextClassName}`}
+                  />
                 </div>
               ))}
             </div>
 
             {canShowPublicContact || savedSettings.show_contact_publicly ? (
-              <label className="mt-4 flex cursor-pointer flex-col gap-3 rounded-xl border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
-                <span>
-                  <span className="block text-sm font-black text-theme-primary">
+              <label className="mt-4 flex min-w-0 cursor-pointer flex-col gap-3 rounded-xl border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
+                <span className="min-w-0">
+                  <span className={`block ${valueTextClassName}`}>
                     Show contact on public item pages
                   </span>
-                  <span className="mt-1 block text-xs leading-5 text-theme-muted">
+                  <span className={`mt-1 block ${mutedTextClassName}`}>
                     Applies to public QR/item pages. Private workspace data
                     stays private.
                     {!canShowPublicContact &&
@@ -1115,15 +1149,25 @@ export default function SettingsPage() {
               </div>
               <div className="grid gap-2 px-4 py-3 text-xs leading-5 text-theme-muted">
                 {settings.contact_email && (
-                  <p className="break-words">Email: {settings.contact_email}</p>
+                  <LongSettingValue
+                    value={settings.contact_email}
+                    prefix="Email: "
+                    className="min-w-0 truncate text-xs leading-5 text-theme-muted"
+                  />
                 )}
                 {settings.contact_phone && (
-                  <p className="break-words">Phone: {settings.contact_phone}</p>
+                  <LongSettingValue
+                    value={settings.contact_phone}
+                    prefix="Phone: "
+                    className="min-w-0 truncate text-xs leading-5 text-theme-muted"
+                  />
                 )}
                 {settings.contact_website && (
-                  <p className="break-words">
-                    Website: {settings.contact_website}
-                  </p>
+                  <LongSettingValue
+                    value={settings.contact_website}
+                    prefix="Website: "
+                    className="min-w-0 truncate text-xs leading-5 text-theme-muted"
+                  />
                 )}
                 {contactCount === 0 && (
                   <p>No public contact details configured yet.</p>
@@ -1382,7 +1426,7 @@ export default function SettingsPage() {
           action={<Badge tone="accent">{currentPlanName} plan</Badge>}
         >
           <div className="grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                 Plan
               </p>
@@ -1393,7 +1437,7 @@ export default function SettingsPage() {
                 <StatusChip>Current plan</StatusChip>
               </div>
             </div>
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                 Status
               </p>
@@ -1404,7 +1448,7 @@ export default function SettingsPage() {
                 Read from existing subscription data.
               </p>
             </div>
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                 Item limit
               </p>
@@ -1642,24 +1686,29 @@ export default function SettingsPage() {
           action={<StatusChip tone="success">Auth email active</StatusChip>}
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                 Account email
               </p>
-              <p className="mt-1 break-words text-sm font-black text-theme-primary">
-                {userEmail || "Email unavailable"}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
+              <LongSettingValue
+                value={userEmail}
+                fallback="Email unavailable"
+                className={`mt-1 ${valueTextClassName}`}
+              />
+              <p
+                className={`mt-1 ${mutedTextClassName}`}
+              >
                 Used for sign-in, verification, and account access emails.
               </p>
             </div>
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                 Custom sender
               </p>
-              <p className="mt-1 text-sm font-black text-theme-primary">
-                Not configured
-              </p>
+              <LongSettingValue
+                value="Not configured"
+                className={`mt-1 ${valueTextClassName}`}
+              />
               <div className="mt-2">
                 <StatusChip>Custom sender future</StatusChip>
               </div>
@@ -1679,14 +1728,17 @@ export default function SettingsPage() {
           }
         >
           <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                 Public contact email
               </p>
-              <p className="mt-1 break-words text-sm font-black text-theme-primary">
-                {settings.contact_email || "Not set"}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
+              <LongSettingValue
+                value={settings.contact_email}
+                className={`mt-1 ${valueTextClassName}`}
+              />
+              <p
+                className={`mt-1 ${mutedTextClassName}`}
+              >
                 Public contact display is controlled in Branding and Workspace.
               </p>
             </div>
@@ -1717,7 +1769,7 @@ export default function SettingsPage() {
           action={<StatusChip tone="info">Manual reports</StatusChip>}
         >
           <div className="grid gap-3 sm:grid-cols-2">
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-sm font-black text-theme-primary">
                 Available today
               </p>
@@ -1764,10 +1816,12 @@ export default function SettingsPage() {
                 className="flex items-start justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
               >
                 <span className="min-w-0">
-                  <span className="block text-sm font-black text-theme-primary">
+                  <span className={`block ${valueTextClassName}`}>
                     {title}
                   </span>
-                  <span className="mt-0.5 block text-xs leading-5 text-theme-muted">
+                  <span
+                    className={`mt-0.5 block ${mutedTextClassName}`}
+                  >
                     {description}
                   </span>
                 </span>
@@ -1792,7 +1846,7 @@ export default function SettingsPage() {
                 key={item}
                 className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
               >
-                <span className="text-sm font-bold text-theme-primary">
+                <span className={labelTextClassName}>
                   {item}
                 </span>
                 <StatusChip>Future</StatusChip>
@@ -1823,32 +1877,216 @@ export default function SettingsPage() {
   );
 
   const renderSecurityPanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Authentication"
-        description="SydIN uses the existing Supabase Auth session. This page does not alter providers, policies, or account security flows."
-        action={<StatusChip tone="success">Active session</StatusChip>}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Signed in as
-            </p>
-            <p className="mt-1 break-words text-sm font-black text-theme-primary">
-              {userEmail || "Current user"}
+    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
+      <div className="grid gap-4">
+        <SettingCard
+          title="Account access"
+          description="Your dashboard session is managed by SydIN authentication. This page displays the current account state without changing auth settings."
+          action={<StatusChip tone="success">Signed in</StatusChip>}
+        >
+          <div className="grid gap-3">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Signed in as
+              </p>
+              <LongSettingValue
+                value={userEmail}
+                fallback="Current user"
+                className={`mt-1 ${valueTextClassName}`}
+              />
+              <p
+                className={`mt-1 ${mutedTextClassName}`}
+              >
+                Account email comes from the current authenticated session.
+              </p>
+            </div>
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                Sign out
+              </p>
+              <p
+                className="mt-1 min-w-0 text-sm text-theme-muted"
+              >
+                Sign-out remains in the dashboard account menu and mobile More
+                sheet.
+              </p>
+              <div className="mt-2">
+                <StatusChip>Account menu action</StatusChip>
+              </div>
+            </div>
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Sign-in methods"
+          description="These are the sign-in methods exposed by the existing login and signup screens. Settings does not connect or unlink providers."
+          action={<StatusChip>OAuth available</StatusChip>}
+        >
+          <div className="grid gap-2">
+            {[
+              ["Email and password", "Available sign-in method"],
+              ["Google", "Available OAuth sign-in method"],
+              ["Microsoft", "Available OAuth sign-in method"],
+            ].map(([method, status]) => (
+              <div
+                key={method}
+                className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
+              >
+                <span className="min-w-0">
+                  <span className={`block ${valueTextClassName}`}>
+                    {method}
+                  </span>
+                  <span
+                    className={`mt-0.5 block ${mutedTextClassName}`}
+                  >
+                    {status}
+                  </span>
+                </span>
+                <StatusChip>Available</StatusChip>
+              </div>
+            ))}
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Password and recovery"
+          description="Password recovery emails are handled by the authentication provider through the existing sign-in support flow."
+          action={<StatusChip tone="success">Auth email active</StatusChip>}
+        >
+          <div className="grid gap-3 sm:grid-cols-2">
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className={valueTextClassName}>
+                Email verification
+              </p>
+              <p
+                className={`mt-1 ${mutedTextClassName}`}
+              >
+                Signup verification uses the current auth email flow.
+              </p>
+            </div>
+            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
+              <p className={valueTextClassName}>
+                Password help
+              </p>
+              <p
+                className={`mt-1 ${mutedTextClassName}`}
+              >
+                Managed during sign-in and support. No new password reset
+                controls were added here.
+              </p>
+            </div>
+          </div>
+          <div className="mt-3">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => switchSection("email")}
+            >
+              Review Email Settings
+            </Button>
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Workspace security"
+          description="Dashboard access is protected by the existing authenticated session and workspace data rules. Advanced team security belongs in a later phase."
+          action={<StatusChip tone="success">Authenticated dashboard</StatusChip>}
+        >
+          <div className="grid gap-2 sm:grid-cols-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => switchSection("profile")}
+            >
+              Review Profile
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => switchSection("data")}
+            >
+              Review Data Settings
+            </Button>
+          </div>
+        </SettingCard>
+      </div>
+
+      <div className="grid gap-4">
+        <SettingCard
+          title="Session and device controls"
+          description="Advanced controls such as MFA and session management require a later security phase."
+          action={<StatusChip>Session controls future</StatusChip>}
+        >
+          <div className="grid gap-2">
+            {[
+              "Multi-factor authentication",
+              "Active sessions",
+              "Trusted devices",
+              "Sign out of all devices",
+              "Security notifications",
+            ].map((item) => (
+              <div
+                key={item}
+                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
+              >
+                <span className={labelTextClassName}>
+                  {item}
+                </span>
+                <StatusChip>Future</StatusChip>
+              </div>
+            ))}
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Team and audit controls"
+          description="Team roles, approval flows, and audit logs are not implemented in Settings v1."
+          action={<StatusChip>Team roles future</StatusChip>}
+        >
+          <div className="grid gap-2">
+            {[
+              ["Team roles and permissions", "Future"],
+              ["Audit log", "Future"],
+              ["Approval flows", "Future"],
+              ["Provider linking and unlinking", "Future"],
+            ].map(([label, status]) => (
+              <div
+                key={label}
+                className="flex min-h-10 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
+              >
+                <span className={labelTextClassName}>
+                  {label}
+                </span>
+                <StatusChip>{status}</StatusChip>
+              </div>
+            ))}
+          </div>
+        </SettingCard>
+
+        <SettingCard
+          title="Data protection"
+          description="Inventory and business settings are available inside the authenticated dashboard. Public item pages expose only their limited public item view."
+          action={<StatusChip>Dashboard data private</StatusChip>}
+        >
+          <div className="grid gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              onClick={() => switchSection("data")}
+            >
+              Open Data Settings
+            </Button>
+            <p className="min-w-0 text-xs leading-5 text-theme-subtle">
+              This section avoids exposing internal account IDs or security
+              implementation details.
             </p>
           </div>
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Password and providers
-            </p>
-            <p className="mt-1 text-sm text-theme-muted">
-              Managed by the existing auth flow. No provider changes in this
-              phase.
-            </p>
-          </div>
-        </div>
-      </SettingCard>
+        </SettingCard>
+      </div>
     </div>
   );
 
