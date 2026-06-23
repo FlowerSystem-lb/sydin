@@ -4,20 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
-import {
-  PageHeader,
-  buttonClassName,
-} from "@/components/ui";
-import InventoryValueOverview, {
-  type InventoryCategoryValue,
-  type InventoryValueAnalytics,
-} from "@/app/dashboard/components/InventoryValueOverview";
-import {
-  getCategoriesForUser,
-  resolveCategoryDisplay,
-  type Category,
-} from "@/app/lib/categories";
-import { supabase } from "@/app/lib/supabase";
+import { formatDepotLabel, getDepotsForUser, type Depot } from "@/app/lib/depots";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -34,34 +21,159 @@ import {
 import {
   calculateInventoryValue,
   getEffectiveItemLowStockThreshold,
+  getInventoryQuantityLabel,
+  normalizeCurrencyCode,
+  type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
 import {
   getOnboardingProgress,
   type OnboardingProgress,
 } from "@/app/lib/onboarding";
+import {
+  formatStockMovementNotes,
+  getRecentStockMovements,
+  STOCK_MOVEMENT_LABELS,
+  type StockMovement,
+} from "@/app/lib/stockMovements";
+import {
+  getCategoriesForUser,
+  resolveCategoryDisplay,
+  type Category,
+} from "@/app/lib/categories";
+import { supabase } from "@/app/lib/supabase";
 
 interface Item {
   id: number;
   name: string;
-  category: string;
+  category: string | null;
   category_id?: number | null;
   quantity: number;
-  image: string;
-  sku?: string;
-  notes?: string;
+  image: string | null;
+  sku?: string | null;
+  item_code?: string | null;
+  depot_id?: number | null;
+  unit_type?: InventoryUnitType | string | null;
+  custom_unit_label?: string | null;
   cost_price?: number | string | null;
   selling_price?: number | string | null;
   min_stock_level?: number | null;
 }
+
+type StockState = "in" | "low" | "out";
 
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
 
+function formatNumber(value: number) {
+  return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatCurrency(value: number, currencyCode: string) {
+  const currency = normalizeCurrencyCode(currencyCode);
+
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency,
+      maximumFractionDigits: 2,
+    }).format(value);
+  } catch {
+    return `${currency} ${value.toFixed(2)}`;
+  }
+}
+
+function formatDateDistance(value: string) {
+  if (!value) return "";
+
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  const differenceMs = Date.now() - date.getTime();
+  const minute = 60 * 1000;
+  const hour = 60 * minute;
+  const day = 24 * hour;
+
+  if (differenceMs < hour) {
+    return `${Math.max(1, Math.round(differenceMs / minute))}m ago`;
+  }
+
+  if (differenceMs < day) {
+    return `${Math.round(differenceMs / hour)}h ago`;
+  }
+
+  if (differenceMs < 7 * day) {
+    return `${Math.round(differenceMs / day)}d ago`;
+  }
+
+  return new Intl.DateTimeFormat("en", {
+    month: "short",
+    day: "numeric",
+  }).format(date);
+}
+
+function getItemIdentifier(item: Item) {
+  return item.item_code || item.sku || "No identifier";
+}
+
+function getItemThreshold(
+  item: Item,
+  canUseItemThreshold: boolean,
+  fallbackThreshold: number
+) {
+  return canUseItemThreshold
+    ? getEffectiveItemLowStockThreshold(
+        item.min_stock_level,
+        fallbackThreshold
+      )
+    : fallbackThreshold;
+}
+
+function getStockState(quantity: number, threshold: number): StockState {
+  if (quantity <= 0) return "out";
+  if (quantity <= threshold) return "low";
+  return "in";
+}
+
+function getStockLabel(state: StockState) {
+  if (state === "out") return "Out of Stock";
+  if (state === "low") return "Low Stock";
+  return "In Stock";
+}
+
+function DashboardCardHeader({
+  icon,
+  title,
+  href,
+  hrefLabel = "View all",
+}: {
+  icon: UiIconName;
+  title: string;
+  href?: string;
+  hrefLabel?: string;
+}) {
+  return (
+    <div className="overview-card-header">
+      <div className="overview-card-title">
+        <UiIcon name={icon} className="h-4 w-4" />
+        <h2>{title}</h2>
+      </div>
+      {href && (
+        <Link href={href} className="overview-view-link">
+          {hrefLabel}
+          <UiIcon name="chevron-right" className="h-4 w-4" />
+        </Link>
+      )}
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [depots, setDepots] = useState<Depot[]>([]);
+  const [movements, setMovements] = useState<StockMovement[]>([]);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [businessSettings, setBusinessSettings] =
@@ -69,640 +181,612 @@ export default function DashboardPage() {
   const [onboarding, setOnboarding] = useState<OnboardingProgress | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const planCapabilities = getSubscriptionCapabilities(
+    subscriptionUsage.subscription
+  );
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
     subscriptionUsage.subscription,
     businessSettings.low_stock_threshold
   );
-  const planCapabilities = getSubscriptionCapabilities(
-    subscriptionUsage.subscription
+  const canUseItemThreshold = planCapabilities.customLowStockThreshold;
+  const currencyCode = normalizeCurrencyCode(
+    businessSettings.currency_code,
+    "USD"
   );
-  const canViewValueAnalytics = planCapabilities.dashboardAnalytics;
 
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth.getUser().then(({ data: { user }, error: userError }) => {
-      if (!isActive) return;
+    supabase.auth
+      .getUser()
+      .then(({ data: { user }, error: userError }) => {
+        if (!isActive) return;
 
-      if (userError) {
-        setError("We could not confirm your session. Please sign in again.");
-        setLoading(false);
-        return;
-      }
+        if (userError) {
+          setError("We could not confirm your session. Please sign in again.");
+          setLoading(false);
+          return;
+        }
 
-      if (!user) {
-        setLoading(false);
-        return;
-      }
+        if (!user) {
+          setLoading(false);
+          return;
+        }
 
-      Promise.all([
-        supabase
-          .from("inventory")
-          .select("*")
-          .eq("user_id", user.id)
-          .order("id", {
-            ascending: false,
-          }),
-        getSubscriptionUsage(user.id),
-        getOrCreateBusinessSettings(user.id),
-        getCategoriesForUser(user.id).catch(() => []),
-        getOnboardingProgress(user.id).catch(() => null),
-      ])
-        .then(
-          ([
-            { data, error: inventoryError },
-            usage,
-            settings,
-            loadedCategories,
-            loadedOnboarding,
-          ]) => {
-          if (!isActive) return;
+        Promise.all([
+          supabase
+            .from("inventory")
+            .select(
+              "id, name, category, category_id, quantity, image, sku, item_code, depot_id, unit_type, custom_unit_label, cost_price, selling_price, min_stock_level"
+            )
+            .eq("user_id", user.id)
+            .order("id", { ascending: false }),
+          getSubscriptionUsage(user.id),
+          getOrCreateBusinessSettings(user.id),
+          getCategoriesForUser(user.id).catch(() => []),
+          getDepotsForUser(user.id).catch(() => []),
+          getOnboardingProgress(user.id).catch(() => null),
+          getRecentStockMovements(user.id, 8).catch(() => []),
+        ])
+          .then(
+            ([
+              { data, error: inventoryError },
+              usage,
+              settings,
+              loadedCategories,
+              loadedDepots,
+              loadedOnboarding,
+              loadedMovements,
+            ]) => {
+              if (!isActive) return;
 
-          if (inventoryError) {
+              if (inventoryError) {
+                setError(
+                  "We could not load your inventory summary. Refresh the page and try again."
+                );
+                setLoading(false);
+                return;
+              }
+
+              setItems((data || []) as Item[]);
+              setSubscriptionUsage(usage);
+              setBusinessSettings(settings);
+              setCategories(loadedCategories);
+              setDepots(loadedDepots);
+              setOnboarding(loadedOnboarding);
+              setMovements(loadedMovements);
+              setLoading(false);
+            }
+          )
+          .catch(() => {
+            if (!isActive) return;
+
             setError(
-              "We could not load your inventory summary. Refresh the page and try again."
+              "We could not load your dashboard. Refresh the page and try again."
             );
             setLoading(false);
-            return;
-          }
+          });
+      })
+      .catch(() => {
+        if (!isActive) return;
 
-          setItems(data || []);
-          setCategories(loadedCategories);
-          setSubscriptionUsage(usage);
-          setBusinessSettings(settings);
-          setOnboarding(loadedOnboarding);
-          setLoading(false);
-          }
-        )
-        .catch(() => {
-          if (!isActive) return;
-
-          setError(
-            "We could not load your dashboard. Refresh the page and try again."
-          );
-          setLoading(false);
-        });
-    }).catch(() => {
-      if (!isActive) return;
-
-      setError("We could not confirm your session. Please sign in again.");
-      setLoading(false);
-    });
+        setError("We could not confirm your session. Please sign in again.");
+        setLoading(false);
+      });
 
     return () => {
       isActive = false;
     };
   }, []);
 
-  const stats = useMemo(() => {
-    const totalStock = items.reduce(
-      (sum, item) => sum + Number(item.quantity || 0),
+  const itemById = useMemo(
+    () => new Map(items.map((item) => [item.id, item])),
+    [items]
+  );
+  const depotById = useMemo(
+    () => new Map(depots.map((depot) => [depot.id, depot])),
+    [depots]
+  );
+
+  const dashboardData = useMemo(() => {
+    const enrichedItems = items.map((item) => {
+      const quantity = Number(item.quantity || 0);
+      const threshold = getItemThreshold(
+        item,
+        canUseItemThreshold,
+        effectiveLowStockThreshold
+      );
+      const state = getStockState(quantity, threshold);
+      const retailValue = calculateInventoryValue(quantity, item.selling_price);
+      const costValue = calculateInventoryValue(quantity, item.cost_price);
+
+      return {
+        item,
+        quantity,
+        threshold,
+        state,
+        retailValue,
+        costValue,
+        category: resolveCategoryDisplay(
+          item,
+          categories.find((category) => category.id === item.category_id) ||
+            null
+        ),
+        depot: formatDepotLabel(
+          item.depot_id ? depotById.get(item.depot_id) : null
+        ),
+      };
+    });
+    const totalStock = enrichedItems.reduce(
+      (sum, entry) => sum + entry.quantity,
       0
     );
+    const lowStockCount = enrichedItems.filter(
+      (entry) => entry.state !== "in"
+    ).length;
+    const totalRetailValue = enrichedItems.reduce(
+      (sum, entry) => sum + (entry.retailValue || 0),
+      0
+    );
+    const totalCostValue = enrichedItems.reduce(
+      (sum, entry) => sum + (entry.costValue || 0),
+      0
+    );
+    const hasRetailValue = enrichedItems.some(
+      (entry) => entry.retailValue !== null
+    );
+    const hasCostValue = enrichedItems.some(
+      (entry) => entry.costValue !== null
+    );
 
-    const lowStockItems = items.filter((item) => {
-      const itemThreshold = planCapabilities.customLowStockThreshold
-        ? getEffectiveItemLowStockThreshold(
-            item.min_stock_level,
-            effectiveLowStockThreshold
-          )
-        : effectiveLowStockThreshold;
-
-      return Number(item.quantity || 0) <= itemThreshold;
-    }).length;
+    const lowStockItems = enrichedItems
+      .filter((entry) => entry.state !== "in")
+      .sort((left, right) => {
+        if (left.state !== right.state) return left.state === "out" ? -1 : 1;
+        return left.quantity - right.quantity;
+      });
+    const reorderSuggestions = lowStockItems
+      .map((entry) => ({
+        ...entry,
+        suggested: Math.max(0, entry.threshold - entry.quantity),
+      }))
+      .filter((entry) => entry.suggested > 0);
 
     return {
       totalItems: items.length,
       totalStock,
-      lowStockItems,
-      recentlyAddedItems: Math.min(items.length, 3),
+      lowStockCount,
+      value: hasRetailValue ? totalRetailValue : totalCostValue,
+      valueLabel: hasRetailValue
+        ? "Estimated retail value"
+        : hasCostValue
+          ? "Estimated cost value"
+          : "No price data yet",
+      hasValue: hasRetailValue || hasCostValue,
+      snapshotItems: enrichedItems.slice(0, 6),
+      lowStockItems: lowStockItems.slice(0, 3),
+      reorderSuggestions: reorderSuggestions.slice(0, 3),
     };
   }, [
-    effectiveLowStockThreshold,
-    items,
-    planCapabilities.customLowStockThreshold,
-  ]);
-
-  const valueAnalytics = useMemo<InventoryValueAnalytics>(() => {
-    const categoryValues = new Map<string, InventoryCategoryValue>();
-    let totalCostValue = 0;
-    let totalRetailValue = 0;
-    let itemsWithPriceData = 0;
-    let hasCostPriceData = false;
-    let lowStockItems = 0;
-    let outOfStockItems = 0;
-
-    items.forEach((item) => {
-      const quantity = Number(item.quantity || 0);
-      const hasCostPrice =
-        item.cost_price !== null &&
-        item.cost_price !== undefined &&
-        item.cost_price !== "";
-      const hasSellingPrice =
-        item.selling_price !== null &&
-        item.selling_price !== undefined &&
-        item.selling_price !== "";
-      const costValue = calculateInventoryValue(quantity, item.cost_price);
-      const retailValue = calculateInventoryValue(
-        quantity,
-        item.selling_price
-      );
-      const itemThreshold = planCapabilities.customLowStockThreshold
-        ? getEffectiveItemLowStockThreshold(
-            item.min_stock_level,
-            effectiveLowStockThreshold
-          )
-        : effectiveLowStockThreshold;
-
-      if (hasCostPrice || hasSellingPrice) {
-        itemsWithPriceData += 1;
-      }
-      if (hasCostPrice) {
-        hasCostPriceData = true;
-      }
-      if (costValue !== null) {
-        totalCostValue += costValue;
-      }
-      if (retailValue !== null) {
-        totalRetailValue += retailValue;
-      }
-      if (quantity <= itemThreshold) {
-        lowStockItems += 1;
-      }
-      if (quantity <= 0) {
-        outOfStockItems += 1;
-      }
-
-      if (hasCostPrice) {
-        const category = resolveCategoryDisplay(
-          item,
-          categories.find(
-            (managedCategory) =>
-              managedCategory.id === item.category_id
-          ) || null
-        );
-        const currentCategory = categoryValues.get(category) || {
-          category,
-          costValue: 0,
-          retailValue: 0,
-        };
-
-        currentCategory.costValue += costValue || 0;
-        currentCategory.retailValue += retailValue || 0;
-        categoryValues.set(category, currentCategory);
-      }
-    });
-
-    const sortedCategories = [...categoryValues.values()].sort(
-      (left, right) => right.costValue - left.costValue
-    );
-    const chartCategories = sortedCategories.slice(0, 6);
-
-    if (sortedCategories.length > 6) {
-      chartCategories.push(
-        sortedCategories.slice(6).reduce<InventoryCategoryValue>(
-          (other, category) => ({
-            category: "Other",
-            costValue: other.costValue + category.costValue,
-            retailValue: other.retailValue + category.retailValue,
-          }),
-          {
-            category: "Other",
-            costValue: 0,
-            retailValue: 0,
-          }
-        )
-      );
-    }
-
-    return {
-      totalCostValue: Math.round(totalCostValue * 100) / 100,
-      totalRetailValue: Math.round(totalRetailValue * 100) / 100,
-      estimatedMarginValue:
-        Math.round((totalRetailValue - totalCostValue) * 100) / 100,
-      itemsWithPriceData,
-      lowStockItems,
-      outOfStockItems,
-      hasCostPriceData,
-      categories: chartCategories,
-    };
-  }, [
-    effectiveLowStockThreshold,
+    canUseItemThreshold,
     categories,
+    depotById,
+    effectiveLowStockThreshold,
     items,
-    planCapabilities.customLowStockThreshold,
   ]);
-
-  const recentItems = useMemo(
-    () => items.slice(0, 3),
-    [items]
-  );
 
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
-  const upgradePlan =
-    subscriptionUsage.subscription.plan === "free"
-      ? "Standard"
-      : subscriptionUsage.subscription.plan === "standard"
-        ? "Pro"
-        : "";
-  const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
-  const usagePercent = Math.min(
-    100,
-    Math.round(
-      (subscriptionUsage.usedItems /
-        Math.max(subscriptionUsage.subscription.item_limit, 1)) *
-        100
-    )
-  );
+  const itemLimit = subscriptionUsage.subscription.item_limit;
+  const itemUsageText = `${formatNumber(subscriptionUsage.usedItems)} / ${formatNumber(
+    itemLimit
+  )} items`;
+  const setupPercent = onboarding?.percentage ?? 0;
+  const nextStep = onboarding?.nextStep;
 
-  const summaryCards = [
+  const kpiCards = [
     {
       label: "Total Items",
-      value: stats.totalItems,
-      detail: "Products tracked",
-      href: "/dashboard/inventory",
+      value: formatNumber(dashboardData.totalItems),
+      detail: "Across inventory",
       icon: "box" as UiIconName,
-      accent: "from-indigo-400 to-violet-500",
+      tone: "blue",
     },
     {
       label: "Total Stock",
-      value: stats.totalStock,
+      value: formatNumber(dashboardData.totalStock),
       detail: "Units available",
-      href: "/dashboard/inventory",
       icon: "layers" as UiIconName,
-      accent: "from-cyan-300 to-indigo-500",
+      tone: "blue",
     },
     {
       label: "Low Stock Items",
-      value: stats.lowStockItems,
-      detail: `At or below ${effectiveLowStockThreshold} units`,
-      href: "/dashboard/reports",
+      value: formatNumber(dashboardData.lowStockCount),
+      detail: "At or below reorder level",
       icon: "alert" as UiIconName,
-      accent: "from-rose-400 to-fuchsia-500",
+      tone: "red",
     },
     {
-      label: "Recently Added Items",
-      value: stats.recentlyAddedItems,
-      detail: "Latest records",
-      href: "/dashboard/inventory",
-      icon: "clock" as UiIconName,
-      accent: "from-violet-400 to-sky-400",
+      label: "Inventory Value",
+      value: dashboardData.hasValue
+        ? formatCurrency(dashboardData.value, currencyCode)
+        : "--",
+      detail: dashboardData.valueLabel,
+      icon: "usage" as UiIconName,
+      tone: "green",
     },
   ];
 
+  const recentMovements = movements.slice(0, 4);
+
   return (
-    <div className="contents">
-      <main>
-        <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-8">
-          <PageHeader
-            eyebrow={`Welcome back to ${businessSettings.business_name}`}
-            title="Dashboard"
-            description="Monitor stock health, recently added products, and inventory movement signals from one workspace."
-            meta={
-              <span className="ui-badge ui-badge-info mb-2">
-                Inventory overview
+    <main className="dashboard-overview">
+      <div className="dashboard-overview-inner">
+        <section className="overview-hero" aria-labelledby="dashboard-title">
+          <div className="min-w-0">
+            <p className="overview-kicker">Inventory overview</p>
+            <h1 id="dashboard-title">Overview</h1>
+            <p>{businessSettings.business_name}</p>
+          </div>
+          <div className="overview-actions" aria-label="Dashboard actions">
+            <Link href="/dashboard/add-item" className="overview-action">
+              <UiIcon name="plus" className="h-4 w-4" />
+              Add Item
+            </Link>
+            <Link href="/dashboard/inventory" className="overview-action">
+              <UiIcon name="box" className="h-4 w-4" />
+              View Inventory
+            </Link>
+            <Link
+              href="/dashboard/purchase-orders"
+              className="overview-action overview-action-primary"
+            >
+              <UiIcon name="file" className="h-4 w-4" />
+              Create PO
+            </Link>
+            <Link href="/dashboard/stock-counts" className="overview-action">
+              <UiIcon name="check" className="h-4 w-4" />
+              Stock Count
+            </Link>
+            <Link href="/dashboard/qr-center" className="overview-action">
+              <UiIcon name="qr" className="h-4 w-4" />
+              QR Scan
+            </Link>
+          </div>
+        </section>
+
+        {error && (
+          <p role="alert" className="overview-alert overview-alert-danger">
+            {error}
+          </p>
+        )}
+
+        <section className="overview-kpi-grid" aria-label="Inventory metrics">
+          {kpiCards.map((card) => (
+            <article key={card.label} className="overview-kpi-card">
+              <div>
+                <p>{card.label}</p>
+                <strong>{loading ? "..." : card.value}</strong>
+                <span>{card.detail}</span>
+              </div>
+              <span className={`overview-kpi-icon overview-kpi-icon-${card.tone}`}>
+                <UiIcon name={card.icon} className="h-6 w-6" />
               </span>
-            }
-            actions={
-              <>
-                <Link
-                  href="/dashboard/reports"
-                  className={buttonClassName({ variant: "secondary" })}
-                >
-                  View Reports
-                </Link>
+            </article>
+          ))}
+        </section>
 
-                <Link
-                  href="/dashboard/inventory"
-                  className={buttonClassName({ variant: "primary" })}
-                >
-                  View Inventory
-                </Link>
-
-                <Link
-                  href="/dashboard/add-item"
-                  className={buttonClassName({ variant: "ghost" })}
-                >
-                  Add Item
-                </Link>
-              </>
-            }
-          />
-
-          {error && (
-            <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
-              {error}
+        <section className="overview-plan-strip" aria-label="Plan and setup">
+          <div className="overview-plan-cell overview-plan-name">
+            <span className="overview-plan-mark">
+              <UiIcon name="usage" className="h-5 w-5" />
+            </span>
+            <div>
+              <strong>{currentPlanName} Plan</strong>
+              <p>Usage: {loading ? "..." : itemUsageText}</p>
             </div>
-          )}
+          </div>
+          <div className="overview-plan-cell overview-plan-progress">
+            <div className="overview-plan-progress-copy">
+              <span>Setup Progress</span>
+              <strong>{loading ? "..." : `${setupPercent}%`}</strong>
+            </div>
+            <div className="overview-progress-track">
+              <span style={{ width: `${setupPercent}%` }} />
+            </div>
+          </div>
+          <div className="overview-plan-cell overview-plan-next">
+            <div>
+              <strong>
+                {nextStep ? `Next Step: ${nextStep.action}` : "Setup guide"}
+              </strong>
+              <p>
+                {nextStep
+                  ? nextStep.description
+                  : "Review guides and support when needed."}
+              </p>
+            </div>
+            <Link href={nextStep?.href || "/dashboard/help"}>
+              Continue setup
+              <UiIcon name="chevron-right" className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
 
-          <section className="glass-card p-5 sm:p-6">
+        <div className="overview-main-grid">
+          <section className="overview-card overview-inventory-card">
+            <DashboardCardHeader
+              icon="box"
+              title="Inventory Snapshot"
+              href="/dashboard/inventory"
+              hrefLabel="View all"
+            />
+
             {loading ? (
-              <div className="h-32 animate-pulse rounded-2xl bg-theme-surface" />
-            ) : onboarding ? (
-              <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                <div className="min-w-0">
-                  <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
-                    Getting started
-                  </p>
-                  <h2 className="mt-2 text-2xl font-black text-theme-primary">
-                    {onboarding.completedCount} of {onboarding.totalCount}{" "}
-                    recommended steps complete
-                  </h2>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
-                    {onboarding.nextStep
-                      ? `Next suggestion: ${onboarding.nextStep.title}. These setup steps are optional and can be completed in any order.`
-                      : "Your recommended setup is complete. Visit the Help Center whenever you need a guide or support contact."}
-                  </p>
-                  {onboarding.hasPartialError && (
-                    <p className="mt-2 text-xs font-semibold text-theme-warning">
-                      Some setup statuses could not be checked right now.
-                    </p>
-                  )}
-                </div>
-
-                <div className="flex min-w-0 flex-col gap-3 sm:flex-row lg:min-w-[420px] lg:items-center">
-                  <div className="flex-1 rounded-2xl border border-cyan-300/15 bg-cyan-400/[0.07] p-4">
-                    <div className="flex items-center justify-between gap-4 text-sm font-bold">
-                      <span className="text-theme-muted">Setup progress</span>
-                      <span className="text-theme-accent">
-                        {onboarding.percentage}%
-                      </span>
-                    </div>
-                    <div className="mt-3 h-2 overflow-hidden rounded-full bg-theme-surface">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-blue-500"
-                        style={{ width: `${onboarding.percentage}%` }}
-                      />
-                    </div>
-                  </div>
-
-                  <Link
-                    href={
-                      onboarding.nextStep?.href || "/dashboard/help"
-                    }
-                    className="glass-button min-h-12 px-5 py-3 text-sm font-bold"
-                  >
-                    {onboarding.nextStep
-                      ? onboarding.nextStep.action
-                      : "Open Help Center"}
-                  </Link>
-                  <Link
-                    href="/dashboard/help"
-                    className="min-h-12 rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-center text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
-                  >
-                    View Guide
-                  </Link>
-                </div>
+              <div className="overview-skeleton-list" aria-hidden="true">
+                {[1, 2, 3, 4, 5].map((item) => (
+                  <span key={item} />
+                ))}
+              </div>
+            ) : dashboardData.snapshotItems.length === 0 ? (
+              <div className="overview-empty-state">
+                <UiIcon name="box" className="h-8 w-8" />
+                <strong>No inventory yet</strong>
+                <p>Add your first item to start tracking stock health.</p>
+                <Link href="/dashboard/add-item">Add Item</Link>
               </div>
             ) : (
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-xl font-black text-theme-primary">
-                    Need help getting started?
-                  </h2>
-                  <p className="mt-2 text-sm text-theme-muted">
-                    Setup progress is unavailable, but all guides and support
-                    contacts remain accessible.
-                  </p>
+              <>
+                <div className="overview-inventory-table">
+                  <div className="overview-inventory-head">
+                    <span>Item</span>
+                    <span>Category</span>
+                    <span>Stock</span>
+                    <span>Location</span>
+                    <span>Status</span>
+                    <span aria-hidden="true" />
+                  </div>
+                  {dashboardData.snapshotItems.map((entry) => (
+                    <Link
+                      key={entry.item.id}
+                      href={`/dashboard/inventory/${entry.item.id}`}
+                      className="overview-inventory-row"
+                    >
+                      <span className="overview-item-cell">
+                        <span className="overview-thumb">
+                          {entry.item.image ? (
+                            <Image
+                              src={entry.item.image}
+                              alt={entry.item.name}
+                              fill
+                              sizes="44px"
+                              className="object-contain"
+                            />
+                          ) : (
+                            <UiIcon name="box" className="h-5 w-5" />
+                          )}
+                        </span>
+                        <span className="min-w-0">
+                          <strong>{entry.item.name}</strong>
+                          <small>SKU: {getItemIdentifier(entry.item)}</small>
+                        </span>
+                      </span>
+                      <span>{entry.category}</span>
+                      <span>
+                        {getInventoryQuantityLabel(
+                          entry.item.quantity,
+                          entry.item.unit_type,
+                          entry.item.custom_unit_label
+                        )}
+                      </span>
+                      <span>{entry.depot}</span>
+                      <span>
+                        <span className={`overview-status overview-status-${entry.state}`}>
+                          {getStockLabel(entry.state)}
+                        </span>
+                      </span>
+                      <span className="overview-row-more" aria-hidden="true">
+                        <UiIcon name="more" className="h-4 w-4" />
+                      </span>
+                    </Link>
+                  ))}
                 </div>
-                <Link
-                  href="/dashboard/help"
-                  className="glass-button px-5 py-3 text-sm font-bold"
-                >
-                  Open Help Center
-                </Link>
-              </div>
+
+                <div className="overview-inventory-mobile-list">
+                  {dashboardData.snapshotItems.slice(0, 4).map((entry) => (
+                    <Link
+                      key={entry.item.id}
+                      href={`/dashboard/inventory/${entry.item.id}`}
+                      className="overview-mobile-item"
+                    >
+                      <span className="overview-thumb overview-thumb-lg">
+                        {entry.item.image ? (
+                          <Image
+                            src={entry.item.image}
+                            alt={entry.item.name}
+                            fill
+                            sizes="64px"
+                            className="object-contain"
+                          />
+                        ) : (
+                          <UiIcon name="box" className="h-5 w-5" />
+                        )}
+                      </span>
+                      <span className="min-w-0">
+                        <strong>{entry.item.name}</strong>
+                        <small>SKU: {getItemIdentifier(entry.item)}</small>
+                      </span>
+                      <span className="overview-mobile-item-meta">
+                        <small>Stock</small>
+                        <strong>{formatNumber(entry.quantity)}</strong>
+                      </span>
+                      <span className={`overview-status overview-status-${entry.state}`}>
+                        {getStockLabel(entry.state)}
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              </>
             )}
           </section>
 
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-            <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Subscription
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
-                  {loading ? (
-                    <span className="inline-block h-9 w-64 max-w-full animate-pulse rounded-2xl bg-theme-surface" />
-                  ) : (
-                    `Current plan: ${currentPlanName}`
-                  )}
-                </h2>
-
-                <p className="mt-3 text-base text-theme-muted">
-                  {loading ? (
-                    <span className="inline-block h-5 w-40 animate-pulse rounded-full bg-theme-surface" />
-                  ) : (
-                    `Usage: ${itemUsageText}`
-                  )}
-                </p>
-              </div>
-
-              <div className="min-w-0 rounded-3xl border border-indigo-300/20 bg-indigo-500/10 p-4 lg:min-w-[320px]">
-                <div className="flex items-center justify-between gap-4">
-                  <span className="text-sm font-bold text-theme-accent">
-                    Item usage
-                  </span>
-
-                  <span className="text-sm font-black text-theme-primary">
-                    {loading ? "..." : `${usagePercent}%`}
-                  </span>
-                </div>
-
-                <div className="mt-3 h-3 overflow-hidden rounded-full bg-[var(--sydin-input-bg)]">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-indigo-300 via-violet-400 to-fuchsia-400 transition-all"
-                    style={{
-                      width: loading ? "0%" : `${usagePercent}%`,
-                    }}
-                  />
-                </div>
-
-                <p className="mt-3 text-xs font-semibold text-theme-subtle">
-                  Add item limits are enforced from your current plan.
-                </p>
-
-                {upgradePlan && (
-                  <Link
-                    href={`/request-plan?plan=${upgradePlan}&source=dashboard-plan`}
-                    className="mt-4 inline-flex min-h-10 w-full items-center justify-center rounded-xl border border-indigo-200/25 bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-accent transition hover:border-indigo-200/40 hover:bg-theme-hover"
-                  >
-                    Request {upgradePlan}
-                  </Link>
-                )}
-              </div>
-            </div>
-          </section>
-
-          <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-            {summaryCards.map((card) => (
-              <Link
-                key={card.label}
-                href={card.href}
-                className="ui-card ui-card-interactive group p-5 sm:p-6"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-theme-muted">
-                      {card.label}
-                    </p>
-
-                    <p className="mt-3 text-3xl font-bold tracking-tight text-theme-primary">
-                      {loading ? (
-                        <span className="block h-12 w-24 animate-pulse rounded-2xl bg-theme-surface" />
-                      ) : (
-                        card.value.toLocaleString()
-                      )}
-                    </p>
-                  </div>
-
-                  <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br ${card.accent} text-white shadow-[var(--shadow-subtle)]`}>
-                    <UiIcon name={card.icon} className="h-6 w-6" />
-                  </div>
-                </div>
-
-                <p className="mt-5 text-sm text-theme-subtle">
-                  {card.detail}
-                </p>
-              </Link>
-            ))}
-          </section>
-
-          <InventoryValueOverview
-            analytics={valueAnalytics}
-            currencyCode={businessSettings.currency_code || "USD"}
-            currentPlanName={currentPlanName}
-            isLocked={!canViewValueAnalytics}
-            loading={loading}
-          />
-
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Latest activity
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
-                  Recent Items
-                </h2>
-              </div>
-
-              <Link
+          <aside className="overview-side-stack">
+            <section className="overview-card">
+              <DashboardCardHeader
+                icon="alert"
+                title="Low Stock Alerts"
                 href="/dashboard/inventory"
-                className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
-              >
-                View Inventory
-              </Link>
-            </div>
-
-            <div className="mt-6">
-              {loading ? (
-                <div className="grid grid-cols-1 gap-4">
-                  {[1, 2, 3].map((item) => (
-                    <div
-                      key={item}
-                      className="min-h-[116px] overflow-hidden rounded-3xl border border-theme bg-theme-surface"
-                    >
-                      <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
-                    </div>
-                  ))}
-                </div>
-              ) : recentItems.length === 0 ? (
-                <div className="rounded-3xl border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-14 text-center">
-                  <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
-                    <UiIcon name="box" className="h-8 w-8" />
-                  </div>
-
-                  <h3 className="text-2xl font-bold">
-                    No inventory yet
-                  </h3>
-
-                  <p className="mx-auto mt-3 max-w-md text-theme-muted">
-                    Add your first product and your dashboard will start showing live inventory signals.
-                  </p>
-
-                  <Link
-                    href="/dashboard/add-item"
-                    className="mt-6 inline-flex rounded-2xl bg-white px-5 py-3 font-bold text-black transition hover:bg-slate-200"
-                  >
-                    Add Item
-                  </Link>
-                </div>
+              />
+              {dashboardData.lowStockItems.length === 0 && !loading ? (
+                <div className="overview-compact-empty">All stocked.</div>
               ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {recentItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex flex-col gap-4 rounded-3xl border border-theme bg-theme-inset p-4 transition hover:border-indigo-300/25 hover:bg-theme-hover sm:flex-row sm:items-center"
+                <div className="overview-compact-list">
+                  {(loading ? [] : dashboardData.lowStockItems).map((entry) => (
+                    <Link
+                      key={entry.item.id}
+                      href={`/dashboard/inventory/${entry.item.id}`}
+                      className="overview-low-stock-row"
                     >
-                      <div className="flex h-[132px] shrink-0 items-center justify-center rounded-3xl bg-[#f4f0e8] p-4 sm:h-24 sm:w-24">
-                        {item.image ? (
-                          <div className="relative h-full w-full">
-                            <Image
-                              src={item.image}
-                              alt={item.name}
-                              fill
-                              loading="lazy"
-                              sizes="96px"
-                              className="object-contain"
-                            />
-                          </div>
+                      <span className="overview-thumb overview-thumb-sm">
+                        {entry.item.image ? (
+                          <Image
+                            src={entry.item.image}
+                            alt={entry.item.name}
+                            fill
+                            sizes="34px"
+                            className="object-contain"
+                          />
                         ) : (
-                          <div className="flex h-full w-full flex-col items-center justify-center rounded-2xl border border-slate-300/30 bg-white/35 text-center text-theme-subtle">
-                            <span className="text-xs font-black uppercase tracking-[0.16em]">
-                              Image
-                            </span>
-
-                            <span className="mt-1 text-xs font-semibold">
-                              Not added
-                            </span>
-                          </div>
+                          <UiIcon name="box" className="h-4 w-4" />
                         )}
-                      </div>
-
-                      <div className="min-w-0 flex-1">
-                        <h3 className="text-2xl font-bold tracking-tight text-theme-primary break-words">
-                          {item.name}
-                        </h3>
-
-                        <p className="mt-1 text-theme-muted break-words">
-                          {resolveCategoryDisplay(
-                            item,
-                            categories.find(
-                              (category) =>
-                                category.id === item.category_id
-                            ) || null
-                          )}
-                        </p>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-3 sm:flex-col sm:items-end">
-                        <span className="rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-lg font-bold text-theme-primary">
-                          Qty {item.quantity}
-                        </span>
-
-                        {item.quantity <=
-                          (planCapabilities.customLowStockThreshold
-                            ? getEffectiveItemLowStockThreshold(
-                                item.min_stock_level,
-                                effectiveLowStockThreshold
-                              )
-                            : effectiveLowStockThreshold) && (
-                          <span className="rounded-full border border-red-400/30 bg-red-500/15 px-3 py-2 text-xs font-bold text-red-300">
-                            Low Stock
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                      </span>
+                      <strong>{entry.item.name}</strong>
+                      <span>Stock {formatNumber(entry.quantity)}</span>
+                      <span>Reorder at {formatNumber(entry.threshold)}</span>
+                    </Link>
                   ))}
+                  {loading && <span className="overview-mini-skeleton" />}
                 </div>
               )}
-            </div>
-          </section>
+            </section>
+
+            <section className="overview-card">
+              <DashboardCardHeader
+                icon="clock"
+                title="Recent Activity"
+                href="/dashboard/stock-movements"
+              />
+              {recentMovements.length === 0 && !loading ? (
+                <div className="overview-compact-empty">
+                  No recent activity.{" "}
+                  <Link href="/dashboard/stock-movements">Open movements</Link>
+                </div>
+              ) : (
+                <div className="overview-activity-list">
+                  {(loading ? [] : recentMovements).map((movement) => {
+                    const item = movement.item_id
+                      ? itemById.get(movement.item_id)
+                      : null;
+                    const movementLabel =
+                      item?.name ||
+                      formatStockMovementNotes(movement.notes) ||
+                      STOCK_MOVEMENT_LABELS[movement.movement_type];
+                    const delta = movement.quantity_delta;
+
+                    return (
+                      <Link
+                        key={movement.id}
+                        href="/dashboard/stock-movements"
+                        className="overview-activity-row"
+                      >
+                        <span className="overview-activity-icon">
+                          <UiIcon name="movement" className="h-3.5 w-3.5" />
+                        </span>
+                        <strong>{movementLabel}</strong>
+                        <span
+                          className={
+                            delta < 0
+                              ? "overview-delta-negative"
+                              : delta > 0
+                                ? "overview-delta-positive"
+                                : ""
+                          }
+                        >
+                          {delta > 0 ? "+" : ""}
+                          {formatNumber(delta)} units
+                        </span>
+                        <small>{formatDateDistance(movement.created_at)}</small>
+                      </Link>
+                    );
+                  })}
+                  {loading && <span className="overview-mini-skeleton" />}
+                </div>
+              )}
+            </section>
+
+            <section className="overview-card">
+              <DashboardCardHeader icon="usage" title="Quick Actions" />
+              <div className="overview-quick-actions">
+                <Link href="/dashboard/add-item">
+                  <UiIcon name="plus" className="h-4 w-4" />
+                  Add Item
+                </Link>
+                <Link href="/dashboard/purchase-orders">
+                  <UiIcon name="file" className="h-4 w-4" />
+                  Create PO
+                </Link>
+                <Link href="/dashboard/stock-counts">
+                  <UiIcon name="check" className="h-4 w-4" />
+                  Stock Count
+                </Link>
+                <Link href="/dashboard/qr-center">
+                  <UiIcon name="qr" className="h-4 w-4" />
+                  QR Scan
+                </Link>
+              </div>
+            </section>
+
+            <section className="overview-card">
+              <DashboardCardHeader
+                icon="movement"
+                title="Reorder Suggestions"
+                href="/dashboard/inventory"
+              />
+              {dashboardData.reorderSuggestions.length === 0 && !loading ? (
+                <div className="overview-compact-empty">
+                  No reorder suggestions right now.
+                </div>
+              ) : (
+                <div className="overview-reorder-list">
+                  {(loading ? [] : dashboardData.reorderSuggestions).map(
+                    (entry) => (
+                      <div key={entry.item.id} className="overview-reorder-row">
+                        <span className="overview-thumb overview-thumb-sm">
+                          {entry.item.image ? (
+                            <Image
+                              src={entry.item.image}
+                              alt={entry.item.name}
+                              fill
+                              sizes="34px"
+                              className="object-contain"
+                            />
+                          ) : (
+                            <UiIcon name="box" className="h-4 w-4" />
+                          )}
+                        </span>
+                        <strong>{entry.item.name}</strong>
+                        <span>Suggested: {formatNumber(entry.suggested)}</span>
+                        <Link href="/dashboard/purchase-orders">Create PO</Link>
+                      </div>
+                    )
+                  )}
+                  {loading && <span className="overview-mini-skeleton" />}
+                </div>
+              )}
+            </section>
+          </aside>
         </div>
-      </main>
-    </div>
+      </div>
+    </main>
   );
 }
