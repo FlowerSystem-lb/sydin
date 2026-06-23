@@ -3767,6 +3767,15 @@ select.glass-input option {
   background: #f5f8ff;
 }
 
+.overview-action:focus-visible,
+.overview-view-link:focus-visible,
+.overview-plan-next a:focus-visible,
+.overview-quick-actions a:focus-visible,
+.overview-reorder-row > a:not(.overview-reorder-item-link):focus-visible {
+  outline: 3px solid rgba(29, 101, 255, 0.22);
+  outline-offset: 3px;
+}
+
 .overview-action-primary {
   border-color: transparent;
   background: linear-gradient(135deg, #1d65ff, var(--overview-purple));
@@ -3802,6 +3811,22 @@ select.glass-input option {
   border-radius: 14px;
   padding: 1.05rem 1.2rem;
   color: var(--overview-text);
+  text-decoration: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease,
+    transform 150ms ease;
+}
+
+.overview-kpi-card:hover {
+  border-color: #b8c9e5;
+  box-shadow: 0 18px 46px rgba(29, 101, 255, 0.12);
+  transform: translateY(-1px);
+}
+
+.overview-kpi-card:focus-visible {
+  outline: 3px solid rgba(29, 101, 255, 0.22);
+  outline-offset: 3px;
 }
 
 .overview-kpi-card p,
@@ -3938,6 +3963,7 @@ select.glass-input option {
   color: var(--overview-blue);
   font-size: 0.8rem;
   font-weight: 900;
+  text-decoration: none;
 }
 
 .overview-main-grid {
@@ -3986,6 +4012,7 @@ select.glass-input option {
   color: var(--overview-blue);
   font-size: 0.78rem;
   font-weight: 900;
+  text-decoration: none;
 }
 
 .overview-inventory-table {
@@ -4015,9 +4042,22 @@ select.glass-input option {
   font-size: 0.82rem;
   font-weight: 750;
   text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    box-shadow 150ms ease;
 }
 
 .overview-inventory-row:hover {
+  background: #f8fbff;
+}
+
+.overview-inventory-row:focus-visible,
+.overview-mobile-item:focus-visible,
+.overview-low-stock-row:focus-visible,
+.overview-activity-row:focus-visible,
+.overview-reorder-item-link:focus-visible {
+  outline: 3px solid rgba(29, 101, 255, 0.22);
+  outline-offset: -3px;
   background: #f8fbff;
 }
 
@@ -4141,6 +4181,17 @@ select.glass-input option {
   font-weight: 750;
 }
 
+.overview-low-stock-row,
+.overview-activity-row {
+  text-decoration: none;
+  transition: background-color 150ms ease;
+}
+
+.overview-low-stock-row:hover,
+.overview-activity-row:hover {
+  background: #f8fbff;
+}
+
 .overview-low-stock-row {
   grid-template-columns: auto minmax(0, 1fr) auto auto;
 }
@@ -4150,7 +4201,7 @@ select.glass-input option {
 }
 
 .overview-reorder-row {
-  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto;
 }
 
 .overview-activity-icon {
@@ -4180,8 +4231,22 @@ select.glass-input option {
   padding: 0.8rem 1rem 1rem;
 }
 
+.overview-reorder-item-link {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.65rem;
+  color: var(--overview-text);
+  text-decoration: none;
+  transition: color 150ms ease;
+}
+
+.overview-reorder-item-link:hover strong {
+  color: var(--overview-blue);
+}
+
 .overview-quick-actions a,
-.overview-reorder-row a {
+.overview-reorder-row > a:not(.overview-reorder-item-link) {
   display: inline-flex;
   min-height: 2.25rem;
   align-items: center;
@@ -4195,10 +4260,17 @@ select.glass-input option {
   font-size: 0.75rem;
   font-weight: 900;
   text-align: center;
+  text-decoration: none;
 }
 
-.overview-reorder-row a {
+.overview-reorder-row > a:not(.overview-reorder-item-link) {
   color: var(--overview-blue);
+}
+
+.overview-quick-actions a:hover,
+.overview-reorder-row > a:not(.overview-reorder-item-link):hover {
+  border-color: #b8c9e5;
+  background: #f5f8ff;
 }
 
 .overview-empty-state,
@@ -4328,6 +4400,7 @@ select.glass-input option {
     min-height: 4.9rem;
     border-top: 1px solid var(--overview-border);
     color: var(--overview-text);
+    text-decoration: none;
   }
 }
 
@@ -4429,9 +4502,13 @@ select.glass-input option {
   .overview-activity-row > span:not(.overview-activity-icon),
   .overview-activity-row small,
   .overview-reorder-row > span:not(.overview-thumb),
-  .overview-reorder-row a {
+  .overview-reorder-row > a:not(.overview-reorder-item-link) {
     grid-column: 2;
     justify-self: start;
+  }
+
+  .overview-reorder-item-link {
+    grid-column: 1 / -1;
   }
 
   .overview-quick-actions {

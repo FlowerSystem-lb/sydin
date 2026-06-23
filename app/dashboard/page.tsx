@@ -61,6 +61,19 @@ interface Item {
 
 type StockState = "in" | "low" | "out";
 
+const DASHBOARD_RETURN_TO = "/dashboard";
+const LOW_STOCK_INVENTORY_HREF = "/dashboard/inventory?stock=low";
+
+function getDashboardItemHref(itemId: number) {
+  return `/dashboard/inventory/${itemId}?returnTo=${encodeURIComponent(
+    DASHBOARD_RETURN_TO
+  )}`;
+}
+
+function getPurchaseOrderItemHref(itemId: number) {
+  return `/dashboard/purchase-orders?items=${itemId}`;
+}
+
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
@@ -391,6 +404,7 @@ export default function DashboardPage() {
       detail: "Across inventory",
       icon: "box" as UiIconName,
       tone: "blue",
+      href: "/dashboard/inventory",
     },
     {
       label: "Total Stock",
@@ -398,6 +412,7 @@ export default function DashboardPage() {
       detail: "Units available",
       icon: "layers" as UiIconName,
       tone: "blue",
+      href: "/dashboard/inventory",
     },
     {
       label: "Low Stock Items",
@@ -405,6 +420,7 @@ export default function DashboardPage() {
       detail: "At or below reorder level",
       icon: "alert" as UiIconName,
       tone: "red",
+      href: LOW_STOCK_INVENTORY_HREF,
     },
     {
       label: "Inventory Value",
@@ -414,6 +430,7 @@ export default function DashboardPage() {
       detail: dashboardData.valueLabel,
       icon: "usage" as UiIconName,
       tone: "green",
+      href: "/dashboard/reports",
     },
   ];
 
@@ -463,7 +480,12 @@ export default function DashboardPage() {
 
         <section className="overview-kpi-grid" aria-label="Inventory metrics">
           {kpiCards.map((card) => (
-            <article key={card.label} className="overview-kpi-card">
+            <Link
+              key={card.label}
+              href={card.href}
+              className="overview-kpi-card"
+              aria-label={`Open ${card.label}`}
+            >
               <div>
                 <p>{card.label}</p>
                 <strong>{loading ? "..." : card.value}</strong>
@@ -472,7 +494,7 @@ export default function DashboardPage() {
               <span className={`overview-kpi-icon overview-kpi-icon-${card.tone}`}>
                 <UiIcon name={card.icon} className="h-6 w-6" />
               </span>
-            </article>
+            </Link>
           ))}
         </section>
 
@@ -549,8 +571,9 @@ export default function DashboardPage() {
                   {dashboardData.snapshotItems.map((entry) => (
                     <Link
                       key={entry.item.id}
-                      href={`/dashboard/inventory/${entry.item.id}`}
+                      href={getDashboardItemHref(entry.item.id)}
                       className="overview-inventory-row"
+                      aria-label={`Open ${entry.item.name} details`}
                     >
                       <span className="overview-item-cell">
                         <span className="overview-thumb">
@@ -596,8 +619,9 @@ export default function DashboardPage() {
                   {dashboardData.snapshotItems.slice(0, 4).map((entry) => (
                     <Link
                       key={entry.item.id}
-                      href={`/dashboard/inventory/${entry.item.id}`}
+                      href={getDashboardItemHref(entry.item.id)}
                       className="overview-mobile-item"
+                      aria-label={`Open ${entry.item.name} details`}
                     >
                       <span className="overview-thumb overview-thumb-lg">
                         {entry.item.image ? (
@@ -635,7 +659,7 @@ export default function DashboardPage() {
               <DashboardCardHeader
                 icon="alert"
                 title="Low Stock Alerts"
-                href="/dashboard/inventory"
+                href={LOW_STOCK_INVENTORY_HREF}
               />
               {dashboardData.lowStockItems.length === 0 && !loading ? (
                 <div className="overview-compact-empty">All stocked.</div>
@@ -644,8 +668,9 @@ export default function DashboardPage() {
                   {(loading ? [] : dashboardData.lowStockItems).map((entry) => (
                     <Link
                       key={entry.item.id}
-                      href={`/dashboard/inventory/${entry.item.id}`}
+                      href={getDashboardItemHref(entry.item.id)}
                       className="overview-low-stock-row"
+                      aria-label={`Open ${entry.item.name} details`}
                     >
                       <span className="overview-thumb overview-thumb-sm">
                         {entry.item.image ? (
@@ -698,6 +723,7 @@ export default function DashboardPage() {
                         key={movement.id}
                         href="/dashboard/stock-movements"
                         className="overview-activity-row"
+                        aria-label={`Open stock movement history for ${movementLabel}`}
                       >
                         <span className="overview-activity-icon">
                           <UiIcon name="movement" className="h-3.5 w-3.5" />
@@ -750,7 +776,7 @@ export default function DashboardPage() {
               <DashboardCardHeader
                 icon="movement"
                 title="Reorder Suggestions"
-                href="/dashboard/inventory"
+                href={LOW_STOCK_INVENTORY_HREF}
               />
               {dashboardData.reorderSuggestions.length === 0 && !loading ? (
                 <div className="overview-compact-empty">
@@ -761,22 +787,33 @@ export default function DashboardPage() {
                   {(loading ? [] : dashboardData.reorderSuggestions).map(
                     (entry) => (
                       <div key={entry.item.id} className="overview-reorder-row">
-                        <span className="overview-thumb overview-thumb-sm">
-                          {entry.item.image ? (
-                            <Image
-                              src={entry.item.image}
-                              alt={entry.item.name}
-                              fill
-                              sizes="34px"
-                              className="object-contain"
-                            />
-                          ) : (
-                            <UiIcon name="box" className="h-4 w-4" />
-                          )}
-                        </span>
-                        <strong>{entry.item.name}</strong>
+                        <Link
+                          href={getDashboardItemHref(entry.item.id)}
+                          className="overview-reorder-item-link"
+                          aria-label={`Open ${entry.item.name} details`}
+                        >
+                          <span className="overview-thumb overview-thumb-sm">
+                            {entry.item.image ? (
+                              <Image
+                                src={entry.item.image}
+                                alt={entry.item.name}
+                                fill
+                                sizes="34px"
+                                className="object-contain"
+                              />
+                            ) : (
+                              <UiIcon name="box" className="h-4 w-4" />
+                            )}
+                          </span>
+                          <strong>{entry.item.name}</strong>
+                        </Link>
                         <span>Suggested: {formatNumber(entry.suggested)}</span>
-                        <Link href="/dashboard/purchase-orders">Create PO</Link>
+                        <Link
+                          href={getPurchaseOrderItemHref(entry.item.id)}
+                          aria-label={`Create purchase order draft with ${entry.item.name}`}
+                        >
+                          Create PO
+                        </Link>
                       </div>
                     )
                   )}
