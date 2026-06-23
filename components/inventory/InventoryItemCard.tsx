@@ -172,13 +172,13 @@ export default function InventoryItemCard({
           openDetails();
         }
       }}
-      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-[22px] border bg-theme-surface shadow-[0_14px_36px_rgba(15,23,42,0.08)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_18px_42px_rgba(67,56,202,0.12)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
+      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-[18px] border bg-theme-surface shadow-[0_10px_28px_rgba(15,23,42,0.07)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_14px_34px_rgba(67,56,202,0.11)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
         selectable && selected
           ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/35"
           : "border-theme"
       }`}
     >
-      <div className="relative aspect-[4/3] overflow-hidden rounded-t-[21px] border-b border-theme bg-[#f5f7fb]">
+      <div className="relative aspect-[5/3] overflow-hidden rounded-t-[17px] border-b border-theme bg-[#f5f7fb]">
         {selectable && (
           <label
             className="absolute left-3 top-3 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white focus-within:ring-4 focus-within:ring-cyan-300/25"
@@ -206,7 +206,7 @@ export default function InventoryItemCard({
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-indigo-200/60 bg-white text-theme-accent shadow-sm">
+            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-200/60 bg-white text-theme-accent shadow-sm">
               <UiIcon name="box" className="h-5 w-5" />
             </span>
             <span className="mt-2 text-xs font-semibold">No image</span>
@@ -311,13 +311,13 @@ export default function InventoryItemCard({
           )}
       </div>
 
-      <div className="p-4">
+      <div className="p-3.5">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
               {itemCode || (item.sku ? `SKU ${item.sku}` : "Inventory item")}
             </p>
-            <h2 className="mt-1 truncate text-base font-extrabold tracking-tight text-theme-primary">
+            <h2 className="mt-1 truncate text-[0.95rem] font-extrabold text-theme-primary">
               {item.name}
             </h2>
           </div>
@@ -326,7 +326,7 @@ export default function InventoryItemCard({
           </span>
         </div>
 
-        <div className="mt-3 flex min-h-7 flex-wrap gap-1.5">
+        <div className="mt-2.5 flex min-h-7 flex-wrap gap-1.5">
           <span className="max-w-full truncate rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-[11px] font-semibold text-theme-secondary">
             {categoryLabel}
           </span>
