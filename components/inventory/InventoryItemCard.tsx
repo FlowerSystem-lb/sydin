@@ -26,6 +26,7 @@ export default function InventoryItemCard({
   quantityLabel,
   categoryLabel,
   depotLabel,
+  supplierLabel,
   lowStock,
   deleting,
   selectable = false,
@@ -44,6 +45,7 @@ export default function InventoryItemCard({
   quantityLabel: string;
   categoryLabel: string;
   depotLabel?: string | null;
+  supplierLabel?: string | null;
   lowStock: boolean;
   deleting: boolean;
   selectable?: boolean;
@@ -172,16 +174,16 @@ export default function InventoryItemCard({
           openDetails();
         }
       }}
-      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-[18px] border bg-theme-surface shadow-[0_10px_28px_rgba(15,23,42,0.07)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_14px_34px_rgba(67,56,202,0.11)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
+      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-2xl border bg-theme-surface shadow-[0_8px_22px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_12px_28px_rgba(67,56,202,0.1)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
         selectable && selected
           ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/35"
           : "border-theme"
       }`}
     >
-      <div className="relative aspect-[5/3] overflow-hidden rounded-t-[17px] border-b border-theme bg-[#f5f7fb]">
+      <div className="relative aspect-[8/5] overflow-hidden rounded-t-[15px] border-b border-theme bg-[#f5f7fb]">
         {selectable && (
           <label
-            className="absolute left-3 top-3 z-10 flex h-9 w-9 cursor-pointer items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white focus-within:ring-4 focus-within:ring-cyan-300/25"
+            className="absolute left-2.5 top-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white focus-within:ring-4 focus-within:ring-cyan-300/25"
             onClick={(event) => event.stopPropagation()}
           >
             <span className="sr-only">
@@ -202,19 +204,19 @@ export default function InventoryItemCard({
             fill
             loading="lazy"
             sizes="(min-width: 1536px) 20vw, (min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
-            className="object-contain p-3 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="object-contain p-2.5 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-indigo-200/60 bg-white text-theme-accent shadow-sm">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-indigo-200/60 bg-white text-theme-accent shadow-sm">
               <UiIcon name="box" className="h-5 w-5" />
             </span>
-            <span className="mt-2 text-xs font-semibold">No image</span>
+            <span className="mt-1.5 text-[11px] font-semibold">No image</span>
           </div>
         )}
 
         {lowStock && (
-          <span className="absolute left-3 top-3 rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-[11px] font-bold text-red-600 shadow-sm">
+          <span className="absolute left-2.5 top-2.5 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600 shadow-sm">
             Low stock
           </span>
         )}
@@ -228,9 +230,9 @@ export default function InventoryItemCard({
           data-item-actions={item.id}
           onClick={toggleMenu}
           onKeyDown={(event) => event.stopPropagation()}
-          className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white/95 text-slate-600 shadow-sm outline-none transition hover:bg-white hover:text-slate-950 focus-visible:ring-4 focus-visible:ring-indigo-400/20"
+          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white/95 text-slate-600 shadow-sm outline-none transition hover:bg-white hover:text-slate-950 focus-visible:ring-4 focus-visible:ring-indigo-400/20"
         >
-          <UiIcon name="more" className="h-5 w-5" />
+          <UiIcon name="more" className="h-4 w-4" />
         </button>
 
         {menuOpen &&
@@ -311,28 +313,33 @@ export default function InventoryItemCard({
           )}
       </div>
 
-      <div className="p-3.5">
+      <div className="p-3">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
-            <p className="truncate text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
+            <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-theme-accent">
               {itemCode || (item.sku ? `SKU ${item.sku}` : "Inventory item")}
             </p>
-            <h2 className="mt-1 truncate text-[0.95rem] font-extrabold text-theme-primary">
+            <h2 className="mt-0.5 truncate text-[0.92rem] font-extrabold text-theme-primary" title={item.name}>
               {item.name}
             </h2>
           </div>
-          <span className="max-w-[46%] shrink-0 rounded-xl border border-indigo-200/70 bg-indigo-50 px-2.5 py-1.5 text-right text-xs font-extrabold text-indigo-700">
+          <span className="max-w-[48%] shrink-0 rounded-lg border border-indigo-200/70 bg-indigo-50 px-2 py-1 text-right text-[11px] font-extrabold text-indigo-700">
             {quantityLabel}
           </span>
         </div>
 
-        <div className="mt-2.5 flex min-h-7 flex-wrap gap-1.5">
-          <span className="max-w-full truncate rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-[11px] font-semibold text-theme-secondary">
+        <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">
+          <span className="max-w-full truncate rounded-full border border-theme bg-theme-inset px-2 py-0.5 text-[10px] font-semibold text-theme-secondary">
             {categoryLabel}
           </span>
           {depotLabel && (
-            <span className="max-w-full truncate rounded-full border border-cyan-200/70 bg-cyan-50 px-2.5 py-1 text-[11px] font-semibold text-cyan-800">
+            <span className="max-w-full truncate rounded-full border border-cyan-200/70 bg-cyan-50 px-2 py-0.5 text-[10px] font-semibold text-cyan-800">
               {depotLabel}
+            </span>
+          )}
+          {supplierLabel && (
+            <span className="max-w-full truncate rounded-full border border-emerald-200/70 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+              {supplierLabel}
             </span>
           )}
         </div>

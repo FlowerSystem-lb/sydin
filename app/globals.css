@@ -3653,7 +3653,50 @@ select.glass-input option {
 }
 
 .inventory-filter-panel {
+  border: 1px solid var(--border-divider);
+  border-radius: 14px;
+  background: var(--bg-inset);
+  padding: 0.65rem;
   animation: inventory-filter-panel-in 180ms var(--motion-ease-standard) both;
+}
+
+.inventory-workspace {
+  --inventory-focus: rgba(34, 211, 238, 0.18);
+}
+
+.inventory-workspace .action-button {
+  min-height: 2.5rem;
+  border-radius: 12px;
+}
+
+.inventory-workspace .ui-select {
+  min-width: 9.5rem;
+}
+
+.inventory-workspace table th,
+.inventory-workspace table td {
+  vertical-align: middle;
+}
+
+.inventory-workspace table td {
+  line-height: 1.35;
+}
+
+@media (max-width: 1024px) {
+  .inventory-workspace .ui-select {
+    min-width: 8.5rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .inventory-workspace {
+    padding-bottom: calc(1.5rem + env(safe-area-inset-bottom));
+  }
+
+  .inventory-workspace .ui-select {
+    min-width: min(100%, 10rem);
+    flex: 1 1 8.5rem;
+  }
 }
 
 .dashboard-overview {
@@ -4549,8 +4592,8 @@ select.glass-input option {
 
 .quick-add-dialog {
   display: flex;
-  width: min(100%, 40rem);
-  max-height: min(88vh, 42rem);
+  width: min(100%, 38rem);
+  max-height: min(88vh, 39rem);
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
@@ -4624,7 +4667,7 @@ select.glass-input option {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
-  padding: 0.8rem 0.9rem;
+  padding: 0.7rem 0.85rem;
 }
 
 .quick-add-input {
@@ -4657,7 +4700,7 @@ select.glass-input option {
 }
 
 .quick-add-more {
-  margin-top: 0.75rem;
+  margin-top: 0.65rem;
   overflow: hidden;
   border: 1px solid var(--border-divider);
   border-radius: 14px;
@@ -4671,7 +4714,7 @@ select.glass-input option {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.75rem 0.85rem;
+  padding: 0.65rem 0.8rem;
 }
 
 .quick-add-more summary::-webkit-details-marker {
@@ -4701,9 +4744,9 @@ select.glass-input option {
 
 .quick-add-more-body {
   display: grid;
-  gap: 0.75rem;
+  gap: 0.65rem;
   border-top: 1px solid var(--border-divider);
-  padding: 0.8rem;
+  padding: 0.7rem;
 }
 
 .quick-add-subsection {
@@ -4725,7 +4768,7 @@ select.glass-input option {
   gap: 0.5rem;
   align-items: center;
   border-top-width: 1px;
-  padding: 0.7rem 0.9rem;
+  padding: 0.65rem 0.85rem;
 }
 
 .quick-add-full-link,
