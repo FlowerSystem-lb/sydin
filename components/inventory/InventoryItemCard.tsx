@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -28,6 +27,8 @@ export default function InventoryItemCard({
   depotLabel,
   supplierLabel,
   lowStock,
+  stockStatusLabel,
+  stockStatusTone = lowStock ? "warning" : "success",
   deleting,
   selectable = false,
   selected = false,
@@ -47,6 +48,8 @@ export default function InventoryItemCard({
   depotLabel?: string | null;
   supplierLabel?: string | null;
   lowStock: boolean;
+  stockStatusLabel?: string;
+  stockStatusTone?: "success" | "warning" | "danger";
   deleting: boolean;
   selectable?: boolean;
   selected?: boolean;
@@ -64,8 +67,16 @@ export default function InventoryItemCard({
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const resolvedDetailsHref =
     detailsHref || `/dashboard/inventory/${item.id}`;
+  const showImage = Boolean(item.image) && failedImageSrc !== item.image;
+  const statusClassName =
+    stockStatusTone === "danger"
+      ? "border-red-200 bg-red-50 text-red-600"
+      : stockStatusTone === "warning"
+        ? "border-amber-200 bg-amber-50 text-amber-700"
+        : "border-emerald-200 bg-emerald-50 text-emerald-700";
 
   const openDetails = useCallback(() => {
     if (selectable) {
@@ -174,13 +185,13 @@ export default function InventoryItemCard({
           openDetails();
         }
       }}
-      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-2xl border bg-theme-surface shadow-[0_8px_22px_rgba(15,23,42,0.06)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_12px_28px_rgba(67,56,202,0.1)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
+      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-2xl border bg-theme-surface shadow-[0_6px_18px_rgba(15,23,42,0.055)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_10px_24px_rgba(67,56,202,0.1)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
         selectable && selected
           ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/35"
           : "border-theme"
       }`}
     >
-      <div className="relative aspect-[8/5] overflow-hidden rounded-t-[15px] border-b border-theme bg-[#f5f7fb]">
+      <div className="relative aspect-[5/3] overflow-hidden rounded-t-[15px] border-b border-theme bg-[#f5f7fb]">
         {selectable && (
           <label
             className="absolute left-2.5 top-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white focus-within:ring-4 focus-within:ring-cyan-300/25"
@@ -197,27 +208,29 @@ export default function InventoryItemCard({
             />
           </label>
         )}
-        {item.image ? (
-          <Image
+        {showImage ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={item.image}
             alt={item.name}
-            fill
             loading="lazy"
-            sizes="(min-width: 1536px) 20vw, (min-width: 1280px) 25vw, (min-width: 768px) 33vw, 50vw"
-            className="object-contain p-2.5 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            decoding="async"
+            draggable={false}
+            onError={() => setFailedImageSrc(item.image)}
+            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-indigo-200/60 bg-white text-theme-accent shadow-sm">
               <UiIcon name="box" className="h-5 w-5" />
             </span>
-            <span className="mt-1.5 text-[11px] font-semibold">No image</span>
+            <span className="mt-1 text-[10px] font-semibold">No image</span>
           </div>
         )}
 
         {lowStock && (
-          <span className="absolute left-2.5 top-2.5 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600 shadow-sm">
-            Low stock
+          <span className="absolute left-2.5 bottom-2.5 rounded-full border border-red-200 bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-600 shadow-sm">
+            {stockStatusLabel || "Low stock"}
           </span>
         )}
 
@@ -313,22 +326,27 @@ export default function InventoryItemCard({
           )}
       </div>
 
-      <div className="p-3">
+      <div className="p-2.5">
         <div className="flex min-w-0 items-start justify-between gap-3">
           <div className="min-w-0">
             <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-theme-accent">
               {itemCode || (item.sku ? `SKU ${item.sku}` : "Inventory item")}
             </p>
-            <h2 className="mt-0.5 truncate text-[0.92rem] font-extrabold text-theme-primary" title={item.name}>
+            <h2 className="mt-0.5 truncate text-[0.9rem] font-extrabold text-theme-primary" title={item.name}>
               {item.name}
             </h2>
           </div>
-          <span className="max-w-[48%] shrink-0 rounded-lg border border-indigo-200/70 bg-indigo-50 px-2 py-1 text-right text-[11px] font-extrabold text-indigo-700">
+          <span className="max-w-[48%] shrink-0 rounded-lg border border-indigo-200/70 bg-indigo-50 px-2 py-0.5 text-right text-[10px] font-extrabold text-indigo-700">
             {quantityLabel}
           </span>
         </div>
 
-        <div className="mt-2 flex min-h-6 flex-wrap gap-1.5">
+        <div className="mt-1.5 flex min-h-6 flex-wrap gap-1">
+          <span
+            className={`max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusClassName}`}
+          >
+            {stockStatusLabel || "In Stock"}
+          </span>
           <span className="max-w-full truncate rounded-full border border-theme bg-theme-inset px-2 py-0.5 text-[10px] font-semibold text-theme-secondary">
             {categoryLabel}
           </span>

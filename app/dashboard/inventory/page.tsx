@@ -6,16 +6,17 @@ import {
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
   type ReactNode,
 } from "react";
-import Image from "next/image";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   BrowserMultiFormatReader,
   type IScannerControls,
 } from "@zxing/browser";
-import UiIcon from "@/components/UiIcon";
+import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
@@ -123,6 +124,12 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
 type DepotFilter = "all" | "unassigned" | string;
 type CategoryFilter = "all" | "uncategorized" | string;
 type StockFilter = "all" | "low";
+type QuickFilter =
+  | "all"
+  | "low-stock"
+  | "out-of-stock"
+  | "no-image"
+  | "unassigned";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
 type ViewMode = "grid" | "list" | "table";
 type ItemDetailsTarget = {
@@ -149,6 +156,15 @@ const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const PDF_SETTINGS_STORAGE_KEY = "sydin:inventory-pdf-settings";
 const COMPACT_SELECT_BUTTON_CLASS =
   "min-h-10 rounded-xl px-3 py-2 text-xs font-bold";
+const SORT_SELECT_BUTTON_CLASS =
+  "inventory-sort-trigger min-h-10 rounded-xl px-3 py-2 text-xs font-bold";
+const QUICK_FILTER_OPTIONS: { value: QuickFilter; label: string }[] = [
+  { value: "all", label: "All" },
+  { value: "low-stock", label: "Low stock" },
+  { value: "out-of-stock", label: "Out of stock" },
+  { value: "no-image", label: "No image" },
+  { value: "unassigned", label: "Unassigned" },
+];
 const DEFAULT_PDF_SETTINGS: PdfSettings = {
   reportType: "summary",
   scope: "all",
@@ -201,15 +217,50 @@ function InventoryActionMenu({
   children: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
+  const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
   const menuRootRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+
+  const positionMenu = useCallback(() => {
+    const trigger = buttonRef.current;
+    if (!trigger) return;
+
+    const rect = trigger.getBoundingClientRect();
+    const viewportPadding = 12;
+    const menuWidth = menuRef.current?.offsetWidth || 224;
+    const menuHeight = menuRef.current?.offsetHeight || 252;
+    const left = Math.min(
+      Math.max(rect.right - menuWidth, viewportPadding),
+      window.innerWidth - menuWidth - viewportPadding
+    );
+    const opensUp =
+      rect.bottom + menuHeight + viewportPadding > window.innerHeight;
+    const top = opensUp
+      ? Math.max(viewportPadding, rect.top - menuHeight - 8)
+      : rect.bottom + 8;
+
+    setMenuStyle({
+      position: "fixed",
+      left,
+      top,
+      width: menuWidth,
+    });
+  }, []);
 
   useEffect(() => {
     if (!open) return;
 
+    positionMenu();
+
     const handlePointerDown = (event: MouseEvent | TouchEvent) => {
       const target = event.target as Node;
-      if (menuRootRef.current?.contains(target)) return;
+      if (
+        menuRootRef.current?.contains(target) ||
+        menuRef.current?.contains(target)
+      ) {
+        return;
+      }
       setOpen(false);
     };
 
@@ -222,13 +273,17 @@ function InventoryActionMenu({
     window.addEventListener("mousedown", handlePointerDown);
     window.addEventListener("touchstart", handlePointerDown);
     window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("resize", positionMenu);
+    window.addEventListener("scroll", positionMenu, true);
 
     return () => {
       window.removeEventListener("mousedown", handlePointerDown);
       window.removeEventListener("touchstart", handlePointerDown);
       window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("resize", positionMenu);
+      window.removeEventListener("scroll", positionMenu, true);
     };
-  }, [open]);
+  }, [open, positionMenu]);
 
   return (
     <div ref={menuRootRef} className="relative">
@@ -237,28 +292,71 @@ function InventoryActionMenu({
         type="button"
         aria-haspopup="menu"
         aria-expanded={open}
-        onClick={() => setOpen((current) => !current)}
+        onClick={() => {
+          positionMenu();
+          setOpen((current) => !current);
+        }}
         className={buttonClassName}
       >
         <UiIcon name="more" />
         {label}
       </button>
-      {open && (
-        <div
-          role="menu"
-          onClick={(event) => {
-            const action = (event.target as HTMLElement).closest("a,button");
-            if (action) setOpen(false);
-          }}
-          className={
-            menuClassName ||
-            "absolute right-0 z-40 mt-2 w-52 overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]"
-          }
-        >
-          {children}
-        </div>
-      )}
+      {open &&
+        createPortal(
+          <div
+            ref={menuRef}
+            role="menu"
+            style={menuStyle}
+            onClick={(event) => {
+              const action = (event.target as HTMLElement).closest("a,button");
+              if (action) setOpen(false);
+            }}
+            className={
+              menuClassName ||
+              "inventory-floating-menu z-[120] overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]"
+            }
+          >
+            {children}
+          </div>,
+          document.body
+        )}
     </div>
+  );
+}
+
+function InventoryThumbnail({
+  src,
+  alt,
+  imgClassName = "object-contain p-1.5",
+  iconClassName = "h-5 w-5",
+}: {
+  src?: string | null;
+  alt: string;
+  imgClassName?: string;
+  iconClassName?: string;
+}) {
+  const [failedSrc, setFailedSrc] = useState<string | null>(null);
+  const showImage = Boolean(src) && failedSrc !== src;
+
+  if (showImage) {
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        src={src || ""}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        draggable={false}
+        onError={() => setFailedSrc(src || null)}
+        className={`h-full w-full ${imgClassName}`}
+      />
+    );
+  }
+
+  return (
+    <span className="flex h-full items-center justify-center text-theme-subtle">
+      <UiIcon name="box" className={iconClassName} />
+    </span>
   );
 }
 
@@ -296,6 +394,19 @@ function formatFileSize(size: number) {
   }
 
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatCompactCurrency(value: number, currencyCode: string) {
+  try {
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: normalizeCurrencyCode(currencyCode, "USD"),
+      notation: Math.abs(value) >= 10000 ? "compact" : "standard",
+      maximumFractionDigits: 0,
+    }).format(value);
+  } catch {
+    return `${normalizeCurrencyCode(currencyCode, "USD")} ${value.toFixed(0)}`;
+  }
 }
 
 function getImageValidationError(file: File) {
@@ -397,9 +508,11 @@ export default function InventoryPage() {
   const [categoryFilter, setCategoryFilter] =
     useState<CategoryFilter>("all");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
+  const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showStats, setShowStats] = useState(true);
   const [selectionMode, setSelectionMode] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(
     () => new Set()
@@ -526,6 +639,14 @@ export default function InventoryPage() {
     subscriptionUsage.subscription,
     businessSettings.low_stock_threshold
   );
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      setShowStats(!window.matchMedia("(max-width: 900px)").matches);
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   const fetchItems = async () => {
     const {
@@ -2030,6 +2151,17 @@ export default function InventoryPage() {
       : effectiveLowStockThreshold;
   const isItemLowStock = (item: Item) =>
     item.quantity <= getLowStockThresholdForItem(item);
+  const getStockStatus = (item: Item) => {
+    if (item.quantity <= 0) {
+      return { label: "Out of Stock", tone: "danger" as const };
+    }
+
+    if (isItemLowStock(item)) {
+      return { label: "Low Stock", tone: "warning" as const };
+    }
+
+    return { label: "In Stock", tone: "success" as const };
+  };
   const normalizedSearch = search.trim().toLowerCase();
   const depotFilterOptions = depots.filter(
     (depot) =>
@@ -2039,12 +2171,17 @@ export default function InventoryPage() {
     normalizedSearch !== "" ||
     depotFilter !== "all" ||
     categoryFilter !== "all" ||
-    stockFilter !== "all";
+    stockFilter !== "all" ||
+    quickFilter !== "all";
   const activeFilterCount = [
     depotFilter !== "all",
     categoryFilter !== "all",
     stockFilter !== "all",
+    quickFilter !== "all",
   ].filter(Boolean).length;
+  const activeQuickFilterLabel =
+    QUICK_FILTER_OPTIONS.find((option) => option.value === quickFilter)
+      ?.label || "Quick filter";
   const activeFilterChips = [
     depotFilter !== "all"
       ? {
@@ -2077,6 +2214,12 @@ export default function InventoryPage() {
           onClear: () => setStockFilter("all"),
         }
       : null,
+    quickFilter !== "all"
+      ? {
+          label: `Quick: ${activeQuickFilterLabel}`,
+          onClear: () => setQuickFilter("all"),
+        }
+      : null,
   ].filter(
     (chip): chip is { label: string; onClear: () => void } => Boolean(chip)
   );
@@ -2086,6 +2229,7 @@ export default function InventoryPage() {
     setDepotFilter("all");
     setCategoryFilter("all");
     setStockFilter("all");
+    setQuickFilter("all");
     setSortBy("newest");
   };
 
@@ -2093,6 +2237,7 @@ export default function InventoryPage() {
     setDepotFilter("all");
     setCategoryFilter("all");
     setStockFilter("all");
+    setQuickFilter("all");
   };
 
   const toggleSelectionMode = () => {
@@ -2239,7 +2384,15 @@ export default function InventoryPage() {
     return matchesDepot && matchesCategory && matchesStock;
   });
 
-  const visibleItems = [...filteredItems].sort((firstItem, secondItem) => {
+  const quickFilteredItems = filteredItems.filter((item) => {
+    if (quickFilter === "low-stock") return isItemLowStock(item);
+    if (quickFilter === "out-of-stock") return Number(item.quantity || 0) <= 0;
+    if (quickFilter === "no-image") return !item.image?.trim();
+    if (quickFilter === "unassigned") return !item.depot_id;
+    return true;
+  });
+
+  const visibleItems = [...quickFilteredItems].sort((firstItem, secondItem) => {
     if (sortBy === "name-az") {
       return firstItem.name.localeCompare(secondItem.name);
     }
@@ -2315,6 +2468,51 @@ export default function InventoryPage() {
       .map((item) => item.depot_id)
       .filter((depotId): depotId is number => typeof depotId === "number")
   ).size;
+  const inventoryStats: Array<{
+    icon: UiIconName;
+    label: string;
+    value: string;
+  }> = [
+    { icon: "box", label: "Items", value: items.length.toLocaleString() },
+    {
+      icon: "layers",
+      label: "Total Stock",
+      value: totalQuantity.toLocaleString(),
+    },
+    {
+      icon: "alert",
+      label: "Low Stock",
+      value: lowStockCount.toLocaleString(),
+    },
+    {
+      icon: "depots",
+      label: "Locations",
+      value: assignedDepotCount.toLocaleString(),
+    },
+  ];
+  const outOfStockCount = items.filter((item) => item.quantity <= 0).length;
+  const lowStockAlerts = items
+    .filter((item) => isItemLowStock(item))
+    .sort((first, second) => first.quantity - second.quantity)
+    .slice(0, 4);
+  const stockByLocation = Array.from(
+    items.reduce((locationMap, item) => {
+      const label = formatDepotLabel(getDepotForItem(item));
+      locationMap.set(label, (locationMap.get(label) || 0) + item.quantity);
+      return locationMap;
+    }, new Map<string, number>())
+  )
+    .sort((first, second) => second[1] - first[1])
+    .slice(0, 4);
+  const stockByCategory = Array.from(
+    items.reduce((categoryMap, item) => {
+      const label = getCategoryLabel(item);
+      categoryMap.set(label, (categoryMap.get(label) || 0) + item.quantity);
+      return categoryMap;
+    }, new Map<string, number>())
+  )
+    .sort((first, second) => second[1] - first[1])
+    .slice(0, 4);
   const pdfScopeItemCount = getPdfScopeItems(pdfSettings.scope).length;
   const canSelectPdfScope = selectedItems.length > 0;
   const businessLogoAvailable = Boolean(
@@ -2333,22 +2531,22 @@ export default function InventoryPage() {
   const renderItemActionMenu = (
     item: Item,
     menuClassName =
-      "absolute right-0 z-50 mt-2 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
+      "inventory-floating-menu z-[120] rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
   ) => (
     <div
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
       <InventoryActionMenu
-        label="Actions"
-        buttonClassName="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-theme bg-theme-surface px-2.5 text-xs font-bold text-theme-primary transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20"
+        label="More"
+        buttonClassName="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20"
         menuClassName={menuClassName}
       >
         <button
           type="button"
           role="menuitem"
           onClick={() => setDetailsItem({ id: item.id, tab: "details" })}
-          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="file" className="h-4 w-4" />
           View details
@@ -2357,7 +2555,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => setMovementItem(item)}
-          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="movement" className="h-4 w-4" />
           Adjust stock
@@ -2366,7 +2564,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => openEditModal(item)}
-          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="appearance" className="h-4 w-4" />
           Edit
@@ -2376,7 +2574,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => setDetailsItem({ id: item.id, tab: "activity" })}
-          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="clock" className="h-4 w-4" />
           Activity
@@ -2385,7 +2583,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => openQrCenterForItems([item.id])}
-          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="qr" className="h-4 w-4" />
           Create QR / Label
@@ -2396,7 +2594,7 @@ export default function InventoryPage() {
           role="menuitem"
           onClick={() => setPendingDeleteItem(item)}
           disabled={deletingId === item.id}
-          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           <UiIcon name="trash" className="h-4 w-4" />
           {deletingId === item.id ? "Deleting..." : "Delete"}
@@ -2407,13 +2605,15 @@ export default function InventoryPage() {
 
   return (
     <div className="contents">
-      <main>
+      <main className="min-w-0 overflow-x-clip">
         <div
-          className={`inventory-workspace mx-auto flex w-full max-w-[1600px] flex-col gap-3 ${
+          className={`inventory-workspace mx-auto flex w-full max-w-[1600px] flex-col gap-2.5 pt-1 ${
+            showStats ? "" : "inventory-workspace-summary-hidden"
+          } ${
             selectionMode ? "pb-36 sm:pb-0" : ""
           }`}
         >
-          <section className="rounded-[18px] border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:p-4">
+          <section className="rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:p-3.5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
@@ -2435,7 +2635,7 @@ export default function InventoryPage() {
                 </p>
               </div>
 
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="inventory-page-actions flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
@@ -2522,33 +2722,44 @@ export default function InventoryPage() {
                           : "Export Excel"}
                     </button>
                 </InventoryActionMenu>
+                <button
+                  type="button"
+                  onClick={() => setShowStats((current) => !current)}
+                  className="action-button px-3 py-2 text-sm"
+                  aria-pressed={showStats}
+                >
+                  <UiIcon name="usage" />
+                  {showStats ? "Hide summary" : "Show summary"}
+                </button>
               </div>
             </div>
           </section>
 
-          <section
-            aria-label="Inventory summary"
-            className="grid grid-cols-2 overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.05)] md:grid-cols-4"
-          >
-            {[
-              ["Items", items.length.toLocaleString()],
-              ["Quantity", totalQuantity.toLocaleString()],
-              ["Low stock", lowStockCount.toLocaleString()],
-              ["Locations", assignedDepotCount.toLocaleString()],
-            ].map(([label, value]) => (
-              <div
-                key={label}
-                className="border-b border-r border-theme px-3 py-2.5 last:border-r-0 md:border-b-0"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                  {label}
-                </p>
-                <p className="mt-0.5 text-lg font-black text-theme-primary">
-                  {loadingItems ? "—" : value}
-                </p>
-              </div>
-            ))}
-          </section>
+          {showStats && (
+            <section
+              aria-label="Inventory summary"
+              className="grid grid-cols-2 gap-2 md:grid-cols-4"
+            >
+              {inventoryStats.map((stat) => (
+                <div
+                  key={stat.label}
+                  className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-theme bg-theme-surface px-3 py-2 shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+                >
+                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-200/70 bg-cyan-50 text-theme-accent">
+                    <UiIcon name={stat.icon} className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      {stat.label}
+                    </span>
+                    <span className="mt-0.5 block text-base font-black text-theme-primary sm:text-lg">
+                      {loadingItems ? "--" : stat.value}
+                    </span>
+                  </span>
+                </div>
+              ))}
+            </section>
+          )}
 
           {(pageNotice || pageError) && (
             <div
@@ -2562,7 +2773,7 @@ export default function InventoryPage() {
             </div>
           )}
 
-          <section className="rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
+          <section className="rounded-2xl border border-theme bg-theme-surface p-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:p-3">
             <div className="flex flex-col gap-3">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex-1">
@@ -2615,12 +2826,18 @@ export default function InventoryPage() {
                     ariaLabel="Sort"
                     value={sortBy}
                     onChange={(value) => setSortBy(value as SortOption)}
-                    buttonClassName={COMPACT_SELECT_BUTTON_CLASS}
+                    buttonClassName={SORT_SELECT_BUTTON_CLASS}
                     options={[
                       { value: "newest", label: "Newest" },
                       { value: "name-az", label: "Name A-Z" },
-                      { value: "quantity-asc", label: "Quantity low-high" },
-                      { value: "quantity-desc", label: "Quantity high-low" },
+                      {
+                        value: "quantity-asc",
+                        label: "Quantity: low to high",
+                      },
+                      {
+                        value: "quantity-desc",
+                        label: "Quantity: high to low",
+                      },
                     ]}
                   />
                   <Select
@@ -2642,6 +2859,29 @@ export default function InventoryPage() {
                     {selectionMode ? "Exit selection" : "Select items"}
                   </button>
                 </div>
+              </div>
+
+              <div
+                className="inventory-quick-filters"
+                aria-label="Quick inventory filters"
+              >
+                {QUICK_FILTER_OPTIONS.map((option) => {
+                  const active = quickFilter === option.value;
+
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setQuickFilter(option.value)}
+                      aria-pressed={active}
+                      className={`inventory-quick-filter ${
+                        active ? "inventory-quick-filter-active" : ""
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
               </div>
 
               {activeFilterChips.length > 0 && (
@@ -2913,60 +3153,72 @@ export default function InventoryPage() {
             </section>
           )}
 
+          <div
+            className={`inventory-content-grid ${
+              showStats ? "" : "inventory-content-grid-summary-hidden"
+            }`}
+          >
+            <section className="min-w-0 space-y-2.5" aria-label="Inventory items">
           {/* Items */}
           {loadingItems ? (
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
+            <div className="inventory-items-grid">
               {[1, 2, 3, 4, 5].map((item) => (
                 <div
                   key={item}
-                  className="aspect-[4/5] overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.06)]"
+                  className="aspect-[5/4] overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.06)]"
                 >
                   <div className="h-full animate-pulse bg-theme-inset" />
                 </div>
               ))}
             </div>
           ) : viewMode === "grid" ? (
-            <div className="grid grid-cols-2 gap-2.5 md:grid-cols-3 xl:grid-cols-5 2xl:grid-cols-6">
-              {visibleItems.map((item) => (
-                <InventoryItemCard
-                  key={item.id}
-                  item={item}
-                  itemCode={item.item_code}
-                  quantityLabel={getInventoryQuantityLabel(
-                    item.quantity,
-                    item.unit_type,
-                    item.custom_unit_label
-                  )}
-                  categoryLabel={getCategoryLabel(item)}
-                  depotLabel={
-                    getDepotForItem(item)
-                      ? formatDepotLabel(getDepotForItem(item))
-                      : null
-                  }
-                  supplierLabel={getSupplierForItem(item)?.name || null}
-                  lowStock={isItemLowStock(item)}
-                  deleting={deletingId === item.id}
-                  selectable={selectionMode}
-                  selected={selectedItemIds.has(item.id)}
-                  onToggleSelected={() => toggleItemSelection(item.id)}
-                  onOpenDetails={() =>
-                    setDetailsItem({ id: item.id, tab: "details" })
-                  }
-                  onHistory={() =>
-                    setDetailsItem({ id: item.id, tab: "activity" })
-                  }
-                  onCreateQrLabel={() => openQrCenterForItems([item.id])}
-                  onAdjust={() => setMovementItem(item)}
-                  onEdit={() => openEditModal(item)}
-                  onDelete={() => setPendingDeleteItem(item)}
-                  detailsHref={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
-                    currentContext
-                  )}`}
-                />
-              ))}
+            <div className="inventory-items-grid">
+              {visibleItems.map((item) => {
+                const status = getStockStatus(item);
+
+                return (
+                  <InventoryItemCard
+                    key={item.id}
+                    item={item}
+                    itemCode={item.item_code || item.barcode}
+                    quantityLabel={getInventoryQuantityLabel(
+                      item.quantity,
+                      item.unit_type,
+                      item.custom_unit_label
+                    )}
+                    categoryLabel={getCategoryLabel(item)}
+                    depotLabel={
+                      getDepotForItem(item)
+                        ? formatDepotLabel(getDepotForItem(item))
+                        : null
+                    }
+                    supplierLabel={getSupplierForItem(item)?.name || null}
+                    lowStock={isItemLowStock(item)}
+                    stockStatusLabel={status.label}
+                    stockStatusTone={status.tone}
+                    deleting={deletingId === item.id}
+                    selectable={selectionMode}
+                    selected={selectedItemIds.has(item.id)}
+                    onToggleSelected={() => toggleItemSelection(item.id)}
+                    onOpenDetails={() =>
+                      setDetailsItem({ id: item.id, tab: "details" })
+                    }
+                    onHistory={() =>
+                      setDetailsItem({ id: item.id, tab: "activity" })
+                    }
+                    onCreateQrLabel={() => openQrCenterForItems([item.id])}
+                    onAdjust={() => setMovementItem(item)}
+                    onEdit={() => openEditModal(item)}
+                    onDelete={() => setPendingDeleteItem(item)}
+                    detailsHref={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
+                      currentContext
+                    )}`}
+                  />
+                );
+              })}
             </div>
           ) : viewMode === "list" ? (
-            <div className="grid gap-2">
+            <div className="inventory-list">
               {visibleItems.map((item) => {
                 const selected = selectedItemIds.has(item.id);
                 const quantityLabel = getInventoryQuantityLabel(
@@ -2976,6 +3228,7 @@ export default function InventoryPage() {
                 );
                 const depot = getDepotForItem(item);
                 const supplier = getSupplierForItem(item);
+                const status = getStockStatus(item);
 
                 return (
                   <div
@@ -2998,7 +3251,7 @@ export default function InventoryPage() {
                       }
                       setDetailsItem({ id: item.id, tab: "details" });
                     }}
-                    className={`grid cursor-pointer grid-cols-[auto_2.75rem_minmax(0,1fr)] items-center gap-2.5 rounded-2xl border bg-theme-surface p-2.5 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_3rem_minmax(0,1fr)_auto] ${
+                    className={`inventory-list-row grid cursor-pointer grid-cols-[auto_2.5rem_minmax(0,1fr)] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_2.75rem_minmax(0,1fr)_auto] ${
                       selected
                         ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/30"
                         : "border-theme"
@@ -3016,31 +3269,25 @@ export default function InventoryPage() {
                     ) : (
                       <span className="h-4 w-4" aria-hidden="true" />
                     )}
-                    <div className="relative h-11 w-11 overflow-hidden rounded-xl border border-theme bg-theme-inset sm:h-12 sm:w-12">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt=""
-                          fill
-                          sizes="48px"
-                          className="object-contain p-1.5"
-                        />
-                      ) : (
-                        <span className="flex h-full items-center justify-center text-theme-subtle">
-                          <UiIcon name="box" className="h-5 w-5" />
-                        </span>
-                      )}
+                    <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-theme bg-theme-inset sm:h-11 sm:w-11">
+                      <InventoryThumbnail src={item.image} alt="" />
                     </div>
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
                         <p className="truncate text-sm font-black text-theme-primary" title={item.name}>
                           {item.name}
                         </p>
-                        {isItemLowStock(item) && (
-                          <span className="rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-600">
-                            Low
-                          </span>
-                        )}
+                        <span
+                          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                            status.tone === "danger"
+                              ? "border-red-200 bg-red-50 text-red-600"
+                              : status.tone === "warning"
+                                ? "border-amber-200 bg-amber-50 text-amber-700"
+                                : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                          }`}
+                        >
+                          {status.label}
+                        </span>
                       </div>
                       <p className="mt-0.5 truncate text-xs font-semibold text-theme-muted">
                         {[item.item_code || item.sku, getCategoryLabel(item), depot ? formatDepotLabel(depot) : "", supplier?.name]
@@ -3048,8 +3295,8 @@ export default function InventoryPage() {
                           .join(" | ")}
                       </p>
                     </div>
-                    <div className="col-span-3 flex items-center justify-between gap-2 sm:col-span-1 sm:justify-end">
-                      <span className="rounded-xl border border-theme bg-theme-inset px-2.5 py-1.5 text-xs font-black text-theme-primary">
+                    <div className="inventory-list-actions col-span-3 flex items-center justify-between gap-2 sm:col-span-1 sm:justify-end">
+                      <span className="rounded-lg border border-theme bg-theme-inset px-2.5 py-1 text-xs font-black text-theme-primary">
                         {quantityLabel}
                       </span>
                       {renderItemActionMenu(item)}
@@ -3114,26 +3361,26 @@ export default function InventoryPage() {
                           item.custom_unit_label
                         )}
                       </span>
-                      {renderItemActionMenu(
-                        item,
-                        "absolute bottom-full right-0 z-50 mb-2 w-52 rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
-                      )}
+                      {renderItemActionMenu(item)}
                     </div>
                   );
                 })}
               </div>
-              <div className="hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:block">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full table-fixed text-left text-sm">
+              <div className="inventory-table-shell hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:block">
+                <div className="inventory-table-scroll">
+                  <table className="inventory-table table-fixed text-left text-sm">
                     <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
                       <tr>
                         <th className="w-10 px-3 py-2.5">
                           <span className="sr-only">Select</span>
                         </th>
                         <th className="px-3 py-2.5">Item</th>
+                        <th className="px-3 py-2.5">Code</th>
                         <th className="px-3 py-2.5">Category</th>
                         <th className="px-3 py-2.5">Depot</th>
-                        <th className="px-3 py-2.5 text-right">Quantity</th>
+                        <th className="px-3 py-2.5 text-right">Stock</th>
+                        <th className="px-3 py-2.5">Status</th>
+                        <th className="px-3 py-2.5 text-right">Value</th>
                         <th className="px-3 py-2.5 text-right">Actions</th>
                       </tr>
                     </thead>
@@ -3141,6 +3388,13 @@ export default function InventoryPage() {
                       {visibleItems.map((item) => {
                         const selected = selectedItemIds.has(item.id);
                         const depot = getDepotForItem(item);
+                        const status = getStockStatus(item);
+                        const itemValue =
+                          calculateInventoryValue(
+                            item.quantity,
+                            item.selling_price
+                          ) ??
+                          calculateInventoryValue(item.quantity, item.cost_price);
                         return (
                           <tr
                             key={item.id}
@@ -3179,29 +3433,38 @@ export default function InventoryPage() {
                             <td className="px-3 py-2.5">
                               <div className="flex min-w-0 items-center gap-2.5">
                                 <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-theme bg-theme-inset">
-                                  {item.image ? (
-                                    <Image
-                                      src={item.image}
-                                      alt=""
-                                      fill
-                                      sizes="36px"
-                                      className="object-contain p-1"
-                                    />
-                                  ) : (
-                                    <span className="flex h-full items-center justify-center text-theme-subtle">
-                                      <UiIcon name="box" className="h-4 w-4" />
-                                    </span>
-                                  )}
+                                  <InventoryThumbnail
+                                    src={item.image}
+                                    alt=""
+                                    imgClassName="object-contain p-1"
+                                    iconClassName="h-4 w-4"
+                                  />
                                 </div>
                                 <div className="min-w-0">
                                   <p className="truncate font-black text-theme-primary" title={item.name}>
                                     {item.name}
                                   </p>
                                   <p className="truncate text-xs font-semibold text-theme-muted">
-                                    {item.item_code || item.sku || "Inventory item"}
+                                    {item.barcode || "Inventory item"}
                                   </p>
                                 </div>
                               </div>
+                            </td>
+                            <td className="px-3 py-2.5 text-theme-secondary">
+                              <span
+                                className="block max-w-[9rem] truncate"
+                                title={
+                                  item.item_code ||
+                                  item.sku ||
+                                  item.barcode ||
+                                  "No code"
+                                }
+                              >
+                                {item.item_code ||
+                                  item.sku ||
+                                  item.barcode ||
+                                  "No code"}
+                              </span>
                             </td>
                             <td className="px-3 py-2.5 text-theme-secondary">
                               {getCategoryLabel(item)}
@@ -3215,6 +3478,27 @@ export default function InventoryPage() {
                                 item.unit_type,
                                 item.custom_unit_label
                               )}
+                            </td>
+                            <td className="px-3 py-2.5">
+                              <span
+                                className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                                  status.tone === "danger"
+                                    ? "border-red-200 bg-red-50 text-red-600"
+                                    : status.tone === "warning"
+                                      ? "border-amber-200 bg-amber-50 text-amber-700"
+                                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                }`}
+                              >
+                                {status.label}
+                              </span>
+                            </td>
+                            <td className="px-3 py-2.5 text-right text-xs font-black text-theme-primary">
+                              {itemValue === null
+                                ? "--"
+                                : formatCompactCurrency(
+                                    itemValue,
+                                    editCurrencyCode
+                                  )}
                             </td>
                             <td className="px-3 py-2.5 text-right">
                               {renderItemActionMenu(item)}
@@ -3269,6 +3553,136 @@ export default function InventoryPage() {
               )}
             </div>
           )}
+            </section>
+
+            {showStats && (
+            <aside className="inventory-insights-rail" aria-label="Inventory insights">
+              <section className="inventory-insight-card">
+                <div className="inventory-insight-card-header">
+                  <span>
+                    <UiIcon name="alert" className="h-4 w-4" />
+                    Low Stock Alerts
+                  </span>
+                  <strong>{lowStockCount.toLocaleString()}</strong>
+                </div>
+                {lowStockAlerts.length > 0 ? (
+                  <div className="mt-2 grid gap-2">
+                    {lowStockAlerts.map((item) => (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() =>
+                          setDetailsItem({ id: item.id, tab: "alerts" })
+                        }
+                        className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-theme bg-theme-inset px-3 py-2 text-left transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-xs font-black text-theme-primary">
+                            {item.name}
+                          </span>
+                          <span className="block text-[11px] font-semibold text-theme-muted">
+                            Reorder at {getLowStockThresholdForItem(item)}
+                          </span>
+                        </span>
+                        <span className="text-xs font-black text-theme-danger">
+                          {item.quantity}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="mt-2 rounded-xl border border-emerald-200/70 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">
+                    All stocked
+                  </p>
+                )}
+              </section>
+
+              <section className="inventory-insight-card">
+                <div className="inventory-insight-card-header">
+                  <span>
+                    <UiIcon name="depots" className="h-4 w-4" />
+                    Stock by Location
+                  </span>
+                </div>
+                <div className="mt-2 grid gap-2">
+                  {(stockByLocation.length > 0
+                    ? stockByLocation
+                    : [["Unassigned", 0] as [string, number]]
+                  ).map(([label, quantity]) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between gap-3 text-xs"
+                    >
+                      <span className="min-w-0 truncate font-bold text-theme-secondary">
+                        {label}
+                      </span>
+                      <strong className="shrink-0 text-theme-primary">
+                        {quantity.toLocaleString()}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="inventory-insight-card">
+                <div className="inventory-insight-card-header">
+                  <span>
+                    <UiIcon name="categories" className="h-4 w-4" />
+                    Stock by Category
+                  </span>
+                </div>
+                <div className="mt-2 grid gap-2">
+                  {(stockByCategory.length > 0
+                    ? stockByCategory
+                    : [["Uncategorized", 0] as [string, number]]
+                  ).map(([label, quantity]) => (
+                    <div
+                      key={label}
+                      className="flex items-center justify-between gap-3 text-xs"
+                    >
+                      <span className="min-w-0 truncate font-bold text-theme-secondary">
+                        {label}
+                      </span>
+                      <strong className="shrink-0 text-theme-primary">
+                        {quantity.toLocaleString()}
+                      </strong>
+                    </div>
+                  ))}
+                </div>
+              </section>
+
+              <section className="inventory-insight-card">
+                <div className="inventory-insight-card-header">
+                  <span>
+                    <UiIcon name="usage" className="h-4 w-4" />
+                    Stock Health
+                  </span>
+                </div>
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      Out
+                    </span>
+                    <strong className="text-base text-theme-danger">
+                      {outOfStockCount.toLocaleString()}
+                    </strong>
+                  </div>
+                  <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
+                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      Healthy
+                    </span>
+                    <strong className="text-base text-theme-primary">
+                      {Math.max(
+                        0,
+                        items.length - lowStockCount
+                      ).toLocaleString()}
+                    </strong>
+                  </div>
+                </div>
+              </section>
+            </aside>
+            )}
+          </div>
         </div>
       </main>
 
@@ -3446,13 +3860,11 @@ export default function InventoryPage() {
                       {image && imagePreviewUrl ? (
                         <div className="grid h-full grid-cols-[72px_1fr] gap-3 items-center">
                           <div className="relative aspect-square overflow-hidden rounded-lg bg-[#f4f0e8]">
-                            <Image
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
                               src={imagePreviewUrl}
                               alt="Selected product preview"
-                              fill
-                              unoptimized
-                              sizes="72px"
-                              className="object-contain p-1.5"
+                              className="h-full w-full object-contain p-1.5"
                             />
                           </div>
 
