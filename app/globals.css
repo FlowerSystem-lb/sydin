@@ -3685,6 +3685,15 @@ select.glass-input option {
   justify-content: flex-start;
 }
 
+.inventory-mobile-breadcrumb,
+.inventory-mobile-folder-strip {
+  display: none;
+}
+
+.inventory-mobile-folder {
+  flex: 0 0 auto;
+}
+
 .inventory-workspace .ui-select {
   min-width: 8.5rem;
 }
@@ -3707,10 +3716,11 @@ select.glass-input option {
 
 .inventory-quick-filter {
   flex: 0 0 auto;
+  min-height: 2.25rem;
   border: 1px solid var(--border-divider);
   border-radius: 999px;
   background: var(--bg-surface);
-  padding: 0.4rem 0.68rem;
+  padding: 0.45rem 0.72rem;
   color: var(--text-secondary);
   font-size: 0.72rem;
   font-weight: 800;
@@ -3766,7 +3776,10 @@ select.glass-input option {
 }
 
 .inventory-table-scroll {
+  max-width: 100%;
   overflow-x: auto;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .inventory-table {
@@ -3885,8 +3898,18 @@ select.glass-input option {
 }
 
 .inventory-floating-menu {
+  overflow-y: auto;
+  overscroll-behavior: contain;
   transform-origin: top right;
   animation: inventory-menu-in var(--motion-fast) var(--motion-ease-standard) both;
+}
+
+.inventory-floating-menu :is(a, button) {
+  min-height: 2.5rem;
+}
+
+.inventory-modal-overlay {
+  z-index: 900;
 }
 
 @keyframes dashboard-content-in {
@@ -3974,7 +3997,112 @@ select.glass-input option {
 
 @media (max-width: 640px) {
   .inventory-workspace {
-    padding-bottom: var(--space-2);
+    gap: 0.55rem;
+    padding-bottom: var(--space-3);
+  }
+
+  .inventory-mobile-header-card {
+    border-radius: 14px;
+    padding: 0.75rem;
+  }
+
+  .inventory-mobile-kicker,
+  .inventory-mobile-description {
+    display: none;
+  }
+
+  .inventory-mobile-title {
+    margin-top: 0;
+    font-size: 1.35rem;
+    line-height: 1.1;
+  }
+
+  .inventory-mobile-breadcrumb {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text-muted);
+    font-size: 0.78rem;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+
+  .inventory-mobile-folder-strip {
+    display: flex;
+    gap: 0.5rem;
+    margin-inline: -0.15rem;
+    overflow-x: auto;
+    padding: 0.1rem 0.15rem 0.2rem;
+    scroll-padding-inline: 0.15rem;
+    scrollbar-width: none;
+  }
+
+  .inventory-mobile-folder-strip::-webkit-scrollbar {
+    display: none;
+  }
+
+  .inventory-mobile-folder {
+    display: grid;
+    min-width: 7.25rem;
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    gap: 0.5rem;
+    border: 1px solid var(--border-divider);
+    border-radius: 13px;
+    background: var(--bg-surface);
+    padding: 0.5rem 0.6rem;
+    color: var(--text-primary);
+    text-align: left;
+    transition:
+      background-color var(--motion-fast) var(--motion-ease-standard),
+      border-color var(--motion-fast) var(--motion-ease-standard),
+      box-shadow var(--motion-fast) var(--motion-ease-standard),
+      transform var(--motion-fast) var(--motion-ease-standard);
+  }
+
+  .inventory-mobile-folder-active {
+    border-color: rgba(37, 99, 235, 0.38);
+    background: color-mix(in srgb, #2563eb 10%, var(--bg-surface));
+    box-shadow: 0 8px 18px rgba(37, 99, 235, 0.08);
+  }
+
+  .inventory-mobile-folder:active {
+    transform: scale(0.985);
+  }
+
+  .inventory-mobile-folder-icon {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    place-items: center;
+    border-radius: 10px;
+    background: var(--bg-inset);
+    color: var(--text-accent);
+  }
+
+  .inventory-mobile-folder-name,
+  .inventory-mobile-folder-count {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inventory-mobile-folder-name {
+    font-size: 0.78rem;
+    font-weight: 900;
+    line-height: 1.1;
+  }
+
+  .inventory-mobile-folder-count {
+    margin-top: 0.15rem;
+    color: var(--text-subtle);
+    font-size: 0.68rem;
+    font-weight: 800;
+  }
+
+  .inventory-workspace .action-button {
+    min-height: 2.65rem;
   }
 
   .inventory-workspace .ui-select {
@@ -3982,16 +4110,82 @@ select.glass-input option {
     flex: 1 1 8.5rem;
   }
 
+  .inventory-sort-trigger {
+    min-width: min(100%, 11rem);
+  }
+
+  .inventory-quick-filters {
+    display: none;
+  }
+
+  .inventory-quick-filter {
+    min-height: 2.4rem;
+  }
+
+  .inventory-card-media {
+    aspect-ratio: 16 / 9;
+  }
+
+  .inventory-items-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.5rem;
+  }
+
+  .inventory-floating-menu :is(a, button) {
+    min-height: 2.75rem;
+  }
+
   .inventory-insights-rail {
     grid-template-columns: 1fr;
   }
 
   .inventory-list-row {
-    min-height: 4rem;
+    min-height: 3.75rem;
+    border: 0;
+    border-bottom: 1px solid var(--border-divider);
+    border-radius: 0;
+    box-shadow: none;
+    grid-template-columns: auto 3rem minmax(0, 1fr) auto;
+    padding: 0.55rem 0.65rem;
+  }
+
+  .inventory-list-row:last-child {
+    border-bottom: 0;
+  }
+
+  .inventory-list {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-divider);
+    border-radius: 14px;
+    background: var(--bg-surface);
+  }
+
+  .inventory-list-row > .relative {
+    width: 3rem;
+    height: 3rem;
   }
 
   .inventory-list-actions {
-    padding-left: 3.1rem;
+    min-width: max-content;
+    justify-content: flex-end;
+    padding-left: 0;
+  }
+
+  .inventory-list-quantity {
+    max-width: 5.8rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .inventory-list-actions [aria-haspopup="menu"] {
+    width: 2.25rem;
+    min-height: 2.25rem;
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
+    font-size: 0;
   }
 }
 
@@ -4002,7 +4196,7 @@ select.glass-input option {
     height: 100svh;
     flex-direction: column;
     overflow: hidden;
-    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
 
   .dashboard-shell:has(.inventory-workspace) .dashboard-mobile-header {
@@ -4014,8 +4208,8 @@ select.glass-input option {
     flex: 1 1 auto;
     overflow-y: auto;
     overscroll-behavior: contain;
-    padding-bottom: var(--space-3);
-    scroll-padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
 
   .dashboard-shell:has(.inventory-workspace) .dashboard-mobile-nav {
@@ -4028,6 +4222,39 @@ select.glass-input option {
     width: 2.25rem;
     height: 2.25rem;
     margin-top: 0;
+  }
+
+  .dashboard-shell:has(.quick-add-overlay) .dashboard-mobile-nav {
+    pointer-events: none;
+    visibility: hidden;
+  }
+
+  html.inventory-modal-open,
+  body.inventory-modal-open {
+    overflow: hidden;
+  }
+
+  body.inventory-modal-open
+    .dashboard-shell
+    :is(
+      .dashboard-mobile-nav,
+      .dashboard-mobile-nav *,
+      .dashboard-mobile-scan,
+      .dashboard-mobile-scan-icon,
+      .dashboard-account-area,
+      .dashboard-account-trigger,
+      .dashboard-account-menu,
+      .dashboard-more-sheet,
+      .dashboard-more-account
+    ) {
+    pointer-events: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  .inventory-selection-bar {
+    bottom: calc(6rem + env(safe-area-inset-bottom));
+    z-index: 55;
   }
 }
 
@@ -4923,10 +5150,11 @@ select.glass-input option {
 
 .quick-add-overlay {
   position: fixed;
-  z-index: 90;
+  z-index: 1000;
   inset: 0;
   display: grid;
   place-items: center;
+  overflow: hidden;
   padding: 1rem;
   background: var(--bg-overlay);
   -webkit-backdrop-filter: blur(10px);
@@ -4941,6 +5169,7 @@ select.glass-input option {
   min-height: 0;
   flex-direction: column;
   overflow: hidden;
+  isolation: isolate;
   border: 1px solid var(--border-divider);
   border-radius: 18px;
   background: var(--bg-surface-strong);
@@ -5011,7 +5240,9 @@ select.glass-input option {
   min-height: 0;
   flex: 1;
   overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0.7rem 0.85rem;
+  -webkit-overflow-scrolling: touch;
 }
 
 .quick-add-input {
@@ -5211,13 +5442,23 @@ select.glass-input option {
     width: 100%;
     max-height: 100svh;
     height: 100svh;
+    height: 100dvh;
     border-inline: 0;
     border-bottom: 0;
     border-radius: 18px 18px 0 0;
   }
 
+  .quick-add-header {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+
+  .quick-add-scroll {
+    padding-bottom: max(1rem, calc(1rem + env(safe-area-inset-bottom)));
+  }
+
   .quick-add-footer {
     grid-template-columns: 1fr 1fr;
+    padding-bottom: max(1rem, calc(0.8rem + env(safe-area-inset-bottom)));
   }
 
   .quick-add-input,

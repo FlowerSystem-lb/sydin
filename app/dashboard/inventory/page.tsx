@@ -228,6 +228,8 @@ function InventoryActionMenu({
 
     const rect = trigger.getBoundingClientRect();
     const viewportPadding = 12;
+    const reservedBottom =
+      window.matchMedia("(max-width: 639px)").matches ? 104 : viewportPadding;
     const menuWidth = menuRef.current?.offsetWidth || 224;
     const menuHeight = menuRef.current?.offsetHeight || 252;
     const left = Math.min(
@@ -235,16 +237,21 @@ function InventoryActionMenu({
       window.innerWidth - menuWidth - viewportPadding
     );
     const opensUp =
-      rect.bottom + menuHeight + viewportPadding > window.innerHeight;
+      rect.bottom + menuHeight + reservedBottom > window.innerHeight;
     const top = opensUp
       ? Math.max(viewportPadding, rect.top - menuHeight - 8)
       : rect.bottom + 8;
+    const availableHeight = Math.max(
+      176,
+      window.innerHeight - top - reservedBottom
+    );
 
     setMenuStyle({
       position: "fixed",
       left,
       top,
       width: menuWidth,
+      maxHeight: availableHeight,
     });
   }, []);
 
@@ -313,7 +320,7 @@ function InventoryActionMenu({
             }}
             className={
               menuClassName ||
-              "inventory-floating-menu z-[120] overflow-hidden rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]"
+              "inventory-floating-menu z-[120] overflow-y-auto rounded-2xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_18px_50px_rgba(15,23,42,0.18)]"
             }
           >
             {children}
@@ -628,6 +635,16 @@ export default function InventoryPage() {
   const [pendingDeleteItem, setPendingDeleteItem] = useState<Item | null>(null);
   const [movementItem, setMovementItem] = useState<Item | null>(null);
   const [detailsItem, setDetailsItem] = useState<ItemDetailsTarget>(null);
+  const inventoryModalOpen =
+    isModalOpen ||
+    isScannerOpen ||
+    isEditModalOpen ||
+    isPdfSettingsOpen ||
+    bulkDialogMode !== null ||
+    pendingDeleteItem !== null ||
+    movementItem !== null ||
+    detailsItem !== null ||
+    lockedFeature !== null;
   const [inventoryContextReady, setInventoryContextReady] = useState(false);
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
@@ -639,6 +656,19 @@ export default function InventoryPage() {
     subscriptionUsage.subscription,
     businessSettings.low_stock_threshold
   );
+
+  useEffect(() => {
+    const className = "inventory-modal-open";
+    if (!inventoryModalOpen) return;
+
+    document.documentElement.classList.add(className);
+    document.body.classList.add(className);
+
+    return () => {
+      document.documentElement.classList.remove(className);
+      document.body.classList.remove(className);
+    };
+  }, [inventoryModalOpen]);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -849,6 +879,8 @@ export default function InventoryPage() {
         requestedView === "table"
       ) {
         setViewMode(requestedView);
+      } else if (window.matchMedia("(max-width: 640px)").matches) {
+        setViewMode("list");
       }
 
       setInventoryContextReady(true);
@@ -2223,6 +2255,112 @@ export default function InventoryPage() {
   ].filter(
     (chip): chip is { label: string; onClear: () => void } => Boolean(chip)
   );
+  const resetFolderFilters = () => {
+    setCategoryFilter("all");
+    setDepotFilter("all");
+    setStockFilter("all");
+    setQuickFilter("all");
+  };
+  const mobileFolderOptions = [
+    {
+      key: "all",
+      label: "All Items",
+      count: items.length,
+      icon: "box" as UiIconName,
+      active:
+        categoryFilter === "all" &&
+        depotFilter === "all" &&
+        stockFilter === "all" &&
+        quickFilter === "all",
+      onSelect: resetFolderFilters,
+    },
+    ...categories.map((category) => ({
+      key: `category-${category.id}`,
+      label: category.name,
+      count: items.filter((item) => item.category_id === category.id).length,
+      icon: "categories" as UiIconName,
+      active:
+        categoryFilter === String(category.id) &&
+        stockFilter === "all" &&
+        quickFilter === "all",
+      onSelect: () => {
+        setCategoryFilter(String(category.id));
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("all");
+      },
+    })),
+    {
+      key: "uncategorized",
+      label: "Uncategorized",
+      count: items.filter(
+        (item) => !item.category_id && !item.category?.trim()
+      ).length,
+      icon: "categories" as UiIconName,
+      active: categoryFilter === "uncategorized" && quickFilter === "all",
+      onSelect: () => {
+        setCategoryFilter("uncategorized");
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("all");
+      },
+    },
+    {
+      key: "low-stock",
+      label: "Low Stock",
+      count: items.filter((item) => isItemLowStock(item)).length,
+      icon: "alert" as UiIconName,
+      active: quickFilter === "low-stock" || stockFilter === "low",
+      onSelect: () => {
+        setCategoryFilter("all");
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("low-stock");
+      },
+    },
+    {
+      key: "out-of-stock",
+      label: "Out of Stock",
+      count: items.filter((item) => Number(item.quantity || 0) <= 0).length,
+      icon: "alert" as UiIconName,
+      active: quickFilter === "out-of-stock",
+      onSelect: () => {
+        setCategoryFilter("all");
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("out-of-stock");
+      },
+    },
+    {
+      key: "no-image",
+      label: "No Image",
+      count: items.filter((item) => !item.image?.trim()).length,
+      icon: "box" as UiIconName,
+      active: quickFilter === "no-image",
+      onSelect: () => {
+        setCategoryFilter("all");
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("no-image");
+      },
+    },
+    {
+      key: "unassigned",
+      label: "Unassigned",
+      count: items.filter((item) => !item.depot_id).length,
+      icon: "depots" as UiIconName,
+      active: quickFilter === "unassigned" || depotFilter === "unassigned",
+      onSelect: () => {
+        setCategoryFilter("all");
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("unassigned");
+      },
+    },
+  ];
+  const activeMobileFolder =
+    mobileFolderOptions.find((folder) => folder.active) ||
+    mobileFolderOptions[0];
 
   const resetInventoryControls = () => {
     setSearch("");
@@ -2613,18 +2751,18 @@ export default function InventoryPage() {
             selectionMode ? "pb-36 sm:pb-0" : ""
           }`}
         >
-          <section className="rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:p-3.5">
+          <section className="inventory-mobile-header-card rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:p-3.5">
             <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
+                <p className="inventory-mobile-kicker text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
                   Products
                 </p>
 
-                <h1 className="mt-0.5 text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
+                <h1 className="inventory-mobile-title mt-0.5 text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
                   Inventory
                 </h1>
 
-                <p className="mt-0.5 text-sm leading-5 text-theme-muted">
+                <p className="inventory-mobile-description mt-0.5 text-sm leading-5 text-theme-muted">
                   {loadingItems
                     ? "Loading inventory..."
                     : `${items.length.toLocaleString()} item${
@@ -2633,6 +2771,10 @@ export default function InventoryPage() {
                         assignedDepotCount === 1 ? "" : "s"
                       }.`}
                 </p>
+              </div>
+
+              <div className="inventory-mobile-breadcrumb" aria-live="polite">
+                Items{activeMobileFolder?.label ? ` / ${activeMobileFolder.label}` : ""}
               </div>
 
               <div className="inventory-page-actions flex flex-wrap items-center gap-2">
@@ -2731,6 +2873,32 @@ export default function InventoryPage() {
                   <UiIcon name="usage" />
                   {showStats ? "Hide summary" : "Show summary"}
                 </button>
+              </div>
+
+              <div className="inventory-mobile-folder-strip" aria-label="Inventory folders">
+                {mobileFolderOptions.map((folder) => (
+                  <button
+                    key={folder.key}
+                    type="button"
+                    onClick={folder.onSelect}
+                    aria-pressed={folder.active}
+                    className={`inventory-mobile-folder ${
+                      folder.active ? "inventory-mobile-folder-active" : ""
+                    }`}
+                  >
+                    <span className="inventory-mobile-folder-icon">
+                      <UiIcon name={folder.icon} className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <span className="inventory-mobile-folder-name">
+                        {folder.label}
+                      </span>
+                      <span className="inventory-mobile-folder-count">
+                        {folder.count.toLocaleString()}
+                      </span>
+                    </span>
+                  </button>
+                ))}
               </div>
             </div>
           </section>
@@ -2981,7 +3149,7 @@ export default function InventoryPage() {
 
           {selectionMode && (
             <section
-              className="fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-cyan-300/25 bg-theme-surface p-2.5 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:top-2 sm:bottom-auto sm:z-20 sm:shadow-[0_12px_30px_rgba(15,23,42,0.1)]"
+              className="inventory-selection-bar fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-cyan-300/25 bg-theme-surface p-2.5 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:top-2 sm:bottom-auto sm:z-20 sm:shadow-[0_12px_30px_rgba(15,23,42,0.1)]"
               aria-live="polite"
             >
               <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
@@ -3251,7 +3419,7 @@ export default function InventoryPage() {
                       }
                       setDetailsItem({ id: item.id, tab: "details" });
                     }}
-                    className={`inventory-list-row grid cursor-pointer grid-cols-[auto_2.5rem_minmax(0,1fr)] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_2.75rem_minmax(0,1fr)_auto] ${
+                    className={`inventory-list-row grid cursor-pointer grid-cols-[auto_2.5rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_2.75rem_minmax(0,1fr)_auto] ${
                       selected
                         ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/30"
                         : "border-theme"
@@ -3277,17 +3445,17 @@ export default function InventoryPage() {
                         <p className="truncate text-sm font-black text-theme-primary" title={item.name}>
                           {item.name}
                         </p>
-                        <span
-                          className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
-                            status.tone === "danger"
-                              ? "border-red-200 bg-red-50 text-red-600"
-                              : status.tone === "warning"
-                                ? "border-amber-200 bg-amber-50 text-amber-700"
-                                : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                          }`}
-                        >
-                          {status.label}
-                        </span>
+                        {status.tone !== "success" && (
+                          <span
+                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                              status.tone === "danger"
+                                ? "border-red-200 bg-red-50 text-red-600"
+                                : "border-amber-200 bg-amber-50 text-amber-700"
+                            }`}
+                          >
+                            {status.label}
+                          </span>
+                        )}
                       </div>
                       <p className="mt-0.5 truncate text-xs font-semibold text-theme-muted">
                         {[item.item_code || item.sku, getCategoryLabel(item), depot ? formatDepotLabel(depot) : "", supplier?.name]
@@ -3295,8 +3463,8 @@ export default function InventoryPage() {
                           .join(" | ")}
                       </p>
                     </div>
-                    <div className="inventory-list-actions col-span-3 flex items-center justify-between gap-2 sm:col-span-1 sm:justify-end">
-                      <span className="rounded-lg border border-theme bg-theme-inset px-2.5 py-1 text-xs font-black text-theme-primary">
+                    <div className="inventory-list-actions flex items-center justify-between gap-2 sm:justify-end">
+                      <span className="inventory-list-quantity rounded-lg border border-theme bg-theme-inset px-2.5 py-1 text-xs font-black text-theme-primary">
                         {quantityLabel}
                       </span>
                       {renderItemActionMenu(item)}
@@ -3687,7 +3855,7 @@ export default function InventoryPage() {
       </main>
 
       {isScannerOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+        <div className="inventory-modal-overlay fixed inset-0 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="my-8 w-full max-w-2xl overflow-hidden rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-theme p-5 sm:p-6">
               <div>
@@ -5172,7 +5340,7 @@ export default function InventoryPage() {
 
       {/* Edit Item Modal */}
       {isEditModalOpen && selectedItem && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+        <div className="inventory-modal-overlay fixed inset-0 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>

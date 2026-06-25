@@ -100,20 +100,27 @@ export default function InventoryItemCard({
     const menuWidth = 232;
     const menuHeight = 292;
     const viewportPadding = 12;
+    const reservedBottom =
+      window.matchMedia("(max-width: 639px)").matches ? 104 : viewportPadding;
     const left = Math.min(
       Math.max(rect.right - menuWidth, viewportPadding),
       window.innerWidth - menuWidth - viewportPadding
     );
     const wouldClipBottom =
-      rect.bottom + menuHeight + viewportPadding > window.innerHeight;
+      rect.bottom + menuHeight + reservedBottom > window.innerHeight;
     const top = wouldClipBottom
       ? Math.max(viewportPadding, rect.top - menuHeight - 8)
       : rect.bottom + 8;
+    const availableHeight = Math.max(
+      176,
+      window.innerHeight - top - reservedBottom
+    );
 
     setMenuStyle({
       left,
       top,
       width: menuWidth,
+      maxHeight: availableHeight,
     });
   }, []);
 
@@ -191,7 +198,7 @@ export default function InventoryItemCard({
           : "border-theme"
       }`}
     >
-      <div className="relative aspect-[5/3] overflow-hidden rounded-t-[15px] border-b border-theme bg-[#f5f7fb]">
+      <div className="inventory-card-media relative aspect-[5/3] overflow-hidden rounded-t-[15px] border-b border-theme bg-[#f5f7fb]">
         {selectable && (
           <label
             className="absolute left-2.5 top-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white focus-within:ring-4 focus-within:ring-cyan-300/25"
@@ -256,7 +263,7 @@ export default function InventoryItemCard({
               style={menuStyle}
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}
-              className="fixed z-[120] overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
+              className="fixed z-[120] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
             >
             <button
               type="button"
