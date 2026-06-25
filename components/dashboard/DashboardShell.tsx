@@ -589,14 +589,14 @@ export default function DashboardShell({
         <Link href="/dashboard" aria-label="SydIN home">
           <SydINMark size="md" />
         </Link>
-        <p className="min-w-0 flex-1 truncate text-sm font-bold text-[var(--text-primary)]">
+        <p className="sr-only">
           {currentPage.shortLabel}
         </p>
         <button
           ref={mobileSearchTriggerRef}
           type="button"
           onClick={(event) => openGlobalSearch(event.currentTarget)}
-          className="ui-icon-button ui-icon-button-md"
+          className="ui-icon-button ui-icon-button-md ml-auto"
           aria-label="Open global search"
           title="Search"
         >

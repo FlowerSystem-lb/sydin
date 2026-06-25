@@ -194,7 +194,7 @@ export default function StockMovementsPage() {
   };
 
   return (
-    <main>
+    <main className="operations-workspace operations-stock-movements">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
         <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

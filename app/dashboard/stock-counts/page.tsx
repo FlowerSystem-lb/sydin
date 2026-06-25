@@ -656,7 +656,7 @@ export default function StockCountsPage() {
             : "All inventory";
 
   return (
-    <main>
+    <main className="operations-workspace operations-stock-counts">
       <div
         className={`mx-auto flex w-full max-w-[1500px] flex-col gap-4 ${
           step === "count" || step === "review" ? "pb-28 sm:pb-0" : ""
@@ -676,7 +676,7 @@ export default function StockCountsPage() {
                 adjustments through SydIN stock movements.
               </p>
             </div>
-            <div className="grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
+            <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
               {(["setup", "count", "review", "finalized"] as WorkflowStep[]).map(
                 (itemStep, index) => (
                   <div
@@ -724,8 +724,8 @@ export default function StockCountsPage() {
           <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
               <div className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 px-4 py-3 text-sm text-theme-accent">
-                Your count draft stays on this device while you work. Review
-                differences before finalizing to record stock adjustments.
+                Draft saved on this device. Review differences before
+                finalizing stock adjustments.
               </div>
               {draftRestored && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-theme-warning">
@@ -1240,7 +1240,8 @@ export default function StockCountsPage() {
                 </p>
               </div>
               {differenceDetails.length > 0 ? (
-                <div className="overflow-x-auto">
+                <>
+                <div className="hidden overflow-x-auto md:block">
                   <table className="min-w-[760px] w-full table-fixed text-left text-sm">
                     <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
                       <tr>
@@ -1294,6 +1295,67 @@ export default function StockCountsPage() {
                     </tbody>
                   </table>
                 </div>
+                <div className="grid gap-2 p-3 md:hidden">
+                  {differenceDetails.map(({ row, item, counted, difference }) => {
+                    if (!item || counted === null) return null;
+                    return (
+                      <article
+                        key={item.id}
+                        className="rounded-2xl border border-theme bg-theme-inset p-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h3 className="truncate font-black text-theme-primary">
+                              {item.name}
+                            </h3>
+                            <p className="mt-1 truncate text-xs text-theme-muted">
+                              {item.item_code || item.sku || getCategoryLabel(item)}
+                            </p>
+                          </div>
+                          <span
+                            className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${
+                              difference > 0
+                                ? "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
+                                : "border-red-400/30 bg-red-500/10 text-theme-danger"
+                            }`}
+                          >
+                            {formatSigned(difference)}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                              Current
+                            </p>
+                            <p className="mt-1 font-black text-theme-primary">
+                              {row.expectedQuantity}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                              Counted
+                            </p>
+                            <p className="mt-1 font-black text-theme-primary">
+                              {counted}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                              Change
+                            </p>
+                            <p className="mt-1 font-black text-theme-primary">
+                              {difference > 0 ? "Higher" : "Lower"}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-3 text-xs font-semibold text-theme-muted">
+                          {row.note || "Stock count adjustment"}
+                        </p>
+                      </article>
+                    );
+                  })}
+                </div>
+                </>
               ) : (
                 <div className="px-5 py-12 text-center">
                   <UiIcon

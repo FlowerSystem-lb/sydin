@@ -434,7 +434,7 @@ export default function QrCenterPage() {
   );
 
   return (
-    <main>
+    <main className="operations-workspace operations-qr-center">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
         <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -447,6 +447,14 @@ export default function QrCenterPage() {
             Create clean QR label documents or open the existing inventory
             scanner.
           </p>
+          <button
+            type="button"
+            onClick={openExistingScanner}
+            className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 sm:w-auto"
+          >
+            <UiIcon name="scan" className="h-5 w-5" />
+            Start Scanner
+          </button>
         </section>
 
         {(error || notice) && (

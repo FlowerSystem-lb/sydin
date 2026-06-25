@@ -386,7 +386,7 @@ export default function PickListsPage() {
 
   return (
     <div className="contents">
-      <main>
+      <main className="operations-workspace operations-pick-lists">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -606,7 +606,7 @@ export default function PickListsPage() {
       </main>
 
       {formOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+        <div className="operations-modal-overlay fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="glass-modal my-8 w-full max-w-2xl p-5 sm:p-7">
             <PickListForm
               values={formValues}

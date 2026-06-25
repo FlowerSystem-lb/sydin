@@ -775,7 +775,7 @@ export default function PurchaseOrdersPage() {
   ].filter(Boolean);
 
   return (
-    <main>
+    <main className="operations-workspace operations-purchase-orders">
       <div className="po-screen-only mx-auto flex w-full max-w-[1500px] flex-col gap-4 pb-28 sm:pb-0">
         <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -817,7 +817,7 @@ export default function PurchaseOrdersPage() {
         )}
 
         <section className="rounded-[20px] border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-          <div className="grid gap-2 sm:grid-cols-4" aria-label="Purchase order steps">
+          <div className="operations-step-strip grid gap-2 sm:grid-cols-4" aria-label="Purchase order steps">
             {stepItems.map((item, index) => {
               const active = step === item.id;
               return (
@@ -842,9 +842,8 @@ export default function PurchaseOrdersPage() {
         </section>
 
         <section className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-4 py-3 text-sm font-semibold leading-6 text-theme-accent">
-          Purchase order drafts are saved in this browser for now. Export a PDF
-          or CSV before closing the tab. Stock increases only through Receiving
-          or Stock Movements.
+          Draft saved on this device. Export before closing. Stock changes only
+          through Receiving or Stock Movements.
         </section>
 
         {draftRestored && (
@@ -974,8 +973,8 @@ export default function PurchaseOrdersPage() {
                 </p>
               )}
               <div className="mt-4 rounded-xl border border-theme bg-theme-surface p-3 text-xs font-semibold leading-5 text-theme-secondary">
-                This workflow creates exportable purchase orders today.
-                Cloud-saved purchase order history is planned for a later update.
+                Create and export this purchase order draft. Saved PO history is
+                planned for later.
               </div>
             </aside>
           </section>
@@ -1429,7 +1428,7 @@ export default function PurchaseOrdersPage() {
             )}
 
             <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
-              <div className="overflow-x-auto">
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full min-w-[760px] table-fixed text-left text-sm">
                   <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
                     <tr>
@@ -1482,6 +1481,65 @@ export default function PurchaseOrdersPage() {
                   </tbody>
                 </table>
               </div>
+              <div className="grid gap-2 p-3 md:hidden">
+                {lineDetails.map(({ line, quantity, unitCost, lineTotal }) => (
+                  <article
+                    key={line.id}
+                    className="rounded-2xl border border-theme bg-theme-inset p-3"
+                  >
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <h3 className="truncate font-black text-theme-primary">
+                          {line.name || "Unnamed custom line"}
+                        </h3>
+                        <p className="mt-1 truncate text-xs text-theme-muted">
+                          {[line.itemCode, line.sku ? `SKU ${line.sku}` : ""]
+                            .filter(Boolean)
+                            .join(" | ") || "Custom"}
+                        </p>
+                      </div>
+                      <span
+                        className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black ${
+                          quantity && quantity > 0
+                            ? "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
+                            : "border-amber-300/30 bg-amber-500/10 text-theme-warning"
+                        }`}
+                      >
+                        {quantity && quantity > 0 ? "Included" : "Draft only"}
+                      </span>
+                    </div>
+                    <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                      <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                        <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                          Qty
+                        </p>
+                        <p className="mt-1 font-black text-theme-primary">
+                          {quantity ?? "Invalid"}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                        <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                          Unit
+                        </p>
+                        <p className="mt-1 truncate font-black text-theme-primary">
+                          {line.unitLabel}
+                        </p>
+                      </div>
+                      <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                        <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                          Total
+                        </p>
+                        <p className="mt-1 truncate font-black text-theme-primary">
+                          {formatMoney(lineTotal, currencyCode)}
+                        </p>
+                      </div>
+                    </div>
+                    <p className="mt-3 text-xs font-semibold text-theme-muted">
+                      Unit cost {formatMoney(unitCost, currencyCode)}
+                    </p>
+                  </article>
+                ))}
+              </div>
             </section>
           </section>
         ) : (
@@ -1527,9 +1585,8 @@ export default function PurchaseOrdersPage() {
               )}
 
               <div className="mt-4 rounded-xl border border-theme bg-theme-inset p-4 text-sm font-semibold leading-6 text-theme-secondary">
-                Save draft, mark ready, and mark sent stay inside this device
-                draft for now. Export before closing the tab. Receiving stock
-                must be finalized separately to record stock-in movements.
+                This draft stays on this device. Export before closing. Receive
+                stock separately when it arrives.
               </div>
             </div>
 

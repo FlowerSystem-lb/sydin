@@ -940,7 +940,7 @@ export default function ReceivingPage() {
   ];
 
   return (
-    <main>
+    <main className="operations-workspace operations-receiving">
       <div
         className={`mx-auto flex w-full max-w-[1500px] flex-col gap-4 ${
           step === "receive" || step === "review" ? "pb-28 sm:pb-0" : ""
@@ -960,7 +960,7 @@ export default function ReceivingPage() {
                 manual restocks. Inventory changes after receiving is finalized.
               </p>
             </div>
-            <div className="grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
+            <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
               {stepItems.map((item, index) => (
                 <div
                   key={item.id}
@@ -1004,9 +1004,8 @@ export default function ReceivingPage() {
           <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
               <div className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 px-4 py-3 text-sm text-theme-accent">
-                Receiving drafts are saved in this browser for now. Finalizing
-                will record stock-in movements and update inventory through the
-                existing stock movement workflow.
+                Draft saved on this device. Finalizing records stock-in
+                movements and updates inventory.
               </div>
               {draftRestored && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-theme-warning">
@@ -1154,8 +1153,7 @@ export default function ReceivingPage() {
                 </div>
               </div>
               <p className="text-xs leading-5 text-theme-muted">
-                Receiving history is tracked through Stock Movements today.
-                Cloud-saved receiving sessions are planned for a later update.
+                Receiving history is tracked through Stock Movements.
               </p>
               {details.source === "purchase_order_draft" &&
                 (poDraftLines.length > 0 ? (
@@ -1688,7 +1686,8 @@ export default function ReceivingPage() {
                 </p>
               </div>
               {receivedLineDetails.length > 0 ? (
-                <div className="overflow-x-auto">
+                <>
+                <div className="hidden overflow-x-auto md:block">
                   <table className="min-w-[840px] w-full table-fixed text-left text-sm">
                     <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
                       <tr>
@@ -1745,6 +1744,68 @@ export default function ReceivingPage() {
                     </tbody>
                   </table>
                 </div>
+                <div className="grid gap-2 p-3 md:hidden">
+                  {receivedLineDetails.map((detail) => {
+                    const item = detail.item;
+                    if (!item || detail.received === null) return null;
+                    const currentQuantity = Number(item.quantity || 0);
+                    const resultingQuantity = currentQuantity + detail.received;
+
+                    return (
+                      <article
+                        key={detail.line.id}
+                        className="rounded-2xl border border-theme bg-theme-inset p-3"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="min-w-0">
+                            <h3 className="truncate font-black text-theme-primary">
+                              {item.name}
+                            </h3>
+                            <p className="mt-1 truncate text-xs text-theme-muted">
+                              {item.item_code || item.sku || "Inventory item"}
+                            </p>
+                          </div>
+                          <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-black text-theme-success">
+                            +{formatNumber(detail.received)}
+                          </span>
+                        </div>
+                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
+                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                              Current
+                            </p>
+                            <p className="mt-1 font-black text-theme-primary">
+                              {formatNumber(currentQuantity)}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                              Result
+                            </p>
+                            <p className="mt-1 font-black text-theme-primary">
+                              {formatNumber(resultingQuantity)}
+                            </p>
+                          </div>
+                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
+                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                              Unit
+                            </p>
+                            <p className="mt-1 truncate font-black text-theme-primary">
+                              {getInventoryUnitLabel(
+                                item.unit_type,
+                                item.custom_unit_label
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="mt-3 text-xs font-semibold text-theme-muted">
+                          {getDepotLabel(item)} | {detail.line.note || "Receiving"}
+                        </p>
+                      </article>
+                    );
+                  })}
+                </div>
+                </>
               ) : (
                 <div className="px-5 py-12 text-center">
                   <UiIcon

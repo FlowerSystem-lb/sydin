@@ -613,7 +613,7 @@ export default function PickListDetailPage() {
   if (loading) {
     return (
       <div className="contents">
-        <main>
+        <main className="operations-workspace operations-pick-list-detail">
           <div className="mx-auto max-w-[1400px] space-y-6">
             <div className="glass-panel h-64 animate-pulse" />
             <div className="glass-card h-40 animate-pulse" />
@@ -627,7 +627,7 @@ export default function PickListDetailPage() {
   if (!detail) {
     return (
       <div className="contents">
-        <main>
+        <main className="operations-workspace operations-pick-list-detail">
           <section className="glass-panel mx-auto max-w-2xl p-7 text-center">
             <h1 className="text-3xl font-black">Pick List unavailable</h1>
             <p className="mt-3 leading-7 text-theme-muted">
@@ -648,7 +648,7 @@ export default function PickListDetailPage() {
 
   return (
     <div className="contents">
-      <main>
+      <main className="operations-workspace operations-pick-list-detail">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
@@ -1108,7 +1108,7 @@ export default function PickListDetailPage() {
       </main>
 
       {metadataOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+        <div className="operations-modal-overlay fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="glass-modal my-8 w-full max-w-2xl p-5 sm:p-7">
             <form onSubmit={handleMetadataSave}>
               <div className="flex items-start justify-between gap-4">
@@ -1225,7 +1225,7 @@ export default function PickListDetailPage() {
       )}
 
       {addOpen && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+        <div className="operations-modal-overlay fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="glass-modal my-8 max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-y-auto p-5 sm:p-7">
             <div className="flex items-start justify-between gap-4">
               <div>
@@ -1399,7 +1399,7 @@ export default function PickListDetailPage() {
       )}
 
       {cancelOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
+        <div className="operations-modal-overlay fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
@@ -1439,7 +1439,7 @@ export default function PickListDetailPage() {
       )}
 
       {pendingRemove && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
+        <div className="operations-modal-overlay fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
@@ -1482,7 +1482,7 @@ export default function PickListDetailPage() {
       )}
 
       {completeOpen && (
-        <div className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+        <div className="operations-modal-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"
