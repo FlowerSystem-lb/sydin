@@ -79,12 +79,12 @@ const STATUS_OPTIONS = [
   { value: "draft", label: "Draft" },
   {
     value: "ready",
-    label: "Ready to send - needs saved PO storage",
+    label: "Ready to send",
     disabled: true,
   },
   {
     value: "sent",
-    label: "Sent - needs saved PO storage",
+    label: "Sent",
     disabled: true,
   },
 ];
@@ -968,13 +968,11 @@ export default function PurchaseOrdersPage() {
                 </div>
               ) : (
                 <p className="mt-3 text-sm leading-6 text-theme-muted">
-                  No saved suppliers loaded. Use free text for this device
-                  draft.
+                  No saved suppliers yet. Enter supplier details manually.
                 </p>
               )}
               <div className="mt-4 rounded-xl border border-theme bg-theme-surface p-3 text-xs font-semibold leading-5 text-theme-secondary">
-                Create and export this purchase order draft. Saved PO history is
-                planned for later.
+                Create and export this purchase order draft when it is ready.
               </div>
             </aside>
           </section>
@@ -1737,7 +1735,7 @@ export default function PurchaseOrdersPage() {
         <DialogShell
           title="Clear purchase order draft?"
           eyebrow="Device draft"
-          description="This clears the draft saved in this browser. Inventory quantities and stock movements are not affected."
+          description="This clears the draft saved on this device. Inventory quantities and stock movements are not affected."
           tone="danger"
           onClose={() => setConfirmClearDraft(false)}
           footer={

@@ -792,7 +792,7 @@ export default function PickListDetailPage() {
               <p className="mt-2 leading-7 text-theme-muted">
                 {detail.status === "completed"
                   ? detail.completion_stock_action === "deducted"
-                    ? "It was completed and inventory stock was deducted atomically."
+                    ? "It was completed and inventory stock was deducted."
                     : "It was completed without changing inventory stock."
                   : "It was cancelled without changing inventory stock."}
               </p>
@@ -1501,8 +1501,8 @@ export default function PickListDetailPage() {
                   Complete Pick List
                 </h2>
                 <p className="mt-2 text-sm leading-6 text-theme-muted">
-                  Completion is permanent. In this v1, completion marks
-                  operational progress only and does not deduct inventory.
+                  Completion is permanent. This marks the list prepared and
+                  keeps inventory quantities unchanged.
                 </p>
               </div>
               <ModalCloseButton
@@ -1518,8 +1518,7 @@ export default function PickListDetailPage() {
                 </p>
                 <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Close the Pick List as prepared while leaving inventory
-                  quantities unchanged. Stock deduction after picking is a
-                  future workflow and is intentionally unavailable here.
+                  quantities unchanged.
                 </p>
             </div>
 
@@ -1572,8 +1571,8 @@ export default function PickListDetailPage() {
             {shortages.length > 0 && (
               <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-theme-warning">
                 {shortages.length} line{shortages.length === 1 ? "" : "s"}{" "}
-                has a current stock shortage. You can still complete this v1
-                pick list because inventory quantities are not deducted.
+                has a current stock shortage. You can still complete this pick
+                list because inventory quantities are not deducted.
               </div>
             )}
 

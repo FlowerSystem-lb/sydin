@@ -1931,7 +1931,7 @@ export default function ReceivingPage() {
         <DialogShell
           title="Clear receiving draft?"
           eyebrow="Device draft"
-          description="This clears the receiving draft saved in this browser. Finalized stock movements are not affected."
+          description="This clears the receiving draft saved on this device. Finalized stock movements are not affected."
           tone="danger"
           onClose={() => setConfirmClearDraft(false)}
           footer={

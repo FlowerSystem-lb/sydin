@@ -4296,6 +4296,11 @@ select.glass-input option {
     backdrop-filter: none;
   }
 
+  .dashboard-shell-content:has(.operations-workspace) {
+    padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+  }
+
   .dashboard-shell:has(.operations-modal-overlay)
     :is(.dashboard-mobile-nav, .dashboard-mobile-nav *, .dashboard-account-area),
   .dashboard-shell:has(.ui-overlay)
@@ -4364,10 +4369,29 @@ select.glass-input option {
     padding: 0.9rem;
   }
 
+  .operations-modal-overlay :is(h1, h2) {
+    font-size: 1.2rem;
+    line-height: 1.35rem;
+  }
+
+  .operations-modal-overlay [class~="text-3xl"] {
+    font-size: 1.2rem;
+    line-height: 1.35rem;
+  }
+
   .operations-workspace > div,
   .operations-workspace .po-screen-only {
     gap: 0.65rem;
-    padding-bottom: 0.75rem;
+  }
+
+  .operations-workspace {
+    padding-bottom: calc(1.25rem + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(8rem + env(safe-area-inset-bottom));
+  }
+
+  .operations-workspace > div,
+  .operations-workspace .po-screen-only {
+    scroll-padding-bottom: calc(7.75rem + env(safe-area-inset-bottom));
   }
 
   .operations-workspace main,
@@ -4411,6 +4435,12 @@ select.glass-input option {
   .operations-workspace p[class*="leading-7"],
   .operations-workspace p[class*="leading-6"] {
     line-height: 1.35rem;
+  }
+
+  .operations-workspace [class~="py-16"],
+  .operations-workspace [class~="py-14"] {
+    padding-top: 2rem;
+    padding-bottom: 2rem;
   }
 
   .operations-workspace .operations-step-strip {
@@ -4491,6 +4521,11 @@ select.glass-input option {
     width: min(72%, 10.5rem);
   }
 
+  .operations-qr-center [class*="overflow-y-auto"] {
+    padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+    scroll-padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
+  }
+
   .operations-stock-movements article {
     padding: 0.75rem;
   }
@@ -4519,6 +4554,15 @@ select.glass-input option {
 
   .operations-pick-lists a.glass-card {
     min-height: auto;
+  }
+
+  .operations-pick-lists [class~="min-h-72"] {
+    min-height: auto;
+  }
+
+  .operations-pick-lists [class~="h-72"],
+  .operations-pick-list-detail [class~="h-72"] {
+    height: 8rem;
   }
 
   .operations-pick-lists a.glass-card h2,

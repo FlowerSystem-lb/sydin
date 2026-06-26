@@ -1481,7 +1481,7 @@ export default function StockCountsPage() {
         <DialogShell
           title="Clear stock count draft?"
           eyebrow="Device draft"
-          description="This clears the stock count draft saved in this browser. Finalized stock movements are not affected."
+          description="This clears the stock count draft saved on this device. Finalized stock movements are not affected."
           tone="danger"
           onClose={() => setConfirmClearDraft(false)}
           footer={
