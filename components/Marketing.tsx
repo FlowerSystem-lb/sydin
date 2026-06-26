@@ -1,7 +1,7 @@
 import Link from "next/link";
+import Image from "next/image";
 import SydINMark from "@/components/brand/SydINMark";
 import PlanCtaLink from "@/components/PlanCtaLink";
-import Wordmark from "@/components/Wordmark";
 import Reveal from "@/components/Reveal";
 import UiIcon from "@/components/UiIcon";
 import {
@@ -107,8 +107,14 @@ export function MarketingLogo() {
       className="marketing-logo flex min-w-0 items-center gap-2.5"
       aria-label="SydIN home"
     >
-      <SydINMark size="md" />
-      <Wordmark size="sm" variant="light-background" />
+      <Image
+        src="/brand/sydin-logo.svg"
+        alt=""
+        width={132}
+        height={40}
+        priority
+        className="marketing-logo-image object-contain"
+      />
     </Link>
   );
 }

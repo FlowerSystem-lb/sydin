@@ -1,7 +1,6 @@
 import Link from "next/link";
+import Image from "next/image";
 import SydINLoginVisual from "@/components/auth/SydINLoginVisual";
-import SydINMark from "@/components/brand/SydINMark";
-import Wordmark from "@/components/Wordmark";
 import UiIcon from "@/components/UiIcon";
 
 export default function AuthPageShell({
@@ -15,8 +14,14 @@ export default function AuthPageShell({
         <div className="login-auth-inner">
           <header className="login-auth-header">
             <Link href="/" className="login-brand" aria-label="SydIN home">
-              <SydINMark size="md" />
-              <Wordmark size="md" variant="light-background" />
+              <Image
+                src="/brand/sydin-logo.svg"
+                alt=""
+                width={150}
+                height={46}
+                priority
+                className="login-brand-logo object-contain"
+              />
             </Link>
 
             <Link href="/" className="login-back-link">

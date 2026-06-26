@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import SydINMark from "@/components/brand/SydINMark";
-import SydINWordmark from "@/components/brand/SydINWordmark";
 import GlobalSearchDialog from "@/components/dashboard/GlobalSearchDialog";
 import UiIcon from "@/components/UiIcon";
 import {
@@ -450,10 +449,21 @@ export default function DashboardShell({
             className="dashboard-brand-link"
             aria-label="SydIN dashboard"
           >
-            <SydINMark size="md" />
-            <SydINWordmark
-              size="sm"
-              className="dashboard-sidebar-wordmark"
+            <Image
+              src="/brand/sydin-mark.svg"
+              alt=""
+              width={40}
+              height={40}
+              priority
+              className="dashboard-brand-mark object-contain"
+            />
+            <Image
+              src="/brand/sydin-logo.svg"
+              alt=""
+              width={132}
+              height={40}
+              priority
+              className="dashboard-brand-logo object-contain"
             />
           </Link>
           <IconButton
@@ -587,7 +597,14 @@ export default function DashboardShell({
 
       <header className="dashboard-mobile-header glass-navigation">
         <Link href="/dashboard" aria-label="SydIN home">
-          <SydINMark size="md" />
+          <Image
+            src="/brand/sydin-mark.svg"
+            alt=""
+            width={34}
+            height={34}
+            priority
+            className="dashboard-mobile-brand-mark object-contain"
+          />
         </Link>
         <p className="sr-only">
           {currentPage.shortLabel}

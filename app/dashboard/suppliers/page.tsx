@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import UiIcon from "@/components/UiIcon";
 import {
   createSupplier,
   deleteSupplier,
@@ -38,8 +39,24 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
+type SupplierFilter =
+  | "all"
+  | "with-contact"
+  | "missing-contact"
+  | "has-items"
+  | "no-items";
+
 const inputClassName =
   "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sky-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)] disabled:opacity-60";
+
+function hasSupplierContact(supplier: Supplier) {
+  return Boolean(
+    supplier.contact_name?.trim() ||
+      supplier.phone?.trim() ||
+      supplier.whatsapp?.trim() ||
+      supplier.email?.trim()
+  );
+}
 
 function SupplierForm({
   title,
@@ -230,6 +247,7 @@ export default function SuppliersPage() {
   const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
   const [userId, setUserId] = useState("");
   const [search, setSearch] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState<SupplierFilter>("all");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -317,24 +335,64 @@ export default function SuppliersPage() {
 
   const visibleSuppliers = useMemo(() => {
     const normalizedSearch = search.trim().toLowerCase();
+    return suppliers.filter((supplier) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        [
+          supplier.name,
+          supplier.contact_name,
+          supplier.phone,
+          supplier.whatsapp,
+          supplier.email,
+          supplier.notes,
+        ]
+          .filter(Boolean)
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedSearch);
+      const hasContact = hasSupplierContact(supplier);
+      const itemCount = supplier.item_count || 0;
+      const matchesFilter =
+        supplierFilter === "all" ||
+        (supplierFilter === "with-contact" && hasContact) ||
+        (supplierFilter === "missing-contact" && !hasContact) ||
+        (supplierFilter === "has-items" && itemCount > 0) ||
+        (supplierFilter === "no-items" && itemCount === 0);
 
-    if (!normalizedSearch) return suppliers;
+      return matchesSearch && matchesFilter;
+    });
+  }, [search, supplierFilter, suppliers]);
 
-    return suppliers.filter((supplier) =>
-      [
-        supplier.name,
-        supplier.contact_name,
-        supplier.phone,
-        supplier.whatsapp,
-        supplier.email,
-        supplier.notes,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(normalizedSearch)
-    );
-  }, [search, suppliers]);
+  const supplierFilters: {
+    value: SupplierFilter;
+    label: string;
+    count: number;
+  }[] = [
+    { value: "all", label: "All", count: suppliers.length },
+    {
+      value: "with-contact",
+      label: "With contact",
+      count: suppliers.filter(hasSupplierContact).length,
+    },
+    {
+      value: "missing-contact",
+      label: "Missing contact",
+      count: suppliers.filter((supplier) => !hasSupplierContact(supplier))
+        .length,
+    },
+    {
+      value: "has-items",
+      label: "Has items",
+      count: suppliers.filter((supplier) => (supplier.item_count || 0) > 0)
+        .length,
+    },
+    {
+      value: "no-items",
+      label: "No items",
+      count: suppliers.filter((supplier) => (supplier.item_count || 0) === 0)
+        .length,
+    },
+  ];
 
   const openCreateForm = () => {
     setEditingSupplier(null);
@@ -439,7 +497,7 @@ export default function SuppliersPage() {
 
   return (
     <div className="contents">
-      <main>
+      <main className="organize-workspace organize-suppliers">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
           <section className="glass-panel p-5 sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -454,10 +512,10 @@ export default function SuppliersPage() {
                   Keep vendor contacts organized and connect them to inventory when useful.
                 </p>
               </div>
-              <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="organize-page-actions flex flex-col gap-3 sm:flex-row">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 text-center font-bold text-theme-primary transition hover:bg-theme-hover"
+                  className="organize-inventory-link rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 text-center font-bold text-theme-primary transition hover:bg-theme-hover"
                 >
                   Inventory
                 </Link>
@@ -497,7 +555,7 @@ export default function SuppliersPage() {
             />
           )}
 
-          <section className="glass-card p-4 sm:p-5">
+          <section className="organize-search-card glass-card p-4 sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex-1">
                 <label className="mb-2 block text-sm font-semibold text-theme-muted">
@@ -507,13 +565,33 @@ export default function SuppliersPage() {
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Name, contact, phone, WhatsApp, email, or notes"
+                  placeholder="Search suppliers"
                   className={inputClassName}
                 />
               </div>
               <p className="rounded-2xl border border-theme bg-theme-inset px-4 py-3 text-sm font-bold text-theme-secondary">
                 {suppliers.length} / {supplierLimit} suppliers
               </p>
+            </div>
+            <div
+              className="organize-chip-strip mt-4"
+              role="group"
+              aria-label="Supplier filters"
+            >
+              {supplierFilters.map((filter) => (
+                <button
+                  key={filter.value}
+                  type="button"
+                  aria-pressed={supplierFilter === filter.value}
+                  onClick={() => setSupplierFilter(filter.value)}
+                  className={`organize-chip ${
+                    supplierFilter === filter.value ? "organize-chip-active" : ""
+                  }`}
+                >
+                  <span>{filter.label}</span>
+                  <span>{filter.count}</span>
+                </button>
+              ))}
             </div>
           </section>
 
@@ -524,14 +602,17 @@ export default function SuppliersPage() {
               ))}
             </div>
           ) : visibleSuppliers.length > 0 ? (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <div className="organize-list-grid grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visibleSuppliers.map((supplier) => {
                 const whatsappHref = supplier.whatsapp
                   ? getWhatsAppHref(supplier.whatsapp)
                   : "";
 
                 return (
-                  <article key={supplier.id} className="glass-card flex flex-col p-5 sm:p-6">
+                  <article
+                    key={supplier.id}
+                    className="organize-row organize-supplier-row glass-card flex flex-col p-5 sm:p-6"
+                  >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
                         <h2 className="break-words text-2xl font-black text-theme-primary">
@@ -546,7 +627,7 @@ export default function SuppliersPage() {
                       </span>
                     </div>
 
-                    <div className="mt-5 flex flex-wrap gap-2">
+                    <div className="organize-row-meta mt-5 flex flex-wrap gap-2">
                       {supplier.phone && (
                         <span className="rounded-full border border-theme bg-theme-surface px-3 py-1.5 text-xs font-semibold text-theme-secondary">
                           {supplier.phone}
@@ -573,7 +654,7 @@ export default function SuppliersPage() {
                       </div>
                     )}
 
-                    <div className="mt-auto pt-6">
+                    <div className="organize-row-actions mt-auto pt-6">
                       <div className="grid grid-cols-3 gap-2">
                         <a
                           href={supplier.phone ? `tel:${supplier.phone}` : undefined}
@@ -612,7 +693,7 @@ export default function SuppliersPage() {
                         </a>
                       </div>
 
-                      <div className="mt-3 grid grid-cols-2 gap-3">
+                      <div className="organize-desktop-actions mt-3 grid grid-cols-2 gap-3">
                         <button
                           type="button"
                           onClick={() => openEditForm(supplier)}
@@ -628,6 +709,26 @@ export default function SuppliersPage() {
                           Delete
                         </button>
                       </div>
+                      <details className="organize-action-menu organize-mobile-actions mt-2">
+                        <summary aria-label={`More actions for ${supplier.name}`}>
+                          <UiIcon name="more" className="h-4 w-4" />
+                        </summary>
+                        <div>
+                          <button
+                            type="button"
+                            onClick={() => openEditForm(supplier)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setPendingDelete(supplier)}
+                            className="organize-danger-action"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </details>
                     </div>
                   </article>
                 );
@@ -658,7 +759,7 @@ export default function SuppliersPage() {
       </main>
 
       {formOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+        <div className="organize-modal-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
           <div className="glass-modal my-6 max-h-[calc(100vh-2rem)] w-full overflow-y-auto p-5 sm:p-7">
             <SupplierForm
               title={editingSupplier ? "Edit Supplier" : "Add Supplier"}
@@ -677,7 +778,7 @@ export default function SuppliersPage() {
       )}
 
       {pendingDelete && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
+        <div className="organize-modal-overlay fixed inset-0 z-[60] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"

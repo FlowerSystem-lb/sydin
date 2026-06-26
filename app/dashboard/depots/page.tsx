@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import UiIcon from "@/components/UiIcon";
 import {
   createDepot,
   deleteDepot,
@@ -26,8 +27,11 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
+type DepotFilter = "all" | "active" | "inactive" | "missing-code";
+
 export default function DepotsPage() {
   const [depots, setDepots] = useState<Depot[]>([]);
+  const [depotFilter, setDepotFilter] = useState<DepotFilter>("all");
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -134,6 +138,35 @@ export default function DepotsPage() {
   );
   const reachedDepotLimit = depots.length >= depotLimit;
   const requiredPlan = getUpgradePlanForDepotLimit(currentPlan);
+  const visibleDepots = useMemo(
+    () =>
+      depots.filter(
+        (depot) =>
+          depotFilter === "all" ||
+          (depotFilter === "active" && depot.is_active) ||
+          (depotFilter === "inactive" && !depot.is_active) ||
+          (depotFilter === "missing-code" && !depot.code?.trim())
+      ),
+    [depotFilter, depots]
+  );
+  const depotFilters: { value: DepotFilter; label: string; count: number }[] = [
+    { value: "all", label: "All", count: depots.length },
+    {
+      value: "active",
+      label: "Active",
+      count: depots.filter((depot) => depot.is_active).length,
+    },
+    {
+      value: "inactive",
+      label: "Inactive",
+      count: depots.filter((depot) => !depot.is_active).length,
+    },
+    {
+      value: "missing-code",
+      label: "Missing code",
+      count: depots.filter((depot) => !depot.code?.trim()).length,
+    },
+  ];
 
   const handleCreateDepot = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -285,7 +318,7 @@ export default function DepotsPage() {
 
   return (
     <div className="contents">
-      <main>
+      <main className="organize-workspace organize-depots">
         <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-8">
           <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
             <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
@@ -305,7 +338,7 @@ export default function DepotsPage() {
 
               <Link
                 href="/dashboard/inventory"
-                className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
+                className="organize-inventory-link rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 Back to Inventory
               </Link>
@@ -328,7 +361,7 @@ export default function DepotsPage() {
             <form
               onSubmit={handleCreateDepot}
               aria-busy={saving}
-              className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7"
+              className="organize-depot-form rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7"
             >
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                 New depot
@@ -424,7 +457,7 @@ export default function DepotsPage() {
               )}
             </form>
 
-            <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7">
+            <section className="organize-depot-list-panel rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
@@ -440,6 +473,28 @@ export default function DepotsPage() {
                   {depots.length} {depots.length === 1 ? "depot" : "depots"}
                 </span>
               </div>
+              <div
+                className="organize-chip-strip mt-4"
+                role="group"
+                aria-label="Depot filters"
+              >
+                {depotFilters.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    aria-pressed={depotFilter === filter.value}
+                    onClick={() => setDepotFilter(filter.value)}
+                    className={`organize-chip ${
+                      depotFilter === filter.value
+                        ? "organize-chip-active"
+                        : ""
+                    }`}
+                  >
+                    <span>{filter.label}</span>
+                    <span>{filter.count}</span>
+                  </button>
+                ))}
+              </div>
 
               {loading ? (
                 <div className="mt-6 grid grid-cols-1 gap-4">
@@ -452,12 +507,12 @@ export default function DepotsPage() {
                     </div>
                   ))}
                 </div>
-              ) : depots.length > 0 ? (
-                <div className="mt-6 grid grid-cols-1 gap-4">
-                  {depots.map((depot) => (
+              ) : visibleDepots.length > 0 ? (
+                <div className="organize-list-grid mt-6 grid grid-cols-1 gap-4">
+                  {visibleDepots.map((depot) => (
                     <div
                       key={depot.id}
-                      className="rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
+                      className="organize-row organize-depot-row relative rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
                     >
                       {editingId === depot.id ? (
                         <form
@@ -573,7 +628,7 @@ export default function DepotsPage() {
                             </p>
                           </div>
 
-                          <div className="flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
+                          <div className="organize-row-actions organize-desktop-actions flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
                             <button
                               type="button"
                               onClick={() => startEditing(depot)}
@@ -591,6 +646,27 @@ export default function DepotsPage() {
                               {deletingId === depot.id ? "Deleting..." : "Delete"}
                             </button>
                           </div>
+                          <details className="organize-action-menu organize-mobile-actions">
+                            <summary aria-label={`More actions for ${formatDepotLabel(depot)}`}>
+                              <UiIcon name="more" className="h-4 w-4" />
+                            </summary>
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => startEditing(depot)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setPendingDeleteDepot(depot)}
+                                disabled={deletingId === depot.id}
+                                className="organize-danger-action"
+                              >
+                                {deletingId === depot.id ? "Deleting..." : "Delete"}
+                              </button>
+                            </div>
+                          </details>
                         </div>
                       )}
                     </div>
@@ -603,11 +679,13 @@ export default function DepotsPage() {
                   </div>
 
                   <h3 className="mt-5 text-2xl font-bold text-theme-primary">
-                    No depots yet
+                    {depots.length === 0 ? "No depots yet" : "No depots found"}
                   </h3>
 
                   <p className="mx-auto mt-2 max-w-md text-base leading-7 text-theme-muted">
-                    Add your first location to assign inventory items to a depot.
+                    {depots.length === 0
+                      ? "Add your first location to assign inventory items to a depot."
+                      : "Try another location filter."}
                   </p>
                 </div>
               )}
@@ -617,7 +695,7 @@ export default function DepotsPage() {
       </main>
 
       {pendingDeleteDepot && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
+        <div className="organize-modal-overlay fixed inset-0 z-50 flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div
             role="dialog"
             aria-modal="true"

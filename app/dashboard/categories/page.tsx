@@ -894,7 +894,7 @@ export default function CategoriesPage() {
   );
 
   return (
-    <main className="min-w-0">
+    <main className="organize-workspace organize-categories min-w-0">
       <div className="mx-auto w-full max-w-[1600px]">
         {(pageError || pageNotice) && (
           <div
@@ -932,13 +932,13 @@ export default function CategoriesPage() {
           </div>
         )}
 
-        <div className="overflow-hidden rounded-[24px] border border-theme bg-theme-surface shadow-[0_18px_60px_rgba(15,23,42,0.08)] lg:grid lg:min-h-[calc(100vh-8rem)] lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <div className="organize-category-shell overflow-hidden rounded-[24px] border border-theme bg-theme-surface shadow-[0_18px_60px_rgba(15,23,42,0.08)] lg:grid lg:min-h-[calc(100vh-8rem)] lg:grid-cols-[19rem_minmax(0,1fr)]">
           <aside
-            className={`border-theme bg-theme-inset lg:border-r ${
+            className={`organize-sidebar border-theme bg-theme-inset lg:border-r ${
               mobileDetailOpen ? "hidden lg:flex" : "flex"
             } min-h-[calc(100vh-8rem)] flex-col`}
           >
-            <div className="border-b border-theme p-4">
+            <div className="organize-sidebar-header border-b border-theme p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-[0.16em] text-theme-accent">
@@ -975,11 +975,11 @@ export default function CategoriesPage() {
               </label>
             </div>
 
-            <div className="border-b border-theme p-3">
+            <div className="organize-filter-panel border-b border-theme p-3">
               <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-[0.16em] text-theme-subtle">
                 Smart filters
               </p>
-              <div className="grid gap-1">
+              <div className="organize-category-filter-strip grid gap-1">
                 {smartFilters.map((filter) => {
                   const selected = selection.type === filter.type;
                   return (
@@ -989,7 +989,7 @@ export default function CategoriesPage() {
                       onClick={() =>
                         setWorkspaceSelection({ type: filter.type } as WorkspaceSelection)
                       }
-                      className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/15 ${
+                      className={`organize-filter-chip flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/15 ${
                         selected
                           ? "bg-indigo-500/12 text-theme-primary ring-1 ring-indigo-300/30"
                           : "text-theme-secondary hover:bg-theme-hover"
@@ -1041,7 +1041,7 @@ export default function CategoriesPage() {
                     return (
                       <div
                         key={category.id}
-                        className={`group flex items-center gap-1 rounded-xl pr-1 transition ${
+                        className={`organize-row organize-category-row group flex items-center gap-1 rounded-xl pr-1 transition ${
                           selected
                             ? "bg-indigo-500/12 ring-1 ring-indigo-300/30"
                             : "hover:bg-theme-hover"
@@ -1127,9 +1127,11 @@ export default function CategoriesPage() {
           </aside>
 
           <section
-            className={`min-w-0 ${mobileDetailOpen ? "block" : "hidden lg:block"}`}
+            className={`organize-category-detail min-w-0 ${
+              mobileDetailOpen ? "block" : "hidden lg:block"
+            }`}
           >
-            <header className="border-b border-theme bg-theme-surface p-4 sm:p-5">
+            <header className="organize-detail-header border-b border-theme bg-theme-surface p-4 sm:p-5">
               <button
                 type="button"
                 onClick={() => setMobileDetailOpen(false)}
@@ -1138,6 +1140,9 @@ export default function CategoriesPage() {
                 <UiIcon name="chevron-left" className="h-4 w-4" />
                 Back to Categories
               </button>
+              <p className="organize-mobile-breadcrumb mb-2 hidden text-xs font-black uppercase tracking-[0.14em] text-theme-subtle lg:hidden">
+                Categories / {selectionTitle}
+              </p>
 
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="flex min-w-0 items-center gap-4">
@@ -1177,7 +1182,7 @@ export default function CategoriesPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
+                <div className="organize-detail-actions flex flex-wrap gap-2">
                   <Link
                     href={contextualAddItemHref}
                     className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white"
