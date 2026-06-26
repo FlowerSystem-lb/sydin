@@ -3658,6 +3658,65 @@ select.glass-input option {
   }
 }
 
+@media (max-width: 639px) {
+  .dashboard-mobile-header {
+    gap: 0.55rem;
+    min-height: 3.35rem;
+    padding-inline: 0.8rem;
+  }
+
+  .dashboard-mobile-header .ui-icon-button {
+    min-width: 2.45rem;
+    min-height: 2.45rem;
+    border-radius: 10px;
+  }
+
+  .dashboard-shell-content :is(.ui-button, .glass-button, .action-button) {
+    min-height: 2.45rem;
+    border-radius: 10px;
+    gap: 0.4rem;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.8125rem;
+    line-height: 1rem;
+  }
+
+  .dashboard-shell-content :is(.ui-button-sm, .ui-icon-button-sm) {
+    min-height: 2.25rem;
+  }
+
+  .dashboard-shell-content .ui-icon-button {
+    min-width: 2.45rem;
+    min-height: 2.45rem;
+  }
+
+  .dashboard-shell-content main > div > section:first-child > p[class*="uppercase"][class*="tracking"],
+  .dashboard-shell-content main > div > section:first-child > div > div:first-child > p[class*="uppercase"][class*="tracking"],
+  .dashboard-shell-content .glass-panel:first-child > div > div:first-child > p[class*="uppercase"][class*="tracking"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  .dashboard-shell-content main > div > section:first-child p[class*="leading-7"],
+  .dashboard-shell-content main > div > section:first-child p[class*="leading-6"],
+  .dashboard-shell-content .glass-panel:first-child p[class*="leading-7"],
+  .dashboard-shell-content .glass-panel:first-child p[class*="leading-6"] {
+    margin-top: 0.35rem;
+    font-size: 0.8125rem;
+    line-height: 1.2rem;
+  }
+
+  .dashboard-shell-content main > div > section:first-child h1,
+  .dashboard-shell-content .glass-panel:first-child h1 {
+    margin-top: 0;
+    font-size: 1.45rem;
+    line-height: 1.1;
+  }
+}
+
 .inventory-filter-panel {
   border: 1px solid var(--border-divider);
   border-radius: 14px;
