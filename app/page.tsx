@@ -49,7 +49,7 @@ const workflow = [
 export default function Home() {
   return (
     <MarketingPage active="home">
-      <section className="marketing-hero px-4 pb-12 pt-16 sm:px-6 sm:pb-16 sm:pt-20 lg:px-8">
+      <section className="marketing-hero px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8">
         <div className="mx-auto w-full max-w-7xl">
           <Reveal className="mx-auto max-w-4xl text-center">
             <p className="marketing-hero-kicker">
@@ -70,7 +70,7 @@ export default function Home() {
             <CTAButtons align="center" />
           </Reveal>
 
-          <Reveal delay={120} className="mx-auto mt-12 max-w-6xl">
+          <Reveal delay={120} className="mx-auto mt-8 max-w-6xl sm:mt-10">
             <DashboardPreview />
           </Reveal>
         </div>
@@ -89,7 +89,7 @@ export default function Home() {
         </Reveal>
       </section>
 
-      <section className="px-4 py-20 sm:px-6 lg:px-8">
+      <section className="px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
         <SectionIntro
           eyebrow="Made for daily operations"
           title="The essentials are easy to find and easy to use."

@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
-import { useTheme } from "@/components/ThemeProvider";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
@@ -34,7 +33,6 @@ import {
   getUserSubscription,
   type UserSubscription,
 } from "@/app/lib/subscription";
-import type { ThemePreference } from "@/app/lib/theme";
 
 type SettingsSectionId =
   | "workspace"
@@ -65,7 +63,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "profile",
     label: "Profile",
-    description: "Signed-in account and appearance",
+    description: "Signed-in account and workspace style",
     icon: "settings",
   },
   {
@@ -122,68 +120,11 @@ const SECTION_IDS = new Set<SettingsSectionId>(
   SETTINGS_SECTIONS.map((section) => section.id)
 );
 
-const THEME_OPTIONS: Array<{
-  value: ThemePreference;
-  label: string;
-  description: string;
-}> = [
-  {
-    value: "dark",
-    label: "Dark",
-    description: "SydIN's original deep blue workspace.",
-  },
-  {
-    value: "light",
-    label: "Light",
-    description: "A bright, refined liquid-glass workspace.",
-  },
-  {
-    value: "system",
-    label: "System",
-    description: "Match this device and update automatically.",
-  },
-];
-
 const inputClassName =
   "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 const valueTextClassName =
   "min-w-0 truncate text-sm font-black text-theme-primary";
 const mutedTextClassName = "min-w-0 text-xs leading-5 text-theme-muted";
-
-function ThemePreview({ theme }: { theme: ThemePreference }) {
-  const isLight = theme === "light";
-
-  return (
-    <div
-      aria-hidden="true"
-      className={`relative h-20 overflow-hidden rounded-xl border ${
-        isLight
-          ? "border-blue-200 bg-[#edf6ff]"
-          : theme === "dark"
-            ? "border-sky-300/20 bg-[#030817]"
-            : "border-theme bg-[linear-gradient(115deg,#030817_0_49%,#edf6ff_51%_100%)]"
-      }`}
-    >
-      <div
-        className={`absolute inset-x-2.5 top-2.5 h-2.5 rounded-full ${
-          isLight ? "bg-white/90" : "bg-white/10"
-        }`}
-      />
-      <div
-        className={`absolute bottom-2.5 left-2.5 top-7 w-1/4 rounded-lg ${
-          isLight ? "bg-blue-100" : "bg-sky-400/15"
-        }`}
-      />
-      <div
-        className={`absolute bottom-2.5 left-[34%] right-2.5 top-7 rounded-lg border ${
-          isLight
-            ? "border-blue-100 bg-white/80"
-            : "border-theme bg-theme-surface"
-        }`}
-      />
-    </div>
-  );
-}
 
 function getLogoExtension(fileName: string) {
   const extension = fileName.split(".").pop()?.toLowerCase();
@@ -365,7 +306,6 @@ function SaveBar({
 export default function SettingsPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { preference, resolvedTheme, setPreference } = useTheme();
   const [hashSection, setHashSection] = useState<SettingsSectionId | null>(
     () =>
       typeof window !== "undefined" &&
@@ -856,70 +796,40 @@ export default function SettingsPage() {
         <SectionHeader
           id="appearance-heading"
           eyebrow="Appearance"
-          title="Workspace theme"
-          description="Your choice applies immediately and stays on this device."
+          title="Light Liquid Glass workspace"
+          description="SydIN now uses one consistent light workspace across web, tablet, and mobile."
           action={
-            <p className="supporting-body font-semibold text-theme-muted">
-              Saved locally
-            </p>
+            <StatusChip tone="success">Active</StatusChip>
           }
         />
 
-        <fieldset className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
-          <legend className="sr-only">Dashboard appearance</legend>
-          {THEME_OPTIONS.map((option) => {
-            const selected = preference === option.value;
-
-            return (
-              <label
-                key={option.value}
-                className={`group cursor-pointer rounded-xl border p-3 transition ${
-                  selected
-                    ? "border-theme-strong bg-theme-selected shadow-[0_16px_45px_rgba(14,116,229,0.12)]"
-                    : "border-theme bg-theme-surface hover:border-theme-strong"
-                }`}
-              >
-                <input
-                  type="radio"
-                  name="appearance"
-                  value={option.value}
-                  checked={selected}
-                  onChange={() => setPreference(option.value)}
-                  className="peer sr-only"
-                />
-                <ThemePreview theme={option.value} />
-                <span className="mt-3 flex items-start gap-3">
-                  <span
-                    className={`mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border ${
-                      selected
-                        ? "border-sky-500 bg-sky-500"
-                        : "border-theme-strong bg-theme-inset"
-                    }`}
-                  >
-                    {selected && (
-                      <span className="h-2 w-2 rounded-full bg-white" />
-                    )}
-                  </span>
-                  <span>
-                    <span className="block font-bold text-theme-primary">
-                      {option.label}
-                    </span>
-                    <span className="mt-1 block text-sm leading-5 text-theme-muted">
-                      {option.description}
-                    </span>
-                    {option.value === "system" && (
-                      <span className="mt-2 block text-xs font-semibold text-sky-600">
-                        Currently using{" "}
-                        {resolvedTheme === "light" ? "Light" : "Dark"} from
-                        your device.
-                      </span>
-                    )}
-                  </span>
+        <div className="mt-4 grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
+          <div className="relative min-h-32 overflow-hidden rounded-xl border border-theme bg-[linear-gradient(135deg,rgba(255,255,255,0.94),rgba(235,247,255,0.76)_52%,rgba(245,241,255,0.72))] p-4 shadow-[0_18px_48px_rgba(30,64,175,0.1)]">
+            <div className="relative grid gap-3">
+              <div className="flex items-center justify-between gap-3">
+                <span className="h-2.5 w-28 rounded-full bg-white/80 shadow-inner" />
+                <span className="rounded-full border border-cyan-200 bg-white/70 px-2.5 py-1 text-xs font-black text-theme-accent">
+                  Light only
                 </span>
-              </label>
-            );
-          })}
-        </fieldset>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-3">
+                <span className="h-16 rounded-xl border border-white/80 bg-white/70 shadow-sm" />
+                <span className="h-16 rounded-xl border border-white/80 bg-white/60 shadow-sm" />
+                <span className="h-16 rounded-xl border border-white/80 bg-white/70 shadow-sm" />
+              </div>
+              <span className="h-12 rounded-xl border border-white/80 bg-white/72 shadow-sm" />
+            </div>
+          </div>
+          <div className="grid content-center gap-3 rounded-xl border border-theme bg-theme-inset p-4">
+            <p className="text-sm font-black text-theme-primary">
+              Dark and system switching are paused for this redesign pass.
+            </p>
+            <p className="text-sm leading-6 text-theme-muted">
+              Keeping one light visual system improves consistency for the
+              app shell, forms, tables, sheets, and mobile bottom navigation.
+            </p>
+          </div>
+        </div>
       </SectionCard>
     </div>
   );

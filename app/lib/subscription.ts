@@ -120,7 +120,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       "1 depot, 3 suppliers, 5 categories",
       "3 active Pick Lists",
       "Public QR item pages",
-      "Help Center and appearance settings",
+      "Help Center and light workspace",
     ],
     capabilities: {
       itemLimit: PLAN_ITEM_LIMITS.free,
@@ -342,7 +342,7 @@ export const PLAN_COMPARISON_ROWS = [
     values: PUBLIC_PLAN_ORDER.map(() => "Included"),
   },
   {
-    feature: "Dark, light, and system appearance",
+    feature: "Premium light workspace",
     values: PUBLIC_PLAN_ORDER.map(() => "Included"),
   },
 ];

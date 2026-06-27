@@ -506,7 +506,7 @@ export default function DashboardShell({
                   onClick={() => setAccountMenuOpen(false)}
                 >
                   <UiIcon name="appearance" className="h-4 w-4" />
-                  Appearance
+                  Workspace style
                 </Link>
                 <Link
                   href="/dashboard/settings"
