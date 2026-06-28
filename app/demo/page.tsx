@@ -15,7 +15,7 @@ const demoItems = [
     sku: "EVT-018",
     category: "Events",
     quantity: 14,
-    color: "from-indigo-200 via-sky-100 to-emerald-100",
+    color: "from-indigo-200 via-sky-100 to-cyan-100",
   },
   {
     name: "Ceramic planter",
@@ -29,7 +29,7 @@ const demoItems = [
     sku: "OPS-032",
     category: "Operations",
     quantity: 28,
-    color: "from-amber-100 via-slate-100 to-indigo-100",
+    color: "from-cyan-100 via-slate-100 to-indigo-100",
   },
 ];
 
@@ -45,7 +45,7 @@ export default function DemoPage() {
               </p>
 
               <h1 className="mt-4 text-5xl font-black tracking-tight sm:text-6xl">
-                See how SydIn turns item records into a visual workflow.
+                See how SydIN turns item records into a visual workflow.
               </h1>
 
               <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-400">
@@ -161,7 +161,7 @@ export default function DemoPage() {
           <div className="mx-auto mt-10 max-w-5xl rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-[0.9fr_1.1fr]">
               <div className="rounded-3xl bg-[#f4f0e8] p-5">
-                <div className="h-72 rounded-3xl bg-gradient-to-br from-indigo-200 via-fuchsia-100 to-emerald-100" />
+                <div className="h-72 rounded-3xl bg-gradient-to-br from-indigo-200 via-fuchsia-100 to-cyan-100" />
               </div>
 
               <div>

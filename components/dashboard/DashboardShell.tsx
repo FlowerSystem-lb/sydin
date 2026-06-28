@@ -52,9 +52,9 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 const DASHBOARD_TOP_TABS = [
   { label: "Overview", href: "/dashboard" },
   { label: "Activity", href: "/dashboard/stock-movements" },
-  { label: "Manage", href: "/dashboard/inventory" },
-  { label: "Program", href: "/dashboard/pick-lists" },
-  { label: "Account", href: "/dashboard/settings" },
+  { label: "Inventory", href: "/dashboard/inventory" },
+  { label: "Orders", href: "/dashboard/purchase-orders" },
+  { label: "Pick Lists", href: "/dashboard/pick-lists" },
   { label: "Reports", href: "/dashboard/reports" },
 ];
 
@@ -691,6 +691,15 @@ export default function DashboardShell({
             >
               <UiIcon name="search" className="h-5 w-5" />
             </button>
+            {quickAddVisible && (
+              <Link
+                href="/dashboard/add-item"
+                className="dashboard-top-primary-button"
+              >
+                <UiIcon name="plus" className="h-4 w-4" />
+                Add Item
+              </Link>
+            )}
             <button
               type="button"
               onClick={requestScanner}

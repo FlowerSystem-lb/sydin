@@ -31,8 +31,8 @@ export default function ContactPage() {
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <SectionIntro
           eyebrow="Contact"
-          title="Talk to the SydIn team."
-          text="Get help with early access, plan activation, inventory workflows, or questions about using SydIn for your business."
+          title="Talk to the SydIN team."
+          text="Get help with early access, plan activation, inventory workflows, or questions about using SydIN for your business."
         />
 
         <div className="mx-auto mt-10 grid max-w-6xl grid-cols-1 gap-5 lg:grid-cols-2">
@@ -85,7 +85,7 @@ export default function ContactPage() {
                 </h2>
 
                 <p className="mt-4 max-w-2xl text-base leading-7 text-slate-400">
-                  SydIn is in early access, with manual plan activation available for growing teams.
+                  SydIN is in early access, with manual plan activation available for growing teams.
                 </p>
               </div>
 

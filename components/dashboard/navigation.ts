@@ -56,15 +56,15 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     href: "/dashboard/pick-lists",
     icon: "picklists",
     section: "operations",
-    mobilePlacement: "primary",
+    mobilePlacement: "more",
   },
   {
     label: "Purchase Orders",
-    shortLabel: "POs",
+    shortLabel: "Orders",
     href: "/dashboard/purchase-orders",
     icon: "file",
     section: "operations",
-    mobilePlacement: "more",
+    mobilePlacement: "primary",
   },
   {
     label: "Receiving",

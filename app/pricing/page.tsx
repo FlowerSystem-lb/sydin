@@ -19,7 +19,7 @@ const faqs = [
   },
   {
     question: "Can I upload photos?",
-    answer: "Yes. SydIn supports product photo uploads so inventory is easier to recognize visually.",
+    answer: "Yes. SydIN supports product photo uploads so inventory is easier to recognize visually.",
   },
   {
     question: "Are payments active now?",
@@ -173,7 +173,7 @@ export default function PricingPage() {
         <SectionIntro
           eyebrow="FAQ"
           title="Common pricing questions."
-          text="A few simple answers for early SydIn customers."
+          text="A few simple answers for early SydIN customers."
         />
 
         <div className="mx-auto mt-10 grid max-w-5xl grid-cols-1 gap-4">

@@ -3,16 +3,16 @@ import Reveal from "@/components/Reveal";
 
 const termsSections = [
   {
-    title: "Use of SydIn",
-    text: "SydIn provides inventory software for businesses that need to manage product records, quantities, images, depots, QR item pages, exports, and related workspace settings.",
+    title: "Use of SydIN",
+    text: "SydIN provides inventory software for businesses that need to manage product records, quantities, images, depots, QR item pages, exports, and related workspace settings.",
   },
   {
     title: "User Responsibility",
-    text: "Users are responsible for the accuracy, legality, and maintenance of the inventory data they enter into SydIn, including product details, uploaded images, notes, quantities, depot assignments, and public item page content.",
+    text: "Users are responsible for the accuracy, legality, and maintenance of the inventory data they enter into SydIN, including product details, uploaded images, notes, quantities, depot assignments, and public item page content.",
   },
   {
     title: "Early Access Status",
-    text: "SydIn is currently an early access product. Features may be improved, adjusted, added, or removed as the service develops and customer needs become clearer.",
+    text: "SydIN is currently an early access product. Features may be improved, adjusted, added, or removed as the service develops and customer needs become clearer.",
   },
   {
     title: "Subscriptions and Manual Activation",
@@ -20,7 +20,7 @@ const termsSections = [
   },
   {
     title: "Service Changes",
-    text: "SydIn may change over time, including interface updates, plan changes, feature availability, limits, reports, exports, and operational workflows. The service may also require maintenance or temporary interruptions.",
+    text: "SydIN may change over time, including interface updates, plan changes, feature availability, limits, reports, exports, and operational workflows. The service may also require maintenance or temporary interruptions.",
   },
 ];
 
@@ -30,8 +30,8 @@ export default function TermsPage() {
       <section className="px-4 py-16 sm:px-6 lg:px-8">
         <SectionIntro
           eyebrow="Terms"
-          title="SydIn Terms of Use"
-          text="A plain-language early access overview for using SydIn."
+          title="SydIN Terms of Use"
+          text="A plain-language early access overview for using SydIN."
         />
 
         <Reveal>
@@ -64,7 +64,7 @@ export default function TermsPage() {
               </h2>
 
               <p className="mt-4 text-base leading-8 text-slate-400">
-                For terms or account questions, contact SydIn at support@sydin.app.
+                For terms or account questions, contact SydIN at support@sydin.app.
               </p>
             </article>
           </Reveal>

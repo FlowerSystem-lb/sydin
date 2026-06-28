@@ -53,7 +53,7 @@ function normalizePublicItem(data: unknown): PublicItem | null {
     image: item.image || "",
     sku: item.sku || "",
     created_at: item.created_at || null,
-    business_name: item.business_name || "SydIn",
+    business_name: item.business_name || "SydIN",
     business_logo_url: item.business_logo_url || "",
     contact_email: item.contact_email || "",
     contact_phone: item.contact_phone || "",
@@ -144,7 +144,7 @@ export default function PublicItemPage() {
     };
   }, [publicId]);
 
-  const businessName = item?.business_name || "SydIn";
+  const businessName = item?.business_name || "SydIN";
   const businessLogoUrl = item?.business_logo_url || "";
   const publicWebsite = getSafePublicWebsite(item?.contact_website);
   const hasContact =
@@ -184,7 +184,7 @@ export default function PublicItemPage() {
             </div>
 
             <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
-              Powered by SydIn
+              Powered by SydIN
             </p>
           </div>
         </header>
@@ -215,7 +215,7 @@ export default function PublicItemPage() {
               href="/"
               className="mt-6 inline-flex rounded-2xl bg-white px-5 py-3 font-bold text-black transition hover:bg-slate-200"
             >
-              Go to SydIn
+              Go to SydIN
             </Link>
           </section>
         )}

@@ -31,7 +31,7 @@ export default function FeaturesPage() {
               </h1>
 
               <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-400">
-                SydIn helps shops, florists, warehouses, and local businesses track products, stock, photos, and QR item pages from one simple workspace.
+                SydIN helps shops, florists, warehouses, and local businesses track products, stock, photos, and QR item pages from one simple workspace.
               </p>
 
               <CTAButtons />
