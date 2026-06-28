@@ -49,6 +49,15 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
+const DASHBOARD_TOP_TABS = [
+  { label: "Overview", href: "/dashboard" },
+  { label: "Activity", href: "/dashboard/stock-movements" },
+  { label: "Manage", href: "/dashboard/inventory" },
+  { label: "Program", href: "/dashboard/pick-lists" },
+  { label: "Account", href: "/dashboard/settings" },
+  { label: "Reports", href: "/dashboard/reports" },
+];
+
 function getDashboardPageContext(pathname: string, action?: string | null) {
   if (pathname === "/dashboard/add-item") {
     return {
@@ -142,8 +151,11 @@ function NavigationLink({
         compact && "dashboard-nav-link-compact"
       )}
     >
-      <UiIcon name={item.icon} className="h-5 w-5 shrink-0" />
+      <span className="dashboard-nav-icon" aria-hidden="true">
+        <UiIcon name={item.icon} className="h-5 w-5" />
+      </span>
       <span className="dashboard-nav-label">{item.label}</span>
+      <span className="dashboard-nav-active-mark" aria-hidden="true" />
       <span className="dashboard-nav-tooltip" role="tooltip">
         {item.label}
       </span>
@@ -480,8 +492,23 @@ export default function DashboardShell({
           />
         </div>
 
+        <div className="dashboard-sidebar-workspace" aria-label="Current workspace">
+          <AccountAvatar
+            logoUrl={businessSettings.business_logo_url}
+            businessName={businessSettings.business_name}
+            size="sm"
+          />
+          <div className="dashboard-sidebar-workspace-copy">
+            <span>Workspace</span>
+            <strong>{businessSettings.business_name}</strong>
+            <small>
+              {planName} plan - {usagePercent}% used
+            </small>
+          </div>
+        </div>
+
         <div className="dashboard-sidebar-scroll">
-          <NavigationGroups pathname={pathname} compact={effectiveCollapsed} />
+          <NavigationGroups pathname={pathname} compact />
         </div>
 
         <div
@@ -632,53 +659,72 @@ export default function DashboardShell({
         )}
       </header>
 
-      <div className="dashboard-desktop-toolbar">
-        <div className="min-w-0">
-          <p className="truncate text-sm font-bold text-[var(--text-primary)]">
-            {currentPage.label}
-          </p>
-          <p className="truncate text-xs text-[var(--text-subtle)]">
-            {businessSettings.business_name}
-          </p>
-        </div>
-        <button
-          ref={desktopSearchTriggerRef}
-          type="button"
-          onClick={(event) => openGlobalSearch(event.currentTarget)}
-          className="hidden min-h-10 min-w-[22rem] max-w-[32rem] flex-1 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 text-sm font-semibold text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/15 xl:flex"
-          aria-label="Open global search"
-        >
-          <span className="flex min-w-0 items-center gap-2">
-            <UiIcon name="search" className="h-4 w-4 shrink-0" />
-            <span className="truncate">
-              Search items, categories, suppliers, movements...
-            </span>
-          </span>
-          <span className="rounded-md border border-theme bg-theme-inset px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em] text-theme-subtle">
-            Ctrl K
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={(event) => openGlobalSearch(event.currentTarget)}
-          className="ui-icon-button ui-icon-button-md xl:hidden"
-          aria-label="Open global search"
-          title="Search"
-        >
-          <UiIcon name="search" className="h-5 w-5" />
-        </button>
-        {quickAddVisible && (
-          <Link
-            href="/dashboard/add-item"
-            className={buttonClassName({ size: "sm" })}
-          >
-            <UiIcon name="plus" className="h-4 w-4" />
-            Add Item
-          </Link>
-        )}
-      </div>
+      <div className="dashboard-main-canvas">
+        <div className="dashboard-desktop-toolbar">
+          <nav className="dashboard-top-tabs" aria-label="Dashboard sections">
+            {DASHBOARD_TOP_TABS.map((tab) => {
+              const active = isDashboardRouteActive(pathname, tab.href);
+              return (
+                <Link
+                  key={tab.href}
+                  href={tab.href}
+                  aria-current={active ? "page" : undefined}
+                  className={cx(
+                    "dashboard-top-tab",
+                    active && "dashboard-top-tab-active"
+                  )}
+                >
+                  {tab.label}
+                </Link>
+              );
+            })}
+          </nav>
 
-      <div className="dashboard-shell-content">{children}</div>
+          <div className="dashboard-top-tools">
+            <button
+              ref={desktopSearchTriggerRef}
+              type="button"
+              onClick={(event) => openGlobalSearch(event.currentTarget)}
+              className="dashboard-top-icon-button"
+              aria-label="Open global search"
+              title="Search"
+            >
+              <UiIcon name="search" className="h-5 w-5" />
+            </button>
+            <button
+              type="button"
+              onClick={requestScanner}
+              className="dashboard-top-icon-button"
+              aria-label="Scan inventory code"
+              title="Scan"
+            >
+              <UiIcon name="scan" className="h-5 w-5" />
+            </button>
+            <Link
+              href="/dashboard/help"
+              className="dashboard-top-icon-button"
+              aria-label="Open help center"
+              title="Help"
+            >
+              <UiIcon name="info" className="h-5 w-5" />
+            </Link>
+            <Link href="/dashboard/settings" className="dashboard-top-account-pill">
+              <AccountAvatar
+                logoUrl={businessSettings.business_logo_url}
+                businessName={businessSettings.business_name}
+                size="sm"
+              />
+              <span>
+                <strong>{businessSettings.business_name}</strong>
+                <small>{email || `${planName} plan`}</small>
+              </span>
+              <UiIcon name="chevron-down" className="h-4 w-4" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="dashboard-shell-content">{children}</div>
+      </div>
 
       <nav
         className="dashboard-mobile-nav glass-navigation"

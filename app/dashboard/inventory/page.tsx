@@ -672,7 +672,7 @@ export default function InventoryPage() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      setShowStats(!window.matchMedia("(max-width: 900px)").matches);
+      setShowStats(true);
     });
 
     return () => window.cancelAnimationFrame(frame);
@@ -2611,7 +2611,7 @@ export default function InventoryPage() {
     label: string;
     value: string;
   }> = [
-    { icon: "box", label: "Items", value: items.length.toLocaleString() },
+    { icon: "box", label: "Total Items", value: items.length.toLocaleString() },
     {
       icon: "layers",
       label: "Total Stock",
@@ -2751,37 +2751,38 @@ export default function InventoryPage() {
             selectionMode ? "pb-36 sm:pb-0" : ""
           }`}
         >
-          <section className="inventory-mobile-header-card rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.07)] sm:p-3.5">
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="inventory-mobile-kicker text-[11px] font-bold uppercase tracking-[0.14em] text-theme-accent">
-                  Products
+          <section className="inventory-hero-card inventory-mobile-header-card">
+            <div className="inventory-hero-top">
+              <div className="inventory-hero-title-block">
+                <p className="inventory-mobile-kicker inventory-hero-kicker">
+                  {businessSettings.business_name}
                 </p>
 
-                <h1 className="inventory-mobile-title mt-0.5 text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
+                <h1 className="inventory-mobile-title inventory-hero-title">
                   Inventory
                 </h1>
 
-                <p className="inventory-mobile-description mt-0.5 text-sm leading-5 text-theme-muted">
+                <p className="inventory-mobile-description inventory-hero-description">
                   {loadingItems
                     ? "Loading inventory..."
-                    : `${items.length.toLocaleString()} item${
+                    : `Manage ${items.length.toLocaleString()} item${
                         items.length === 1 ? "" : "s"
-                      } across ${assignedDepotCount.toLocaleString()} location${
-                        assignedDepotCount === 1 ? "" : "s"
-                      }.`}
+                      }, stock levels, and locations from one clean workspace.`}
                 </p>
+                <div className="inventory-hero-badges" aria-label="Current inventory view">
+                  <span>{visibleItems.length.toLocaleString()} visible</span>
+                  <span>{currentPlanName} plan</span>
+                  {hasActiveFilters && (
+                    <span>{activeFilterCount} active filters</span>
+                  )}
+                </div>
               </div>
 
-              <div className="inventory-mobile-breadcrumb" aria-live="polite">
-                Items{activeMobileFolder?.label ? ` / ${activeMobileFolder.label}` : ""}
-              </div>
-
-              <div className="inventory-page-actions flex flex-wrap items-center gap-2">
+              <div className="inventory-page-actions inventory-hero-actions">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(true)}
-                  className="action-button action-button-primary px-3 py-2 text-sm"
+                  className="action-button action-button-primary inventory-action-primary"
                 >
                   <UiIcon name="plus" />
                   Add Item
@@ -2791,7 +2792,7 @@ export default function InventoryPage() {
                   type="button"
                   onClick={openScanner}
                   disabled={usageLoading}
-                  className={`action-button px-3 py-2 text-sm ${
+                  className={`action-button inventory-action-secondary ${
                     canUseScanner
                       ? ""
                       : "border-sky-300/15 bg-theme-surface text-theme-muted"
@@ -2809,7 +2810,7 @@ export default function InventoryPage() {
 
                 <InventoryActionMenu
                   label="More"
-                  buttonClassName="action-button px-3 py-2 text-sm"
+                  buttonClassName="action-button inventory-action-secondary"
                 >
                     <Link
                       href="/dashboard/inventory/import"
@@ -2864,65 +2865,77 @@ export default function InventoryPage() {
                           : "Export Excel"}
                     </button>
                 </InventoryActionMenu>
-                <button
-                  type="button"
-                  onClick={() => setShowStats((current) => !current)}
-                  className="action-button px-3 py-2 text-sm"
-                  aria-pressed={showStats}
-                >
-                  <UiIcon name="usage" />
-                  {showStats ? "Hide summary" : "Show summary"}
-                </button>
               </div>
+            </div>
 
-              <div className="inventory-mobile-folder-strip" aria-label="Inventory folders">
-                {mobileFolderOptions.map((folder) => (
-                  <button
-                    key={folder.key}
-                    type="button"
-                    onClick={folder.onSelect}
-                    aria-pressed={folder.active}
-                    className={`inventory-mobile-folder ${
-                      folder.active ? "inventory-mobile-folder-active" : ""
-                    }`}
-                  >
-                    <span className="inventory-mobile-folder-icon">
-                      <UiIcon name={folder.icon} className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <span className="inventory-mobile-folder-name">
-                        {folder.label}
-                      </span>
-                      <span className="inventory-mobile-folder-count">
-                        {folder.count.toLocaleString()}
-                      </span>
-                    </span>
-                  </button>
-                ))}
+            {showStats && (
+              <div className="inventory-hero-status" aria-label="Inventory status">
+                <span>
+                  <small>Needs attention</small>
+                  <strong>{loadingItems ? "--" : lowStockCount.toLocaleString()}</strong>
+                </span>
+                <span>
+                  <small>Out of stock</small>
+                  <strong>{loadingItems ? "--" : outOfStockCount.toLocaleString()}</strong>
+                </span>
+                <span>
+                  <small>Locations</small>
+                  <strong>{loadingItems ? "--" : assignedDepotCount.toLocaleString()}</strong>
+                </span>
               </div>
+            )}
+
+            <div className="inventory-mobile-breadcrumb" aria-live="polite">
+              Items{activeMobileFolder?.label ? ` / ${activeMobileFolder.label}` : ""}
+            </div>
+
+            <div className="inventory-mobile-folder-strip" aria-label="Inventory folders">
+              {mobileFolderOptions.map((folder) => (
+                <button
+                  key={folder.key}
+                  type="button"
+                  onClick={folder.onSelect}
+                  aria-pressed={folder.active}
+                  className={`inventory-mobile-folder ${
+                    folder.active ? "inventory-mobile-folder-active" : ""
+                  }`}
+                >
+                  <span className="inventory-mobile-folder-icon">
+                    <UiIcon name={folder.icon} className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="inventory-mobile-folder-name">
+                      {folder.label}
+                    </span>
+                    <span className="inventory-mobile-folder-count">
+                      {folder.count.toLocaleString()}
+                    </span>
+                  </span>
+                </button>
+              ))}
             </div>
           </section>
 
           {showStats && (
             <section
               aria-label="Inventory summary"
-              className="grid grid-cols-2 gap-2 md:grid-cols-4"
+              className="inventory-stat-grid"
             >
               {inventoryStats.map((stat) => (
                 <div
                   key={stat.label}
-                  className="flex min-h-14 items-center gap-2.5 rounded-2xl border border-theme bg-theme-surface px-3 py-2 shadow-[0_8px_24px_rgba(15,23,42,0.05)]"
+                  className="inventory-stat-card"
                 >
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-xl border border-cyan-200/70 bg-cyan-50 text-theme-accent">
+                  <span className="inventory-stat-icon">
                     <UiIcon name={stat.icon} className="h-4 w-4" />
                   </span>
-                  <span className="min-w-0">
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <span className="inventory-stat-copy">
+                    <span>
                       {stat.label}
                     </span>
-                    <span className="mt-0.5 block text-base font-black text-theme-primary sm:text-lg">
+                    <strong>
                       {loadingItems ? "--" : stat.value}
-                    </span>
+                    </strong>
                   </span>
                 </div>
               ))}
@@ -2941,27 +2954,18 @@ export default function InventoryPage() {
             </div>
           )}
 
-          <section className="rounded-2xl border border-theme bg-theme-surface p-2.5 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:p-3">
-            <div className="flex flex-col gap-3">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="flex-1">
+          <section className="inventory-toolbar-panel">
+            <div className="inventory-toolbar-stack">
+              <div className="inventory-toolbar-main">
+                <div className="inventory-toolbar-search">
                   <label htmlFor="inventory-search" className="sr-only">
                     Search inventory
                   </label>
                   <div className="relative">
-                    <svg
+                    <UiIcon
+                      name="search"
                       className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={1.8}
-                        d="m21 21-4.35-4.35m1.35-5.65a7 7 0 1 1-14 0 7 7 0 0 1 14 0Z"
-                      />
-                    </svg>
+                    />
 
                     <input
                       id="inventory-search"
@@ -2969,25 +2973,26 @@ export default function InventoryPage() {
                       placeholder="Search items, SKU, barcode, depot..."
                       value={search}
                       onChange={(event) => setSearch(event.target.value)}
-                      className="w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                      className="inventory-search-input"
                     />
                   </div>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="whitespace-nowrap rounded-xl border border-theme bg-theme-inset px-3 py-2 text-xs font-bold text-theme-secondary">
+                <div className="inventory-toolbar-actions">
+                  <p className="inventory-showing-pill">
                     Showing {visibleItems.length} of {items.length} items
                   </p>
                   <button
                     type="button"
                     onClick={toggleFiltersOpen}
                     aria-expanded={filtersOpen}
-                    className={`whitespace-nowrap rounded-xl border px-3 py-2 text-xs font-bold transition hover:bg-theme-hover ${
+                    className={`inventory-toolbar-button ${
                       hasActiveFilters
-                        ? "border-cyan-300/50 bg-cyan-500/10 text-theme-accent"
-                        : "border-theme bg-theme-surface text-theme-primary"
+                        ? "inventory-toolbar-button-active"
+                        : ""
                     }`}
                   >
+                    <UiIcon name="settings" className="h-4 w-4" />
                     Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
                   </button>
                   <Select
@@ -3022,57 +3027,61 @@ export default function InventoryPage() {
                   <button
                     type="button"
                     onClick={toggleSelectionMode}
-                    className="whitespace-nowrap rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover"
+                    className="inventory-toolbar-button"
                   >
+                    <UiIcon name="check" className="h-4 w-4" />
                     {selectionMode ? "Exit selection" : "Select items"}
                   </button>
                 </div>
               </div>
 
-              <div
-                className="inventory-quick-filters"
-                aria-label="Quick inventory filters"
-              >
-                {QUICK_FILTER_OPTIONS.map((option) => {
-                  const active = quickFilter === option.value;
+              <div className="inventory-toolbar-secondary">
+                <div
+                  className="inventory-quick-filters"
+                  aria-label="Quick inventory filters"
+                >
+                  {QUICK_FILTER_OPTIONS.map((option) => {
+                    const active = quickFilter === option.value;
 
-                  return (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setQuickFilter(option.value)}
-                      aria-pressed={active}
-                      className={`inventory-quick-filter ${
-                        active ? "inventory-quick-filter-active" : ""
-                      }`}
-                    >
-                      {option.label}
-                    </button>
-                  );
-                })}
-              </div>
+                    return (
+                      <button
+                        key={option.value}
+                        type="button"
+                        onClick={() => setQuickFilter(option.value)}
+                        aria-pressed={active}
+                        className={`inventory-quick-filter ${
+                          active ? "inventory-quick-filter-active" : ""
+                        }`}
+                      >
+                        {option.label}
+                      </button>
+                    );
+                  })}
+                </div>
 
-              {activeFilterChips.length > 0 && (
-                <div className="flex flex-wrap items-center gap-2">
+                {activeFilterChips.length > 0 && (
+                <div className="inventory-active-chips">
                   {activeFilterChips.map((chip) => (
                     <button
                       key={chip.label}
                       type="button"
                       onClick={chip.onClear}
-                      className="rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-xs font-bold text-theme-secondary transition hover:bg-theme-hover"
+                      className="inventory-active-chip"
                     >
-                      {chip.label} x
+                      {chip.label}
+                      <UiIcon name="close" className="h-3 w-3" />
                     </button>
                   ))}
                   <button
                     type="button"
                     onClick={resetInventoryControls}
-                    className="rounded-full px-2.5 py-1 text-xs font-bold text-theme-accent"
+                    className="inventory-clear-chips"
                   >
                     Clear all
                   </button>
                 </div>
-              )}
+                )}
+              </div>
 
               {filtersOpen && (
               <div className="inventory-filter-panel grid grid-cols-1 gap-2 sm:grid-cols-3">

@@ -17,6 +17,12 @@ const highlights = [
   "Reports and Pick Lists",
 ];
 
+const heroStats = [
+  ["50", "free starter items"],
+  ["4", "daily work modes"],
+  ["1", "visual inventory hub"],
+];
+
 const coreFeatures: Array<{
   title: string;
   text: string;
@@ -50,27 +56,35 @@ export default function Home() {
   return (
     <MarketingPage active="home">
       <section className="marketing-hero px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8">
-        <div className="mx-auto w-full max-w-7xl">
-          <Reveal className="mx-auto max-w-4xl text-center">
+        <div className="marketing-hero-shell mx-auto w-full max-w-7xl">
+          <Reveal className="marketing-hero-copy-block mx-auto max-w-4xl text-center">
             <p className="marketing-hero-kicker">
-              Smart inventory for growing businesses
+              Smart inventory for growing teams
             </p>
 
             <h1 className="marketing-hero-title mt-6">
-              Inventory that stays{" "}
-              <span className="marketing-gradient-text">simple.</span>
+              SydIN visual inventory
             </h1>
 
             <p className="marketing-hero-copy mx-auto mt-6 max-w-2xl">
-              SydIN gives small teams one clear place to organize items, track
-              stock, scan codes, prepare Pick Lists, and understand what needs
-              attention next.
+              A premium workspace for product photos, stock counts, QR and
+              barcode work, Pick Lists, and the daily decisions that keep
+              inventory under control.
             </p>
 
             <CTAButtons align="center" />
+
+            <div className="marketing-hero-proof" aria-label="SydIN highlights">
+              {heroStats.map(([value, label]) => (
+                <span key={label}>
+                  <strong>{value}</strong>
+                  <small>{label}</small>
+                </span>
+              ))}
+            </div>
           </Reveal>
 
-          <Reveal delay={120} className="mx-auto mt-8 max-w-6xl sm:mt-10">
+          <Reveal delay={120} className="marketing-hero-preview mx-auto mt-8 max-w-6xl sm:mt-10">
             <DashboardPreview />
           </Reveal>
         </div>
@@ -96,7 +110,7 @@ export default function Home() {
           text="SydIN keeps the interface calm so your inventory, not the software, stays at the center of the work."
         />
 
-        <div className="mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-5 md:grid-cols-3">
+        <div className="marketing-feature-grid mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-5 md:grid-cols-3">
           {coreFeatures.map((feature, index) => (
             <Reveal key={feature.title} delay={index * 70}>
               <article className="marketing-feature-card">
@@ -133,7 +147,7 @@ export default function Home() {
             </div>
           </Reveal>
 
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="marketing-workflow-grid grid gap-3 sm:grid-cols-2">
             {workflow.map(([number, title, text], index) => (
               <Reveal key={number} delay={index * 60}>
                 <article className="marketing-workflow-card">

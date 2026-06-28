@@ -139,6 +139,14 @@ export default function InventoryItemCard({
     closeMenu();
     action();
   };
+  const runInlineAction = (
+    event: ReactMouseEvent<HTMLButtonElement>,
+    action?: () => void
+  ) => {
+    event.preventDefault();
+    event.stopPropagation();
+    action?.();
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -192,16 +200,16 @@ export default function InventoryItemCard({
           openDetails();
         }
       }}
-      className={`group relative min-w-0 cursor-pointer overflow-visible rounded-2xl border bg-theme-surface shadow-[0_6px_18px_rgba(15,23,42,0.055)] transition duration-200 hover:-translate-y-0.5 hover:border-indigo-300/40 hover:shadow-[0_10px_24px_rgba(67,56,202,0.1)] active:translate-y-px focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/20 motion-reduce:transform-none ${
+      className={`inventory-item-card group ${
         selectable && selected
-          ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/35"
-          : "border-theme"
+          ? "inventory-item-card-selected"
+          : ""
       }`}
     >
-      <div className="inventory-card-media relative aspect-[5/3] overflow-hidden rounded-t-[15px] border-b border-theme bg-[#f5f7fb]">
+      <div className="inventory-card-media">
         {selectable && (
           <label
-            className="absolute left-2.5 top-2.5 z-10 flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg border border-slate-200 bg-white/95 text-slate-700 shadow-sm transition hover:bg-white focus-within:ring-4 focus-within:ring-cyan-300/25"
+            className="inventory-card-select"
             onClick={(event) => event.stopPropagation()}
           >
             <span className="sr-only">
@@ -236,7 +244,7 @@ export default function InventoryItemCard({
         )}
 
         {lowStock && (
-          <span className="absolute left-2.5 bottom-2.5 rounded-full border border-red-200 bg-red-50 px-1.5 py-0.5 text-[9px] font-bold text-red-600 shadow-sm">
+          <span className="inventory-card-alert-pill">
             {stockStatusLabel || "Low stock"}
           </span>
         )}
@@ -250,7 +258,7 @@ export default function InventoryItemCard({
           data-item-actions={item.id}
           onClick={toggleMenu}
           onKeyDown={(event) => event.stopPropagation()}
-          className="absolute right-2.5 top-2.5 flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white/95 text-slate-600 shadow-sm outline-none transition hover:bg-white hover:text-slate-950 focus-visible:ring-4 focus-visible:ring-indigo-400/20"
+          className="inventory-card-menu-button"
         >
           <UiIcon name="more" className="h-4 w-4" />
         </button>
@@ -333,39 +341,69 @@ export default function InventoryItemCard({
           )}
       </div>
 
-      <div className="p-2.5">
-        <div className="flex min-w-0 items-start justify-between gap-3">
+      <div className="inventory-card-body">
+        <div className="inventory-card-heading">
           <div className="min-w-0">
-            <p className="truncate text-[10px] font-bold uppercase tracking-[0.12em] text-theme-accent">
+            <p className="inventory-card-code">
               {itemCode || (item.sku ? `SKU ${item.sku}` : "Inventory item")}
             </p>
-            <h2 className="mt-0.5 truncate text-[0.9rem] font-extrabold text-theme-primary" title={item.name}>
+            <h2 className="inventory-card-title" title={item.name}>
               {item.name}
             </h2>
           </div>
-          <span className="max-w-[48%] shrink-0 rounded-lg border border-indigo-200/70 bg-indigo-50 px-2 py-0.5 text-right text-[10px] font-extrabold text-indigo-700">
+          <span className="inventory-card-quantity">
             {quantityLabel}
           </span>
         </div>
 
-        <div className="mt-1.5 flex min-h-6 flex-wrap gap-1">
+        <div className="inventory-card-tags">
           <span
-            className={`max-w-full truncate rounded-full border px-2 py-0.5 text-[10px] font-bold ${statusClassName}`}
+            className={`inventory-card-tag inventory-card-status ${statusClassName}`}
           >
             {stockStatusLabel || "In Stock"}
           </span>
-          <span className="max-w-full truncate rounded-full border border-theme bg-theme-inset px-2 py-0.5 text-[10px] font-semibold text-theme-secondary">
+          <span className="inventory-card-tag">
             {categoryLabel}
           </span>
           {depotLabel && (
-            <span className="max-w-full truncate rounded-full border border-cyan-200/70 bg-cyan-50 px-2 py-0.5 text-[10px] font-semibold text-cyan-800">
+            <span className="inventory-card-tag inventory-card-tag-blue">
               {depotLabel}
             </span>
           )}
           {supplierLabel && (
-            <span className="max-w-full truncate rounded-full border border-emerald-200/70 bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
+            <span className="inventory-card-tag inventory-card-tag-green">
               {supplierLabel}
             </span>
+          )}
+        </div>
+
+        <div className="inventory-card-meta">
+          <span>
+            <small>Location</small>
+            <strong>{depotLabel || "Unassigned"}</strong>
+          </span>
+          <span>
+            <small>Supplier</small>
+            <strong>{supplierLabel || "None"}</strong>
+          </span>
+        </div>
+
+        <div className="inventory-card-footer">
+          <button
+            type="button"
+            onClick={(event) => runInlineAction(event, onAdjust)}
+          >
+            <UiIcon name="movement" className="h-3.5 w-3.5" />
+            Adjust
+          </button>
+          {onCreateQrLabel && (
+            <button
+              type="button"
+              onClick={(event) => runInlineAction(event, onCreateQrLabel)}
+            >
+              <UiIcon name="qr" className="h-3.5 w-3.5" />
+              QR
+            </button>
           )}
         </div>
       </div>

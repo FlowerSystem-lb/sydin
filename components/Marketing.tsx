@@ -294,6 +294,12 @@ export function CTAButtons({
 export function DashboardPreview() {
   return (
     <div className="marketing-product-frame">
+      <div className="marketing-product-browser">
+        <span />
+        <span />
+        <span />
+        <strong>SydIN Workspace</strong>
+      </div>
       <div className="marketing-product-app">
         <aside className="marketing-product-rail">
           <SydINMark size="md" />
@@ -311,15 +317,15 @@ export function DashboardPreview() {
         </aside>
 
         <div className="marketing-product-main">
-          <div className="flex items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold text-slate-500">
-                Inventory overview
-              </p>
-              <p className="mt-1 text-lg font-bold text-slate-950">
-                Good morning, North Studio
-              </p>
+          <div className="marketing-product-command">
+            <div className="min-w-0">
+              <p>Inventory overview</p>
+              <strong>North Studio</strong>
             </div>
+            <span className="marketing-product-search">
+              <UiIcon name="search" className="h-4 w-4" />
+              Search inventory
+            </span>
             <span className="marketing-product-add">
               <UiIcon name="plus" className="h-4 w-4" />
               Add item
@@ -341,28 +347,47 @@ export function DashboardPreview() {
             ))}
           </div>
 
-          <div className="marketing-product-list mt-4">
-            <div className="flex items-center justify-between gap-4">
-              <div>
-                <p className="font-semibold text-slate-950">Restock priorities</p>
-                <p className="mt-1 text-xs text-slate-500">Items at or below minimum stock</p>
-              </div>
-              <span className="text-xs font-semibold text-blue-600">View report</span>
-            </div>
-            <div className="mt-4 grid gap-2">
-              {[
-                ["Studio storage box", "BOX-014", "4 left"],
-                ["Ceramic planter", "RET-104", "7 left"],
-              ].map(([name, code, stock]) => (
-                <div key={code} className="marketing-product-row">
-                  <span className="marketing-product-thumb" />
-                  <span className="min-w-0 flex-1">
-                    <span className="block truncate text-sm font-semibold text-slate-900">{name}</span>
-                    <span className="block text-xs text-slate-500">{code}</span>
-                  </span>
-                  <span className="marketing-product-stock">{stock}</span>
+          <div className="marketing-product-workspace">
+            <div className="marketing-product-list">
+              <div className="flex items-center justify-between gap-4">
+                <div>
+                  <p className="font-semibold text-slate-950">Visual inventory</p>
+                  <p className="mt-1 text-xs text-slate-500">Photo-first item records</p>
                 </div>
-              ))}
+                <span className="text-xs font-semibold text-blue-600">Grid view</span>
+              </div>
+              <div className="marketing-product-card-grid">
+                {[
+                  ["Studio storage box", "BOX-014", "4 left"],
+                  ["Ceramic planter", "RET-104", "7 left"],
+                  ["Event tote", "EVT-220", "32 left"],
+                ].map(([name, code, stock]) => (
+                  <div key={code} className="marketing-product-card">
+                    <span className="marketing-product-thumb" />
+                    <strong>{name}</strong>
+                    <small>{code}</small>
+                    <span className="marketing-product-stock">{stock}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="marketing-product-side-panel">
+              <div>
+                <p>Stock health</p>
+                <strong>93%</strong>
+                <span>9 items need attention</span>
+              </div>
+              <div className="marketing-product-priority-list">
+                {["Restock ceramic planter", "Scan incoming shipment", "Prepare pick list"].map(
+                  (item) => (
+                    <span key={item}>
+                      <UiIcon name="check" className="h-3.5 w-3.5" />
+                      {item}
+                    </span>
+                  )
+                )}
+              </div>
             </div>
           </div>
         </div>
