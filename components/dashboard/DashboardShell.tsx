@@ -446,7 +446,7 @@ export default function DashboardShell({
   return (
     <div
       className={cx(
-        "dashboard-shell liquid-bg min-h-screen text-theme-primary",
+        "dashboard-shell dashboard-workspace-shell liquid-bg min-h-screen text-theme-primary",
         effectiveCollapsed && "dashboard-shell-collapsed"
       )}
     >
