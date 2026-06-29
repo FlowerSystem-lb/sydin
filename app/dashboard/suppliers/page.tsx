@@ -5,6 +5,18 @@ import Link from "next/link";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon from "@/components/UiIcon";
 import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  DashboardToolbar,
+  FilterBar,
+  FilterChip,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
+import { Button, DialogShell } from "@/components/ui";
+import {
   createSupplier,
   deleteSupplier,
   getSupplierErrorMessage,
@@ -498,50 +510,34 @@ export default function SuppliersPage() {
   return (
     <div className="contents">
       <main className="organize-workspace organize-suppliers">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
-          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                  Purchasing contacts
-                </p>
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                  Suppliers
-                </h1>
-                <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                  Keep vendor contacts organized and connect them to inventory when useful.
-                </p>
-              </div>
-              <div className="organize-page-actions flex flex-col gap-3 sm:flex-row">
+        <DashboardPageShell>
+          <DashboardPageHeader
+            eyebrow="Purchasing contacts"
+            title="Suppliers"
+            description="Keep vendor contacts organized and connect them to inventory when useful."
+            actions={
+              <>
                 <Link
                   href="/dashboard/inventory"
-                  className="organize-inventory-link rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 text-center font-bold text-theme-primary transition hover:bg-theme-hover"
+                  className="organize-inventory-link dashboard-action-button dashboard-action-button-secondary"
                 >
                   Inventory
                 </Link>
-                <button
-                  type="button"
+                <ActionButton
                   onClick={openCreateForm}
                   disabled={loading || limitReached}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+                  icon="plus"
                 >
                   Add Supplier
-                </button>
-              </div>
-            </div>
-          </section>
+                </ActionButton>
+              </>
+            }
+          />
 
           {(pageError || pageNotice) && (
-            <div
-              role={pageError ? "alert" : "status"}
-              className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
-                pageError
-                  ? "border-red-400/25 bg-red-500/10 text-theme-danger"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
-              }`}
-            >
+            <DashboardNotice tone={pageError ? "danger" : "success"}>
               {pageError || pageNotice}
-            </div>
+            </DashboardNotice>
           )}
 
           {!loading && limitReached && (
@@ -555,7 +551,7 @@ export default function SuppliersPage() {
             />
           )}
 
-          <section className="organize-search-card rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-5">
+          <DashboardToolbar className="organize-search-card sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex-1">
                 <label className="mb-2 block text-sm font-semibold text-theme-muted">
@@ -573,34 +569,26 @@ export default function SuppliersPage() {
                 {suppliers.length} / {supplierLimit} suppliers
               </p>
             </div>
-            <div
-              className="organize-chip-strip mt-4"
-              role="group"
-              aria-label="Supplier filters"
-            >
+            <FilterBar label="Supplier filters" className="mt-4">
               {supplierFilters.map((filter) => (
-                <button
+                <FilterChip
                   key={filter.value}
-                  type="button"
-                  aria-pressed={supplierFilter === filter.value}
+                  active={supplierFilter === filter.value}
+                  count={filter.count}
                   onClick={() => setSupplierFilter(filter.value)}
-                  className={`organize-chip ${
-                    supplierFilter === filter.value ? "organize-chip-active" : ""
-                  }`}
                 >
-                  <span>{filter.label}</span>
-                  <span>{filter.count}</span>
-                </button>
+                  {filter.label}
+                </FilterChip>
               ))}
-            </div>
-          </section>
+            </FilterBar>
+          </DashboardToolbar>
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {[1, 2, 3].map((key) => (
-                <div key={key} className="h-72 animate-pulse rounded-[20px] border border-theme bg-theme-surface" />
-              ))}
-            </div>
+            <LoadingSkeletonGroup
+              count={3}
+              className="grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
+              itemClassName="min-h-72"
+            />
           ) : visibleSuppliers.length > 0 ? (
             <div className="organize-list-grid grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visibleSuppliers.map((supplier) => {
@@ -735,27 +723,28 @@ export default function SuppliersPage() {
               })}
             </div>
           ) : (
-            <div className="rounded-[20px] border border-dashed border-theme bg-theme-surface px-5 py-16 text-center">
-              <h2 className="text-3xl font-black text-theme-primary">
-                {suppliers.length === 0 ? "Add your first supplier" : "No suppliers found"}
-              </h2>
-              <p className="mx-auto mt-3 max-w-md leading-7 text-theme-muted">
-                {suppliers.length === 0
+            <DashboardEmptyState
+              icon="suppliers"
+              title={
+                suppliers.length === 0
+                  ? "Add your first supplier"
+                  : "No suppliers found"
+              }
+              description={
+                suppliers.length === 0
                   ? "Supplier links are optional. Your existing items can stay without a supplier."
-                  : "Try a different name, contact, phone number, email, or note."}
-              </p>
-              {suppliers.length === 0 && !limitReached && (
-                <button
-                  type="button"
-                  onClick={openCreateForm}
-                  className="mt-6 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3.5 font-bold text-white shadow-lg shadow-indigo-500/15"
-                >
-                  Add your first supplier
-                </button>
-              )}
-            </div>
+                  : "Try a different name, contact, phone number, email, or note."
+              }
+              action={
+                suppliers.length === 0 && !limitReached ? (
+                  <ActionButton onClick={openCreateForm} icon="plus">
+                    Add your first supplier
+                  </ActionButton>
+                ) : null
+              }
+            />
           )}
-        </div>
+        </DashboardPageShell>
       </main>
 
       {formOpen && (
@@ -778,42 +767,39 @@ export default function SuppliersPage() {
       )}
 
       {pendingDelete && (
-        <div className="organize-modal-overlay fixed inset-0 z-[60] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-supplier-title"
-            className="w-full max-w-md rounded-[20px] border border-theme bg-theme-surface p-6 shadow-[0_20px_70px_rgba(15,23,42,0.16)] sm:p-7"
-          >
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-red-300">
-              Delete supplier
-            </p>
-            <h2 id="delete-supplier-title" className="mt-3 text-2xl font-black text-theme-primary">
-              Delete {pendingDelete.name}?
-            </h2>
-            <p className="mt-3 leading-7 text-theme-muted">
-              Inventory items will not be deleted. They will become No supplier.
-            </p>
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
-              <button
-                type="button"
+        <DialogShell
+          title={`Delete ${pendingDelete.name}?`}
+          eyebrow="Delete supplier"
+          description="Inventory items will not be deleted. They will become No supplier."
+          tone="danger"
+          onClose={() => {
+            if (!deletingId) setPendingDelete(null);
+          }}
+          closeDisabled={deletingId !== null}
+          className="max-w-md"
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setPendingDelete(null)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+                className="flex-1"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => void handleDelete()}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-500/30 disabled:opacity-50"
+                loading={deletingId !== null}
+                loadingLabel="Deleting..."
+                className="flex-1"
               >
-                {deletingId ? "Deleting..." : "Delete Supplier"}
-              </button>
-            </div>
-          </div>
-        </div>
+                Delete Supplier
+              </Button>
+            </>
+          }
+        />
       )}
     </div>
   );

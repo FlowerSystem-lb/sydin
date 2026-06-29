@@ -5,6 +5,17 @@ import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { Button, DialogShell, Select } from "@/components/ui";
 import {
+  DashboardEmptyState,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  DashboardToolbar,
+  FilterBar,
+  FilterChip,
+  LoadingSkeletonGroup,
+  MetricCard,
+} from "@/components/dashboard/Workspace";
+import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
@@ -239,26 +250,6 @@ function downloadCsv(filename: string, rows: Array<Array<string | number | null 
   link.click();
   link.remove();
   URL.revokeObjectURL(downloadUrl);
-}
-
-function SummaryTile({
-  label,
-  value,
-  detail,
-}: {
-  label: string;
-  value: string;
-  detail: string;
-}) {
-  return (
-    <div className="rounded-xl border border-theme bg-theme-inset p-3">
-      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-theme-subtle">
-        {label}
-      </p>
-      <p className="mt-1 text-2xl font-black text-theme-primary">{value}</p>
-      <p className="mt-1 text-xs text-theme-muted">{detail}</p>
-    </div>
-  );
 }
 
 function FormatChip({ label }: { label: string }) {
@@ -660,21 +651,12 @@ export default function ReportsPage() {
 
   return (
     <main className="reports-workspace operations-workspace">
-      <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Insights
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Reports
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Generate inventory reports, stock activity exports, and workflow
-                shortcuts.
-              </p>
-            </div>
+      <DashboardPageShell width="wide">
+        <DashboardPageHeader
+          eyebrow="Insights"
+          title="Reports"
+          description="Generate inventory reports, stock activity exports, and workflow shortcuts."
+          actions={
             <Button
               onClick={() => setInventoryDialogReport(INVENTORY_REPORTS[0])}
               leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
@@ -682,63 +664,55 @@ export default function ReportsPage() {
             >
               New report
             </Button>
-          </div>
-        </section>
+          }
+        />
 
         {(notice || error) && (
-          <p
-            role={error ? "alert" : "status"}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-              error
-                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
-                : "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
-            }`}
-          >
+          <DashboardNotice tone={error ? "danger" : "success"}>
             {error || notice}
-          </p>
+          </DashboardNotice>
         )}
 
-        <section className="grid gap-3 rounded-[18px] border border-theme bg-theme-surface p-3 sm:grid-cols-2 xl:grid-cols-4">
-          <SummaryTile
+        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <MetricCard
+            icon="box"
             label="Inventory items"
             value={items.length.toLocaleString()}
             detail="Current workspace items"
           />
-          <SummaryTile
+          <MetricCard
+            icon="alert"
             label="Low stock"
             value={lowStockItems.length.toLocaleString()}
             detail={`${outOfStockItems.length.toLocaleString()} out of stock`}
           />
-          <SummaryTile
+          <MetricCard
+            icon="usage"
             label="Cost value"
             value={formatCurrency(totals.totalCostValue, currencyCode)}
             detail="Current stock cost"
           />
-          <SummaryTile
+          <MetricCard
+            icon="movement"
             label="Movements"
             value={movementTotals.movementCount.toLocaleString()}
             detail="Latest 250 movement records"
           />
         </section>
 
-        <section className="rounded-[18px] border border-theme bg-theme-surface p-3">
+        <DashboardToolbar>
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex flex-wrap gap-2">
+            <FilterBar label="Report categories" className="flex-wrap overflow-visible">
               {reportCategories.map((category) => (
-                <button
+                <FilterChip
                   key={category.id}
-                  type="button"
+                  active={activeCategory === category.id}
                   onClick={() => setActiveCategory(category.id)}
-                  className={`min-h-10 rounded-xl border px-3 py-2 text-xs font-black transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/15 ${
-                    activeCategory === category.id
-                      ? "border-cyan-300/30 bg-cyan-500/10 text-theme-accent"
-                      : "border-theme bg-theme-inset text-theme-secondary hover:bg-theme-hover"
-                  }`}
                 >
                   {category.label}
-                </button>
+                </FilterChip>
               ))}
-            </div>
+            </FilterBar>
             <label className="relative w-full lg:max-w-sm">
               <span className="sr-only">Search reports</span>
               <UiIcon
@@ -754,17 +728,14 @@ export default function ReportsPage() {
               />
             </label>
           </div>
-        </section>
+        </DashboardToolbar>
 
         {loading ? (
-          <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-            {[1, 2, 3, 4, 5, 6].map((item) => (
-              <div
-                key={item}
-                className="h-44 animate-pulse rounded-[18px] border border-theme bg-theme-surface"
-              />
-            ))}
-          </section>
+          <LoadingSkeletonGroup
+            count={6}
+            className="grid gap-3 md:grid-cols-2 xl:grid-cols-3"
+            itemClassName="min-h-44"
+          />
         ) : (
           <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {visibleReports.map((report) => {
@@ -868,18 +839,12 @@ export default function ReportsPage() {
               );
             })}
             {visibleReports.length === 0 && (
-              <div className="rounded-[18px] border border-dashed border-theme bg-theme-surface px-5 py-14 text-center md:col-span-2 xl:col-span-3">
-                <UiIcon
-                  name="search"
-                  className="mx-auto h-8 w-8 text-theme-accent"
-                />
-                <h2 className="mt-4 text-xl font-bold text-theme-primary">
-                  No reports match
-                </h2>
-                <p className="mt-2 text-sm text-theme-muted">
-                  Adjust the category or search text.
-                </p>
-              </div>
+              <DashboardEmptyState
+                className="md:col-span-2 xl:col-span-3"
+                icon="search"
+                title="No reports match"
+                description="Adjust the category or search text."
+              />
             )}
           </section>
         )}
@@ -915,7 +880,7 @@ export default function ReportsPage() {
             </div>
           </div>
         </section>
-      </div>
+      </DashboardPageShell>
 
       {inventoryDialogReport && (
         <DialogShell

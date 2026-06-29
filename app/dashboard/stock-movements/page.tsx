@@ -3,6 +3,15 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import UiIcon from "@/components/UiIcon";
+import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  DashboardToolbar,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
@@ -195,48 +204,31 @@ export default function StockMovementsPage() {
 
   return (
     <main className="operations-workspace operations-stock-movements">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Operations
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Stock Movements
-              </h1>
-              <p className="mt-1 text-sm leading-6 text-theme-muted">
-                Record stock changes and review the latest 100 movement entries.
-              </p>
-            </div>
-            <button
-              type="button"
+      <DashboardPageShell>
+        <DashboardPageHeader
+          eyebrow="Operations"
+          title="Stock Movements"
+          description="Record stock changes and review the latest 100 movement entries."
+          actions={
+            <ActionButton
+              icon="plus"
               onClick={() => {
                 setInitialItemId(null);
                 setDialogOpen(true);
               }}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15"
             >
-              <UiIcon name="plus" className="h-4 w-4" />
               Record Movement
-            </button>
-          </div>
-        </section>
+            </ActionButton>
+          }
+        />
 
         {(notice || error) && (
-          <p
-            role={error ? "alert" : "status"}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-              error
-                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
-                : "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
-            }`}
-          >
+          <DashboardNotice tone={error ? "danger" : "success"}>
             {error || notice}
-          </p>
+          </DashboardNotice>
         )}
 
-        <section className="grid gap-2 rounded-[20px] border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:grid-cols-2 lg:grid-cols-4">
+        <DashboardToolbar className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
           <label className="relative">
             <span className="sr-only">Search movements</span>
             <UiIcon
@@ -287,18 +279,11 @@ export default function StockMovementsPage() {
               { value: "oldest", label: "Oldest first" },
             ]}
           />
-        </section>
+        </DashboardToolbar>
 
-        <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
+        <section className="dashboard-card overflow-hidden p-0">
           {loading ? (
-            <div className="space-y-2 p-4">
-              {[1, 2, 3, 4].map((row) => (
-                <div
-                  key={row}
-                  className="h-20 animate-pulse rounded-xl bg-theme-inset"
-                />
-              ))}
-            </div>
+            <LoadingSkeletonGroup count={4} className="p-4" itemClassName="min-h-20" />
           ) : visibleMovements.length > 0 ? (
             <div className="divide-y divide-[var(--border-default)]">
               {visibleMovements.map((movement) => {
@@ -394,21 +379,15 @@ export default function StockMovementsPage() {
               })}
             </div>
           ) : (
-            <div className="px-5 py-16 text-center">
-              <UiIcon
-                name="movement"
-                className="mx-auto h-8 w-8 text-theme-accent"
-              />
-              <h2 className="mt-4 text-xl font-bold text-theme-primary">
-                No movements found
-              </h2>
-              <p className="mt-2 text-sm text-theme-muted">
-                Record a movement or adjust the filters.
-              </p>
-            </div>
+            <DashboardEmptyState
+              className="m-4"
+              icon="movement"
+              title="No movements found"
+              description="Record a movement or adjust the filters."
+            />
           )}
         </section>
-      </div>
+      </DashboardPageShell>
 
       {detailsItemId && (
         <ItemDetailsSlideOver

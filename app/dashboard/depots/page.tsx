@@ -5,6 +5,16 @@ import Link from "next/link";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon from "@/components/UiIcon";
 import {
+  DashboardEmptyState,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  FilterBar,
+  FilterChip,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
+import { Button, DialogShell } from "@/components/ui";
+import {
   createDepot,
   deleteDepot,
   formatDepotLabel,
@@ -319,42 +329,25 @@ export default function DepotsPage() {
   return (
     <div className="contents">
       <main className="organize-workspace organize-depots">
-        <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-4">
-          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                  Locations
-                </p>
-
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                  Depots
-                </h1>
-
-                <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                  Manage the places where inventory items live.
-                </p>
-              </div>
-
+        <DashboardPageShell width="compact">
+          <DashboardPageHeader
+            eyebrow="Locations"
+            title="Depots"
+            description="Manage the places where inventory items live."
+            actions={
               <Link
                 href="/dashboard/inventory"
-                className="organize-inventory-link rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
+                className="organize-inventory-link dashboard-action-button dashboard-action-button-secondary"
               >
                 Back to Inventory
               </Link>
-            </div>
-          </section>
+            }
+          />
 
           {(pageNotice || pageError) && (
-            <div
-              className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
-                pageError
-                  ? "border-red-500/30 bg-red-500/10 text-theme-danger"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
-              }`}
-            >
+            <DashboardNotice tone={pageError ? "danger" : "success"}>
               {pageError || pageNotice}
-            </div>
+            </DashboardNotice>
           )}
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.85fr_1.15fr]">
@@ -457,7 +450,7 @@ export default function DepotsPage() {
               )}
             </form>
 
-            <section className="organize-depot-list-panel rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            <section className="dashboard-card organize-depot-list-panel">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
@@ -473,40 +466,25 @@ export default function DepotsPage() {
                   {depots.length} {depots.length === 1 ? "depot" : "depots"}
                 </span>
               </div>
-              <div
-                className="organize-chip-strip mt-4"
-                role="group"
-                aria-label="Depot filters"
-              >
+              <FilterBar label="Depot filters" className="mt-4">
                 {depotFilters.map((filter) => (
-                  <button
+                  <FilterChip
                     key={filter.value}
-                    type="button"
-                    aria-pressed={depotFilter === filter.value}
+                    active={depotFilter === filter.value}
+                    count={filter.count}
                     onClick={() => setDepotFilter(filter.value)}
-                    className={`organize-chip ${
-                      depotFilter === filter.value
-                        ? "organize-chip-active"
-                        : ""
-                    }`}
                   >
-                    <span>{filter.label}</span>
-                    <span>{filter.count}</span>
-                  </button>
+                    {filter.label}
+                  </FilterChip>
                 ))}
-              </div>
+              </FilterBar>
 
               {loading ? (
-                <div className="mt-6 grid grid-cols-1 gap-4">
-                  {[1, 2, 3].map((item) => (
-                    <div
-                      key={item}
-                      className="h-32 overflow-hidden rounded-[26px] border border-theme bg-theme-surface"
-                    >
-                      <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
-                    </div>
-                  ))}
-                </div>
+                <LoadingSkeletonGroup
+                  count={3}
+                  className="mt-6"
+                  itemClassName="min-h-32"
+                />
               ) : visibleDepots.length > 0 ? (
                 <div className="organize-list-grid mt-6 grid grid-cols-1 gap-4">
                   {visibleDepots.map((depot) => (
@@ -673,64 +651,56 @@ export default function DepotsPage() {
                   ))}
                 </div>
               ) : (
-                <div className="mt-6 rounded-[26px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-12 text-center">
-                  <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-theme-accent">
-                    0
-                  </div>
-
-                  <h3 className="mt-5 text-2xl font-bold text-theme-primary">
-                    {depots.length === 0 ? "No depots yet" : "No depots found"}
-                  </h3>
-
-                  <p className="mx-auto mt-2 max-w-md text-base leading-7 text-theme-muted">
-                    {depots.length === 0
+                <DashboardEmptyState
+                  className="mt-6"
+                  icon="depots"
+                  title={depots.length === 0 ? "No depots yet" : "No depots found"}
+                  description={
+                    depots.length === 0
                       ? "Add your first location to assign inventory items to a depot."
-                      : "Try another location filter."}
-                  </p>
-                </div>
+                      : "Try another location filter."
+                  }
+                />
               )}
             </section>
           </div>
-        </div>
+        </DashboardPageShell>
       </main>
 
       {pendingDeleteDepot && (
-        <div className="organize-modal-overlay fixed inset-0 z-50 flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-depot-title"
-            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
-          >
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
-              Delete depot
-            </p>
-            <h2 id="delete-depot-title" className="mt-3 break-words text-2xl font-bold text-theme-primary">
-              Delete {formatDepotLabel(pendingDeleteDepot)}?
-            </h2>
-            <p className="mt-3 leading-7 text-theme-muted">
-              Items assigned to this depot will become Unassigned. Inventory items will not be deleted.
-            </p>
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
-              <button
-                type="button"
+        <DialogShell
+          title={`Delete ${formatDepotLabel(pendingDeleteDepot)}?`}
+          eyebrow="Delete depot"
+          description="Items assigned to this depot will become Unassigned. Inventory items will not be deleted."
+          tone="danger"
+          onClose={() => {
+            if (!deletingId) setPendingDeleteDepot(null);
+          }}
+          closeDisabled={deletingId !== null}
+          className="max-w-md"
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setPendingDeleteDepot(null)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
+                className="flex-1"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => void handleDeleteDepot(pendingDeleteDepot)}
                 disabled={deletingId !== null}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                loading={deletingId === pendingDeleteDepot.id}
+                loadingLabel="Deleting..."
+                className="flex-1"
               >
-                {deletingId === pendingDeleteDepot.id ? "Deleting..." : "Delete Depot"}
-              </button>
-            </div>
-          </div>
-        </div>
+                Delete Depot
+              </Button>
+            </>
+          }
+        />
       )}
     </div>
   );
