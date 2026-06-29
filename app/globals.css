@@ -13057,3 +13057,1480 @@ body,
     padding-inline: 0.8rem;
   }
 }
+
+/* SydIN Sortly-inspired inventory SaaS: Phase 1 scoped layer */
+.dashboard-shell-content:has(.sydin-overview),
+.dashboard-shell-content:has(.inventory-workspace),
+.dashboard-shell-content:has(.settings-workspace) {
+  background: #f4f7fb;
+}
+
+.dashboard-shell-content:has(.sydin-overview),
+.dashboard-shell-content:has(.inventory-workspace) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: clip;
+}
+
+.sydin-overview,
+.inventory-workspace,
+.settings-workspace {
+  --overview-ink: #071638;
+  --overview-copy: #44566f;
+  --overview-muted: #728095;
+  --overview-line: #dce5ef;
+  --overview-soft: #f8fafc;
+  --overview-blue: #2563eb;
+  --overview-cyan: #0ea5c6;
+  --overview-violet: #7d5cff;
+  min-width: 0;
+  color: var(--overview-ink);
+}
+
+.sydin-overview,
+.inventory-workspace {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.sydin-overview-inner {
+  container-type: inline-size;
+  display: grid;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  gap: 1rem;
+}
+
+.sydin-overview-inner > *,
+.inventory-workspace > * {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.sydin-overview-header,
+.sydin-overview-panel,
+.sydin-overview-summary-card,
+.inventory-context-panel,
+.settings-hero,
+.settings-sidebar,
+.settings-panel {
+  border: 1px solid var(--overview-line);
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+}
+
+.sydin-overview-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.sydin-overview-header > :first-child {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+.sydin-overview-kicker {
+  color: var(--overview-blue);
+  font-size: 0.72rem;
+  font-weight: 850;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.sydin-overview-header h1 {
+  margin-top: 0.2rem;
+  color: var(--overview-ink);
+  font-size: clamp(1.8rem, 2.7vw, 2.35rem);
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: 0;
+}
+
+.sydin-overview-header p:not(.sydin-overview-kicker) {
+  margin-top: 0.35rem;
+  max-width: 42rem;
+  color: var(--overview-copy);
+  font-size: 0.9rem;
+  font-weight: 600;
+  line-height: 1.45;
+}
+
+.sydin-overview-header-actions {
+  display: flex;
+  flex: 1 1 22rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: min(100%, 36rem);
+  gap: 0.5rem;
+}
+
+.sydin-overview-chip,
+.sydin-overview-action,
+.sydin-overview-text-link,
+.inventory-view-toggle,
+.inventory-view-toggle button,
+.inventory-context-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-decoration: none;
+}
+
+.sydin-overview-chip,
+.sydin-overview-action {
+  max-width: 100%;
+  min-width: 0;
+  min-height: 2.45rem;
+  border: 1px solid var(--overview-line);
+  border-radius: 999px;
+  background: #ffffff;
+  padding-inline: 0.85rem;
+  color: var(--overview-ink);
+  font-size: 0.8rem;
+  font-weight: 800;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-align: center;
+  white-space: normal;
+}
+
+.sydin-overview-chip {
+  background: var(--overview-soft);
+  color: var(--overview-copy);
+}
+
+.sydin-overview-action-primary,
+.inventory-action-primary {
+  border-color: transparent !important;
+  background: linear-gradient(135deg, #10c4dc 0%, #2563eb 58%, #7d5cff 100%) !important;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.16) !important;
+  color: #ffffff !important;
+}
+
+.sydin-overview-alert {
+  border: 1px solid rgba(245, 158, 11, 0.32);
+  border-radius: 10px;
+  background: #fff7ed;
+  padding: 0.85rem 1rem;
+  color: #92400e;
+  font-size: 0.88rem;
+  font-weight: 750;
+}
+
+.sydin-overview-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  min-width: 0;
+  gap: 0.8rem;
+}
+
+.sydin-overview-summary-card {
+  display: grid;
+  min-width: 0;
+  min-height: 7rem;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.8rem;
+  padding: 0.9rem;
+  color: var(--overview-ink);
+  text-decoration: none;
+  transition:
+    border-color 180ms ease,
+    box-shadow 180ms ease,
+    transform 180ms ease;
+}
+
+.sydin-overview-summary-icon,
+.sydin-overview-thumb,
+.sydin-overview-activity-icon,
+.sydin-overview-empty > span {
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(14, 165, 198, 0.24);
+  background: linear-gradient(135deg, rgba(14, 165, 198, 0.12), rgba(125, 92, 255, 0.09));
+  color: var(--overview-blue);
+}
+
+.sydin-overview-summary-icon {
+  width: 2.45rem;
+  height: 2.45rem;
+  border-radius: 10px;
+}
+
+.sydin-overview-summary-card small,
+.sydin-overview-summary-card em,
+.sydin-overview-panel-header,
+.sydin-overview-restock-row small,
+.sydin-overview-activity-row small,
+.sydin-overview-item-card small,
+.inventory-context-section p,
+.inventory-filter-section > span {
+  color: var(--overview-muted);
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 750;
+}
+
+.sydin-overview-summary-card strong {
+  display: block;
+  margin-top: 0.25rem;
+  overflow: hidden;
+  color: var(--overview-ink);
+  font-size: 1.45rem;
+  font-weight: 900;
+  line-height: 1.1;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sydin-overview-summary-card em {
+  display: block;
+  margin-top: 0.45rem;
+}
+
+.sydin-overview-grid {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.75fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.sydin-overview-panel {
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sydin-overview-recent,
+.sydin-overview-activity {
+  grid-column: 1 / -1;
+}
+
+.sydin-overview-panel-header {
+  display: flex;
+  min-height: 3.1rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-bottom: 1px solid var(--overview-line);
+  padding: 0.75rem 0.9rem;
+}
+
+.sydin-overview-panel-title {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--overview-blue);
+}
+
+.sydin-overview-panel-title h2 {
+  overflow: hidden;
+  color: var(--overview-ink);
+  font-size: 0.96rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sydin-overview-text-link {
+  flex: none;
+  color: var(--overview-blue);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.sydin-overview-restock-list,
+.sydin-overview-activity-list {
+  display: grid;
+  padding: 0.35rem 0.9rem 0.8rem;
+}
+
+.sydin-overview-restock-row,
+.sydin-overview-activity-row {
+  display: grid;
+  min-height: 3.75rem;
+  align-items: center;
+  gap: 0.7rem;
+  border-top: 1px solid var(--overview-line);
+  color: var(--overview-ink);
+  text-decoration: none;
+  transition: background-color 180ms ease;
+}
+
+.sydin-overview-restock-row {
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+}
+
+.sydin-overview-activity-row {
+  grid-template-columns: auto minmax(0, 1fr) auto auto auto;
+}
+
+.sydin-overview-restock-row:first-child,
+.sydin-overview-activity-row:first-child {
+  border-top: 0;
+}
+
+.sydin-overview-restock-row strong,
+.sydin-overview-activity-row strong,
+.sydin-overview-item-card strong {
+  display: block;
+  overflow: hidden;
+  color: var(--overview-ink);
+  font-size: 0.86rem;
+  font-weight: 850;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sydin-overview-restock-row em,
+.sydin-overview-item-card em,
+.sydin-overview-activity-row em {
+  color: var(--overview-ink);
+  font-size: 0.78rem;
+  font-style: normal;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.sydin-overview-thumb {
+  width: 2.45rem;
+  height: 2.45rem;
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.sydin-overview-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.25rem;
+}
+
+.sydin-overview-status,
+.sydin-overview-activity-status {
+  display: inline-flex;
+  min-height: 1.55rem;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  padding-inline: 0.55rem;
+  font-size: 0.68rem;
+  font-weight: 850;
+  white-space: nowrap;
+}
+
+.sydin-overview-status-in,
+.sydin-overview-activity-success {
+  border-color: rgba(14, 165, 198, 0.24);
+  background: rgba(14, 165, 198, 0.1);
+  color: #047c99;
+}
+
+.sydin-overview-status-low,
+.sydin-overview-activity-warning {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+  color: #92400e;
+}
+
+.sydin-overview-status-out,
+.sydin-overview-activity-neutral {
+  border-color: rgba(125, 92, 255, 0.28);
+  background: rgba(125, 92, 255, 0.1);
+  color: #5b35d5;
+}
+
+.sydin-overview-action-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0.85rem;
+}
+
+.sydin-overview-action-grid a {
+  display: flex;
+  min-width: 0;
+  min-height: 3.35rem;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  border: 1px solid var(--overview-line);
+  border-radius: 10px;
+  background: var(--overview-soft);
+  padding: 0.65rem;
+  color: var(--overview-ink);
+  font-size: 0.78rem;
+  font-weight: 850;
+  text-decoration: none;
+}
+
+.sydin-overview-action-grid a span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.sydin-overview-items-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+  gap: 0.75rem;
+  padding: 0.85rem;
+}
+
+.sydin-overview-item-card {
+  display: grid;
+  min-width: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.65rem;
+  border: 1px solid var(--overview-line);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.65rem;
+  color: var(--overview-ink);
+  text-decoration: none;
+}
+
+.sydin-overview-item-card .sydin-overview-status,
+.sydin-overview-item-meta {
+  grid-column: 1 / -1;
+  justify-self: start;
+}
+
+.sydin-overview-empty {
+  display: grid;
+  place-items: center;
+  gap: 0.55rem;
+  min-height: 12rem;
+  padding: 1.5rem;
+  color: var(--overview-copy);
+  text-align: center;
+}
+
+.sydin-overview-empty > span {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 10px;
+}
+
+.sydin-overview-empty strong {
+  color: var(--overview-ink);
+  font-size: 0.95rem;
+  font-weight: 900;
+}
+
+.sydin-overview-empty p {
+  max-width: 24rem;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.sydin-overview-empty a {
+  color: var(--overview-blue);
+  font-size: 0.82rem;
+  font-weight: 850;
+}
+
+.sydin-overview-delta-positive {
+  color: #047c99 !important;
+}
+
+.sydin-overview-delta-negative {
+  color: #5b35d5 !important;
+}
+
+.sydin-overview-skeleton-list,
+.inventory-group-stack {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.sydin-overview-skeleton-list {
+  padding: 0.85rem;
+}
+
+.sydin-overview-skeleton-list span,
+.sydin-overview-item-skeleton {
+  display: block;
+  min-height: 3.4rem;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #eef4fb, #ffffff, #eef4fb);
+  background-size: 220% 100%;
+  animation: overview-skeleton 1.2s ease-in-out infinite;
+}
+
+.inventory-workspace {
+  container-type: inline-size;
+  width: 100%;
+  max-width: none !important;
+  min-width: 0;
+}
+
+.inventory-content-grid {
+  display: grid;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 14.5rem) minmax(0, 1fr) minmax(0, 17rem);
+  align-items: start;
+}
+
+.inventory-content-grid-summary-hidden {
+  grid-template-columns: minmax(0, 14.5rem) minmax(0, 1fr);
+}
+
+.inventory-hero-top,
+.inventory-toolbar-main,
+.inventory-toolbar-secondary,
+.inventory-page-actions,
+.inventory-hero-actions,
+.inventory-toolbar-actions,
+.inventory-stat-grid,
+.inventory-items-grid,
+.inventory-group-stack,
+.inventory-item-group,
+.inventory-table-shell {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.inventory-hero-title-block {
+  flex: 1 1 20rem;
+  min-width: 0;
+}
+
+.inventory-hero-actions {
+  flex: 1 1 22rem;
+  flex-wrap: wrap;
+  min-width: 0;
+  max-width: min(100%, 34rem);
+}
+
+.inventory-toolbar-main {
+  grid-template-columns: minmax(0, 1fr) minmax(0, auto);
+}
+
+.inventory-toolbar-actions > *,
+.inventory-workspace .ui-select,
+.inventory-sort-trigger,
+.inventory-view-toggle {
+  max-width: 100%;
+  min-width: 0;
+}
+
+.inventory-workspace .ui-select {
+  min-width: min(100%, 8.5rem);
+}
+
+.inventory-sort-trigger {
+  min-width: min(100%, 12rem);
+}
+
+.inventory-context-panel {
+  display: grid;
+  gap: 0.85rem;
+  padding: 0.8rem;
+}
+
+.inventory-context-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.inventory-context-header span {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--overview-ink);
+  font-size: 0.86rem;
+  font-weight: 900;
+}
+
+.inventory-context-header button {
+  color: var(--overview-blue);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.inventory-context-section {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.inventory-context-section p {
+  padding-inline: 0.3rem;
+  text-transform: uppercase;
+}
+
+.inventory-context-section button {
+  display: flex;
+  min-height: 2.15rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  padding-inline: 0.55rem;
+  color: var(--overview-copy);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.inventory-context-section button span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inventory-context-section button small {
+  flex: none;
+  color: var(--overview-muted);
+  font-size: 0.68rem;
+  font-weight: 850;
+}
+
+.inventory-context-section .inventory-context-item-active {
+  border-color: rgba(14, 165, 198, 0.28);
+  background: linear-gradient(135deg, rgba(14, 165, 198, 0.12), rgba(125, 92, 255, 0.08));
+  color: var(--overview-ink);
+}
+
+.inventory-context-link {
+  min-height: 2.35rem;
+  border: 1px solid var(--overview-line);
+  border-radius: 9px;
+  background: var(--overview-soft);
+  color: var(--overview-blue);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.inventory-filter-section {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.inventory-filter-section > span {
+  text-transform: uppercase;
+}
+
+.inventory-view-toggle {
+  min-height: 2.35rem;
+  overflow: hidden;
+  border: 1px solid #dde6f1;
+  border-radius: 999px;
+  background: #ffffff;
+  padding: 0.18rem;
+}
+
+.inventory-view-toggle button {
+  min-height: 1.9rem;
+  border-radius: 999px;
+  padding-inline: 0.65rem;
+  color: var(--overview-copy);
+  font-size: 0.74rem;
+  font-weight: 850;
+}
+
+.inventory-view-toggle .inventory-view-toggle-active {
+  background: linear-gradient(135deg, rgba(14, 165, 198, 0.14), rgba(125, 92, 255, 0.1));
+  color: var(--overview-blue);
+}
+
+.inventory-item-group {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.inventory-item-group-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border: 1px solid #dce5ef;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.55rem 0.7rem;
+}
+
+.inventory-item-group-header h2 {
+  overflow: hidden;
+  color: var(--overview-ink);
+  font-size: 0.88rem;
+  font-weight: 900;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inventory-item-group-header span,
+.inventory-table-group-row small {
+  color: var(--overview-muted);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.inventory-table-group-row td {
+  background: #f8fafc;
+  padding: 0.55rem 0.75rem !important;
+}
+
+.inventory-table-group-row span {
+  color: var(--overview-ink);
+  font-size: 0.78rem;
+  font-weight: 900;
+}
+
+.inventory-table-group-row small {
+  margin-left: 0.5rem;
+}
+
+.inventory-card-alert-pill {
+  border-color: rgba(245, 158, 11, 0.3);
+  background: #fff7ed;
+  color: #92400e;
+}
+
+.settings-workspace {
+  min-width: 0;
+  color: var(--overview-ink);
+}
+
+.settings-shell {
+  max-width: none !important;
+}
+
+.settings-hero,
+.settings-panel,
+.settings-sidebar {
+  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05) !important;
+}
+
+.settings-sidebar button[aria-current="page"] {
+  border-color: rgba(14, 165, 198, 0.28) !important;
+  background: linear-gradient(135deg, rgba(14, 165, 198, 0.13), rgba(125, 92, 255, 0.09)) !important;
+  color: var(--overview-blue) !important;
+}
+
+@media (hover: hover) {
+  .sydin-overview-action:hover,
+  .sydin-overview-summary-card:hover,
+  .sydin-overview-restock-row:hover,
+  .sydin-overview-activity-row:hover,
+  .sydin-overview-item-card:hover,
+  .sydin-overview-action-grid a:hover,
+  .inventory-context-section button:hover,
+  .inventory-context-link:hover,
+  .inventory-view-toggle button:hover {
+    border-color: rgba(14, 165, 198, 0.32);
+    background-color: #ffffff;
+  }
+
+  .sydin-overview-summary-card:hover,
+  .sydin-overview-item-card:hover {
+    transform: translateY(-1px);
+  }
+}
+
+@container (max-width: 1100px) {
+  .sydin-overview-summary,
+  .inventory-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sydin-overview-grid,
+  .inventory-content-grid,
+  .inventory-content-grid-summary-hidden {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inventory-context-panel {
+    display: none;
+  }
+
+  .inventory-insights-rail {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@container (max-width: 900px) {
+  .sydin-overview-header,
+  .inventory-hero-top,
+  .inventory-toolbar-secondary {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sydin-overview-header-actions,
+  .inventory-hero-actions,
+  .inventory-toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+    max-width: none;
+  }
+
+  .sydin-overview-chip,
+  .sydin-overview-action,
+  .inventory-hero-actions .action-button,
+  .inventory-toolbar-actions > * {
+    width: 100%;
+  }
+
+  .sydin-overview-restock-row,
+  .sydin-overview-activity-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .sydin-overview-restock-row .sydin-overview-status,
+  .sydin-overview-activity-status,
+  .sydin-overview-activity-row > small {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+
+  .inventory-toolbar-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@container (max-width: 639px) {
+  .sydin-overview-summary,
+  .sydin-overview-header-actions,
+  .sydin-overview-action-grid,
+  .sydin-overview-items-grid,
+  .inventory-stat-grid,
+  .inventory-hero-actions,
+  .inventory-toolbar-actions,
+  .inventory-insights-rail {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1280px) {
+  .sydin-overview-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sydin-overview-grid,
+  .inventory-content-grid,
+  .inventory-content-grid-summary-hidden {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .inventory-context-panel {
+    display: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .sydin-overview-header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .sydin-overview-header-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .sydin-overview-chip,
+  .sydin-overview-action {
+    width: 100%;
+  }
+
+  .sydin-overview-restock-row,
+  .sydin-overview-activity-row {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
+
+  .sydin-overview-restock-row .sydin-overview-status,
+  .sydin-overview-activity-status,
+  .sydin-overview-activity-row > small {
+    grid-column: 2 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-shell:has(.sydin-overview),
+  .dashboard-shell:has(.inventory-workspace),
+  .dashboard-shell:has(.settings-workspace) {
+    height: auto;
+    min-height: 100vh;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .dashboard-shell-content:has(.sydin-overview),
+  .dashboard-shell-content:has(.inventory-workspace),
+  .dashboard-shell-content:has(.settings-workspace) {
+    min-height: auto;
+    overflow-x: clip;
+    overflow-y: visible;
+    padding-bottom: calc(6.5rem + env(safe-area-inset-bottom)) !important;
+  }
+
+  .sydin-overview-summary,
+  .sydin-overview-header-actions,
+  .sydin-overview-action-grid,
+  .sydin-overview-items-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .sydin-overview-header,
+  .sydin-overview-panel,
+  .sydin-overview-summary-card {
+    border-radius: 10px;
+  }
+
+  .inventory-view-toggle {
+    width: 100%;
+  }
+
+  .inventory-view-toggle button {
+    flex: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sydin-overview-action,
+  .sydin-overview-summary-card,
+  .sydin-overview-restock-row,
+  .sydin-overview-activity-row,
+  .sydin-overview-item-card,
+  .inventory-context-section button,
+  .inventory-view-toggle button {
+    transition: none;
+  }
+}
+
+/* Final scoped overflow repair for dashboard and inventory workspaces. */
+.dashboard-theme:has(.sydin-overview),
+.dashboard-theme:has(.inventory-workspace),
+.dashboard-shell:has(.sydin-overview),
+.dashboard-shell:has(.inventory-workspace),
+.dashboard-shell:has(.sydin-overview) .dashboard-main-canvas,
+.dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas,
+.dashboard-shell:has(.sydin-overview) .dashboard-desktop-toolbar,
+.dashboard-shell:has(.inventory-workspace) .dashboard-desktop-toolbar,
+.dashboard-shell:has(.sydin-overview) .dashboard-shell-content,
+.dashboard-shell:has(.inventory-workspace) .dashboard-shell-content {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.dashboard-theme:has(.sydin-overview),
+.dashboard-theme:has(.inventory-workspace),
+.dashboard-shell:has(.sydin-overview),
+.dashboard-shell:has(.inventory-workspace),
+.dashboard-shell:has(.sydin-overview) .dashboard-main-canvas,
+.dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas,
+.dashboard-shell:has(.sydin-overview) .dashboard-shell-content,
+.dashboard-shell:has(.inventory-workspace) .dashboard-shell-content,
+.sydin-overview,
+.sydin-overview-inner,
+.inventory-workspace {
+  overflow-x: clip;
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-shell-content,
+.dashboard-shell:has(.inventory-workspace) .dashboard-shell-content {
+  padding-inline-end: max(1rem, calc(env(safe-area-inset-right) + 1rem)) !important;
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-desktop-toolbar,
+.dashboard-shell:has(.inventory-workspace) .dashboard-desktop-toolbar {
+  flex-wrap: wrap;
+  align-content: center;
+  gap: 0.6rem;
+  overflow-x: clip;
+  padding-inline-end: max(0.85rem, calc(env(safe-area-inset-right) + 0.85rem));
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-top-tabs,
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-tabs {
+  flex: 1 1 14rem;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-top-tools,
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-tools {
+  flex: 1 1 22rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-top-icon-button,
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-icon-button {
+  flex: 0 1 2.55rem;
+  min-width: 2.35rem;
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-top-primary-button,
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-primary-button {
+  flex: 0 1 auto;
+  max-width: 9rem;
+  min-width: 0;
+  white-space: normal;
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-top-account-pill,
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-account-pill {
+  flex: 1 1 9rem;
+  max-width: min(12rem, 100%);
+  min-width: 0;
+}
+
+.dashboard-shell:has(.sydin-overview) .dashboard-top-account-pill > span:not(:first-child),
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-account-pill > span:not(:first-child),
+.dashboard-shell:has(.sydin-overview) .dashboard-top-account-pill strong,
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-account-pill strong,
+.dashboard-shell:has(.sydin-overview) .dashboard-top-account-pill small,
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-account-pill small {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-command-search {
+  flex: 1 1 12rem;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.dashboard-command-actions {
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dashboard-command-action,
+.dashboard-command-primary {
+  flex: 0 1 auto;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.sydin-overview-header-actions,
+.inventory-hero-actions,
+.inventory-toolbar-actions {
+  min-width: 0;
+  max-width: 100%;
+}
+
+@media (min-width: 900px) {
+  .dashboard-theme:has(.sydin-overview),
+  .dashboard-theme:has(.inventory-workspace) {
+    align-items: stretch;
+    justify-content: stretch;
+    max-width: 100vw;
+    overflow-x: clip;
+    padding-inline: clamp(0.75rem, 2vw, 1.25rem);
+  }
+
+  .dashboard-shell:has(.sydin-overview),
+  .dashboard-shell:has(.inventory-workspace) {
+    width: 100%;
+    max-width: 100%;
+  }
+}
+
+@container (max-width: 1040px) {
+  .sydin-overview-header-actions,
+  .inventory-hero-actions,
+  .inventory-toolbar-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+
+  .sydin-overview-chip,
+  .sydin-overview-action,
+  .inventory-hero-actions .action-button,
+  .inventory-toolbar-actions > * {
+    width: 100%;
+  }
+}
+
+@container (max-width: 720px) {
+  .sydin-overview-header-actions,
+  .inventory-hero-actions,
+  .inventory-toolbar-actions {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 1100px) and (min-width: 900px) {
+  .dashboard-shell:has(.sydin-overview) .dashboard-desktop-toolbar,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-desktop-toolbar {
+    gap: 0.45rem;
+    padding-inline: 0.6rem max(0.8rem, calc(env(safe-area-inset-right) + 0.8rem));
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-top-tools,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-top-tools {
+    flex-basis: 18rem;
+    gap: 0.4rem;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-top-account-pill,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-top-account-pill {
+    max-width: min(10rem, 100%);
+  }
+}
+
+/* Structural lock: SydIN dashboard is a full workspace, never a rounded app canvas. */
+.dashboard-theme:has(.dashboard-shell),
+.dashboard-shell:has(.sydin-overview),
+.dashboard-shell:has(.inventory-workspace) {
+  color-scheme: light;
+  background: #eef2f7 !important;
+}
+
+.dashboard-shell:has(.sydin-overview),
+.dashboard-shell:has(.inventory-workspace),
+.dashboard-shell:has(.sydin-overview) *,
+.dashboard-shell:has(.inventory-workspace) * {
+  box-sizing: border-box;
+}
+
+@media (min-width: 900px) {
+  .dashboard-theme:has(.dashboard-shell) {
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 100vh !important;
+    align-items: stretch !important;
+    justify-content: stretch !important;
+    overflow-x: clip !important;
+    padding: 0 !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview),
+  .dashboard-shell:has(.inventory-workspace) {
+    --dashboard-rail-width: 4.5rem;
+    --dashboard-sidebar-width: 4.5rem;
+    display: block !important;
+    width: 100% !important;
+    max-width: none !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #eef2f7 !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-sidebar,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar {
+    position: fixed !important;
+    inset: 0 auto 0 0 !important;
+    z-index: 60 !important;
+    display: flex !important;
+    width: var(--dashboard-rail-width) !important;
+    height: 100vh !important;
+    flex-direction: column !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-right: 1px solid #dce5ef !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0.75rem 0.5rem !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-header,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-header {
+    min-height: 3rem !important;
+    justify-content: center !important;
+    padding: 0 !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-brand-mark,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-brand-mark {
+    display: block !important;
+    width: 2.35rem !important;
+    height: 2.35rem !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-brand-logo,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-brand-logo,
+  .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-toggle,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-toggle,
+  .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-workspace,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-workspace,
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-group-label,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-group-label,
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-label,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-label,
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-active-mark,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-active-mark,
+  .dashboard-shell:has(.sydin-overview) .dashboard-account-copy,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-account-copy,
+  .dashboard-shell:has(.sydin-overview) .dashboard-account-chevron,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-account-chevron {
+    display: none !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-scroll,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-scroll {
+    min-height: 0 !important;
+    flex: 1 1 auto !important;
+    overflow-x: visible !important;
+    overflow-y: auto !important;
+    padding-block: 1rem !important;
+    scrollbar-width: none !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-scroll::-webkit-scrollbar,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-scroll::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-groups,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-groups,
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-group-items,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-group-items {
+    display: grid !important;
+    gap: 0.5rem !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link {
+    width: 2.75rem !important;
+    min-height: 2.75rem !important;
+    justify-content: center !important;
+    gap: 0 !important;
+    border: 1px solid transparent !important;
+    border-radius: 12px !important;
+    background: transparent !important;
+    color: #53637a !important;
+    padding: 0 !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-icon,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-icon {
+    display: grid !important;
+    width: 2.45rem !important;
+    height: 2.45rem !important;
+    place-items: center !important;
+    border-radius: 12px !important;
+    color: inherit !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link-active,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link-active {
+    border-color: rgba(14, 165, 198, 0.28) !important;
+    background: linear-gradient(135deg, rgba(16, 196, 220, 0.15), rgba(37, 99, 235, 0.12), rgba(125, 92, 255, 0.12)) !important;
+    color: #075985 !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-tooltip {
+    left: calc(100% + 0.7rem) !important;
+    display: none;
+    border-color: #dce5ef !important;
+    background: #ffffff !important;
+    color: #071638 !important;
+    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
+    display: block !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-account-area,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-account-area {
+    border-top: 1px solid #e4ebf3 !important;
+    padding-top: 0.75rem !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-account-trigger,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-account-trigger {
+    width: 2.75rem !important;
+    min-height: 2.75rem !important;
+    justify-content: center !important;
+    border: 0 !important;
+    border-radius: 12px !important;
+    background: #f8fafc !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-account-menu,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-account-menu {
+    left: 0.4rem !important;
+    bottom: 3.75rem !important;
+    width: 18rem !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-main-canvas,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas {
+    display: block !important;
+    width: calc(100% - var(--dashboard-rail-width)) !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: 100vh !important;
+    height: auto !important;
+    margin-left: var(--dashboard-rail-width) !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #f4f7fb !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-desktop-toolbar,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-desktop-toolbar {
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 45 !important;
+    display: flex !important;
+    width: 100% !important;
+    max-width: none !important;
+    min-height: 4.25rem !important;
+    margin-left: 0 !important;
+    align-items: center !important;
+    gap: 0.75rem !important;
+    overflow-x: clip !important;
+    border: 0 !important;
+    border-bottom: 1px solid #dce5ef !important;
+    border-radius: 0 !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0.75rem 1.25rem !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-shell-content,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-shell-content {
+    width: 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+    min-height: auto !important;
+    margin-left: 0 !important;
+    overflow: visible !important;
+    overflow-x: hidden !important;
+    overflow-y: visible !important;
+    background: #f4f7fb !important;
+    padding: 1.25rem !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-top-tabs,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-top-tabs {
+    flex: 1 1 auto !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-top-tab,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-top-tab {
+    border-radius: 10px !important;
+    color: #53637a !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-top-tab-active,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-top-tab-active,
+  .dashboard-shell:has(.sydin-overview) .dashboard-top-primary-button,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-top-primary-button {
+    background: linear-gradient(135deg, #10c4dc, #2563eb 58%, #7d5cff) !important;
+    color: #ffffff !important;
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-top-tools,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-top-tools {
+    flex: 0 1 auto !important;
+    min-width: 0 !important;
+    max-width: 100% !important;
+  }
+}
+
+.dashboard-shell:has(.sydin-overview) .sydin-overview,
+.dashboard-shell:has(.inventory-workspace) .inventory-workspace {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  overflow-x: hidden !important;
+}
+
+.dashboard-shell:has(.sydin-overview) .sydin-overview-inner,
+.dashboard-shell:has(.inventory-workspace) .inventory-content-grid,
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-secondary,
+.dashboard-shell:has(.inventory-workspace) .inventory-items-grid,
+.dashboard-shell:has(.inventory-workspace) .inventory-group-stack,
+.dashboard-shell:has(.inventory-workspace) .inventory-item-group {
+  width: 100% !important;
+  max-width: none !important;
+  min-width: 0 !important;
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-content-grid {
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr) minmax(240px, 17rem);
+  gap: 1rem;
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-content-grid-summary-hidden {
+  grid-template-columns: minmax(220px, 260px) minmax(0, 1fr);
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-table-scroll {
+  overflow-x: auto;
+  max-width: 100%;
+}
+
+.dashboard-shell:has(.inventory-workspace) [class*="text-red"] {
+  color: #6d28d9 !important;
+}
+
+.dashboard-shell:has(.inventory-workspace) [class*="bg-red"] {
+  background-color: rgba(125, 92, 255, 0.1) !important;
+}
+
+.dashboard-shell:has(.inventory-workspace) [class*="border-red"] {
+  border-color: rgba(125, 92, 255, 0.28) !important;
+}
+
+.dashboard-shell:has(.inventory-workspace) .text-theme-danger {
+  color: #6d28d9 !important;
+}
+
+@media (max-width: 1279px) {
+  .dashboard-shell:has(.inventory-workspace) .inventory-content-grid,
+  .dashboard-shell:has(.inventory-workspace) .inventory-content-grid-summary-hidden {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-shell:has(.inventory-workspace) .inventory-context-panel {
+    display: none;
+  }
+}

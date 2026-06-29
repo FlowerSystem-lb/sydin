@@ -26,6 +26,7 @@ export default function InventoryItemCard({
   categoryLabel,
   depotLabel,
   supplierLabel,
+  valueLabel,
   lowStock,
   stockStatusLabel,
   stockStatusTone = lowStock ? "warning" : "success",
@@ -47,6 +48,7 @@ export default function InventoryItemCard({
   categoryLabel: string;
   depotLabel?: string | null;
   supplierLabel?: string | null;
+  valueLabel?: string | null;
   lowStock: boolean;
   stockStatusLabel?: string;
   stockStatusTone?: "success" | "warning" | "danger";
@@ -73,10 +75,10 @@ export default function InventoryItemCard({
   const showImage = Boolean(item.image) && failedImageSrc !== item.image;
   const statusClassName =
     stockStatusTone === "danger"
-      ? "border-red-200 bg-red-50 text-red-600"
+      ? "border-violet-200 bg-violet-50 text-violet-700"
       : stockStatusTone === "warning"
         ? "border-amber-200 bg-amber-50 text-amber-700"
-        : "border-emerald-200 bg-emerald-50 text-emerald-700";
+        : "border-cyan-200 bg-cyan-50 text-cyan-700";
 
   const openDetails = useCallback(() => {
     if (selectable) {
@@ -331,7 +333,7 @@ export default function InventoryItemCard({
               role="menuitem"
               onClick={() => runMenuAction(onDelete)}
               disabled={deleting}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-violet-700 transition hover:bg-violet-50 focus-visible:bg-violet-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               <UiIcon name="trash" className="h-4 w-4" />
               {deleting ? "Deleting..." : "Delete"}
@@ -383,8 +385,8 @@ export default function InventoryItemCard({
             <strong>{depotLabel || "Unassigned"}</strong>
           </span>
           <span>
-            <small>Supplier</small>
-            <strong>{supplierLabel || "None"}</strong>
+            <small>{valueLabel ? "Value" : "Supplier"}</small>
+            <strong>{valueLabel || supplierLabel || "None"}</strong>
           </span>
         </div>
 

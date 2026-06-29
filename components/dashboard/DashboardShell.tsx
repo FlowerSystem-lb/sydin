@@ -54,8 +54,7 @@ const DASHBOARD_TOP_TABS = [
   { label: "Activity", href: "/dashboard/stock-movements" },
   { label: "Inventory", href: "/dashboard/inventory" },
   { label: "Orders", href: "/dashboard/purchase-orders" },
-  { label: "Pick Lists", href: "/dashboard/pick-lists" },
-  { label: "Reports", href: "/dashboard/reports" },
+  { label: "Receiving", href: "/dashboard/receiving" },
 ];
 
 function getDashboardPageContext(pathname: string, action?: string | null) {
@@ -178,6 +177,8 @@ function NavigationGroups({
         const items = DASHBOARD_NAVIGATION.filter(
           (item) => item.section === section
         );
+
+        if (items.length === 0) return null;
 
         return (
           <div key={section} className="dashboard-nav-group">
@@ -543,14 +544,6 @@ export default function DashboardShell({
                   <UiIcon name="settings" className="h-4 w-4" />
                   Settings
                 </Link>
-                <Link
-                  href="/dashboard/help"
-                  role="menuitem"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  <UiIcon name="help" className="h-4 w-4" />
-                  Help Center
-                </Link>
               </div>
               <div className="dashboard-account-menu-signout">
                 <button type="button" role="menuitem" onClick={handleSignOut}>
@@ -709,14 +702,6 @@ export default function DashboardShell({
             >
               <UiIcon name="scan" className="h-5 w-5" />
             </button>
-            <Link
-              href="/dashboard/help"
-              className="dashboard-top-icon-button"
-              aria-label="Open help center"
-              title="Help"
-            >
-              <UiIcon name="info" className="h-5 w-5" />
-            </Link>
             <Link href="/dashboard/settings" className="dashboard-top-account-pill">
               <AccountAvatar
                 logoUrl={businessSettings.business_logo_url}
@@ -740,9 +725,7 @@ export default function DashboardShell({
         aria-label="Primary mobile navigation"
       >
         {DASHBOARD_NAVIGATION.filter(
-          (item) =>
-            item.mobilePlacement === "primary" &&
-            item.href !== "/dashboard/pick-lists"
+          (item) => item.mobilePlacement === "primary"
         ).map((item) => {
           const active = isDashboardRouteActive(pathname, item.href);
           return (
@@ -771,25 +754,6 @@ export default function DashboardShell({
           </span>
           <span>Scan</span>
         </button>
-        {DASHBOARD_NAVIGATION.filter(
-          (item) => item.href === "/dashboard/pick-lists"
-        ).map((item) => {
-          const active = isDashboardRouteActive(pathname, item.href);
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              aria-current={active ? "page" : undefined}
-              className={cx(
-                "dashboard-mobile-nav-item",
-                active && "dashboard-mobile-nav-item-active"
-              )}
-            >
-              <UiIcon name={item.icon} className="h-5 w-5" />
-              <span>Pick Lists</span>
-            </Link>
-          );
-        })}
         <button
           type="button"
           onClick={() => setMoreOpen(true)}

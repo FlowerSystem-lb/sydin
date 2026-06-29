@@ -11,7 +11,6 @@ import {
 } from "@/app/lib/businessSettings";
 import {
   FALLBACK_SUBSCRIPTION,
-  formatPlanName,
   getEffectiveLowStockThreshold,
   getSubscriptionCapabilities,
   getSubscriptionUsage,
@@ -24,10 +23,6 @@ import {
   normalizeCurrencyCode,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
-import {
-  getOnboardingProgress,
-  type OnboardingProgress,
-} from "@/app/lib/onboarding";
 import {
   formatStockMovementNotes,
   getRecentStockMovements,
@@ -63,20 +58,16 @@ type StockState = "in" | "low" | "out";
 const DASHBOARD_RETURN_TO = "/dashboard";
 const LOW_STOCK_INVENTORY_HREF = "/dashboard/inventory?stock=low";
 
+const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
+  subscription: FALLBACK_SUBSCRIPTION,
+  usedItems: 0,
+};
+
 function getDashboardItemHref(itemId: number) {
   return `/dashboard/inventory/${itemId}?returnTo=${encodeURIComponent(
     DASHBOARD_RETURN_TO
   )}`;
 }
-
-function getPurchaseOrderItemHref(itemId: number) {
-  return `/dashboard/purchase-orders?items=${itemId}`;
-}
-
-const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
-  subscription: FALLBACK_SUBSCRIPTION,
-  usedItems: 0,
-};
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
@@ -89,7 +80,7 @@ function formatCurrency(value: number, currencyCode: string) {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency,
-      maximumFractionDigits: 2,
+      maximumFractionDigits: Math.abs(value) >= 10000 ? 0 : 2,
     }).format(value);
   } catch {
     return `${currency} ${value.toFixed(2)}`;
@@ -134,59 +125,29 @@ function formatDateTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
     month: "short",
     day: "numeric",
-    year: "numeric",
     hour: "2-digit",
     minute: "2-digit",
   }).format(date);
-}
-
-function toTitleCase(value: string) {
-  return value
-    .replace(/[._-]+/g, " ")
-    .split(" ")
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function getUserDisplayName(user: {
-  email?: string | null;
-  user_metadata?: Record<string, unknown> | null;
-}) {
-  const metadata = user.user_metadata || {};
-  const metadataName =
-    typeof metadata.full_name === "string"
-      ? metadata.full_name
-      : typeof metadata.name === "string"
-        ? metadata.name
-        : typeof metadata.first_name === "string"
-          ? metadata.first_name
-          : "";
-
-  if (metadataName.trim()) return metadataName.trim();
-
-  const emailName = user.email?.split("@")[0] || "";
-  return emailName ? toTitleCase(emailName) : "";
 }
 
 function getMovementStatus(movementType: StockMovement["movement_type"]) {
   if (movementType === "damaged_lost") {
     return {
       label: "Attention",
-      className: "fin-status-danger",
+      tone: "warning",
     };
   }
 
   if (movementType === "adjustment") {
     return {
       label: "Review",
-      className: "fin-status-warning",
+      tone: "neutral",
     };
   }
 
   return {
-    label: "Completed",
-    className: "fin-status-success",
+    label: "Recorded",
+    tone: "success",
   };
 }
 
@@ -209,7 +170,13 @@ function getStockState(quantity: number, threshold: number): StockState {
   return "in";
 }
 
-function DashboardCardHeader({
+function getStockLabel(state: StockState) {
+  if (state === "out") return "Out of stock";
+  if (state === "low") return "Low stock";
+  return "In stock";
+}
+
+function DashboardPanelHeader({
   icon,
   title,
   href,
@@ -221,18 +188,35 @@ function DashboardCardHeader({
   hrefLabel?: string;
 }) {
   return (
-    <div className="fin-card-header">
-      <div className="fin-card-title">
+    <div className="sydin-overview-panel-header">
+      <div className="sydin-overview-panel-title">
         <UiIcon name={icon} className="h-4 w-4" />
         <h2>{title}</h2>
       </div>
       {href && (
-        <Link href={href} className="fin-view-link">
+        <Link href={href} className="sydin-overview-text-link">
           {hrefLabel}
           <UiIcon name="chevron-right" className="h-4 w-4" />
         </Link>
       )}
     </div>
+  );
+}
+
+function ItemThumb({ item }: { item: Item }) {
+  if (item.image) {
+    return (
+      <span className="sydin-overview-thumb">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src={item.image} alt="" loading="lazy" decoding="async" />
+      </span>
+    );
+  }
+
+  return (
+    <span className="sydin-overview-thumb">
+      <UiIcon name="box" className="h-4 w-4" />
+    </span>
   );
 }
 
@@ -245,8 +229,6 @@ export default function DashboardPage() {
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [businessSettings, setBusinessSettings] =
     useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
-  const [onboarding, setOnboarding] = useState<OnboardingProgress | null>(null);
-  const [profileName, setProfileName] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -282,8 +264,6 @@ export default function DashboardPage() {
           return;
         }
 
-        setProfileName(getUserDisplayName(user));
-
         Promise.all([
           supabase
             .from("inventory")
@@ -296,7 +276,6 @@ export default function DashboardPage() {
           getOrCreateBusinessSettings(user.id),
           getCategoriesForUser(user.id).catch(() => []),
           getDepotsForUser(user.id).catch(() => []),
-          getOnboardingProgress(user.id).catch(() => null),
           getRecentStockMovements(user.id, 8).catch(() => []),
         ])
           .then(
@@ -306,7 +285,6 @@ export default function DashboardPage() {
               settings,
               loadedCategories,
               loadedDepots,
-              loadedOnboarding,
               loadedMovements,
             ]) => {
               if (!isActive) return;
@@ -324,7 +302,6 @@ export default function DashboardPage() {
               setBusinessSettings(settings);
               setCategories(loadedCategories);
               setDepots(loadedDepots);
-              setOnboarding(loadedOnboarding);
               setMovements(loadedMovements);
               setLoading(false);
             }
@@ -370,14 +347,14 @@ export default function DashboardPage() {
       const state = getStockState(quantity, threshold);
       const retailValue = calculateInventoryValue(quantity, item.selling_price);
       const costValue = calculateInventoryValue(quantity, item.cost_price);
+      const value = retailValue ?? costValue;
 
       return {
         item,
         quantity,
         threshold,
         state,
-        retailValue,
-        costValue,
+        value,
         category: resolveCategoryDisplay(
           item,
           categories.find((category) => category.id === item.category_id) ||
@@ -388,543 +365,379 @@ export default function DashboardPage() {
         ),
       };
     });
-    const totalStock = enrichedItems.reduce(
+
+    const totalQuantity = enrichedItems.reduce(
       (sum, entry) => sum + entry.quantity,
       0
     );
-    const lowStockCount = enrichedItems.filter(
-      (entry) => entry.state !== "in"
-    ).length;
-    const totalRetailValue = enrichedItems.reduce(
-      (sum, entry) => sum + (entry.retailValue || 0),
+    const valueItems = enrichedItems.filter((entry) => entry.value !== null);
+    const totalValue = valueItems.reduce(
+      (sum, entry) => sum + (entry.value || 0),
       0
     );
-    const totalCostValue = enrichedItems.reduce(
-      (sum, entry) => sum + (entry.costValue || 0),
-      0
-    );
-    const hasRetailValue = enrichedItems.some(
-      (entry) => entry.retailValue !== null
-    );
-    const hasCostValue = enrichedItems.some(
-      (entry) => entry.costValue !== null
-    );
-
     const lowStockItems = enrichedItems
       .filter((entry) => entry.state !== "in")
       .sort((left, right) => {
         if (left.state !== right.state) return left.state === "out" ? -1 : 1;
         return left.quantity - right.quantity;
       });
-    const reorderSuggestions = lowStockItems
-      .map((entry) => ({
-        ...entry,
-        suggested: Math.max(0, entry.threshold - entry.quantity),
-      }))
-      .filter((entry) => entry.suggested > 0);
-
-    const locationSummary = new Map<
-      string,
-      {
-        label: string;
-        itemCount: number;
-        quantity: number;
-        value: number;
-        attention: number;
-      }
-    >();
-
-    const categorySummary = new Map<
-      string,
-      {
-        label: string;
-        stock: number;
-        attention: number;
-      }
-    >();
-
-    enrichedItems.forEach((entry) => {
-      const locationLabel = entry.depot || "Unassigned";
-      const location = locationSummary.get(locationLabel) || {
-        label: locationLabel,
-        itemCount: 0,
-        quantity: 0,
-        value: 0,
-        attention: 0,
-      };
-
-      location.itemCount += 1;
-      location.quantity += entry.quantity;
-      location.value += entry.retailValue ?? entry.costValue ?? 0;
-      location.attention += entry.state === "in" ? 0 : 1;
-      locationSummary.set(locationLabel, location);
-
-      const categoryLabel = entry.category || "Uncategorized";
-      const categoryEntry = categorySummary.get(categoryLabel) || {
-        label: categoryLabel,
-        stock: 0,
-        attention: 0,
-      };
-
-      categoryEntry.stock += Math.max(0, entry.quantity);
-      categoryEntry.attention += entry.state === "in" ? 0 : Math.max(1, entry.quantity);
-      categorySummary.set(categoryLabel, categoryEntry);
-    });
-
-    const stockMixRaw = Array.from(categorySummary.values())
-      .sort(
-        (left, right) =>
-          right.stock + right.attention - (left.stock + left.attention)
-      )
-      .slice(0, 8);
-    const maxStockMix = Math.max(
-      1,
-      ...stockMixRaw.map((entry) => entry.stock + entry.attention)
+    const activeDepotIds = new Set(
+      enrichedItems
+        .map((entry) => entry.item.depot_id)
+        .filter((depotId): depotId is number => typeof depotId === "number")
     );
-    const stockMixItems = stockMixRaw.map((entry) => ({
-      ...entry,
-      stockHeight: Math.max(12, Math.round((entry.stock / maxStockMix) * 100)),
-      attentionHeight: Math.max(
-        entry.attention > 0 ? 10 : 0,
-        Math.round((entry.attention / maxStockMix) * 100)
-      ),
-    }));
 
     return {
+      enrichedItems,
+      recentItems: enrichedItems.slice(0, 6),
       totalItems: items.length,
-      totalStock,
-      lowStockCount,
-      inStockCount: enrichedItems.filter((entry) => entry.state === "in").length,
-      outStockCount: enrichedItems.filter((entry) => entry.state === "out").length,
-      value: hasRetailValue ? totalRetailValue : totalCostValue,
-      valueLabel: hasRetailValue
-        ? "Estimated retail value"
-        : hasCostValue
-          ? "Estimated cost value"
-          : "No price data yet",
-      hasValue: hasRetailValue || hasCostValue,
-      costValue: totalCostValue,
-      hasCostValue,
-      locationCards: Array.from(locationSummary.values())
-        .sort((left, right) => right.value - left.value || right.quantity - left.quantity)
-        .slice(0, 3),
-      stockMixItems,
-      snapshotItems: enrichedItems.slice(0, 6),
-      lowStockItems: lowStockItems.slice(0, 3),
-      reorderSuggestions: reorderSuggestions.slice(0, 3),
+      totalQuantity,
+      totalValue,
+      hasValue: valueItems.length > 0,
+      totalDepots: Math.max(depots.length, activeDepotIds.size),
+      lowStockItems: lowStockItems.slice(0, 5),
+      lowStockCount: lowStockItems.length,
+      outStockCount: lowStockItems.filter((entry) => entry.state === "out")
+        .length,
     };
   }, [
     canUseItemThreshold,
     categories,
     depotById,
+    depots.length,
     effectiveLowStockThreshold,
     items,
   ]);
 
-  const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
-  const itemLimit = subscriptionUsage.subscription.item_limit;
-  const itemUsageText = `${formatNumber(subscriptionUsage.usedItems)} / ${formatNumber(
-    itemLimit
-  )} items`;
-  const setupPercent = onboarding?.percentage ?? 0;
-  const nextStep = onboarding?.nextStep;
-
-  const healthyItemCount = Math.max(
-    0,
-    dashboardData.totalItems - dashboardData.lowStockCount
-  );
-  const stockHealthPercent =
-    dashboardData.totalItems > 0
-      ? Math.round((healthyItemCount / dashboardData.totalItems) * 100)
-      : 100;
-  const itemUsagePercent =
-    itemLimit > 0
-      ? Math.min(
-          100,
-          Math.round((subscriptionUsage.usedItems / itemLimit) * 100)
-        )
-      : 0;
-  const displayName =
-    profileName || businessSettings.business_name.split(" ")[0] || "there";
-  const inventoryValue = dashboardData.hasValue
-    ? formatCurrency(dashboardData.value, currencyCode)
-    : "--";
-  const firstReorderHref = dashboardData.reorderSuggestions[0]
-    ? getPurchaseOrderItemHref(dashboardData.reorderSuggestions[0].item.id)
-    : "/dashboard/purchase-orders";
-  const totalLocations = Math.max(depots.length, dashboardData.locationCards.length);
-  const recentMovements = movements.slice(0, 5);
-
-  const metricCards = [
+  const summaryCards = [
     {
       label: "Total Items",
       value: formatNumber(dashboardData.totalItems),
-      detail: `${formatNumber(dashboardData.inStockCount)} healthy items`,
+      detail: `${formatNumber(dashboardData.lowStockCount)} need attention`,
       icon: "box" as UiIconName,
-      tone: "primary",
       href: "/dashboard/inventory",
     },
     {
-      label: "Low Stock",
-      value: formatNumber(dashboardData.lowStockCount),
-      detail: `${formatNumber(dashboardData.outStockCount)} out of stock`,
-      icon: "alert" as UiIconName,
-      tone: "soft",
-      href: LOW_STOCK_INVENTORY_HREF,
+      label: "Depots / Locations",
+      value: formatNumber(dashboardData.totalDepots),
+      detail: "Inventory locations",
+      icon: "depots" as UiIconName,
+      href: "/dashboard/depots",
     },
     {
-      label: "Total Stock",
-      value: formatNumber(dashboardData.totalStock),
-      detail: "Units available",
+      label: "Total Quantity",
+      value: formatNumber(dashboardData.totalQuantity),
+      detail: "Units across items",
       icon: "layers" as UiIconName,
-      tone: "soft",
       href: "/dashboard/inventory",
     },
     {
-      label: "Stock Health",
-      value: `${stockHealthPercent}%`,
-      detail: "Across inventory",
+      label: "Inventory Value",
+      value: dashboardData.hasValue
+        ? formatCurrency(dashboardData.totalValue, currencyCode)
+        : "--",
+      detail: dashboardData.hasValue ? currencyCode : "Add prices to track value",
       icon: "usage" as UiIconName,
-      tone: "soft",
-      href: "/dashboard/reports",
+      href: "/dashboard/inventory",
     },
   ];
 
-  const quickCards = [
+  const topActions = [
     {
-      title: "Add Item",
-      detail: "Create a new inventory record",
+      label: "Add Item",
       href: "/dashboard/add-item",
       icon: "plus" as UiIconName,
-      tone: "dark",
+      primary: true,
     },
     {
-      title: "Stock Count",
-      detail: `${setupPercent}% setup complete`,
-      href: nextStep?.href || "/dashboard/stock-counts",
+      label: "Set Depots",
+      href: "/dashboard/depots",
+      icon: "depots" as UiIconName,
+    },
+    {
+      label: "QR Scan",
+      href: "/dashboard/qr-center",
+      icon: "qr" as UiIconName,
+    },
+    {
+      label: "Stock Count",
+      href: "/dashboard/stock-counts",
       icon: "check" as UiIconName,
-      tone: "orange",
     },
   ];
+  const recentMovements = movements.slice(0, 6);
 
   return (
-    <main className="dashboard-overview fin-dashboard">
-      <section className="fin-greeting" aria-labelledby="dashboard-title">
-        <span className="fin-greeting-icon" aria-hidden="true">
-          <UiIcon name="appearance" className="h-5 w-5" />
-        </span>
-        <div>
-          <h1 id="dashboard-title">Good morning, {displayName}</h1>
-          <p>Stay on top of your stock, monitor progress, and track status.</p>
-        </div>
-      </section>
-
-      {error && (
-        <p role="alert" className="fin-alert fin-alert-danger">
-          {error}
-        </p>
-      )}
-
-      <div className="fin-dashboard-grid">
-        <section className="fin-card fin-balance-card" aria-label="Inventory value">
-          <div className="fin-balance-head">
-            <div>
-              <span>Total Inventory Value</span>
-              <strong>{loading ? "..." : inventoryValue}</strong>
-              <p>
-                <span>{stockHealthPercent}%</span> healthy stock across{" "}
-                {formatNumber(healthyItemCount)} items
-              </p>
-            </div>
-            <span className="fin-currency-pill">{currencyCode}</span>
+    <main className="dashboard-overview sydin-overview">
+      <div className="sydin-overview-inner">
+        <section className="sydin-overview-header" aria-labelledby="dashboard-title">
+          <div>
+            <p className="sydin-overview-kicker">SydIN workspace</p>
+            <h1 id="dashboard-title">Dashboard</h1>
+            <p>
+              Inventory snapshot across items, depots, and recent stock
+              activity.
+            </p>
           </div>
-
-          <div className="fin-balance-actions" aria-label="Inventory actions">
-            <Link href="/dashboard/add-item">
-              <UiIcon name="plus" className="h-4 w-4" />
-              Add Item
-            </Link>
-            <Link href={firstReorderHref}>
-              <UiIcon name="file" className="h-4 w-4" />
-              Request
-            </Link>
-          </div>
-
-          <div className="fin-wallet-heading">
-            <span>Locations</span>
-            <span>Total {formatNumber(totalLocations)} depots</span>
-          </div>
-
-          {loading ? (
-            <div className="fin-mini-skeleton" aria-hidden="true" />
-          ) : dashboardData.locationCards.length === 0 ? (
-            <div className="fin-empty-mini">
-              Add your first item to see location value here.
-            </div>
-          ) : (
-            <div className="fin-location-grid">
-              {dashboardData.locationCards.map((location) => (
-                <Link
-                  key={location.label}
-                  href="/dashboard/inventory"
-                  className="fin-location-card"
-                  aria-label={`Open inventory for ${location.label}`}
-                >
-                  <span className="fin-location-flag">
-                    {location.label.slice(0, 2).toUpperCase()}
-                  </span>
-                  <strong>
-                    {dashboardData.hasValue
-                      ? formatCurrency(location.value, currencyCode)
-                      : `${formatNumber(location.quantity)} units`}
-                  </strong>
-                  <small>{location.itemCount} item types</small>
-                  <span
-                    className={
-                      location.attention > 0
-                        ? "fin-location-status fin-location-status-risk"
-                        : "fin-location-status"
-                    }
-                  >
-                    {location.attention > 0 ? "Review" : "Active"}
-                  </span>
-                </Link>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="fin-metrics-grid" aria-label="Inventory metrics">
-          {metricCards.map((card) => (
-            <Link
-              key={card.label}
-              href={card.href}
-              className={`fin-metric-card fin-metric-${card.tone}`}
-              aria-label={`Open ${card.label}`}
-            >
-              <span className="fin-metric-icon" aria-hidden="true">
-                <UiIcon name={card.icon} className="h-4 w-4" />
-              </span>
-              <span>{card.label}</span>
-              <strong>{loading ? "..." : card.value}</strong>
-              <small>{card.detail}</small>
-            </Link>
-          ))}
-        </section>
-
-        <section className="fin-card fin-chart-card">
-          <DashboardCardHeader
-            icon="reports"
-            title="Stock Mix"
-            href="/dashboard/reports"
-            hrefLabel="Reports"
-          />
-          <p className="fin-card-subtitle">
-            View availability and attention across your top categories.
-          </p>
-          <div className="fin-chart-legend" aria-hidden="true">
-            <span>
-              <i className="fin-legend-stock" /> Available
-            </span>
-            <span>
-              <i className="fin-legend-risk" /> At risk
-            </span>
-          </div>
-          {loading ? (
-            <div className="fin-chart-skeleton" aria-hidden="true" />
-          ) : dashboardData.stockMixItems.length === 0 ? (
-            <div className="fin-empty-mini">
-              Categories will appear here once items are added.
-            </div>
-          ) : (
-            <div className="fin-chart-bars" aria-label="Stock mix chart">
-              {dashboardData.stockMixItems.map((entry) => (
-                <div key={entry.label} className="fin-chart-bar">
-                  <div className="fin-chart-track">
-                    <span
-                      className="fin-chart-stock"
-                      style={{ height: `${entry.stockHeight}%` }}
-                    />
-                    <span
-                      className="fin-chart-risk"
-                      style={{ height: `${entry.attentionHeight}%` }}
-                    />
-                  </div>
-                  <small title={entry.label}>{entry.label.slice(0, 3)}</small>
-                </div>
-              ))}
-            </div>
-          )}
-        </section>
-
-        <section className="fin-card fin-limit-card">
-          <div className="fin-plain-card-head">
-            <h2>Monthly Item Limit</h2>
-            <span>{currentPlanName}</span>
-          </div>
-          <div className="fin-limit-track">
-            <span style={{ width: `${itemUsagePercent}%` }} />
-          </div>
-          <div className="fin-limit-meta">
-            <span>{loading ? "..." : itemUsageText}</span>
-            <span>{formatNumber(itemLimit)} max</span>
-          </div>
-        </section>
-
-        <section className="fin-card fin-action-panel">
-          <div className="fin-plain-card-head">
-            <h2>My Actions</h2>
-            <Link href="/dashboard/help">Help</Link>
-          </div>
-          <div className="fin-action-card-grid">
-            {quickCards.map((card) => (
+          <div className="sydin-overview-header-actions">
+            {topActions.map((action) => (
               <Link
-                key={card.title}
-                href={card.href}
-                className={`fin-action-card fin-action-${card.tone}`}
+                key={action.href}
+                href={action.href}
+                className={
+                  action.primary
+                    ? "sydin-overview-action sydin-overview-action-primary"
+                    : "sydin-overview-action"
+                }
               >
-                <span aria-hidden="true">
-                  <UiIcon name={card.icon} className="h-4 w-4" />
-                </span>
-                <strong>{card.title}</strong>
-                <small>{card.detail}</small>
+                <UiIcon name={action.icon} className="h-4 w-4" />
+                {action.label}
               </Link>
             ))}
           </div>
         </section>
 
-        <section className="fin-card fin-activities-card">
-          <div className="fin-activities-toolbar">
-            <DashboardCardHeader
-              icon="clock"
-              title="Recent Activities"
-              href="/dashboard/stock-movements"
-              hrefLabel="View all"
+        {error && (
+          <p role="alert" className="sydin-overview-alert">
+            {error}
+          </p>
+        )}
+
+        <section className="sydin-overview-summary" aria-label="Inventory summary">
+          {summaryCards.map((card) => (
+            <Link
+              key={card.label}
+              href={card.href}
+              className="sydin-overview-summary-card"
+            >
+              <span className="sydin-overview-summary-icon">
+                <UiIcon name={card.icon} className="h-4 w-4" />
+              </span>
+              <span>
+                <small>{card.label}</small>
+                <strong>{loading ? "--" : card.value}</strong>
+                <em>{card.detail}</em>
+              </span>
+            </Link>
+          ))}
+        </section>
+
+        <div className="sydin-overview-grid">
+          <section className="sydin-overview-panel sydin-overview-restock">
+            <DashboardPanelHeader
+              icon="alert"
+              title="Items that need restocking"
+              href={LOW_STOCK_INVENTORY_HREF}
+              hrefLabel="Low stock"
             />
-            <div className="fin-table-tools">
-              <label className="fin-table-search">
-                <UiIcon name="search" className="h-4 w-4" />
-                <input aria-label="Search activities" placeholder="Search" />
-              </label>
-              <Link href="/dashboard/stock-movements" className="fin-filter-button">
-                Filter
-                <UiIcon name="settings" className="h-4 w-4" />
+
+            {loading ? (
+              <div className="sydin-overview-skeleton-list" aria-hidden="true">
+                {[1, 2, 3].map((item) => (
+                  <span key={item} />
+                ))}
+              </div>
+            ) : dashboardData.lowStockItems.length === 0 ? (
+              <div className="sydin-overview-empty">
+                <span>
+                  <UiIcon name="check" className="h-5 w-5" />
+                </span>
+                <strong>No restocking needed</strong>
+                <p>Your current items are above their low-stock thresholds.</p>
+              </div>
+            ) : (
+              <div className="sydin-overview-restock-list">
+                {dashboardData.lowStockItems.map((entry) => (
+                  <Link
+                    key={entry.item.id}
+                    href={getDashboardItemHref(entry.item.id)}
+                    className="sydin-overview-restock-row"
+                  >
+                    <ItemThumb item={entry.item} />
+                    <span className="min-w-0">
+                      <strong>{entry.item.name}</strong>
+                      <small>
+                        {entry.depot} - reorder at {formatNumber(entry.threshold)}
+                      </small>
+                    </span>
+                    <span
+                      className={`sydin-overview-status sydin-overview-status-${entry.state}`}
+                    >
+                      {getStockLabel(entry.state)}
+                    </span>
+                    <em>
+                      {getInventoryQuantityLabel(
+                        entry.item.quantity,
+                        entry.item.unit_type,
+                        entry.item.custom_unit_label
+                      )}
+                    </em>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="sydin-overview-panel sydin-overview-actions-panel">
+            <DashboardPanelHeader icon="plus" title="Top actions" />
+            <div className="sydin-overview-action-grid">
+              {topActions.map((action) => (
+                <Link key={action.href} href={action.href}>
+                  <UiIcon name={action.icon} className="h-4 w-4" />
+                  <span>{action.label}</span>
+                </Link>
+              ))}
+              <Link href="/dashboard/purchase-orders">
+                <UiIcon name="file" className="h-4 w-4" />
+                <span>Create PO</span>
+              </Link>
+              <Link href="/dashboard/receiving">
+                <UiIcon name="movement" className="h-4 w-4" />
+                <span>Receive</span>
               </Link>
             </div>
-          </div>
+          </section>
 
-          {loading ? (
-            <div className="fin-table-skeleton" aria-hidden="true">
-              {[1, 2, 3, 4].map((item) => (
-                <span key={item} />
-              ))}
-            </div>
-          ) : recentMovements.length === 0 ? (
-            <div className="fin-empty-state">
-              <UiIcon name="movement" className="h-8 w-8" />
-              <strong>No recent activity</strong>
-              <p>Stock movements will appear here as your team works.</p>
-              <Link href="/dashboard/stock-movements">Open movements</Link>
-            </div>
-          ) : (
-            <div className="fin-table-wrap">
-              <table className="fin-activity-table">
-                <thead>
-                  <tr>
-                    <th aria-label="Selection" />
-                    <th>Order ID</th>
-                    <th>Activity</th>
-                    <th>Quantity</th>
-                    <th>Status</th>
-                    <th>Date</th>
-                    <th aria-label="Actions" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {recentMovements.map((movement) => {
-                    const item = movement.item_id
-                      ? itemById.get(movement.item_id)
-                      : null;
-                    const movementLabel =
-                      item?.name ||
-                      formatStockMovementNotes(movement.notes) ||
-                      STOCK_MOVEMENT_LABELS[movement.movement_type];
-                    const movementStatus = getMovementStatus(
-                      movement.movement_type
-                    );
-                    const delta = movement.quantity_delta;
-                    const activityHref = item
-                      ? getDashboardItemHref(item.id)
-                      : "/dashboard/stock-movements";
+          <section className="sydin-overview-panel sydin-overview-recent">
+            <DashboardPanelHeader
+              icon="box"
+              title="Recent Items"
+              href="/dashboard/inventory"
+              hrefLabel="All items"
+            />
 
-                    return (
-                      <tr key={movement.id}>
-                        <td>
-                          <span className="fin-table-check" aria-hidden="true" />
-                        </td>
-                        <td>INV_{String(movement.id).padStart(6, "0")}</td>
-                        <td>
-                          <Link href={activityHref} className="fin-activity-name">
-                            <span aria-hidden="true">
-                              <UiIcon name="movement" className="h-3.5 w-3.5" />
-                            </span>
-                            <span>
-                              <strong>{movementLabel}</strong>
-                              {item && (
-                                <small>
-                                  {getInventoryQuantityLabel(
-                                    item.quantity,
-                                    item.unit_type,
-                                    item.custom_unit_label
-                                  )}{" "}
-                                  in stock
-                                </small>
-                              )}
-                            </span>
-                          </Link>
-                        </td>
-                        <td
-                          className={
-                            delta < 0
-                              ? "fin-quantity-negative"
-                              : delta > 0
-                                ? "fin-quantity-positive"
-                                : ""
-                          }
-                        >
-                          {delta > 0 ? "+" : ""}
-                          {formatNumber(delta)}
-                        </td>
-                        <td>
-                          <span
-                            className={`fin-table-status ${movementStatus.className}`}
-                          >
-                            {movementStatus.label}
-                          </span>
-                        </td>
-                        <td>
-                          <span className="fin-date-cell">
-                            {formatDateTime(movement.created_at)}
-                            <small>{formatDateDistance(movement.created_at)}</small>
-                          </span>
-                        </td>
-                        <td>
-                          <Link
-                            href="/dashboard/stock-movements"
-                            className="fin-row-more"
-                            aria-label={`Open stock movement history for ${movementLabel}`}
-                          >
-                            <UiIcon name="more" className="h-4 w-4" />
-                          </Link>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
+            {loading ? (
+              <div className="sydin-overview-items-grid">
+                {[1, 2, 3].map((item) => (
+                  <span key={item} className="sydin-overview-item-skeleton" />
+                ))}
+              </div>
+            ) : dashboardData.recentItems.length === 0 ? (
+              <div className="sydin-overview-empty">
+                <span>
+                  <UiIcon name="box" className="h-5 w-5" />
+                </span>
+                <strong>No items yet</strong>
+                <p>Add your first item to start building inventory history.</p>
+                <Link href="/dashboard/add-item">Add Item</Link>
+              </div>
+            ) : (
+              <div className="sydin-overview-items-grid">
+                {dashboardData.recentItems.map((entry) => (
+                  <Link
+                    key={entry.item.id}
+                    href={getDashboardItemHref(entry.item.id)}
+                    className="sydin-overview-item-card"
+                  >
+                    <ItemThumb item={entry.item} />
+                    <span className="min-w-0">
+                      <strong>{entry.item.name}</strong>
+                      <small>
+                        {entry.item.item_code || entry.item.sku || "No SKU"}
+                      </small>
+                    </span>
+                    <em>
+                      {getInventoryQuantityLabel(
+                        entry.item.quantity,
+                        entry.item.unit_type,
+                        entry.item.custom_unit_label
+                      )}
+                    </em>
+                    <span
+                      className={`sydin-overview-status sydin-overview-status-${entry.state}`}
+                    >
+                      {getStockLabel(entry.state)}
+                    </span>
+                    <small className="sydin-overview-item-meta">
+                      {[entry.category, entry.depot].filter(Boolean).join(" - ")}
+                    </small>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="sydin-overview-panel sydin-overview-activity">
+            <DashboardPanelHeader
+              icon="clock"
+              title="Recent Activity"
+              href="/dashboard/stock-movements"
+              hrefLabel="Activity"
+            />
+
+            {loading ? (
+              <div className="sydin-overview-skeleton-list" aria-hidden="true">
+                {[1, 2, 3, 4].map((item) => (
+                  <span key={item} />
+                ))}
+              </div>
+            ) : recentMovements.length === 0 ? (
+              <div className="sydin-overview-empty">
+                <span>
+                  <UiIcon name="movement" className="h-5 w-5" />
+                </span>
+                <strong>No recent activity</strong>
+                <p>Stock movements will appear here as the team works.</p>
+                <Link href="/dashboard/stock-movements">Open movements</Link>
+              </div>
+            ) : (
+              <div className="sydin-overview-activity-list">
+                {recentMovements.map((movement) => {
+                  const item = movement.item_id
+                    ? itemById.get(movement.item_id)
+                    : null;
+                  const movementLabel =
+                    item?.name ||
+                    formatStockMovementNotes(movement.notes) ||
+                    STOCK_MOVEMENT_LABELS[movement.movement_type];
+                  const movementStatus = getMovementStatus(
+                    movement.movement_type
+                  );
+                  const activityHref = item
+                    ? getDashboardItemHref(item.id)
+                    : "/dashboard/stock-movements";
+
+                  return (
+                    <Link
+                      key={movement.id}
+                      href={activityHref}
+                      className="sydin-overview-activity-row"
+                    >
+                      <span className="sydin-overview-activity-icon">
+                        <UiIcon name="movement" className="h-3.5 w-3.5" />
+                      </span>
+                      <span className="min-w-0">
+                        <strong>{movementLabel}</strong>
+                        <small>
+                          {STOCK_MOVEMENT_LABELS[movement.movement_type]} -{" "}
+                          {formatDateTime(movement.created_at)}
+                        </small>
+                      </span>
+                      <em
+                        className={
+                          movement.quantity_delta < 0
+                            ? "sydin-overview-delta-negative"
+                            : movement.quantity_delta > 0
+                              ? "sydin-overview-delta-positive"
+                              : ""
+                        }
+                      >
+                        {movement.quantity_delta > 0 ? "+" : ""}
+                        {formatNumber(movement.quantity_delta)}
+                      </em>
+                      <span
+                        className={`sydin-overview-activity-status sydin-overview-activity-${movementStatus.tone}`}
+                      >
+                        {movementStatus.label}
+                      </span>
+                      <small>{formatDateDistance(movement.created_at)}</small>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        </div>
       </div>
     </main>
   );
