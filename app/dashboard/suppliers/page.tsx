@@ -99,7 +99,7 @@ function SupplierForm({
           onClick={onCancel}
           disabled={saving}
           aria-label="Close supplier form"
-          className="flex h-11 w-11 items-center justify-center rounded-2xl border border-theme bg-theme-surface text-xl text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
+          className="flex h-11 w-11 items-center justify-center rounded-xl border border-theme bg-theme-surface text-xl text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
         >
           ×
         </button>
@@ -226,14 +226,14 @@ function SupplierForm({
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="rounded-2xl border border-theme bg-theme-surface px-6 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+          className="rounded-xl border border-theme bg-theme-surface px-5 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
         >
           Cancel
         </button>
         <button
           type="submit"
           disabled={saving || !values.name.trim() || emailError}
-          className="rounded-2xl bg-white px-6 py-3.5 font-bold text-black transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Supplier"}
         </button>
@@ -499,16 +499,16 @@ export default function SuppliersPage() {
     <div className="contents">
       <main className="organize-workspace organize-suppliers">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
-          <section className="glass-panel p-5 sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                   Purchasing contacts
                 </p>
-                <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
                   Suppliers
                 </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
                   Keep vendor contacts organized and connect them to inventory when useful.
                 </p>
               </div>
@@ -523,7 +523,7 @@ export default function SuppliersPage() {
                   type="button"
                   onClick={openCreateForm}
                   disabled={loading || limitReached}
-                  className="glass-button px-5 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   Add Supplier
                 </button>
@@ -555,7 +555,7 @@ export default function SuppliersPage() {
             />
           )}
 
-          <section className="organize-search-card glass-card p-4 sm:p-5">
+          <section className="organize-search-card rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex-1">
                 <label className="mb-2 block text-sm font-semibold text-theme-muted">
@@ -598,7 +598,7 @@ export default function SuppliersPage() {
           {loading ? (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {[1, 2, 3].map((key) => (
-                <div key={key} className="glass-card h-72 animate-pulse" />
+                <div key={key} className="h-72 animate-pulse rounded-[20px] border border-theme bg-theme-surface" />
               ))}
             </div>
           ) : visibleSuppliers.length > 0 ? (
@@ -611,7 +611,7 @@ export default function SuppliersPage() {
                 return (
                   <article
                     key={supplier.id}
-                    className="organize-row organize-supplier-row glass-card flex flex-col p-5 sm:p-6"
+                    className="organize-row organize-supplier-row flex flex-col rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-6"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
@@ -639,7 +639,7 @@ export default function SuppliersPage() {
                         </span>
                       )}
                       {supplier.email && (
-                        <span className="max-w-full break-all rounded-full border border-violet-300/20 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-violet-100">
+                        <span className="max-w-full break-all rounded-full border border-violet-300/25 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-theme-accent">
                           {supplier.email}
                         </span>
                       )}
@@ -685,7 +685,7 @@ export default function SuppliersPage() {
                           aria-disabled={!supplier.email}
                           className={`rounded-xl border px-3 py-2.5 text-center text-xs font-bold transition ${
                             supplier.email
-                              ? "border-violet-300/20 bg-violet-500/10 text-violet-100 hover:bg-violet-500/20"
+                              ? "border-violet-300/25 bg-violet-500/10 text-theme-accent hover:bg-violet-500/20"
                               : "pointer-events-none border-white/5 bg-white/[0.02] text-theme-subtle"
                           }`}
                         >
@@ -697,7 +697,7 @@ export default function SuppliersPage() {
                         <button
                           type="button"
                           onClick={() => openEditForm(supplier)}
-                          className="rounded-2xl bg-white px-4 py-3 font-bold text-black transition hover:bg-slate-200"
+                          className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-3 font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
                         >
                           Edit
                         </button>
@@ -735,7 +735,7 @@ export default function SuppliersPage() {
               })}
             </div>
           ) : (
-            <div className="glass-card border-dashed px-5 py-16 text-center">
+            <div className="rounded-[20px] border border-dashed border-theme bg-theme-surface px-5 py-16 text-center">
               <h2 className="text-3xl font-black text-theme-primary">
                 {suppliers.length === 0 ? "Add your first supplier" : "No suppliers found"}
               </h2>
@@ -748,7 +748,7 @@ export default function SuppliersPage() {
                 <button
                   type="button"
                   onClick={openCreateForm}
-                  className="glass-button mt-6 px-6 py-3.5 font-bold"
+                  className="mt-6 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3.5 font-bold text-white shadow-lg shadow-indigo-500/15"
                 >
                   Add your first supplier
                 </button>
@@ -760,7 +760,7 @@ export default function SuppliersPage() {
 
       {formOpen && (
         <div className="organize-modal-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="glass-modal my-6 max-h-[calc(100vh-2rem)] w-full overflow-y-auto p-5 sm:p-7">
+          <div className="my-6 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_20px_70px_rgba(15,23,42,0.16)] sm:p-6">
             <SupplierForm
               title={editingSupplier ? "Edit Supplier" : "Add Supplier"}
               eyebrow={editingSupplier ? "Supplier details" : "New supplier"}
@@ -783,7 +783,7 @@ export default function SuppliersPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-supplier-title"
-            className="glass-modal w-full max-w-md p-6 sm:p-7"
+            className="w-full max-w-md rounded-[20px] border border-theme bg-theme-surface p-6 shadow-[0_20px_70px_rgba(15,23,42,0.16)] sm:p-7"
           >
             <p className="text-xs font-bold uppercase tracking-[0.18em] text-red-300">
               Delete supplier

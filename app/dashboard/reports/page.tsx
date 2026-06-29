@@ -136,7 +136,7 @@ const INVENTORY_REPORTS: ReportCard[] = [
   {
     id: "valuation",
     name: "Inventory Valuation",
-    description: "Cost and potential retail valuation from current inventory pricing.",
+    description: "Inventory value based on current cost and retail pricing.",
     category: "valuation",
     source: "Inventory",
     formats: ["PDF"],
@@ -423,7 +423,7 @@ export default function ReportsPage() {
     { id: "all", label: "All" },
     { id: "inventory", label: "Inventory" },
     { id: "operations", label: "Operations" },
-    { id: "valuation", label: "Financial / Valuation" },
+    { id: "valuation", label: "Inventory Value" },
     { id: "activity", label: "Activity" },
   ];
 
@@ -659,7 +659,7 @@ export default function ReportsPage() {
   };
 
   return (
-    <main>
+    <main className="reports-workspace operations-workspace">
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4">
         <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
@@ -671,7 +671,8 @@ export default function ReportsPage() {
                 Reports
               </h1>
               <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Generate inventory, operations, and valuation reports.
+                Generate inventory reports, stock activity exports, and workflow
+                shortcuts.
               </p>
             </div>
             <Button

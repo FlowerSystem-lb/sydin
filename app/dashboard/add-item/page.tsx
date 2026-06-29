@@ -607,7 +607,7 @@ export default function AddItemPage() {
 
   return (
     <div className="contents">
-      <main>
+      <main className="operations-workspace operations-add-item">
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-3">
           <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -1305,7 +1305,7 @@ export default function AddItemPage() {
                       subscriptionUsage.subscription.plan,
                       "item-limit"
                     )}
-                    className="mt-4 inline-flex min-h-11 items-center justify-center rounded-2xl bg-white px-5 py-3 text-sm font-black text-black transition hover:bg-slate-200"
+                    className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
                   >
                     {getUpgradeActionLabel(
                       subscriptionUsage.subscription.plan

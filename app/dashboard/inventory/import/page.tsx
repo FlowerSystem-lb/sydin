@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
-import Wordmark from "@/components/Wordmark";
 import {
   getCategoriesForUser,
   type Category,
@@ -400,30 +399,27 @@ export default function InventoryImportPage() {
 
   return (
     <div className="contents">
-      <main>
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-6 sm:gap-8">
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+      <main className="operations-workspace operations-inventory-import">
+        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
+          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <div className="flex items-center gap-3">
-                  <Wordmark size="sm" />
-                  <span className="rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3 py-1 text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
-                    Import
-                  </span>
-                </div>
-
-                <h1 className="mt-4 text-4xl font-bold tracking-tight text-theme-primary sm:text-5xl lg:text-6xl">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
+                  Bulk import
+                </p>
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
                   Import Inventory
                 </h1>
 
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-theme-muted sm:text-lg sm:leading-7">
-                  Review every row before it reaches your inventory.
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
+                  Upload a CSV or Excel file, review each row, then create
+                  inventory records in one controlled import.
                 </p>
               </div>
 
               <Link
                 href="/dashboard/inventory"
-                className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
+                className="rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 Back to Inventory
               </Link>
@@ -440,7 +436,7 @@ export default function InventoryImportPage() {
             />
           ) : (
             <>
-              <section className="grid grid-cols-3 gap-2 rounded-[24px] border border-theme bg-theme-surface p-2 sm:gap-3 sm:p-3">
+              <section className="operations-step-strip grid grid-cols-3 gap-2 rounded-[20px] border border-theme bg-theme-surface p-2 sm:gap-3 sm:p-3">
             {[
               ["1", "Upload", !parsedFile && !success],
               ["2", "Review", Boolean(parsedFile && !success)],
@@ -450,13 +446,13 @@ export default function InventoryImportPage() {
                 key={String(number)}
                 className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl px-2 py-3 text-center text-xs font-bold transition sm:text-sm ${
                   active
-                    ? "bg-white text-black shadow-[0_16px_50px_rgba(255,255,255,0.1)]"
-                    : "bg-theme-surface text-theme-subtle"
+                    ? "bg-cyan-500/10 text-theme-accent ring-1 ring-cyan-300/30"
+                    : "bg-theme-inset text-theme-secondary"
                 }`}
               >
                 <span
                   className={`flex h-7 w-7 items-center justify-center rounded-xl text-xs font-black ${
-                    active ? "bg-black text-theme-primary" : "bg-theme-surface"
+                    active ? "bg-white text-theme-accent" : "bg-theme-surface"
                   }`}
                 >
                   {String(number)}
@@ -467,7 +463,7 @@ export default function InventoryImportPage() {
               </section>
 
           {initialLoading ? (
-            <section className="rounded-[32px] border border-theme bg-theme-surface p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <section className="rounded-[20px] border border-theme bg-theme-surface p-6 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
               <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-indigo-400/20" />
               <h2 className="mt-5 text-xl font-bold text-theme-primary">
                 Preparing import checks
@@ -477,7 +473,7 @@ export default function InventoryImportPage() {
               </p>
             </section>
           ) : success ? (
-            <section className="rounded-[32px] border border-emerald-400/20 bg-emerald-500/[0.07] p-6 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-10">
+            <section className="rounded-[20px] border border-emerald-400/20 bg-emerald-500/[0.07] p-6 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-8">
               <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-emerald-300/25 bg-emerald-500/15 text-2xl font-black text-theme-success">
                 {success.importedCount}
               </div>
@@ -504,7 +500,7 @@ export default function InventoryImportPage() {
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-2xl bg-white px-6 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200"
+                  className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
                 >
                   Back to Inventory
                 </Link>
@@ -521,7 +517,7 @@ export default function InventoryImportPage() {
           ) : !parsedFile ? (
             <>
               <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_0.75fr]">
-                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-7">
+                <div className="rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Templates
@@ -556,7 +552,7 @@ export default function InventoryImportPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-7">
+                <div className="rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                   <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-subtle">
                     Import limits
                   </p>
@@ -605,7 +601,7 @@ export default function InventoryImportPage() {
                   setIsDragging(false);
                   void processFile(event.dataTransfer.files?.[0] || null);
                 }}
-                className={`rounded-[32px] border border-dashed p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl transition sm:p-8 ${
+                className={`rounded-[20px] border border-dashed p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition sm:p-6 ${
                   isDragging
                     ? "border-indigo-300/60 bg-indigo-500/15"
                     : "border-indigo-300/25 bg-theme-surface"
@@ -629,7 +625,7 @@ export default function InventoryImportPage() {
                     Your file is reviewed locally first. Nothing is imported until every row passes validation and you confirm.
                   </span>
 
-                  <span className="mt-5 rounded-2xl bg-white px-5 py-3 text-sm font-black text-black">
+                  <span className="mt-5 rounded-xl bg-cyan-500/10 px-5 py-3 text-sm font-black text-theme-accent">
                     Choose CSV or Excel
                   </span>
                 </button>
@@ -653,7 +649,7 @@ export default function InventoryImportPage() {
             </>
           ) : validation ? (
             <>
-              <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-7">
+              <section className="rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -730,7 +726,7 @@ export default function InventoryImportPage() {
                 </section>
               )}
 
-              <section className="rounded-[32px] border border-theme bg-theme-surface p-4 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl sm:p-6">
+              <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-5">
                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
                     <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -751,7 +747,7 @@ export default function InventoryImportPage() {
                 <div className="hidden overflow-hidden rounded-2xl border border-theme md:block">
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
-                      <thead className="bg-[#11172a] text-xs uppercase tracking-[0.12em] text-theme-muted">
+                      <thead className="border-b border-theme bg-theme-inset text-xs uppercase tracking-[0.12em] text-theme-subtle">
                         <tr>
                           {["Row", "Name", "SKU", "Category", "Quantity", "Depot", "Item details", "Notes", "Status"].map(
                             (header) => (
@@ -985,7 +981,7 @@ export default function InventoryImportPage() {
                 </div>
               </section>
 
-              <section className="rounded-[32px] border border-indigo-300/20 bg-indigo-500/[0.08] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.26)] sm:p-7">
+              <section className="rounded-[20px] border border-indigo-300/20 bg-indigo-500/[0.08] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -1005,7 +1001,7 @@ export default function InventoryImportPage() {
                         usage.subscription.plan,
                         "import-item-limit"
                       )}
-                      className="rounded-2xl bg-white px-5 py-3 text-center text-sm font-black text-black transition hover:bg-slate-200"
+                      className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-center text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
                     >
                       {getUpgradeActionLabel(usage.subscription.plan)}
                     </Link>
@@ -1025,7 +1021,7 @@ export default function InventoryImportPage() {
                 </section>
               )}
 
-              <section className="sticky bottom-0 z-20 -mx-4 flex flex-col-reverse gap-3 border-t border-theme bg-[#050713]/95 px-4 py-4 backdrop-blur-xl sm:mx-0 sm:flex-row sm:justify-end sm:rounded-[24px] sm:border sm:px-5">
+              <section className="sticky bottom-0 z-20 -mx-4 flex flex-col-reverse gap-3 border-t border-theme bg-theme-surface/95 px-4 py-4 shadow-[0_-10px_30px_rgba(15,23,42,0.08)] backdrop-blur-xl sm:mx-0 sm:flex-row sm:justify-end sm:rounded-[20px] sm:border sm:px-5">
                 <Link
                   href="/dashboard/inventory"
                   className="rounded-2xl border border-theme bg-theme-surface px-6 py-4 text-center text-base font-bold text-theme-primary transition hover:bg-theme-hover"
@@ -1042,7 +1038,7 @@ export default function InventoryImportPage() {
                     validation.validRows.length === 0 ||
                     exceedsPlanLimit
                   }
-                  className="rounded-2xl bg-white px-7 py-4 text-base font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isImporting
                     ? `Importing ${validation.validRows.length} items...`

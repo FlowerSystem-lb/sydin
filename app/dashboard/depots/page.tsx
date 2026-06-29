@@ -319,26 +319,26 @@ export default function DepotsPage() {
   return (
     <div className="contents">
       <main className="organize-workspace organize-depots">
-        <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-8">
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-4">
+          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                   Locations
                 </p>
 
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
                   Depots
                 </h1>
 
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
+                <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
                   Manage the places where inventory items live.
                 </p>
               </div>
 
               <Link
                 href="/dashboard/inventory"
-                className="organize-inventory-link rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
+                className="organize-inventory-link rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
               >
                 Back to Inventory
               </Link>
@@ -361,13 +361,13 @@ export default function DepotsPage() {
             <form
               onSubmit={handleCreateDepot}
               aria-busy={saving}
-              className="organize-depot-form rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7"
+              className="organize-depot-form rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
             >
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                 New depot
               </p>
 
-              <h2 className="mt-2 text-3xl font-bold tracking-tight">
+              <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
                 Add Location
               </h2>
 
@@ -449,7 +449,7 @@ export default function DepotsPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="mt-6 w-full rounded-2xl bg-white px-6 py-4 text-base font-bold text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-6 w-full rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {saving ? "Saving depot..." : "Add Depot"}
                   </button>
@@ -457,14 +457,14 @@ export default function DepotsPage() {
               )}
             </form>
 
-            <section className="organize-depot-list-panel rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7">
+            <section className="organize-depot-list-panel rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
                   <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                     Saved locations
                   </p>
 
-                  <h2 className="mt-2 text-3xl font-bold tracking-tight">
+                  <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
                     Depot List
                   </h2>
                 </div>
@@ -594,7 +594,7 @@ export default function DepotsPage() {
                             <button
                               type="submit"
                               disabled={saving}
-                              className="flex-1 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black transition hover:bg-slate-200 disabled:opacity-50"
+                              className="flex-1 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:opacity-50"
                             >
                               {saving ? "Saving..." : "Save Changes"}
                             </button>
@@ -632,7 +632,7 @@ export default function DepotsPage() {
                             <button
                               type="button"
                               onClick={() => startEditing(depot)}
-                              className="rounded-2xl bg-white px-5 py-3 text-sm font-bold text-black transition hover:bg-slate-200"
+                              className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
                             >
                               Edit
                             </button>
