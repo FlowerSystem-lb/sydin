@@ -4357,6 +4357,32 @@ select.glass-input option {
   }
 }
 
+/* ============================================================================
+   INVENTORY WORKSPACE STYLES — MAP & MAINTENANCE NOTES
+   ----------------------------------------------------------------------------
+   Inventory styles are scoped to `.inventory-workspace` (and, for shell layout,
+   `.dashboard-shell:has(.inventory-workspace)`). They are intentionally split
+   into ordered layers; LATER layers override earlier ones purely by source
+   order, so DO NOT reorder or relocate these sections — doing so flips the
+   cascade and changes the approved Sprint 3 appearance.
+
+   Layers, in cascade order (search the `===[ INVENTORY: ... ]===` banners to
+   jump between them):
+     1. base layout & components            (this section)
+     2. glass theme
+     3. hero / toolbar / item-card components
+     4. light theme overrides
+     5. overview shared layer               (shares rules with .sydin-overview / .settings-*)
+     6. dashboard shell scoping / overflow repair
+     7. Sprint 3 polish  <-- MUST REMAIN LAST (high-specificity + !important)
+
+   Responsive (@media / @container) and reduced-motion rules for each layer
+   live alongside that layer. When editing, keep changes scoped to
+   `.inventory-workspace` and avoid touching shared `.sydin-overview*` /
+   `.settings-*` selectors.
+   ============================================================================ */
+
+/* ===[ INVENTORY: base layout & components ]=== */
 .inventory-filter-panel {
   border: 1px solid var(--border-divider);
   border-radius: 14px;
@@ -9469,7 +9495,7 @@ body [class*="tracking-["],
   background: rgba(255, 255, 255, 0.86);
 }
 
-/* Inventory workspace */
+/* ===[ INVENTORY: glass theme ]=== */
 .inventory-workspace {
   color: var(--text-primary);
 }
@@ -10152,6 +10178,7 @@ body [class*="tracking-["],
   box-shadow: 0 10px 24px rgba(36, 79, 135, 0.08);
 }
 
+/* ===[ INVENTORY: hero / toolbar / item-card components ]=== */
 .inventory-hero-card {
   display: grid;
   gap: 1rem;
@@ -11416,6 +11443,7 @@ body [class*="tracking-["],
   }
 }
 
+/* ===[ INVENTORY: light theme overrides ]=== */
 .dashboard-overview,
 .inventory-workspace {
   color: #071638;
@@ -13634,6 +13662,7 @@ body,
   }
 }
 
+/* ===[ INVENTORY: overview shared layer — shares rules with .sydin-overview / .settings-* ]=== */
 /* SydIN Sortly-inspired inventory SaaS: Phase 1 scoped layer */
 .dashboard-shell-content:has(.sydin-overview),
 .dashboard-shell-content:has(.inventory-workspace),
@@ -13689,7 +13718,6 @@ body,
 .sydin-overview-header,
 .sydin-overview-panel,
 .sydin-overview-summary-card,
-.inventory-context-panel,
 .settings-hero,
 .settings-sidebar,
 .settings-panel {
@@ -13750,10 +13778,7 @@ body,
 
 .sydin-overview-chip,
 .sydin-overview-action,
-.sydin-overview-text-link,
-.inventory-view-toggle,
-.inventory-view-toggle button,
-.inventory-context-link {
+.sydin-overview-text-link {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -13847,9 +13872,7 @@ body,
 .sydin-overview-panel-header,
 .sydin-overview-restock-row small,
 .sydin-overview-activity-row small,
-.sydin-overview-item-card small,
-.inventory-context-section p,
-.inventory-filter-section > span {
+.sydin-overview-item-card small {
   color: var(--overview-muted);
   font-size: 0.72rem;
   font-style: normal;
@@ -14126,8 +14149,7 @@ body,
   color: #5b35d5 !important;
 }
 
-.sydin-overview-skeleton-list,
-.inventory-group-stack {
+.sydin-overview-skeleton-list {
   display: grid;
   gap: 0.75rem;
 }
@@ -14174,8 +14196,6 @@ body,
 .inventory-toolbar-actions,
 .inventory-stat-grid,
 .inventory-items-grid,
-.inventory-group-stack,
-.inventory-item-group,
 .inventory-table-shell {
   max-width: 100%;
   min-width: 0;
@@ -14199,8 +14219,7 @@ body,
 
 .inventory-toolbar-actions > *,
 .inventory-workspace .ui-select,
-.inventory-sort-trigger,
-.inventory-view-toggle {
+.inventory-sort-trigger {
   max-width: 100%;
   min-width: 0;
 }
@@ -14211,168 +14230,6 @@ body,
 
 .inventory-sort-trigger {
   min-width: min(100%, 12rem);
-}
-
-.inventory-context-panel {
-  display: grid;
-  gap: 0.85rem;
-  padding: 0.8rem;
-}
-
-.inventory-context-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-}
-
-.inventory-context-header span {
-  display: inline-flex;
-  min-width: 0;
-  align-items: center;
-  gap: 0.45rem;
-  color: var(--overview-ink);
-  font-size: 0.86rem;
-  font-weight: 900;
-}
-
-.inventory-context-header button {
-  color: var(--overview-blue);
-  font-size: 0.74rem;
-  font-weight: 850;
-}
-
-.inventory-context-section {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.inventory-context-section p {
-  padding-inline: 0.3rem;
-  text-transform: uppercase;
-}
-
-.inventory-context-section button {
-  display: flex;
-  min-height: 2.15rem;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-  border: 1px solid transparent;
-  border-radius: 9px;
-  padding-inline: 0.55rem;
-  color: var(--overview-copy);
-  font-size: 0.78rem;
-  font-weight: 800;
-  text-align: left;
-}
-
-.inventory-context-section button span {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inventory-context-section button small {
-  flex: none;
-  color: var(--overview-muted);
-  font-size: 0.68rem;
-  font-weight: 850;
-}
-
-.inventory-context-section .inventory-context-item-active {
-  border-color: rgba(14, 165, 198, 0.28);
-  background: linear-gradient(135deg, rgba(14, 165, 198, 0.12), rgba(125, 92, 255, 0.08));
-  color: var(--overview-ink);
-}
-
-.inventory-context-link {
-  min-height: 2.35rem;
-  border: 1px solid var(--overview-line);
-  border-radius: 9px;
-  background: var(--overview-soft);
-  color: var(--overview-blue);
-  font-size: 0.78rem;
-  font-weight: 850;
-}
-
-.inventory-filter-section {
-  display: grid;
-  gap: 0.4rem;
-}
-
-.inventory-filter-section > span {
-  text-transform: uppercase;
-}
-
-.inventory-view-toggle {
-  min-height: 2.35rem;
-  overflow: hidden;
-  border: 1px solid #dde6f1;
-  border-radius: 999px;
-  background: #ffffff;
-  padding: 0.18rem;
-}
-
-.inventory-view-toggle button {
-  min-height: 1.9rem;
-  border-radius: 999px;
-  padding-inline: 0.65rem;
-  color: var(--overview-copy);
-  font-size: 0.74rem;
-  font-weight: 850;
-}
-
-.inventory-view-toggle .inventory-view-toggle-active {
-  background: linear-gradient(135deg, rgba(14, 165, 198, 0.14), rgba(125, 92, 255, 0.1));
-  color: var(--overview-blue);
-}
-
-.inventory-item-group {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.inventory-item-group-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  border: 1px solid #dce5ef;
-  border-radius: 10px;
-  background: #ffffff;
-  padding: 0.55rem 0.7rem;
-}
-
-.inventory-item-group-header h2 {
-  overflow: hidden;
-  color: var(--overview-ink);
-  font-size: 0.88rem;
-  font-weight: 900;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.inventory-item-group-header span,
-.inventory-table-group-row small {
-  color: var(--overview-muted);
-  font-size: 0.72rem;
-  font-weight: 800;
-}
-
-.inventory-table-group-row td {
-  background: #f8fafc;
-  padding: 0.55rem 0.75rem !important;
-}
-
-.inventory-table-group-row span {
-  color: var(--overview-ink);
-  font-size: 0.78rem;
-  font-weight: 900;
-}
-
-.inventory-table-group-row small {
-  margin-left: 0.5rem;
 }
 
 .inventory-card-alert-pill {
@@ -14408,10 +14265,7 @@ body,
   .sydin-overview-restock-row:hover,
   .sydin-overview-activity-row:hover,
   .sydin-overview-item-card:hover,
-  .sydin-overview-action-grid a:hover,
-  .inventory-context-section button:hover,
-  .inventory-context-link:hover,
-  .inventory-view-toggle button:hover {
+  .sydin-overview-action-grid a:hover {
     border-color: rgba(14, 165, 198, 0.32);
     background-color: #ffffff;
   }
@@ -14432,10 +14286,6 @@ body,
   .inventory-content-grid,
   .inventory-content-grid-summary-hidden {
     grid-template-columns: minmax(0, 1fr);
-  }
-
-  .inventory-context-panel {
-    display: none;
   }
 
   .inventory-insights-rail {
@@ -14509,9 +14359,6 @@ body,
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .inventory-context-panel {
-    display: none;
-  }
 }
 
 @media (max-width: 900px) {
@@ -14576,13 +14423,6 @@ body,
     border-radius: 10px;
   }
 
-  .inventory-view-toggle {
-    width: 100%;
-  }
-
-  .inventory-view-toggle button {
-    flex: 1;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -14590,13 +14430,12 @@ body,
   .sydin-overview-summary-card,
   .sydin-overview-restock-row,
   .sydin-overview-activity-row,
-  .sydin-overview-item-card,
-  .inventory-context-section button,
-  .inventory-view-toggle button {
+  .sydin-overview-item-card {
     transition: none;
   }
 }
 
+/* ===[ INVENTORY: dashboard shell scoping / overflow repair ]=== */
 /* Final scoped overflow repair for dashboard and inventory workspaces. */
 .dashboard-theme:has(.sydin-overview),
 .dashboard-theme:has(.inventory-workspace),
@@ -15062,9 +14901,7 @@ body,
 .dashboard-shell:has(.inventory-workspace) .inventory-content-grid,
 .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
 .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-secondary,
-.dashboard-shell:has(.inventory-workspace) .inventory-items-grid,
-.dashboard-shell:has(.inventory-workspace) .inventory-group-stack,
-.dashboard-shell:has(.inventory-workspace) .inventory-item-group {
+.dashboard-shell:has(.inventory-workspace) .inventory-items-grid {
   width: 100% !important;
   max-width: none !important;
   min-width: 0 !important;
@@ -15106,9 +14943,6 @@ body,
     grid-template-columns: minmax(0, 1fr);
   }
 
-  .dashboard-shell:has(.inventory-workspace) .inventory-context-panel {
-    display: none;
-  }
 }
 
 /* Shared workspace shell repair: apply the full-width layout to every /dashboard/* page. */
@@ -15433,6 +15267,7 @@ body,
   }
 }
 
+/* ===[ INVENTORY: Sprint 3 polish — MUST REMAIN THE LAST INVENTORY LAYER ]=== */
 /* SydIN Inventory Sprint 3 polish */
 .dashboard-shell:has(.inventory-workspace) .inventory-workspace {
   gap: 0.8rem !important;

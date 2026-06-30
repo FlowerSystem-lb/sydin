@@ -66,4 +66,53 @@ Import header/step shell · Settings · Inventory notices · Categories notices.
 
 ---
 
+## Sprint 3B — Inventory CSS Stabilization  *(Completed)*
+
+Reduced CSS risk/cascade debt around the approved Sprint 3 Inventory UI **without changing
+the design or any behavior**. Conservative approach (annotate in place + remove only
+provably-dead CSS); no rules were relocated, so the cascade — and the rendered output — is
+unchanged.
+
+**Changed files:** `app/globals.css` (only).
+
+**Added (navigation, zero cascade impact):**
+- A top **index/map comment** above the first inventory cluster documenting the inventory CSS
+  layers in cascade order and warning not to reorder them (Sprint 3 polish must stay last).
+- Searchable `/* ===[ INVENTORY: <label> ]=== */` **section banners** at the major layer
+  boundaries: base layout & components, glass theme, hero/toolbar/item-card components,
+  light theme overrides, overview shared layer, dashboard shell scoping / overflow repair,
+  and Sprint 3 polish (marked as the required last layer).
+
+**Removed (provably-dead — confirmed in zero `.ts/.tsx` repo-wide):** the abandoned inventory
+"overview/context" design direction —
+`inventory-context-panel`, `inventory-context-header(+span/button)`, `inventory-context-section*`,
+`inventory-context-link`, `inventory-context-item-active`, `inventory-filter-section*`,
+`inventory-view-toggle(+button/-active)`, `inventory-item-group(+header)`,
+`inventory-table-group-row*`, `inventory-group-stack`. Deleted one large contiguous block plus
+several `display:none`/responsive rules, and surgically stripped these dead tokens out of
+selector lists shared with **live** `.sydin-overview*` / `.settings-*` siblings (siblings left
+intact). Net ~165 fewer lines (≈196 CSS lines removed, ~31 lines of comments added);
+`app/globals.css` 15,672 → 15,507 lines.
+
+**Explicitly preserved (untouched):** `.inventory-action-primary` (live), all `.sydin-overview*`
+and `.settings-*` rules, and `sydin-overview-header-actions` (live in `app/dashboard/page.tsx`).
+
+**Approved Sprint 3 UI preserved:** wider item cards · 3-metric summary · primary item-browsing
+layout · secondary insights rail · search/filter toolbar · More dropdown · desktop/tablet/mobile.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (all 30 routes
+generated, incl. `/dashboard/inventory` and `/dashboard`). Brace balance verified (2241/2241).
+Dead-token grep over `app/globals.css` returns zero matches.
+
+**Risks / follow-ups:**
+- No automated visual-regression tooling exists; `lint`/`tsc`/`build` cannot prove "visually
+  identical." The no-move/annotate-only + dead-only-removal strategy makes regression highly
+  unlikely, but a **manual visual pass** on `/dashboard/inventory` (desktop/tablet/mobile) and
+  `/dashboard` is still recommended before sign-off.
+- Inventory CSS is now navigable but still **interleaved** with `.sydin-overview`/`.settings-*`
+  across the file. A deeper refactor (extract to a co-located `@layer` module to dedupe theme
+  layers) remains valuable but is its own larger sprint — defer until Phase 1 foundation closes.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
