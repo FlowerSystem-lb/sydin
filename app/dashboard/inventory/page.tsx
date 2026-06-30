@@ -23,7 +23,15 @@ import ItemDetailsSlideOver, {
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import StockMovementDialog from "@/components/inventory/StockMovementDialog";
 import { Button, DialogShell, Select } from "@/components/ui";
-import { DashboardNotice } from "@/components/dashboard/Workspace";
+import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  FilterBar,
+  FilterChip,
+  LoadingSkeletonGroup,
+  MetricCard,
+} from "@/components/dashboard/Workspace";
 import CategorySelector from "@/components/CategorySelector";
 import {
   getCategoriesForUser,
@@ -2607,29 +2615,34 @@ export default function InventoryPage() {
       .map((item) => item.depot_id)
       .filter((depotId): depotId is number => typeof depotId === "number")
   ).size;
+  const outOfStockCount = items.filter((item) => item.quantity <= 0).length;
   const inventoryStats: Array<{
     icon: UiIconName;
     label: string;
     value: string;
+    detail: string;
   }> = [
-    { icon: "box", label: "Total Items", value: items.length.toLocaleString() },
+    {
+      icon: "box",
+      label: "Items",
+      value: items.length.toLocaleString(),
+      detail: `${visibleItems.length.toLocaleString()} visible`,
+    },
     {
       icon: "layers",
-      label: "Total Stock",
+      label: "Stock units",
       value: totalQuantity.toLocaleString(),
+      detail: `${assignedDepotCount.toLocaleString()} location${
+        assignedDepotCount === 1 ? "" : "s"
+      }`,
     },
     {
       icon: "alert",
-      label: "Low Stock",
+      label: "Needs attention",
       value: lowStockCount.toLocaleString(),
-    },
-    {
-      icon: "depots",
-      label: "Locations",
-      value: assignedDepotCount.toLocaleString(),
+      detail: `${outOfStockCount.toLocaleString()} out of stock`,
     },
   ];
-  const outOfStockCount = items.filter((item) => item.quantity <= 0).length;
   const lowStockAlerts = items
     .filter((item) => isItemLowStock(item))
     .sort((first, second) => first.quantity - second.quantity)
@@ -2780,20 +2793,20 @@ export default function InventoryPage() {
               </div>
 
               <div className="inventory-page-actions inventory-hero-actions">
-                <button
-                  type="button"
+                <ActionButton
                   onClick={() => setIsModalOpen(true)}
-                  className="action-button action-button-primary inventory-action-primary"
+                  icon="plus"
+                  className="inventory-action-primary"
                 >
-                  <UiIcon name="plus" />
                   Add Item
-                </button>
+                </ActionButton>
 
-                <button
-                  type="button"
+                <ActionButton
                   onClick={openScanner}
                   disabled={usageLoading}
-                  className={`action-button inventory-action-secondary ${
+                  icon={!usageLoading && canUseScanner ? "scan" : undefined}
+                  variant="secondary"
+                  className={`inventory-action-secondary ${
                     canUseScanner
                       ? ""
                       : "border-sky-300/15 bg-theme-surface text-theme-muted"
@@ -2802,16 +2815,13 @@ export default function InventoryPage() {
                   {!usageLoading && !canUseScanner ? (
                     <LockedActionLabel>Scan</LockedActionLabel>
                   ) : (
-                    <>
-                      <UiIcon name="scan" />
-                      Scan
-                    </>
+                    "Scan"
                   )}
-                </button>
+                </ActionButton>
 
                 <InventoryActionMenu
                   label="More"
-                  buttonClassName="action-button inventory-action-secondary"
+                  buttonClassName="dashboard-action-button dashboard-action-button-secondary inventory-action-secondary"
                 >
                     <Link
                       href="/dashboard/inventory/import"
@@ -2869,23 +2879,6 @@ export default function InventoryPage() {
               </div>
             </div>
 
-            {showStats && (
-              <div className="inventory-hero-status" aria-label="Inventory status">
-                <span>
-                  <small>Needs attention</small>
-                  <strong>{loadingItems ? "--" : lowStockCount.toLocaleString()}</strong>
-                </span>
-                <span>
-                  <small>Out of stock</small>
-                  <strong>{loadingItems ? "--" : outOfStockCount.toLocaleString()}</strong>
-                </span>
-                <span>
-                  <small>Locations</small>
-                  <strong>{loadingItems ? "--" : assignedDepotCount.toLocaleString()}</strong>
-                </span>
-              </div>
-            )}
-
             <div className="inventory-mobile-breadcrumb" aria-live="polite">
               Items{activeMobileFolder?.label ? ` / ${activeMobileFolder.label}` : ""}
             </div>
@@ -2923,22 +2916,13 @@ export default function InventoryPage() {
               className="inventory-stat-grid"
             >
               {inventoryStats.map((stat) => (
-                <div
+                <MetricCard
                   key={stat.label}
-                  className="inventory-stat-card"
-                >
-                  <span className="inventory-stat-icon">
-                    <UiIcon name={stat.icon} className="h-4 w-4" />
-                  </span>
-                  <span className="inventory-stat-copy">
-                    <span>
-                      {stat.label}
-                    </span>
-                    <strong>
-                      {loadingItems ? "--" : stat.value}
-                    </strong>
-                  </span>
-                </div>
+                  icon={stat.icon}
+                  label={stat.label}
+                  value={loadingItems ? "--" : stat.value}
+                  detail={loadingItems ? "Loading..." : stat.detail}
+                />
               ))}
             </section>
           )}
@@ -3031,28 +3015,25 @@ export default function InventoryPage() {
               </div>
 
               <div className="inventory-toolbar-secondary">
-                <div
+                <FilterBar
+                  label="Quick inventory filters"
                   className="inventory-quick-filters"
-                  aria-label="Quick inventory filters"
                 >
                   {QUICK_FILTER_OPTIONS.map((option) => {
                     const active = quickFilter === option.value;
 
                     return (
-                      <button
+                      <FilterChip
                         key={option.value}
-                        type="button"
                         onClick={() => setQuickFilter(option.value)}
-                        aria-pressed={active}
-                        className={`inventory-quick-filter ${
-                          active ? "inventory-quick-filter-active" : ""
-                        }`}
+                        active={active}
+                        className="inventory-quick-filter"
                       >
                         {option.label}
-                      </button>
+                      </FilterChip>
                     );
                   })}
-                </div>
+                </FilterBar>
 
                 {activeFilterChips.length > 0 && (
                 <div className="inventory-active-chips">
@@ -3333,20 +3314,18 @@ export default function InventoryPage() {
             <section className="min-w-0 space-y-2.5" aria-label="Inventory items">
           {/* Items */}
           {loadingItems ? (
-            <div className="inventory-items-grid">
-              {[1, 2, 3, 4, 5].map((item) => (
-                <div
-                  key={item}
-                  className="aspect-[5/4] overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.06)]"
-                >
-                  <div className="h-full animate-pulse bg-theme-inset" />
-                </div>
-              ))}
-            </div>
+            <LoadingSkeletonGroup
+              count={6}
+              className="inventory-items-grid"
+              itemClassName="inventory-item-skeleton"
+            />
           ) : viewMode === "grid" ? (
             <div className="inventory-items-grid">
               {visibleItems.map((item) => {
                 const status = getStockStatus(item);
+                const itemValue =
+                  calculateInventoryValue(item.quantity, item.selling_price) ??
+                  calculateInventoryValue(item.quantity, item.cost_price);
 
                 return (
                   <InventoryItemCard
@@ -3365,6 +3344,11 @@ export default function InventoryPage() {
                         : null
                     }
                     supplierLabel={getSupplierForItem(item)?.name || null}
+                    valueLabel={
+                      itemValue === null
+                        ? null
+                        : formatCompactCurrency(itemValue, editCurrencyCode)
+                    }
                     lowStock={isItemLowStock(item)}
                     stockStatusLabel={status.label}
                     stockStatusTone={status.tone}
@@ -3688,42 +3672,51 @@ export default function InventoryPage() {
           {/* Empty State */}
           {!loadingItems && visibleItems.length ===
             0 && (
-            <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-indigo-300/25 bg-theme-surface px-4 py-9 text-center shadow-[0_8px_24px_rgba(15,23,42,0.05)]">
-              <div className="mb-3 flex h-11 w-11 items-center justify-center rounded-xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
-                <UiIcon
-                  name={items.length === 0 ? "box" : "search"}
-                  className="h-5 w-5"
-                />
-              </div>
-
-              <h2 className="mb-1 text-lg font-bold text-theme-primary">
-                {items.length === 0 ? "No inventory items yet" : "No items found"}
-              </h2>
-
-              <p className="max-w-md text-sm leading-5 text-theme-muted">
-                {items.length === 0
-                  ? "Add your first product to start tracking stock."
-                  : "No products match the current search or filters."}
-              </p>
-
-              {items.length === 0 ? (
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(true)}
-                  className="mt-4 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black shadow-[0_12px_34px_rgba(255,255,255,0.1)] transition hover:bg-slate-200"
-                >
-                  Add your first item
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={resetInventoryControls}
-                  className="mt-4 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black shadow-[0_12px_34px_rgba(255,255,255,0.1)] transition hover:bg-slate-200"
-                >
-                  Clear filters
-                </button>
-              )}
-            </div>
+            <DashboardEmptyState
+              icon={items.length === 0 ? "box" : "search"}
+              title={items.length === 0 ? "No inventory items yet" : "No items found"}
+              description={
+                items.length === 0
+                  ? "Add an item, import a file, or scan a code to start building your inventory workspace."
+                  : "No products match the current search or filters."
+              }
+              action={
+                items.length === 0 ? (
+                  <div className="inventory-empty-actions">
+                    <ActionButton onClick={() => setIsModalOpen(true)} icon="plus">
+                      Add Item
+                    </ActionButton>
+                    <ActionButton
+                      href="/dashboard/inventory/import"
+                      icon="upload"
+                      variant="secondary"
+                    >
+                      {!usageLoading && !planCapabilities.csvExcelImport ? (
+                        <LockedActionLabel>Import</LockedActionLabel>
+                      ) : (
+                        "Import Inventory"
+                      )}
+                    </ActionButton>
+                    <ActionButton
+                      onClick={openScanner}
+                      disabled={usageLoading}
+                      icon={!usageLoading && canUseScanner ? "scan" : undefined}
+                      variant="secondary"
+                    >
+                      {!usageLoading && !canUseScanner ? (
+                        <LockedActionLabel>Scan</LockedActionLabel>
+                      ) : (
+                        "Scan item"
+                      )}
+                    </ActionButton>
+                  </div>
+                ) : (
+                  <ActionButton onClick={resetInventoryControls} variant="secondary">
+                    Clear filters
+                  </ActionButton>
+                )
+              }
+            />
           )}
             </section>
 
