@@ -5,6 +5,13 @@ import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import UiIcon from "@/components/UiIcon";
 import { Button, DialogShell, Select } from "@/components/ui";
 import {
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  DashboardToolbar,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
+import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
@@ -776,22 +783,12 @@ export default function PurchaseOrdersPage() {
 
   return (
     <main className="operations-workspace operations-purchase-orders">
-      <div className="po-screen-only mx-auto flex w-full max-w-[1500px] flex-col gap-4 pb-28 sm:pb-0">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Operations
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Purchase Orders
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Create supplier order drafts from inventory items or custom
-                lines, then print or export them. Purchase orders do not change
-                stock.
-              </p>
-            </div>
+      <DashboardPageShell width="wide" className="po-screen-only pb-28 sm:pb-0">
+        <DashboardPageHeader
+          eyebrow="Operations"
+          title="Purchase Orders"
+          description="Create supplier order drafts from inventory items or custom lines, then print or export them. Purchase orders do not change stock."
+          actions={
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button variant="secondary" onClick={() => setConfirmClearDraft(true)}>
                 Restart
@@ -800,23 +797,16 @@ export default function PurchaseOrdersPage() {
                 Output
               </Button>
             </div>
-          </div>
-        </section>
+          }
+        />
 
         {(notice || loadError) && (
-          <p
-            role={loadError ? "alert" : "status"}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-              loadError
-                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
-                : "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
-            }`}
-          >
+          <DashboardNotice tone={loadError ? "danger" : "success"}>
             {loadError || notice}
-          </p>
+          </DashboardNotice>
         )}
 
-        <section className="rounded-[20px] border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+        <DashboardToolbar>
           <div className="operations-step-strip grid gap-2 sm:grid-cols-4" aria-label="Purchase order steps">
             {stepItems.map((item, index) => {
               const active = step === item.id;
@@ -839,28 +829,28 @@ export default function PurchaseOrdersPage() {
               );
             })}
           </div>
-        </section>
+        </DashboardToolbar>
 
-        <section className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-4 py-3 text-sm font-semibold leading-6 text-theme-accent">
+        <DashboardNotice>
           Draft saved on this device. Export before closing. Stock changes only
           through Receiving or Stock Movements.
-        </section>
+        </DashboardNotice>
 
         {draftRestored && (
-          <section className="rounded-xl border border-cyan-300/25 bg-cyan-400/10 px-4 py-3 text-sm font-semibold text-theme-accent">
+          <DashboardNotice>
             Device draft restored. Export it, clear it, or restart when you are
             finished.
-          </section>
+          </DashboardNotice>
         )}
 
         {loading ? (
-          <section className="grid gap-3 rounded-[22px] border border-theme bg-theme-surface p-4">
-            {[1, 2, 3].map((key) => (
-              <div key={key} className="h-16 animate-pulse rounded-xl bg-theme-inset" />
-            ))}
-          </section>
+          <LoadingSkeletonGroup
+            count={3}
+            className="dashboard-card"
+            itemClassName="min-h-16"
+          />
         ) : step === "details" ? (
-          <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[1.3fr_0.7fr]">
+          <section className="dashboard-card grid gap-4 lg:grid-cols-[1.3fr_0.7fr]">
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="grid gap-1 text-sm font-bold text-theme-primary sm:col-span-2">
                 PO number or title
@@ -978,7 +968,7 @@ export default function PurchaseOrdersPage() {
           </section>
         ) : step === "lines" ? (
           <>
-            <section className="grid gap-3 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-end">
+            <DashboardToolbar className="grid gap-3 lg:grid-cols-[minmax(0,1fr)_auto_auto] lg:items-end">
               <Select
                 label="Inventory item"
                 value={selectedInventoryItemId}
@@ -1012,7 +1002,7 @@ export default function PurchaseOrdersPage() {
                   Custom Line
                 </Button>
               </div>
-            </section>
+            </DashboardToolbar>
 
             {lineError && (
               <p
@@ -1023,7 +1013,7 @@ export default function PurchaseOrdersPage() {
               </p>
             )}
 
-            <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
+            <section className="dashboard-table-card">
               <div className="border-b border-theme p-4">
                 <h2 className="text-xl font-black text-theme-primary">
                   Order Lines
@@ -1037,8 +1027,8 @@ export default function PurchaseOrdersPage() {
               {lines.length > 0 ? (
                 <>
                   <div className="hidden overflow-x-auto md:block">
-                    <table className="w-full min-w-[1120px] table-fixed text-left text-sm">
-                      <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <table className="dashboard-table min-w-[1120px] table-fixed">
+                      <thead>
                         <tr>
                           <th className="w-[260px] px-4 py-3">Item</th>
                           <th className="w-[160px] px-4 py-3">Supplier</th>
@@ -1662,7 +1652,7 @@ export default function PurchaseOrdersPage() {
             </div>
           </div>
         </section>
-      </div>
+      </DashboardPageShell>
 
       <section id="po-print-area" className="po-print-area">
         <header className="po-print-header">

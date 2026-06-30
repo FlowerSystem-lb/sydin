@@ -4,6 +4,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
+  ActionButton,
+  DashboardPageHeader,
+  DashboardPageShell,
+  DashboardToolbar,
+} from "@/components/dashboard/Workspace";
+import {
   getCategoriesForUser,
   type Category,
 } from "@/app/lib/categories";
@@ -400,31 +406,17 @@ export default function InventoryImportPage() {
   return (
     <div className="contents">
       <main className="operations-workspace operations-inventory-import">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-          <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                  Bulk import
-                </p>
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                  Import Inventory
-                </h1>
-
-                <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                  Upload a CSV or Excel file, review each row, then create
-                  inventory records in one controlled import.
-                </p>
-              </div>
-
-              <Link
-                href="/dashboard/inventory"
-                className="rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-center text-sm font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
-              >
+        <DashboardPageShell>
+          <DashboardPageHeader
+            eyebrow="Bulk import"
+            title="Import Inventory"
+            description="Upload a CSV or Excel file, review each row, then create inventory records in one controlled import."
+            actions={
+              <ActionButton href="/dashboard/inventory" variant="secondary">
                 Back to Inventory
-              </Link>
-            </div>
-          </section>
+              </ActionButton>
+            }
+          />
 
           {!initialLoading && !canImport ? (
             <LockedFeaturePanel
@@ -436,7 +428,7 @@ export default function InventoryImportPage() {
             />
           ) : (
             <>
-              <section className="operations-step-strip grid grid-cols-3 gap-2 rounded-[20px] border border-theme bg-theme-surface p-2 sm:gap-3 sm:p-3">
+              <DashboardToolbar className="operations-step-strip grid grid-cols-3 gap-2 sm:gap-3">
             {[
               ["1", "Upload", !parsedFile && !success],
               ["2", "Review", Boolean(parsedFile && !success)],
@@ -460,7 +452,7 @@ export default function InventoryImportPage() {
                 {String(label)}
               </div>
             ))}
-              </section>
+              </DashboardToolbar>
 
           {initialLoading ? (
             <section className="rounded-[20px] border border-theme bg-theme-surface p-6 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
@@ -1055,7 +1047,7 @@ export default function InventoryImportPage() {
           )}
             </>
           )}
-        </div>
+        </DashboardPageShell>
       </main>
 
       {isImporting && validation && (

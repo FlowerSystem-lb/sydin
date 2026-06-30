@@ -5,6 +5,15 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import UiIcon from "@/components/UiIcon";
+import {
+  ActionButton,
+  DashboardCard,
+  DashboardEmptyState,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
@@ -435,43 +444,26 @@ export default function QrCenterPage() {
 
   return (
     <main className="operations-workspace operations-qr-center">
-      <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-            Operations
-          </p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-            QR Center
-          </h1>
-          <p className="mt-1 text-sm leading-6 text-theme-muted">
-            Create clean QR label documents or open the existing inventory
-            scanner.
-          </p>
-          <button
-            type="button"
-            onClick={openExistingScanner}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 sm:w-auto"
-          >
-            <UiIcon name="scan" className="h-5 w-5" />
-            Start Scanner
-          </button>
-        </section>
+      <DashboardPageShell>
+        <DashboardPageHeader
+          eyebrow="Operations"
+          title="QR Center"
+          description="Create clean QR label documents or open the existing inventory scanner."
+          actions={
+            <ActionButton icon="scan" onClick={openExistingScanner}>
+              Start Scanner
+            </ActionButton>
+          }
+        />
 
         {(error || notice) && (
-          <p
-            role={error ? "alert" : "status"}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-              error
-                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
-                : "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
-            }`}
-          >
+          <DashboardNotice tone={error ? "danger" : "success"}>
             {error || notice}
-          </p>
+          </DashboardNotice>
         )}
 
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
-          <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_12px_36px_rgba(15,23,42,0.07)] sm:p-5">
+          <DashboardCard>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-black text-theme-primary">
@@ -485,7 +477,7 @@ export default function QrCenterPage() {
                 type="button"
                 onClick={selectAllVisible}
                 disabled={visibleItems.length === 0}
-                className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
+                className="dashboard-action-button dashboard-action-button-secondary min-h-10 px-3 py-2.5 text-xs disabled:opacity-50"
               >
                 Select visible
               </button>
@@ -513,7 +505,7 @@ export default function QrCenterPage() {
                     <button
                       type="button"
                       onClick={() => setSettingsOpen(true)}
-                      className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-xs font-bold text-white"
+                      className="dashboard-action-button dashboard-action-button-primary min-h-10 px-4 py-2.5 text-xs"
                     >
                       Create Labels
                     </button>
@@ -539,12 +531,11 @@ export default function QrCenterPage() {
 
             <div className="mt-4 grid max-h-[520px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
               {loading ? (
-                [1, 2, 3, 4].map((row) => (
-                  <div
-                    key={row}
-                    className="h-20 animate-pulse rounded-xl bg-theme-inset"
-                  />
-                ))
+                <LoadingSkeletonGroup
+                  count={4}
+                  className="col-span-full grid-cols-1 sm:grid-cols-2"
+                  itemClassName="min-h-20"
+                />
               ) : visibleItems.length > 0 ? (
                 visibleItems.map((item) => {
                   const selected = selectedIds.has(item.id);
@@ -607,15 +598,18 @@ export default function QrCenterPage() {
                   );
                 })
               ) : (
-                <p className="col-span-full py-10 text-center text-sm text-theme-muted">
-                  No matching inventory items.
-                </p>
+                <DashboardEmptyState
+                  className="col-span-full"
+                  icon="search"
+                  title="No matching inventory items"
+                  description="Adjust the search text to find label-ready items."
+                />
               )}
             </div>
-          </section>
+          </DashboardCard>
 
           <div className="grid gap-4">
-            <section className="rounded-[22px] border border-theme bg-theme-surface p-5 shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
+            <DashboardCard>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl font-black text-theme-primary">
                   Label Preview
@@ -654,19 +648,16 @@ export default function QrCenterPage() {
                   </div>
                 </div>
               ) : (
-                <div className="mt-4 rounded-xl border border-dashed border-theme bg-theme-inset px-4 py-10 text-center">
-                  <UiIcon
-                    name="qr"
-                    className="mx-auto h-8 w-8 text-theme-accent"
-                  />
-                  <p className="mt-3 text-sm text-theme-muted">
-                    Select an item to preview its label.
-                  </p>
-                </div>
+                <DashboardEmptyState
+                  className="mt-4"
+                  icon="qr"
+                  title="No label selected"
+                  description="Select an item to preview its label."
+                />
               )}
-            </section>
+            </DashboardCard>
 
-            <section className="rounded-[22px] border border-theme bg-theme-surface p-5 shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
+            <DashboardCard>
               <h2 className="text-xl font-black text-theme-primary">
                 Scan QR Code
               </h2>
@@ -681,10 +672,10 @@ export default function QrCenterPage() {
                 <UiIcon name="scan" className="h-5 w-5" />
                 Start Camera Scanner
               </button>
-            </section>
+            </DashboardCard>
           </div>
         </div>
-      </div>
+      </DashboardPageShell>
 
       <section
         className={`qr-print-root ${getLayoutGrid(settings.layout)}`}

@@ -4,6 +4,13 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import UiIcon from "@/components/UiIcon";
 import { Button, DialogShell, Select } from "@/components/ui";
+import {
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  DashboardToolbar,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 import { getOrCreateBusinessSettings } from "@/app/lib/businessSettings";
 import {
   getCategoriesForUser,
@@ -657,25 +664,17 @@ export default function StockCountsPage() {
 
   return (
     <main className="operations-workspace operations-stock-counts">
-      <div
-        className={`mx-auto flex w-full max-w-[1500px] flex-col gap-4 ${
+      <DashboardPageShell
+        width="wide"
+        className={
           step === "count" || step === "review" ? "pb-28 sm:pb-0" : ""
-        }`}
+        }
       >
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Operations
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Stock Counts
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Count stock, review discrepancies, and finalize auditable
-                adjustments through SydIN stock movements.
-              </p>
-            </div>
+        <DashboardPageHeader
+          eyebrow="Operations"
+          title="Stock Counts"
+          description="Count stock, review discrepancies, and finalize auditable adjustments through SydIN stock movements."
+          actions={
             <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
               {(["setup", "count", "review", "finalized"] as WorkflowStep[]).map(
                 (itemStep, index) => (
@@ -695,33 +694,23 @@ export default function StockCountsPage() {
                 )
               )}
             </div>
-          </div>
-        </section>
+          }
+        />
 
         {(notice || loadError) && (
-          <p
-            role={loadError ? "alert" : "status"}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-              loadError
-                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
-                : "border-cyan-400/25 bg-cyan-500/10 text-theme-accent"
-            }`}
-          >
+          <DashboardNotice tone={loadError ? "danger" : "info"}>
             {loadError || notice}
-          </p>
+          </DashboardNotice>
         )}
 
         {loading ? (
-          <section className="grid gap-3 rounded-[22px] border border-theme bg-theme-surface p-4">
-            {[1, 2, 3].map((row) => (
-              <div
-                key={row}
-                className="h-20 animate-pulse rounded-xl bg-theme-inset"
-              />
-            ))}
-          </section>
+          <LoadingSkeletonGroup
+            count={3}
+            className="dashboard-card"
+            itemClassName="min-h-20"
+          />
         ) : loadError ? null : step === "setup" ? (
-          <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <section className="dashboard-card grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
               <div className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 px-4 py-3 text-sm text-theme-accent">
                 Draft saved on this device. Review differences before
@@ -871,7 +860,7 @@ export default function StockCountsPage() {
           </section>
         ) : step === "count" ? (
           <>
-            <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            <DashboardToolbar>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div>
                   <h2 className="text-xl font-black text-theme-primary">
@@ -918,7 +907,7 @@ export default function StockCountsPage() {
                 {countedDetails.length} counted, {uncountedCount} uncounted,
                 {differenceDetails.length} differences.
               </p>
-            </section>
+            </DashboardToolbar>
 
             {finalizeError && (
               <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
@@ -926,10 +915,10 @@ export default function StockCountsPage() {
               </p>
             )}
 
-            <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
+            <section className="dashboard-table-card">
               <div className="hidden overflow-x-auto lg:block">
-                <table className="min-w-full table-fixed text-left text-sm">
-                  <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                <table className="dashboard-table min-w-full table-fixed">
+                  <thead>
                     <tr>
                       <th className="w-[26%] px-4 py-3">Item</th>
                       <th className="w-[14%] px-4 py-3">Category</th>
@@ -1475,7 +1464,7 @@ export default function StockCountsPage() {
             </div>
           </section>
         )}
-      </div>
+      </DashboardPageShell>
 
       {confirmClearDraft && (
         <DialogShell

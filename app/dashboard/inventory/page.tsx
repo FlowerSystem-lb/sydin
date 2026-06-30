@@ -23,6 +23,7 @@ import ItemDetailsSlideOver, {
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import StockMovementDialog from "@/components/inventory/StockMovementDialog";
 import { Button, DialogShell, Select } from "@/components/ui";
+import { DashboardNotice } from "@/components/dashboard/Workspace";
 import CategorySelector from "@/components/CategorySelector";
 import {
   getCategoriesForUser,
@@ -2943,15 +2944,9 @@ export default function InventoryPage() {
           )}
 
           {(pageNotice || pageError) && (
-            <div
-              className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
-                pageError
-                  ? "border-red-500/30 bg-red-500/10 text-theme-danger"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
-              }`}
-            >
+            <DashboardNotice tone={pageError ? "danger" : "success"}>
               {pageError || pageNotice}
-            </div>
+            </DashboardNotice>
           )}
 
           <section className="inventory-toolbar-panel">

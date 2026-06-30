@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { HTMLAttributes, ReactNode } from "react";
+import type { HTMLAttributes, ReactNode, TableHTMLAttributes } from "react";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { cx } from "@/components/ui/utils";
 
@@ -284,5 +284,104 @@ export function DashboardEmptyState({
       <p>{description}</p>
       {action && <div className="dashboard-empty-action">{action}</div>}
     </div>
+  );
+}
+
+export function DashboardTable({
+  children,
+  className,
+  minWidth = "760px",
+  loading,
+  loadingRows = 4,
+  empty,
+  ...props
+}: TableHTMLAttributes<HTMLTableElement> & {
+  minWidth?: string;
+  loading?: boolean;
+  loadingRows?: number;
+  empty?: ReactNode;
+}) {
+  return (
+    <section className={cx("dashboard-table-card", className)}>
+      {loading ? (
+        <LoadingSkeletonGroup
+          count={loadingRows}
+          className="dashboard-table-state"
+          itemClassName="min-h-16"
+        />
+      ) : empty ? (
+        <div className="dashboard-table-state">{empty}</div>
+      ) : (
+        <div className="dashboard-table-scroll">
+          <table
+            className="dashboard-table"
+            style={{ minWidth }}
+            {...props}
+          >
+            {children}
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
+
+export function DashboardListRow({
+  title,
+  subtitle,
+  leading,
+  status,
+  actions,
+  children,
+  className,
+  as: Component = "article",
+}: {
+  title: ReactNode;
+  subtitle?: ReactNode;
+  leading?: ReactNode;
+  status?: ReactNode;
+  actions?: ReactNode;
+  children?: ReactNode;
+  className?: string;
+  as?: "article" | "div" | "li";
+}) {
+  return (
+    <Component className={cx("dashboard-list-row", className)}>
+      {leading && <span className="dashboard-list-row-leading">{leading}</span>}
+      <span className="dashboard-list-row-copy">
+        <strong>{title}</strong>
+        {subtitle && <small>{subtitle}</small>}
+        {children}
+      </span>
+      {status && <span className="dashboard-list-row-status">{status}</span>}
+      {actions && <span className="dashboard-list-row-actions">{actions}</span>}
+    </Component>
+  );
+}
+
+export function DashboardFormSection({
+  title,
+  description,
+  actions,
+  children,
+  className,
+}: {
+  title: string;
+  description?: string;
+  actions?: ReactNode;
+  children: ReactNode;
+  className?: string;
+}) {
+  return (
+    <section className={cx("dashboard-form-section", className)}>
+      <div className="dashboard-form-section-header">
+        <div className="min-w-0">
+          <h2>{title}</h2>
+          {description && <p>{description}</p>}
+        </div>
+        {actions && <div className="dashboard-form-section-actions">{actions}</div>}
+      </div>
+      <div className="dashboard-form-section-body">{children}</div>
+    </section>
   );
 }

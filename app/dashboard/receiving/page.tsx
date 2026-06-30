@@ -5,6 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import UiIcon from "@/components/UiIcon";
 import { Button, DialogShell, Select } from "@/components/ui";
 import {
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  DashboardToolbar,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
+import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
@@ -941,25 +948,17 @@ export default function ReceivingPage() {
 
   return (
     <main className="operations-workspace operations-receiving">
-      <div
-        className={`mx-auto flex w-full max-w-[1500px] flex-col gap-4 ${
+      <DashboardPageShell
+        width="wide"
+        className={
           step === "receive" || step === "review" ? "pb-28 sm:pb-0" : ""
-        }`}
+        }
       >
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Operations
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Receiving
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Receive supplier deliveries, purchase order drafts, returns, and
-                manual restocks. Inventory changes after receiving is finalized.
-              </p>
-            </div>
+        <DashboardPageHeader
+          eyebrow="Operations"
+          title="Receiving"
+          description="Receive supplier deliveries, purchase order drafts, returns, and manual restocks. Inventory changes after receiving is finalized."
+          actions={
             <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
               {stepItems.map((item, index) => (
                 <div
@@ -975,33 +974,23 @@ export default function ReceivingPage() {
                 </div>
               ))}
             </div>
-          </div>
-        </section>
+          }
+        />
 
         {(notice || loadError) && (
-          <p
-            role={loadError ? "alert" : "status"}
-            className={`rounded-xl border px-4 py-3 text-sm font-semibold ${
-              loadError
-                ? "border-red-400/30 bg-red-500/10 text-theme-danger"
-                : "border-cyan-400/25 bg-cyan-500/10 text-theme-accent"
-            }`}
-          >
+          <DashboardNotice tone={loadError ? "danger" : "info"}>
             {loadError || notice}
-          </p>
+          </DashboardNotice>
         )}
 
         {loading ? (
-          <section className="grid gap-3 rounded-[22px] border border-theme bg-theme-surface p-4">
-            {[1, 2, 3].map((row) => (
-              <div
-                key={row}
-                className="h-20 animate-pulse rounded-xl bg-theme-inset"
-              />
-            ))}
-          </section>
+          <LoadingSkeletonGroup
+            count={3}
+            className="dashboard-card"
+            itemClassName="min-h-20"
+          />
         ) : loadError ? null : step === "setup" ? (
-          <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <section className="dashboard-card grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
               <div className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 px-4 py-3 text-sm text-theme-accent">
                 Draft saved on this device. Finalizing records stock-in
@@ -1178,7 +1167,7 @@ export default function ReceivingPage() {
           </section>
         ) : step === "receive" ? (
           <>
-            <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+            <DashboardToolbar>
               <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                 <div>
                   <h2 className="text-xl font-black text-theme-primary">
@@ -1256,7 +1245,7 @@ export default function ReceivingPage() {
                 {receivedLineDetails.length} received lines, {skippedCount} skipped
                 lines, {overReceivedDetails.length} over received warnings.
               </p>
-            </section>
+            </DashboardToolbar>
 
             {invalidQuantityCount > 0 || invalidCostCount > 0 ? (
               <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
@@ -1266,10 +1255,10 @@ export default function ReceivingPage() {
               </p>
             ) : null}
 
-            <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
+            <section className="dashboard-table-card">
               <div className="hidden overflow-x-auto xl:block">
-                <table className="min-w-[1180px] w-full table-fixed text-left text-sm">
-                  <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                <table className="dashboard-table min-w-[1180px] table-fixed">
+                  <thead>
                     <tr>
                       <th className="w-[23%] px-4 py-3">Item</th>
                       <th className="w-[10%] px-4 py-3 text-right">Current</th>
@@ -1925,7 +1914,7 @@ export default function ReceivingPage() {
             </div>
           </section>
         )}
-      </div>
+      </DashboardPageShell>
 
       {confirmClearDraft && (
         <DialogShell

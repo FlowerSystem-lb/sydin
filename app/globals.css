@@ -1031,6 +1031,155 @@ canvas {
   margin-top: var(--space-5);
 }
 
+.dashboard-table-card {
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 18px;
+  background: var(--bg-surface);
+  box-shadow: 0 12px 36px rgba(15, 23, 42, 0.07);
+}
+
+.dashboard-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.dashboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+  font-size: 0.875rem;
+}
+
+.dashboard-table thead {
+  background: var(--bg-page-muted);
+  color: var(--text-subtle);
+  font-size: 0.6875rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.dashboard-table th,
+.dashboard-table td {
+  border-bottom: 1px solid var(--border-divider);
+  padding: 0.8rem var(--space-4);
+  vertical-align: middle;
+}
+
+.dashboard-table tbody tr {
+  color: var(--text-secondary);
+  transition:
+    background-color var(--motion-control) ease,
+    box-shadow var(--motion-control) ease;
+}
+
+.dashboard-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.dashboard-table-state {
+  padding: var(--space-4);
+}
+
+.dashboard-list-row {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: var(--space-3);
+  border: 1px solid var(--border-default);
+  border-radius: 14px;
+  background: var(--bg-surface);
+  padding: var(--space-3);
+  color: var(--text-primary);
+  transition:
+    background-color var(--motion-control) ease,
+    border-color var(--motion-control) ease,
+    box-shadow var(--motion-control) ease,
+    transform var(--motion-control) ease;
+}
+
+.dashboard-list-row-leading {
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.dashboard-list-row-copy {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dashboard-list-row-copy strong,
+.dashboard-list-row-copy small {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-list-row-copy strong {
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 800;
+  line-height: 1.25rem;
+}
+
+.dashboard-list-row-copy small {
+  margin-top: 0.15rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  line-height: 1rem;
+}
+
+.dashboard-list-row-status,
+.dashboard-list-row-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dashboard-form-section {
+  border: 1px solid var(--border-default);
+  border-radius: 18px;
+  background: var(--bg-surface);
+  padding: var(--space-4);
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+}
+
+.dashboard-form-section-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  border-bottom: 1px solid var(--border-divider);
+  padding-bottom: var(--space-4);
+}
+
+.dashboard-form-section-header h2 {
+  color: var(--text-primary);
+  font-size: 1.125rem;
+  font-weight: 900;
+  line-height: 1.5rem;
+}
+
+.dashboard-form-section-header p {
+  margin-top: var(--space-1);
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5rem;
+}
+
+.dashboard-form-section-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.dashboard-form-section-body {
+  padding-top: var(--space-4);
+}
+
 @media (min-width: 640px) {
   .dashboard-page-header-card {
     padding: var(--space-5);
@@ -2547,7 +2696,8 @@ select.glass-input option {
   .ui-button:not(:disabled):hover,
   .ui-card-interactive:hover,
   .dashboard-card-interactive:hover,
-  .dashboard-metric-card:hover {
+  .dashboard-metric-card:hover,
+  .dashboard-list-row:hover {
     transform: translateY(-1px);
   }
 
@@ -2563,7 +2713,8 @@ select.glass-input option {
   }
 
   .dashboard-card-interactive:hover,
-  .dashboard-metric-card:hover {
+  .dashboard-metric-card:hover,
+  .dashboard-list-row:hover {
     border-color: var(--border-strong);
     box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1);
   }
@@ -2624,6 +2775,10 @@ select.glass-input option {
   }
 
   .dashboard-shell-content table tbody tr:hover {
+    background: var(--bg-hover);
+  }
+
+  .dashboard-table tbody tr:hover {
     background: var(--bg-hover);
   }
 

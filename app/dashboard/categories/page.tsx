@@ -10,6 +10,7 @@ import ItemDetailsSlideOver, {
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import UiIcon from "@/components/UiIcon";
 import { DialogShell, Select } from "@/components/ui";
+import { DashboardNotice } from "@/components/dashboard/Workspace";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   createCategory,
@@ -897,13 +898,9 @@ export default function CategoriesPage() {
     <main className="organize-workspace organize-categories min-w-0">
       <div className="mx-auto w-full max-w-[1600px]">
         {(pageError || pageNotice) && (
-          <div
-            role={pageError ? "alert" : "status"}
-            className={`mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border px-4 py-3 text-sm font-semibold ${
-              pageError
-                ? "border-red-400/25 bg-red-500/10 text-theme-danger"
-                : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
-            }`}
+          <DashboardNotice
+            tone={pageError ? "danger" : "success"}
+            className="mb-3 flex flex-wrap items-center justify-between gap-3"
           >
             <span>{pageError || pageNotice}</span>
             {!pageError && undoAssignment && (
@@ -916,7 +913,7 @@ export default function CategoriesPage() {
                 {undoing ? "Undoing..." : "Undo"}
               </button>
             )}
-          </div>
+          </DashboardNotice>
         )}
 
         {!loading && limitReached && (
