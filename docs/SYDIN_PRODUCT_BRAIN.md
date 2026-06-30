@@ -18,7 +18,23 @@ Inspired by:
 - **Shopify** — operational workflows
 
 SydIN must **not** feel like an old ERP. It should feel like a premium inventory operating
-system: clean, compact, fast, smooth, clickable, visual, professional, easy to use.
+system: clean, compact, fast, smooth, clickable, visual, professional, easy to use, scalable.
+
+**Long-term vision:** SydIN becomes the **modern operating system for inventory and physical
+assets** — the default tool small businesses and teams reach for to manage things, not a
+spreadsheet and not a legacy ERP.
+
+> This file is the core overview. The full project brain is split across `docs/`; see the
+> index in [../CLAUDE.md](../CLAUDE.md). Notably: roadmap & sequence
+> ([SYDIN_ROADMAP.md](SYDIN_ROADMAP.md)), backlog
+> ([SYDIN_FEATURE_BACKLOG.md](SYDIN_FEATURE_BACKLOG.md)), module map
+> ([SYDIN_MODULE_ARCHITECTURE.md](SYDIN_MODULE_ARCHITECTURE.md)), principles & decision rules
+> ([SYDIN_PRODUCT_PRINCIPLES.md](SYDIN_PRODUCT_PRINCIPLES.md)), decisions
+> ([SYDIN_DECISION_LOG.md](SYDIN_DECISION_LOG.md)), mobile
+> ([SYDIN_MOBILE_ROADMAP.md](SYDIN_MOBILE_ROADMAP.md)), founder manual
+> ([SYDIN_FOUNDER_OPERATING_MANUAL.md](SYDIN_FOUNDER_OPERATING_MANUAL.md)), marketing
+> ([SYDIN_MARKETING_LAUNCH_PLAN.md](SYDIN_MARKETING_LAUNCH_PLAN.md)), payments
+> ([SYDIN_PAYMENTS_STRATEGY.md](SYDIN_PAYMENTS_STRATEGY.md)).
 
 ---
 

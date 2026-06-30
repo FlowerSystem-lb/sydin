@@ -115,4 +115,38 @@ Dead-token grep over `app/globals.css` returns zero matches.
 
 ---
 
+## Project Brain Expansion — Documentation Sprint  *(Completed)*
+
+Documentation/project-memory only. **No application code, UI, auth, Supabase, schema, routing,
+or business logic was changed.**
+
+**Created (8 new docs):**
+- `docs/SYDIN_FEATURE_BACKLOG.md` — prioritized backlog (P0–P3, impact, difficulty, phase, deps).
+- `docs/SYDIN_MODULE_ARCHITECTURE.md` — module map, file locations, cross-module flows.
+- `docs/SYDIN_PRODUCT_PRINCIPLES.md` — product principles, decision rules, Feature Review Template.
+- `docs/SYDIN_DECISION_LOG.md` — append-only decision record (seeded with decisions to date).
+- `docs/SYDIN_MOBILE_ROADMAP.md` — mobile as a first-class, scan-first product.
+- `docs/SYDIN_FOUNDER_OPERATING_MANUAL.md` — founder context + how to coach Sayed + security rules.
+- `docs/SYDIN_MARKETING_LAUNCH_PLAN.md` — positioning, launch phases, content, checklist.
+- `docs/SYDIN_PAYMENTS_STRATEGY.md` — billing approach (manual approval first), provider research, cost discipline.
+
+**Updated (5 docs):**
+- `CLAUDE.md` — links to all new docs (core vs read-before-major-work), founder & working-style section.
+- `docs/SYDIN_PRODUCT_BRAIN.md` — long-term vision + index pointer to the expanded brain.
+- `docs/SYDIN_ROADMAP.md` — Phase 1 status marks; replaced stale "Sprint 3B next" with the
+  Sprint 4–12 sequence; slimmed the duplicated feature-ideas section to point at the backlog.
+- `docs/SYDIN_SPRINT_LOG.md` — this entry.
+- `docs/SYDIN_UI_RULES.md` — cross-links to product principles + mobile roadmap.
+
+**Goal:** make the repo the permanent source of truth — full vision, founder context, roadmap,
+backlog, module architecture, principles, decision rules, mobile, marketing, and payments — so
+future Claude Code / Claude Project sessions can plan correctly from a cold start.
+
+**Verification:** N/A (docs only — no `lint`/`tsc`/`build` impact). All internal doc links use
+relative paths.
+
+**Next:** Sprint 4 — Categories Workspace Polish (see [SYDIN_ROADMAP.md](SYDIN_ROADMAP.md)).
+
+---
+
 <!-- Append the next sprint entry below this line. -->

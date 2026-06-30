@@ -6,17 +6,21 @@ signed off and the user asks for it.
 
 ---
 
-## Phase 1 — Foundation  *(in progress, mostly complete)*
+## Phase 1 — Foundation  *(in progress)*
 
-- Design system
-- Shared dashboard components
-- Motion system
-- Dashboard polish
-- Settings Control Center
-- Inventory polish
-- Categories polish
-- Item details polish
-- Add/Edit Item UX polish
+- Design system ✅
+- Shared dashboard components ✅
+- Motion system ✅
+- Dashboard polish ✅
+- Settings Control Center ✅
+- Inventory polish ✅ (Sprint 3)
+- Inventory CSS stabilization ✅ (Sprint 3B)
+- Categories polish *(next — Sprint 4)*
+- Item details polish *(Sprint 5)*
+- Add/Edit Item UX polish *(Sprint 6)*
+- Mobile inventory QA *(Sprint 7)*
+- Loading / empty / error states everywhere
+- QA screenshot workflow
 
 ## Phase 2 — Operations
 
@@ -43,59 +47,37 @@ signed off and the user asks for it.
 
 ---
 
-## Immediate next work
+## Immediate sprint sequence
 
-Do **not** start Scanner or QR features yet.
+Sprint 3B (Inventory CSS Stabilization) is **complete**. Build in this order — finish the
+foundation before the exciting Scanner/QR work:
 
-**Recommended next sprint — Sprint 3B: Inventory CSS Stabilization**
+1. **Sprint 4 — Categories Workspace Polish**
+2. **Sprint 5 — Item Details Polish**
+3. **Sprint 6 — Add/Edit Item UX Polish**
+4. **Sprint 7 — Mobile Inventory QA**
+5. **Sprint 8 — QR & Labels Workspace Design Foundation**
+6. **Sprint 9 — Scanner Workspace Design Foundation**
+7. **Sprint 10 — Stock Alerts + Activity Foundation**
+8. **Sprint 11 — Reports Polish**
+9. **Sprint 12 — Search / Command Palette Foundation**
 
-Goal: keep the approved Sprint 3 Inventory UI visually identical, but reduce CSS risk.
+> ⚠️ Scanner and QR are exciting and are strong differentiators, but **do not jump to them**
+> (Sprints 8–9) until Inventory, Categories, Item Details, and Add/Edit Item UX are stable
+> (Sprints 4–7). Each sprint: plan-first if risky, verify (`lint`/`tsc`/`build` + screenshots),
+> log it. Don't begin a sprint until explicitly asked.
 
-- Inspect inventory-specific CSS in `app/globals.css`.
-- Keep inventory styles scoped to `.inventory-workspace`.
-- Remove clearly obsolete / duplicate inventory CSS rules.
-- Organize inventory styles into a clearer, single section.
-- Preserve the current approved layout and behavior exactly.
-
-> Do not begin Sprint 3B until explicitly asked.
+For the full "what could we build" list with priorities, see
+[SYDIN_FEATURE_BACKLOG.md](SYDIN_FEATURE_BACKLOG.md). Mobile detail lives in
+[SYDIN_MOBILE_ROADMAP.md](SYDIN_MOBILE_ROADMAP.md).
 
 ---
 
-## Founder feature ideas (future — not yet scheduled)
+## Founder feature ideas (future)
 
-### Scanner System
-QR scan · barcode scan · mobile camera scanner · desktop scanner workflows ·
-scan to search item · scan to add product · scan to open item · scan modes.
-Modes: **Lookup · Receive · Issue · Transfer · Inventory Count · Assign Asset · Repair · Return**.
-
-### QR & Labels
-QR generator · barcode generator · bulk QR · label templates · business logo · brand colors ·
-small/medium/large labels · printable PDF · PNG/SVG export · label history · branded sticker templates.
-
-### Import / Export Center
-CSV/Excel upload · template download · column mapping · row validation · warnings/errors ·
-import valid rows · import history · export CSV · export PDF · export Excel.
-
-### Stock Alerts
-Per-item low-stock threshold · email notification · dashboard notification · push notification ·
-later: automatic purchase-order draft.
-
-### Notification Center
-Inventory alerts · billing · AI · system · product updates · team actions · stock-movement updates.
-
-### Custom Fields (dynamic per-category)
-- Electronics: serial number, warranty, CPU, RAM
-- Food: expiry, origin, batch
-- Vehicles: plate, VIN, engine
-- Arbitrary custom fields per category
-
-### AI Assistant
-What needs restocking · duplicate items · monthly reports · inventory value by supplier ·
-inactive items · purchase recommendations · daily activity summary.
-
-### Automation Engine (no-code)
-- IF stock < threshold THEN notify
-- IF warranty expires THEN notify manager
-- IF item added THEN generate QR
-- IF stock count mismatch THEN create task
-- IF supplier added THEN create checklist
+The detailed, prioritized feature list — Scanner System, QR & Labels, Import/Export Center,
+Stock Alerts, Notification Center, Dashboard, Reports, Activity/Timeline, Search & Command
+Palette, Custom Fields, AI Assistant, Automation Engine, Purchase Orders/Receiving, and Mobile
+— now lives in **[SYDIN_FEATURE_BACKLOG.md](SYDIN_FEATURE_BACKLOG.md)** with priority (P0–P3),
+impact, difficulty, phase, and dependencies. This roadmap stays focused on phases and sprint
+sequence; the backlog holds the idea detail.

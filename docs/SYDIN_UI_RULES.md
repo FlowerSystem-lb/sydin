@@ -3,6 +3,12 @@
 Non-negotiable rules for building SydIN screens. The goal is a premium, compact, fast,
 Linear/Stripe-grade inventory operating system — never a legacy ERP.
 
+> This is the **UI layer**. Product judgment (what to build, in what order, push-back rules,
+> and the Feature Review Template) lives in
+> [SYDIN_PRODUCT_PRINCIPLES.md](SYDIN_PRODUCT_PRINCIPLES.md); mobile-specific UX in
+> [SYDIN_MOBILE_ROADMAP.md](SYDIN_MOBILE_ROADMAP.md). A feature isn't "done" until its UI meets
+> the rules below **and** its empty/loading/error states exist.
+
 ---
 
 ## Page anatomy

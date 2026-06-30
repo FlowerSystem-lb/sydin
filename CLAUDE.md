@@ -8,14 +8,35 @@ Shopify (operational workflows).
 
 ## Read these first
 
-Every session, before doing work, read the project brain in `docs/`:
+Every session, before doing work, read the **core** project brain in `docs/`:
 
 - [docs/SYDIN_PRODUCT_BRAIN.md](docs/SYDIN_PRODUCT_BRAIN.md) — what SydIN is, architecture, current state.
-- [docs/SYDIN_ROADMAP.md](docs/SYDIN_ROADMAP.md) — the 5-phase master roadmap + founder feature ideas.
+- [docs/SYDIN_ROADMAP.md](docs/SYDIN_ROADMAP.md) — the 5-phase master roadmap + immediate sprint sequence.
 - [docs/SYDIN_SPRINT_LOG.md](docs/SYDIN_SPRINT_LOG.md) — what each sprint changed (append-only history).
 - [docs/SYDIN_UI_RULES.md](docs/SYDIN_UI_RULES.md) — required page anatomy, visual style, motion, components to reuse.
+- [docs/SYDIN_FOUNDER_OPERATING_MANUAL.md](docs/SYDIN_FOUNDER_OPERATING_MANUAL.md) — **who Sayed is and how to work with him. Read before giving any instructions.**
 
-After completing a sprint, **append** a new entry to `docs/SYDIN_SPRINT_LOG.md`.
+Before planning **major work** (new modules, a new sprint, features, strategy), also read the
+relevant deep-context docs:
+
+- [docs/SYDIN_FEATURE_BACKLOG.md](docs/SYDIN_FEATURE_BACKLOG.md) — prioritized backlog (P0–P3, impact, difficulty, deps).
+- [docs/SYDIN_MODULE_ARCHITECTURE.md](docs/SYDIN_MODULE_ARCHITECTURE.md) — module map + cross-module flows.
+- [docs/SYDIN_PRODUCT_PRINCIPLES.md](docs/SYDIN_PRODUCT_PRINCIPLES.md) — decision rules + Feature Review Template.
+- [docs/SYDIN_DECISION_LOG.md](docs/SYDIN_DECISION_LOG.md) — settled decisions (don't re-litigate).
+- [docs/SYDIN_MOBILE_ROADMAP.md](docs/SYDIN_MOBILE_ROADMAP.md) — mobile is a first-class, scan-first product.
+- [docs/SYDIN_MARKETING_LAUNCH_PLAN.md](docs/SYDIN_MARKETING_LAUNCH_PLAN.md) — positioning, launch, content.
+- [docs/SYDIN_PAYMENTS_STRATEGY.md](docs/SYDIN_PAYMENTS_STRATEGY.md) — billing approach + provider research.
+
+After completing a sprint, **append** a new entry to `docs/SYDIN_SPRINT_LOG.md`, and record
+notable choices in `docs/SYDIN_DECISION_LOG.md`.
+
+## Founder & working style
+
+You work with **Sayed**, a solo, student founder who is **not** a professional programmer.
+Give plain, numbered, step-by-step instructions (where to click, what command to run, what to
+send back, what not to touch). Be helpful **and strict** — don't rubber-stamp bad/early/costly
+ideas. **Never** ask him to paste secrets (API keys, passwords, Supabase service-role keys,
+card details, customer data). Full guidance: [docs/SYDIN_FOUNDER_OPERATING_MANUAL.md](docs/SYDIN_FOUNDER_OPERATING_MANUAL.md).
 
 ## Tech stack (verified)
 
