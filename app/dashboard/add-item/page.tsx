@@ -62,7 +62,7 @@ type FieldName =
 type FieldErrors = Partial<Record<FieldName, string>>;
 
 const inputClassName =
-  "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 const errorInputClassName =
   "border-red-400/50 bg-red-500/[0.08] focus:border-red-300/70 focus:shadow-[0_0_0_4px_rgba(248,113,113,0.12)]";
 
@@ -1174,7 +1174,7 @@ export default function AddItemPage() {
                 </div>
 
                 <div className="rounded-2xl border border-violet-300/15 bg-violet-500/[0.07] p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-200">
+                  <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                     Stock retail value
                   </p>
                   <p className="mt-1 break-words text-base font-black text-theme-primary">
@@ -1305,7 +1305,7 @@ export default function AddItemPage() {
                       subscriptionUsage.subscription.plan,
                       "item-limit"
                     )}
-                    className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
+                    className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
                   >
                     {getUpgradeActionLabel(
                       subscriptionUsage.subscription.plan
@@ -1331,7 +1331,7 @@ export default function AddItemPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className="min-w-[160px] rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(79,70,229,0.22)] transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="min-w-[160px] rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? "Saving item..." : "Save Item"}
                 </button>

@@ -321,4 +321,46 @@ card, Stock Movements empty state, and Item History numbers all correctly light-
 
 ---
 
+## Sprint 6 — Add/Edit Item UX Polish  *(Completed & approved)*
+
+**Scope:** Full **brand alignment** of the item **write** surfaces — the Add Item flow and the
+shared Edit form — completing the light "liquid glass" pass started for the read surfaces in
+Sprints 5 / 5B. Presentation / token-alignment only; no behavior change.
+
+**Changes:**
+- **EditItemForm Save button** → swapped the dark-era `bg-white`/`text-black`/`hover:bg-slate-200`
+  primary for the **brand gradient** (`#10c4dc → #2563eb 58% → #7d5cff`, white text,
+  `rgba(37,99,235,0.16)` shadow, `hover:brightness-110`), matching the Sprint 5B treatment.
+- **"Stock retail value" eyebrows** → `text-violet-200` → `text-theme-accent` in **both** files.
+- **Add Item primary buttons** → Save Item + the plan-limit upsell link moved from the non-brand
+  `from-cyan-400 via-indigo-500 to-violet-600` gradient to the brand gradient (submit shadow
+  normalized to `rgba(37,99,235,0.16)`).
+- **Focus rings** → shared `inputClassName` focus treatment in both files moved from indigo
+  (`indigo-300/60`, `rgba(99,102,241,0.12)`) to **brand-blue** (`#2563eb/50`,
+  `rgba(37,99,235,0.12)`); the red error-state focus ring was left unchanged.
+
+**Shared-impact (confirmed):** `EditItemForm` is rendered by multiple surfaces, so the button /
+eyebrow / focus-ring fixes propagate to the **full-page edit**, the **slide-over edit**, and the
+**inventory-list edit** — verified via screenshots on multiple surfaces, desktop + mobile.
+
+**Known gap (flagged for a future pass):** review surfaced a separate **"Quick Add" modal**
+component that is **not** part of `add-item/page.tsx` or `EditItemForm.tsx`. It was out of scope
+here because the Sprint 6 investigation did not surface it. It should get the same brand-alignment
+treatment in a future polish sprint.
+
+**Files changed:** `app/dashboard/add-item/page.tsx` · `app/dashboard/inventory/EditItemForm.tsx`.
+(No `app/globals.css` change was needed.)
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (30/30 routes) ·
+visual review across both edit surfaces, desktop + mobile. *(Note: an initial `tsc`/`build` run
+tripped on a truncated `.next/dev/types/routes.d.ts` — a race with the running `next dev` server
+regenerating route types, not a code error; both passed cleanly on re-run once edits settled.)*
+
+**Untouchables:** No form validation (inline or `validateEditItemFormValues`), image-upload logic,
+inventory insert/update Supabase calls, `logInventoryHistory`, subscription/limit/upsell logic,
+routing (`returnTo` / `ContextBackButton`), or the `Select` / `CategorySelector` / `EditItemForm`
+prop contracts were touched.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

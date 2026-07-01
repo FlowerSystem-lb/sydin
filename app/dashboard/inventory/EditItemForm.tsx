@@ -83,7 +83,7 @@ export interface ParsedEditItemValues {
 }
 
 const inputClassName =
-  "w-full min-h-11 rounded-xl border border-theme bg-theme-surface px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full min-h-11 rounded-xl border border-theme bg-theme-surface px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 const errorInputClassName =
   "border-red-400/50 bg-red-500/[0.08] focus:border-red-300/70 focus:shadow-[0_0_0_4px_rgba(248,113,113,0.12)]";
 
@@ -758,7 +758,7 @@ export default function EditItemForm({
             </p>
           </div>
           <div className="rounded-[18px] border border-violet-300/15 bg-violet-500/[0.07] p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-violet-200">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
               Stock retail value
             </p>
             <p className="mt-1.5 break-normal text-xl font-black text-theme-primary">
@@ -862,7 +862,7 @@ export default function EditItemForm({
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-black transition hover:bg-slate-200 disabled:opacity-50 sm:flex-none"
+          className="flex-1 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50 sm:flex-none"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
