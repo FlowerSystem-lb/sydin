@@ -10,7 +10,12 @@ import ItemDetailsSlideOver, {
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import UiIcon from "@/components/UiIcon";
 import { DialogShell, Select } from "@/components/ui";
-import { DashboardNotice } from "@/components/dashboard/Workspace";
+import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   createCategory,
@@ -89,6 +94,22 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 };
 const inputClassName =
   "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.1)] disabled:opacity-60";
+
+// Centralized, translation-ready copy for the states polished in this workspace.
+const CATEGORY_COPY = {
+  sidebarEmptyTitle: "No categories yet",
+  sidebarEmptyBody: "Create your first category to start organizing inventory.",
+  sidebarEmptyAction: "Add your first category",
+  sidebarNoMatchTitle: "No matches",
+  sidebarNoMatchBody: "No categories match your search.",
+  detailEmptyTitle: "No items yet",
+  detailEmptyBody: "Add an item here or choose another category from the list.",
+  detailNoMatchTitle: "No matching items",
+  detailNoMatchBody: "Try changing the item search or filters.",
+  assignEmptyAllBody: "Every inventory item is already in this category.",
+  assignNoMatchBody: "No inventory items match this search.",
+  addCategory: "Add category",
+} as const;
 
 const markerTones = [
   "from-cyan-400 to-blue-600",
@@ -843,7 +864,7 @@ export default function CategoriesPage() {
   const renderCompactRow = (item: CategoryInventoryItem) => (
     <article
       key={item.id}
-      className="flex min-w-0 flex-col gap-3 rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center"
+      className="organize-compact-row flex min-w-0 flex-col gap-3 rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center"
     >
       <button
         type="button"
@@ -945,15 +966,16 @@ export default function CategoriesPage() {
                     Categories
                   </h1>
                 </div>
-                <button
-                  type="button"
+                <ActionButton
                   onClick={openCreateForm}
                   disabled={loading || limitReached}
-                  className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-indigo-600 text-white shadow-sm disabled:opacity-50"
-                  aria-label="Add category"
+                  icon="plus"
+                  variant="primary"
+                  aria-label={CATEGORY_COPY.addCategory}
+                  className="organize-sidebar-add"
                 >
-                  <UiIcon name="plus" className="h-5 w-5" />
-                </button>
+                  Add
+                </ActionButton>
               </div>
 
               <label className="relative mt-4 block">
@@ -1021,14 +1043,11 @@ export default function CategoriesPage() {
               </div>
 
               {loading ? (
-                <div className="grid gap-2">
-                  {[1, 2, 3, 4].map((key) => (
-                    <div
-                      key={key}
-                      className="h-14 animate-pulse rounded-xl bg-theme-surface"
-                    />
-                  ))}
-                </div>
+                <LoadingSkeletonGroup
+                  count={5}
+                  className="gap-2"
+                  itemClassName="h-14 rounded-xl"
+                />
               ) : visibleCategories.length > 0 ? (
                 <div className="grid gap-1">
                   {visibleCategories.map((category) => {
@@ -1102,23 +1121,29 @@ export default function CategoriesPage() {
                   })}
                 </div>
               ) : categories.length === 0 ? (
-                <div className="rounded-xl border border-dashed border-theme p-5 text-center">
-                  <p className="text-sm font-bold text-theme-primary">
-                    No categories yet
-                  </p>
-                  <button
-                    type="button"
-                    onClick={openCreateForm}
-                    disabled={limitReached}
-                    className="mt-3 text-sm font-bold text-theme-accent"
-                  >
-                    Add your first category
-                  </button>
-                </div>
+                <DashboardEmptyState
+                  className="organize-sidebar-empty"
+                  icon="categories"
+                  title={CATEGORY_COPY.sidebarEmptyTitle}
+                  description={CATEGORY_COPY.sidebarEmptyBody}
+                  action={
+                    <ActionButton
+                      onClick={openCreateForm}
+                      disabled={limitReached}
+                      icon="plus"
+                      variant="primary"
+                    >
+                      {CATEGORY_COPY.sidebarEmptyAction}
+                    </ActionButton>
+                  }
+                />
               ) : (
-                <p className="rounded-xl border border-dashed border-theme p-5 text-center text-sm text-theme-muted">
-                  No categories match your search.
-                </p>
+                <DashboardEmptyState
+                  className="organize-sidebar-empty"
+                  icon="search"
+                  title={CATEGORY_COPY.sidebarNoMatchTitle}
+                  description={CATEGORY_COPY.sidebarNoMatchBody}
+                />
               )}
             </div>
           </aside>
@@ -1180,36 +1205,33 @@ export default function CategoriesPage() {
                   </div>
                 </div>
                 <div className="organize-detail-actions flex flex-wrap gap-2">
-                  <Link
+                  <ActionButton
                     href={contextualAddItemHref}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white"
+                    icon="plus"
+                    variant="primary"
                   >
-                    <UiIcon name="plus" className="h-4 w-4" />
                     Add Item
-                  </Link>
+                  </ActionButton>
                   {selectedCategory && (
                     <>
-                      <button
-                        type="button"
+                      <ActionButton
                         onClick={openAssignment}
-                        className="rounded-xl border border-indigo-300/40 bg-indigo-500/10 px-4 py-2.5 text-sm font-bold text-theme-accent hover:bg-indigo-500/15"
+                        variant="secondary"
                       >
                         Add Existing Items
-                      </button>
-                      <button
-                        type="button"
+                      </ActionButton>
+                      <ActionButton
                         onClick={() => openEditForm(selectedCategory)}
-                        className="rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary hover:bg-theme-hover"
+                        variant="secondary"
                       >
                         Edit Category
-                      </button>
-                      <button
-                        type="button"
+                      </ActionButton>
+                      <ActionButton
                         onClick={() => setPendingDelete(selectedCategory)}
-                        className="rounded-xl border border-red-300/40 bg-red-500/10 px-4 py-2.5 text-sm font-bold text-theme-danger hover:bg-red-500/15"
+                        variant="danger"
                       >
                         Delete
-                      </button>
+                      </ActionButton>
                     </>
                   )}
                 </div>
@@ -1336,69 +1358,63 @@ export default function CategoriesPage() {
               </div>
 
               {loading ? (
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  {[1, 2, 3, 4].map((key) => (
-                    <div
-                      key={key}
-                      className="h-48 animate-pulse rounded-2xl border border-theme bg-theme-inset"
-                    />
-                  ))}
-                </div>
+                <LoadingSkeletonGroup
+                  count={4}
+                  className="mt-3 sm:grid-cols-2"
+                  itemClassName="min-h-[12rem] rounded-2xl"
+                />
               ) : filteredItems.length === 0 ? (
-                <div className="mt-3 rounded-2xl border border-dashed border-theme bg-theme-inset px-4 py-14 text-center">
-                  <span className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-200/60 bg-white text-theme-accent">
-                    <UiIcon
-                      name={selectionItems.length === 0 ? "box" : "search"}
-                      className="h-5 w-5"
-                    />
-                  </span>
-                  <h3 className="mt-4 text-lg font-black text-theme-primary">
-                    {selectionItems.length === 0
-                      ? `No items in ${selectionTitle}`
-                      : "No matching items"}
-                  </h3>
-                  <p className="mx-auto mt-2 max-w-md text-sm text-theme-muted">
-                    {selectionItems.length === 0
-                      ? "Add an item here or choose another category from the list."
-                      : "Try changing the item search or filters."}
-                  </p>
-                  {selectionItems.length === 0 && (
-                    <div className="mt-5 flex flex-wrap justify-center gap-2">
-                      {selectedCategory ? (
-                        <>
-                          <Link
+                <DashboardEmptyState
+                  className="mt-3"
+                  icon={selectionItems.length === 0 ? "box" : "search"}
+                  title={
+                    selectionItems.length === 0
+                      ? CATEGORY_COPY.detailEmptyTitle
+                      : CATEGORY_COPY.detailNoMatchTitle
+                  }
+                  description={
+                    selectionItems.length === 0
+                      ? CATEGORY_COPY.detailEmptyBody
+                      : CATEGORY_COPY.detailNoMatchBody
+                  }
+                  action={
+                    selectionItems.length === 0 ? (
+                      <div className="flex flex-wrap justify-center gap-2">
+                        {selectedCategory ? (
+                          <>
+                            <ActionButton
+                              href={contextualAddItemHref}
+                              variant="primary"
+                            >
+                              Add New Item
+                            </ActionButton>
+                            <ActionButton
+                              onClick={openAssignment}
+                              variant="secondary"
+                            >
+                              Add Existing Items
+                            </ActionButton>
+                          </>
+                        ) : selection.type === "low" ||
+                          selection.type === "recent" ? (
+                          <ActionButton
+                            href="/dashboard/inventory"
+                            variant="secondary"
+                          >
+                            View Inventory
+                          </ActionButton>
+                        ) : (
+                          <ActionButton
                             href={contextualAddItemHref}
-                            className="inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white"
+                            variant="primary"
                           >
                             Add New Item
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={openAssignment}
-                            className="rounded-xl border border-indigo-300/40 bg-white px-4 py-2.5 text-sm font-bold text-indigo-700"
-                          >
-                            Add Existing Items
-                          </button>
-                        </>
-                      ) : selection.type === "low" ||
-                        selection.type === "recent" ? (
-                        <Link
-                          href="/dashboard/inventory"
-                          className="inline-flex rounded-xl border border-theme bg-white px-4 py-2.5 text-sm font-bold text-theme-primary"
-                        >
-                          View Inventory
-                        </Link>
-                      ) : (
-                        <Link
-                          href={contextualAddItemHref}
-                          className="inline-flex rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white"
-                        >
-                          Add New Item
-                        </Link>
-                      )}
-                    </div>
-                  )}
-                </div>
+                          </ActionButton>
+                        )}
+                      </div>
+                    ) : undefined
+                  }
+                />
               ) : itemView === "list" ? (
                 <div className="mt-3 grid gap-2">
                   {filteredItems.map(renderCompactRow)}
@@ -1565,9 +1581,9 @@ export default function CategoriesPage() {
               ))}
             </div>
             {assignError && (
-              <p className="mt-4 text-sm font-semibold text-theme-danger">
+              <DashboardNotice tone="danger" className="mt-4">
                 {assignError}
-              </p>
+              </DashboardNotice>
             )}
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
@@ -1627,12 +1643,7 @@ export default function CategoriesPage() {
             </p>
             <div className="mt-3 max-h-[26rem] space-y-2 overflow-y-auto pr-1">
               {loading ? (
-                [1, 2, 3].map((key) => (
-                  <div
-                    key={key}
-                    className="h-16 animate-pulse rounded-xl bg-theme-inset"
-                  />
-                ))
+                <LoadingSkeletonGroup count={3} itemClassName="h-16 rounded-xl" />
               ) : visibleAssignmentCandidates.length > 0 ? (
                 visibleAssignmentCandidates.map((item) => (
                   <label
@@ -1684,11 +1695,15 @@ export default function CategoriesPage() {
                   </label>
                 ))
               ) : (
-                <div className="rounded-xl border border-dashed border-theme px-4 py-10 text-center text-sm text-theme-muted">
-                  {assignmentCandidates.length === 0
-                    ? "Every inventory item is already in this category."
-                    : "No inventory items match this search."}
-                </div>
+                <DashboardEmptyState
+                  icon="box"
+                  title="No items to add"
+                  description={
+                    assignmentCandidates.length === 0
+                      ? CATEGORY_COPY.assignEmptyAllBody
+                      : CATEGORY_COPY.assignNoMatchBody
+                  }
+                />
               )}
             </div>
             <div className="mt-5 flex flex-col-reverse gap-2 border-t border-theme pt-4 sm:flex-row sm:justify-end">

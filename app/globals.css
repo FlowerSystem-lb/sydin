@@ -15505,3 +15505,42 @@ body,
     aspect-ratio: 16 / 10;
   }
 }
+
+/* ===[ CATEGORIES (organize) workspace polish — Sprint 4 ]=== */
+/* Scoped to .organize-categories so the shared organize base and sibling pages
+   (.organize-suppliers, .organize-depots) are unaffected. Appended last on purpose,
+   mirroring the inventory polish convention. Interaction states are gated behind
+   @media (hover: hover) so they never fight the mobile (max-width: 639px) block above. */
+.organize-categories .organize-compact-row {
+  transition:
+    border-color var(--motion-control) ease,
+    box-shadow var(--motion-control) ease,
+    transform var(--motion-control) ease;
+}
+
+.organize-categories .organize-sidebar-empty {
+  padding: 1.25rem 1rem;
+}
+
+.organize-categories .organize-sidebar-empty .dashboard-empty-icon {
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.organize-categories .organize-sidebar-add {
+  min-height: 2.4rem;
+  padding-inline: 0.85rem;
+}
+
+@media (hover: hover) {
+  .organize-categories .organize-compact-row:hover {
+    border-color: var(--border-strong);
+    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+  }
+
+  .organize-categories .organize-category-row:active,
+  .organize-categories .organize-compact-row:active {
+    transform: scale(0.99);
+  }
+}

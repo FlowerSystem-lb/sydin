@@ -149,4 +149,22 @@ relative paths.
 
 ---
 
+## Sprint 4 — Categories Workspace Polish  *(Completed & approved)*
+
+**Changed files:** `app/dashboard/categories/page.tsx` · `app/globals.css`.
+
+**Scope:**
+- Adopted the shared dashboard **state primitives** (loading / empty / notice states) on the
+  Categories workspace for consistency with the rest of the dashboard.
+- Swapped bespoke buttons over to the shared **`ActionButton`** primitive.
+- Added scoped **`.organize-categories`** CSS polish in `app/globals.css` (kept scoped to the
+  Categories workspace so it does not affect other pages' cascade).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ — all passed.
+
+**Untouchables:** No untouchables were modified — authentication, Supabase integration,
+database schema, routing, and existing business logic were all left unchanged.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
