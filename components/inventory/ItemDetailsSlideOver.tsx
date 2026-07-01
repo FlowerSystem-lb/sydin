@@ -13,6 +13,12 @@ import {
 import { createPortal } from "react-dom";
 import UiIcon from "@/components/UiIcon";
 import { Select } from "@/components/ui";
+import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 import { cx } from "@/components/ui/utils";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -705,29 +711,46 @@ export default function ItemDetailsSlideOver({
         </nav>
 
         <div className="item-details-body">
-          {error && (
-            <div role="alert" className="item-details-alert item-details-alert-error">
+          {error && item && (
+            <DashboardNotice tone="danger" className="item-details-notice">
               {error}
-            </div>
+            </DashboardNotice>
           )}
 
           {loading && (
-            <div className="item-details-loading">
-              <div />
-              <div />
-              <div />
-            </div>
+            <LoadingSkeletonGroup
+              count={3}
+              className="item-details-loading"
+              itemClassName="min-h-28"
+            />
+          )}
+
+          {!loading && !item && (
+            <DashboardEmptyState
+              icon="box"
+              title="Item not found"
+              description={
+                error ||
+                "This item does not exist or you do not have access to it."
+              }
+              action={
+                <ActionButton
+                  variant="secondary"
+                  icon="chevron-left"
+                  onClick={beginClose}
+                >
+                  Back to inventory
+                </ActionButton>
+              }
+            />
           )}
 
           {!loading && item && (
             <>
               {(notice || refreshing) && (
-                <p
-                  role="status"
-                  className="item-details-alert item-details-alert-success"
-                >
+                <DashboardNotice tone="success" className="item-details-notice">
                   {refreshing ? "Refreshing latest activity..." : notice}
-                </p>
+                </DashboardNotice>
               )}
 
               <div
@@ -918,9 +941,11 @@ export default function ItemDetailsSlideOver({
                         ))}
                       </div>
                     ) : (
-                      <p className="item-details-empty">
-                        No stock movements yet.
-                      </p>
+                      <DashboardEmptyState
+                        icon="movement"
+                        title="No stock movements yet"
+                        description="Stock in, stock out, adjustments, and damaged or lost activity for this item will appear here."
+                      />
                     )}
 
                     {history.length > 0 && (

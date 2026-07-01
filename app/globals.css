@@ -1418,6 +1418,13 @@ canvas {
   color: var(--text-primary);
 }
 
+/* ===[ ITEM DETAILS: slide-over polish (Sprint 5) ]=== */
+/* Presentation-only polish of the item quick-view slide-over: light "liquid glass"
+   alignment (brand gradient submit, brand-blue focus ring), softer borders/shadow,
+   subtle card elevation, and hover/press motion. Rules are edited in place; the
+   loading/error/empty states now use the shared dashboard primitives, so the old
+   `.item-details-loading` / `.item-details-alert*` state CSS was retired. The 900px /
+   640px responsive tuning further below is unchanged. */
 .item-details-overlay {
   position: fixed;
   z-index: 90;
@@ -1451,9 +1458,9 @@ canvas {
   overflow: hidden;
   border-left: 1px solid var(--sydin-ui-border);
   background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 18rem),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 20rem),
     var(--sydin-bg-elevated);
-  box-shadow: -24px 0 70px rgba(15, 23, 42, 0.2);
+  box-shadow: -28px 0 80px rgba(15, 23, 42, 0.14);
   color: var(--sydin-text);
   transform: translate3d(100%, 0, 0);
   transition:
@@ -1519,15 +1526,17 @@ canvas {
   justify-content: center;
   gap: 0.45rem;
   border: 1px solid var(--sydin-ui-border);
-  border-radius: 0.75rem;
+  border-radius: 0.85rem;
   background: var(--sydin-ui-surface);
   color: var(--sydin-text-secondary);
   font-size: 0.8rem;
   font-weight: 800;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transition:
     background-color 140ms ease,
     border-color 140ms ease,
     color 140ms ease,
+    box-shadow 140ms ease,
     transform 140ms ease,
     opacity 140ms ease;
 }
@@ -1547,6 +1556,7 @@ canvas {
   border-color: var(--sydin-ui-border-strong);
   background: var(--sydin-surface-hover);
   color: var(--sydin-text);
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
 }
 
 .item-details-icon-button:active,
@@ -1676,8 +1686,9 @@ canvas {
 .item-details-history,
 .item-details-alert-card {
   border: 1px solid var(--sydin-ui-border);
-  border-radius: 0.9rem;
+  border-radius: 0.95rem;
   background: var(--sydin-ui-surface);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .item-details-quantity-strip > div {
@@ -1714,28 +1725,18 @@ canvas {
   padding-inline: 0.35rem;
 }
 
-.item-details-alert {
-  margin-top: 0.75rem;
-  border: 1px solid var(--status-info-border);
-  border-radius: 0.85rem;
-  background: var(--status-info-surface);
-  padding: 0.75rem;
-  color: var(--status-info-text);
-  font-size: 0.82rem;
-  font-weight: 700;
+/* Note: loading/error/empty states now use the shared dashboard primitives
+   (LoadingSkeletonGroup / DashboardNotice / DashboardEmptyState). The old
+   `.item-details-alert*` notice classes were retired here; only the movement
+   quick-form's inline error styling remains below. */
+.item-details-notice {
+  margin-bottom: 0.6rem;
 }
 
-.item-details-alert-error,
 .item-details-form-error {
   border-color: var(--status-danger-border);
   background: var(--status-danger-surface);
   color: var(--status-danger-text);
-}
-
-.item-details-alert-success {
-  border-color: var(--status-success-border);
-  background: var(--status-success-surface);
-  color: var(--status-success-text);
 }
 
 .item-details-adjust {
@@ -1776,8 +1777,8 @@ canvas {
 }
 
 .item-details-input:focus {
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  border-color: rgba(37, 99, 235, 0.55);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
 .item-details-submit {
@@ -1787,18 +1788,21 @@ canvas {
   justify-content: center;
   gap: 0.5rem;
   border-radius: 0.8rem;
-  background: linear-gradient(90deg, #22d3ee, #4f46e5, #7c3aed);
+  background: linear-gradient(90deg, #10c4dc, #2563eb 58%, #7d5cff);
   color: #ffffff;
   font-size: 0.85rem;
   font-weight: 850;
+  box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
   transition:
     filter 140ms ease,
+    box-shadow 140ms ease,
     transform 140ms ease,
     opacity 140ms ease;
 }
 
 .item-details-submit:hover {
   filter: saturate(1.08);
+  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.24);
 }
 
 .item-details-submit:active {
@@ -2014,19 +2018,7 @@ canvas {
 }
 
 .item-details-loading {
-  display: grid;
-  gap: 0.75rem;
-}
-
-.item-details-loading div {
-  height: 8rem;
-  overflow: hidden;
-  border-radius: 1rem;
-  background:
-    linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.26), transparent),
-    var(--sydin-surface-inset);
-  background-size: 220% 100%;
-  animation: item-details-skeleton 1.1s ease-in-out infinite;
+  margin-top: 0.15rem;
 }
 
 @keyframes item-details-tab-in {
@@ -2059,15 +2051,6 @@ canvas {
   to {
     opacity: 1;
     transform: scale(1) translateY(0);
-  }
-}
-
-@keyframes item-details-skeleton {
-  from {
-    background-position: 140% 0;
-  }
-  to {
-    background-position: -80% 0;
   }
 }
 

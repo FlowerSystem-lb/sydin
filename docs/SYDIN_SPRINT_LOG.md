@@ -235,4 +235,45 @@ route already existed (polished in Sprint 4); this only surfaces it in the nav d
 
 ---
 
+## Sprint 5 — Item Details Slide-Over Polish  *(Completed & approved)*
+
+**Scope:** Polished the item quick-view **slide-over** ([components/inventory/ItemDetailsSlideOver.tsx](../components/inventory/ItemDetailsSlideOver.tsx))
+— presentation only, aligned to the light "liquid glass" theme, with custom state markup
+swapped to the shared dashboard primitives. No behavior change.
+
+**Changes:**
+- **Loading** → `LoadingSkeletonGroup` (replaced three custom skeleton `<div>`s).
+- **Notices** → `DashboardNotice` for both the error (`tone="danger"`) and the refresh/success
+  (`tone="success"`) states, replacing the inline `.item-details-alert*` pills.
+- **Empty states** → `DashboardEmptyState` for a new polished **"Item not found"** state (with a
+  **Back to inventory** `ActionButton` wired to the existing close handler) and the Activity tab's
+  **"No stock movements yet"**.
+- **Theme alignment** → submit button + input focus ring moved from generic cyan/indigo/violet to
+  the **brand gradient** (`#10c4dc → #2563eb → #7d5cff`) and brand-blue focus ring; softer panel
+  shadow, softer card radii + subtle 1px elevation; header controls gained resting/hover shadow.
+- **Cleanup** → retired now-dead `.item-details-alert*` and custom `.item-details-loading` skeleton
+  CSS plus the unused `@keyframes item-details-skeleton`; kept `.item-details-form-error` (movement
+  quick-form) and `.item-details-empty` (Alerts footnote). CSS edited in place under a labeled
+  Sprint 5 banner; the 900px/640px responsive tuning is unchanged.
+
+**Decision noted:** the header **Edit** and **overflow-menu** buttons were kept as the tuned custom
+controls (NOT swapped to `ActionButton`) to preserve their mobile-header responsive behavior — Edit
+collapses to icon-only at 640px, the close button hides, and the back button appears. Swapping would
+have regressed that.
+
+**Deferred:** the full item page (`app/dashboard/inventory/[id]`) is intentionally left for
+**Sprint 5B** — this sprint touched the slide-over only.
+
+**Files changed:** `components/inventory/ItemDetailsSlideOver.tsx` · `app/globals.css` (the
+`.item-details-*` scoped section only).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (30/30 routes) ·
+visual review of all three tabs (Details / Activity / Alerts) on desktop and mobile.
+
+**Untouchables:** No data loading, stock-movement, history, edit/delete, routing, auth, or
+subscription logic was touched, and the `onItemUpdated(item, movement)` callback contract and the
+slide-over's `body.style.overflow` scroll-lock are unchanged.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
