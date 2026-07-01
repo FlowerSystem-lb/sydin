@@ -97,6 +97,13 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
+    label: "Categories",
+    href: "/dashboard/categories",
+    icon: "categories",
+    section: "organize",
+    mobilePlacement: "more",
+  },
+  {
     label: "Settings",
     href: "/dashboard/settings",
     icon: "settings",

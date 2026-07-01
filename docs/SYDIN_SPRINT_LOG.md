@@ -212,4 +212,27 @@ desktop (`≥900px`) block was touched.
 
 ---
 
+## Categories Sidebar Navigation  *(Completed & confirmed)*
+
+**Scope:** Added **Categories** to the main dashboard navigation. Previously the Categories
+workspace was only reachable indirectly (via **Add Item → Manage Categories**); it now has a
+first-class nav entry.
+
+**Change:** One `DashboardNavigationItem` added to `DASHBOARD_NAVIGATION` — `label: "Categories"`,
+`href: "/dashboard/categories"`, `icon: "categories"`, `section: "organize"` (next to Depots),
+`mobilePlacement: "more"` (no `shortLabel`, matching the Depots pattern). Renders automatically in
+the desktop sidebar (Organize group) and the mobile **More** sheet; active-state highlighting is
+handled generically by the existing `isDashboardRouteActive`.
+
+**File changed:** `components/dashboard/navigation.ts` (only).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (30/30 routes) ·
+visual confirm — appears in the desktop sidebar and the mobile More sheet under Organize, next to
+Depots, with active-state highlighting.
+
+**Note:** No routing, auth, Supabase, or business logic touched — the `/dashboard/categories`
+route already existed (polished in Sprint 4); this only surfaces it in the nav data.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
