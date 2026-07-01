@@ -276,4 +276,49 @@ slide-over's `body.style.overflow` scroll-lock are unchanged.
 
 ---
 
+## Sprint 5B — Item Details Full Page Polish  *(Completed & approved)*
+
+**Scope:** Token-alignment / color-only polish of the full item details page
+([app/dashboard/inventory/[id]/page.tsx](../app/dashboard/inventory/[id]/page.tsx)), aligned to
+the light "liquid glass" theme. Pairs yesterday's slide-over work (Sprint 5) so both item views
+match. Presentation only — no behavior change.
+
+**Changes:**
+- **Primary buttons** → 4 dark `bg-white`/`text-black`/`hover:bg-slate-200` buttons (header **Edit
+  Item**, error-state **Back to Inventory**, **Download QR**, Record-Movement **submit**) swapped to
+  the light-theme **brand gradient** (`#10c4dc → #2563eb 58% → #7d5cff`, white text, brand-blue
+  shadow, `hover:brightness-110`). Applied inline rather than via `ActionButton` so each keeps its
+  sibling-matched radius/padding/text-size.
+- **Theme tokens** → `text-slate-200` → `text-theme-primary` (Before/Old-qty numbers + zero-delta
+  branch); `text-red-300` → `text-theme-danger` (Low-Stock badge, Delete eyebrow);
+  `text-emerald-300` → `text-theme-success` (both Stock-activity eyebrows); DetailCard
+  `text-violet-100` → `text-theme-accent`.
+- **Loading skeleton** → re-skinned via **`LoadingSkeletonGroup`** (replaced the dark shimmer +
+  `rgba(0,0,0,0.28)` panels), preserving the 2-column layout with the shared light shimmer.
+- **Shadows normalized** → oversized dark shadows (`rgba(0,0,0,0.28–0.6)` on the error panel, both
+  large modals, and the delete dialog) brought down to the page's light scale
+  `shadow-[0_14px_42px_rgba(15,23,42,0.12)]`.
+- **Placeholders** → image-empty placeholder (`border-slate-300/35 bg-white/35` →
+  `border-theme bg-theme-surface`) and the QR card's `rgba(255,255,255,…)` shadow fixed to the
+  light scale.
+
+The 3 inline modals (Movement / Edit / Delete) got classname/color changes only — `onSubmit`,
+validation, and the `closeX(force)` guards were untouched.
+
+**Explicitly deferred (flagged, not done — both are refactors, out of scope for a polish sprint):**
+- Unifying the local `DetailCard` with the slide-over's version.
+- Adopting the shared `StockMovementDialog` for the page's inline movement modal.
+
+**Files changed:** `app/dashboard/inventory/[id]/page.tsx` (only). No `app/globals.css` change was
+needed — the shared `LoadingSkeletonGroup` already carries the light shimmer.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (30/30 routes) ·
+visual review of the full page at `/dashboard/inventory/[id]` on **desktop + mobile** (buttons, QR
+card, Stock Movements empty state, and Item History numbers all correctly light-themed and readable).
+
+**Untouchables:** No data loading, stock-movement, history, edit/delete handler logic, routing, the
+`action=edit|stock|delete` query-param handling, auth, Supabase, or subscription logic was touched.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

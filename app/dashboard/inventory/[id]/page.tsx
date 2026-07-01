@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import BrandMark from "@/components/BrandMark";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
+import { LoadingSkeletonGroup } from "@/components/dashboard/Workspace";
 import {
   getCategoriesForUser,
   resolveCategoryDisplay,
@@ -154,7 +155,7 @@ function DetailCard({
       : accent === "cyan"
         ? "border-cyan-300/20 bg-cyan-500/10 text-theme-accent"
         : accent === "violet"
-          ? "border-violet-300/20 bg-violet-500/10 text-violet-100"
+          ? "border-violet-300/20 bg-violet-500/10 text-theme-accent"
           : accent === "amber"
             ? "border-amber-300/20 bg-amber-500/10 text-theme-warning"
             : "border-theme bg-theme-inset text-theme-primary";
@@ -847,7 +848,7 @@ export default function ItemDetailsPage() {
                     <button
                       type="button"
                       onClick={openEditModal}
-                      className="min-h-10 rounded-xl bg-white px-3.5 py-2 text-sm font-bold text-black shadow-[0_10px_28px_rgba(255,255,255,0.1)] transition hover:bg-slate-200"
+                      className="min-h-10 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-3.5 py-2 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
                     >
                       Edit Item
                     </button>
@@ -873,15 +874,11 @@ export default function ItemDetailsPage() {
           )}
 
           {loading && (
-            <div className="grid grid-cols-1 gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-theme bg-theme-surface shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
-                <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
-              </div>
-
-              <div className="min-h-[420px] overflow-hidden rounded-[32px] border border-theme bg-theme-surface shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
-                <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
-              </div>
-            </div>
+            <LoadingSkeletonGroup
+              count={2}
+              className="gap-5 xl:grid-cols-[1.15fr_0.85fr]"
+              itemClassName="min-h-[420px] rounded-[32px]"
+            />
           )}
 
           {!loading && authMissing && (
@@ -891,7 +888,7 @@ export default function ItemDetailsPage() {
           )}
 
           {!loading && !authMissing && (error || !item) && (
-            <div className="rounded-[32px] border border-theme bg-theme-surface p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+            <div className="rounded-[32px] border border-theme bg-theme-surface p-8 text-center shadow-[0_14px_42px_rgba(15,23,42,0.12)] backdrop-blur-xl">
               <h2 className="text-3xl font-bold">
                 Item not found
               </h2>
@@ -902,7 +899,7 @@ export default function ItemDetailsPage() {
 
               <Link
                 href="/dashboard/inventory"
-                className="mt-6 inline-flex rounded-2xl bg-white px-5 py-3 font-bold text-black transition hover:bg-slate-200"
+                className="mt-6 inline-flex rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
               >
                 Back to Inventory
               </Link>
@@ -972,7 +969,7 @@ export default function ItemDetailsPage() {
                       />
                     </div>
                   ) : (
-                    <div className="flex min-h-[300px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-theme-subtle">
+                    <div className="flex min-h-[300px] w-full flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface text-center text-theme-subtle">
                       <span className="text-sm font-black uppercase tracking-[0.18em]">
                         Image
                       </span>
@@ -999,7 +996,7 @@ export default function ItemDetailsPage() {
                     </div>
 
                     {itemIsLowStock && (
-                      <span className="self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
+                      <span className="self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-theme-danger">
                         Low Stock
                       </span>
                     )}
@@ -1190,7 +1187,7 @@ export default function ItemDetailsPage() {
 
                     <div
                       ref={qrCodeRef}
-                      className="rounded-3xl bg-white p-4 shadow-[0_24px_80px_rgba(255,255,255,0.08)]"
+                      className="rounded-3xl bg-white p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)]"
                     >
                       {qrUrl ? (
                         <QRCode
@@ -1239,7 +1236,7 @@ export default function ItemDetailsPage() {
                         type="button"
                         onClick={downloadQrCode}
                         disabled={!qrUrl}
-                        className="flex-1 rounded-2xl bg-white px-4 py-3 text-sm font-bold text-black transition hover:bg-slate-200 disabled:opacity-50"
+                        className="flex-1 rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50"
                       >
                         Download QR
                       </button>
@@ -1255,7 +1252,7 @@ export default function ItemDetailsPage() {
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-300">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-success">
                       Stock activity
                     </p>
 
@@ -1312,7 +1309,7 @@ export default function ItemDetailsPage() {
                                 Before
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-slate-200">
+                              <p className="mt-2 text-2xl font-black text-theme-primary">
                                 {movement.quantity_before}
                               </p>
                             </div>
@@ -1328,7 +1325,7 @@ export default function ItemDetailsPage() {
                                     ? "text-theme-danger"
                                     : movement.quantity_delta > 0
                                       ? "text-theme-success"
-                                      : "text-slate-200"
+                                      : "text-theme-primary"
                                 }`}
                               >
                                 {formatQuantityDelta(movement.quantity_delta)}
@@ -1414,7 +1411,7 @@ export default function ItemDetailsPage() {
                                 Old quantity
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-slate-200">
+                              <p className="mt-2 text-2xl font-black text-theme-primary">
                                 {formatQuantity(entry.old_quantity)}
                               </p>
                             </div>
@@ -1456,10 +1453,10 @@ export default function ItemDetailsPage() {
 
       {isMovementModalOpen && item && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-9">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_14px_42px_rgba(15,23,42,0.12)] backdrop-blur-2xl sm:p-7 md:p-9">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-success">
                   Stock activity
                 </p>
 
@@ -1618,7 +1615,7 @@ export default function ItemDetailsPage() {
                 <button
                   type="submit"
                   disabled={isRecordingMovement}
-                  className="flex-1 rounded-2xl bg-white py-4 text-base font-bold text-black transition hover:bg-slate-200 disabled:opacity-50"
+                  className="flex-1 rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] py-4 text-base font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50"
                 >
                   {isRecordingMovement ? "Recording..." : "Record Movement"}
                 </button>
@@ -1630,7 +1627,7 @@ export default function ItemDetailsPage() {
 
       {isEditModalOpen && item && (
         <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_14px_42px_rgba(15,23,42,0.12)] backdrop-blur-2xl sm:p-7 md:p-8">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
@@ -1682,9 +1679,9 @@ export default function ItemDetailsPage() {
             role="dialog"
             aria-modal="true"
             aria-labelledby="delete-detail-item-title"
-            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_30px_120px_rgba(0,0,0,0.6)] sm:p-7"
+            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-7"
           >
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-red-300">
+            <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-danger">
               Delete inventory item
             </p>
             <h2 id="delete-detail-item-title" className="mt-3 break-words text-2xl font-bold text-theme-primary">
