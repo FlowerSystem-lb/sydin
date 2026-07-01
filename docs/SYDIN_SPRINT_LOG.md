@@ -167,4 +167,49 @@ database schema, routing, and existing business logic were all left unchanged.
 
 ---
 
+## Mobile Scroll Fix — Dashboard & Inventory  *(Completed & confirmed)*
+
+**Scope:** Fixed the mobile scroll trap on `/dashboard` and `/dashboard/inventory` — at mobile
+width (~390px) the page could not scroll to the bottom (mouse wheel and arrow keys did nothing).
+`/dashboard/settings` was unaffected and kept working throughout.
+
+**Root cause:** `overscroll-behavior: contain` on `.dashboard-shell-content` (in the
+`:has(.dashboard-overview)` and `:has(.inventory-workspace)` mobile blocks). On mobile the shell
+grew to `height: auto` / `overflow: visible`, so `.dashboard-shell-content` became an
+`overflow-y: auto` container with **zero scroll range** (its `scrollHeight === clientHeight`).
+A zero-range scroll container with `overscroll-behavior: contain` **absorbs** the wheel/keys and
+**refuses to chain** the scroll up to `<html>` — which is the only element with real scroll range
+(document `scrollHeight` ≈ 2799/3338 vs 844 viewport). Settings scrolled fine because its content
+region uses `overscroll-behavior: auto` (chains to the document). Confirmed via a **live CDP wheel
+test** (synthetic `mouseWheel` → measured `document.scrollingElement.scrollTop`):
+before fix `/dashboard` and `/dashboard/inventory` moved `0 → 0`; after fix `0 → 988` and
+`0 → 900`; `/dashboard/settings` `0 → 787` before and after.
+
+**Fix:** Changed `overscroll-behavior: contain` → `auto` on **only** those two scoped rules
+(`.dashboard-shell-content:has(.dashboard-overview)` and
+`.dashboard-shell-content:has(.inventory-workspace)`). No `.settings-workspace` rule and no
+desktop (`≥900px`) block was touched.
+
+**Changed files:** `app/globals.css` (only).
+
+**Two earlier missed attempts (recorded so future sessions don't repeat them):**
+1. *Static-analysis pass* edited what looked like the culprits — `.dashboard-overview`
+   `overflow-x: hidden` → `clip`, and the inventory shell block (`height: 100svh; overflow: hidden`
+   → `auto`/`visible`). These were **not the winning declarations**, so scroll stayed broken. (The
+   `overflow-x` change was also silently defeated at runtime by an `overflow-x: hidden !important`
+   rule on the same elements, which — via the CSS one-axis rule — keeps `overflow-y` computed as
+   `auto`.)
+2. Only a **live computed-style + wheel test** (headless Chrome over the DevTools Protocol at
+   390px, with a dummy local session injected to mount the auth-gated shell) revealed the actual
+   winning rule was `overscroll-behavior: contain`, not any `overflow`/`height` declaration.
+   Lesson: for cascade bugs in this ~15k-line stylesheet, verify the **computed** value and the
+   **matched winning rule**, don't trust source-order reasoning alone.
+
+**Verification:** live CDP wheel test (both pages scroll, Settings unaffected) ✅ ·
+`npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (30/30 routes).
+
+**Untouchables:** No authentication, Supabase, schema, routing, or business logic changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

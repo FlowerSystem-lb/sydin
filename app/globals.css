@@ -4915,12 +4915,15 @@ select.glass-input option {
 }
 
 @media (max-width: 639px) {
+  /* Mobile scroll fix (inventory ONLY): the inventory shell scrolls with the document
+     instead of being a fixed 100svh box with an inner-scroll content region. This is
+     scoped strictly to :has(.inventory-workspace) — .sydin-overview / .settings-workspace
+     are intentionally NOT affected here. Bottom-nav clearance safe-area padding kept. */
   .dashboard-shell:has(.inventory-workspace) {
     box-sizing: border-box;
-    display: flex;
-    height: 100svh;
-    flex-direction: column;
-    overflow: hidden;
+    display: block;
+    height: auto;
+    overflow: visible;
     padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
 
@@ -4929,10 +4932,11 @@ select.glass-input option {
   }
 
   .dashboard-shell-content:has(.inventory-workspace) {
-    min-height: 0;
-    flex: 1 1 auto;
-    overflow-y: auto;
-    overscroll-behavior: contain;
+    min-height: auto;
+    overflow-y: visible;
+    /* auto (not contain): the content region grew to a zero-scroll-range container, and
+       `contain` was absorbing the wheel/keys instead of chaining to the document. */
+    overscroll-behavior: auto;
     padding-bottom: calc(var(--space-3) + env(safe-area-inset-bottom));
     scroll-padding-bottom: calc(6rem + env(safe-area-inset-bottom));
   }
@@ -5992,7 +5996,9 @@ select.glass-input option {
   min-height: calc(100vh - 6rem);
   margin: calc(-1 * var(--space-3));
   padding: var(--space-3);
-  overflow-x: hidden;
+  /* clip (not hidden) so overflow-y is not forced to `auto` (which would make this
+     an unintended nested vertical scroll container on mobile). Horizontal protection kept. */
+  overflow-x: clip;
   background:
     radial-gradient(circle at 84% -18%, rgba(53, 114, 255, 0.08), transparent 26rem),
     linear-gradient(180deg, #fbfdff 0%, var(--overview-bg) 100%);
@@ -6745,7 +6751,9 @@ select.glass-input option {
     min-height: 0;
     flex: 1 1 auto;
     overflow-y: auto;
-    overscroll-behavior: contain;
+    /* auto (not contain): the content region grew to a zero-scroll-range container, and
+       `contain` was absorbing the wheel/keys instead of chaining to the document. */
+    overscroll-behavior: auto;
     padding-bottom: var(--space-3);
     scroll-padding-bottom: calc(5.75rem + env(safe-area-inset-bottom));
   }
