@@ -1329,7 +1329,7 @@ export default function CategoriesPage() {
                   <div
                     role="group"
                     aria-label="Item view"
-                    className="flex flex-wrap gap-1 rounded-xl border border-theme bg-theme-inset p-1"
+                    className="flex flex-wrap gap-1.5 rounded-xl border border-theme bg-theme-inset p-1"
                   >
                     {(
                       [
@@ -1344,7 +1344,7 @@ export default function CategoriesPage() {
                         type="button"
                         aria-pressed={itemView === view}
                         onClick={() => updateItemView(view)}
-                        className={`rounded-lg px-2.5 py-2 text-xs font-bold ${
+                        className={`inline-flex min-h-11 items-center justify-center rounded-lg px-3 text-xs font-bold ${
                           itemView === view
                             ? "bg-white text-indigo-700 shadow-sm"
                             : "text-theme-muted hover:text-theme-primary"

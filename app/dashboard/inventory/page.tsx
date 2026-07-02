@@ -2691,14 +2691,14 @@ export default function InventoryPage() {
     >
       <InventoryActionMenu
         label="More"
-        buttonClassName="inline-flex min-h-8 items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20"
+        buttonClassName="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20"
         menuClassName={menuClassName}
       >
         <button
           type="button"
           role="menuitem"
           onClick={() => setDetailsItem({ id: item.id, tab: "details" })}
-          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="file" className="h-4 w-4" />
           View details
@@ -2707,7 +2707,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => setMovementItem(item)}
-          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="movement" className="h-4 w-4" />
           Adjust stock
@@ -2716,7 +2716,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => openEditModal(item)}
-          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="appearance" className="h-4 w-4" />
           Edit
@@ -2726,7 +2726,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => setDetailsItem({ id: item.id, tab: "activity" })}
-          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="clock" className="h-4 w-4" />
           Activity
@@ -2735,7 +2735,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => openQrCenterForItems([item.id])}
-          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
           <UiIcon name="qr" className="h-4 w-4" />
           Create QR / Label
@@ -2746,7 +2746,7 @@ export default function InventoryPage() {
           role="menuitem"
           onClick={() => setPendingDeleteItem(item)}
           disabled={deletingId === item.id}
-          className="flex min-h-9 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
         >
           <UiIcon name="trash" className="h-4 w-4" />
           {deletingId === item.id ? "Deleting..." : "Delete"}

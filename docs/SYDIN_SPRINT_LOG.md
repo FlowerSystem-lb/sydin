@@ -363,4 +363,32 @@ prop contracts were touched.
 
 ---
 
+## Sprint 7 — Mobile Inventory QA  *(Completed & approved)*
+
+**Scope:** A mobile QA pass over the inventory surfaces, split into an **investigation phase**
+and a narrow **fix phase**. The investigation (static audit + live CDP wheel-test across
+**Categories**, **Add Item**, the **full item-details page**, and the **Inventory list** at
+390px) confirmed **0 screens needed scroll/layout fixes** — `overscroll-behavior: auto` is
+already applied correctly by browser default, and the insights rail is `display: none` on
+mobile (not overlapping content). No scroll/overflow/overscroll CSS was touched.
+
+**Fix phase — touch-target sizing only** (bumped to `min-h-11` / 44px):
+- **Categories** view-mode toggle buttons (List / 2-col / 3-col / Table).
+- **Inventory full-page** inline-modal close buttons (movement + edit).
+- **Inventory list** action-menu trigger + its 6 menu items.
+
+**Explicitly excluded:** `ItemDetailsSlideOver.tsx` header icon controls (~38px) — a documented
+**Sprint 5 collapse-behavior tradeoff**, intentionally left as-is.
+
+**Files changed:** `app/dashboard/categories/page.tsx` · `app/dashboard/inventory/[id]/page.tsx` ·
+`app/dashboard/inventory/page.tsx`. (No `app/globals.css` change was needed — existing utility
+classes covered every fix.)
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live CDP scroll
+test (0 issues) · screenshot review at **390px and 320px** — all passed.
+
+**This closes Sprint 7 and Phase 1 — Foundation.**
+
+---
+
 <!-- Append the next sprint entry below this line. -->

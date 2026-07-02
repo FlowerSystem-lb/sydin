@@ -1476,7 +1476,7 @@ export default function ItemDetailsPage() {
                 type="button"
                 onClick={() => closeMovementModal()}
                 disabled={isRecordingMovement}
-                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
               >
                 <svg
                   className="h-8 w-8"
@@ -1644,7 +1644,7 @@ export default function ItemDetailsPage() {
                 type="button"
                 onClick={() => closeEditModal()}
                 disabled={isEditing}
-                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
+                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
               >
                 <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
