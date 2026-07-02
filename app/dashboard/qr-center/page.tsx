@@ -525,7 +525,7 @@ export default function QrCenterPage() {
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search item name, SKU, or item code"
-                className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-indigo-300/60 focus:ring-4 focus:ring-indigo-400/10"
+                className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
               />
             </label>
 
@@ -544,7 +544,7 @@ export default function QrCenterPage() {
                       key={item.id}
                       className={`flex items-center gap-3 rounded-xl border p-3 transition ${
                         selected
-                          ? "border-indigo-300/60 bg-indigo-500/10 ring-4 ring-indigo-400/10"
+                          ? "border-[#2563eb]/50 bg-[#2563eb]/10 ring-4 ring-[#2563eb]/15"
                           : "border-theme bg-theme-surface hover:bg-theme-hover"
                       } ${!item.public_id ? "opacity-55" : ""}`}
                     >
@@ -553,7 +553,7 @@ export default function QrCenterPage() {
                         checked={selected}
                         onChange={() => toggleItem(item.id)}
                         disabled={!item.public_id}
-                        className="h-4 w-4 accent-indigo-600"
+                        className="h-4 w-4 accent-[#2563eb]"
                       />
                       <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-theme bg-theme-inset">
                         {item.image ? (
@@ -717,7 +717,7 @@ export default function QrCenterPage() {
                   onClick={() => updateSettings({ layout: option.value })}
                   className={`rounded-xl border px-3 py-3 text-sm font-bold ${
                     settings.layout === option.value
-                      ? "border-indigo-300/60 bg-indigo-500/15 text-theme-accent ring-4 ring-indigo-400/10"
+                      ? "border-[#2563eb]/50 bg-[#2563eb]/12 text-theme-accent ring-4 ring-[#2563eb]/15"
                       : "border-theme bg-theme-surface text-theme-secondary"
                   }`}
                 >
@@ -750,7 +750,7 @@ export default function QrCenterPage() {
                     onClick={() => updateSettings({ branding: value })}
                     className={`rounded-xl border px-3 py-3 text-sm font-bold ${
                       settings.branding === value
-                        ? "border-indigo-300/60 bg-indigo-500/15 text-theme-accent ring-4 ring-indigo-400/10"
+                        ? "border-[#2563eb]/50 bg-[#2563eb]/12 text-theme-accent ring-4 ring-[#2563eb]/15"
                         : "border-theme bg-theme-surface text-theme-secondary"
                     } disabled:cursor-not-allowed disabled:opacity-45`}
                   >
@@ -798,7 +798,7 @@ export default function QrCenterPage() {
                         [field]: event.target.checked,
                       } as Partial<QrLabelSettings>)
                     }
-                    className="h-4 w-4 accent-indigo-600"
+                    className="h-4 w-4 accent-[#2563eb]"
                   />
                   {label}
                 </label>
@@ -828,7 +828,7 @@ export default function QrCenterPage() {
             <button
               type="button"
               onClick={printLabels}
-              className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-3 text-sm font-bold text-white"
+              className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
             >
               {selectedCount === 1 ? "Print Label" : "Print Labels"}
             </button>

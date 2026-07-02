@@ -81,6 +81,10 @@ drag-and-drop label designer.
 | Public item scan page | P2 | Med | Med | 2 | Routing/auth review (do not change without ask) |
 | Drag-and-drop label designer | P3 | Med | High | 4 | Labels module mature |
 
+**Known gap:** items without a `public_id` cannot get a QR/label and are silently filtered
+from the printable set in QR Center, with no in-UI way to generate one. Needs a scoped sprint
+(backend behavior) if/when prioritized. Flagged 2026-07.
+
 ## 4. Import / Export Center
 
 CSV/Excel upload · template download · column mapping · row validation · warnings/errors ·

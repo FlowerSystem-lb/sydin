@@ -57,4 +57,10 @@ Crypto is optional and **not** a launch priority. **Why:** avoid lock-in and was
 founder's account/region eligibility must be checked against current provider rules.
 **Status:** Revisit (before billing sprint).
 
+### 2026-07 · Correction: QR Center was already fully built, not a design-foundation greenfield build
+Sprint 8 investigation (2026-07) found `app/dashboard/qr-center/page.tsx` and
+`app/lib/qrLabelPdf.ts` fully implemented and shipped prior to this sprint. Backlog entries
+describing QR & Labels as needing "workspace design foundation" are stale. Redefined Sprint 8
+as a brand-alignment polish pass instead. **Status:** Active.
+
 <!-- Append the next decision below this line. -->
