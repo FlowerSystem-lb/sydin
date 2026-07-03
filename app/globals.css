@@ -10731,7 +10731,7 @@ body [class*="tracking-["],
 .marketing-hero-title {
   max-width: 14ch;
   font-size: clamp(3.25rem, 7.4vw, 6.4rem);
-  line-height: 0.95;
+  line-height: 1.02;
 }
 
 .marketing-hero-proof {
