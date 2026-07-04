@@ -3784,7 +3784,7 @@ select.glass-input option {
 .inventory-filter-panel {
   border: 1px solid var(--border-divider);
   border-radius: 14px;
-  background: var(--bg-inset);
+  background: var(--sydin-surface-inset);
   padding: 0.65rem;
   animation: inventory-filter-panel-in 180ms var(--motion-ease-standard) both;
 }
@@ -4199,7 +4199,7 @@ select.glass-input option {
     height: 2rem;
     place-items: center;
     border-radius: 10px;
-    background: var(--bg-inset);
+    background: var(--sydin-surface-inset);
     color: var(--text-accent);
   }
 
@@ -8440,4 +8440,65 @@ select.glass-input option {
   .ui-icon-button:not(:disabled):active {
     transform: none;
   }
+}
+
+/* Global "Add New" quick-create menu in the dashboard toolbars. */
+
+.dashboard-addnew-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 70;
+  width: 16.5rem;
+  animation: dashboard-content-in 140ms var(--motion-ease-standard) both;
+}
+
+.dashboard-addnew-item {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: var(--space-3);
+  border-radius: var(--radius-control);
+  padding: var(--space-2) var(--space-3);
+  color: var(--text-secondary);
+  font-size: 0.875rem;
+  transition: background-color var(--motion-control) ease,
+    color var(--motion-control) ease;
+}
+
+.dashboard-addnew-item:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.dashboard-addnew-icon {
+  display: grid;
+  height: 2.25rem;
+  width: 2.25rem;
+  flex-shrink: 0;
+  place-items: center;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--sydin-surface-inset);
+  color: var(--text-accent);
+}
+
+.dashboard-addnew-label {
+  display: block;
+  font-weight: 800;
+  color: var(--text-primary);
+}
+
+.dashboard-addnew-description {
+  display: block;
+  margin-top: 1px;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  color: var(--text-muted);
+}
+
+/* Keep toolbar dropdowns (Add New) above page content. */
+.dashboard-desktop-toolbar {
+  position: relative;
+  z-index: 45;
 }

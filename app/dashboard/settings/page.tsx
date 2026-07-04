@@ -386,6 +386,13 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [signingOutAll, setSigningOutAll] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [emailSaving, setEmailSaving] = useState(false);
+  const [backupExporting, setBackupExporting] = useState(false);
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -662,6 +669,184 @@ export default function SettingsPage() {
       setError("Something went wrong while saving business settings.");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleChangePassword = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (passwordSaving) return;
+
+    if (newPassword.length < 8) {
+      setSuccess("");
+      setError("New password must be at least 8 characters.");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      setSuccess("");
+      setError("Password confirmation does not match.");
+      return;
+    }
+
+    try {
+      setPasswordSaving(true);
+      setError("");
+      setSuccess("");
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword,
+      });
+
+      if (updateError) {
+        setError(
+          updateError.message ||
+            "We could not update your password. Please try again."
+        );
+        return;
+      }
+
+      setNewPassword("");
+      setConfirmPassword("");
+      setSuccess("Password updated. Use it the next time you sign in.");
+    } catch {
+      setError("We could not update your password. Please try again.");
+    } finally {
+      setPasswordSaving(false);
+    }
+  };
+
+  const handleGlobalSignOut = async () => {
+    if (signingOutAll) return;
+
+    try {
+      setSigningOutAll(true);
+      setError("");
+      setSuccess("");
+      await supabase.auth.signOut({ scope: "global" });
+      window.location.href = "/login";
+    } catch {
+      setSigningOutAll(false);
+      setError("We could not sign out of all devices. Please try again.");
+    }
+  };
+
+  const handleChangeEmail = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (emailSaving) return;
+
+    const email = newEmail.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setSuccess("");
+      setError("Enter a valid email address.");
+      return;
+    }
+
+    if (email === userEmail.toLowerCase()) {
+      setSuccess("");
+      setError("This is already your account email.");
+      return;
+    }
+
+    try {
+      setEmailSaving(true);
+      setError("");
+      setSuccess("");
+
+      const { error: updateError } = await supabase.auth.updateUser({
+        email,
+      });
+
+      if (updateError) {
+        setError(
+          updateError.message ||
+            "We could not start the email change. Please try again."
+        );
+        return;
+      }
+
+      setNewEmail("");
+      setSuccess(
+        "Email change started. Confirmation links were sent to your current and new addresses."
+      );
+    } catch {
+      setError("We could not start the email change. Please try again.");
+    } finally {
+      setEmailSaving(false);
+    }
+  };
+
+  const handleDownloadBackup = async () => {
+    if (backupExporting) return;
+
+    try {
+      setBackupExporting(true);
+      setError("");
+      setSuccess("");
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setError("Please sign in again to download a backup.");
+        return;
+      }
+
+      const [
+        { data: inventory, error: inventoryError },
+        { data: categories },
+        { data: depots },
+        { data: suppliers },
+        { data: movements },
+      ] = await Promise.all([
+        supabase.from("inventory").select("*").eq("user_id", user.id),
+        supabase.from("categories").select("*").eq("user_id", user.id),
+        supabase.from("depots").select("*").eq("user_id", user.id),
+        supabase.from("suppliers").select("*").eq("user_id", user.id),
+        supabase
+          .from("stock_movements")
+          .select("*")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(2000),
+      ]);
+
+      if (inventoryError) {
+        setError("We could not read your inventory for the backup.");
+        return;
+      }
+
+      const backup = {
+        format: "sydin-workspace-backup",
+        version: 1,
+        exported_at: new Date().toISOString(),
+        account_email: userEmail,
+        business_settings: savedSettings,
+        inventory: inventory || [],
+        categories: categories || [],
+        depots: depots || [],
+        suppliers: suppliers || [],
+        stock_movements: movements || [],
+      };
+
+      const blob = new Blob([JSON.stringify(backup, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      const stamp = new Date().toISOString().slice(0, 10);
+      link.href = url;
+      link.download = `sydin-backup-${stamp}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      setSuccess(
+        `Workspace backup downloaded (${(inventory || []).length} items included).`
+      );
+    } catch {
+      setError("We could not create the workspace backup. Please try again.");
+    } finally {
+      setBackupExporting(false);
     }
   };
 
@@ -1681,6 +1866,39 @@ export default function SettingsPage() {
     <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
       <div className="grid gap-4">
         <SettingCard
+          title="Change account email"
+          description="Move this account to a new sign-in email. For safety, confirmation links are sent to both the current and the new address before the change applies."
+          action={<StatusChip tone="success">Live</StatusChip>}
+        >
+          <form
+            onSubmit={handleChangeEmail}
+            aria-busy={emailSaving}
+            className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end"
+          >
+            <FormField label="New account email" htmlFor="settings-new-email">
+              <Input
+                id="settings-new-email"
+                type="email"
+                autoComplete="email"
+                value={newEmail}
+                onChange={(event) => setNewEmail(event.target.value)}
+                placeholder="name@business.com"
+                disabled={emailSaving}
+              />
+            </FormField>
+            <Button
+              type="submit"
+              size="sm"
+              loading={emailSaving}
+              loadingLabel="Sending confirmations..."
+              disabled={!newEmail.trim()}
+            >
+              Change Email
+            </Button>
+          </form>
+        </SettingCard>
+
+        <SettingCard
           title="Current email setup"
           description="Account verification and password-related emails are handled by SydIN's authentication provider. Custom sender controls are not active in Settings v1."
           action={<StatusChip tone="success">Auth email active</StatusChip>}
@@ -1839,7 +2057,7 @@ export default function SettingsPage() {
       <div className="grid gap-4">
         <SettingCard
           title="Account access"
-          description="Your dashboard session is managed by SydIN authentication. This page displays the current account state without changing auth settings."
+          description="Your dashboard session is managed by SydIN authentication. Review the signed-in account and end sessions on every device when needed."
           action={<StatusChip tone="success">Signed in</StatusChip>}
         >
           <div className="grid gap-3">
@@ -1860,16 +2078,25 @@ export default function SettingsPage() {
             </div>
             <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
               <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Sign out
+                Sign out of all devices
               </p>
               <p
                 className="mt-1 min-w-0 text-sm text-theme-muted"
               >
-                Sign-out remains in the dashboard account menu and mobile More
-                sheet.
+                Ends every active SydIN session for this account, including
+                this one. You will need to sign in again.
               </p>
               <div className="mt-2">
-                <StatusChip>Account menu action</StatusChip>
+                <Button
+                  type="button"
+                  variant="danger"
+                  size="sm"
+                  onClick={handleGlobalSignOut}
+                  loading={signingOutAll}
+                  loadingLabel="Signing out everywhere..."
+                >
+                  Sign out of all devices
+                </Button>
               </div>
             </div>
           </div>
@@ -1907,43 +2134,54 @@ export default function SettingsPage() {
         </SettingCard>
 
         <SettingCard
-          title="Password and recovery"
-          description="Password recovery emails are handled by the authentication provider through the existing sign-in support flow."
-          action={<StatusChip tone="success">Auth email active</StatusChip>}
+          title="Change password"
+          description="Set a new password for this account. It applies immediately to future sign-ins."
+          action={<StatusChip tone="success">Live</StatusChip>}
         >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className={valueTextClassName}>
-                Email verification
-              </p>
-              <p
-                className={`mt-1 ${mutedTextClassName}`}
+          <form
+            onSubmit={handleChangePassword}
+            aria-busy={passwordSaving}
+            className="grid gap-3"
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <FormField label="New password" htmlFor="settings-new-password">
+                <Input
+                  id="settings-new-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={newPassword}
+                  onChange={(event) => setNewPassword(event.target.value)}
+                  placeholder="At least 8 characters"
+                  disabled={passwordSaving}
+                />
+              </FormField>
+              <FormField
+                label="Confirm new password"
+                htmlFor="settings-confirm-password"
               >
-                Signup verification uses the current auth email flow.
-              </p>
+                <Input
+                  id="settings-confirm-password"
+                  type="password"
+                  autoComplete="new-password"
+                  value={confirmPassword}
+                  onChange={(event) => setConfirmPassword(event.target.value)}
+                  placeholder="Repeat the new password"
+                  disabled={passwordSaving}
+                />
+              </FormField>
             </div>
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className={valueTextClassName}>
-                Password help
-              </p>
-              <p
-                className={`mt-1 ${mutedTextClassName}`}
+            <div className="flex justify-end">
+              <Button
+                type="submit"
+                size="sm"
+                loading={passwordSaving}
+                loadingLabel="Updating password..."
+                disabled={!newPassword || !confirmPassword}
               >
-                Managed during sign-in and support. No new password reset
-                controls were added here.
-              </p>
+                Update Password
+              </Button>
             </div>
-          </div>
-          <div className="mt-3">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("email")}
-            >
-              Review Email Settings
-            </Button>
-          </div>
+          </form>
         </SettingCard>
 
         <SettingCard
@@ -1975,12 +2213,11 @@ export default function SettingsPage() {
       <div className="grid gap-4">
         <RoadmapCard
           title="Advanced security roadmap"
-          description="Advanced security controls are grouped here so the current account, sign-in, and data protection summaries stay focused."
+          description="Password changes and signing out of all devices are live above. The remaining advanced controls stay grouped here for a later phase."
           items={[
             "Multi-factor authentication",
             "Active sessions",
             "Trusted devices",
-            "Sign out of all devices",
             "Security notifications",
             "Team roles",
             "Audit log",
@@ -2016,6 +2253,30 @@ export default function SettingsPage() {
   const renderDataPanel = () => (
     <div className="grid gap-4">
       <SettingCard
+        title="Workspace backup"
+        description="Download a complete JSON snapshot of this workspace: inventory, categories, depots, suppliers, recent stock movements, and business settings."
+        action={<StatusChip tone="success">Live</StatusChip>}
+      >
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="min-w-0 text-xs leading-5 text-theme-muted">
+            The backup is created on this device and never leaves it. Keep the
+            file somewhere safe - it is a readable record of your workspace
+            data.
+          </p>
+          <Button
+            type="button"
+            size="sm"
+            onClick={handleDownloadBackup}
+            loading={backupExporting}
+            loadingLabel="Preparing backup..."
+            leadingIcon={<UiIcon name="download" className="h-4 w-4" />}
+          >
+            Download Backup
+          </Button>
+        </div>
+      </SettingCard>
+
+      <SettingCard
         title="Data movement"
         description="Use existing import and export surfaces. Settings v1 does not add backup jobs or destructive data tools."
       >
@@ -2042,13 +2303,8 @@ export default function SettingsPage() {
       </SettingCard>
       <RoadmapCard
         title="Advanced data tools roadmap"
-        description="Backup, restore, and audit snapshot concepts are grouped here without adding destructive tools to Settings."
-        items={[
-          "Workspace backups",
-          "Restore points",
-          "Audit snapshots",
-          "Advanced exports",
-        ]}
+        description="Workspace backups are live above. Restore and audit snapshot concepts stay grouped here without adding destructive tools to Settings."
+        items={["Restore points", "Audit snapshots"]}
       />
     </div>
   );

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import SydINMark from "@/components/brand/SydINMark";
 import GlobalSearchDialog from "@/components/dashboard/GlobalSearchDialog";
-import UiIcon from "@/components/UiIcon";
+import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
   Badge,
   Button,
@@ -82,6 +82,122 @@ interface DashboardShellProps {
   children: React.ReactNode;
   userId: string;
   email?: string | null;
+}
+
+const ADD_NEW_LINKS: Array<{
+  label: string;
+  description: string;
+  href: string;
+  icon: UiIconName;
+}> = [
+  {
+    label: "Inventory Item",
+    description: "Add a product to inventory",
+    href: "/dashboard/add-item",
+    icon: "box",
+  },
+  {
+    label: "Import Items",
+    description: "Bulk import from a spreadsheet",
+    href: "/dashboard/inventory/import",
+    icon: "upload",
+  },
+  {
+    label: "Purchase Order",
+    description: "Draft a supplier order",
+    href: "/dashboard/purchase-orders",
+    icon: "file",
+  },
+  {
+    label: "Pick List",
+    description: "Prepare an order or project",
+    href: "/dashboard/pick-lists",
+    icon: "picklists",
+  },
+  {
+    label: "Category",
+    description: "Organize items into groups",
+    href: "/dashboard/categories",
+    icon: "categories",
+  },
+  {
+    label: "Depot",
+    description: "Add a stock location",
+    href: "/dashboard/depots#new-depot",
+    icon: "depots",
+  },
+  {
+    label: "Supplier",
+    description: "Save a vendor contact",
+    href: "/dashboard/suppliers",
+    icon: "suppliers",
+  },
+];
+
+function AddNewMenu() {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
+  return (
+    <div ref={rootRef} className="relative shrink-0">
+      <Button
+        size="sm"
+        onClick={() => setOpen((current) => !current)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
+      >
+        Add New
+        <UiIcon
+          name={open ? "chevron-up" : "chevron-down"}
+          className="h-3.5 w-3.5"
+        />
+      </Button>
+      {open && (
+        <MenuSurface className="dashboard-addnew-menu">
+          {ADD_NEW_LINKS.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              role="menuitem"
+              onClick={() => setOpen(false)}
+              className="dashboard-addnew-item"
+            >
+              <span className="dashboard-addnew-icon">
+                <UiIcon name={link.icon} className="h-4 w-4" />
+              </span>
+              <span className="min-w-0">
+                <span className="dashboard-addnew-label">{link.label}</span>
+                <span className="dashboard-addnew-description">
+                  {link.description}
+                </span>
+              </span>
+            </Link>
+          ))}
+        </MenuSurface>
+      )}
+    </div>
+  );
 }
 
 function AccountAvatar({
@@ -584,15 +700,7 @@ export default function DashboardShell({
         >
           <UiIcon name="search" className="h-5 w-5" />
         </button>
-        {quickAddVisible && (
-          <Link
-            href="/dashboard/add-item"
-            className={buttonClassName({ size: "sm" })}
-          >
-            <UiIcon name="plus" className="h-4 w-4" />
-            Add Item
-          </Link>
-        )}
+        <AddNewMenu />
       </header>
 
       <header className="dashboard-mobile-header glass-navigation">
@@ -667,15 +775,7 @@ export default function DashboardShell({
         >
           <UiIcon name="search" className="h-5 w-5" />
         </button>
-        {quickAddVisible && (
-          <Link
-            href="/dashboard/add-item"
-            className={buttonClassName({ size: "sm" })}
-          >
-            <UiIcon name="plus" className="h-4 w-4" />
-            Add Item
-          </Link>
-        )}
+        <AddNewMenu />
       </div>
 
       <div className="dashboard-shell-content">{children}</div>
