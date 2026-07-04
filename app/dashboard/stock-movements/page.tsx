@@ -2,10 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import UiIcon from "@/components/UiIcon";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
+import { Button, buttonClassName } from "@/components/ui";
 import Select from "@/components/ui/Select";
 import StockMovementDialog, {
   type MovementInventoryItem,
@@ -196,32 +199,38 @@ export default function StockMovementsPage() {
   return (
     <main className="operations-workspace operations-stock-movements">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Operations
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Stock Movements
-              </h1>
-              <p className="mt-1 text-sm leading-6 text-theme-muted">
-                Record stock changes and review the latest 100 movement entries.
-              </p>
-            </div>
-            <button
-              type="button"
-              onClick={() => {
-                setInitialItemId(null);
-                setDialogOpen(true);
-              }}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15"
-            >
-              <UiIcon name="plus" className="h-4 w-4" />
-              Record Movement
-            </button>
-          </div>
-        </section>
+        <WorkspaceHeader
+          section="Operations"
+          title="Stock Movements"
+          description="Record stock changes and review the latest 100 movement entries."
+          actions={
+            <>
+              <Link
+                href="/dashboard/receiving"
+                className={buttonClassName({ variant: "secondary" })}
+              >
+                <UiIcon name="movement" className="h-4 w-4" />
+                Receive Stock
+              </Link>
+              <Link
+                href="/dashboard/stock-counts"
+                className={buttonClassName({ variant: "secondary" })}
+              >
+                <UiIcon name="check" className="h-4 w-4" />
+                Stock Count
+              </Link>
+              <Button
+                onClick={() => {
+                  setInitialItemId(null);
+                  setDialogOpen(true);
+                }}
+                leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
+              >
+                Record Movement
+              </Button>
+            </>
+          }
+        />
 
         {(notice || error) && (
           <p

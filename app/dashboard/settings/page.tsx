@@ -8,6 +8,7 @@ import BrandMark from "@/components/BrandMark";
 import { useTheme } from "@/components/ThemeProvider";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
 import {
   Badge,
   Button,
@@ -2097,21 +2098,11 @@ export default function SettingsPage() {
     <div className="contents">
       <main>
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-5">
-          <section className="rounded-[18px] border border-theme bg-theme-surface p-4 shadow-[0_18px_60px_rgba(15,23,42,0.12)] sm:p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
-                  Control center
-                </p>
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                  Settings
-                </h1>
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
-                  Manage the workspace details SydIN already supports, with
-                  compact roadmap summaries for later branding, billing,
-                  email, team, security, and data controls.
-                </p>
-              </div>
+          <WorkspaceHeader
+            section="System"
+            title="Settings"
+            description="Manage the workspace details SydIN already supports, with compact roadmap summaries for later branding, billing, email, team, security, and data controls."
+            aside={
               <div className="flex flex-wrap gap-2">
                 <StatusChip tone={settings.business_name.trim() ? "success" : "warning"}>
                   {workspaceStatus}
@@ -2121,8 +2112,8 @@ export default function SettingsPage() {
                 </StatusChip>
                 <Badge tone="accent">{currentPlanName} plan</Badge>
               </div>
-            </div>
-          </section>
+            }
+          />
 
           <div className="grid gap-4 lg:grid-cols-[280px_1fr] lg:items-start">
             <aside className="rounded-[18px] border border-theme bg-theme-surface p-3 lg:sticky lg:top-4">

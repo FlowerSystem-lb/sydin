@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
 import CategorySelector from "@/components/CategorySelector";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
 import Select from "@/components/ui/Select";
 import {
   getCategoriesForUser,
@@ -609,28 +610,18 @@ export default function AddItemPage() {
     <div className="contents">
       <main>
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-3">
-          <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                  New product
-                </p>
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary">
-                  Add Item
-                </h1>
-                <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted">
-                  Add the essentials now. Optional details can be filled in
-                  only when you need them.
-                </p>
-              </div>
-
+          <WorkspaceHeader
+            section="Inventory"
+            title="Add Item"
+            description="Add the essentials now. Optional details can be filled in only when you need them."
+            actions={
               <ContextBackButton
                 fallbackHref="/dashboard/inventory"
                 label={backLabel}
                 className="min-h-10 rounded-xl px-3.5 py-2 text-sm"
               />
-            </div>
-          </section>
+            }
+          />
 
           <form
             onSubmit={handleSubmit}

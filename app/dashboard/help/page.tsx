@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
 import {
   FAQ_ITEMS,
   QUICK_GUIDES,
@@ -157,21 +158,11 @@ export default function HelpCenterPage() {
     <div className="contents">
       <main>
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
-          <section className="glass-panel p-5 sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Guidance and support
-                </p>
-                <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-                  Help Center
-                </h1>
-                <p className="mt-4 max-w-3xl text-base leading-7 text-theme-muted sm:text-lg">
-                  How can we help? Follow the recommended setup steps, learn
-                  each SydIN workflow, or contact the team directly.
-                </p>
-              </div>
-
+          <WorkspaceHeader
+            section="System"
+            title="Help Center"
+            description="How can we help? Follow the recommended setup steps, learn each SydIN workflow, or contact the team directly."
+            aside={
               <div className="rounded-2xl border border-cyan-300/15 bg-cyan-400/[0.07] px-5 py-4">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Current workspace
@@ -188,8 +179,8 @@ export default function HelpCenterPage() {
                     : ""}
                 </p>
               </div>
-            </div>
-          </section>
+            }
+          />
 
           {error && (
             <div

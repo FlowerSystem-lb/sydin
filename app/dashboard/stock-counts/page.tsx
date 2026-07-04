@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import UiIcon from "@/components/UiIcon";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
 import { Button, DialogShell, Select } from "@/components/ui";
 import { getOrCreateBusinessSettings } from "@/app/lib/businessSettings";
 import {
@@ -662,20 +663,11 @@ export default function StockCountsPage() {
           step === "count" || step === "review" ? "pb-28 sm:pb-0" : ""
         }`}
       >
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Operations
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Stock Counts
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Count stock, review discrepancies, and finalize auditable
-                adjustments through SydIN stock movements.
-              </p>
-            </div>
+        <WorkspaceHeader
+          section="Operations"
+          title="Stock Counts"
+          description="Count stock, review discrepancies, and finalize auditable adjustments through SydIN stock movements."
+          aside={
             <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
               {(["setup", "count", "review", "finalized"] as WorkflowStep[]).map(
                 (itemStep, index) => (
@@ -695,8 +687,8 @@ export default function StockCountsPage() {
                 )
               )}
             </div>
-          </div>
-        </section>
+          }
+        />
 
         {(notice || loadError) && (
           <p

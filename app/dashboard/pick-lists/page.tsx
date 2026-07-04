@@ -3,6 +3,8 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
+import { Button } from "@/components/ui";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   addPickListItem,
@@ -388,31 +390,19 @@ export default function PickListsPage() {
     <div className="contents">
       <main className="operations-workspace operations-pick-lists">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
-          <section className="glass-panel p-5 sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Order preparation
-                </p>
-                <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-                  Pick Lists
-                </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
-                  Prepare orders, events, and projects without changing stock
-                  until the work is complete.
-                </p>
-              </div>
-
-              <button
-                type="button"
+          <WorkspaceHeader
+            section="Operations"
+            title="Pick Lists"
+            description="Prepare orders, events, and projects without changing stock until the work is complete."
+            actions={
+              <Button
                 onClick={openCreateForm}
                 disabled={loading || limitReached}
-                className="glass-button px-6 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Create Pick List
-              </button>
-            </div>
-          </section>
+              </Button>
+            }
+          />
 
           {pageError && (
             <div

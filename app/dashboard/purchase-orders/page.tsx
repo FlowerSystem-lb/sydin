@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
 import UiIcon from "@/components/UiIcon";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
 import { Button, DialogShell, Select } from "@/components/ui";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -777,31 +778,25 @@ export default function PurchaseOrdersPage() {
   return (
     <main className="operations-workspace operations-purchase-orders">
       <div className="po-screen-only mx-auto flex w-full max-w-[1500px] flex-col gap-4 pb-28 sm:pb-0">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Operations
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Purchase Orders
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Create supplier order drafts from inventory items or custom
-                lines, then print or export them. Purchase orders do not change
-                stock.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button variant="secondary" onClick={() => setConfirmClearDraft(true)}>
+        <WorkspaceHeader
+          section="Operations"
+          title="Purchase Orders"
+          description="Create supplier order drafts from inventory items or custom lines, then print or export them. Purchase orders do not change stock."
+          actions={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setConfirmClearDraft(true)}
+              >
                 Restart
               </Button>
               <Button onClick={() => setStep("output")} disabled={!canOutput}>
+                <UiIcon name="file" className="h-4 w-4" />
                 Output
               </Button>
-            </div>
-          </div>
-        </section>
+            </>
+          }
+        />
 
         {(notice || loadError) && (
           <p

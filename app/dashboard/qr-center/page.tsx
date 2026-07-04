@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import UiIcon from "@/components/UiIcon";
@@ -10,7 +11,8 @@ import ItemDetailsSlideOver, {
 } from "@/components/inventory/ItemDetailsSlideOver";
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
-import { DialogShell, Select } from "@/components/ui";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
+import { Button, DialogShell, Select, buttonClassName } from "@/components/ui";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -436,26 +438,28 @@ export default function QrCenterPage() {
   return (
     <main className="operations-workspace operations-qr-center">
       <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-4">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-            Operations
-          </p>
-          <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-            QR Center
-          </h1>
-          <p className="mt-1 text-sm leading-6 text-theme-muted">
-            Create clean QR label documents or open the existing inventory
-            scanner.
-          </p>
-          <button
-            type="button"
-            onClick={openExistingScanner}
-            className="mt-3 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 sm:w-auto"
-          >
-            <UiIcon name="scan" className="h-5 w-5" />
-            Start Scanner
-          </button>
-        </section>
+        <WorkspaceHeader
+          section="Operations"
+          title="QR Center"
+          description="Print QR labels for your items or scan a code to jump straight to an item."
+          actions={
+            <>
+              <Link
+                href="/dashboard/inventory"
+                className={buttonClassName({ variant: "secondary" })}
+              >
+                <UiIcon name="box" className="h-4 w-4" />
+                View Inventory
+              </Link>
+              <Button
+                onClick={openExistingScanner}
+                leadingIcon={<UiIcon name="scan" className="h-4 w-4" />}
+              >
+                Start Scanner
+              </Button>
+            </>
+          }
+        />
 
         {(error || notice) && (
           <p
@@ -481,14 +485,14 @@ export default function QrCenterPage() {
                   Select one or more items with public item links.
                 </p>
               </div>
-              <button
-                type="button"
+              <Button
+                variant="secondary"
+                size="sm"
                 onClick={selectAllVisible}
                 disabled={visibleItems.length === 0}
-                className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
               >
                 Select visible
-              </button>
+              </Button>
             </div>
 
             <div className="mt-4 rounded-xl border border-theme bg-theme-inset p-3">
@@ -503,20 +507,20 @@ export default function QrCenterPage() {
                     {selectedCount === 1 ? "item selected" : "items selected"}
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => setSelectedIds(new Set())}
-                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
                     >
                       Clear Selection
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      size="sm"
                       onClick={() => setSettingsOpen(true)}
-                      className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-2.5 text-xs font-bold text-white"
+                      leadingIcon={<UiIcon name="qr" className="h-4 w-4" />}
                     >
                       Create Labels
-                    </button>
+                    </Button>
                   </div>
                 </div>
               )}
@@ -629,28 +633,29 @@ export default function QrCenterPage() {
                 <div className="mt-4">
                   {renderLabel(selectedItem)}
                   <div className="mt-4 grid gap-2 sm:grid-cols-3">
-                    <button
-                      type="button"
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => downloadQr(selectedItem)}
-                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
                     >
                       Download QR
-                    </button>
-                    <button
-                      type="button"
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={() => void downloadPdf()}
-                      disabled={exportingPdf}
-                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
+                      loading={exportingPdf}
+                      loadingLabel="Creating..."
                     >
-                      {exportingPdf ? "Creating..." : "Download PDF"}
-                    </button>
-                    <button
-                      type="button"
+                      Download PDF
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
                       onClick={printLabels}
-                      className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
                     >
                       {selectedCount === 1 ? "Print Label" : "Print Labels"}
-                    </button>
+                    </Button>
                   </div>
                 </div>
               ) : (
@@ -668,19 +673,30 @@ export default function QrCenterPage() {
 
             <section className="rounded-[22px] border border-theme bg-theme-surface p-5 shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
               <h2 className="text-xl font-black text-theme-primary">
-                Scan QR Code
+                Quick Actions
               </h2>
               <p className="mt-2 text-sm leading-6 text-theme-muted">
-                Open the existing SydIN ZXing scanner.
+                Scan a code with the camera or add a new item to label next.
               </p>
-              <button
-                type="button"
-                onClick={openExistingScanner}
-                className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary hover:bg-theme-hover"
-              >
-                <UiIcon name="scan" className="h-5 w-5" />
-                Start Camera Scanner
-              </button>
+              <div className="mt-4 grid gap-2">
+                <Button
+                  className="w-full"
+                  onClick={openExistingScanner}
+                  leadingIcon={<UiIcon name="scan" className="h-5 w-5" />}
+                >
+                  Start Camera Scanner
+                </Button>
+                <Link
+                  href="/dashboard/add-item?returnTo=/dashboard/qr-center"
+                  className={buttonClassName({
+                    variant: "secondary",
+                    className: "w-full",
+                  })}
+                >
+                  <UiIcon name="plus" className="h-4 w-4" />
+                  Add Item
+                </Link>
+              </div>
             </section>
           </div>
         </div>
@@ -826,21 +842,17 @@ export default function QrCenterPage() {
           </fieldset>
 
           <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <button
-              type="button"
+            <Button
+              variant="secondary"
               onClick={() => void downloadPdf()}
-              disabled={exportingPdf}
-              className="rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
+              loading={exportingPdf}
+              loadingLabel="Creating PDF..."
             >
-              {exportingPdf ? "Creating PDF..." : "Download PDF"}
-            </button>
-            <button
-              type="button"
-              onClick={printLabels}
-              className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-3 text-sm font-bold text-white"
-            >
+              Download PDF
+            </Button>
+            <Button onClick={printLabels}>
               {selectedCount === 1 ? "Print Label" : "Print Labels"}
-            </button>
+            </Button>
           </div>
         </div>
       </DialogShell>

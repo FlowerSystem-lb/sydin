@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
 import { Button, DialogShell, Select } from "@/components/ui";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -661,28 +662,30 @@ export default function ReportsPage() {
   return (
     <main>
       <div className="mx-auto flex w-full max-w-[1500px] flex-col gap-4">
-        <section className="rounded-[24px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.08)] sm:p-5">
-          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                Insights
-              </p>
-              <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                Reports
-              </h1>
-              <p className="mt-1 max-w-2xl text-sm leading-6 text-theme-muted">
-                Generate inventory, operations, and valuation reports.
-              </p>
-            </div>
-            <Button
-              onClick={() => setInventoryDialogReport(INVENTORY_REPORTS[0])}
-              leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
-              disabled={loading}
-            >
-              New report
-            </Button>
-          </div>
-        </section>
+        <WorkspaceHeader
+          section="Insights"
+          title="Reports"
+          description="Generate inventory, operations, and valuation reports."
+          actions={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setMovementDialogOpen(true)}
+                disabled={loading}
+              >
+                <UiIcon name="movement" className="h-4 w-4" />
+                Movements CSV
+              </Button>
+              <Button
+                onClick={() => setInventoryDialogReport(INVENTORY_REPORTS[0])}
+                leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
+                disabled={loading}
+              >
+                New report
+              </Button>
+            </>
+          }
+        />
 
         {(notice || error) && (
           <p

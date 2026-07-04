@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
+import { Button, buttonClassName } from "@/components/ui";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon from "@/components/UiIcon";
 import {
@@ -499,37 +501,36 @@ export default function SuppliersPage() {
     <div className="contents">
       <main className="organize-workspace organize-suppliers">
         <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
-          <section className="glass-panel p-5 sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Purchasing contacts
-                </p>
-                <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-                  Suppliers
-                </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
-                  Keep vendor contacts organized and connect them to inventory when useful.
-                </p>
-              </div>
-              <div className="organize-page-actions flex flex-col gap-3 sm:flex-row">
+          <WorkspaceHeader
+            section="Organize"
+            title="Suppliers"
+            description="Keep vendor contacts organized and connect them to inventory when useful."
+            actions={
+              <>
+                <Link
+                  href="/dashboard/purchase-orders"
+                  className={buttonClassName({ variant: "secondary" })}
+                >
+                  <UiIcon name="file" className="h-4 w-4" />
+                  Create PO
+                </Link>
                 <Link
                   href="/dashboard/inventory"
-                  className="organize-inventory-link rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 text-center font-bold text-theme-primary transition hover:bg-theme-hover"
+                  className={buttonClassName({ variant: "secondary" })}
                 >
+                  <UiIcon name="box" className="h-4 w-4" />
                   Inventory
                 </Link>
-                <button
-                  type="button"
+                <Button
                   onClick={openCreateForm}
                   disabled={loading || limitReached}
-                  className="glass-button px-5 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                  leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
                 >
                   Add Supplier
-                </button>
-              </div>
-            </div>
-          </section>
+                </Button>
+              </>
+            }
+          />
 
           {(pageError || pageNotice) && (
             <div

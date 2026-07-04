@@ -2,6 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
+import WorkspaceHeader from "@/components/dashboard/WorkspaceHeader";
+import { buttonClassName } from "@/components/ui";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon from "@/components/UiIcon";
 import {
@@ -320,30 +322,26 @@ export default function DepotsPage() {
     <div className="contents">
       <main className="organize-workspace organize-depots">
         <div className="mx-auto flex w-full max-w-[1300px] flex-col gap-8">
-          <section className="rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.38)] backdrop-blur-2xl sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Locations
-                </p>
-
-                <h1 className="mt-2 text-5xl font-bold tracking-tight text-theme-primary sm:text-6xl lg:text-7xl">
-                  Depots
-                </h1>
-
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
-                  Manage the places where inventory items live.
-                </p>
-              </div>
-
-              <Link
-                href="/dashboard/inventory"
-                className="organize-inventory-link rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-center text-base font-bold text-theme-primary transition hover:border-theme-strong hover:bg-theme-hover"
-              >
-                Back to Inventory
-              </Link>
-            </div>
-          </section>
+          <WorkspaceHeader
+            section="Organize"
+            title="Depots"
+            description="Manage the places where inventory items live."
+            actions={
+              <>
+                <Link
+                  href="/dashboard/inventory"
+                  className={buttonClassName({ variant: "secondary" })}
+                >
+                  <UiIcon name="box" className="h-4 w-4" />
+                  Inventory
+                </Link>
+                <a href="#new-depot" className={buttonClassName()}>
+                  <UiIcon name="plus" className="h-4 w-4" />
+                  Add Depot
+                </a>
+              </>
+            }
+          />
 
           {(pageNotice || pageError) && (
             <div
@@ -359,6 +357,7 @@ export default function DepotsPage() {
 
           <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.85fr_1.15fr]">
             <form
+              id="new-depot"
               onSubmit={handleCreateDepot}
               aria-busy={saving}
               className="organize-depot-form rounded-[32px] border border-theme bg-theme-surface p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7"
