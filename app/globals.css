@@ -1802,7 +1802,9 @@ canvas {
 
 .item-details-submit:hover {
   filter: saturate(1.08);
-  box-shadow: 0 16px 34px rgba(37, 99, 235, 0.24);
+  box-shadow:
+    0 16px 34px rgba(37, 99, 235, 0.24),
+    0 0 36px rgba(125, 92, 255, 0.18);
 }
 
 .item-details-submit:active {
@@ -2656,6 +2658,10 @@ select.glass-input option {
   transform: translateY(0) scale(0.985);
 }
 
+.dashboard-action-button:not(:disabled):not(.dashboard-action-button-disabled):active {
+  transform: translateY(0) scale(0.985);
+}
+
 @media (hover: hover) {
   .ui-button-primary:hover {
     background: var(--button-primary-hover);
@@ -2708,7 +2714,9 @@ select.glass-input option {
 
   .dashboard-action-button-primary:hover {
     filter: brightness(1.04);
-    box-shadow: 0 16px 34px rgba(37, 99, 235, 0.2);
+    box-shadow:
+      0 16px 34px rgba(37, 99, 235, 0.2),
+      0 0 36px rgba(125, 92, 255, 0.18);
   }
 
   .dashboard-action-button-secondary:hover,

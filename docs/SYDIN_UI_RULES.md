@@ -45,8 +45,8 @@ A page is not "done" until all of loading, empty, and error states are handled.
 
 ## Motion
 
-- Button hover **lift**
-- Button active **scale** (press)
+- Button hover **lift** (+ soft brand-color glow on primary/gradient buttons)
+- Button active **scale** (press) — implemented on `ActionButton` (`.dashboard-action-button:active`, `translateY(0) scale(0.985)`, 140ms ease)
 - Card hover **lift**
 - Row hover **highlight**
 - Dropdown **fade / scale**

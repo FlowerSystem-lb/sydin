@@ -63,4 +63,16 @@ Sprint 8 investigation (2026-07) found `app/dashboard/qr-center/page.tsx` and
 describing QR & Labels as needing "workspace design foundation" are stale. Redefined Sprint 8
 as a brand-alignment polish pass instead. **Status:** Active.
 
+### 2026-07-04 · Button press state built + brand-glow hover added to gradient buttons
+**Decision:** `SYDIN_UI_RULES.md`'s "Button active scale (press)" line previously described
+intent that was never implemented for `ActionButton` — corrected the doc and added a real
+`.dashboard-action-button:active` rule (`translateY(0) scale(0.985)`, 140ms ease, matching the
+existing `.action-button`/`.ui-button` press pattern). Also layered a soft brand-color glow
+(`0 0 36px rgba(125, 92, 255, 0.18)`) onto the existing hover shadow of all three gradient
+save/primary buttons (`dashboard-action-button-primary`, `.item-details-submit`,
+EditItemForm's save button) without merging their separate implementations. **Why:** docs
+should describe what's actually built, and the three gradient buttons should read as visually
+related even though consolidating them into one shared class is a separate future refactor.
+**Status:** Active.
+
 <!-- Append the next decision below this line. -->

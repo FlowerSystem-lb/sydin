@@ -862,7 +862,7 @@ export default function EditItemForm({
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50 sm:flex-none"
+          className="flex-1 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition duration-[140ms] ease-[ease] hover:brightness-110 hover:shadow-[0_12px_28px_rgba(37,99,235,0.16),0_0_36px_rgba(125,92,255,0.18)] disabled:opacity-50 sm:flex-none"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>
