@@ -19,7 +19,9 @@ export default function ContextBackButton({
     const params = new URLSearchParams(window.location.search);
     const returnTo = params.get("returnTo");
     const isSafeReturn =
-      returnTo?.startsWith("/dashboard") && !returnTo.startsWith("//");
+      returnTo?.startsWith("/dashboard") &&
+      !returnTo.startsWith("//") &&
+      !returnTo.includes("\\");
 
     if (isSafeReturn && returnTo) {
       router.push(returnTo);

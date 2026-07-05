@@ -580,7 +580,9 @@ export default function AddItemPage() {
         "returnTo"
       );
       router.push(
-        returnTo?.startsWith("/dashboard") && !returnTo.startsWith("//")
+        returnTo?.startsWith("/dashboard") &&
+          !returnTo.startsWith("//") &&
+          !returnTo.includes("\\")
           ? returnTo
           : "/dashboard/inventory"
       );

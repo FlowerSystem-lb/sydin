@@ -11,7 +11,16 @@ export function normalizePlanIntent(value: string | null): SubscriptionPlan {
 }
 
 export function sanitizeReturnTo(value: string | null) {
-  if (!value || !value.startsWith("/") || value.startsWith("//")) {
+  // Require a same-origin path. "//host" and "/\host" are treated as
+  // protocol-relative URLs by browsers, so both are rejected, along with
+  // backslashes and control characters anywhere in the value.
+  if (
+    !value ||
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.includes("\\") ||
+    /[\u0000-\u001f]/.test(value)
+  ) {
     return "/dashboard";
   }
 
