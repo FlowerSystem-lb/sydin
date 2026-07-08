@@ -1,9 +1,15 @@
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatInventoryPrice, normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import {
+  getContainedImageSize,
+  loadExportImage,
+  type LoadedExportImage,
+} from "@/app/lib/exportImage";
 
 export interface PurchaseOrderPdfLine {
   name: string;
+  category?: string;
   code?: string;
   sku?: string;
   unit: string;
@@ -14,17 +20,25 @@ export interface PurchaseOrderPdfLine {
 }
 
 export interface PurchaseOrderPdfDetails {
-  title: string;
+  poNumber: string;
+  title?: string;
   supplierName: string;
-  supplierEmail?: string;
+  supplierContact?: string;
+  depotName?: string;
+  purchaseDate?: string;
   expectedDeliveryDate?: string;
   status: string;
+  paymentMethod?: string;
+  paidBy?: string;
+  paymentStatus?: string;
+  amountPaid?: number | null;
   notes?: string;
   internalReference?: string;
 }
 
 export interface PurchaseOrderPdfBranding {
   businessName: string;
+  businessLogoUrl?: string;
   contactEmail?: string;
   contactPhone?: string;
   contactWebsite?: string;
@@ -37,6 +51,8 @@ export interface ExportPurchaseOrderPdfOptions {
   currencyCode?: string;
 }
 
+const HEADER_HEIGHT = 36;
+
 function formatDateForDisplay(date: Date) {
   return new Intl.DateTimeFormat("en", {
     dateStyle: "medium",
@@ -46,12 +62,10 @@ function formatDateForDisplay(date: Date) {
 
 function formatDateOnly(value?: string) {
   if (!value) return "Not set";
-  const date = new Date(`${value}T00:00:00`);
+  const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
 
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-  }).format(date);
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
 }
 
 function formatDateForFilename(date: Date) {
@@ -71,8 +85,10 @@ function slugifyFilename(value: string) {
   );
 }
 
-function formatMoney(value: number | null, currencyCode: string) {
-  return value === null ? "Not set" : formatInventoryPrice(value, currencyCode) || "Not set";
+function formatMoney(value: number | null | undefined, currencyCode: string) {
+  return value === null || value === undefined
+    ? "Not set"
+    : formatInventoryPrice(value, currencyCode) || "Not set";
 }
 
 function drawHeader({
@@ -82,7 +98,8 @@ function drawHeader({
   businessName,
   contactLine,
   generatedAt,
-  title,
+  poNumber,
+  logo,
 }: {
   document: jsPDF;
   pageWidth: number;
@@ -90,35 +107,59 @@ function drawHeader({
   businessName: string;
   contactLine: string;
   generatedAt: Date;
-  title: string;
+  poNumber: string;
+  logo: LoadedExportImage | null;
 }) {
   document.setFillColor(15, 23, 42);
-  document.rect(0, 0, pageWidth, 34, "F");
+  document.rect(0, 0, pageWidth, HEADER_HEIGHT, "F");
+  // Brand accent underline (cyan → indigo feel from the app theme).
+  document.setFillColor(18, 184, 214);
+  document.rect(0, HEADER_HEIGHT, pageWidth, 1.4, "F");
 
-  document.setFont("helvetica", "bold");
-  document.setFontSize(12);
-  document.setTextColor(255, 255, 255);
-  document.text(businessName, margin, 12);
-  document.setFontSize(18);
-  document.text("Purchase Order", margin, 23);
+  let textX = margin;
 
-  if (contactLine) {
-    document.setFont("helvetica", "normal");
-    document.setFontSize(7.5);
-    document.setTextColor(203, 213, 225);
-    document.text(contactLine, margin, 30);
+  if (logo) {
+    const logoSize = getContainedImageSize(logo.width, logo.height, 22, 22);
+    // White rounded plate so transparent/dark logos stay legible on the dark bar.
+    document.setFillColor(255, 255, 255);
+    document.roundedRect(margin, 7, 24, 24, 3, 3, "F");
+    document.addImage(
+      logo.dataUrl,
+      logo.extension === "png" ? "PNG" : "JPEG",
+      margin + (24 - logoSize.width) / 2,
+      7 + (24 - logoSize.height) / 2,
+      logoSize.width,
+      logoSize.height
+    );
+    textX = margin + 30;
   }
 
   document.setFont("helvetica", "bold");
-  document.setFontSize(8.5);
+  document.setFontSize(13);
+  document.setTextColor(255, 255, 255);
+  document.text(businessName, textX, 15);
+  document.setFont("helvetica", "normal");
+  document.setFontSize(9);
+  document.setTextColor(148, 163, 184);
+  document.text("Purchase Order", textX, 22);
+
+  if (contactLine) {
+    document.setFontSize(7.5);
+    document.setTextColor(203, 213, 225);
+    document.text(contactLine, textX, 29, { maxWidth: pageWidth / 2 });
+  }
+
+  document.setFont("helvetica", "bold");
+  document.setFontSize(11);
   document.setTextColor(226, 232, 240);
-  document.text(title, pageWidth - margin, 13, { align: "right" });
+  document.text(poNumber, pageWidth - margin, 15, { align: "right" });
   document.setFont("helvetica", "normal");
   document.setFontSize(7);
+  document.setTextColor(148, 163, 184);
   document.text(`Generated ${formatDateForDisplay(generatedAt)}`, pageWidth - margin, 22, {
     align: "right",
   });
-  document.text("Generated by SydIN", pageWidth - margin, 30, { align: "right" });
+  document.text("Generated by SydIN", pageWidth - margin, 28, { align: "right" });
 }
 
 function drawFooter({
@@ -152,6 +193,74 @@ function drawFooter({
   );
 }
 
+function drawInfoColumns({
+  document,
+  pageWidth,
+  margin,
+  startY,
+  details,
+  currency,
+}: {
+  document: jsPDF;
+  pageWidth: number;
+  margin: number;
+  startY: number;
+  details: PurchaseOrderPdfDetails;
+  currency: string;
+}) {
+  const columnGap = 6;
+  const columnWidth = (pageWidth - margin * 2 - columnGap * 2) / 3;
+  const paymentLine = [
+    details.paymentStatus,
+    details.paymentMethod,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  const columns: Array<{ heading: string; rows: string[] }> = [
+    {
+      heading: "Supplier",
+      rows: [
+        details.supplierName || "Not set",
+        details.supplierContact || "",
+      ].filter(Boolean),
+    },
+    {
+      heading: "Order",
+      rows: [
+        details.title ? details.title : "",
+        `Depot: ${details.depotName || "Not set"}`,
+        `Purchased: ${formatDateOnly(details.purchaseDate)}`,
+        `Expected: ${formatDateOnly(details.expectedDeliveryDate)}`,
+        `Status: ${details.status}`,
+        details.internalReference ? `Ref: ${details.internalReference}` : "",
+      ].filter(Boolean),
+    },
+    {
+      heading: "Payment",
+      rows: [
+        paymentLine || "Not set",
+        details.paidBy ? `Paid by: ${details.paidBy}` : "",
+        details.amountPaid !== null && details.amountPaid !== undefined
+          ? `Amount paid: ${formatMoney(details.amountPaid, currency)}`
+          : "",
+      ].filter(Boolean),
+    },
+  ];
+
+  columns.forEach((column, index) => {
+    const x = margin + index * (columnWidth + columnGap);
+    document.setFont("helvetica", "bold");
+    document.setFontSize(9);
+    document.setTextColor(15, 23, 42);
+    document.text(column.heading, x, startY);
+    document.setFont("helvetica", "normal");
+    document.setFontSize(8);
+    document.setTextColor(51, 65, 85);
+    document.text(column.rows, x, startY + 6, { maxWidth: columnWidth });
+  });
+}
+
 export async function exportPurchaseOrderPdf({
   details,
   lines,
@@ -172,8 +281,14 @@ export async function exportPurchaseOrderPdf({
   ]
     .filter(Boolean)
     .join("  |  ");
+  const logo = branding.businessLogoUrl
+    ? await loadExportImage(branding.businessLogoUrl)
+    : null;
   const orderedLines = lines.filter((line) => line.orderQuantity > 0);
-  const subtotal = orderedLines.reduce((total, line) => total + Number(line.lineTotal || 0), 0);
+  const subtotal = orderedLines.reduce(
+    (total, line) => total + Number(line.lineTotal || 0),
+    0
+  );
   const orderedQuantity = orderedLines.reduce(
     (total, line) => total + Number(line.orderQuantity || 0),
     0
@@ -186,44 +301,24 @@ export async function exportPurchaseOrderPdf({
     businessName,
     contactLine,
     generatedAt,
-    title: details.title || "Purchase Order",
+    poNumber: details.poNumber || "Purchase Order",
+    logo,
   });
 
-  document.setFont("helvetica", "bold");
-  document.setFontSize(10);
-  document.setTextColor(15, 23, 42);
-  document.text("Supplier", margin, 47);
-  document.text("Order Details", pageWidth / 2 + 4, 47);
-
-  document.setFont("helvetica", "normal");
-  document.setFontSize(8.5);
-  document.setTextColor(51, 65, 85);
-  document.text(
-    [
-      details.supplierName || "Supplier not set",
-      details.supplierEmail ? `Email: ${details.supplierEmail}` : "",
-    ].filter(Boolean),
+  drawInfoColumns({
+    document,
+    pageWidth,
     margin,
-    54,
-    { maxWidth: pageWidth / 2 - margin - 6 }
-  );
-  document.text(
-    [
-      `PO: ${details.title || "Untitled purchase order"}`,
-      `Status: ${details.status}`,
-      `Expected delivery: ${formatDateOnly(details.expectedDeliveryDate)}`,
-      details.internalReference ? `Reference: ${details.internalReference}` : "",
-    ].filter(Boolean),
-    pageWidth / 2 + 4,
-    54,
-    { maxWidth: pageWidth / 2 - margin - 4 }
-  );
+    startY: 50,
+    details,
+    currency,
+  });
 
-  const summaryY = 79;
+  const summaryY = 82;
   const cards = [
     ["Lines", String(orderedLines.length)],
-    ["Ordered quantity", String(orderedQuantity)],
-    ["Estimated subtotal", formatMoney(subtotal, currency)],
+    ["Total quantity", String(orderedQuantity)],
+    ["Order total", formatMoney(subtotal, currency)],
   ];
   const cardWidth = (pageWidth - margin * 2 - 6) / 3;
   cards.forEach(([label, value], index) => {
@@ -242,17 +337,37 @@ export async function exportPurchaseOrderPdf({
 
   autoTable(document, {
     startY: 104,
-    head: [["Item", "Code / SKU", "Unit", "Qty", "Unit cost", "Line total", "Notes"]],
+    head: [["Item", "Category / Code", "Unit", "Qty", "Unit cost", "Line total", "Notes"]],
     body: orderedLines.map((line) => [
       line.name,
-      [line.code, line.sku ? `SKU ${line.sku}` : ""].filter(Boolean).join("\n") || "-",
+      [
+        line.category,
+        line.code,
+        line.sku ? `SKU ${line.sku}` : "",
+      ]
+        .filter(Boolean)
+        .join("\n") || "-",
       line.unit || "Unit",
       line.orderQuantity,
       formatMoney(line.unitCost, currency),
       formatMoney(line.lineTotal, currency),
       line.note || "",
     ]),
-    margin: { left: margin, right: margin, top: 39, bottom: 18 },
+    foot: [
+      [
+        {
+          content: "Order total",
+          colSpan: 5,
+          styles: { halign: "right", fontStyle: "bold" },
+        },
+        {
+          content: formatMoney(subtotal, currency),
+          styles: { halign: "right", fontStyle: "bold" },
+        },
+        "",
+      ],
+    ],
+    margin: { left: margin, right: margin, top: HEADER_HEIGHT + 5, bottom: 18 },
     showHead: "everyPage",
     pageBreak: "auto",
     rowPageBreak: "avoid",
@@ -272,10 +387,14 @@ export async function exportPurchaseOrderPdf({
       fontStyle: "bold",
       fontSize: 7.4,
     },
+    footStyles: {
+      fillColor: [241, 245, 249],
+      textColor: [15, 23, 42],
+    },
     alternateRowStyles: { fillColor: [248, 250, 252] },
     columnStyles: {
-      0: { cellWidth: 43 },
-      1: { cellWidth: 26 },
+      0: { cellWidth: 42 },
+      1: { cellWidth: 27 },
       2: { cellWidth: 21 },
       3: { cellWidth: 16, halign: "right" },
       4: { cellWidth: 25, halign: "right" },
@@ -292,7 +411,8 @@ export async function exportPurchaseOrderPdf({
           businessName,
           contactLine,
           generatedAt,
-          title: details.title || "Purchase Order",
+          poNumber: details.poNumber || "Purchase Order",
+          logo,
         });
       }
     },
@@ -337,11 +457,9 @@ export async function exportPurchaseOrderPdf({
     });
   }
 
-  const filename = `${slugifyFilename(
-    businessName
-  )}-${slugifyFilename(details.title || "purchase-order")}-${formatDateForFilename(
-    generatedAt
-  )}.pdf`;
+  const filename = `${slugifyFilename(businessName)}-${slugifyFilename(
+    details.poNumber || "purchase-order"
+  )}-${formatDateForFilename(generatedAt)}.pdf`;
 
   document.save(filename);
   return filename;

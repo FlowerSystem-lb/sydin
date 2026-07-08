@@ -33,6 +33,12 @@ export function formatStockMovementNotes(notes: string | null) {
     return `Pick List #${pickListMatch[1]} — ${pickListMatch[2]}`;
   }
 
+  const purchaseOrderMatch = notes.match(/^Purchase order #(\d+):\s*(.+)$/i);
+
+  if (purchaseOrderMatch) {
+    return `PO #${purchaseOrderMatch[1]} — ${purchaseOrderMatch[2]}`;
+  }
+
   return notes;
 }
 

@@ -391,4 +391,162 @@ test (0 issues) · screenshot review at **390px and 320px** — all passed.
 
 ---
 
+## Sprint PO-A — Purchase Orders foundation (persisted history + new creation flow)  *(Code complete; awaiting phase-8 SQL run)*
+
+**Scope:** Replace the on-device-only PO draft builder with a persisted purchase-order system,
+pulled forward from the roadmap at the founder's request. POs now cover **inventory restocks
+and general/expense purchases** (equipment, supplies, services… e.g. "new AC for a depot").
+
+**Delivered:**
+- **`sql/phase-8-purchase-orders.sql`** — `purchase_orders` + `purchase_order_lines` tables
+  (mixed `inventory`/`expense` line types, `affects_stock` flag, payment fields: method /
+  paid_by / status / amount, depot + supplier snapshots, attachment fields), stock_movements
+  PO reference columns, **`receive_purchase_order` RPC** (stock only changes on receive, via
+  stock_in movements labeled "Purchase order #N"), full RLS + normalize/guard triggers
+  (modeled on phase-7 pick lists), and the **`po-attachments` public storage bucket** with
+  owner-folder upload policies.
+- **`app/lib/purchaseOrders.ts`** — types, list/create/cancel/delete/receive helpers,
+  `getNextPoNumber` (prefix: depot code → depot name → business name → SYDIN, count-based,
+  always editable), attachment upload, spending split helper (stock vs expense), and
+  `isPurchaseOrdersSchemaMissing` for graceful pre-migration UX.
+- **`/dashboard/purchase-orders/new`** — single scrolling form (no rigid wizard): auto PO
+  number, purchase/expected dates, status, **depot select + inline "New depot" dialog**,
+  saved-supplier or free-text supplier + contact, **mixed lines editor** (inventory picker
+  dialog with debounced search; expense lines with category), per-line "Add to stock when
+  received" toggle with plain-language explainer, live totals bar (stock/general/total),
+  **invoice image attachment** (file picker; phone camera via `accept="image/*"`), payment
+  section, sticky save bar.
+- **`/dashboard/purchase-orders`** — rewritten as **history + spending summary**: month
+  metric cards (Spent this month / Stock purchases / General purchases), search + status +
+  depot filters, row list with status badges, **detail dialog** (lines with "→ stock" flags,
+  payment, attachment preview, notes) with **Export PDF** (existing `exportPurchaseOrderPdf`
+  with Settings branding), **Mark received** (two-step confirm → RPC), and Cancel order.
+- `formatStockMovementNotes` now renders "PO #N — …" in item history and activity feeds.
+- PO-scoped CSS appended last in `globals.css` (`.po-*`), hover lift/press per UI rules.
+
+**Decisions:** stock changes only at **receive time**, never at creation; expense lines can
+never touch stock (DB constraint); no plan-limit trigger on POs yet; old localStorage draft
+builder retired (`sydin:purchase-order-draft` key now unused).
+
+**Founder action required:** run `sql/phase-8-purchase-orders.sql` in the Supabase SQL Editor
+(also creates the storage bucket). Until then both pages show a friendly notice explaining
+exactly that.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (32 routes,
+including new `/dashboard/purchase-orders/new` and `/dashboard/search`) · live preview:
+history page schema-missing state ✅ · creation form with $500 expense line splitting into
+General purchases ✅ · zero console errors.
+
+**Next (PO-B/PO-C):** branded PDF header redesign + Excel export, dashboard Spending card,
+receive-flow polish, motion/tooltip pass.
+
+---
+
+## Sprint PO-B — Purchase Order documents (branded PDF + Excel)  *(Complete)*
+
+**Scope:** Give saved purchase orders professional, shareable exports.
+
+**Delivered:**
+- **`app/lib/exportImage.ts`** (new shared helper) — `loadExportImage` (fetch → blob →
+  base64 dataURL + dimensions, graceful null on failure) and `getContainedImageSize`, used by
+  both exporters. Extracted from the inventory-Excel image logic pattern.
+- **`app/lib/purchaseOrderPdfExport.ts`** (redesigned) — richer interface: `poNumber`, depot,
+  purchase date, supplier contact, and a **Payment** info column (method / paid-by / status /
+  amount); **business logo** drawn on a white plate in the dark header + cyan accent rule;
+  three-column info layout (Supplier / Order / Payment); expense **category** shown per line;
+  autotable **footer total row**. Filename now keyed to the PO number.
+- **`app/lib/purchaseOrderExcelExport.ts`** (new) — ExcelJS workbook mirroring the inventory
+  export house style: dark branded banner with logo, 8-cell summary block (supplier, depot,
+  dates, payment, status, order total), lines table (type, name, category, code, sku, unit,
+  qty, unit cost, line total, adds-to-stock, notes) with currency number formats, total row,
+  notes row, frozen header + autofilter.
+- **`/dashboard/purchase-orders`** — detail dialog now has **Export PDF** and **Export Excel**;
+  shared `exportDetails`/`exportBranding` builders pass the logo + full payment/depot/date data
+  to both.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+opened the real "202351-PO-0001 — AC main Floor" order, clicked **both** export buttons — no
+error notices, no jsPDF/ExcelJS console errors (only unrelated background Supabase auth network
+timeouts). Logo fetch degrades to null cleanly if the network is down.
+
+**Next (PO-C):** dashboard Spending card, receive-flow polish, motion/tooltip pass.
+
+---
+
+## Sprint PO-B.1 — Purchase Order UX refinements (founder feedback)  *(Complete)*
+
+**Scope:** Small but important clarity fixes to the creation flow, from Sayed's review.
+
+**Delivered:**
+- **Removed the Status dropdown** (Draft/Ordered) from `/dashboard/purchase-orders/new` —
+  it forced a confusing choice that didn't matter. New POs always save as `draft`; the
+  lifecycle is driven by the clear "Mark received" action on the saved order.
+- **Added one "already received" checkbox** near Save: *"We already received these items —
+  add to stock now."* Off → save as a record, receive later. On → the order saves, then
+  immediately calls `receivePurchaseOrder` (adds every stock-affecting line to inventory).
+  The Save button relabels to **"Save & receive now"**. This covers the buy-and-collect-
+  same-day case without a second workflow. A receive failure is non-fatal (order stays a
+  saved draft); history then shows a warning notice (`?receivefailed=1`) telling the user to
+  press Mark received.
+- **Redesigned the line-delete button** (`.po-line-remove`): subtle borderless icon, muted by
+  default, red tint on hover — replacing the clunky outlined pill.
+- Excel export: `.xlsx` header reworked to a clean solid dark banner with a cyan divider and
+  **no internal border lines**, bigger logo, richText summary cards, colored order total, and
+  the quantity "1." trailing-dot quirk fixed (`General` number format).
+
+**Notes / research answered for the founder:**
+- Bluetooth phone→laptop photo transfer is not possible in web apps and isn't how SaaS works;
+  the supported paths are opening SydIN on the phone (camera opens directly) or phone→cloud
+  sync then normal file pick. Kept to one adaptive "Add invoice image" button.
+- Stock still only changes on receive (never at plain save) — the checkbox is the single
+  opt-in for same-moment receipt.
+- Confirmed the header account-logo 500 in local dev is an SSL cert issue
+  (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`) in Next's image optimizer, environmental only — does not
+  affect the PDF/Excel logo, which fetch the raw URL directly.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview
+(after clearing the stale Turbopack `.next` CSS cache): Status dropdown gone, checkbox toggles
+the Save label to "Save & receive now", delete button renders as the new subtle control.
+
+---
+
+## Sprint PO-C — Spending analytics + PO workflow simplification + design polish  *(Complete)*
+
+**Scope:** Close out the Purchase Orders module: dashboard spending analytics, founder-requested
+workflow fixes, and a design/motion pass.
+
+**Workflow simplification (founder feedback):**
+- **Removed the Draft/Ordered Status dropdown** from `/purchase-orders/new` — new orders save
+  as draft automatically; status now changes only through explicit actions.
+- **Added the "We already received these items — add to stock now" checkbox** above the save
+  bar: unchecked = save and receive later; checked = save then immediately run
+  `receive_purchase_order` (button label becomes "Save & receive now"). A receive failure after
+  a successful save degrades to a warning notice on the history page
+  (`?created=<id>&receivefailed=1`) telling the user to press Mark received.
+- Line delete button restyled (`.po-line-remove`): subtle ghost icon, red tint on hover,
+  press-scale.
+
+**Dashboard Spending panel (`app/dashboard/page.tsx`):**
+- New "Spending this month" panel in the overview grid: gradient **Total spent** card
+  (amount + purchase count) and two hover-lift rows splitting **Stock purchases** vs
+  **General purchases**, linking to `/dashboard/purchase-orders`. Data via
+  `getPurchaseOrdersForUser().catch(() => [])` so a missing phase-8 table just shows the
+  empty state. Current-month filter excludes cancelled orders.
+
+**PO history redesign/motion (`.po-*` CSS + row markup):**
+- Status **color rail** on each row's left edge (grey draft / cyan ordered / green received /
+  rose cancelled), **"Invoice" chip** for orders with attachments, branded gradient metric
+  icons on the summary cards (matches inventory stat grid), hover lift + press scale on rows
+  and cards, all gated behind `@media (hover: hover)`.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+Spending panel showing real data ($628 / 2 purchases, stock-vs-general split) ✅ · redesigned
+history page with rails, chip, filters ✅. Note: Turbopack served a stale `globals.css` from the
+`.next` cache during this work — cleared `.next` and restarted dev to recover; production builds
+were never affected.
+
+**This closes the Purchase Orders module (PO-A/B/C).**
+
+---
+
 <!-- Append the next sprint entry below this line. -->

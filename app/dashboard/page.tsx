@@ -34,6 +34,11 @@ import {
   resolveCategoryDisplay,
   type Category,
 } from "@/app/lib/categories";
+import {
+  getPurchaseOrderSplit,
+  getPurchaseOrdersForUser,
+  type PurchaseOrder,
+} from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
 
 interface Item {
@@ -225,6 +230,7 @@ export default function DashboardPage() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [businessSettings, setBusinessSettings] =
@@ -277,6 +283,9 @@ export default function DashboardPage() {
           getCategoriesForUser(user.id).catch(() => []),
           getDepotsForUser(user.id).catch(() => []),
           getRecentStockMovements(user.id, 8).catch(() => []),
+          // Empty when the phase-8 SQL has not been run yet — the panel
+          // falls back to its empty state instead of breaking the dashboard.
+          getPurchaseOrdersForUser(user.id).catch(() => []),
         ])
           .then(
             ([
@@ -286,6 +295,7 @@ export default function DashboardPage() {
               loadedCategories,
               loadedDepots,
               loadedMovements,
+              loadedPurchaseOrders,
             ]) => {
               if (!isActive) return;
 
@@ -303,6 +313,7 @@ export default function DashboardPage() {
               setCategories(loadedCategories);
               setDepots(loadedDepots);
               setMovements(loadedMovements);
+              setPurchaseOrders(loadedPurchaseOrders);
               setLoading(false);
             }
           )
@@ -441,6 +452,37 @@ export default function DashboardPage() {
       href: "/dashboard/inventory",
     },
   ];
+
+  const spending = useMemo(() => {
+    const now = new Date();
+    const monthOrders = purchaseOrders.filter((order) => {
+      if (order.status === "cancelled") return false;
+      const source = order.purchase_date || order.created_at;
+      if (!source) return false;
+      const date = new Date(source.includes("T") ? source : `${source}T00:00:00`);
+      return (
+        !Number.isNaN(date.getTime()) &&
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth()
+      );
+    });
+
+    let inventoryTotal = 0;
+    let expenseTotal = 0;
+    for (const order of monthOrders) {
+      const split = getPurchaseOrderSplit(order);
+      inventoryTotal += split.inventoryTotal;
+      expenseTotal += split.expenseTotal;
+    }
+
+    return {
+      monthTotal: inventoryTotal + expenseTotal,
+      inventoryTotal,
+      expenseTotal,
+      monthCount: monthOrders.length,
+      recentOrders: purchaseOrders.slice(0, 3),
+    };
+  }, [purchaseOrders]);
 
   const topActions = [
     {
@@ -653,6 +695,82 @@ export default function DashboardPage() {
                     </small>
                   </Link>
                 ))}
+              </div>
+            )}
+          </section>
+
+          <section className="sydin-overview-panel sydin-overview-spending">
+            <DashboardPanelHeader
+              icon="reports"
+              title="Spending this month"
+              href="/dashboard/purchase-orders"
+              hrefLabel="All purchases"
+            />
+
+            {loading ? (
+              <div className="sydin-overview-skeleton-list" aria-hidden="true">
+                {[1, 2, 3].map((item) => (
+                  <span key={item} />
+                ))}
+              </div>
+            ) : spending.monthCount === 0 ? (
+              <div className="sydin-overview-empty">
+                <span>
+                  <UiIcon name="file" className="h-5 w-5" />
+                </span>
+                <strong>No purchases this month</strong>
+                <p>
+                  Record stock restocks and general purchases to track spending
+                  here.
+                </p>
+                <Link href="/dashboard/purchase-orders/new">
+                  New purchase order
+                </Link>
+              </div>
+            ) : (
+              <div className="sydin-overview-spending-body">
+                <div className="sydin-overview-spending-total">
+                  <small>Total spent</small>
+                  <strong>
+                    {formatCurrency(spending.monthTotal, currencyCode)}
+                  </strong>
+                  <em>
+                    {formatNumber(spending.monthCount)} purchase
+                    {spending.monthCount === 1 ? "" : "s"} this month
+                  </em>
+                </div>
+                <div className="sydin-overview-spending-split">
+                  <Link
+                    href="/dashboard/purchase-orders"
+                    className="sydin-overview-spending-row"
+                  >
+                    <span className="sydin-overview-spending-icon">
+                      <UiIcon name="box" className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <strong>Stock purchases</strong>
+                      <small>Items bought for inventory</small>
+                    </span>
+                    <em>
+                      {formatCurrency(spending.inventoryTotal, currencyCode)}
+                    </em>
+                  </Link>
+                  <Link
+                    href="/dashboard/purchase-orders"
+                    className="sydin-overview-spending-row"
+                  >
+                    <span className="sydin-overview-spending-icon">
+                      <UiIcon name="file" className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0">
+                      <strong>General purchases</strong>
+                      <small>Equipment, supplies, services</small>
+                    </span>
+                    <em>
+                      {formatCurrency(spending.expenseTotal, currencyCode)}
+                    </em>
+                  </Link>
+                </div>
               </div>
             )}
           </section>

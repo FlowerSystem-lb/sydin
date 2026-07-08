@@ -65,6 +65,13 @@ function getDashboardPageContext(pathname: string, action?: string | null) {
     };
   }
 
+  if (pathname === "/dashboard/search") {
+    return {
+      label: "Search",
+      shortLabel: "Search",
+    };
+  }
+
   if (/^\/dashboard\/inventory\/[^/]+$/.test(pathname)) {
     if (action === "edit") {
       return {
@@ -223,10 +230,21 @@ export default function DashboardShell({
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  const [searchShortcutKey, setSearchShortcutKey] = useState("Ctrl");
   const [businessSettings, setBusinessSettings] = useState(
     DEFAULT_BUSINESS_SETTINGS
   );
   const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
+
+  useEffect(() => {
+    if (!/mac/i.test(navigator.platform || navigator.userAgent)) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      setSearchShortcutKey("⌘");
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
@@ -673,17 +691,25 @@ export default function DashboardShell({
             })}
           </nav>
 
+          <button
+            ref={desktopSearchTriggerRef}
+            type="button"
+            onClick={(event) => openGlobalSearch(event.currentTarget)}
+            className="dashboard-top-searchbar"
+            aria-label="Search SydIN"
+            title="Search (Ctrl/Cmd+K)"
+          >
+            <UiIcon name="search" className="h-4 w-4 shrink-0" />
+            <span className="dashboard-top-searchbar-label">
+              Search items, orders, suppliers...
+            </span>
+            <span className="dashboard-top-searchbar-kbd" aria-hidden="true">
+              <kbd>{searchShortcutKey}</kbd>
+              <kbd>K</kbd>
+            </span>
+          </button>
+
           <div className="dashboard-top-tools">
-            <button
-              ref={desktopSearchTriggerRef}
-              type="button"
-              onClick={(event) => openGlobalSearch(event.currentTarget)}
-              className="dashboard-top-icon-button"
-              aria-label="Open global search"
-              title="Search"
-            >
-              <UiIcon name="search" className="h-5 w-5" />
-            </button>
             {quickAddVisible && (
               <Link
                 href="/dashboard/add-item"
