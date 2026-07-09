@@ -549,4 +549,57 @@ were never affected.
 
 ---
 
+## Sprint RCV-1 — Receiving repositioned around the Purchase Orders module  *(Complete)*
+
+**Scope:** Founder asked whether Receiving should be removed now that POs receive stock.
+Decision: **keep Receiving** for non-purchase stock-in (customer returns, corrections, quick
+restocks) — routing those through POs would corrupt spending analytics — but remove the
+overlap and give it PO-style history UX.
+
+**Changed (`app/dashboard/receiving/page.tsx` + scoped `.receiving-*` CSS):**
+- **Removed the "Purchase order draft" source** and all its dead machinery (the old
+  localStorage PO-draft handoff: `readPurchaseOrderDraft`, `poDraftLines`, "Add PO draft"
+  buttons, setup-aside notices). The `purchase_order_draft` union member and label stay so
+  previously saved device drafts still restore safely.
+- **PO hint**: choosing "Supplier delivery" shows an inline info card — "Buying from a
+  supplier? A purchase order also tracks cost, payment, and the invoice" — linking to
+  `/dashboard/purchase-orders/new`.
+- **Header copy** repositioned: "Record stock that arrives without a purchase…".
+- **Recent stock in history on the same page** (setup + finalized steps): two gradient stat
+  cards (units received this month, stock-in movement count) + last 8 stock-in movements as
+  PO-style rows (green left rail, +delta pill, item name, date · note with "PO #N" / "Receiving
+  – RCV-…" labels via `formatStockMovementNotes`). Data from existing `stock_movements` —
+  **no schema change**. History refreshes after finalize.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+hint card visible, PO-draft option gone, history showing real data (5 units / 1 movement this
+month, rows incl. "Receiving - RCV-20260708 - Supplier delivery +5") ✅.
+
+---
+
+## Sprint PO-D — Payment on receive + Record payment  *(Complete)*
+
+**Scope:** Founder's deposit workflow ("pay a deposit now, pay the rest on delivery"). Decision
+(documented in chat): do NOT link Receiving↔PO or merge their pages — keep each purchase's whole
+lifecycle inside the PO. The real gap was that a saved PO's payment was read-only; fixed here.
+
+**Delivered:**
+- **`updatePurchaseOrderPayment(userId, orderId, payment)`** in `app/lib/purchaseOrders.ts` —
+  updates only payment fields (status / amount / method / paid_by). Allowed at any status incl.
+  received (the phase-8 `normalize_purchase_order` trigger permits post-receipt metadata edits).
+- **PO detail dialog** now has an inline **payment panel** (gradient card: status, amount paid,
+  method, paid-by) driven by a `paymentMode` state (`none` | `receive` | `edit`):
+  - **Mark received** → opens the panel in `receive` mode with an amber "payment on delivery"
+    note; **Confirm receive** saves the payment *then* runs `receive_purchase_order` (stock in).
+  - **Record payment** (new button, any non-cancelled order) → opens the panel in `edit` mode;
+    **Save payment** updates payment only and refreshes the still-open dialog.
+  - Replaced the old `confirmingReceive` boolean with `paymentMode`; footer swaps to Back +
+    the mode's primary action while a panel is open.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+opened received PO-0003, "Record payment" reveals the panel (status/amount/method/paid-by),
+footer switches to Back / Save payment ✅.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

@@ -16207,6 +16207,175 @@ body,
   }
 }
 
+/* ===[ RECEIVING: reposition + PO-style history ]=== */
+.receiving-po-hint {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  margin-top: 0.4rem;
+  border: 1px solid rgba(14, 165, 198, 0.24);
+  border-radius: 12px;
+  background: rgba(18, 184, 214, 0.08);
+  padding: 0.55rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.15rem;
+  color: var(--text-secondary);
+}
+
+.receiving-po-hint svg {
+  margin-top: 0.1rem;
+  color: var(--text-accent);
+}
+
+.receiving-po-hint a {
+  font-weight: 800;
+  color: var(--text-accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.receiving-history {
+  border: 1px solid var(--border-default);
+  border-radius: var(--sydin-radius-panel);
+  background: var(--sydin-ui-surface);
+  padding: 1rem;
+}
+
+.receiving-history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.receiving-history-header h2 {
+  font-size: 1rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.receiving-history-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--text-accent);
+  transition: transform 140ms ease;
+}
+
+.receiving-history-link:hover {
+  transform: translateX(2px);
+}
+
+.receiving-history-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.7rem;
+  margin-bottom: 0.75rem;
+}
+
+.receiving-history-stat {
+  border: 1px solid rgba(14, 165, 198, 0.22);
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(16, 196, 220, 0.08), rgba(125, 92, 255, 0.05));
+  padding: 0.7rem 0.85rem;
+}
+
+.receiving-history-stat small {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 850;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.receiving-history-stat strong {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.receiving-history-stat em {
+  display: block;
+  font-size: 0.72rem;
+  font-style: normal;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.receiving-history-empty {
+  border: 1px dashed var(--border-default);
+  border-radius: 14px;
+  background: var(--sydin-surface-inset);
+  padding: 1.1rem;
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.receiving-history-list {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.receiving-history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border: 1px solid var(--border-default);
+  border-left: 3px solid rgba(16, 185, 129, 0.55);
+  border-radius: var(--sydin-radius-control);
+  background: var(--sydin-ui-surface);
+  padding: 0.6rem 0.8rem;
+  transition:
+    border-color var(--motion-control, 160ms) ease,
+    box-shadow var(--motion-control, 160ms) ease,
+    transform var(--motion-control, 160ms) ease;
+}
+
+.receiving-history-row-icon {
+  display: grid;
+  height: 2.05rem;
+  width: 2.05rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 10px;
+  background: var(--sydin-surface-inset);
+  color: var(--text-accent);
+}
+
+.receiving-history-delta {
+  flex-shrink: 0;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 900;
+  color: #047857;
+}
+
+@media (hover: hover) {
+  .receiving-history-row:hover {
+    border-color: rgba(14, 165, 198, 0.4);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+    transform: translateY(-1px);
+  }
+}
+
+@media (max-width: 639px) {
+  .receiving-history-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 .po-receive-now-card {
   padding: 0.35rem;
 }
@@ -16288,6 +16457,26 @@ body,
   display: flex;
   align-items: center;
   gap: 0.85rem;
+}
+
+.po-payment-panel {
+  display: grid;
+  gap: 0.6rem;
+  border: 1px solid rgba(14, 165, 198, 0.24);
+  border-radius: 16px;
+  background: linear-gradient(135deg, rgba(16, 196, 220, 0.07), rgba(125, 92, 255, 0.05));
+  padding: 0.85rem;
+}
+
+.po-payment-panel-note {
+  border-radius: 10px;
+  border: 1px solid rgba(245, 158, 11, 0.28);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.5rem 0.65rem;
+  font-size: 0.75rem;
+  font-weight: 650;
+  line-height: 1.1rem;
+  color: var(--text-warning, #92400e);
 }
 
 .po-detail-grid {

@@ -29,7 +29,12 @@ import {
   normalizeCurrencyCode,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
-import { recordStockMovement } from "@/app/lib/stockMovements";
+import {
+  formatStockMovementNotes,
+  getRecentStockMovements,
+  recordStockMovement,
+  type StockMovement,
+} from "@/app/lib/stockMovements";
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
 import { supabase } from "@/app/lib/supabase";
 
@@ -83,25 +88,6 @@ interface ReceivingLine {
   note: string;
 }
 
-interface PurchaseOrderDraftLine {
-  id?: string;
-  inventoryItemId?: number | null;
-  orderQuantity?: string;
-  unitCost?: string;
-  note?: string;
-}
-
-interface PurchaseOrderDraft {
-  details?: {
-    title?: string;
-    supplierId?: string;
-    supplierName?: string;
-    expectedDeliveryDate?: string;
-    notes?: string;
-  };
-  lines?: PurchaseOrderDraftLine[];
-}
-
 interface FinalizeResult {
   recorded: number;
   skipped: number;
@@ -116,11 +102,11 @@ interface DraftPayload {
 }
 
 const DRAFT_STORAGE_KEY = "sydin:receiving-draft";
-const PO_DRAFT_STORAGE_KEY = "sydin:purchase-order-draft";
 
+// "Purchase order draft" is intentionally not offered anymore — real purchases
+// belong in the Purchase Orders module, which adds stock itself when received.
 const SOURCE_OPTIONS: Array<{ value: ReceivingSource; label: string }> = [
   { value: "supplier_delivery", label: "Supplier delivery" },
-  { value: "purchase_order_draft", label: "Purchase order draft" },
   { value: "manual_restock", label: "Manual restock" },
   { value: "customer_return", label: "Return from customer" },
   { value: "other", label: "Other" },
@@ -198,19 +184,6 @@ function makeLineFromItem(
   };
 }
 
-function readPurchaseOrderDraft(): PurchaseOrderDraft | null {
-  try {
-    const rawDraft = window.sessionStorage.getItem(PO_DRAFT_STORAGE_KEY);
-    if (!rawDraft) return null;
-    const parsed = JSON.parse(rawDraft) as PurchaseOrderDraft;
-    if (!parsed.details && !parsed.lines?.length) return null;
-
-    return parsed;
-  } catch {
-    return null;
-  }
-}
-
 function getLineReceived(line: ReceivingLine) {
   return parseNonNegativeNumber(line.receivedQuantity);
 }
@@ -243,7 +216,7 @@ export default function ReceivingPage() {
   const [confirmFinalize, setConfirmFinalize] = useState(false);
   const [confirmClearDraft, setConfirmClearDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
-  const [poDraft, setPoDraft] = useState<PurchaseOrderDraft | null>(null);
+  const [recentStockIn, setRecentStockIn] = useState<StockMovement[]>([]);
   const [finalizeResult, setFinalizeResult] = useState<FinalizeResult | null>(
     null
   );
@@ -289,30 +262,27 @@ export default function ReceivingPage() {
     [items]
   );
 
-  const poDraftLines = useMemo(() => {
-    if (!poDraft?.lines?.length) return [];
-
-    return poDraft.lines
-      .map((line) => {
-        const itemId = Number(line.inventoryItemId);
-        const quantity = parseNonNegativeNumber(String(line.orderQuantity || ""));
-
-        return {
-          line,
-          itemId,
-          quantity,
-          item: itemById.get(itemId),
-        };
-      })
-      .filter(
-        (detail) =>
-          Number.isInteger(detail.itemId) &&
-          detail.itemId > 0 &&
-          detail.item &&
-          detail.quantity !== null &&
-          detail.quantity > 0
+  // "Received this month" summary + recent history feed (stock_in movements).
+  const receivingHistory = useMemo(() => {
+    const now = new Date();
+    const monthMovements = recentStockIn.filter((movement) => {
+      const date = new Date(movement.created_at);
+      return (
+        !Number.isNaN(date.getTime()) &&
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth()
       );
-  }, [itemById, poDraft]);
+    });
+
+    return {
+      monthCount: monthMovements.length,
+      monthUnits: monthMovements.reduce(
+        (total, movement) => total + Math.max(0, movement.quantity_delta),
+        0
+      ),
+      recent: recentStockIn.slice(0, 8),
+    };
+  }, [recentStockIn]);
 
   const receivedDetails = useMemo(
     () =>
@@ -475,6 +445,7 @@ export default function ReceivingPage() {
         loadedSuppliers,
         loadedDepots,
         settings,
+        loadedMovements,
       ] = await Promise.all([
         supabase
           .from("inventory")
@@ -488,6 +459,7 @@ export default function ReceivingPage() {
         getOrCreateBusinessSettings(user.id).catch(
           () => DEFAULT_BUSINESS_SETTINGS
         ),
+        getRecentStockMovements(user.id, 150).catch(() => []),
       ]);
 
       if (inventoryError) throw inventoryError;
@@ -497,7 +469,11 @@ export default function ReceivingPage() {
       setSuppliers(loadedSuppliers);
       setDepots(loadedDepots);
       setBusinessSettings(settings);
-      setPoDraft(readPurchaseOrderDraft());
+      setRecentStockIn(
+        loadedMovements.filter(
+          (movement) => movement.movement_type === "stock_in"
+        )
+      );
       setLoading(false);
     }
 
@@ -693,41 +669,7 @@ export default function ReceivingPage() {
       return;
     }
 
-    if (details.source === "purchase_order_draft") {
-      if (poDraftLines.length === 0) {
-        setSetupError(
-          "No purchase order draft lines are available to receive on this device."
-        );
-        return;
-      }
-
-      const draftSupplierId = poDraft?.details?.supplierId || "";
-      const draftSupplierName = poDraft?.details?.supplierName || "";
-
-      setDetails((current) => ({
-        ...current,
-        title: current.title || poDraft?.details?.title || title,
-        supplierId: draftSupplierId || current.supplierId,
-        supplierName: draftSupplierName || current.supplierName,
-        notes: current.notes || poDraft?.details?.notes || "",
-      }));
-      setLines(
-        poDraftLines.map((detail) =>
-          makeLineFromItem(
-            detail.item as ReceivingInventoryItem,
-            "po-draft",
-            detail.quantity,
-            detail.line.unitCost,
-            detail.line.note || "Loaded from purchase order draft."
-          )
-        )
-      );
-      setNotice(
-        `Loaded ${poDraftLines.length} purchase order draft line${
-          poDraftLines.length === 1 ? "" : "s"
-        }. Review received quantities before finalizing.`
-      );
-    } else if (selectedItems.length > 0 && lines.length === 0) {
+    if (selectedItems.length > 0 && lines.length === 0) {
       setLines(
         selectedItems.map((item) =>
           makeLineFromItem(item, "selected", null, item.cost_price)
@@ -763,22 +705,6 @@ export default function ReceivingPage() {
       lowStockItems.map((item) => makeLineFromItem(item, "low-stock")),
       "Added {count} low-stock item(s) to this receiving draft.",
       "No new low-stock items are available to add."
-    );
-  };
-
-  const addPurchaseOrderLines = () => {
-    addLinesForItems(
-      poDraftLines.map((detail) =>
-        makeLineFromItem(
-          detail.item as ReceivingInventoryItem,
-          "po-draft",
-          detail.quantity,
-          detail.line.unitCost,
-          detail.line.note || "Loaded from purchase order draft."
-        )
-      ),
-      "Added {count} purchase order draft line(s).",
-      "No new purchase order draft lines are available to add."
     );
   };
 
@@ -915,6 +841,21 @@ export default function ReceivingPage() {
       }
 
       await refreshItems();
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+        if (user) {
+          const refreshedMovements = await getRecentStockMovements(user.id, 150);
+          setRecentStockIn(
+            refreshedMovements.filter(
+              (movement) => movement.movement_type === "stock_in"
+            )
+          );
+        }
+      } catch {
+        // History refresh is cosmetic; the finalize itself already succeeded.
+      }
       const result = {
         recorded,
         skipped: skippedCount,
@@ -957,7 +898,7 @@ export default function ReceivingPage() {
         <DashboardPageHeader
           eyebrow="Operations"
           title="Receiving"
-          description="Receive supplier deliveries, purchase order drafts, returns, and manual restocks. Inventory changes after receiving is finalized."
+          description="Record stock that arrives without a purchase — customer returns, corrections, and quick restocks. Bought something? Use Purchase Orders instead."
           actions={
             <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
               {stepItems.map((item, index) => (
@@ -1030,6 +971,19 @@ export default function ReceivingPage() {
                       label: option.label,
                     }))}
                   />
+                  {details.source === "supplier_delivery" && (
+                    <span className="receiving-po-hint">
+                      <UiIcon name="info" className="h-4 w-4 shrink-0" />
+                      <span>
+                        Buying from a supplier? A{" "}
+                        <a href="/dashboard/purchase-orders/new">
+                          purchase order
+                        </a>{" "}
+                        also tracks cost, payment, and the invoice — and adds
+                        stock when received.
+                      </span>
+                    </span>
+                  )}
                 </label>
                 <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
                   Supplier
@@ -1144,20 +1098,6 @@ export default function ReceivingPage() {
               <p className="text-xs leading-5 text-theme-muted">
                 Receiving history is tracked through Stock Movements.
               </p>
-              {details.source === "purchase_order_draft" &&
-                (poDraftLines.length > 0 ? (
-                  <p className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-3 py-2 text-xs font-semibold text-theme-accent">
-                    Current purchase order draft has{" "}
-                    {poDraftLines.length} receivable line
-                    {poDraftLines.length === 1 ? "" : "s"}.
-                  </p>
-                ) : (
-                  <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
-                    No purchase order draft lines are available on this device.
-                    You can add inventory items or manual receiving lines
-                    instead.
-                  </p>
-                ))}
               {items.length === 0 && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
                   Inventory is empty. Add items before receiving stock.
@@ -1227,13 +1167,6 @@ export default function ReceivingPage() {
                 </Button>
                 <Button variant="secondary" onClick={addLowStockLines}>
                   Add low stock
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={addPurchaseOrderLines}
-                  disabled={poDraftLines.length === 0}
-                >
-                  Add PO draft
                 </Button>
               </div>
               {lineError && (
@@ -1560,13 +1493,6 @@ export default function ReceivingPage() {
                   <div className="mx-auto mt-5 flex max-w-md flex-col justify-center gap-2 sm:flex-row">
                     <Button variant="secondary" onClick={addInventoryLine}>
                       Add item
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      onClick={addPurchaseOrderLines}
-                      disabled={poDraftLines.length === 0}
-                    >
-                      Add PO draft
                     </Button>
                     <Button variant="secondary" onClick={addLowStockLines}>
                       Add low stock
@@ -1912,6 +1838,74 @@ export default function ReceivingPage() {
                 View Receiving Rows
               </Button>
             </div>
+          </section>
+        )}
+
+        {(step === "setup" || step === "finalized") && !loading && (
+          <section className="receiving-history" aria-label="Recent stock in">
+            <div className="receiving-history-header">
+              <h2>Recent stock in</h2>
+              <a href="/dashboard/stock-movements" className="receiving-history-link">
+                All movements
+                <UiIcon name="chevron-right" className="h-4 w-4" />
+              </a>
+            </div>
+
+            <div className="receiving-history-summary">
+              <div className="receiving-history-stat">
+                <small>Received this month</small>
+                <strong>{formatNumber(receivingHistory.monthUnits)}</strong>
+                <em>units added to stock</em>
+              </div>
+              <div className="receiving-history-stat">
+                <small>Stock-in movements</small>
+                <strong>{formatNumber(receivingHistory.monthCount)}</strong>
+                <em>this month</em>
+              </div>
+            </div>
+
+            {receivingHistory.recent.length === 0 ? (
+              <p className="receiving-history-empty">
+                No stock-in movements yet. Finalized receiving and received
+                purchase orders will show here.
+              </p>
+            ) : (
+              <div className="receiving-history-list">
+                {receivingHistory.recent.map((movement) => {
+                  const item = movement.item_id
+                    ? itemById.get(movement.item_id)
+                    : null;
+                  const note = formatStockMovementNotes(movement.notes);
+
+                  return (
+                    <div key={movement.id} className="receiving-history-row">
+                      <span className="receiving-history-row-icon" aria-hidden="true">
+                        <UiIcon name="movement" className="h-4 w-4" />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-sm font-black text-theme-primary">
+                          {item?.name || "Stock in"}
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted">
+                          {[
+                            new Intl.DateTimeFormat("en", {
+                              month: "short",
+                              day: "numeric",
+                            }).format(new Date(movement.created_at)),
+                            note,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </span>
+                      </span>
+                      <span className="receiving-history-delta">
+                        +{formatNumber(movement.quantity_delta)}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </section>
         )}
       </DashboardPageShell>

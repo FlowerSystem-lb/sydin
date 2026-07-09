@@ -350,6 +350,35 @@ export async function receivePurchaseOrder(orderId: number) {
   return data;
 }
 
+export interface PurchaseOrderPaymentUpdate {
+  payment_status: PurchaseOrderPaymentStatus;
+  amount_paid: number | null;
+  payment_method: PurchaseOrderPaymentMethod | null;
+  paid_by: string | null;
+}
+
+/** Updates only the payment fields — allowed at any status (incl. received) by the phase-8 trigger. */
+export async function updatePurchaseOrderPayment(
+  userId: string,
+  orderId: number,
+  payment: PurchaseOrderPaymentUpdate
+) {
+  const { error } = await supabase
+    .from("purchase_orders")
+    .update({
+      payment_status: payment.payment_status,
+      amount_paid: payment.amount_paid,
+      payment_method: payment.payment_method,
+      paid_by: payment.paid_by,
+    })
+    .eq("id", orderId)
+    .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+}
+
 export async function uploadPurchaseOrderAttachment(userId: string, file: File) {
   const extension = file.name.includes(".")
     ? file.name.split(".").pop()?.toLowerCase() || "jpg"

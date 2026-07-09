@@ -39,7 +39,10 @@ import {
   getPurchaseOrdersForUser,
   isPurchaseOrdersSchemaMissing,
   receivePurchaseOrder,
+  updatePurchaseOrderPayment,
   type PurchaseOrder,
+  type PurchaseOrderPaymentMethod,
+  type PurchaseOrderPaymentStatus,
   type PurchaseOrderStatus,
 } from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
@@ -92,7 +95,15 @@ export default function PurchaseOrdersPage() {
   const [depotFilter, setDepotFilter] = useState("all");
 
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  const [confirmingReceive, setConfirmingReceive] = useState(false);
+  // "receive" = confirm receive + record payment together; "edit" = record payment only.
+  const [paymentMode, setPaymentMode] = useState<"none" | "receive" | "edit">(
+    "none"
+  );
+  const [payStatus, setPayStatus] =
+    useState<PurchaseOrderPaymentStatus>("unpaid");
+  const [payAmount, setPayAmount] = useState("");
+  const [payMethod, setPayMethod] = useState("");
+  const [payBy, setPayBy] = useState("");
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [successNotice, setSuccessNotice] = useState("");
@@ -246,14 +257,46 @@ export default function PurchaseOrdersPage() {
     }
   };
 
+  const openPaymentPanel = (mode: "receive" | "edit") => {
+    if (!selectedOrder) return;
+    setActionError("");
+    setPayStatus(selectedOrder.payment_status);
+    setPayAmount(
+      selectedOrder.amount_paid !== null ? String(selectedOrder.amount_paid) : ""
+    );
+    setPayMethod(selectedOrder.payment_method || "");
+    setPayBy(selectedOrder.paid_by || "");
+    setPaymentMode(mode);
+  };
+
+  const buildPaymentUpdate = () => {
+    const trimmedAmount = payAmount.trim();
+    const parsedAmount = trimmedAmount === "" ? null : Number(trimmedAmount);
+    return {
+      payment_status: payStatus,
+      amount_paid:
+        parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0
+          ? parsedAmount
+          : null,
+      payment_method: (payMethod || null) as PurchaseOrderPaymentMethod | null,
+      paid_by: payBy.trim() || null,
+    };
+  };
+
   const handleReceive = async () => {
     if (!selectedOrder) return;
     setActionBusy(true);
     setActionError("");
     try {
+      await updatePurchaseOrderPayment(
+        userId,
+        selectedOrder.id,
+        buildPaymentUpdate()
+      );
       await receivePurchaseOrder(selectedOrder.id);
       await refreshOrders();
-      setConfirmingReceive(false);
+      setPaymentMode("none");
+      setSuccessNoticeTone("success");
       setSuccessNotice(
         `${selectedOrder.po_number} marked as received. Stock-affecting lines were added to inventory.`
       );
@@ -262,6 +305,25 @@ export default function PurchaseOrdersPage() {
       setActionError(
         "The order could not be received. Refresh and try again — if a line's item was deleted, edit the order first."
       );
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleRecordPayment = async () => {
+    if (!selectedOrder) return;
+    setActionBusy(true);
+    setActionError("");
+    try {
+      await updatePurchaseOrderPayment(
+        userId,
+        selectedOrder.id,
+        buildPaymentUpdate()
+      );
+      await refreshOrders();
+      setPaymentMode("none");
+    } catch {
+      setActionError("The payment could not be updated. Try again.");
     } finally {
       setActionBusy(false);
     }
@@ -500,7 +562,7 @@ export default function PurchaseOrdersPage() {
                 type="button"
                 onClick={() => {
                   setSelectedOrderId(order.id);
-                  setConfirmingReceive(false);
+                  setPaymentMode("none");
                   setActionError("");
                 }}
                 className={`po-history-row po-history-row-${order.status}`}
@@ -556,64 +618,157 @@ export default function PurchaseOrdersPage() {
           title={selectedOrder.po_number}
           eyebrow={PURCHASE_ORDER_STATUS_LABELS[selectedOrder.status]}
           description={selectedOrder.title || undefined}
-          onClose={() => setSelectedOrderId(null)}
+          onClose={() => {
+            setSelectedOrderId(null);
+            setPaymentMode("none");
+          }}
           closeDisabled={actionBusy}
           footer={
-            <div className="flex flex-wrap justify-end gap-2">
-              <Button
-                variant="secondary"
-                leadingIcon={<UiIcon name="download" className="h-4 w-4" />}
-                onClick={handleExportPdf}
-                disabled={actionBusy}
-              >
-                Export PDF
-              </Button>
-              <Button
-                variant="secondary"
-                leadingIcon={<UiIcon name="sheet" className="h-4 w-4" />}
-                onClick={handleExportExcel}
-                disabled={actionBusy}
-              >
-                Export Excel
-              </Button>
-              {(selectedOrder.status === "draft" ||
-                selectedOrder.status === "ordered") && (
-                <>
+            paymentMode === "receive" ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setPaymentMode("none")}
+                  disabled={actionBusy}
+                >
+                  Back
+                </Button>
+                <Button onClick={handleReceive} disabled={actionBusy}>
+                  {actionBusy ? "Receiving…" : "Confirm receive"}
+                </Button>
+              </div>
+            ) : paymentMode === "edit" ? (
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  variant="secondary"
+                  onClick={() => setPaymentMode("none")}
+                  disabled={actionBusy}
+                >
+                  Back
+                </Button>
+                <Button onClick={handleRecordPayment} disabled={actionBusy}>
+                  {actionBusy ? "Saving…" : "Save payment"}
+                </Button>
+              </div>
+            ) : (
+              <div className="flex flex-wrap justify-end gap-2">
+                <Button
+                  variant="secondary"
+                  leadingIcon={<UiIcon name="download" className="h-4 w-4" />}
+                  onClick={handleExportPdf}
+                  disabled={actionBusy}
+                >
+                  Export PDF
+                </Button>
+                <Button
+                  variant="secondary"
+                  leadingIcon={<UiIcon name="sheet" className="h-4 w-4" />}
+                  onClick={handleExportExcel}
+                  disabled={actionBusy}
+                >
+                  Export Excel
+                </Button>
+                {selectedOrder.status !== "cancelled" && (
                   <Button
-                    variant="danger"
-                    onClick={handleCancelOrder}
+                    variant="secondary"
+                    leadingIcon={<UiIcon name="usage" className="h-4 w-4" />}
+                    onClick={() => openPaymentPanel("edit")}
                     disabled={actionBusy}
                   >
-                    Cancel order
+                    Record payment
                   </Button>
-                  {confirmingReceive ? (
-                    <Button onClick={handleReceive} disabled={actionBusy}>
-                      {actionBusy ? "Receiving…" : "Confirm receive"}
-                    </Button>
-                  ) : (
+                )}
+                {(selectedOrder.status === "draft" ||
+                  selectedOrder.status === "ordered") && (
+                  <>
                     <Button
-                      onClick={() => setConfirmingReceive(true)}
+                      variant="danger"
+                      onClick={handleCancelOrder}
+                      disabled={actionBusy}
+                    >
+                      Cancel order
+                    </Button>
+                    <Button
+                      onClick={() => openPaymentPanel("receive")}
                       leadingIcon={<UiIcon name="check" className="h-4 w-4" />}
                       disabled={actionBusy}
                     >
                       Mark received
                     </Button>
-                  )}
-                </>
-              )}
-            </div>
+                  </>
+                )}
+              </div>
+            )
           }
         >
           <div className="grid gap-4">
             {actionError && (
               <DashboardNotice tone="danger">{actionError}</DashboardNotice>
             )}
-            {confirmingReceive && (
-              <DashboardNotice tone="warning">
-                Receiving is final. Lines marked &ldquo;add to stock&rdquo; will
-                increase inventory quantities and appear in each item&rsquo;s
-                history as this PO.
-              </DashboardNotice>
+
+            {paymentMode !== "none" && (
+              <div className="po-payment-panel">
+                {paymentMode === "receive" && (
+                  <p className="po-payment-panel-note">
+                    Receiving adds the &ldquo;add to stock&rdquo; lines to
+                    inventory (final). Update the payment below if you paid the
+                    balance on delivery, then confirm.
+                  </p>
+                )}
+                <p className="po-detail-label">
+                  {paymentMode === "receive"
+                    ? "Payment on delivery"
+                    : "Record payment"}
+                </p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <Select
+                    label="Payment status"
+                    value={payStatus}
+                    onChange={(value) =>
+                      setPayStatus(value as PurchaseOrderPaymentStatus)
+                    }
+                    options={Object.entries(
+                      PURCHASE_ORDER_PAYMENT_STATUS_LABELS
+                    ).map(([value, label]) => ({ value, label }))}
+                  />
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-bold text-theme-secondary">
+                      Amount paid ({currencyCode})
+                    </span>
+                    <input
+                      type="number"
+                      min="0"
+                      step="any"
+                      value={payAmount}
+                      onChange={(event) => setPayAmount(event.target.value)}
+                      placeholder="Total paid so far"
+                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                    />
+                  </label>
+                  <Select
+                    label="Payment method"
+                    value={payMethod}
+                    onChange={setPayMethod}
+                    options={[
+                      { value: "", label: "Not set" },
+                      ...Object.entries(
+                        PURCHASE_ORDER_PAYMENT_METHOD_LABELS
+                      ).map(([value, label]) => ({ value, label })),
+                    ]}
+                  />
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-bold text-theme-secondary">
+                      Paid by (optional)
+                    </span>
+                    <input
+                      value={payBy}
+                      onChange={(event) => setPayBy(event.target.value)}
+                      placeholder="Person or account"
+                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                    />
+                  </label>
+                </div>
+              </div>
             )}
 
             <div className="po-detail-grid">
