@@ -7,7 +7,6 @@ import UiIcon from "@/components/UiIcon";
 import { Badge, Button, DialogShell, Select } from "@/components/ui";
 import {
   ActionButton,
-  DashboardCard,
   DashboardEmptyState,
   DashboardNotice,
   DashboardPageHeader,
@@ -33,6 +32,7 @@ import {
   PURCHASE_ORDER_PAYMENT_STATUS_LABELS,
   PURCHASE_ORDER_STATUS_LABELS,
   cancelPurchaseOrder,
+  getPurchaseOrderBalance,
   getPurchaseOrderLineTotal,
   getPurchaseOrderSplit,
   getPurchaseOrderTotal,
@@ -94,6 +94,7 @@ export default function PurchaseOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [depotFilter, setDepotFilter] = useState("all");
 
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   // "receive" = confirm receive + record payment together; "edit" = record payment only.
   const [paymentMode, setPaymentMode] = useState<"none" | "receive" | "edit">(
@@ -227,6 +228,32 @@ export default function PurchaseOrdersPage() {
         .includes(normalizedSearch);
     });
   }, [orders, search, statusFilter, depotFilter]);
+
+  // Group the (already newest-first) filtered orders into collapsible month sections.
+  const monthGroups = useMemo(() => {
+    const groups: Array<{ key: string; label: string; orders: PurchaseOrder[] }> = [];
+    const indexByKey = new Map<string, number>();
+
+    for (const order of filteredOrders) {
+      const source = order.purchase_date || order.created_at;
+      const date = source
+        ? new Date(source.includes("T") ? source : `${source}T00:00:00`)
+        : null;
+      const valid = date && !Number.isNaN(date.getTime());
+      const key = valid ? `${date!.getFullYear()}-${date!.getMonth()}` : "undated";
+      const label = valid
+        ? new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date!)
+        : "No date";
+
+      if (!indexByKey.has(key)) {
+        indexByKey.set(key, groups.length);
+        groups.push({ key, label, orders: [] });
+      }
+      groups[indexByKey.get(key)!].orders.push(order);
+    }
+
+    return groups;
+  }, [filteredOrders]);
 
   const spending = useMemo(() => {
     const monthOrders = orders.filter(
@@ -552,65 +579,125 @@ export default function PurchaseOrdersPage() {
           }
         />
       ) : (
-        <DashboardCard className="po-history-list">
-          {filteredOrders.map((order) => {
-            const total = getPurchaseOrderTotal(order);
+        <div className="po-history-months">
+          {monthGroups.map((group) => {
+            const collapsed = collapsedMonths.has(group.key);
+            const groupTotal = group.orders.reduce(
+              (sum, order) => sum + getPurchaseOrderTotal(order),
+              0
+            );
 
             return (
-              <button
-                key={order.id}
-                type="button"
-                onClick={() => {
-                  setSelectedOrderId(order.id);
-                  setPaymentMode("none");
-                  setActionError("");
-                }}
-                className={`po-history-row po-history-row-${order.status}`}
-              >
-                <span className="po-history-row-icon" aria-hidden="true">
+              <section key={group.key} className="po-month-group">
+                <button
+                  type="button"
+                  aria-expanded={!collapsed}
+                  onClick={() =>
+                    setCollapsedMonths((current) => {
+                      const next = new Set(current);
+                      if (next.has(group.key)) next.delete(group.key);
+                      else next.add(group.key);
+                      return next;
+                    })
+                  }
+                  className="po-month-header"
+                >
                   <UiIcon
-                    name={
-                      order.lines.some((line) => line.line_type === "expense")
-                        ? "file"
-                        : "box"
-                    }
-                    className="h-4 w-4"
+                    name="chevron-down"
+                    className={`po-month-chevron h-4 w-4 ${
+                      collapsed ? "po-month-chevron-collapsed" : ""
+                    }`}
                   />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-black text-theme-primary">
-                    {order.po_number}
-                    {order.title ? ` — ${order.title}` : ""}
+                  <span className="po-month-label">{group.label}</span>
+                  <span className="po-month-meta">
+                    {group.orders.length} order
+                    {group.orders.length === 1 ? "" : "s"} ·{" "}
+                    {formatInventoryPrice(groupTotal, currencyCode) || "—"}
                   </span>
-                  <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted">
-                    {[
-                      formatDate(order.purchase_date || order.created_at),
-                      order.depot_name_snapshot,
-                      order.supplier_name_snapshot,
-                      `${order.lines.length} line${
-                        order.lines.length === 1 ? "" : "s"
-                      }`,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </span>
-                </span>
-                {order.attachment_url && (
-                  <span className="po-history-attachment-chip" title="Invoice attached">
-                    <UiIcon name="file" className="h-3.5 w-3.5" />
-                    Invoice
-                  </span>
+                </button>
+
+                {!collapsed && (
+                  <div className="po-history-list">
+                    {group.orders.map((order) => {
+                      const total = getPurchaseOrderTotal(order);
+                      const remaining =
+                        order.status === "cancelled"
+                          ? 0
+                          : getPurchaseOrderBalance(order).remaining;
+
+                      return (
+                        <button
+                          key={order.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedOrderId(order.id);
+                            setPaymentMode("none");
+                            setActionError("");
+                          }}
+                          className={`po-history-row po-history-row-${order.status}`}
+                        >
+                          <span className="po-history-row-icon" aria-hidden="true">
+                            <UiIcon
+                              name={
+                                order.lines.some(
+                                  (line) => line.line_type === "expense"
+                                )
+                                  ? "file"
+                                  : "box"
+                              }
+                              className="h-4 w-4"
+                            />
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="block truncate text-sm font-black text-theme-primary">
+                              {order.po_number}
+                              {order.title ? ` — ${order.title}` : ""}
+                            </span>
+                            <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted">
+                              {[
+                                formatDate(order.purchase_date || order.created_at),
+                                order.depot_name_snapshot,
+                                order.supplier_name_snapshot,
+                                `${order.lines.length} line${
+                                  order.lines.length === 1 ? "" : "s"
+                                }`,
+                              ]
+                                .filter(Boolean)
+                                .join(" · ")}
+                            </span>
+                          </span>
+                          {remaining > 0 && (
+                            <span
+                              className="po-history-owe-chip"
+                              title="Balance still owed"
+                            >
+                              Owe {formatInventoryPrice(remaining, currencyCode)}
+                            </span>
+                          )}
+                          {order.attachment_url && (
+                            <span
+                              className="po-history-attachment-chip"
+                              title="Invoice attached"
+                            >
+                              <UiIcon name="file" className="h-3.5 w-3.5" />
+                              Invoice
+                            </span>
+                          )}
+                          <span className="shrink-0 text-sm font-black text-theme-primary">
+                            {formatInventoryPrice(total, currencyCode) || "—"}
+                          </span>
+                          <Badge tone={STATUS_TONES[order.status]}>
+                            {PURCHASE_ORDER_STATUS_LABELS[order.status]}
+                          </Badge>
+                        </button>
+                      );
+                    })}
+                  </div>
                 )}
-                <span className="shrink-0 text-sm font-black text-theme-primary">
-                  {formatInventoryPrice(total, currencyCode) || "—"}
-                </span>
-                <Badge tone={STATUS_TONES[order.status]}>
-                  {PURCHASE_ORDER_STATUS_LABELS[order.status]}
-                </Badge>
-              </button>
+              </section>
             );
           })}
-        </DashboardCard>
+        </div>
       )}
 
       {selectedOrder && (
@@ -770,6 +857,40 @@ export default function PurchaseOrdersPage() {
                 </div>
               </div>
             )}
+
+            {(() => {
+              const balance = getPurchaseOrderBalance(selectedOrder);
+              return (
+                <div className="po-balance-strip">
+                  <div>
+                    <small>Order total</small>
+                    <strong>
+                      {formatInventoryPrice(balance.total, currencyCode) || "—"}
+                    </strong>
+                  </div>
+                  <div>
+                    <small>Paid</small>
+                    <strong>
+                      {formatInventoryPrice(balance.paid, currencyCode) || "—"}
+                    </strong>
+                  </div>
+                  <div
+                    className={
+                      balance.remaining > 0
+                        ? "po-balance-remaining-due"
+                        : "po-balance-remaining-clear"
+                    }
+                  >
+                    <small>{balance.remaining > 0 ? "Still owe" : "Fully paid"}</small>
+                    <strong>
+                      {balance.remaining > 0
+                        ? formatInventoryPrice(balance.remaining, currencyCode)
+                        : "✓"}
+                    </strong>
+                  </div>
+                </div>
+              );
+            })()}
 
             <div className="po-detail-grid">
               <div>

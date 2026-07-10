@@ -236,6 +236,14 @@ export function getPurchaseOrderTotal(order: PurchaseOrder) {
   );
 }
 
+/** Total / paid / remaining for an order. `remaining` is clamped at 0 (never negative). */
+export function getPurchaseOrderBalance(order: PurchaseOrder) {
+  const total = getPurchaseOrderTotal(order);
+  const paid = order.amount_paid ?? 0;
+  const remaining = Math.max(0, total - paid);
+  return { total, paid, remaining };
+}
+
 /** Splits an order's total into stock purchases vs general expenses for analytics. */
 export function getPurchaseOrderSplit(order: PurchaseOrder) {
   let inventoryTotal = 0;

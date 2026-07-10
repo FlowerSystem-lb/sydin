@@ -631,4 +631,32 @@ list view shows large frame-filling images + clean unified Add Item gradient (sc
 
 ---
 
+## Sprint B1 — PO remaining balance + collapsible month history  *(Complete)*
+
+**Scope:** The no-database half of note PO-1/PO-2 — value fast, no Supabase step for Sayed.
+
+**Delivered:**
+- **`getPurchaseOrderBalance(order)`** helper (`app/lib/purchaseOrders.ts`): total / paid /
+  remaining (clamped ≥ 0), computed from lines + `amount_paid`.
+- **PO detail dialog balance strip**: three cells — Order total · Paid · **Still owe** (amber
+  when a balance remains, green ✓ when fully paid). Verified live: PO-0003 shows $100 / $50 /
+  Still owe $50.
+- **History "Owe" chips**: rows with an outstanding balance show an amber `Owe $X` chip.
+- **Collapsible month-grouped history**: orders grouped by month (purchase_date||created_at)
+  into accordion sections with a rotating chevron + reveal motion; each header shows
+  "N orders · $total". Verified: June 2026 / July 2026 sections toggle independently.
+
+**Note:** balance is derived from real numbers, so it stays correct even if `payment_status`
+was set loosely (e.g. status "Paid" while only half the amount is recorded). The per-payment
+**timeline log** (when each payment happened) is deferred to Sprint B2 — it needs a small
+`purchase_order_payments` table + migration.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview
+screenshots of the accordion + balance strip.
+
+**Next:** Sprint B2 (optional) — payment timeline log (needs a phase-9 SQL migration), then
+Sprint C (new PO page redesign).
+
+---
+
 <!-- Append the next sprint entry below this line. -->
