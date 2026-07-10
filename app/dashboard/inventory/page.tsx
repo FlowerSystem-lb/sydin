@@ -3425,8 +3425,12 @@ export default function InventoryPage() {
                     ) : (
                       <span className="h-4 w-4" aria-hidden="true" />
                     )}
-                    <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-theme bg-theme-inset sm:h-11 sm:w-11">
-                      <InventoryThumbnail src={item.image} alt="" />
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5 sm:h-14 sm:w-14">
+                      <InventoryThumbnail
+                        src={item.image}
+                        alt=""
+                        imgClassName="object-cover"
+                      />
                     </div>
                     <div className="min-w-0">
                       <div className="flex min-w-0 flex-wrap items-center gap-2">
@@ -3588,19 +3592,19 @@ export default function InventoryPage() {
                             </td>
                             <td className="px-3 py-2.5">
                               <div className="flex min-w-0 items-center gap-2.5">
-                                <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-theme bg-theme-inset">
+                                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
                                   <InventoryThumbnail
                                     src={item.image}
                                     alt=""
-                                    imgClassName="object-contain p-1"
+                                    imgClassName="object-cover"
                                     iconClassName="h-4 w-4"
                                   />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="truncate font-black text-theme-primary" title={item.name}>
+                                  <p className="font-black text-theme-primary [overflow-wrap:anywhere]" title={item.name}>
                                     {item.name}
                                   </p>
-                                  <p className="truncate text-xs font-semibold text-theme-muted">
+                                  <p className="text-xs font-semibold text-theme-muted [overflow-wrap:anywhere]">
                                     {item.barcode || "Inventory item"}
                                   </p>
                                 </div>
@@ -3608,7 +3612,7 @@ export default function InventoryPage() {
                             </td>
                             <td className="px-3 py-2.5 text-theme-secondary">
                               <span
-                                className="block max-w-[9rem] truncate"
+                                className="block [overflow-wrap:anywhere]"
                                 title={
                                   item.item_code ||
                                   item.sku ||
@@ -5338,7 +5342,7 @@ export default function InventoryPage() {
       {/* Edit Item Modal */}
       {isEditModalOpen && selectedItem && (
         <div className="inventory-modal-overlay fixed inset-0 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_120px_rgba(0,0,0,0.55)] backdrop-blur-2xl sm:p-7 md:p-8">
+          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[24px] border border-[var(--border-default)] bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_90px_rgba(0,5,20,0.4)] backdrop-blur-2xl sm:p-7 md:p-8">
             <div className="mb-8 flex items-start justify-between gap-4">
               <div>
                 <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">

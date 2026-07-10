@@ -602,4 +602,33 @@ footer switches to Back / Save payment ✅.
 
 ---
 
+## Sprint A — Global visual polish & bug pass (from Sayed's 14-note review)  *(Complete)*
+
+**Scope:** First sprint of a large UI/UX backlog. Cross-cutting "ugly/broken in all pages"
+fixes, low-risk CSS + small markup, foundation for the bigger redesigns to come.
+
+**Delivered:**
+- **Inventory list/table images** (`app/dashboard/inventory/page.tsx`): enlarged (list 40→56px,
+  table 36→44px), `object-cover` to fill the frame, dropped the hard `border border-theme` for a
+  subtle `ring-1 ring-black/5`, rounded-xl. Fixes the "tiny image with ugly border" complaint.
+- **Table text wraps** instead of truncating: name + code cells use `[overflow-wrap:anywhere]`
+  (dropped `truncate`/`max-w`), so long values like "34233 boxes" wrap cleanly.
+- **Item-card hover: blue → grey** (`app/globals.css`, both hover blocks ~10713 & ~11843):
+  swapped cyan `rgba(14,165,198)` border + blue shadow for neutral `rgba(148,163,184)` + soft
+  grey shadow; kept the lift. Selected state stays cyan (intentional). Overview KPI cards left
+  untouched.
+- **Unified primary button gradient** site-wide: three conflicting cyans (`#18c7dc`, `#0ea5c6`,
+  `#10c4dc`) collapsed to one `linear-gradient(135deg,#10c4dc,#2563eb 58%,#7d5cff)` across
+  `.ui-button-primary` and `.inventory-action-primary`. Fixes the "Add Item colour looks broken".
+- **Menu + modal consistency**: grid-card "Delete" recoloured violet→red to match the list menu
+  (`components/inventory/InventoryItemCard.tsx`); edit-item modal border softened
+  (`rounded-[32px] border-theme` → `rounded-[24px]` + lighter `--border-default`, softer shadow).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+list view shows large frame-filling images + clean unified Add Item gradient (screenshot).
+
+**Next:** Sprint B — PO payment history (balance + payment log) + collapsible month history.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

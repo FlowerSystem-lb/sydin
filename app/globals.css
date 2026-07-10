@@ -9081,10 +9081,10 @@ body [class*="tracking-["],
 .glass-button:not(.glass-button-secondary):not(.glass-button-danger) {
   border-color: rgba(14, 165, 198, 0.32);
   background:
-    linear-gradient(135deg, #18c7dc 0%, #3977ff 58%, #7d5cff 100%);
+    linear-gradient(135deg, #10c4dc 0%, #2563eb 58%, #7d5cff 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 14px 32px rgba(57, 119, 255, 0.2);
+    0 14px 32px rgba(37, 99, 235, 0.2);
   color: #ffffff;
 }
 
@@ -10711,17 +10711,17 @@ body [class*="tracking-["],
 
 @media (hover: hover) {
   .inventory-item-card:hover {
-    border-color: rgba(14, 165, 198, 0.32);
+    border-color: rgba(148, 163, 184, 0.5);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.94),
-      0 24px 58px rgba(36, 79, 135, 0.14);
+      0 18px 44px rgba(15, 23, 42, 0.12);
     transform: translateY(-2px);
   }
 
   .inventory-toolbar-button:hover,
   .inventory-card-footer button:hover,
   .inventory-card-menu-button:hover {
-    border-color: rgba(14, 165, 198, 0.28);
+    border-color: rgba(148, 163, 184, 0.45);
     background: #ffffff;
   }
 }
@@ -11241,7 +11241,7 @@ body [class*="tracking-["],
 .inventory-action-primary,
 .overview-action-primary {
   border-color: transparent !important;
-  background: linear-gradient(135deg, #0ea5c6, #2563eb 58%, #7d5cff) !important;
+  background: linear-gradient(135deg, #10c4dc, #2563eb 58%, #7d5cff) !important;
   color: #ffffff !important;
   box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18) !important;
 }
@@ -11833,14 +11833,24 @@ body [class*="tracking-["],
   .inventory-toolbar-button:hover,
   .inventory-quick-filter:hover,
   .inventory-card-footer button:hover,
-  .inventory-card-menu-button:hover,
+  .inventory-card-menu-button:hover {
+    border-color: rgba(148, 163, 184, 0.45);
+    background: #ffffff;
+    transform: none;
+  }
+
   .overview-action:hover {
     border-color: rgba(25, 195, 221, 0.36);
     background: #ffffff;
     transform: none;
   }
 
-  .inventory-item-card:hover,
+  .inventory-item-card:hover {
+    border-color: rgba(148, 163, 184, 0.5);
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+    transform: translateY(-1px);
+  }
+
   .overview-kpi-card:hover {
     border-color: rgba(25, 195, 221, 0.3);
     box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
