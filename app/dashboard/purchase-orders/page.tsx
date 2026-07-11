@@ -31,18 +31,21 @@ import {
   PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
   PURCHASE_ORDER_PAYMENT_STATUS_LABELS,
   PURCHASE_ORDER_STATUS_LABELS,
+  addPurchaseOrderPayment,
   cancelPurchaseOrder,
+  deletePurchaseOrderPayment,
   getPurchaseOrderBalance,
   getPurchaseOrderLineTotal,
+  getPurchaseOrderPayments,
   getPurchaseOrderSplit,
   getPurchaseOrderTotal,
   getPurchaseOrdersForUser,
+  isPaymentsSchemaMissing,
   isPurchaseOrdersSchemaMissing,
   receivePurchaseOrder,
-  updatePurchaseOrderPayment,
   type PurchaseOrder,
+  type PurchaseOrderPayment,
   type PurchaseOrderPaymentMethod,
-  type PurchaseOrderPaymentStatus,
   type PurchaseOrderStatus,
 } from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
@@ -65,6 +68,14 @@ function formatDate(value: string | null) {
   if (Number.isNaN(date.getTime())) return value;
 
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
+}
+
+function todayIsoDate() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = String(now.getMonth() + 1).padStart(2, "0");
+  const day = String(now.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 function isInCurrentMonth(order: PurchaseOrder) {
@@ -100,11 +111,12 @@ export default function PurchaseOrdersPage() {
   const [paymentMode, setPaymentMode] = useState<"none" | "receive" | "edit">(
     "none"
   );
-  const [payStatus, setPayStatus] =
-    useState<PurchaseOrderPaymentStatus>("unpaid");
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("");
   const [payBy, setPayBy] = useState("");
+  const [payDate, setPayDate] = useState("");
+  const [payNote, setPayNote] = useState("");
+  const [selectedPayments, setSelectedPayments] = useState<PurchaseOrderPayment[]>([]);
   const [actionBusy, setActionBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [successNotice, setSuccessNotice] = useState("");
@@ -162,6 +174,24 @@ export default function PurchaseOrdersPage() {
       active = false;
     };
   }, [router]);
+
+  // Load the payment timeline whenever a different order's dialog opens.
+  useEffect(() => {
+    if (selectedOrderId === null) return;
+
+    let active = true;
+    getPurchaseOrderPayments(selectedOrderId)
+      .then((payments) => {
+        if (active) setSelectedPayments(payments);
+      })
+      .catch(() => {
+        if (active) setSelectedPayments([]);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [selectedOrderId]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -284,30 +314,43 @@ export default function PurchaseOrdersPage() {
     }
   };
 
+  const refreshSelectedPayments = async (orderId: number) => {
+    try {
+      setSelectedPayments(await getPurchaseOrderPayments(orderId));
+    } catch {
+      setSelectedPayments([]);
+    }
+  };
+
   const openPaymentPanel = (mode: "receive" | "edit") => {
     if (!selectedOrder) return;
     setActionError("");
-    setPayStatus(selectedOrder.payment_status);
-    setPayAmount(
-      selectedOrder.amount_paid !== null ? String(selectedOrder.amount_paid) : ""
-    );
+    // Default this payment to the outstanding balance for a one-tap "pay the rest".
+    const remaining = getPurchaseOrderBalance(selectedOrder).remaining;
+    setPayAmount(remaining > 0 ? String(remaining) : "");
     setPayMethod(selectedOrder.payment_method || "");
     setPayBy(selectedOrder.paid_by || "");
+    setPayDate(todayIsoDate());
+    setPayNote("");
     setPaymentMode(mode);
   };
 
-  const buildPaymentUpdate = () => {
-    const trimmedAmount = payAmount.trim();
-    const parsedAmount = trimmedAmount === "" ? null : Number(trimmedAmount);
-    return {
-      payment_status: payStatus,
-      amount_paid:
-        parsedAmount !== null && Number.isFinite(parsedAmount) && parsedAmount >= 0
-          ? parsedAmount
-          : null,
-      payment_method: (payMethod || null) as PurchaseOrderPaymentMethod | null,
+  const parsePayAmount = () => {
+    const parsed = Number(payAmount.trim());
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  };
+
+  const recordPaymentEntry = async (orderId: number) => {
+    const amount = parsePayAmount();
+    if (amount === null) return false;
+    await addPurchaseOrderPayment(orderId, {
+      amount,
+      method: (payMethod || null) as PurchaseOrderPaymentMethod | null,
       paid_by: payBy.trim() || null,
-    };
+      note: payNote.trim() || null,
+      paid_at: payDate || null,
+    });
+    return true;
   };
 
   const handleReceive = async () => {
@@ -315,11 +358,8 @@ export default function PurchaseOrdersPage() {
     setActionBusy(true);
     setActionError("");
     try {
-      await updatePurchaseOrderPayment(
-        userId,
-        selectedOrder.id,
-        buildPaymentUpdate()
-      );
+      // A payment on delivery is optional — only log it when an amount was entered.
+      await recordPaymentEntry(selectedOrder.id);
       await receivePurchaseOrder(selectedOrder.id);
       await refreshOrders();
       setPaymentMode("none");
@@ -339,18 +379,42 @@ export default function PurchaseOrdersPage() {
 
   const handleRecordPayment = async () => {
     if (!selectedOrder) return;
+    if (parsePayAmount() === null) {
+      setActionError("Enter a payment amount greater than zero.");
+      return;
+    }
     setActionBusy(true);
     setActionError("");
     try {
-      await updatePurchaseOrderPayment(
-        userId,
-        selectedOrder.id,
-        buildPaymentUpdate()
-      );
-      await refreshOrders();
+      await recordPaymentEntry(selectedOrder.id);
+      await Promise.all([
+        refreshOrders(),
+        refreshSelectedPayments(selectedOrder.id),
+      ]);
       setPaymentMode("none");
+    } catch (error) {
+      setActionError(
+        isPaymentsSchemaMissing(error)
+          ? "Payments need a one-time database update — run sql/phase-9-purchase-order-payments.sql in Supabase, then try again."
+          : "The payment could not be recorded. Try again."
+      );
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  const handleDeletePayment = async (paymentId: number) => {
+    if (!selectedOrder) return;
+    setActionBusy(true);
+    setActionError("");
+    try {
+      await deletePurchaseOrderPayment(paymentId);
+      await Promise.all([
+        refreshOrders(),
+        refreshSelectedPayments(selectedOrder.id),
+      ]);
     } catch {
-      setActionError("The payment could not be updated. Try again.");
+      setActionError("The payment could not be removed. Try again.");
     } finally {
       setActionBusy(false);
     }
@@ -708,6 +772,7 @@ export default function PurchaseOrdersPage() {
           onClose={() => {
             setSelectedOrderId(null);
             setPaymentMode("none");
+            setSelectedPayments([]);
           }}
           closeDisabled={actionBusy}
           footer={
@@ -804,23 +869,13 @@ export default function PurchaseOrdersPage() {
                 )}
                 <p className="po-detail-label">
                   {paymentMode === "receive"
-                    ? "Payment on delivery"
-                    : "Record payment"}
+                    ? "Payment on delivery (optional)"
+                    : "Add a payment"}
                 </p>
                 <div className="grid gap-3 sm:grid-cols-2">
-                  <Select
-                    label="Payment status"
-                    value={payStatus}
-                    onChange={(value) =>
-                      setPayStatus(value as PurchaseOrderPaymentStatus)
-                    }
-                    options={Object.entries(
-                      PURCHASE_ORDER_PAYMENT_STATUS_LABELS
-                    ).map(([value, label]) => ({ value, label }))}
-                  />
                   <label className="grid gap-1.5">
                     <span className="text-xs font-bold text-theme-secondary">
-                      Amount paid ({currencyCode})
+                      Amount paid now ({currencyCode})
                     </span>
                     <input
                       type="number"
@@ -828,7 +883,18 @@ export default function PurchaseOrdersPage() {
                       step="any"
                       value={payAmount}
                       onChange={(event) => setPayAmount(event.target.value)}
-                      placeholder="Total paid so far"
+                      placeholder="This payment"
+                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                    />
+                  </label>
+                  <label className="grid gap-1.5">
+                    <span className="text-xs font-bold text-theme-secondary">
+                      Payment date
+                    </span>
+                    <input
+                      type="date"
+                      value={payDate}
+                      onChange={(event) => setPayDate(event.target.value)}
                       className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
                     />
                   </label>
@@ -851,6 +917,17 @@ export default function PurchaseOrdersPage() {
                       value={payBy}
                       onChange={(event) => setPayBy(event.target.value)}
                       placeholder="Person or account"
+                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                    />
+                  </label>
+                  <label className="grid gap-1.5 sm:col-span-2">
+                    <span className="text-xs font-bold text-theme-secondary">
+                      Note (optional)
+                    </span>
+                    <input
+                      value={payNote}
+                      onChange={(event) => setPayNote(event.target.value)}
+                      placeholder="e.g. deposit, balance on delivery"
                       className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
                     />
                   </label>
@@ -891,6 +968,46 @@ export default function PurchaseOrdersPage() {
                 </div>
               );
             })()}
+
+            {paymentMode === "none" && selectedPayments.length > 0 && (
+              <div className="grid gap-1.5">
+                <p className="po-detail-label">Payment history</p>
+                {selectedPayments.map((payment) => (
+                  <div key={payment.id} className="po-payment-row">
+                    <span className="po-payment-row-icon" aria-hidden="true">
+                      <UiIcon name="usage" className="h-4 w-4" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-sm font-black text-theme-primary">
+                        {formatInventoryPrice(payment.amount, currencyCode)}
+                      </span>
+                      <span className="block truncate text-xs font-semibold text-theme-muted">
+                        {[
+                          formatDate(payment.paid_at),
+                          payment.method
+                            ? PURCHASE_ORDER_PAYMENT_METHOD_LABELS[payment.method]
+                            : "",
+                          payment.paid_by ? `by ${payment.paid_by}` : "",
+                          payment.note,
+                        ]
+                          .filter(Boolean)
+                          .join(" · ")}
+                      </span>
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleDeletePayment(payment.id)}
+                      disabled={actionBusy}
+                      className="po-line-remove"
+                      aria-label="Remove this payment"
+                      title="Remove payment"
+                    >
+                      <UiIcon name="trash" className="h-4 w-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
 
             <div className="po-detail-grid">
               <div>

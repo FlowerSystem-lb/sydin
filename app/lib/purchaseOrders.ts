@@ -28,6 +28,17 @@ export interface PurchaseOrderLine {
   notes: string | null;
 }
 
+export interface PurchaseOrderPayment {
+  id: number;
+  purchase_order_id: number;
+  amount: number;
+  method: PurchaseOrderPaymentMethod | null;
+  paid_by: string | null;
+  note: string | null;
+  paid_at: string;
+  created_at: string;
+}
+
 export interface PurchaseOrder {
   id: number;
   po_number: string;
@@ -53,6 +64,7 @@ export interface PurchaseOrder {
   received_at: string | null;
   cancelled_at: string | null;
   lines: PurchaseOrderLine[];
+  payments: PurchaseOrderPayment[];
 }
 
 export interface PurchaseOrderLineInput {
@@ -221,6 +233,22 @@ function normalizeOrder(data: Record<string, unknown>): PurchaseOrder {
     lines: rawLines
       .map(normalizeLine)
       .sort((first, second) => first.id - second.id),
+    // Payments are fetched separately (getPurchaseOrderPayments) so the history
+    // page keeps working before the phase-9 migration is run.
+    payments: [],
+  };
+}
+
+function normalizePayment(data: Record<string, unknown>): PurchaseOrderPayment {
+  return {
+    id: Number(data.id),
+    purchase_order_id: Number(data.purchase_order_id),
+    amount: Number(data.amount || 0),
+    method: (data.method ?? null) as PurchaseOrderPaymentMethod | null,
+    paid_by: (data.paid_by as string | null) ?? null,
+    note: (data.note as string | null) ?? null,
+    paid_at: String(data.paid_at || ""),
+    created_at: String(data.created_at || ""),
   };
 }
 
@@ -319,6 +347,21 @@ export async function createPurchaseOrder(
     throw linesError;
   }
 
+  // Seed the payment timeline with the initial deposit, if any. Non-fatal:
+  // a missing phase-9 table just leaves amount_paid as set on the order.
+  if (order.amount_paid && order.amount_paid > 0) {
+    try {
+      await addPurchaseOrderPayment(orderId, {
+        amount: order.amount_paid,
+        method: order.payment_method ?? null,
+        paid_by: order.paid_by ?? null,
+        paid_at: order.purchase_date ?? null,
+      });
+    } catch {
+      // Phase-9 not run yet — the order still carries its amount_paid snapshot.
+    }
+  }
+
   return orderId;
 }
 
@@ -381,6 +424,78 @@ export async function updatePurchaseOrderPayment(
     })
     .eq("id", orderId)
     .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export interface PurchaseOrderPaymentInput {
+  amount: number;
+  method?: PurchaseOrderPaymentMethod | null;
+  paid_by?: string | null;
+  note?: string | null;
+  paid_at?: string | null;
+}
+
+/** True when the error means the phase-9 payments migration has not been run yet. */
+export function isPaymentsSchemaMissing(error: unknown) {
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message: unknown }).message)
+      : String(error ?? "");
+
+  return (
+    message.includes("purchase_order_payments") &&
+    (message.includes("does not exist") ||
+      message.includes("schema cache") ||
+      message.includes("Could not find the table"))
+  );
+}
+
+/** Payment timeline for one order, newest first. Returns [] if the phase-9 table is missing. */
+export async function getPurchaseOrderPayments(orderId: number) {
+  const { data, error } = await supabase
+    .from("purchase_order_payments")
+    .select("id, purchase_order_id, amount, method, paid_by, note, paid_at, created_at")
+    .eq("purchase_order_id", orderId)
+    .order("paid_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  if (error) {
+    if (isPaymentsSchemaMissing(error)) return [];
+    throw error;
+  }
+
+  return ((data || []) as Record<string, unknown>[]).map(normalizePayment);
+}
+
+/** Logs a payment. The phase-9 trigger recomputes the order's amount_paid + status. */
+export async function addPurchaseOrderPayment(
+  orderId: number,
+  payment: PurchaseOrderPaymentInput
+) {
+  const { error } = await supabase.from("purchase_order_payments").insert([
+    {
+      purchase_order_id: orderId,
+      amount: payment.amount,
+      method: payment.method ?? null,
+      paid_by: payment.paid_by?.trim() || null,
+      note: payment.note?.trim() || null,
+      paid_at: payment.paid_at || undefined,
+    },
+  ]);
+
+  if (error) {
+    throw error;
+  }
+}
+
+export async function deletePurchaseOrderPayment(paymentId: number) {
+  const { error } = await supabase
+    .from("purchase_order_payments")
+    .delete()
+    .eq("id", paymentId);
 
   if (error) {
     throw error;

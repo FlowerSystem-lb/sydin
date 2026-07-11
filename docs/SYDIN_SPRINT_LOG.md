@@ -659,4 +659,36 @@ Sprint C (new PO page redesign).
 
 ---
 
+## Sprint B2 — PO payment timeline (per-payment log)  *(Code complete; awaiting phase-9 SQL run)*
+
+**Scope:** The database half of note PO-1 — a log of *when* each payment happened (deposit now,
+balance on delivery), so amount_paid/status become derived and trustworthy.
+
+**Delivered:**
+- **`sql/phase-9-purchase-order-payments.sql`** — `purchase_order_payments` table (amount,
+  method, paid_by, note, paid_at), RLS (owner via parent PO), a **recompute trigger** that sets
+  the parent order's `amount_paid = sum(payments)` and derives `payment_status` from the line
+  total, a validate trigger (owner + trim), and a **backfill** that seeds one payment row from
+  each existing `amount_paid` (run before the triggers so it doesn't trip the auth check) plus a
+  final reconcile loop.
+- **`app/lib/purchaseOrders.ts`** — `PurchaseOrderPayment` type; `getPurchaseOrderPayments`,
+  `addPurchaseOrderPayment`, `deletePurchaseOrderPayment`; `isPaymentsSchemaMissing`;
+  `createPurchaseOrder` seeds an initial payment when a deposit is entered. Payments are fetched
+  **separately** (not in the main PO select) so the history page keeps working before phase-9.
+- **PO detail dialog** — the payment panel is now **"Add a payment"** (amount *this time*, date,
+  method, paid-by, note; status auto-derived, no manual dropdown). A **Payment history** timeline
+  lists each entry (date · method · paid-by · note) with per-entry delete. "Mark received"
+  optionally logs a payment on delivery then receives. Record-payment defaults its amount to the
+  outstanding balance for one-tap "pay the rest". Missing-table errors show a friendly
+  run-the-migration message.
+
+**Founder action required:** run `sql/phase-9-purchase-order-payments.sql` in the Supabase SQL
+Editor. Until then the timeline is simply hidden (graceful) and everything else works.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅. Live timeline
+verification is pending the migration run (the dev DB has no phase-9 table yet; pre-migration
+degrades gracefully by design).
+
+---
+
 <!-- Append the next sprint entry below this line. -->

@@ -16585,6 +16585,28 @@ body,
   }
 }
 
+.po-payment-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--sydin-surface-inset);
+  padding: 0.5rem 0.7rem;
+}
+
+.po-payment-row-icon {
+  display: grid;
+  height: 2rem;
+  width: 2rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9px;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
 .po-history-owe-chip {
   display: inline-flex;
   flex-shrink: 0;
