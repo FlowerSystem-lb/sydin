@@ -691,4 +691,30 @@ degrades gracefully by design).
 
 ---
 
+## Sprint D1 — Whole-site design overhaul: navigation chrome  *(Complete)*
+
+**Scope:** Sayed asked to stop small step-by-step patches and redesign the whole site. Since the
+app runs on a shared design system, the overhaul proceeds as a few big cohesive batches over the
+shared chrome (safer than a big-bang rewrite of a live app). Batch 1 = navigation, which is on
+every screen (notes NAV-12/NAV-13).
+
+**Delivered:**
+- **Distinct per-page sidebar icons** (`components/dashboard/navigation.ts`): Receiving →
+  `download`, Stock Counts → `layers` (were duplicating `movement`/`check`). Every page now has a
+  unique, meaningful icon.
+- **Header top-tabs hover fix** (NAV-12): removed the `translateY(-1px)` lift that made inline
+  tabs jump into the divider line; replaced with a clean background highlight.
+- **Soft sidebar hover-reveal** (NAV-13): the collapsed desktop rail's page-name tooltip now
+  slides in with an opacity + translateX cubic-bezier transition instead of an instant
+  display toggle (appended last in `globals.css` so it wins the cascade; verified each nav link
+  carries its label and the transition).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+distinct icons render; tooltip mechanism verified via DOM (display:block, opacity 0→1 transition).
+
+**Next big batches:** global surface/border consistency, then the page redesigns (new PO page #3,
+inventory redesign #7–10, simpler add-item #14, phone-QR scan #5).
+
+---
+
 <!-- Append the next sprint entry below this line. -->

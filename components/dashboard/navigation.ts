@@ -62,7 +62,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
   {
     label: "Receiving",
     href: "/dashboard/receiving",
-    icon: "movement",
+    icon: "download",
     section: "operations",
     mobilePlacement: "more",
   },
@@ -78,7 +78,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     label: "Stock Counts",
     shortLabel: "Counts",
     href: "/dashboard/stock-counts",
-    icon: "check",
+    icon: "layers",
     section: "operations",
     mobilePlacement: "more",
   },

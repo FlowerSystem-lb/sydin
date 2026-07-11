@@ -13614,7 +13614,6 @@ body,
 }
 
 @media (hover: hover) {
-  .dashboard-top-tab:hover,
   .dashboard-top-icon-button:hover,
   .dashboard-top-account-pill:hover,
   .dashboard-top-primary-button:hover,
@@ -13624,9 +13623,16 @@ body,
     transform: translateY(-1px);
   }
 
+  /* Top tabs are inline in the toolbar — highlight instead of lifting so they
+     never collide with the divider line below. */
+  .dashboard-top-tab:hover {
+    background: rgba(148, 163, 184, 0.14);
+    color: #1f2937;
+  }
+
   .dashboard-top-icon-button:hover,
   .dashboard-top-account-pill:hover {
-    border-color: rgba(14, 165, 198, 0.28);
+    border-color: rgba(148, 163, 184, 0.42);
     background: #f8fbff;
   }
 }
@@ -16747,5 +16753,32 @@ body,
 
   .po-save-bar {
     bottom: 4.5rem; /* clear the mobile bottom navigation */
+  }
+}
+
+/* ===[ NAV CHROME OVERHAUL — softer sidebar hover-reveal (desktop rail) ]=== */
+/* Replaces the instant display none/block toggle with a soft slide-in reveal of
+   the page name. Appended last so it wins over the earlier scoped toggles. */
+@media (min-width: 900px) {
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-tooltip,
+  .dashboard-workspace-shell .dashboard-nav-tooltip {
+    display: block !important;
+    opacity: 0;
+    transform: translateX(-8px);
+    pointer-events: none;
+    transition:
+      opacity 170ms ease,
+      transform 230ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-workspace-shell .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
+  .dashboard-workspace-shell .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
   }
 }
