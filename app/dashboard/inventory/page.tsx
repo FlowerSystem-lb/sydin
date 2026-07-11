@@ -2474,7 +2474,7 @@ export default function InventoryPage() {
     const params = new URLSearchParams();
     if (ids.length > 0) params.set("items", ids.join(","));
     const query = params.toString();
-    router.push(`/dashboard/purchase-orders${query ? `?${query}` : ""}`);
+    router.push(`/dashboard/purchase-orders/new${query ? `?${query}` : ""}`);
   };
 
   const openReceivingForItems = (ids: number[]) => {
@@ -2739,6 +2739,15 @@ export default function InventoryPage() {
         >
           <UiIcon name="qr" className="h-4 w-4" />
           Create QR / Label
+        </button>
+        <button
+          type="button"
+          role="menuitem"
+          onClick={() => openPurchaseOrderForItems([item.id])}
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+        >
+          <UiIcon name="file" className="h-4 w-4" />
+          Create purchase order
         </button>
         <div className="my-1 border-t border-slate-200" />
         <button
