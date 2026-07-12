@@ -16758,6 +16758,212 @@ body,
   }
 }
 
+/* ============================================================================
+   GLASS 2.0 FOUNDATION — whole-app visual layer (Sayed's glassmorphism brief)
+   Ice background + warm gradient orb, frosted chrome and panels, staggered
+   entrance motion. Pure CSS (no new dependencies). Appended last so it wins
+   the cascade over earlier per-page layers. Visual only — no logic changes.
+   ========================================================================= */
+
+/* --- Background: soft ice + warm orb glow (top-left) + teal tint (bottom) --- */
+@media (min-width: 900px) {
+  .dashboard-theme:has(.dashboard-shell),
+  .dashboard-workspace-shell {
+    background:
+      radial-gradient(closest-side, rgba(255, 196, 92, 0.34), transparent 72%),
+      radial-gradient(closest-side, rgba(255, 138, 76, 0.16), transparent 70%),
+      radial-gradient(closest-side, rgba(18, 184, 214, 0.16), transparent 70%),
+      #f2f5f8 !important;
+    background-attachment: fixed, fixed, fixed, fixed !important;
+    background-repeat: no-repeat !important;
+    background-size: 60rem 60rem, 44rem 44rem, 64rem 64rem, auto !important;
+    background-position: -12rem -14rem, 30% -8rem, 108% 112%, 0 0 !important;
+    animation: glass-orb-drift 24s ease-in-out infinite alternate;
+  }
+
+  .dashboard-workspace-shell .dashboard-main-canvas,
+  .dashboard-workspace-shell .dashboard-shell-content {
+    background: transparent !important;
+  }
+
+  /* Frosted chrome: icon rail + top toolbar */
+  .dashboard-workspace-shell .dashboard-sidebar {
+    border-right: 1px solid rgba(255, 255, 255, 0.55) !important;
+    background: rgba(255, 255, 255, 0.58) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+  }
+
+  .dashboard-workspace-shell .dashboard-desktop-toolbar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.55) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+  }
+}
+
+@keyframes glass-orb-drift {
+  from {
+    background-position: -12rem -14rem, 30% -8rem, 108% 112%, 0 0;
+  }
+  to {
+    background-position: -6rem -10rem, 42% -5rem, 102% 104%, 0 0;
+  }
+}
+
+/* --- Frosted glass panels (large surfaces get real blur) --- */
+.dashboard-card,
+.dashboard-page-header-card,
+.dashboard-toolbar-card,
+.dashboard-table-card,
+.dashboard-form-section,
+.sydin-overview-panel,
+.sydin-overview-header,
+.inventory-hero-card,
+.inventory-toolbar-panel,
+.inventory-table-shell,
+.inventory-insight-card,
+.po-month-group {
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.45);
+  backdrop-filter: blur(16px) saturate(1.45);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.07) !important;
+}
+
+/* --- Small repeated cards: translucent white WITHOUT blur (perf on big grids) --- */
+.dashboard-metric-card,
+.sydin-overview-summary-card,
+.inventory-item-card,
+.po-history-row,
+.receiving-history-row,
+.search-page-result-row,
+.sydin-overview-spending-row {
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* Keep frosted panels legible: inset surfaces inside glass go semi-solid */
+.dashboard-card .bg-theme-inset,
+.sydin-overview-panel .bg-theme-inset {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* --- Frosted secondary buttons + icon buttons (pill feel stays) --- */
+.ui-button-secondary,
+.ui-icon-button,
+.dashboard-action-button-secondary,
+.inventory-action-secondary,
+.inventory-toolbar-button,
+.dashboard-top-icon-button,
+.dashboard-top-searchbar,
+.dashboard-top-account-pill {
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
+}
+
+/* --- Staggered entrance: cards fade up as each page loads --- */
+@keyframes glass-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-page-shell > *,
+.sydin-overview-inner > *,
+.inventory-workspace > * {
+  animation: glass-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-page-shell > *:nth-child(2),
+.sydin-overview-inner > *:nth-child(2),
+.inventory-workspace > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.dashboard-page-shell > *:nth-child(3),
+.sydin-overview-inner > *:nth-child(3),
+.inventory-workspace > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.dashboard-page-shell > *:nth-child(4),
+.sydin-overview-inner > *:nth-child(4),
+.inventory-workspace > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.dashboard-page-shell > *:nth-child(5),
+.sydin-overview-inner > *:nth-child(5),
+.inventory-workspace > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+.dashboard-page-shell > *:nth-child(n + 6),
+.sydin-overview-inner > *:nth-child(n + 6),
+.inventory-workspace > *:nth-child(n + 6) {
+  animation-delay: 300ms;
+}
+
+/* --- Accessibility fallbacks --- */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-theme:has(.dashboard-shell),
+  .dashboard-workspace-shell {
+    animation: none;
+  }
+
+  .dashboard-page-shell > *,
+  .sydin-overview-inner > *,
+  .inventory-workspace > * {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .dashboard-card,
+  .dashboard-page-header-card,
+  .dashboard-toolbar-card,
+  .dashboard-table-card,
+  .dashboard-form-section,
+  .sydin-overview-panel,
+  .sydin-overview-header,
+  .inventory-hero-card,
+  .inventory-toolbar-panel,
+  .inventory-table-shell,
+  .inventory-insight-card,
+  .po-month-group,
+  .dashboard-metric-card,
+  .sydin-overview-summary-card,
+  .inventory-item-card,
+  .po-history-row,
+  .ui-button-secondary,
+  .ui-icon-button,
+  .dashboard-action-button-secondary,
+  .inventory-action-secondary,
+  .inventory-toolbar-button,
+  .dashboard-top-icon-button,
+  .dashboard-top-searchbar,
+  .dashboard-top-account-pill {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .dashboard-workspace-shell .dashboard-sidebar,
+  .dashboard-workspace-shell .dashboard-desktop-toolbar {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 /* ===[ INVENTORY COMPACT MODE — "Compact" toggle gives items the screen ]=== */
 .inventory-workspace-summary-hidden .inventory-hero-badges,
 .inventory-workspace-summary-hidden .inventory-hero-description,

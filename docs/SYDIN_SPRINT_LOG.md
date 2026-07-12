@@ -758,4 +758,37 @@ back to default.
 
 ---
 
+## Sprint E1 — Glass 2.0 foundation (whole-app glassmorphism layer)  *(Complete)*
+
+**Scope:** Sayed brought a glassmorphism reference (frosted cards over a warm gradient orb, pill
+controls, staggered motion) and a detailed visual-only brief. Implemented as one appended CSS
+layer over the shared design system, so every dashboard page restyles at once with zero logic
+changes and **zero new dependencies** (pure CSS instead of framer-motion — decided deliberately).
+
+**Delivered (all in `app/globals.css`, appended "GLASS 2.0 FOUNDATION" block):**
+- **Ice background + orb**: `#f2f5f8` with three fixed radial-gradient layers (warm yellow/orange
+  glow top-left, teal tint bottom-right) on `.dashboard-theme:has(.dashboard-shell)` /
+  `.dashboard-workspace-shell`, drifting slowly (24s alternate). Canvas/content made transparent
+  so the glow shows through pages.
+- **Frosted chrome**: sidebar rail + desktop toolbar at `rgba(255,255,255,.55-.58)` with
+  `backdrop-blur(18px) saturate(1.5)` and white hairline borders.
+- **Frosted panels** (real blur, large surfaces): dashboard/PO/inventory cards, page headers,
+  toolbars, tables, month groups → white/62 + blur(16px) + diffused shadow.
+- **Small repeated cards** (item grid, history rows, metric cards): translucent white **without**
+  blur — deliberate performance choice for big grids.
+- **Frosted pill controls**: secondary/icon buttons, header search bar, account pill.
+- **Staggered entrance**: `glass-fade-up` on the top-level children of `.dashboard-page-shell`,
+  `.sydin-overview-inner`, `.inventory-workspace` (60ms stagger, capped at 300ms).
+- **Accessibility**: full `prefers-reduced-motion` (no drift, no entrance) and
+  `prefers-reduced-transparency` (solid white, no blur) fallbacks.
+
+**Deferred to later passes:** count-up numbers, route crossfades (need JS), auth pages,
+modals/dropdowns glass, mobile nav treatment.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview
+screenshots: Overview, Inventory and Purchase Orders all frosted over the orb glow (PO hero shows
+the warm gradient through the glass) · zero console errors.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
