@@ -717,4 +717,25 @@ inventory redesign #7–10, simpler add-item #14, phone-QR scan #5).
 
 ---
 
+## Sprint D2 — Site-wide image polish (note #9 "fix small bordered images in ALL pages")  *(Complete)*
+
+**Scope:** Swept every page for the small-bordered-thumbnail pattern and applied one policy:
+**item photos** fill their frame (`object-cover`, no padding), no hard border → `rounded-xl` +
+soft ring (`ring-1 ring-black/5`), sized ≥ 44px. **Logos, hero/detail images and upload
+previews stay `object-contain`** (never crop a logo).
+
+**Fixed:** receiving (table + review card), stock-counts (table + review card), stock-movements
+rows, qr-center picker, categories assign dialog, dashboard overview `.sydin-overview-thumb`
+(dropped the cyan icon-border/gradient around photos, 2.45→2.75rem, cover) and the inventory
+**grid card media** now fills its tile Sortly-style (`object-cover`, no padding — was
+letterboxed `contain p-2`). Inventory list/table were already done in Sprint A.
+
+**Left as-is intentionally:** icon/emoji chips (bordered boxes are the design), business logos
+(header, settings, item pages), slide-over hero image, add-item upload preview.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · preview
+screenshots: inventory grid full-bleed tiles, overview restock/recent thumbs clean.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

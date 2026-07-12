@@ -1216,14 +1216,14 @@ export default function ReceivingPage() {
                         <tr key={detail.line.id} className="align-middle">
                           <td className="px-4 py-3">
                             <div className="flex min-w-0 items-center gap-3">
-                              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-theme bg-theme-inset">
+                              <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
                                 {item.image ? (
                                   <Image
                                     src={item.image}
                                     alt=""
                                     fill
-                                    sizes="40px"
-                                    className="object-contain p-1"
+                                    sizes="44px"
+                                    className="object-cover"
                                   />
                                 ) : (
                                   <span className="flex h-full items-center justify-center text-theme-subtle">
@@ -1355,14 +1355,14 @@ export default function ReceivingPage() {
                       className="rounded-2xl border border-theme bg-theme-inset p-3"
                     >
                       <div className="flex min-w-0 items-center gap-3">
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-theme bg-theme-surface">
+                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-surface ring-1 ring-black/5">
                           {item.image ? (
                             <Image
                               src={item.image}
                               alt=""
                               fill
                               sizes="48px"
-                              className="object-contain p-1"
+                              className="object-cover"
                             />
                           ) : (
                             <span className="flex h-full items-center justify-center text-theme-subtle">
