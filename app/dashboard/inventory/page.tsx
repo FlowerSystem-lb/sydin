@@ -681,11 +681,29 @@ export default function InventoryPage() {
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
-      setShowStats(true);
+      // Restore the user's compact-mode preference (default: stats visible).
+      setShowStats(
+        window.localStorage.getItem("sydin:inventory-show-stats") !== "off"
+      );
     });
 
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  const toggleShowStats = () => {
+    setShowStats((current) => {
+      const next = !current;
+      try {
+        window.localStorage.setItem(
+          "sydin:inventory-show-stats",
+          next ? "on" : "off"
+        );
+      } catch {
+        // Preference persistence is optional.
+      }
+      return next;
+    });
+  };
 
   const fetchItems = async () => {
     const {
@@ -2982,6 +3000,23 @@ export default function InventoryPage() {
                   >
                     <UiIcon name="settings" className="h-4 w-4" />
                     Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleShowStats}
+                    aria-pressed={!showStats}
+                    className="inventory-toolbar-button"
+                    title={
+                      showStats
+                        ? "Hide the stats and insights for a bigger item view"
+                        : "Show the stats and insights"
+                    }
+                  >
+                    <UiIcon
+                      name={showStats ? "chevron-up" : "chevron-down"}
+                      className="h-4 w-4"
+                    />
+                    {showStats ? "Compact" : "Stats"}
                   </button>
                   <Select
                     ariaLabel="Sort"

@@ -16758,6 +16758,22 @@ body,
   }
 }
 
+/* ===[ INVENTORY COMPACT MODE — "Compact" toggle gives items the screen ]=== */
+.inventory-workspace-summary-hidden .inventory-hero-badges,
+.inventory-workspace-summary-hidden .inventory-hero-description,
+.inventory-workspace-summary-hidden .inventory-mobile-breadcrumb {
+  display: none !important;
+}
+
+.inventory-workspace-summary-hidden .inventory-hero-card {
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+}
+
+.inventory-workspace-summary-hidden .inventory-hero-title {
+  font-size: clamp(1.3rem, 1.8vw, 1.6rem) !important;
+}
+
 /* ===[ NAV CHROME OVERHAUL — softer sidebar hover-reveal (desktop rail) ]=== */
 /* Replaces the instant display none/block toggle with a soft slide-in reveal of
    the page name. Appended last so it wins over the earlier scoped toggles. */

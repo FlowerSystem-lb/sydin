@@ -738,4 +738,24 @@ screenshots: inventory grid full-bleed tiles, overview restock/recent thumbs cle
 
 ---
 
+## Sprint D3 — Inventory compact mode (note #7 "hide stats, big screen for items")  *(Complete)*
+
+**Scope:** The stats/hero header ate the top of the inventory page with no way to reclaim it.
+A `showStats` flag + hidden-state CSS existed but had **no user-facing control** (dead code —
+second such find after the broken Create-PO-from-items).
+
+**Delivered:**
+- **"Compact" / "Stats" toggle** in the inventory toolbar (next to Filters): hides the stat
+  cards, hero badges, description and breadcrumb, slims the hero title — items start ~200px
+  higher. Chevron flips with state; `aria-pressed`; tooltip explains it.
+- **Preference persists** in `localStorage sydin:inventory-show-stats` (restored on mount via
+  the existing rAF pattern; storage failures are non-fatal).
+- Compact CSS scoped under `.inventory-workspace-summary-hidden` appended last in globals.css.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+toggled Compact (hero one-line, grid raised), preference survived a fresh page load, toggled
+back to default.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
