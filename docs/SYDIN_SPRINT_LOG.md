@@ -851,4 +851,31 @@ empty-state illustrations, loading skeleton shimmer tuning.
 
 ---
 
+## Sprint E5 — Glass 2.0 route crossfade  *(Complete)*
+
+**Scope:** Last item from the Glass 2.0 brief — smooth page-to-page transitions, closing out
+the whole-app glassmorphism pass.
+
+**Delivered:**
+- **`app/dashboard/template.tsx`** (new) — a thin wrapper around `{children}`. Next.js
+  `template.tsx` remounts on every navigation (unlike `layout.tsx`, which persists), so the
+  sidebar/header in `layout.tsx` stay mounted while only the page content below them gets a
+  fresh instance per route change. Zero new dependencies — uses a built-in App Router mechanism
+  instead of a client-side transition library.
+- **`.dashboard-route-transition`** CSS (`app/globals.css`): 260ms crossfade + 8px upward slide
+  (`glass-route-in`, same easing family as the rest of Glass 2.0), `prefers-reduced-motion`
+  fallback.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (all 32 routes
+including the new template) · live preview: clicked Overview → Inventory, confirmed via DOM
+inspection that the transition wrapper is a **new node** each navigation with `animationName:
+"glass-route-in"` actively applied (proof the crossfade replays, not just present once) ·
+mobile viewport (375×812) checked — cards, KPI colors, and bottom nav all render cleanly, no
+overlap or breakage.
+
+**This closes the Glass 2.0 whole-app glassmorphism pass** (E1 foundation → E2 dashboard →
+E3 overlays → E4 auth → E5 transitions).
+
+---
+
 <!-- Append the next sprint entry below this line. -->
