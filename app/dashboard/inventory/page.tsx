@@ -889,6 +889,17 @@ export default function InventoryPage() {
         setStockFilter(requestedStock);
       }
 
+      const requestedQuick = params.get("quick");
+      if (
+        requestedQuick === "all" ||
+        requestedQuick === "low-stock" ||
+        requestedQuick === "out-of-stock" ||
+        requestedQuick === "no-image" ||
+        requestedQuick === "unassigned"
+      ) {
+        setQuickFilter(requestedQuick);
+      }
+
       const requestedSort = params.get("sort");
       if (
         requestedSort === "newest" ||

@@ -791,4 +791,33 @@ the warm gradient through the glass) · zero console errors.
 
 ---
 
+## Sprint E2 — Glass 2.0 dashboard upgrades (reference-matching pass)  *(Complete)*
+
+**Scope:** Push the Overview closer to Sayed's glassmorphism reference with real-data features
+(no fake trend percentages — deliberate honesty call: SydIN doesn't track history yet, so no
+"+8.1% vs last month" until it does).
+
+**Delivered:**
+- **Stronger orb**: bigger, warmer, more visible gradient layers (yellow core 0.55α, orange
+  bloom, teal corner) — was nearly invisible at wide viewports.
+- **KPI cards v2** (`app/dashboard/page.tsx`): per-card color identity (teal/indigo/violet/
+  emerald icon chips), **count-up numbers** (`CountUpNumber`, rAF ease-out cubic, reduced-motion
+  aware), and a **real stock-distribution mini-bar** (green in / amber low / red out) under
+  Total Items.
+- **Stock health gauge panel** (`StockHealthGauge`): SVG semicircle, arc = % items in stock
+  (animated stroke-dasharray; green ≥70 / amber ≥40 / red), center count-up %, legend rows with
+  live counts linking to filtered inventory views. Verified live: 57% amber with 4/3/0.
+- **Inventory URL now accepts `?quick=`** (low-stock/out-of-stock/no-image/unassigned) — the
+  quick filters existed but had no deep link; gauge legend uses `?quick=out-of-stock`.
+- **Fixed a latent responsive bug** (pre-existing, exposed at container ≤900px): the overview
+  header's and inventory hero's row flex-basis (20rem/22rem) became *height* in column mode,
+  inflating the header to ~720px with giant stretched action buttons. Fixed via
+  `@container (max-width: 900px) { flex: 0 0 auto }` for those children.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview at
+the failing container width: header normal, colored KPIs + distribution bar, gauge at 57% with
+correct legend counts.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
