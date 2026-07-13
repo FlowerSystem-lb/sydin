@@ -17068,6 +17068,162 @@ body,
   animation-delay: 300ms;
 }
 
+/* --- Glass overlays: backdrop blur behind every dialog/sheet --- */
+.ui-overlay {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* --- Soft scale/fade entrance for dialogs, sheets, menus, dropdowns, tooltips --- */
+@keyframes glass-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes glass-sheet-in-right {
+  from {
+    transform: translateX(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glass-sheet-in-left {
+  from {
+    transform: translateX(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glass-sheet-in-bottom {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.ui-dialog {
+  animation: glass-pop-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-sheet-right {
+  animation: glass-sheet-in-right 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-sheet-left {
+  animation: glass-sheet-in-left 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-sheet-bottom {
+  animation: glass-sheet-in-bottom 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-menu-surface,
+.inventory-floating-menu,
+[role="menu"].fixed,
+.global-search-panel {
+  animation: glass-pop-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Tooltip: frosted glass + fade/scale (was solid + fade-only) --- */
+.ui-tooltip-content {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(15, 23, 42, 0.86);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  backdrop-filter: blur(10px) saturate(1.3);
+  transform: translate(-50%, 4px) scale(0.96);
+  transition:
+    opacity var(--motion-control, 160ms) ease,
+    transform var(--motion-control, 160ms) ease;
+}
+
+.ui-tooltip:hover .ui-tooltip-content,
+.ui-tooltip:focus-within .ui-tooltip-content {
+  transform: translate(-50%, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog,
+  .ui-sheet-right,
+  .ui-sheet-left,
+  .ui-sheet-bottom,
+  .ui-menu-surface,
+  .inventory-floating-menu,
+  [role="menu"].fixed,
+  .global-search-panel {
+    animation: none;
+  }
+}
+
+/* --- Auth pages: warm orb glow + frosted glass surfaces (Glass 2.0 brief) --- */
+.login-auth-panel {
+  background:
+    radial-gradient(closest-side, rgba(255, 193, 77, 0.28), transparent 70%),
+    radial-gradient(closest-side, rgba(18, 184, 214, 0.14), transparent 68%),
+    radial-gradient(circle at 72% 34%, rgba(90, 106, 255, 0.06), transparent 18rem),
+    #ffffff !important;
+  background-position:
+    -8rem -10rem,
+    118% 112%,
+    72% 34%,
+    0 0;
+  background-repeat: no-repeat;
+  background-size:
+    38rem 38rem,
+    34rem 34rem,
+    auto,
+    auto;
+}
+
+.login-provider-button,
+.login-input-wrap input {
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.66) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
+}
+
+.login-provider-icon {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.login-auth-inner {
+  animation: glass-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-auth-inner {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .login-provider-button,
+  .login-input-wrap input {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 /* --- Responsive fix: when the overview/inventory hero stacks into a column
    (container ≤900px), the row-layout flex-basis (20rem/22rem) must not become
    HEIGHT — it inflated the header to ~720px with stretched giant buttons. --- */

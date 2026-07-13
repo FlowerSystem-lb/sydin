@@ -820,4 +820,35 @@ correct legend counts.
 
 ---
 
+## Sprint E3/E4 — Glass 2.0: modals, dropdowns, tooltips, auth pages  *(Complete)*
+
+**Scope:** Continue the glassmorphism brief past the dashboard — overlays and the login page.
+
+**E3 — Overlays (`app/globals.css`):**
+- `.ui-overlay` backdrop now blurs (6px) behind every dialog/sheet — was a flat scrim.
+- **Entrance motion** added for dialogs (`glass-pop-in` scale+fade), sheets (directional slide
+  per side: right/left/bottom), and menus/dropdowns/search panel (`glass-pop-in`, faster/160ms).
+  Found `.ui-menu-surface` / `.inventory-floating-menu` / `.ui-select-menu` were **already**
+  glass (blur 18px, prior sprint) — just missing motion, now added.
+- **Tooltip** upgraded from solid `--bg-surface-strong` to frosted glass (blur 10px) with a
+  scale+fade reveal on hover/focus, matching the existing hover trigger.
+- Full `prefers-reduced-motion` fallback (animations off) on all of the above.
+
+**E4 — Auth pages (`AuthPageShell` via `.login-*` classes):**
+- Kept the existing split-panel layout + `SydINLoginVisual` illustration (safer than a full
+  rebuild, no logic touched) but added the **warm orb + teal glow** behind the form panel and
+  **frosted glass** on the Google/Microsoft buttons and email/password inputs — same visual
+  family as the dashboard. Subtle fade-up on the whole auth column.
+- `prefers-reduced-transparency` fallback (solid white inputs/buttons).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+login page shows glowing frosted buttons/inputs over the illustration split; inventory item
+action menu renders as a frosted glass dropdown with legible text and red Delete; zero console
+errors.
+
+**Remaining from the Glass 2.0 brief:** route crossfade transitions (needs JS/layout-level work),
+empty-state illustrations, loading skeleton shimmer tuning.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
