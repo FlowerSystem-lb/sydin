@@ -158,7 +158,7 @@ export default function PublicItemPage() {
         <header className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_20px_60px_rgba(124,58,237,0.35)]">
+              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] text-lg font-black shadow-[0_20px_60px_rgba(37,99,235,0.35)]">
                 {businessLogoUrl ? (
                   <Image
                     src={businessLogoUrl}
@@ -213,7 +213,7 @@ export default function PublicItemPage() {
 
             <Link
               href="/"
-              className="mt-6 inline-flex rounded-2xl bg-white px-5 py-3 font-bold text-black transition hover:bg-slate-200"
+              className="mt-6 inline-flex rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.35)] transition hover:brightness-110"
             >
               Go to SydIN
             </Link>
@@ -252,7 +252,7 @@ export default function PublicItemPage() {
 
               <div className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#7d5cff]">
                     Product
                   </p>
 
@@ -287,7 +287,7 @@ export default function PublicItemPage() {
                       Quantity
                     </p>
 
-                    <p className="mt-2 text-3xl font-black text-indigo-100">
+                    <p className="mt-2 text-3xl font-black text-white">
                       {item.quantity}
                     </p>
                   </div>
@@ -304,8 +304,8 @@ export default function PublicItemPage() {
                 </div>
 
                 {hasContact && (
-                  <div className="mt-5 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 p-4">
-                    <p className="text-sm font-semibold text-indigo-200">
+                  <div className="mt-5 rounded-2xl border border-[#7d5cff]/20 bg-[#7d5cff]/10 p-4">
+                    <p className="text-sm font-semibold text-[#7d5cff]">
                       Business contact
                     </p>
 
@@ -345,7 +345,7 @@ export default function PublicItemPage() {
             </section>
 
             <section className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-indigo-300">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#7d5cff]">
                 Item QR Code
               </p>
 

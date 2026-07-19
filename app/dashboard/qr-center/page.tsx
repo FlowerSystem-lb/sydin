@@ -32,7 +32,6 @@ import {
   type QrLabelSettings,
   type QrLabelSize,
 } from "@/app/lib/qrLabelPdf";
-import { SCANNER_REQUEST_STORAGE_KEY } from "@/app/lib/scannerNavigation";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -403,12 +402,7 @@ export default function QrCenterPage() {
   };
 
   const openExistingScanner = () => {
-    try {
-      window.sessionStorage.setItem(SCANNER_REQUEST_STORAGE_KEY, "true");
-    } catch {
-      // The inventory route can still open without storage access.
-    }
-    router.push("/dashboard/inventory");
+    router.push("/dashboard/scanner?mode=lookup");
   };
 
   const renderLabel = (item: QrInventoryItem, print = false) => (

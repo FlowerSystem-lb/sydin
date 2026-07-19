@@ -240,7 +240,7 @@ export default function StockMovementsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search item or note"
-              className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-indigo-300/60 focus:ring-4 focus:ring-indigo-400/10"
+              className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
             />
           </label>
           <Select

@@ -93,7 +93,7 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 const inputClassName =
-  "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.1)] disabled:opacity-60";
+  "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 // Centralized, translation-ready copy for the states polished in this workspace.
 const CATEGORY_COPY = {
@@ -207,7 +207,7 @@ function CategoryForm({
         <button
           type="submit"
           disabled={saving || !values.name.trim()}
-          className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-[0_12px_30px_rgba(79,70,229,0.2)] disabled:opacity-50"
+          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] disabled:opacity-50"
         >
           {saving ? "Saving..." : editing ? "Save Changes" : "Add Category"}
         </button>
@@ -1598,7 +1598,7 @@ export default function CategoriesPage() {
                 type="button"
                 onClick={() => void assignExistingItems()}
                 disabled={assigning}
-                className="rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+                className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
               >
                 {assigning ? "Moving Items..." : "Confirm Move"}
               </button>
@@ -1718,7 +1718,7 @@ export default function CategoriesPage() {
                 type="button"
                 onClick={() => setAssignConfirming(true)}
                 disabled={assignSelectedIds.size === 0}
-                className="rounded-xl bg-gradient-to-r from-cyan-400 to-indigo-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+                className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
               >
                 Review Move ({assignSelectedIds.size})
               </button>

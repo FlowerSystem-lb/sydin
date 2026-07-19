@@ -52,6 +52,14 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "primary",
   },
   {
+    label: "Scanner",
+    shortLabel: "Scan",
+    href: "/dashboard/scanner",
+    icon: "scan",
+    section: "workspace",
+    mobilePlacement: "primary",
+  },
+  {
     label: "Purchase Orders",
     shortLabel: "Orders",
     href: "/dashboard/purchase-orders",

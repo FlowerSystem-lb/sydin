@@ -172,7 +172,7 @@ function StockMovementDialogContent({
                 disabled={saving}
                 className={`rounded-xl border px-3 py-3 text-left text-sm font-bold transition ${
                   movementType === type
-                    ? "border-indigo-300/60 bg-indigo-500/15 text-theme-accent ring-4 ring-indigo-400/10"
+                    ? "border-[#2563eb]/60 bg-[#2563eb]/15 text-theme-accent ring-4 ring-[#2563eb]/10"
                     : "border-theme bg-theme-surface text-theme-secondary hover:bg-theme-hover"
                 }`}
               >
@@ -202,7 +202,7 @@ function StockMovementDialogContent({
                 setError("");
               }}
               disabled={saving}
-              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-indigo-300/60 focus:ring-4 focus:ring-indigo-400/10"
+              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
               required
             />
           </div>
@@ -220,7 +220,7 @@ function StockMovementDialogContent({
               onChange={(event) => setNotes(event.target.value)}
               disabled={saving}
               placeholder="Optional context for this movement"
-              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-indigo-300/60 focus:ring-4 focus:ring-indigo-400/10"
+              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
             />
           </div>
         </div>
@@ -255,7 +255,7 @@ function StockMovementDialogContent({
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 disabled:cursor-not-allowed disabled:opacity-50"
+            className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] disabled:cursor-not-allowed disabled:opacity-50"
           >
             {saving ? "Recording..." : "Record Movement"}
           </button>

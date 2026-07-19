@@ -878,4 +878,151 @@ E3 overlays → E4 auth → E5 transitions).
 
 ---
 
+## Sprint F — Glass 2.0 color-consistency pass (secondary pages)  *(Complete)*
+
+**Scope:** Founder asked for a full app audit/launch-readiness pass. An Explore-agent audit across
+every page not individually named in a named sprint (Depots, Suppliers, Search, Settings,
+Inventory Import, Reports, Stock Counts, Pick Lists x2, Help, the public `item/[id]` QR page,
+admin/marketing pages, and the 3 admin API routes) found **zero crash risk** — data fetching is
+consistently hardened (guarded `JSON.parse`, typed `useState<T[]>([])`, try/catch everywhere) —
+but a real, mechanical **visual-consistency gap**: several pages still used pre-Glass-2.0 off-brand
+`indigo`/`violet`/`cyan`/`sky` focus rings, buttons, and badges instead of the brand gradient
+(`#10c4dc → #2563eb 58% → #7d5cff`) and brand-blue (`#2563eb`) focus token established by
+Sprints 5B/6, and two pages (`pick-lists` x2, `help`) plus the public item page still carried
+light-pastel text colors (`text-slate-200`, `text-violet-300/100`, `text-emerald-300`) left over
+from the pre-redesign dark theme — a real contrast bug on the now-light workspace.
+
+**Fixed (presentation-only, no logic/schema/auth touched):**
+- **Brand-token normalization**: focus rings, active-toggle borders, badges, and primary-gradient
+  buttons swapped to the standard tokens across `app/dashboard/depots/page.tsx`,
+  `app/dashboard/suppliers/page.tsx`, `app/dashboard/search/page.tsx`,
+  `app/dashboard/settings/page.tsx`, `app/dashboard/inventory/import/page.tsx`,
+  `app/dashboard/reports/page.tsx`, `app/dashboard/stock-counts/page.tsx`,
+  `app/dashboard/stock-movements/page.tsx`, `app/dashboard/pick-lists/page.tsx`,
+  `app/dashboard/pick-lists/[id]/page.tsx`, `app/dashboard/help/page.tsx`,
+  `app/dashboard/inventory/page.tsx`, `app/dashboard/categories/page.tsx`,
+  `app/dashboard/purchase-orders/page.tsx`, `components/inventory/StockMovementDialog.tsx`
+  (a shared component used across several pages), `app/dashboard/layout.tsx` (session-loading
+  gate), and `app/request-plan/page.tsx`.
+- **Contrast bug fix**: `text-slate-200` Pick List "Draft" badge → `text-theme-muted`;
+  `text-violet-300/100` and `text-emerald-300` on the Help page → `text-theme-*`/brand tokens —
+  these were unreadable-in-spirit light-pastel colors inherited from the pre-redesign dark theme,
+  now correctly legible on the light glass surface.
+- **Public QR item page** (`app/item/[id]/page.tsx`, deliberately its own dark theme — left as
+  dark by design): avatar gradient and "Go to SydIN" CTA moved from a non-brand
+  indigo/violet/fuchsia gradient and flat white/black button to the brand gradient; section
+  eyebrows moved to the brand's `#7d5cff` violet stop instead of stock `indigo-300`.
+- **Settings**: hand-rolled dark-shimmer loading skeleton replaced with the shared
+  `LoadingSkeletonGroup` primitive.
+- **Explicitly left alone**: categorical multi-hue "accent" systems on already-approved surfaces
+  (`inventory/[id]` `DetailCard` accent prop, `EditItemForm`, `add-item`, `InventoryItemCard`,
+  `InventoryValueOverview`, the Reports/Import "4th stat tone", `.glass-button`/`.glass-panel`
+  utility classes) — these are deliberate, signed-off multi-color designs, not brand-consistency
+  bugs, and restructuring `pick-lists`/`help` off their existing `.glass-*` utility-class pattern
+  onto `Workspace.tsx` primitives was intentionally out of scope (real behavior-preservation risk
+  for cosmetic-only gain).
+- Verified (read-only): Stock Counts' mobile card fallback carries full field parity with its
+  desktop table (item, expected/counted/difference, note) — no gap found.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (32/32 routes) ·
+live preview across Depots, Suppliers, Settings (Branding toggle + logo dropzone), Pick Lists
+(list + progress bar), Help (progress bar, troubleshooting, contact cards), Reports, and a mobile
+(375px) pass on Suppliers — all render with the unified brand gradient/blue, legible text, correct
+touch targets, zero console errors.
+
+**Untouchables:** No authentication, Supabase integration, database schema, routing, or business
+logic was changed on any file in this sprint.
+
+## Sprint 9 (Stages 0–1) — Scanner Workspace foundation  *(Stages 0–1 complete; Stages 2–3 pending SQL)*
+
+**Scope:** Roadmap Sprint 9. Founder chose the **full 8-mode** Scanner Workspace
+(Lookup · Receive · Issue · Transfer · Inventory Count · Assign · Repair · Return) including a new
+per-unit asset model. Delivered in stages because the remaining modes need migrations the founder
+runs manually in Supabase. **Stages 0–1 are shipped and verified; Stages 2–3 are not started.**
+
+### Stage 0 — shared scanner extraction (no SQL, zero intended behavior change)
+
+The camera scanner was embedded in `app/dashboard/inventory/page.tsx` (~230 lines of refs, decode
+effect, and modal JSX). Extracted so Inventory and the new workspace share **one** implementation:
+
+- **`app/lib/scannerErrors.ts`** — `getScannerErrorMessage` (moved verbatim) + the unsupported /
+  preview-not-ready message constants.
+- **`components/scanner/BarcodeScannerView.tsx`** — owns the `@zxing/browser` lifecycle
+  (`decodeFromConstraints`, `facingMode: environment`, MediaStream teardown). Props
+  `{active, onDecode, onStatusChange?, continuous?, readyStatus?, className?, videoClassName?}`.
+  `continuous` is new for the workspace; Inventory passes the default `false` to keep
+  stop-on-first-decode.
+- **`components/scanner/ScannerModal.tsx`** — the Inventory quick-scan chrome. "Try Again" now
+  remounts the view via a `key` nonce instead of the previous `setIsScannerOpen(false)` +
+  `setTimeout(…, 0)` reopen dance (verified: the `<video>` is a genuinely new node after retry).
+- **`app/lib/scannerResolve.ts`** — `extractScannedPublicId` + `resolveScannedCode()` returning a
+  discriminated union (`item` / `ambiguous` / `none`).
+
+`app/dashboard/inventory/page.tsx` shrank by **227 lines** and now renders `<ScannerModal>`.
+
+**Three real bugs fixed:**
+1. **Barcode scanning never worked.** Inventory rows carry a `barcode` column, but the resolver
+   only matched `public_id` then `sku` — scanning a product's own barcode always fell through to a
+   plain text search. `barcode` is now matched (priority: public id → exact SKU → barcode →
+   case-insensitive SKU).
+2. **Camera restarted mid-scan.** The old decode effect depended on `handleScannedText`, which is
+   `useCallback`'d on `[closeScanner, items, router]` — so any background item reload tore down and
+   restarted the camera. Callbacks now live in refs; the effect depends only on `active` /
+   `continuous`. *(Intentional improvement, not a pure no-op refactor.)*
+3. **Camera permission ambush.** The first Scanner Workspace build auto-started the camera on
+   mount, firing a permission prompt before the user did anything (it wedged the preview pane —
+   the same thing it would do to a first-time user). Now it queries the Permissions API and
+   auto-arms **only** when camera permission is already granted; otherwise it shows a calm
+   "Ready to scan" state with an explicit **Start scanning** button. Safari doesn't accept the
+   `"camera"` permission name and throws — that path falls back to the manual button.
+
+### Stage 1 — Scanner Workspace (no SQL) → Lookup · Receive · Issue · Count
+
+- **`app/dashboard/scanner/page.tsx`** (new route, 33rd). Sticky scrollable mode chips (44px
+  targets), camera panel, mode action panel, and a session "tape" of completed scans. Reads
+  `?mode=`. Scan → resolve → act → auto-rearm after 1.2s.
+  - **Lookup** → navigates to the item. **Receive/Issue** → quantity stepper →
+    `recordStockMovement` (`stock_in`/`stock_out`), issue blocked above available stock.
+    **Count** → tallies into the active Stock Counts draft.
+  - The four staged modes render as disabled chips that explain which migration unlocks them —
+    deliberately **not** hidden and **not** faked.
+  - States covered: loading · load-error · plan-locked (`LockedFeaturePanel`) · camera-off ·
+    camera-starting · camera-error · paused · no-match · ambiguous-picker · success.
+- **`app/lib/stockCountDraft.ts`** — read/write access to the Stock Counts `sessionStorage` draft
+  (`sydin:stock-counts-draft`). Deliberately **defensive**: validates the payload shape and
+  refuses to write rather than risk corrupting an in-progress count if that page's format changes.
+  Never regresses a `review` draft back to `count`; promotes `setup` → `count` on first scan.
+  *(Note: `stock-counts/page.tsx` keeps its own draft logic — not refactored onto this helper, to
+  avoid touching working behavior. The duplication is known and intentional for now.)*
+- **Navigation**: added `Scanner` (`section: "workspace"`, `mobilePlacement: "primary"`,
+  icon `scan`). `DashboardShell.requestScanner` and QR Center's "Start Scanner" now push
+  `/dashboard/scanner?mode=lookup` instead of routing through Inventory's sessionStorage handoff;
+  Inventory keeps its own quick-scan modal and its `SCANNER_REQUEST_EVENT` listener, so pressing
+  Scan while already on Inventory still opens the modal in place.
+
+**Settled decisions (also in `SYDIN_DECISION_LOG.md`):** Transfer = whole-item relocation with an
+audit row, **not** partial-quantity splitting (per-depot stock would require rewriting every
+quantity read/write in the app). Asset tracking = per-unit `inventory_assets` + append-only
+`asset_events`, quantity **derived** by trigger, opt-in via `inventory.is_asset_tracked`. No
+people/employees table yet — free-text assignee with autocomplete.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (33/33 routes,
+incl. the new `/dashboard/scanner`). Live preview: Inventory scanner opens / maps the permission
+error / retries with a real remount / closes and unmounts cleanly; the QR Center → scanner handoff
+works end-to-end; mode switching works and "Soon" modes surface their reason without switching.
+**31 unit tests written and passing** against the two pure helpers (`scannerResolve` 13,
+`stockCountDraft` 18), covering the new barcode match and the defensive paths where a corrupt or
+finalized count draft must be refused rather than clobbered. *(Tests were run via `tsx` and not
+committed — the repo has no test runner configured. Adding one is a recommended follow-up.)*
+
+**Known gap — on-device testing still required.** The preview browser has no camera, so every
+camera path exercised was the **denied** path. Real QR decode, 1D barcode decode, permission
+grant, and "camera light turns off on close" must still be checked on a phone.
+
+**Next:** Stage 2 (`sql/phase-10a-depot-transfers.sql` → Transfer) and Stage 3
+(`sql/phase-10b-asset-tracking.sql` → Assign/Repair/Return), each requiring the founder to run the
+migration in the Supabase SQL editor. Full plan retained at the approved Sprint 9 plan file.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

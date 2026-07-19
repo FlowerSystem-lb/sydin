@@ -20,6 +20,7 @@ import {
   DashboardCard,
   DashboardPageHeader,
   DashboardPageShell,
+  LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -126,7 +127,7 @@ const SECTION_IDS = new Set<SettingsSectionId>(
 );
 
 const inputClassName =
-  "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 const valueTextClassName =
   "min-w-0 truncate text-sm font-black text-theme-primary";
 const mutedTextClassName = "min-w-0 text-xs leading-5 text-theme-muted";
@@ -745,8 +746,8 @@ export default function SettingsPage() {
                 }
                 className="peer sr-only"
               />
-              <span className="block h-7 w-12 rounded-full border border-theme bg-[var(--sydin-input-bg)] transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
-              <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-cyan-100" />
+              <span className="block h-7 w-12 rounded-full border border-theme bg-[var(--sydin-input-bg)] transition peer-checked:border-[#2563eb]/40 peer-checked:bg-[#2563eb]/25 peer-focus-visible:ring-2 peer-focus-visible:ring-[#2563eb]/60" />
+              <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-white" />
             </span>
           </label>
         ) : (
@@ -903,7 +904,7 @@ export default function SettingsPage() {
                 <p className="mb-3 text-sm font-semibold text-theme-muted">
                   Current logo
                 </p>
-                <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border border-indigo-300/20 bg-indigo-500/10">
+                <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border border-[#2563eb]/20 bg-[#2563eb]/10">
                   {settings.business_logo_url ? (
                     <div className="relative h-full w-full">
                       <Image
@@ -922,7 +923,7 @@ export default function SettingsPage() {
 
               <div>
                 {canUseCustomLogo ? (
-                  <div className="rounded-xl border border-dashed border-indigo-300/25 bg-theme-surface p-4 transition hover:border-indigo-300/45 hover:bg-theme-hover">
+                  <div className="rounded-xl border border-dashed border-[#2563eb]/25 bg-theme-surface p-4 transition hover:border-[#2563eb]/45 hover:bg-theme-hover">
                     <label
                       htmlFor="business-logo-upload"
                       className="grid gap-2 text-sm font-bold text-theme-primary"
@@ -935,7 +936,7 @@ export default function SettingsPage() {
                         onChange={(event) =>
                           setLogoFile(event.target.files?.[0] || null)
                         }
-                        className="w-full cursor-pointer text-sm text-theme-secondary file:mr-4 file:rounded-xl file:border-0 file:bg-indigo-500/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-theme-accent transition-colors hover:file:bg-indigo-500/30"
+                        className="w-full cursor-pointer text-sm text-theme-secondary file:mr-4 file:rounded-xl file:border-0 file:bg-[#2563eb]/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-theme-accent transition-colors hover:file:bg-[#2563eb]/30"
                       />
                     </label>
                     <p className="mt-3 text-xs leading-5 text-theme-subtle">
@@ -1969,18 +1970,7 @@ export default function SettingsPage() {
 
   const renderActivePanel = () => {
     if (loading) {
-      return (
-        <section className="grid gap-3" aria-busy="true">
-          {[1, 2, 3].map((item) => (
-            <div
-              key={item}
-              className="h-28 overflow-hidden rounded-xl border border-theme bg-theme-surface"
-            >
-              <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
-            </div>
-          ))}
-        </section>
-      );
+      return <LoadingSkeletonGroup count={3} itemClassName="min-h-28" />;
     }
 
     switch (activeSection) {

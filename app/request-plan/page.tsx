@@ -292,7 +292,7 @@ function RequestPlanContent() {
                         type="text"
                         value={fullName}
                         onChange={(event) => setFullName(event.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-[#2563eb]/50 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.2)]"
                         required
                       />
                     </div>
@@ -306,7 +306,7 @@ function RequestPlanContent() {
                         type="text"
                         value={businessName}
                         onChange={(event) => setBusinessName(event.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-[#2563eb]/50 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.2)]"
                       />
                     </div>
 
@@ -319,7 +319,7 @@ function RequestPlanContent() {
                         type="email"
                         value={email}
                         onChange={(event) => setEmail(event.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-[#2563eb]/50 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.2)]"
                         required
                       />
                     </div>
@@ -333,7 +333,7 @@ function RequestPlanContent() {
                         type="tel"
                         value={phone}
                         onChange={(event) => setPhone(event.target.value)}
-                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-[#2563eb]/50 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.2)]"
                       />
                     </div>
                   </div>
@@ -393,7 +393,7 @@ function RequestPlanContent() {
                     <textarea
                       value={message}
                       onChange={(event) => setMessage(event.target.value)}
-                      className="min-h-[150px] w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-indigo-300/60 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                      className="min-h-[150px] w-full resize-y rounded-2xl border border-white/10 bg-black/35 px-5 py-4 text-base text-white outline-none transition placeholder:text-slate-600 focus:border-[#2563eb]/50 focus:bg-black/45 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.2)]"
                       placeholder="Tell us how many items you manage or anything we should know before activation."
                     />
                   </div>

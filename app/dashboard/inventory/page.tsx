@@ -12,11 +12,9 @@ import {
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import {
-  BrowserMultiFormatReader,
-  type IScannerControls,
-} from "@zxing/browser";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import ScannerModal from "@/components/scanner/ScannerModal";
+import { resolveScannedCode } from "@/app/lib/scannerResolve";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
@@ -456,50 +454,6 @@ function createImagePath(userId: string, file: File) {
   return `${userId}/${Date.now()}-${random}.${getImageExtension(file)}`;
 }
 
-function extractScannedPublicId(scannedText: string) {
-  const trimmedText = scannedText.trim();
-  const itemPathMatch = trimmedText.match(/(?:^|\/)item\/([^/?#\s]+)/i);
-
-  if (itemPathMatch?.[1]) {
-    return decodeURIComponent(itemPathMatch[1]);
-  }
-
-  const uuidPattern =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-
-  return uuidPattern.test(trimmedText) ? trimmedText : "";
-}
-
-function getScannerErrorMessage(error: unknown) {
-  const errorName =
-    error instanceof DOMException
-      ? error.name
-      : error &&
-          typeof error === "object" &&
-          "name" in error &&
-          typeof error.name === "string"
-        ? error.name
-        : "";
-
-  if (errorName === "NotAllowedError" || errorName === "SecurityError") {
-    return "Camera permission was denied. Allow camera access and try again.";
-  }
-
-  if (errorName === "NotFoundError" || errorName === "DevicesNotFoundError") {
-    return "No camera was found on this device.";
-  }
-
-  if (errorName === "NotReadableError" || errorName === "TrackStartError") {
-    return "The camera is already in use by another app or browser tab.";
-  }
-
-  if (errorName === "OverconstrainedError") {
-    return "We could not start the preferred camera. Try another browser or device.";
-  }
-
-  return "Scanner failed. Close it and try again.";
-}
-
 async function getBusinessCurrency(userId: string) {
   const { data, error } = await supabase
     .from("business_settings")
@@ -514,9 +468,6 @@ async function getBusinessCurrency(userId: string) {
 
 export default function InventoryPage() {
   const router = useRouter();
-  const scannerVideoRef = useRef<HTMLVideoElement | null>(null);
-  const scannerControlsRef = useRef<IScannerControls | null>(null);
-  const scannerMatchedRef = useRef(false);
 
   const [items, setItems] = useState<Item[]>([]);
   const [search, setSearch] = useState("");
@@ -577,9 +528,6 @@ export default function InventoryPage() {
   const [pdfExportStatus, setPdfExportStatus] = useState("");
   const [isExportingExcel, setIsExportingExcel] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
-  const [isScannerStarting, setIsScannerStarting] = useState(false);
-  const [scannerError, setScannerError] = useState("");
-  const [scannerStatus, setScannerStatus] = useState("");
   const [lockedFeature, setLockedFeature] = useState<LockedFeature | null>(
     null
   );
@@ -1004,29 +952,9 @@ export default function InventoryPage() {
     });
   };
 
-  const stopScanner = useCallback(() => {
-    scannerControlsRef.current?.stop();
-    scannerControlsRef.current = null;
-
-    const stream = scannerVideoRef.current?.srcObject;
-
-    if (stream instanceof MediaStream) {
-      stream.getTracks().forEach((track) => track.stop());
-    }
-
-    if (scannerVideoRef.current) {
-      scannerVideoRef.current.srcObject = null;
-    }
-  }, []);
-
   const closeScanner = useCallback(() => {
-    stopScanner();
-    scannerMatchedRef.current = false;
     setIsScannerOpen(false);
-    setIsScannerStarting(false);
-    setScannerError("");
-    setScannerStatus("");
-  }, [stopScanner]);
+  }, []);
 
   const openScanner = useCallback(() => {
     if (!canUseScanner) {
@@ -1042,9 +970,6 @@ export default function InventoryPage() {
 
     setPageError("");
     setPageNotice("");
-    setScannerError("");
-    setScannerStatus("Starting camera...");
-    scannerMatchedRef.current = false;
     setIsScannerOpen(true);
   }, [canUseScanner]);
 
@@ -1097,139 +1022,27 @@ export default function InventoryPage() {
       return;
     }
 
-    const scannedPublicId = extractScannedPublicId(scannedText);
-    const publicItemMatch = scannedPublicId
-      ? items.find((item) => item.public_id === scannedPublicId)
-      : null;
+    const resolution = resolveScannedCode(scannedText, items);
 
-    if (publicItemMatch) {
+    if (resolution.kind === "item") {
       closeScanner();
-      router.push(`/dashboard/inventory/${publicItemMatch.id}`);
+      router.push(`/dashboard/inventory/${resolution.item.id}`);
       return;
     }
 
-    const exactSkuMatches = items.filter(
-      (item) => (item.sku || "").trim() === scannedText
-    );
-
-    if (exactSkuMatches.length === 1) {
-      closeScanner();
-      router.push(`/dashboard/inventory/${exactSkuMatches[0].id}`);
-      return;
-    }
-
-    if (exactSkuMatches.length > 1) {
-      setSearch(scannedText);
+    if (resolution.kind === "ambiguous") {
+      setSearch(resolution.query);
       setPageNotice(
-        `Found ${exactSkuMatches.length} items with that SKU. Showing matches.`
+        `Found ${resolution.items.length} items with that code. Showing matches.`
       );
       closeScanner();
       return;
     }
 
-    const normalizedScannedText = scannedText.toLowerCase();
-    const caseInsensitiveSkuMatches = items.filter(
-      (item) => (item.sku || "").trim().toLowerCase() === normalizedScannedText
-    );
-
-    if (caseInsensitiveSkuMatches.length === 1) {
-      closeScanner();
-      router.push(`/dashboard/inventory/${caseInsensitiveSkuMatches[0].id}`);
-      return;
-    }
-
-    if (caseInsensitiveSkuMatches.length > 1) {
-      setSearch(scannedText);
-      setPageNotice(
-        `Found ${caseInsensitiveSkuMatches.length} items with that SKU. Showing matches.`
-      );
-      closeScanner();
-      return;
-    }
-
-    setSearch(scannedPublicId || scannedText);
+    setSearch(resolution.query);
     setPageNotice("No exact match found. Showing search results for the scanned code.");
     closeScanner();
   }, [closeScanner, items, router]);
-
-  useEffect(() => {
-    return () => {
-      stopScanner();
-    };
-  }, [stopScanner]);
-
-  useEffect(() => {
-    if (!isScannerOpen) return;
-
-    let isActive = true;
-
-    const startScanner = async () => {
-      if (!navigator.mediaDevices?.getUserMedia) {
-        setScannerError("This browser does not support camera scanning.");
-        setScannerStatus("");
-        setIsScannerStarting(false);
-        return;
-      }
-
-      if (!scannerVideoRef.current) {
-        setScannerError("Scanner preview is not ready. Close it and try again.");
-        setScannerStatus("");
-        setIsScannerStarting(false);
-        return;
-      }
-
-      try {
-        setIsScannerStarting(true);
-        setScannerError("");
-        setScannerStatus("Starting camera...");
-
-        const reader = new BrowserMultiFormatReader();
-        const controls = await reader.decodeFromConstraints(
-          {
-            audio: false,
-            video: {
-              facingMode: {
-                ideal: "environment",
-              },
-            },
-          },
-          scannerVideoRef.current,
-          (result, _error, controls) => {
-            if (!isActive || scannerMatchedRef.current || !result) return;
-
-            scannerMatchedRef.current = true;
-            controls.stop();
-            scannerControlsRef.current = null;
-            handleScannedText(result.getText());
-          }
-        );
-
-        if (!isActive) {
-          controls.stop();
-          return;
-        }
-
-        scannerControlsRef.current = controls;
-        setScannerStatus("Scan a SydIN QR code or product barcode.");
-      } catch (error) {
-        if (!isActive) return;
-
-        setScannerError(getScannerErrorMessage(error));
-        setScannerStatus("");
-      } finally {
-        if (isActive) {
-          setIsScannerStarting(false);
-        }
-      }
-    };
-
-    void startScanner();
-
-    return () => {
-      isActive = false;
-      stopScanner();
-    };
-  }, [handleScannedText, isScannerOpen, stopScanner]);
 
   const handleAddItem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -3910,104 +3723,11 @@ export default function InventoryPage() {
         </div>
       </main>
 
-      {isScannerOpen && (
-        <div className="inventory-modal-overlay fixed inset-0 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-8 w-full max-w-2xl overflow-hidden rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(0,0,0,0.6)] backdrop-blur-2xl">
-            <div className="flex items-start justify-between gap-4 border-b border-theme p-5 sm:p-6">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Inventory scanner
-                </p>
-
-                <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary">
-                  Scan Item
-                </h2>
-
-                <p className="mt-2 max-w-md text-sm leading-6 text-theme-muted">
-                  Scan a SydIN QR code or product barcode.
-                </p>
-              </div>
-
-              <button
-                type="button"
-                onClick={closeScanner}
-                className="shrink-0 rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
-                aria-label="Close scanner"
-              >
-                <svg
-                  className="h-7 w-7"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.6}
-                    d="M6 18 18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <div className="p-5 sm:p-6">
-              <div className="overflow-hidden rounded-[28px] border border-indigo-300/20 bg-black">
-                <video
-                  ref={scannerVideoRef}
-                  muted
-                  playsInline
-                  className="aspect-[3/4] w-full bg-black object-cover sm:aspect-video"
-                />
-              </div>
-
-              <div className="mt-4 rounded-2xl border border-theme bg-theme-surface px-4 py-3">
-                {scannerError ? (
-                  <p className="text-sm font-semibold text-theme-danger">
-                    {scannerError}
-                  </p>
-                ) : (
-                  <p className="text-sm font-semibold text-theme-secondary">
-                    {isScannerStarting
-                      ? "Starting camera..."
-                      : scannerStatus || "Point the camera at a code."}
-                  </p>
-                )}
-              </div>
-
-              <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={closeScanner}
-                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-base font-bold text-theme-primary transition hover:bg-theme-hover"
-                >
-                  Close
-                </button>
-
-                {scannerError && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      stopScanner();
-                      scannerMatchedRef.current = false;
-                      setScannerError("");
-                      setScannerStatus("Starting camera...");
-                      setIsScannerStarting(false);
-                      setIsScannerOpen(false);
-
-                      window.setTimeout(() => {
-                        setIsScannerOpen(true);
-                      }, 0);
-                    }}
-                    className="rounded-2xl bg-white px-5 py-3 text-base font-bold text-black transition hover:bg-slate-200"
-                  >
-                    Try Again
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <ScannerModal
+        open={isScannerOpen}
+        onClose={closeScanner}
+        onDecode={handleScannedText}
+      />
 
       <UpgradeDialog
         open={Boolean(lockedFeature)}
@@ -4160,7 +3880,7 @@ export default function InventoryPage() {
                     type="text"
                     value={sku}
                     onChange={(e) => setSku(e.target.value)}
-                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                    className="w-full rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] sm:text-lg"
                   />
                 </div>
                 <div>
@@ -4285,7 +4005,7 @@ export default function InventoryPage() {
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  className="min-h-[110px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)] sm:text-lg"
+                  className="min-h-[110px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] sm:text-lg"
                 />
               </div>
 
