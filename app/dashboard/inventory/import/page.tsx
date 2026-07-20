@@ -81,7 +81,7 @@ function getPhaseFieldErrorClass(
 
   return row?.errors.some((error) => phaseFields.has(error.field))
     ? "border-red-400/35 bg-red-500/10 text-theme-danger"
-    : "border-indigo-300/15 bg-indigo-500/[0.06] text-theme-secondary";
+    : "border-[#2563eb]/15 bg-[#2563eb]/[0.06] text-theme-secondary";
 }
 
 export default function InventoryImportPage() {
@@ -456,7 +456,7 @@ export default function InventoryImportPage() {
 
           {initialLoading ? (
             <section className="rounded-[20px] border border-theme bg-theme-surface p-6 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-              <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-indigo-400/20" />
+              <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-[#2563eb]/20" />
               <h2 className="mt-5 text-xl font-bold text-theme-primary">
                 Preparing import checks
               </h2>
@@ -492,7 +492,7 @@ export default function InventoryImportPage() {
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
+                  className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
                 >
                   Back to Inventory
                 </Link>
@@ -595,17 +595,17 @@ export default function InventoryImportPage() {
                 }}
                 className={`rounded-[20px] border border-dashed p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition sm:p-6 ${
                   isDragging
-                    ? "border-indigo-300/60 bg-indigo-500/15"
-                    : "border-indigo-300/25 bg-theme-surface"
+                    ? "border-[#2563eb]/60 bg-[#2563eb]/15"
+                    : "border-[#2563eb]/25 bg-theme-surface"
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isParsing || Boolean(pageError)}
-                  className="flex min-h-[260px] w-full flex-col items-center justify-center rounded-[28px] border border-theme bg-theme-inset px-5 py-10 text-center transition hover:border-indigo-300/35 hover:bg-[var(--sydin-input-bg)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex min-h-[260px] w-full flex-col items-center justify-center rounded-[28px] border border-theme bg-theme-inset px-5 py-10 text-center transition hover:border-[#2563eb]/35 hover:bg-[var(--sydin-input-bg)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-indigo-300/25 bg-indigo-500/15 text-xl font-black text-theme-accent">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[#2563eb]/25 bg-[#2563eb]/15 text-xl font-black text-theme-accent">
                     CSV
                   </span>
 
@@ -973,7 +973,7 @@ export default function InventoryImportPage() {
                 </div>
               </section>
 
-              <section className="rounded-[20px] border border-indigo-300/20 bg-indigo-500/[0.08] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+              <section className="rounded-[20px] border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -993,7 +993,7 @@ export default function InventoryImportPage() {
                         usage.subscription.plan,
                         "import-item-limit"
                       )}
-                      className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-center text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
+                      className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-center text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
                     >
                       {getUpgradeActionLabel(usage.subscription.plan)}
                     </Link>
@@ -1030,7 +1030,7 @@ export default function InventoryImportPage() {
                     validation.validRows.length === 0 ||
                     exceedsPlanLimit
                   }
-                  className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-7 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-7 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {isImporting
                     ? `Importing ${validation.validRows.length} items...`
@@ -1052,8 +1052,8 @@ export default function InventoryImportPage() {
 
       {isImporting && validation && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
-          <div className="w-full max-w-md rounded-[30px] border border-theme bg-[var(--sydin-surface-strong)] p-7 text-center shadow-[0_30px_120px_rgba(0,0,0,0.6)]">
-            <div className="mx-auto h-14 w-14 animate-pulse rounded-3xl border border-indigo-300/25 bg-indigo-500/15" />
+          <div className="w-full max-w-md rounded-[30px] border border-theme bg-[var(--sydin-surface-strong)] p-7 text-center shadow-[0_14px_42px_rgba(15,23,42,0.12)]">
+            <div className="mx-auto h-14 w-14 animate-pulse rounded-3xl border border-[#2563eb]/25 bg-[#2563eb]/15" />
             <h2 className="mt-5 text-2xl font-bold text-theme-primary">
               Importing {validation.validRows.length} items...
             </h2>

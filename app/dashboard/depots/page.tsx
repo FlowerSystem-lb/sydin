@@ -389,7 +389,7 @@ export default function DepotsPage() {
                         type="text"
                         value={name}
                         onChange={(event) => setName(event.target.value)}
-                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
                         required
                       />
                     </div>
@@ -403,7 +403,7 @@ export default function DepotsPage() {
                         type="text"
                         value={code}
                         onChange={(event) => setCode(event.target.value)}
-                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
                       />
                     </div>
 
@@ -415,11 +415,11 @@ export default function DepotsPage() {
                       <textarea
                         value={notes}
                         onChange={(event) => setNotes(event.target.value)}
-                        className="min-h-[120px] w-full resize-y rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-indigo-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(99,102,241,0.12)]"
+                        className="min-h-[120px] w-full resize-y rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
                       />
                     </div>
 
-                    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-5 py-4">
+                    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-5 py-4">
                       <span>
                         <span className="block text-sm font-bold text-theme-primary">
                           Active
@@ -434,7 +434,7 @@ export default function DepotsPage() {
                         type="checkbox"
                         checked={isActive}
                         onChange={(event) => setIsActive(event.target.checked)}
-                        className="h-6 w-6 accent-indigo-400"
+                        className="h-6 w-6 accent-[#2563eb]"
                       />
                     </label>
                   </div>
@@ -442,7 +442,7 @@ export default function DepotsPage() {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="mt-6 w-full rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="mt-6 w-full rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                   >
                     {saving ? "Saving depot..." : "Add Depot"}
                   </button>
@@ -462,7 +462,7 @@ export default function DepotsPage() {
                   </h2>
                 </div>
 
-                <span className="self-start rounded-full border border-indigo-300/25 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
+                <span className="self-start rounded-full border border-[#2563eb]/25 bg-[#2563eb]/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
                   {depots.length} {depots.length === 1 ? "depot" : "depots"}
                 </span>
               </div>
@@ -509,7 +509,7 @@ export default function DepotsPage() {
                                 onChange={(event) =>
                                   setEditName(event.target.value)
                                 }
-                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface"
+                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:bg-theme-surface"
                                 required
                               />
                             </div>
@@ -525,7 +525,7 @@ export default function DepotsPage() {
                                 onChange={(event) =>
                                   setEditCode(event.target.value)
                                 }
-                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface"
+                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:bg-theme-surface"
                               />
                             </div>
                           </div>
@@ -540,11 +540,11 @@ export default function DepotsPage() {
                               onChange={(event) =>
                                 setEditNotes(event.target.value)
                               }
-                              className="min-h-[100px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-indigo-300/60 focus:bg-theme-surface"
+                              className="min-h-[100px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:bg-theme-surface"
                             />
                           </div>
 
-                          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-indigo-300/20 bg-indigo-500/10 px-4 py-3">
+                          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-4 py-3">
                             <span className="text-sm font-bold text-theme-primary">
                               Active
                             </span>
@@ -555,7 +555,7 @@ export default function DepotsPage() {
                               onChange={(event) =>
                                 setEditIsActive(event.target.checked)
                               }
-                              className="h-6 w-6 accent-indigo-400"
+                              className="h-6 w-6 accent-[#2563eb]"
                             />
                           </label>
 
@@ -572,7 +572,7 @@ export default function DepotsPage() {
                             <button
                               type="submit"
                               disabled={saving}
-                              className="flex-1 rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:opacity-50"
+                              className="flex-1 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50"
                             >
                               {saving ? "Saving..." : "Save Changes"}
                             </button>
@@ -610,7 +610,7 @@ export default function DepotsPage() {
                             <button
                               type="button"
                               onClick={() => startEditing(depot)}
-                              className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
+                              className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
                             >
                               Edit
                             </button>

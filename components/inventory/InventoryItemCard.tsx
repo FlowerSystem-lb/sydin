@@ -234,7 +234,7 @@ export default function InventoryItemCard({
             decoding="async"
             draggable={false}
             onError={() => setFailedImageSrc(item.image)}
-            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">
@@ -333,7 +333,7 @@ export default function InventoryItemCard({
               role="menuitem"
               onClick={() => runMenuAction(onDelete)}
               disabled={deleting}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-violet-700 transition hover:bg-violet-50 focus-visible:bg-violet-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
               <UiIcon name="trash" className="h-4 w-4" />
               {deleting ? "Deleting..." : "Delete"}

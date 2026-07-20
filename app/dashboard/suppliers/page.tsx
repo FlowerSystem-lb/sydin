@@ -59,7 +59,7 @@ type SupplierFilter =
   | "no-items";
 
 const inputClassName =
-  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sky-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(56,189,248,0.12)] disabled:opacity-60";
+  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 function hasSupplierContact(supplier: Supplier) {
   return Boolean(
@@ -245,7 +245,7 @@ function SupplierForm({
         <button
           type="submit"
           disabled={saving || !values.name.trim() || emailError}
-          className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50"
+          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Supplier"}
         </button>
@@ -610,7 +610,7 @@ export default function SuppliersPage() {
                           {supplier.contact_name || "No contact name"}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-full border border-sky-300/20 bg-sky-500/10 px-3 py-1.5 text-xs font-bold text-theme-accent">
+                      <span className="shrink-0 rounded-full border border-[#2563eb]/20 bg-[#2563eb]/10 px-3 py-1.5 text-xs font-bold text-theme-accent">
                         {supplier.item_count || 0} items
                       </span>
                     </div>
@@ -627,7 +627,7 @@ export default function SuppliersPage() {
                         </span>
                       )}
                       {supplier.email && (
-                        <span className="max-w-full break-all rounded-full border border-violet-300/25 bg-violet-500/10 px-3 py-1.5 text-xs font-semibold text-theme-accent">
+                        <span className="max-w-full break-all rounded-full border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-1.5 text-xs font-semibold text-theme-accent">
                           {supplier.email}
                         </span>
                       )}
@@ -673,7 +673,7 @@ export default function SuppliersPage() {
                           aria-disabled={!supplier.email}
                           className={`rounded-xl border px-3 py-2.5 text-center text-xs font-bold transition ${
                             supplier.email
-                              ? "border-violet-300/25 bg-violet-500/10 text-theme-accent hover:bg-violet-500/20"
+                              ? "border-[#2563eb]/25 bg-[#2563eb]/10 text-theme-accent hover:bg-[#2563eb]/20"
                               : "pointer-events-none border-white/5 bg-white/[0.02] text-theme-subtle"
                           }`}
                         >
@@ -685,7 +685,7 @@ export default function SuppliersPage() {
                         <button
                           type="button"
                           onClick={() => openEditForm(supplier)}
-                          className="rounded-xl bg-gradient-to-r from-cyan-400 via-indigo-500 to-violet-600 px-4 py-3 font-bold text-white shadow-lg shadow-indigo-500/15 transition hover:brightness-105"
+                          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
                         >
                           Edit
                         </button>

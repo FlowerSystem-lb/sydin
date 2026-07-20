@@ -225,6 +225,98 @@ function ItemThumb({ item }: { item: Item }) {
   );
 }
 
+/** Animates a number from 0 to `value` on mount (skipped for reduced motion). */
+function CountUpNumber({
+  value,
+  format,
+}: {
+  value: number;
+  format: (current: number) => string;
+}) {
+  const [display, setDisplay] = useState(value);
+
+  useEffect(() => {
+    const reduceMotion = window.matchMedia(
+      "(prefers-reduced-motion: reduce)"
+    ).matches;
+    let frame = 0;
+    const start = performance.now();
+    const duration = 900;
+
+    const tick = (now: number) => {
+      if (reduceMotion) {
+        setDisplay(value);
+        return;
+      }
+      const progress = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setDisplay(value * eased);
+      if (progress < 1) frame = window.requestAnimationFrame(tick);
+    };
+
+    frame = window.requestAnimationFrame(tick);
+    return () => window.cancelAnimationFrame(frame);
+  }, [value]);
+
+  return <>{format(display)}</>;
+}
+
+/** Semicircle gauge of real stock health: % of items above their low-stock threshold. */
+function StockHealthGauge({
+  inCount,
+  lowCount,
+  outCount,
+}: {
+  inCount: number;
+  lowCount: number;
+  outCount: number;
+}) {
+  const total = inCount + lowCount + outCount;
+  const percent = total === 0 ? 0 : Math.round((inCount / total) * 100);
+  const [arc, setArc] = useState(0);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => setArc(percent));
+    return () => window.cancelAnimationFrame(frame);
+  }, [percent]);
+
+  const toneClass =
+    percent >= 70
+      ? "sydin-health-good"
+      : percent >= 40
+        ? "sydin-health-warn"
+        : "sydin-health-bad";
+
+  return (
+    <div className={`sydin-health-gauge ${toneClass}`}>
+      <svg viewBox="0 0 200 112" role="img" aria-label={`${percent}% of items in stock`}>
+        <path
+          d="M 18 104 A 82 82 0 0 1 182 104"
+          fill="none"
+          className="sydin-health-track"
+          strokeWidth="15"
+          strokeLinecap="round"
+        />
+        <path
+          d="M 18 104 A 82 82 0 0 1 182 104"
+          fill="none"
+          className="sydin-health-arc"
+          strokeWidth="15"
+          strokeLinecap="round"
+          pathLength={100}
+          strokeDasharray={`${arc} 100`}
+        />
+      </svg>
+      <div className="sydin-health-center">
+        <strong>
+          <CountUpNumber value={percent} format={(n) => `${Math.round(n)}%`} />
+        </strong>
+        <small>items in stock</small>
+      </div>
+    </div>
+  );
+}
+
 export default function DashboardPage() {
   const [items, setItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -420,36 +512,52 @@ export default function DashboardPage() {
     items,
   ]);
 
+  const stockBreakdown = {
+    out: dashboardData.outStockCount,
+    low: dashboardData.lowStockCount - dashboardData.outStockCount,
+    in: dashboardData.totalItems - dashboardData.lowStockCount,
+  };
+
   const summaryCards = [
     {
       label: "Total Items",
-      value: formatNumber(dashboardData.totalItems),
+      rawValue: dashboardData.totalItems,
+      format: (n: number) => formatNumber(Math.round(n)),
       detail: `${formatNumber(dashboardData.lowStockCount)} need attention`,
       icon: "box" as UiIconName,
       href: "/dashboard/inventory",
+      accent: "sydin-kpi-teal",
+      showBreakdown: true,
     },
     {
       label: "Depots / Locations",
-      value: formatNumber(dashboardData.totalDepots),
+      rawValue: dashboardData.totalDepots,
+      format: (n: number) => formatNumber(Math.round(n)),
       detail: "Inventory locations",
       icon: "depots" as UiIconName,
       href: "/dashboard/depots",
+      accent: "sydin-kpi-indigo",
+      showBreakdown: false,
     },
     {
       label: "Total Quantity",
-      value: formatNumber(dashboardData.totalQuantity),
+      rawValue: dashboardData.totalQuantity,
+      format: (n: number) => formatNumber(Math.round(n)),
       detail: "Units across items",
       icon: "layers" as UiIconName,
       href: "/dashboard/inventory",
+      accent: "sydin-kpi-violet",
+      showBreakdown: false,
     },
     {
       label: "Inventory Value",
-      value: dashboardData.hasValue
-        ? formatCurrency(dashboardData.totalValue, currencyCode)
-        : "--",
+      rawValue: dashboardData.hasValue ? dashboardData.totalValue : null,
+      format: (n: number) => formatCurrency(n, currencyCode),
       detail: dashboardData.hasValue ? currencyCode : "Add prices to track value",
       icon: "usage" as UiIconName,
       href: "/dashboard/inventory",
+      accent: "sydin-kpi-emerald",
+      showBreakdown: false,
     },
   ];
 
@@ -552,13 +660,40 @@ export default function DashboardPage() {
               href={card.href}
               className="sydin-overview-summary-card"
             >
-              <span className="sydin-overview-summary-icon">
+              <span className={`sydin-overview-summary-icon ${card.accent}`}>
                 <UiIcon name={card.icon} className="h-4 w-4" />
               </span>
               <span>
                 <small>{card.label}</small>
-                <strong>{loading ? "--" : card.value}</strong>
+                <strong>
+                  {loading || card.rawValue === null ? (
+                    "--"
+                  ) : (
+                    <CountUpNumber value={card.rawValue} format={card.format} />
+                  )}
+                </strong>
                 <em>{card.detail}</em>
+                {card.showBreakdown &&
+                  !loading &&
+                  dashboardData.totalItems > 0 && (
+                    <span
+                      className="sydin-overview-distribution"
+                      aria-hidden="true"
+                    >
+                      <span
+                        className="sydin-distribution-in"
+                        style={{ flexGrow: stockBreakdown.in }}
+                      />
+                      <span
+                        className="sydin-distribution-low"
+                        style={{ flexGrow: stockBreakdown.low }}
+                      />
+                      <span
+                        className="sydin-distribution-out"
+                        style={{ flexGrow: stockBreakdown.out }}
+                      />
+                    </span>
+                  )}
               </span>
             </Link>
           ))}
@@ -695,6 +830,63 @@ export default function DashboardPage() {
                     </small>
                   </Link>
                 ))}
+              </div>
+            )}
+          </section>
+
+          <section className="sydin-overview-panel sydin-overview-health">
+            <DashboardPanelHeader
+              icon="check"
+              title="Stock health"
+              href={LOW_STOCK_INVENTORY_HREF}
+              hrefLabel="Low stock"
+            />
+
+            {loading ? (
+              <div className="sydin-overview-skeleton-list" aria-hidden="true">
+                {[1, 2, 3].map((item) => (
+                  <span key={item} />
+                ))}
+              </div>
+            ) : dashboardData.totalItems === 0 ? (
+              <div className="sydin-overview-empty">
+                <span>
+                  <UiIcon name="box" className="h-5 w-5" />
+                </span>
+                <strong>No items yet</strong>
+                <p>Add items to see your stock health at a glance.</p>
+                <Link href="/dashboard/add-item">Add Item</Link>
+              </div>
+            ) : (
+              <div className="sydin-health-body">
+                <StockHealthGauge
+                  inCount={stockBreakdown.in}
+                  lowCount={stockBreakdown.low}
+                  outCount={stockBreakdown.out}
+                />
+                <div className="sydin-health-legend">
+                  <Link href="/dashboard/inventory" className="sydin-health-row">
+                    <span className="sydin-health-dot sydin-distribution-in" />
+                    <span>In stock</span>
+                    <em>{formatNumber(stockBreakdown.in)}</em>
+                  </Link>
+                  <Link
+                    href={LOW_STOCK_INVENTORY_HREF}
+                    className="sydin-health-row"
+                  >
+                    <span className="sydin-health-dot sydin-distribution-low" />
+                    <span>Low stock</span>
+                    <em>{formatNumber(stockBreakdown.low)}</em>
+                  </Link>
+                  <Link
+                    href="/dashboard/inventory?quick=out-of-stock"
+                    className="sydin-health-row"
+                  >
+                    <span className="sydin-health-dot sydin-distribution-out" />
+                    <span>Out of stock</span>
+                    <em>{formatNumber(stockBreakdown.out)}</em>
+                  </Link>
+                </div>
               </div>
             )}
           </section>

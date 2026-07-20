@@ -9081,10 +9081,10 @@ body [class*="tracking-["],
 .glass-button:not(.glass-button-secondary):not(.glass-button-danger) {
   border-color: rgba(14, 165, 198, 0.32);
   background:
-    linear-gradient(135deg, #18c7dc 0%, #3977ff 58%, #7d5cff 100%);
+    linear-gradient(135deg, #10c4dc 0%, #2563eb 58%, #7d5cff 100%);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.34),
-    0 14px 32px rgba(57, 119, 255, 0.2);
+    0 14px 32px rgba(37, 99, 235, 0.2);
   color: #ffffff;
 }
 
@@ -10711,17 +10711,17 @@ body [class*="tracking-["],
 
 @media (hover: hover) {
   .inventory-item-card:hover {
-    border-color: rgba(14, 165, 198, 0.32);
+    border-color: rgba(148, 163, 184, 0.5);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.94),
-      0 24px 58px rgba(36, 79, 135, 0.14);
+      0 18px 44px rgba(15, 23, 42, 0.12);
     transform: translateY(-2px);
   }
 
   .inventory-toolbar-button:hover,
   .inventory-card-footer button:hover,
   .inventory-card-menu-button:hover {
-    border-color: rgba(14, 165, 198, 0.28);
+    border-color: rgba(148, 163, 184, 0.45);
     background: #ffffff;
   }
 }
@@ -11241,7 +11241,7 @@ body [class*="tracking-["],
 .inventory-action-primary,
 .overview-action-primary {
   border-color: transparent !important;
-  background: linear-gradient(135deg, #0ea5c6, #2563eb 58%, #7d5cff) !important;
+  background: linear-gradient(135deg, #10c4dc, #2563eb 58%, #7d5cff) !important;
   color: #ffffff !important;
   box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18) !important;
 }
@@ -11833,14 +11833,24 @@ body [class*="tracking-["],
   .inventory-toolbar-button:hover,
   .inventory-quick-filter:hover,
   .inventory-card-footer button:hover,
-  .inventory-card-menu-button:hover,
+  .inventory-card-menu-button:hover {
+    border-color: rgba(148, 163, 184, 0.45);
+    background: #ffffff;
+    transform: none;
+  }
+
   .overview-action:hover {
     border-color: rgba(25, 195, 221, 0.36);
     background: #ffffff;
     transform: none;
   }
 
-  .inventory-item-card:hover,
+  .inventory-item-card:hover {
+    border-color: rgba(148, 163, 184, 0.5);
+    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+    transform: translateY(-1px);
+  }
+
   .overview-kpi-card:hover {
     border-color: rgba(25, 195, 221, 0.3);
     box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
@@ -13604,7 +13614,6 @@ body,
 }
 
 @media (hover: hover) {
-  .dashboard-top-tab:hover,
   .dashboard-top-icon-button:hover,
   .dashboard-top-account-pill:hover,
   .dashboard-top-primary-button:hover,
@@ -13614,9 +13623,16 @@ body,
     transform: translateY(-1px);
   }
 
+  /* Top tabs are inline in the toolbar — highlight instead of lifting so they
+     never collide with the divider line below. */
+  .dashboard-top-tab:hover {
+    background: rgba(148, 163, 184, 0.14);
+    color: #1f2937;
+  }
+
   .dashboard-top-icon-button:hover,
   .dashboard-top-account-pill:hover {
-    border-color: rgba(14, 165, 198, 0.28);
+    border-color: rgba(148, 163, 184, 0.42);
     background: #f8fbff;
   }
 }
@@ -14003,17 +14019,19 @@ body,
 }
 
 .sydin-overview-thumb {
-  width: 2.45rem;
-  height: 2.45rem;
+  width: 2.75rem;
+  height: 2.75rem;
   overflow: hidden;
-  border-radius: 10px;
+  border: 0;
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .sydin-overview-thumb img {
   width: 100%;
   height: 100%;
-  object-fit: contain;
-  padding: 0.25rem;
+  object-fit: cover;
+  padding: 0;
 }
 
 .sydin-overview-status,
@@ -16459,6 +16477,158 @@ body,
   gap: 0.85rem;
 }
 
+/* Total / Paid / Remaining balance strip in the PO detail dialog. */
+.po-balance-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.po-balance-strip > div {
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--sydin-surface-inset);
+  padding: 0.55rem 0.7rem;
+}
+
+.po-balance-strip small {
+  display: block;
+  font-size: 0.62rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.po-balance-strip strong {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 1.02rem;
+  font-weight: 900;
+  color: var(--text-primary);
+}
+
+.po-balance-remaining-due {
+  border-color: rgba(245, 158, 11, 0.35) !important;
+  background: rgba(245, 158, 11, 0.1) !important;
+}
+
+.po-balance-remaining-due strong {
+  color: #b45309;
+}
+
+.po-balance-remaining-clear {
+  border-color: rgba(16, 185, 129, 0.35) !important;
+  background: rgba(16, 185, 129, 0.1) !important;
+}
+
+.po-balance-remaining-clear strong {
+  color: #047857;
+}
+
+/* Collapsible month-grouped history accordion. */
+.po-history-months {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.po-month-group {
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: var(--sydin-radius-panel);
+  background: var(--sydin-ui-surface);
+  box-shadow: var(--sydin-shadow-soft);
+}
+
+.po-month-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.8rem 1rem;
+  text-align: left;
+  transition: background var(--motion-control, 160ms) ease;
+}
+
+.po-month-header:hover {
+  background: var(--sydin-surface-inset);
+}
+
+.po-month-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  transition: transform var(--motion-control, 200ms) ease;
+}
+
+.po-month-chevron-collapsed {
+  transform: rotate(-90deg);
+}
+
+.po-month-label {
+  font-size: 0.9rem;
+  font-weight: 850;
+  color: var(--text-primary);
+}
+
+.po-month-meta {
+  margin-left: auto;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.po-month-group .po-history-list {
+  border-top: 1px solid var(--border-default);
+  animation: po-month-reveal var(--motion-control, 200ms) ease;
+}
+
+@keyframes po-month-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.po-payment-row {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--sydin-surface-inset);
+  padding: 0.5rem 0.7rem;
+}
+
+.po-payment-row-icon {
+  display: grid;
+  height: 2rem;
+  width: 2rem;
+  flex-shrink: 0;
+  place-items: center;
+  border-radius: 9px;
+  border: 1px solid rgba(16, 185, 129, 0.28);
+  background: rgba(16, 185, 129, 0.1);
+  color: #047857;
+}
+
+.po-history-owe-chip {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.22rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  color: #b45309;
+}
+
 .po-payment-panel {
   display: grid;
   gap: 0.6rem;
@@ -16585,5 +16755,607 @@ body,
 
   .po-save-bar {
     bottom: 4.5rem; /* clear the mobile bottom navigation */
+  }
+}
+
+/* ============================================================================
+   GLASS 2.0 FOUNDATION — whole-app visual layer (Sayed's glassmorphism brief)
+   Ice background + warm gradient orb, frosted chrome and panels, staggered
+   entrance motion. Pure CSS (no new dependencies). Appended last so it wins
+   the cascade over earlier per-page layers. Visual only — no logic changes.
+   ========================================================================= */
+
+/* --- Background: soft ice + warm orb glow (top-left) + teal tint (bottom) --- */
+@media (min-width: 900px) {
+  .dashboard-theme:has(.dashboard-shell),
+  .dashboard-workspace-shell {
+    background:
+      radial-gradient(closest-side, rgba(255, 193, 77, 0.55), rgba(255, 166, 60, 0.22) 55%, transparent 74%),
+      radial-gradient(closest-side, rgba(255, 122, 60, 0.26), transparent 70%),
+      radial-gradient(closest-side, rgba(18, 184, 214, 0.24), transparent 70%),
+      #f2f5f8 !important;
+    background-attachment: fixed, fixed, fixed, fixed !important;
+    background-repeat: no-repeat !important;
+    background-size: 78rem 78rem, 52rem 52rem, 72rem 72rem, auto !important;
+    background-position: -14rem -20rem, 42% -14rem, 106% 108%, 0 0 !important;
+    animation: glass-orb-drift 24s ease-in-out infinite alternate;
+  }
+
+  .dashboard-workspace-shell .dashboard-main-canvas,
+  .dashboard-workspace-shell .dashboard-shell-content {
+    background: transparent !important;
+  }
+
+  /* Frosted chrome: icon rail + top toolbar */
+  .dashboard-workspace-shell .dashboard-sidebar {
+    border-right: 1px solid rgba(255, 255, 255, 0.55) !important;
+    background: rgba(255, 255, 255, 0.58) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+  }
+
+  .dashboard-workspace-shell .dashboard-desktop-toolbar {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.6) !important;
+    background: rgba(255, 255, 255, 0.55) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(1.5);
+    backdrop-filter: blur(18px) saturate(1.5);
+  }
+}
+
+@keyframes glass-orb-drift {
+  from {
+    background-position: -12rem -14rem, 30% -8rem, 108% 112%, 0 0;
+  }
+  to {
+    background-position: -6rem -10rem, 42% -5rem, 102% 104%, 0 0;
+  }
+}
+
+/* --- Frosted glass panels (large surfaces get real blur) --- */
+.dashboard-card,
+.dashboard-page-header-card,
+.dashboard-toolbar-card,
+.dashboard-table-card,
+.dashboard-form-section,
+.sydin-overview-panel,
+.sydin-overview-header,
+.inventory-hero-card,
+.inventory-toolbar-panel,
+.inventory-table-shell,
+.inventory-insight-card,
+.po-month-group {
+  border-color: rgba(255, 255, 255, 0.6) !important;
+  background: rgba(255, 255, 255, 0.62) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(1.45);
+  backdrop-filter: blur(16px) saturate(1.45);
+  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.07) !important;
+}
+
+/* --- Small repeated cards: translucent white WITHOUT blur (perf on big grids) --- */
+.dashboard-metric-card,
+.sydin-overview-summary-card,
+.inventory-item-card,
+.po-history-row,
+.receiving-history-row,
+.search-page-result-row,
+.sydin-overview-spending-row {
+  border-color: rgba(255, 255, 255, 0.65) !important;
+  background: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* Keep frosted panels legible: inset surfaces inside glass go semi-solid */
+.dashboard-card .bg-theme-inset,
+.sydin-overview-panel .bg-theme-inset {
+  background: rgba(255, 255, 255, 0.55);
+}
+
+/* --- Frosted secondary buttons + icon buttons (pill feel stays) --- */
+.ui-button-secondary,
+.ui-icon-button,
+.dashboard-action-button-secondary,
+.inventory-action-secondary,
+.inventory-toolbar-button,
+.dashboard-top-icon-button,
+.dashboard-top-searchbar,
+.dashboard-top-account-pill {
+  border-color: rgba(255, 255, 255, 0.7) !important;
+  background: rgba(255, 255, 255, 0.6) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
+}
+
+/* --- KPI card accents: one color identity per stat (reference style) --- */
+.sydin-overview-summary-icon.sydin-kpi-teal {
+  border-color: rgba(20, 184, 166, 0.3);
+  background: rgba(20, 184, 166, 0.14);
+  color: #0f766e;
+}
+
+.sydin-overview-summary-icon.sydin-kpi-indigo {
+  border-color: rgba(99, 102, 241, 0.3);
+  background: rgba(99, 102, 241, 0.13);
+  color: #4338ca;
+}
+
+.sydin-overview-summary-icon.sydin-kpi-violet {
+  border-color: rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.13);
+  color: #6d28d9;
+}
+
+.sydin-overview-summary-icon.sydin-kpi-emerald {
+  border-color: rgba(16, 185, 129, 0.3);
+  background: rgba(16, 185, 129, 0.13);
+  color: #047857;
+}
+
+/* --- Real stock-distribution mini bar (in / low / out) --- */
+.sydin-overview-distribution {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.16);
+}
+
+.sydin-overview-distribution > span {
+  min-width: 0;
+  border-radius: 999px;
+  transition: flex-grow 600ms ease;
+}
+
+.sydin-distribution-in {
+  background: #10b981;
+}
+
+.sydin-distribution-low {
+  background: #f59e0b;
+}
+
+.sydin-distribution-out {
+  background: #f43f5e;
+}
+
+/* --- Stock health gauge panel --- */
+.sydin-health-body {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.sydin-health-gauge {
+  position: relative;
+  margin-inline: auto;
+  width: min(100%, 15rem);
+}
+
+.sydin-health-gauge svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.sydin-health-track {
+  stroke: rgba(148, 163, 184, 0.22);
+}
+
+.sydin-health-arc {
+  transition: stroke-dasharray 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.sydin-health-good .sydin-health-arc {
+  stroke: #10b981;
+}
+
+.sydin-health-warn .sydin-health-arc {
+  stroke: #f59e0b;
+}
+
+.sydin-health-bad .sydin-health-arc {
+  stroke: #f43f5e;
+}
+
+.sydin-health-center {
+  position: absolute;
+  inset: auto 0 0.35rem 0;
+  text-align: center;
+}
+
+.sydin-health-center strong {
+  display: block;
+  font-size: 1.9rem;
+  font-weight: 900;
+  line-height: 2.1rem;
+  color: var(--text-primary, #0f172a);
+}
+
+.sydin-health-center small {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted, #64748b);
+}
+
+.sydin-health-legend {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.sydin-health-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text-primary, #0f172a);
+  transition:
+    border-color var(--motion-control, 160ms) ease,
+    box-shadow var(--motion-control, 160ms) ease,
+    transform var(--motion-control, 160ms) ease;
+}
+
+.sydin-health-row em {
+  margin-left: auto;
+  font-style: normal;
+  font-weight: 900;
+}
+
+.sydin-health-dot {
+  height: 0.6rem;
+  width: 0.6rem;
+  flex-shrink: 0;
+  border-radius: 999px;
+}
+
+@media (hover: hover) {
+  .sydin-health-row:hover {
+    border-color: rgba(148, 163, 184, 0.5);
+    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    transform: translateY(-1px);
+  }
+}
+
+/* --- Staggered entrance: cards fade up as each page loads --- */
+@keyframes glass-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-page-shell > *,
+.sydin-overview-inner > *,
+.inventory-workspace > * {
+  animation: glass-fade-up 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.dashboard-page-shell > *:nth-child(2),
+.sydin-overview-inner > *:nth-child(2),
+.inventory-workspace > *:nth-child(2) {
+  animation-delay: 60ms;
+}
+
+.dashboard-page-shell > *:nth-child(3),
+.sydin-overview-inner > *:nth-child(3),
+.inventory-workspace > *:nth-child(3) {
+  animation-delay: 120ms;
+}
+
+.dashboard-page-shell > *:nth-child(4),
+.sydin-overview-inner > *:nth-child(4),
+.inventory-workspace > *:nth-child(4) {
+  animation-delay: 180ms;
+}
+
+.dashboard-page-shell > *:nth-child(5),
+.sydin-overview-inner > *:nth-child(5),
+.inventory-workspace > *:nth-child(5) {
+  animation-delay: 240ms;
+}
+
+.dashboard-page-shell > *:nth-child(n + 6),
+.sydin-overview-inner > *:nth-child(n + 6),
+.inventory-workspace > *:nth-child(n + 6) {
+  animation-delay: 300ms;
+}
+
+/* --- Glass overlays: backdrop blur behind every dialog/sheet --- */
+.ui-overlay {
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+
+/* --- Soft scale/fade entrance for dialogs, sheets, menus, dropdowns, tooltips --- */
+@keyframes glass-pop-in {
+  from {
+    opacity: 0;
+    transform: scale(0.97) translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes glass-sheet-in-right {
+  from {
+    transform: translateX(12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glass-sheet-in-left {
+  from {
+    transform: translateX(-12px);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes glass-sheet-in-bottom {
+  from {
+    transform: translateY(16px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.ui-dialog {
+  animation: glass-pop-in 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-sheet-right {
+  animation: glass-sheet-in-right 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-sheet-left {
+  animation: glass-sheet-in-left 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-sheet-bottom {
+  animation: glass-sheet-in-bottom 240ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-menu-surface,
+.inventory-floating-menu,
+[role="menu"].fixed,
+.global-search-panel {
+  animation: glass-pop-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* --- Tooltip: frosted glass + fade/scale (was solid + fade-only) --- */
+.ui-tooltip-content {
+  border-color: rgba(255, 255, 255, 0.7);
+  background: rgba(15, 23, 42, 0.86);
+  -webkit-backdrop-filter: blur(10px) saturate(1.3);
+  backdrop-filter: blur(10px) saturate(1.3);
+  transform: translate(-50%, 4px) scale(0.96);
+  transition:
+    opacity var(--motion-control, 160ms) ease,
+    transform var(--motion-control, 160ms) ease;
+}
+
+.ui-tooltip:hover .ui-tooltip-content,
+.ui-tooltip:focus-within .ui-tooltip-content {
+  transform: translate(-50%, 0) scale(1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-dialog,
+  .ui-sheet-right,
+  .ui-sheet-left,
+  .ui-sheet-bottom,
+  .ui-menu-surface,
+  .inventory-floating-menu,
+  [role="menu"].fixed,
+  .global-search-panel {
+    animation: none;
+  }
+}
+
+/* --- Auth pages: warm orb glow + frosted glass surfaces (Glass 2.0 brief) --- */
+.login-auth-panel {
+  background:
+    radial-gradient(closest-side, rgba(255, 193, 77, 0.28), transparent 70%),
+    radial-gradient(closest-side, rgba(18, 184, 214, 0.14), transparent 68%),
+    radial-gradient(circle at 72% 34%, rgba(90, 106, 255, 0.06), transparent 18rem),
+    #ffffff !important;
+  background-position:
+    -8rem -10rem,
+    118% 112%,
+    72% 34%,
+    0 0;
+  background-repeat: no-repeat;
+  background-size:
+    38rem 38rem,
+    34rem 34rem,
+    auto,
+    auto;
+}
+
+.login-provider-button,
+.login-input-wrap input {
+  border-color: rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.66) !important;
+  -webkit-backdrop-filter: blur(10px) saturate(1.4);
+  backdrop-filter: blur(10px) saturate(1.4);
+}
+
+.login-provider-icon {
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.85);
+}
+
+.login-auth-inner {
+  animation: glass-fade-up 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .login-auth-inner {
+    animation: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .login-provider-button,
+  .login-input-wrap input {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* --- Route crossfade: app/dashboard/template.tsx remounts this wrapper on
+   every navigation, so the animation replays per page change automatically. */
+@keyframes glass-route-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.dashboard-route-transition {
+  min-height: 100%;
+  animation: glass-route-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-route-transition {
+    animation: none;
+  }
+}
+
+/* --- Responsive fix: when the overview/inventory hero stacks into a column
+   (container ≤900px), the row-layout flex-basis (20rem/22rem) must not become
+   HEIGHT — it inflated the header to ~720px with stretched giant buttons. --- */
+@container (max-width: 900px) {
+  .sydin-overview-header > :first-child,
+  .sydin-overview-header-actions,
+  .inventory-hero-title-block,
+  .inventory-hero-actions {
+    flex: 0 0 auto;
+  }
+}
+
+/* --- Accessibility fallbacks --- */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-theme:has(.dashboard-shell),
+  .dashboard-workspace-shell {
+    animation: none;
+  }
+
+  .dashboard-page-shell > *,
+  .sydin-overview-inner > *,
+  .inventory-workspace > * {
+    animation: none;
+  }
+
+  .sydin-health-arc,
+  .sydin-overview-distribution > span {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .dashboard-card,
+  .dashboard-page-header-card,
+  .dashboard-toolbar-card,
+  .dashboard-table-card,
+  .dashboard-form-section,
+  .sydin-overview-panel,
+  .sydin-overview-header,
+  .inventory-hero-card,
+  .inventory-toolbar-panel,
+  .inventory-table-shell,
+  .inventory-insight-card,
+  .po-month-group,
+  .dashboard-metric-card,
+  .sydin-overview-summary-card,
+  .inventory-item-card,
+  .po-history-row,
+  .ui-button-secondary,
+  .ui-icon-button,
+  .dashboard-action-button-secondary,
+  .inventory-action-secondary,
+  .inventory-toolbar-button,
+  .dashboard-top-icon-button,
+  .dashboard-top-searchbar,
+  .dashboard-top-account-pill {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .dashboard-workspace-shell .dashboard-sidebar,
+  .dashboard-workspace-shell .dashboard-desktop-toolbar {
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* ===[ INVENTORY COMPACT MODE — "Compact" toggle gives items the screen ]=== */
+.inventory-workspace-summary-hidden .inventory-hero-badges,
+.inventory-workspace-summary-hidden .inventory-hero-description,
+.inventory-workspace-summary-hidden .inventory-mobile-breadcrumb {
+  display: none !important;
+}
+
+.inventory-workspace-summary-hidden .inventory-hero-card {
+  padding-top: 0.65rem !important;
+  padding-bottom: 0.65rem !important;
+}
+
+.inventory-workspace-summary-hidden .inventory-hero-title {
+  font-size: clamp(1.3rem, 1.8vw, 1.6rem) !important;
+}
+
+/* ===[ NAV CHROME OVERHAUL — softer sidebar hover-reveal (desktop rail) ]=== */
+/* Replaces the instant display none/block toggle with a soft slide-in reveal of
+   the page name. Appended last so it wins over the earlier scoped toggles. */
+@media (min-width: 900px) {
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-tooltip,
+  .dashboard-workspace-shell .dashboard-nav-tooltip {
+    display: block !important;
+    opacity: 0;
+    transform: translateX(-8px);
+    pointer-events: none;
+    transition:
+      opacity 170ms ease,
+      transform 230ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-workspace-shell .dashboard-nav-link:hover .dashboard-nav-tooltip,
+  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
+  .dashboard-workspace-shell .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
+    opacity: 1 !important;
+    transform: translateX(0) !important;
   }
 }

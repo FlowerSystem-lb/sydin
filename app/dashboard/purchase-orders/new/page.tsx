@@ -187,6 +187,56 @@ export default function NewPurchaseOrderPage() {
       setSettings(loadedSettings);
       setDepots(loadedDepots);
       setSuppliers(loadedSuppliers);
+
+      // Prefill lines when arriving from inventory "Create purchase order" (?items=1,2,3).
+      const itemsParam = new URLSearchParams(window.location.search).get("items");
+      const prefillIds = (itemsParam || "")
+        .split(",")
+        .map((value) => Number(value.trim()))
+        .filter((value) => Number.isFinite(value) && value > 0);
+
+      if (prefillIds.length > 0) {
+        const { data: prefillItems } = await supabase
+          .from("inventory")
+          .select(
+            "id, name, quantity, sku, item_code, unit_type, custom_unit_label, cost_price"
+          )
+          .eq("user_id", user.id)
+          .in("id", prefillIds);
+
+        if (active && prefillItems && prefillItems.length > 0) {
+          const byId = new Map(
+            (prefillItems as PickerItem[]).map((item) => [item.id, item])
+          );
+          // Preserve the order the user selected them in.
+          const ordered = prefillIds
+            .map((id) => byId.get(id))
+            .filter((item): item is PickerItem => Boolean(item));
+          setLines(
+            ordered.map((item) => ({
+              key: makeLineKey(),
+              lineType: "inventory" as const,
+              inventoryItemId: item.id,
+              name: item.name,
+              sku: item.sku,
+              itemCode: item.item_code,
+              unitLabel: getInventoryUnitLabel(
+                item.unit_type,
+                item.custom_unit_label
+              ),
+              quantity: "1",
+              unitCost:
+                item.cost_price === null || item.cost_price === undefined
+                  ? ""
+                  : String(item.cost_price),
+              affectsStock: true,
+              expenseCategory: "other" as const,
+              note: "",
+            }))
+          );
+        }
+      }
+
       setLoading(false);
     }
 

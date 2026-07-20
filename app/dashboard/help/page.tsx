@@ -38,8 +38,8 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 
 function ExpandableHelpCard({ item }: { item: HelpExpandableItem }) {
   return (
-    <details className="group rounded-2xl border border-theme bg-theme-inset open:border-cyan-300/20 open:bg-cyan-400/[0.06]">
-      <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-bold text-theme-primary outline-none focus-visible:ring-2 focus-visible:ring-cyan-300">
+    <details className="group rounded-2xl border border-theme bg-theme-inset open:border-[#2563eb]/20 open:bg-[#2563eb]/[0.06]">
+      <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-bold text-theme-primary outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb]/60">
         <span>{item.title}</span>
         <span
           aria-hidden="true"
@@ -48,12 +48,12 @@ function ExpandableHelpCard({ item }: { item: HelpExpandableItem }) {
           +
         </span>
       </summary>
-      <div className="border-t border-white/[0.07] px-5 pb-5 pt-4">
+      <div className="border-t border-theme px-5 pb-5 pt-4">
         <p className="leading-7 text-theme-muted">{item.body}</p>
         {item.href && item.action && (
           <Link
             href={item.href}
-            className="mt-4 inline-flex min-h-10 items-center rounded-xl border border-cyan-300/20 bg-cyan-400/10 px-4 py-2 text-sm font-bold text-theme-accent transition hover:bg-cyan-400/20"
+            className="mt-4 inline-flex min-h-10 items-center rounded-xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-4 py-2 text-sm font-bold text-theme-accent transition hover:bg-[#2563eb]/20"
           >
             {item.action}
           </Link>
@@ -172,7 +172,7 @@ export default function HelpCenterPage() {
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-cyan-300/15 bg-cyan-400/[0.07] px-5 py-4">
+              <div className="rounded-2xl border border-[#2563eb]/15 bg-[#2563eb]/[0.07] px-5 py-4">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Current workspace
                 </p>
@@ -228,7 +228,7 @@ export default function HelpCenterPage() {
                 </div>
                 <div className="mt-3 h-2 overflow-hidden rounded-full bg-theme-surface">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-blue-500"
+                    className="h-full rounded-full bg-[linear-gradient(90deg,#10c4dc,#2563eb)]"
                     style={{
                       width: `${onboarding?.percentage || 0}%`,
                     }}
@@ -299,7 +299,7 @@ export default function HelpCenterPage() {
                 </div>
 
                 {onboarding.nextStep ? (
-                  <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-cyan-300/20 bg-cyan-400/[0.08] p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                         Suggested next action
@@ -373,7 +373,7 @@ export default function HelpCenterPage() {
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <article className="rounded-[28px] border border-sky-300/20 bg-sky-400/[0.08] p-5 sm:p-6">
+              <article className="rounded-[28px] border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-5 sm:p-6">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Optional workflow
                 </p>
@@ -390,8 +390,8 @@ export default function HelpCenterPage() {
                 </Link>
               </article>
 
-              <article className="rounded-[28px] border border-violet-300/20 bg-violet-400/[0.08] p-5 sm:p-6">
-                <p className="text-xs font-black uppercase tracking-[0.14em] text-violet-300">
+              <article className="rounded-[28px] border border-[#7d5cff]/20 bg-[#7d5cff]/[0.08] p-5 sm:p-6">
+                <p className="text-xs font-black uppercase tracking-[0.14em] text-[#7d5cff]">
                   {usage.subscription.plan === "pro"
                     ? "Advanced workspace"
                     : "Plan options"}
@@ -416,7 +416,7 @@ export default function HelpCenterPage() {
                             : "Pro"
                         }&source=help-center`
                   }
-                  className="mt-5 inline-flex text-sm font-black text-violet-100"
+                  className="mt-5 inline-flex text-sm font-black text-[#7d5cff]"
                 >
                   {usage.subscription.plan === "pro"
                     ? "Explore Reports"
@@ -428,7 +428,7 @@ export default function HelpCenterPage() {
 
           <section className="grid gap-6 xl:grid-cols-2">
             <div className="glass-card p-5 sm:p-6">
-              <p className="text-xs font-black uppercase tracking-[0.17em] text-amber-300">
+              <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-warning">
                 Common issues
               </p>
               <h2 className="mt-2 text-3xl font-black">Troubleshooting</h2>
@@ -440,7 +440,7 @@ export default function HelpCenterPage() {
             </div>
 
             <div className="glass-card p-5 sm:p-6">
-              <p className="text-xs font-black uppercase tracking-[0.17em] text-violet-300">
+              <p className="text-xs font-black uppercase tracking-[0.17em] text-[#7d5cff]">
                 Product questions
               </p>
               <h2 className="mt-2 text-3xl font-black">
@@ -503,7 +503,7 @@ export default function HelpCenterPage() {
                 </article>
 
                 <article className="rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.06] p-5">
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-emerald-300">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-success">
                     WhatsApp
                   </p>
                   <p className="mt-3 font-black text-theme-primary">

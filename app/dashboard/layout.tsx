@@ -54,7 +54,7 @@ export default function DashboardLayout({
       <ThemeProvider>
         <div className="liquid-bg flex min-h-screen items-center justify-center px-4 text-theme-primary">
           <div className="glass-panel px-7 py-6 text-center">
-            <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-2xl bg-indigo-400/25" />
+            <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-2xl bg-[#2563eb]/25" />
 
             <p className="text-lg font-bold">
               Preparing your workspace

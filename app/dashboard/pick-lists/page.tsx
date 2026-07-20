@@ -39,7 +39,7 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 };
 
 const inputClassName =
-  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-cyan-300/60 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(34,211,238,0.1)] disabled:opacity-60";
+  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 const statusLabels: Record<PickListStatus, string> = {
   draft: "Draft",
@@ -49,8 +49,8 @@ const statusLabels: Record<PickListStatus, string> = {
 };
 
 const statusClasses: Record<PickListStatus, string> = {
-  draft: "border-slate-300/20 bg-slate-400/10 text-slate-200",
-  preparing: "border-cyan-300/25 bg-cyan-400/10 text-theme-accent",
+  draft: "border-slate-300/20 bg-slate-400/10 text-theme-muted",
+  preparing: "border-[#2563eb]/25 bg-[#2563eb]/10 text-theme-accent",
   completed: "border-emerald-300/25 bg-emerald-400/10 text-theme-success",
   cancelled: "border-red-300/20 bg-red-400/10 text-theme-danger",
 };
@@ -457,7 +457,7 @@ export default function PickListsPage() {
                     onClick={() => setFilter(item.id)}
                     className={`rounded-xl border px-4 py-3 text-sm font-bold transition ${
                       filter === item.id
-                        ? "border-cyan-300/30 bg-cyan-400/15 text-theme-accent"
+                        ? "border-[#2563eb]/30 bg-[#2563eb]/15 text-theme-accent"
                         : "border-theme bg-theme-surface text-theme-muted hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
@@ -473,7 +473,7 @@ export default function PickListsPage() {
           </section>
 
           {selectedHandoffIds.length > 0 && formOpen && (
-            <div className="rounded-2xl border border-cyan-300/25 bg-cyan-400/10 px-5 py-4 text-sm font-semibold text-theme-accent">
+            <div className="rounded-2xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-5 py-4 text-sm font-semibold text-theme-accent">
               {selectedHandoffIds.length} selected Inventory item
               {selectedHandoffIds.length === 1 ? "" : "s"} will be added with
               quantity 1. Review quantities before picking; stock will not be
@@ -496,7 +496,7 @@ export default function PickListsPage() {
                   <Link
                     key={list.id}
                     href={`/dashboard/pick-lists/${list.id}`}
-                    className="glass-card group flex min-h-72 flex-col p-5 transition hover:-translate-y-0.5 hover:border-cyan-300/25 sm:p-6"
+                    className="glass-card group flex min-h-72 flex-col p-5 transition hover:-translate-y-0.5 hover:border-[#2563eb]/25 sm:p-6"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
@@ -523,7 +523,7 @@ export default function PickListsPage() {
                       </div>
                       <div className="mt-2 h-2 overflow-hidden rounded-full bg-theme-surface">
                         <div
-                          className="h-full rounded-full bg-gradient-to-r from-cyan-300 to-blue-500"
+                          className="h-full rounded-full bg-[linear-gradient(90deg,#10c4dc,#2563eb)]"
                           style={{ width: `${progress}%` }}
                         />
                       </div>
@@ -572,7 +572,7 @@ export default function PickListsPage() {
             </div>
           ) : lists.length === 0 ? (
             <section className="glass-card px-5 py-16 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-cyan-300/20 bg-cyan-400/10 text-2xl font-black text-theme-accent">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 text-2xl font-black text-theme-accent">
                 +
               </div>
               <h2 className="mt-5 text-3xl font-black text-theme-primary">

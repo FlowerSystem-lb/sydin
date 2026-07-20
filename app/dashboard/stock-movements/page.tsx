@@ -240,7 +240,7 @@ export default function StockMovementsPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search item or note"
-              className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-indigo-300/60 focus:ring-4 focus:ring-indigo-400/10"
+              className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
             />
           </label>
           <Select
@@ -301,14 +301,14 @@ export default function StockMovementsPage() {
                     className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))] sm:items-center"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-theme bg-theme-inset">
+                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
                         {item?.image ? (
                           <Image
                             src={item.image}
                             alt=""
                             fill
                             sizes="48px"
-                            className="object-contain p-1"
+                            className="object-cover"
                           />
                         ) : (
                           <span className="flex h-full items-center justify-center text-theme-subtle">

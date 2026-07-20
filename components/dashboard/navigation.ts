@@ -52,6 +52,14 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "primary",
   },
   {
+    label: "Scanner",
+    shortLabel: "Scan",
+    href: "/dashboard/scanner",
+    icon: "scan",
+    section: "workspace",
+    mobilePlacement: "primary",
+  },
+  {
     label: "Purchase Orders",
     shortLabel: "Orders",
     href: "/dashboard/purchase-orders",
@@ -62,7 +70,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
   {
     label: "Receiving",
     href: "/dashboard/receiving",
-    icon: "movement",
+    icon: "download",
     section: "operations",
     mobilePlacement: "more",
   },
@@ -78,7 +86,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     label: "Stock Counts",
     shortLabel: "Counts",
     href: "/dashboard/stock-counts",
-    icon: "check",
+    icon: "layers",
     section: "operations",
     mobilePlacement: "more",
   },

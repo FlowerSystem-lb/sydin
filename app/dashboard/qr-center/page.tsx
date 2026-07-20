@@ -32,7 +32,6 @@ import {
   type QrLabelSettings,
   type QrLabelSize,
 } from "@/app/lib/qrLabelPdf";
-import { SCANNER_REQUEST_STORAGE_KEY } from "@/app/lib/scannerNavigation";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -403,12 +402,7 @@ export default function QrCenterPage() {
   };
 
   const openExistingScanner = () => {
-    try {
-      window.sessionStorage.setItem(SCANNER_REQUEST_STORAGE_KEY, "true");
-    } catch {
-      // The inventory route can still open without storage access.
-    }
-    router.push("/dashboard/inventory");
+    router.push("/dashboard/scanner?mode=lookup");
   };
 
   const renderLabel = (item: QrInventoryItem, print = false) => (
@@ -555,14 +549,14 @@ export default function QrCenterPage() {
                         disabled={!item.public_id}
                         className="h-4 w-4 accent-[#2563eb]"
                       />
-                      <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-lg border border-theme bg-theme-inset">
+                      <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
                         {item.image ? (
                           <Image
                             src={item.image}
                             alt=""
                             fill
                             sizes="44px"
-                            className="object-contain p-1"
+                            className="object-cover"
                           />
                         ) : (
                           <span className="flex h-full items-center justify-center">

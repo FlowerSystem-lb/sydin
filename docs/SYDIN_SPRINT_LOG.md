@@ -602,4 +602,427 @@ footer switches to Back / Save payment ✅.
 
 ---
 
+## Sprint A — Global visual polish & bug pass (from Sayed's 14-note review)  *(Complete)*
+
+**Scope:** First sprint of a large UI/UX backlog. Cross-cutting "ugly/broken in all pages"
+fixes, low-risk CSS + small markup, foundation for the bigger redesigns to come.
+
+**Delivered:**
+- **Inventory list/table images** (`app/dashboard/inventory/page.tsx`): enlarged (list 40→56px,
+  table 36→44px), `object-cover` to fill the frame, dropped the hard `border border-theme` for a
+  subtle `ring-1 ring-black/5`, rounded-xl. Fixes the "tiny image with ugly border" complaint.
+- **Table text wraps** instead of truncating: name + code cells use `[overflow-wrap:anywhere]`
+  (dropped `truncate`/`max-w`), so long values like "34233 boxes" wrap cleanly.
+- **Item-card hover: blue → grey** (`app/globals.css`, both hover blocks ~10713 & ~11843):
+  swapped cyan `rgba(14,165,198)` border + blue shadow for neutral `rgba(148,163,184)` + soft
+  grey shadow; kept the lift. Selected state stays cyan (intentional). Overview KPI cards left
+  untouched.
+- **Unified primary button gradient** site-wide: three conflicting cyans (`#18c7dc`, `#0ea5c6`,
+  `#10c4dc`) collapsed to one `linear-gradient(135deg,#10c4dc,#2563eb 58%,#7d5cff)` across
+  `.ui-button-primary` and `.inventory-action-primary`. Fixes the "Add Item colour looks broken".
+- **Menu + modal consistency**: grid-card "Delete" recoloured violet→red to match the list menu
+  (`components/inventory/InventoryItemCard.tsx`); edit-item modal border softened
+  (`rounded-[32px] border-theme` → `rounded-[24px]` + lighter `--border-default`, softer shadow).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+list view shows large frame-filling images + clean unified Add Item gradient (screenshot).
+
+**Next:** Sprint B — PO payment history (balance + payment log) + collapsible month history.
+
+---
+
+## Sprint B1 — PO remaining balance + collapsible month history  *(Complete)*
+
+**Scope:** The no-database half of note PO-1/PO-2 — value fast, no Supabase step for Sayed.
+
+**Delivered:**
+- **`getPurchaseOrderBalance(order)`** helper (`app/lib/purchaseOrders.ts`): total / paid /
+  remaining (clamped ≥ 0), computed from lines + `amount_paid`.
+- **PO detail dialog balance strip**: three cells — Order total · Paid · **Still owe** (amber
+  when a balance remains, green ✓ when fully paid). Verified live: PO-0003 shows $100 / $50 /
+  Still owe $50.
+- **History "Owe" chips**: rows with an outstanding balance show an amber `Owe $X` chip.
+- **Collapsible month-grouped history**: orders grouped by month (purchase_date||created_at)
+  into accordion sections with a rotating chevron + reveal motion; each header shows
+  "N orders · $total". Verified: June 2026 / July 2026 sections toggle independently.
+
+**Note:** balance is derived from real numbers, so it stays correct even if `payment_status`
+was set loosely (e.g. status "Paid" while only half the amount is recorded). The per-payment
+**timeline log** (when each payment happened) is deferred to Sprint B2 — it needs a small
+`purchase_order_payments` table + migration.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview
+screenshots of the accordion + balance strip.
+
+**Next:** Sprint B2 (optional) — payment timeline log (needs a phase-9 SQL migration), then
+Sprint C (new PO page redesign).
+
+---
+
+## Sprint B2 — PO payment timeline (per-payment log)  *(Code complete; awaiting phase-9 SQL run)*
+
+**Scope:** The database half of note PO-1 — a log of *when* each payment happened (deposit now,
+balance on delivery), so amount_paid/status become derived and trustworthy.
+
+**Delivered:**
+- **`sql/phase-9-purchase-order-payments.sql`** — `purchase_order_payments` table (amount,
+  method, paid_by, note, paid_at), RLS (owner via parent PO), a **recompute trigger** that sets
+  the parent order's `amount_paid = sum(payments)` and derives `payment_status` from the line
+  total, a validate trigger (owner + trim), and a **backfill** that seeds one payment row from
+  each existing `amount_paid` (run before the triggers so it doesn't trip the auth check) plus a
+  final reconcile loop.
+- **`app/lib/purchaseOrders.ts`** — `PurchaseOrderPayment` type; `getPurchaseOrderPayments`,
+  `addPurchaseOrderPayment`, `deletePurchaseOrderPayment`; `isPaymentsSchemaMissing`;
+  `createPurchaseOrder` seeds an initial payment when a deposit is entered. Payments are fetched
+  **separately** (not in the main PO select) so the history page keeps working before phase-9.
+- **PO detail dialog** — the payment panel is now **"Add a payment"** (amount *this time*, date,
+  method, paid-by, note; status auto-derived, no manual dropdown). A **Payment history** timeline
+  lists each entry (date · method · paid-by · note) with per-entry delete. "Mark received"
+  optionally logs a payment on delivery then receives. Record-payment defaults its amount to the
+  outstanding balance for one-tap "pay the rest". Missing-table errors show a friendly
+  run-the-migration message.
+
+**Founder action required:** run `sql/phase-9-purchase-order-payments.sql` in the Supabase SQL
+Editor. Until then the timeline is simply hidden (graceful) and everything else works.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅. Live timeline
+verification is pending the migration run (the dev DB has no phase-9 table yet; pre-migration
+degrades gracefully by design).
+
+---
+
+## Sprint D1 — Whole-site design overhaul: navigation chrome  *(Complete)*
+
+**Scope:** Sayed asked to stop small step-by-step patches and redesign the whole site. Since the
+app runs on a shared design system, the overhaul proceeds as a few big cohesive batches over the
+shared chrome (safer than a big-bang rewrite of a live app). Batch 1 = navigation, which is on
+every screen (notes NAV-12/NAV-13).
+
+**Delivered:**
+- **Distinct per-page sidebar icons** (`components/dashboard/navigation.ts`): Receiving →
+  `download`, Stock Counts → `layers` (were duplicating `movement`/`check`). Every page now has a
+  unique, meaningful icon.
+- **Header top-tabs hover fix** (NAV-12): removed the `translateY(-1px)` lift that made inline
+  tabs jump into the divider line; replaced with a clean background highlight.
+- **Soft sidebar hover-reveal** (NAV-13): the collapsed desktop rail's page-name tooltip now
+  slides in with an opacity + translateX cubic-bezier transition instead of an instant
+  display toggle (appended last in `globals.css` so it wins the cascade; verified each nav link
+  carries its label and the transition).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+distinct icons render; tooltip mechanism verified via DOM (display:block, opacity 0→1 transition).
+
+**Next big batches:** global surface/border consistency, then the page redesigns (new PO page #3,
+inventory redesign #7–10, simpler add-item #14, phone-QR scan #5).
+
+---
+
+## Sprint D2 — Site-wide image polish (note #9 "fix small bordered images in ALL pages")  *(Complete)*
+
+**Scope:** Swept every page for the small-bordered-thumbnail pattern and applied one policy:
+**item photos** fill their frame (`object-cover`, no padding), no hard border → `rounded-xl` +
+soft ring (`ring-1 ring-black/5`), sized ≥ 44px. **Logos, hero/detail images and upload
+previews stay `object-contain`** (never crop a logo).
+
+**Fixed:** receiving (table + review card), stock-counts (table + review card), stock-movements
+rows, qr-center picker, categories assign dialog, dashboard overview `.sydin-overview-thumb`
+(dropped the cyan icon-border/gradient around photos, 2.45→2.75rem, cover) and the inventory
+**grid card media** now fills its tile Sortly-style (`object-cover`, no padding — was
+letterboxed `contain p-2`). Inventory list/table were already done in Sprint A.
+
+**Left as-is intentionally:** icon/emoji chips (bordered boxes are the design), business logos
+(header, settings, item pages), slide-over hero image, add-item upload preview.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · preview
+screenshots: inventory grid full-bleed tiles, overview restock/recent thumbs clean.
+
+---
+
+## Sprint D3 — Inventory compact mode (note #7 "hide stats, big screen for items")  *(Complete)*
+
+**Scope:** The stats/hero header ate the top of the inventory page with no way to reclaim it.
+A `showStats` flag + hidden-state CSS existed but had **no user-facing control** (dead code —
+second such find after the broken Create-PO-from-items).
+
+**Delivered:**
+- **"Compact" / "Stats" toggle** in the inventory toolbar (next to Filters): hides the stat
+  cards, hero badges, description and breadcrumb, slims the hero title — items start ~200px
+  higher. Chevron flips with state; `aria-pressed`; tooltip explains it.
+- **Preference persists** in `localStorage sydin:inventory-show-stats` (restored on mount via
+  the existing rAF pattern; storage failures are non-fatal).
+- Compact CSS scoped under `.inventory-workspace-summary-hidden` appended last in globals.css.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+toggled Compact (hero one-line, grid raised), preference survived a fresh page load, toggled
+back to default.
+
+---
+
+## Sprint E1 — Glass 2.0 foundation (whole-app glassmorphism layer)  *(Complete)*
+
+**Scope:** Sayed brought a glassmorphism reference (frosted cards over a warm gradient orb, pill
+controls, staggered motion) and a detailed visual-only brief. Implemented as one appended CSS
+layer over the shared design system, so every dashboard page restyles at once with zero logic
+changes and **zero new dependencies** (pure CSS instead of framer-motion — decided deliberately).
+
+**Delivered (all in `app/globals.css`, appended "GLASS 2.0 FOUNDATION" block):**
+- **Ice background + orb**: `#f2f5f8` with three fixed radial-gradient layers (warm yellow/orange
+  glow top-left, teal tint bottom-right) on `.dashboard-theme:has(.dashboard-shell)` /
+  `.dashboard-workspace-shell`, drifting slowly (24s alternate). Canvas/content made transparent
+  so the glow shows through pages.
+- **Frosted chrome**: sidebar rail + desktop toolbar at `rgba(255,255,255,.55-.58)` with
+  `backdrop-blur(18px) saturate(1.5)` and white hairline borders.
+- **Frosted panels** (real blur, large surfaces): dashboard/PO/inventory cards, page headers,
+  toolbars, tables, month groups → white/62 + blur(16px) + diffused shadow.
+- **Small repeated cards** (item grid, history rows, metric cards): translucent white **without**
+  blur — deliberate performance choice for big grids.
+- **Frosted pill controls**: secondary/icon buttons, header search bar, account pill.
+- **Staggered entrance**: `glass-fade-up` on the top-level children of `.dashboard-page-shell`,
+  `.sydin-overview-inner`, `.inventory-workspace` (60ms stagger, capped at 300ms).
+- **Accessibility**: full `prefers-reduced-motion` (no drift, no entrance) and
+  `prefers-reduced-transparency` (solid white, no blur) fallbacks.
+
+**Deferred to later passes:** count-up numbers, route crossfades (need JS), auth pages,
+modals/dropdowns glass, mobile nav treatment.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview
+screenshots: Overview, Inventory and Purchase Orders all frosted over the orb glow (PO hero shows
+the warm gradient through the glass) · zero console errors.
+
+---
+
+## Sprint E2 — Glass 2.0 dashboard upgrades (reference-matching pass)  *(Complete)*
+
+**Scope:** Push the Overview closer to Sayed's glassmorphism reference with real-data features
+(no fake trend percentages — deliberate honesty call: SydIN doesn't track history yet, so no
+"+8.1% vs last month" until it does).
+
+**Delivered:**
+- **Stronger orb**: bigger, warmer, more visible gradient layers (yellow core 0.55α, orange
+  bloom, teal corner) — was nearly invisible at wide viewports.
+- **KPI cards v2** (`app/dashboard/page.tsx`): per-card color identity (teal/indigo/violet/
+  emerald icon chips), **count-up numbers** (`CountUpNumber`, rAF ease-out cubic, reduced-motion
+  aware), and a **real stock-distribution mini-bar** (green in / amber low / red out) under
+  Total Items.
+- **Stock health gauge panel** (`StockHealthGauge`): SVG semicircle, arc = % items in stock
+  (animated stroke-dasharray; green ≥70 / amber ≥40 / red), center count-up %, legend rows with
+  live counts linking to filtered inventory views. Verified live: 57% amber with 4/3/0.
+- **Inventory URL now accepts `?quick=`** (low-stock/out-of-stock/no-image/unassigned) — the
+  quick filters existed but had no deep link; gauge legend uses `?quick=out-of-stock`.
+- **Fixed a latent responsive bug** (pre-existing, exposed at container ≤900px): the overview
+  header's and inventory hero's row flex-basis (20rem/22rem) became *height* in column mode,
+  inflating the header to ~720px with giant stretched action buttons. Fixed via
+  `@container (max-width: 900px) { flex: 0 0 auto }` for those children.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview at
+the failing container width: header normal, colored KPIs + distribution bar, gauge at 57% with
+correct legend counts.
+
+---
+
+## Sprint E3/E4 — Glass 2.0: modals, dropdowns, tooltips, auth pages  *(Complete)*
+
+**Scope:** Continue the glassmorphism brief past the dashboard — overlays and the login page.
+
+**E3 — Overlays (`app/globals.css`):**
+- `.ui-overlay` backdrop now blurs (6px) behind every dialog/sheet — was a flat scrim.
+- **Entrance motion** added for dialogs (`glass-pop-in` scale+fade), sheets (directional slide
+  per side: right/left/bottom), and menus/dropdowns/search panel (`glass-pop-in`, faster/160ms).
+  Found `.ui-menu-surface` / `.inventory-floating-menu` / `.ui-select-menu` were **already**
+  glass (blur 18px, prior sprint) — just missing motion, now added.
+- **Tooltip** upgraded from solid `--bg-surface-strong` to frosted glass (blur 10px) with a
+  scale+fade reveal on hover/focus, matching the existing hover trigger.
+- Full `prefers-reduced-motion` fallback (animations off) on all of the above.
+
+**E4 — Auth pages (`AuthPageShell` via `.login-*` classes):**
+- Kept the existing split-panel layout + `SydINLoginVisual` illustration (safer than a full
+  rebuild, no logic touched) but added the **warm orb + teal glow** behind the form panel and
+  **frosted glass** on the Google/Microsoft buttons and email/password inputs — same visual
+  family as the dashboard. Subtle fade-up on the whole auth column.
+- `prefers-reduced-transparency` fallback (solid white inputs/buttons).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live preview:
+login page shows glowing frosted buttons/inputs over the illustration split; inventory item
+action menu renders as a frosted glass dropdown with legible text and red Delete; zero console
+errors.
+
+**Remaining from the Glass 2.0 brief:** route crossfade transitions (needs JS/layout-level work),
+empty-state illustrations, loading skeleton shimmer tuning.
+
+---
+
+## Sprint E5 — Glass 2.0 route crossfade  *(Complete)*
+
+**Scope:** Last item from the Glass 2.0 brief — smooth page-to-page transitions, closing out
+the whole-app glassmorphism pass.
+
+**Delivered:**
+- **`app/dashboard/template.tsx`** (new) — a thin wrapper around `{children}`. Next.js
+  `template.tsx` remounts on every navigation (unlike `layout.tsx`, which persists), so the
+  sidebar/header in `layout.tsx` stay mounted while only the page content below them gets a
+  fresh instance per route change. Zero new dependencies — uses a built-in App Router mechanism
+  instead of a client-side transition library.
+- **`.dashboard-route-transition`** CSS (`app/globals.css`): 260ms crossfade + 8px upward slide
+  (`glass-route-in`, same easing family as the rest of Glass 2.0), `prefers-reduced-motion`
+  fallback.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (all 32 routes
+including the new template) · live preview: clicked Overview → Inventory, confirmed via DOM
+inspection that the transition wrapper is a **new node** each navigation with `animationName:
+"glass-route-in"` actively applied (proof the crossfade replays, not just present once) ·
+mobile viewport (375×812) checked — cards, KPI colors, and bottom nav all render cleanly, no
+overlap or breakage.
+
+**This closes the Glass 2.0 whole-app glassmorphism pass** (E1 foundation → E2 dashboard →
+E3 overlays → E4 auth → E5 transitions).
+
+---
+
+## Sprint F — Glass 2.0 color-consistency pass (secondary pages)  *(Complete)*
+
+**Scope:** Founder asked for a full app audit/launch-readiness pass. An Explore-agent audit across
+every page not individually named in a named sprint (Depots, Suppliers, Search, Settings,
+Inventory Import, Reports, Stock Counts, Pick Lists x2, Help, the public `item/[id]` QR page,
+admin/marketing pages, and the 3 admin API routes) found **zero crash risk** — data fetching is
+consistently hardened (guarded `JSON.parse`, typed `useState<T[]>([])`, try/catch everywhere) —
+but a real, mechanical **visual-consistency gap**: several pages still used pre-Glass-2.0 off-brand
+`indigo`/`violet`/`cyan`/`sky` focus rings, buttons, and badges instead of the brand gradient
+(`#10c4dc → #2563eb 58% → #7d5cff`) and brand-blue (`#2563eb`) focus token established by
+Sprints 5B/6, and two pages (`pick-lists` x2, `help`) plus the public item page still carried
+light-pastel text colors (`text-slate-200`, `text-violet-300/100`, `text-emerald-300`) left over
+from the pre-redesign dark theme — a real contrast bug on the now-light workspace.
+
+**Fixed (presentation-only, no logic/schema/auth touched):**
+- **Brand-token normalization**: focus rings, active-toggle borders, badges, and primary-gradient
+  buttons swapped to the standard tokens across `app/dashboard/depots/page.tsx`,
+  `app/dashboard/suppliers/page.tsx`, `app/dashboard/search/page.tsx`,
+  `app/dashboard/settings/page.tsx`, `app/dashboard/inventory/import/page.tsx`,
+  `app/dashboard/reports/page.tsx`, `app/dashboard/stock-counts/page.tsx`,
+  `app/dashboard/stock-movements/page.tsx`, `app/dashboard/pick-lists/page.tsx`,
+  `app/dashboard/pick-lists/[id]/page.tsx`, `app/dashboard/help/page.tsx`,
+  `app/dashboard/inventory/page.tsx`, `app/dashboard/categories/page.tsx`,
+  `app/dashboard/purchase-orders/page.tsx`, `components/inventory/StockMovementDialog.tsx`
+  (a shared component used across several pages), `app/dashboard/layout.tsx` (session-loading
+  gate), and `app/request-plan/page.tsx`.
+- **Contrast bug fix**: `text-slate-200` Pick List "Draft" badge → `text-theme-muted`;
+  `text-violet-300/100` and `text-emerald-300` on the Help page → `text-theme-*`/brand tokens —
+  these were unreadable-in-spirit light-pastel colors inherited from the pre-redesign dark theme,
+  now correctly legible on the light glass surface.
+- **Public QR item page** (`app/item/[id]/page.tsx`, deliberately its own dark theme — left as
+  dark by design): avatar gradient and "Go to SydIN" CTA moved from a non-brand
+  indigo/violet/fuchsia gradient and flat white/black button to the brand gradient; section
+  eyebrows moved to the brand's `#7d5cff` violet stop instead of stock `indigo-300`.
+- **Settings**: hand-rolled dark-shimmer loading skeleton replaced with the shared
+  `LoadingSkeletonGroup` primitive.
+- **Explicitly left alone**: categorical multi-hue "accent" systems on already-approved surfaces
+  (`inventory/[id]` `DetailCard` accent prop, `EditItemForm`, `add-item`, `InventoryItemCard`,
+  `InventoryValueOverview`, the Reports/Import "4th stat tone", `.glass-button`/`.glass-panel`
+  utility classes) — these are deliberate, signed-off multi-color designs, not brand-consistency
+  bugs, and restructuring `pick-lists`/`help` off their existing `.glass-*` utility-class pattern
+  onto `Workspace.tsx` primitives was intentionally out of scope (real behavior-preservation risk
+  for cosmetic-only gain).
+- Verified (read-only): Stock Counts' mobile card fallback carries full field parity with its
+  desktop table (item, expected/counted/difference, note) — no gap found.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (32/32 routes) ·
+live preview across Depots, Suppliers, Settings (Branding toggle + logo dropzone), Pick Lists
+(list + progress bar), Help (progress bar, troubleshooting, contact cards), Reports, and a mobile
+(375px) pass on Suppliers — all render with the unified brand gradient/blue, legible text, correct
+touch targets, zero console errors.
+
+**Untouchables:** No authentication, Supabase integration, database schema, routing, or business
+logic was changed on any file in this sprint.
+
+## Sprint 9 (Stages 0–1) — Scanner Workspace foundation  *(Stages 0–1 complete; Stages 2–3 pending SQL)*
+
+**Scope:** Roadmap Sprint 9. Founder chose the **full 8-mode** Scanner Workspace
+(Lookup · Receive · Issue · Transfer · Inventory Count · Assign · Repair · Return) including a new
+per-unit asset model. Delivered in stages because the remaining modes need migrations the founder
+runs manually in Supabase. **Stages 0–1 are shipped and verified; Stages 2–3 are not started.**
+
+### Stage 0 — shared scanner extraction (no SQL, zero intended behavior change)
+
+The camera scanner was embedded in `app/dashboard/inventory/page.tsx` (~230 lines of refs, decode
+effect, and modal JSX). Extracted so Inventory and the new workspace share **one** implementation:
+
+- **`app/lib/scannerErrors.ts`** — `getScannerErrorMessage` (moved verbatim) + the unsupported /
+  preview-not-ready message constants.
+- **`components/scanner/BarcodeScannerView.tsx`** — owns the `@zxing/browser` lifecycle
+  (`decodeFromConstraints`, `facingMode: environment`, MediaStream teardown). Props
+  `{active, onDecode, onStatusChange?, continuous?, readyStatus?, className?, videoClassName?}`.
+  `continuous` is new for the workspace; Inventory passes the default `false` to keep
+  stop-on-first-decode.
+- **`components/scanner/ScannerModal.tsx`** — the Inventory quick-scan chrome. "Try Again" now
+  remounts the view via a `key` nonce instead of the previous `setIsScannerOpen(false)` +
+  `setTimeout(…, 0)` reopen dance (verified: the `<video>` is a genuinely new node after retry).
+- **`app/lib/scannerResolve.ts`** — `extractScannedPublicId` + `resolveScannedCode()` returning a
+  discriminated union (`item` / `ambiguous` / `none`).
+
+`app/dashboard/inventory/page.tsx` shrank by **227 lines** and now renders `<ScannerModal>`.
+
+**Three real bugs fixed:**
+1. **Barcode scanning never worked.** Inventory rows carry a `barcode` column, but the resolver
+   only matched `public_id` then `sku` — scanning a product's own barcode always fell through to a
+   plain text search. `barcode` is now matched (priority: public id → exact SKU → barcode →
+   case-insensitive SKU).
+2. **Camera restarted mid-scan.** The old decode effect depended on `handleScannedText`, which is
+   `useCallback`'d on `[closeScanner, items, router]` — so any background item reload tore down and
+   restarted the camera. Callbacks now live in refs; the effect depends only on `active` /
+   `continuous`. *(Intentional improvement, not a pure no-op refactor.)*
+3. **Camera permission ambush.** The first Scanner Workspace build auto-started the camera on
+   mount, firing a permission prompt before the user did anything (it wedged the preview pane —
+   the same thing it would do to a first-time user). Now it queries the Permissions API and
+   auto-arms **only** when camera permission is already granted; otherwise it shows a calm
+   "Ready to scan" state with an explicit **Start scanning** button. Safari doesn't accept the
+   `"camera"` permission name and throws — that path falls back to the manual button.
+
+### Stage 1 — Scanner Workspace (no SQL) → Lookup · Receive · Issue · Count
+
+- **`app/dashboard/scanner/page.tsx`** (new route, 33rd). Sticky scrollable mode chips (44px
+  targets), camera panel, mode action panel, and a session "tape" of completed scans. Reads
+  `?mode=`. Scan → resolve → act → auto-rearm after 1.2s.
+  - **Lookup** → navigates to the item. **Receive/Issue** → quantity stepper →
+    `recordStockMovement` (`stock_in`/`stock_out`), issue blocked above available stock.
+    **Count** → tallies into the active Stock Counts draft.
+  - The four staged modes render as disabled chips that explain which migration unlocks them —
+    deliberately **not** hidden and **not** faked.
+  - States covered: loading · load-error · plan-locked (`LockedFeaturePanel`) · camera-off ·
+    camera-starting · camera-error · paused · no-match · ambiguous-picker · success.
+- **`app/lib/stockCountDraft.ts`** — read/write access to the Stock Counts `sessionStorage` draft
+  (`sydin:stock-counts-draft`). Deliberately **defensive**: validates the payload shape and
+  refuses to write rather than risk corrupting an in-progress count if that page's format changes.
+  Never regresses a `review` draft back to `count`; promotes `setup` → `count` on first scan.
+  *(Note: `stock-counts/page.tsx` keeps its own draft logic — not refactored onto this helper, to
+  avoid touching working behavior. The duplication is known and intentional for now.)*
+- **Navigation**: added `Scanner` (`section: "workspace"`, `mobilePlacement: "primary"`,
+  icon `scan`). `DashboardShell.requestScanner` and QR Center's "Start Scanner" now push
+  `/dashboard/scanner?mode=lookup` instead of routing through Inventory's sessionStorage handoff;
+  Inventory keeps its own quick-scan modal and its `SCANNER_REQUEST_EVENT` listener, so pressing
+  Scan while already on Inventory still opens the modal in place.
+
+**Settled decisions (also in `SYDIN_DECISION_LOG.md`):** Transfer = whole-item relocation with an
+audit row, **not** partial-quantity splitting (per-depot stock would require rewriting every
+quantity read/write in the app). Asset tracking = per-unit `inventory_assets` + append-only
+`asset_events`, quantity **derived** by trigger, opt-in via `inventory.is_asset_tracked`. No
+people/employees table yet — free-text assignee with autocomplete.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (33/33 routes,
+incl. the new `/dashboard/scanner`). Live preview: Inventory scanner opens / maps the permission
+error / retries with a real remount / closes and unmounts cleanly; the QR Center → scanner handoff
+works end-to-end; mode switching works and "Soon" modes surface their reason without switching.
+**31 unit tests written and passing** against the two pure helpers (`scannerResolve` 13,
+`stockCountDraft` 18), covering the new barcode match and the defensive paths where a corrupt or
+finalized count draft must be refused rather than clobbered. *(Tests were run via `tsx` and not
+committed — the repo has no test runner configured. Adding one is a recommended follow-up.)*
+
+**Known gap — on-device testing still required.** The preview browser has no camera, so every
+camera path exercised was the **denied** path. Real QR decode, 1D barcode decode, permission
+grant, and "camera light turns off on close" must still be checked on a phone.
+
+**Next:** Stage 2 (`sql/phase-10a-depot-transfers.sql` → Transfer) and Stage 3
+(`sql/phase-10b-asset-tracking.sql` → Assign/Repair/Return), each requiring the founder to run the
+migration in the Supabase SQL editor. Full plan retained at the approved Sprint 9 plan file.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

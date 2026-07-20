@@ -724,7 +724,7 @@ export default function ReportsPage() {
                 value={reportSearch}
                 onChange={(event) => setReportSearch(event.target.value)}
                 placeholder="Search reports"
-                className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
               />
             </label>
           </div>
@@ -912,7 +912,7 @@ export default function ReportsPage() {
         >
           <div className="grid gap-4">
             {exportStatus && (
-              <p className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
                 {exportStatus}
               </p>
             )}
@@ -1011,7 +1011,7 @@ export default function ReportsPage() {
                           [key]: event.target.checked,
                         }))
                       }
-                      className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                      className="h-4 w-4 rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb]/50"
                     />
                     {label}
                   </label>
@@ -1042,7 +1042,7 @@ export default function ReportsPage() {
         >
           <div className="grid gap-4">
             {exportStatus && (
-              <p className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
                 {exportStatus}
               </p>
             )}
@@ -1053,7 +1053,7 @@ export default function ReportsPage() {
                   type="date"
                   value={movementStartDate}
                   onChange={(event) => setMovementStartDate(event.target.value)}
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
@@ -1062,7 +1062,7 @@ export default function ReportsPage() {
                   type="date"
                   value={movementEndDate}
                   onChange={(event) => setMovementEndDate(event.target.value)}
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
@@ -1085,7 +1085,7 @@ export default function ReportsPage() {
                   value={movementSearch}
                   onChange={(event) => setMovementSearch(event.target.value)}
                   placeholder="Search item, code, or note"
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
                 />
               </label>
             </div>

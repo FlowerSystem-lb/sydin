@@ -26,10 +26,7 @@ import {
   getUpgradeRequestHref,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
-import {
-  SCANNER_REQUEST_EVENT,
-  SCANNER_REQUEST_STORAGE_KEY,
-} from "@/app/lib/scannerNavigation";
+import { SCANNER_REQUEST_EVENT } from "@/app/lib/scannerNavigation";
 import { supabase } from "@/app/lib/supabase";
 import {
   DASHBOARD_NAVIGATION,
@@ -393,17 +390,14 @@ export default function DashboardShell({
   const effectiveCollapsed = routeCollapsed ?? collapsed;
 
   const requestScanner = useCallback(() => {
+    // The Inventory page keeps its own quick-scan modal, so stay in place when
+    // the user is already there; everywhere else opens the Scanner Workspace.
     if (pathname === "/dashboard/inventory") {
       window.dispatchEvent(new Event(SCANNER_REQUEST_EVENT));
       return;
     }
 
-    try {
-      window.sessionStorage.setItem(SCANNER_REQUEST_STORAGE_KEY, "true");
-    } catch {
-      // Navigation still reaches the scanner workspace.
-    }
-    router.push("/dashboard/inventory");
+    router.push("/dashboard/scanner?mode=lookup");
   }, [pathname, router]);
 
   const openGlobalSearch = (trigger: HTMLButtonElement | null) => {
