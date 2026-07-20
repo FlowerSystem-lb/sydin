@@ -89,21 +89,25 @@ export async function getAssetAssigneeSuggestions(
 
 export async function isAssetTrackingMigrationMissing(): Promise<boolean> {
   try {
+    // Try a simple check: if the table doesn't exist, Supabase will error
     const { error } = await supabase
       .from("inventory_assets")
-      .select("id", { count: "exact", head: true })
+      .select("count")
       .limit(1);
 
-    // If we get a "table not found" error, migration is missing
-    if (error?.code === "42P01") {
+    // Only consider migration missing if we get an explicit "does not exist" or 42P01 error
+    if (error?.message?.includes("does not exist") || error?.code === "42P01") {
       return true;
     }
 
-    // If we got any other response (even an RLS error), the table exists
-    // Only return "missing" if we explicitly get table-not-found
+    // All other responses (including RLS, auth, or successful queries) mean table exists
     return false;
-  } catch {
-    // Network/auth errors — assume missing to be safe
-    return true;
+  } catch (e) {
+    const errorMsg = (e as Error)?.message || "";
+    if (errorMsg.includes("does not exist")) {
+      return true;
+    }
+    // On any other error, assume table exists
+    return false;
   }
 }
