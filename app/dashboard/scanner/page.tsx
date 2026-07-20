@@ -116,36 +116,28 @@ const MODES: ModeDefinition[] = [
     label: "Transfer",
     icon: "movement",
     hint: "Move an item to another depot.",
-    available: false,
-    unavailableReason:
-      "Transfer needs the depot-transfer database setup. Ask your admin to run the phase-10a migration.",
+    available: true,
   },
   {
     id: "assign",
     label: "Assign",
     icon: "suppliers",
     hint: "Assign a tracked unit to a person.",
-    available: false,
-    unavailableReason:
-      "Asset modes need the asset-tracking database setup. Ask your admin to run the phase-10b migration.",
+    available: true,
   },
   {
     id: "repair",
     label: "Repair",
     icon: "alert",
     hint: "Send a tracked unit for repair.",
-    available: false,
-    unavailableReason:
-      "Asset modes need the asset-tracking database setup. Ask your admin to run the phase-10b migration.",
+    available: true,
   },
   {
     id: "return",
     label: "Return",
     icon: "check",
     hint: "Return a tracked unit.",
-    available: false,
-    unavailableReason:
-      "Asset modes need the asset-tracking database setup. Ask your admin to run the phase-10b migration.",
+    available: true,
   },
 ];
 
