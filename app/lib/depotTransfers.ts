@@ -50,7 +50,7 @@ export async function isDepotTransferMigrationMissing(): Promise<boolean> {
 
     // Any other response (including permission errors) means migration exists
     return false;
-  } catch (e) {
+  } catch {
     // On any exception, assume migration exists (table is there, just had an issue)
     return false;
   }

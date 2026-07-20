@@ -116,7 +116,7 @@ export async function isAssetTrackingMigrationMissing(): Promise<boolean> {
 
     // Any other response (including permission errors) means migration exists
     return false;
-  } catch (e) {
+  } catch {
     // On any exception, assume migration exists (tables are there, just had an issue)
     return false;
   }
