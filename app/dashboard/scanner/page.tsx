@@ -21,6 +21,14 @@ import { resolveScannedCode, type ScanResolution } from "@/app/lib/scannerResolv
 import { recordStockMovement } from "@/app/lib/stockMovements";
 import { applyScanToStockCountDraft } from "@/app/lib/stockCountDraft";
 import { getInventoryQuantityLabel } from "@/app/lib/inventoryItemModel";
+import { transferInventoryItemToDepot, isDepotTransferMigrationMissing } from "@/app/lib/depotTransfers";
+import {
+  recordAssetEvent,
+  getAssetsByItem,
+  getAssetAssigneeSuggestions,
+  isAssetTrackingMigrationMissing,
+  type InventoryAsset,
+} from "@/app/lib/assetTracking";
 import { supabase } from "@/app/lib/supabase";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -40,6 +48,18 @@ interface ScannerItem {
   item_code?: string | null;
   unit_type?: string | null;
   custom_unit_label?: string | null;
+  depot_id?: number | null;
+}
+
+interface Depot {
+  id: number;
+  name: string;
+  code: string;
+}
+
+interface AssigneeOption {
+  name: string;
+  count: number;
 }
 
 type ScannerMode =
@@ -166,6 +186,21 @@ function ScannerWorkspace() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState("");
 
+  // Migration status for Stage 2-3 modes
+  const [transferMigrationMissing, setTransferMigrationMissing] = useState(false);
+  const [assetMigrationMissing, setAssetMigrationMissing] = useState(false);
+
+  // Depots for transfer mode
+  const [depots, setDepots] = useState<Depot[]>([]);
+  const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
+
+  // Assets and assignees for asset modes
+  const [scannedAssets, setScannedAssets] = useState<InventoryAsset[]>([]);
+  const [selectedAssetId, setSelectedAssetId] = useState<number | null>(null);
+  const [assigneeSuggestions, setAssigneeSuggestions] = useState<AssigneeOption[]>([]);
+  const [assigneeInput, setAssigneeInput] = useState("");
+  const [selectedCondition, setSelectedCondition] = useState<string>("");
+
   // `armed` is the user's intent to use the camera at all; `scanning` is
   // whether it should be live right now. The camera only auto-starts when the
   // browser already holds camera permission, so landing on this page never
@@ -199,15 +234,28 @@ function ScannerWorkspace() {
       .then(async ({ data: { user } }) => {
         if (!user) throw new Error("Please sign in again to use the scanner.");
 
-        const [{ data, error }, loadedSubscription] = await Promise.all([
+        const [
+          { data, error },
+          loadedSubscription,
+          transferMissing,
+          assetMissing,
+          { data: depotData },
+        ] = await Promise.all([
           supabase
             .from("inventory")
             .select(
-              "id, name, quantity, image, sku, barcode, public_id, item_code, unit_type, custom_unit_label"
+              "id, name, quantity, image, sku, barcode, public_id, item_code, unit_type, custom_unit_label, depot_id"
             )
             .eq("user_id", user.id)
             .order("name", { ascending: true }),
           getUserSubscription(user.id),
+          isDepotTransferMigrationMissing(),
+          isAssetTrackingMigrationMissing(),
+          supabase
+            .from("depots")
+            .select("id, name, code")
+            .eq("user_id", user.id)
+            .order("name", { ascending: true }),
         ]);
 
         if (error) throw error;
@@ -215,6 +263,9 @@ function ScannerWorkspace() {
 
         setItems((data || []) as ScannerItem[]);
         setSubscription(loadedSubscription);
+        setTransferMigrationMissing(transferMissing);
+        setAssetMigrationMissing(assetMissing);
+        setDepots((depotData || []) as Depot[]);
         setLoading(false);
       })
       .catch((error: unknown) => {
@@ -289,6 +340,25 @@ function ScannerWorkspace() {
     setScanning(true);
   }, []);
 
+  const loadAssets = useCallback(
+    async (itemId: number) => {
+      try {
+        const assets = await getAssetsByItem(itemId);
+        setScannedAssets(assets);
+        if (assets.length > 0) {
+          setSelectedAssetId(assets[0].id);
+        }
+      } catch (error: unknown) {
+        setActionError(
+          error instanceof Error
+            ? error.message
+            : "Could not load assets for this item."
+        );
+      }
+    },
+    []
+  );
+
   const handleDecode = useCallback(
     (text: string) => {
       const next = resolveScannedCode(text, items);
@@ -297,16 +367,25 @@ function ScannerWorkspace() {
       setResolution(next);
       setScanning(false);
 
-      if (next.kind === "item" && mode === "lookup") {
-        pushTape({
-          itemName: next.item.name,
-          detail: `Opened via ${next.matchedBy.replace("_", " ")}`,
-          tone: "info",
-        });
-        router.push(`/dashboard/inventory/${next.item.id}`);
+      if (next.kind === "item") {
+        if (mode === "lookup") {
+          pushTape({
+            itemName: next.item.name,
+            detail: `Opened via ${next.matchedBy.replace("_", " ")}`,
+            tone: "info",
+          });
+          router.push(`/dashboard/inventory/${next.item.id}`);
+        } else if (
+          mode === "assign" ||
+          mode === "repair" ||
+          mode === "return"
+        ) {
+          // Load assets for this item
+          void loadAssets(next.item.id);
+        }
       }
     },
-    [items, mode, pushTape, router]
+    [items, mode, pushTape, router, loadAssets]
   );
 
   const applyStockMovement = useCallback(
@@ -392,19 +471,163 @@ function ScannerWorkspace() {
     [pushTape, rearm]
   );
 
+  const applyTransfer = useCallback(
+    async (item: ScannerItem) => {
+      if (!selectedDepot) {
+        setActionError("Select a destination depot.");
+        return;
+      }
+
+      if (selectedDepot === item.depot_id) {
+        setActionError("Item is already in the selected depot.");
+        return;
+      }
+
+      try {
+        setBusy(true);
+        setActionError("");
+
+        await transferInventoryItemToDepot(
+          item.id,
+          selectedDepot,
+          "Scanner",
+          undefined
+        );
+
+        const newDepotName =
+          depots.find((d) => d.id === selectedDepot)?.name || "Unknown";
+
+        pushTape({
+          itemName: item.name,
+          detail: `Moved to ${newDepotName}`,
+          tone: "success",
+        });
+
+        setSelectedDepot(null);
+        rearm();
+      } catch (error: unknown) {
+        setActionError(
+          error instanceof Error ? error.message : "Transfer failed."
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [selectedDepot, depots, pushTape, rearm]
+  );
+
+  const applyAssetEvent = useCallback(
+    async (
+      assetId: number,
+      eventType: "status_changed" | "condition_changed" | "assigned" | "unassigned"
+    ) => {
+      try {
+        setBusy(true);
+        setActionError("");
+
+        let newStatus: "in_stock" | "in_use" | "in_repair" | "retired" | "lost" | undefined;
+        let newCondition: "good" | "fair" | "poor" | "damaged" | "unknown" | undefined;
+        let newAssignedTo: string | undefined;
+
+        if (eventType === "status_changed" && mode === "repair") {
+          newStatus = "in_repair";
+        } else if (eventType === "status_changed" && mode === "return") {
+          newStatus = "in_stock";
+        } else if (eventType === "condition_changed") {
+          newCondition = (selectedCondition as "good" | "fair" | "poor" | "damaged" | "unknown" | "") || undefined;
+        } else if (eventType === "assigned" && mode === "assign") {
+          newAssignedTo = assigneeInput;
+        }
+
+        await recordAssetEvent(
+          assetId,
+          eventType,
+          newStatus,
+          newCondition,
+          newAssignedTo,
+          undefined,
+          "Scanner"
+        );
+
+        const asset = scannedAssets.find((a) => a.id === assetId);
+        const detail =
+          mode === "assign"
+            ? `Assigned to ${assigneeInput}`
+            : mode === "repair"
+              ? "Marked for repair"
+              : mode === "return"
+                ? "Returned to stock"
+                : "Updated";
+
+        pushTape({
+          itemName: asset?.inventory_item_id || "Item",
+          detail,
+          tone: "success",
+        });
+
+        setSelectedDepot(null);
+        setAssigneeInput("");
+        setSelectedCondition("");
+        rearm();
+      } catch (error: unknown) {
+        setActionError(
+          error instanceof Error ? error.message : "Asset event failed."
+        );
+      } finally {
+        setBusy(false);
+      }
+    },
+    [mode, selectedCondition, assigneeInput, scannedAssets, pushTape, rearm]
+  );
+
+  const updateAssigneeSuggestions = useCallback(
+    async (query: string) => {
+      setAssigneeInput(query);
+      if (query.length > 0) {
+        try {
+          const suggestions = await getAssetAssigneeSuggestions(query);
+          setAssigneeSuggestions(suggestions);
+        } catch {
+          setAssigneeSuggestions([]);
+        }
+      } else {
+        setAssigneeSuggestions([]);
+      }
+    },
+    []
+  );
+
   const modeChips = useMemo(
     () =>
       MODES.map((entry) => {
+        // Determine availability based on migration status
+        let available = entry.available;
+        let unavailableReason = entry.unavailableReason;
+
+        if (entry.id === "transfer" && transferMigrationMissing) {
+          available = false;
+          unavailableReason =
+            "Transfer needs the depot-transfer database setup. Ask your admin to run the phase-10a migration.";
+        }
+        if (
+          (entry.id === "assign" || entry.id === "repair" || entry.id === "return") &&
+          assetMigrationMissing
+        ) {
+          available = false;
+          unavailableReason =
+            "Asset modes need the asset-tracking database setup. Ask your admin to run the phase-10b migration.";
+        }
+
         const selected = entry.id === mode;
         return (
           <button
             key={entry.id}
             type="button"
             aria-pressed={selected}
-            title={entry.available ? entry.hint : entry.unavailableReason}
+            title={available ? entry.hint : unavailableReason}
             onClick={() => {
-              if (!entry.available) {
-                setActionError(entry.unavailableReason || "");
+              if (!available) {
+                setActionError(unavailableReason || "");
                 return;
               }
               setMode(entry.id);
@@ -413,14 +636,14 @@ function ScannerWorkspace() {
             className={`inline-flex min-h-11 shrink-0 items-center gap-2 rounded-xl border px-3.5 py-2 text-sm font-bold transition ${
               selected
                 ? "border-[#2563eb]/50 bg-[#2563eb]/12 text-theme-accent ring-4 ring-[#2563eb]/15"
-                : entry.available
+                : available
                   ? "border-theme bg-theme-surface text-theme-secondary hover:bg-theme-hover hover:text-theme-primary"
                   : "cursor-not-allowed border-theme bg-theme-inset text-theme-subtle opacity-60"
             }`}
           >
             <UiIcon name={entry.icon} className="h-4 w-4" />
             {entry.label}
-            {!entry.available && (
+            {!available && (
               <span className="rounded-full border border-theme bg-theme-surface px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em]">
                 Soon
               </span>
@@ -428,7 +651,7 @@ function ScannerWorkspace() {
           </button>
         );
       }),
-    [clearResult, mode]
+    [clearResult, mode, transferMigrationMissing, assetMigrationMissing]
   );
 
   if (loading) {
@@ -742,6 +965,199 @@ function ScannerWorkspace() {
                     Open item
                   </Link>
                 )}
+
+                {mode === "transfer" && (
+                  <>
+                    <label className="grid gap-1.5 text-sm font-bold text-theme-secondary">
+                      Destination depot
+                      <select
+                        value={selectedDepot || ""}
+                        onChange={(e) =>
+                          setSelectedDepot(e.target.value ? Number(e.target.value) : null)
+                        }
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                      >
+                        <option value="">Choose a depot...</option>
+                        {depots.map((depot) => (
+                          <option key={depot.id} value={depot.id}>
+                            {depot.name}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={clearResult}
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy || !selectedDepot}
+                        onClick={() => applyTransfer(scannedItem)}
+                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {busy ? "Moving..." : "Move to depot"}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {mode === "assign" && scannedAssets.length > 0 && (
+                  <>
+                    <label className="grid gap-1.5 text-sm font-bold text-theme-secondary">
+                      Select unit to assign
+                      <select
+                        value={selectedAssetId || ""}
+                        onChange={(e) => setSelectedAssetId(Number(e.target.value))}
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                      >
+                        {scannedAssets.map((asset) => (
+                          <option key={asset.id} value={asset.id}>
+                            {asset.public_id}{" "}
+                            {asset.assigned_to_name ? `(${asset.assigned_to_name})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label className="grid gap-1.5 text-sm font-bold text-theme-secondary">
+                      Assign to
+                      <input
+                        type="text"
+                        list="assignee-suggestions"
+                        value={assigneeInput}
+                        onChange={(e) => updateAssigneeSuggestions(e.target.value)}
+                        placeholder="Name or email..."
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                      />
+                      {assigneeSuggestions.length > 0 && (
+                        <datalist id="assignee-suggestions">
+                          {assigneeSuggestions.map((suggestion) => (
+                            <option key={suggestion.name} value={suggestion.name} />
+                          ))}
+                        </datalist>
+                      )}
+                    </label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={clearResult}
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy || !assigneeInput}
+                        onClick={() =>
+                          selectedAssetId &&
+                          applyAssetEvent(selectedAssetId, "assigned")
+                        }
+                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {busy ? "Assigning..." : "Assign unit"}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {mode === "repair" && scannedAssets.length > 0 && (
+                  <>
+                    <label className="grid gap-1.5 text-sm font-bold text-theme-secondary">
+                      Unit to send for repair
+                      <select
+                        value={selectedAssetId || ""}
+                        onChange={(e) => setSelectedAssetId(Number(e.target.value))}
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                      >
+                        {scannedAssets.map((asset) => (
+                          <option key={asset.id} value={asset.id}>
+                            {asset.public_id} (Current: {asset.condition || "unknown"})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={clearResult}
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          selectedAssetId &&
+                          applyAssetEvent(selectedAssetId, "status_changed")
+                        }
+                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {busy ? "Marking..." : "Mark for repair"}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {mode === "return" && scannedAssets.length > 0 && (
+                  <>
+                    <label className="grid gap-1.5 text-sm font-bold text-theme-secondary">
+                      Unit to return
+                      <select
+                        value={selectedAssetId || ""}
+                        onChange={(e) => setSelectedAssetId(Number(e.target.value))}
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                      >
+                        {scannedAssets.map((asset) => (
+                          <option key={asset.id} value={asset.id}>
+                            {asset.public_id} (Status: {asset.status})
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={clearResult}
+                        disabled={busy}
+                        className="min-h-11 rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="button"
+                        disabled={busy}
+                        onClick={() =>
+                          selectedAssetId &&
+                          applyAssetEvent(selectedAssetId, "status_changed")
+                        }
+                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                      >
+                        {busy ? "Returning..." : "Return to stock"}
+                      </button>
+                    </div>
+                  </>
+                )}
+
+                {(mode === "assign" || mode === "repair" || mode === "return") &&
+                  scannedAssets.length === 0 && (
+                    <DashboardEmptyState
+                      icon="box"
+                      title="No tracked units"
+                      description="This item doesn't have any tracked units yet. You'll need to create assets first."
+                    />
+                  )}
               </div>
             )}
           </section>
