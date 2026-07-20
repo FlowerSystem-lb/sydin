@@ -1025,4 +1025,71 @@ migration in the Supabase SQL editor. Full plan retained at the approved Sprint 
 
 ---
 
+## Sprint 9 (Stages 2–3) — Depot Transfers + Asset Tracking (code & migrations complete)
+
+**Scope:** Deliver the Transfer mode and Asset-Tracking modes (Assign/Repair/Return) for the
+Scanner Workspace, completing the full 8-mode system. Both SQL migrations written, applied to
+Supabase production, and code wired up with auto-detection.
+
+### Stage 2 — Depot Transfers
+
+- **`sql/phase-10a-depot-transfers.sql`** — whole-item relocation with audit trail
+  - `inventory_depot_transfers` table: user_id, inventory_item_id, from_depot, to_depot, moved_by, notes, created_at
+  - `transfer_inventory_item_to_depot(item_id, new_depot_id, moved_by_name, notes)` RPC — single writer, updates
+    `inventory.depot_id`, logs transfer, returns success/failure
+  - RLS + indexes for performance
+- **Scanner UI** — Transfer mode: scan item → select depot (dropdown) → confirm → updates item depot + logs audit
+- **Code** — `app/lib/depotTransfers.ts` provides wrapper + migration detection
+
+### Stage 3 — Asset Tracking (per-unit model)
+
+- **`sql/phase-10b-asset-tracking.sql`** — per-unit tracking + derived quantity
+  - `inventory_assets` table: id, public_id (unique), status, condition, assigned_to_name, serial, notes
+  - `asset_events` append-only log: event_type, old/new status/condition/assignee, recorded_by, created_at
+  - `inventory.is_asset_tracked` flag (opt-in per item)
+  - Trigger to derive `inventory.quantity` from active asset count (status != retired && status != lost)
+  - `record_asset_event(asset_id, event_type, new_status?, new_condition?, new_assigned_to?, notes?, recorded_by?)` RPC
+    — single writer for all asset status transitions
+  - `get_asset_assignee_suggestions(search_term)` helper for autocomplete
+  - RLS + indexes
+- **Scanner UI**
+  - **Assign** — scan tracked item → select unit from dropdown → enter/select assignee (autocomplete from
+    existing names) → confirm → logs `assigned` event
+  - **Repair** — scan tracked item → select unit → mark for repair (status → `in_repair`) → logs `status_changed`
+    event
+  - **Return** — scan tracked item → select unit → return to stock (status → `in_stock`) → logs `status_changed`
+    event
+- **Code** — `app/lib/assetTracking.ts` provides types, RPC wrappers, asset fetching, assignee suggestions +
+  migration detection
+- **Asset UI** — asset unit selector (public_id + current status/assignee), assignee autocomplete, condition
+  picker
+
+### Integration into Scanner Workspace
+
+- Updated `app/dashboard/scanner/page.tsx` to load both migrations on mount and detect availability
+- All 8 modes now present: Lookup, Receive, Issue, Count (enabled) + Transfer, Assign, Repair, Return
+  (auto-enable once phase-10a/10b tables exist)
+- Mode chips update dynamically as migrations are detected
+- When modes aren't available, clicking them shows a helpful "Soon — ask admin to run phase-10a/10b" message
+- Asset modes automatically load assets for the scanned item and populate the asset selector
+- Assignee autocomplete queries distinct `assigned_to_name` values with count, trimmed + case-insensitive match
+
+### Founder action taken
+
+- Run `sql/phase-10a-depot-transfers.sql` in Supabase SQL Editor ✅
+- Run `sql/phase-10b-asset-tracking.sql` in Supabase SQL Editor ✅
+- Scanner auto-detected the new tables and **unlocked all 8 modes** ✅
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (33/33 routes) ·
+Live preview at `/dashboard/scanner`: all 8 mode chips visible and clickable; Transfer/Assign/Repair/Return now
+enabled; clicking them pops depot/asset selectors.
+
+**Known gap — on-device testing still required.** Same as Stage 1: real QR decode, barcode decode, permission
+grant, and camera light off must be verified on phone once Vercel redeploys.
+
+**This closes Sprint 9 entirely — all 4 stages (0–1 shipped July 20, 2–3 code complete, migrations live).** Scanner
+Workspace is feature-complete and ready for user testing. Next sprint: Stock Alerts + Activity Foundation (Sprint 10).
+
+---
+
 <!-- Append the next sprint entry below this line. -->
