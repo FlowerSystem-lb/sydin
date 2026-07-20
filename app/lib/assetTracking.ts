@@ -89,25 +89,35 @@ export async function getAssetAssigneeSuggestions(
 
 export async function isAssetTrackingMigrationMissing(): Promise<boolean> {
   try {
-    // Try a simple check: if the table doesn't exist, Supabase will error
-    const { error } = await supabase
-      .from("inventory_assets")
-      .select("count")
-      .limit(1);
+    // Try to call the RPC that was created by the migration
+    // If the RPC doesn't exist, Supabase will error with "undefined function"
+    const { error } = await supabase.rpc("record_asset_event", {
+      asset_id: 0,
+      event_type_arg: "created",
+      new_status_arg: null,
+      new_condition_arg: null,
+      new_assigned_to_arg: null,
+      event_notes: null,
+      recorded_by_name: null,
+    });
 
-    // Only consider migration missing if we get an explicit "does not exist" or 42P01 error
-    if (error?.message?.includes("does not exist") || error?.code === "42P01") {
+    // Check if the error is specifically about function not existing
+    const errorMsg = error?.message || "";
+    const errorCode = error?.code || "";
+
+    if (
+      errorMsg.includes("undefined function") ||
+      errorMsg.includes("does not exist") ||
+      errorCode === "42883"
+    ) {
+      // Function doesn't exist = migration not applied
       return true;
     }
 
-    // All other responses (including RLS, auth, or successful queries) mean table exists
+    // Any other response (including permission errors) means migration exists
     return false;
   } catch (e) {
-    const errorMsg = (e as Error)?.message || "";
-    if (errorMsg.includes("does not exist")) {
-      return true;
-    }
-    // On any other error, assume table exists
+    // On any exception, assume migration exists (tables are there, just had an issue)
     return false;
   }
 }
