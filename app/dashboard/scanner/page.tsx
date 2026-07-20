@@ -550,6 +550,10 @@ function ScannerWorkspace() {
         );
 
         const asset = scannedAssets.find((a) => a.id === assetId);
+        const itemName =
+          scannedAssets.length > 0
+            ? items.find((i) => i.id === asset?.inventory_item_id)?.name || "Item"
+            : "Item";
         const detail =
           mode === "assign"
             ? `Assigned to ${assigneeInput}`
@@ -560,7 +564,7 @@ function ScannerWorkspace() {
                 : "Updated";
 
         pushTape({
-          itemName: asset?.inventory_item_id || "Item",
+          itemName,
           detail,
           tone: "success",
         });
@@ -577,7 +581,7 @@ function ScannerWorkspace() {
         setBusy(false);
       }
     },
-    [mode, selectedCondition, assigneeInput, scannedAssets, pushTape, rearm]
+    [mode, selectedCondition, assigneeInput, scannedAssets, pushTape, rearm, items]
   );
 
   const updateAssigneeSuggestions = useCallback(

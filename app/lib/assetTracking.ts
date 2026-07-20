@@ -23,6 +23,7 @@ export type AssetEventType =
 
 export interface InventoryAsset {
   id: number;
+  inventory_item_id: number;
   public_id: string;
   status: AssetStatus;
   condition: AssetCondition | null;
