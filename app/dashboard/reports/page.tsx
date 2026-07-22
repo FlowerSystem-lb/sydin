@@ -44,10 +44,12 @@ import {
   normalizeInventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
 import {
+  getDepotReport,
   getInventoryValueTotals,
   getLowStockReport,
   getMovementTotals,
   getOutOfStockReport,
+  getSupplierReport,
   type InventoryReportItem,
   type ReportStockMovement,
 } from "@/app/lib/inventoryReports";
@@ -157,6 +159,29 @@ const INVENTORY_REPORTS: ReportCard[] = [
   },
 ];
 
+const VALUATION_REPORTS: ReportCard[] = [
+  {
+    id: "supplier-inventory",
+    name: "Supplier Report",
+    description: "Inventory grouped by supplier with totals and valuation.",
+    category: "valuation",
+    source: "Inventory",
+    formats: ["CSV"],
+    action: "route",
+    icon: "suppliers",
+  },
+  {
+    id: "depot-inventory",
+    name: "Depot / Location Report",
+    description: "Inventory grouped by depot or storage location with totals.",
+    category: "valuation",
+    source: "Inventory",
+    formats: ["CSV"],
+    action: "route",
+    icon: "depots",
+  },
+];
+
 const OPERATION_REPORTS: ReportCard[] = [
   {
     id: "stock-movements",
@@ -223,7 +248,7 @@ const OPERATION_REPORTS: ReportCard[] = [
   },
 ];
 
-const REPORTS = [...INVENTORY_REPORTS, ...OPERATION_REPORTS];
+const REPORTS = [...INVENTORY_REPORTS, ...VALUATION_REPORTS, ...OPERATION_REPORTS];
 
 function formatCurrency(value: number, currencyCode: string) {
   return (
@@ -290,6 +315,8 @@ export default function ReportsPage() {
   const [movementEndDate, setMovementEndDate] = useState("");
   const [movementType, setMovementType] = useState<MovementFilter>("all");
   const [movementSearch, setMovementSearch] = useState("");
+  const [supplierReportOpen, setSupplierReportOpen] = useState(false);
+  const [depotReportOpen, setDepotReportOpen] = useState(false);
 
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
@@ -409,6 +436,14 @@ export default function ReportsPage() {
   const outOfStockItems = useMemo(() => getOutOfStockReport(items), [items]);
   const totals = useMemo(() => getInventoryValueTotals(items), [items]);
   const movementTotals = useMemo(() => getMovementTotals(movements), [movements]);
+  const supplierReport = useMemo(() => {
+    const supplierMap = new Map(suppliers.map((s) => [s.id, s.name]));
+    return getSupplierReport(items, supplierMap);
+  }, [items, suppliers]);
+  const depotReport = useMemo(() => {
+    const depotMap = new Map(depots.map((d) => [d.id, formatDepotLabel(d)]));
+    return getDepotReport(items, depotMap);
+  }, [items, depots]);
 
   const reportCategories: Array<{ id: ReportCategory; label: string }> = [
     { id: "all", label: "All" },
@@ -639,6 +674,58 @@ export default function ReportsPage() {
     setExportStatus("");
   };
 
+  const exportSupplierReportCsv = () => {
+    if (supplierReport.length === 0) {
+      setNotice("No supplier data available to export.");
+      return;
+    }
+
+    downloadCsv("sydin-supplier-report.csv", [
+      [
+        "Supplier",
+        "Item Count",
+        "Total Quantity",
+        "Cost Value",
+        "Retail Value",
+      ],
+      ...supplierReport.map((supplier) => [
+        supplier.supplierName,
+        supplier.itemCount,
+        supplier.totalQuantity,
+        formatCurrency(supplier.costValue, currencyCode),
+        formatCurrency(supplier.retailValue, currencyCode),
+      ]),
+    ]);
+    setNotice(`Supplier report CSV exported with ${supplierReport.length} supplier${supplierReport.length === 1 ? "" : "s"}.`);
+    setSupplierReportOpen(false);
+  };
+
+  const exportDepotReportCsv = () => {
+    if (depotReport.length === 0) {
+      setNotice("No location data available to export.");
+      return;
+    }
+
+    downloadCsv("sydin-depot-report.csv", [
+      [
+        "Location",
+        "Item Count",
+        "Total Quantity",
+        "Cost Value",
+        "Retail Value",
+      ],
+      ...depotReport.map((depot) => [
+        depot.depotName,
+        depot.itemCount,
+        depot.totalQuantity,
+        formatCurrency(depot.costValue, currencyCode),
+        formatCurrency(depot.retailValue, currencyCode),
+      ]),
+    ]);
+    setNotice(`Depot report CSV exported with ${depotReport.length} location${depotReport.length === 1 ? "" : "s"}.`);
+    setDepotReportOpen(false);
+  };
+
   const openReport = (report: ReportCard) => {
     setNotice("");
     setExportStatus("");
@@ -646,6 +733,10 @@ export default function ReportsPage() {
       setInventoryDialogReport(report);
     } else if (report.action === "movement-csv") {
       setMovementDialogOpen(true);
+    } else if (report.id === "supplier-inventory") {
+      setSupplierReportOpen(true);
+    } else if (report.id === "depot-inventory") {
+      setDepotReportOpen(true);
     }
   };
 
@@ -673,7 +764,7 @@ export default function ReportsPage() {
           </DashboardNotice>
         )}
 
-        <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           <MetricCard
             icon="box"
             label="Inventory items"
@@ -697,6 +788,18 @@ export default function ReportsPage() {
             label="Movements"
             value={movementTotals.movementCount.toLocaleString()}
             detail="Latest 250 movement records"
+          />
+          <MetricCard
+            icon="suppliers"
+            label="Suppliers"
+            value={supplierReport.length.toLocaleString()}
+            detail={`${supplierReport.length === 1 ? "1 supplier" : supplierReport.length + " suppliers"}`}
+          />
+          <MetricCard
+            icon="depots"
+            label="Locations"
+            value={depotReport.length.toLocaleString()}
+            detail={`${depotReport.length === 1 ? "1 location" : depotReport.length + " locations"}`}
           />
         </section>
 
@@ -1093,6 +1196,76 @@ export default function ReportsPage() {
               {movementRows.length} row{movementRows.length === 1 ? "" : "s"} match
               these filters.
             </p>
+          </div>
+        </DialogShell>
+      )}
+
+      {supplierReportOpen && (
+        <DialogShell
+          title="Supplier Report"
+          eyebrow="Valuation report"
+          description="Export inventory grouped by supplier with totals and valuation."
+          onClose={() => setSupplierReportOpen(false)}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setSupplierReportOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={exportSupplierReportCsv}>Export CSV</Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            {notice && !supplierReportOpen && (
+              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+                {notice}
+              </p>
+            )}
+            <div className="rounded-xl border border-theme bg-theme-inset p-4">
+              <p className="text-sm text-theme-secondary">
+                {supplierReport.length === 0
+                  ? "No suppliers configured. Add suppliers to items before exporting."
+                  : `This report will include ${supplierReport.length} supplier${supplierReport.length === 1 ? "" : "s"} with a combined inventory value of ${formatCurrency(supplierReport.reduce((sum, s) => sum + s.costValue, 0), currencyCode)}.`}
+              </p>
+            </div>
+          </div>
+        </DialogShell>
+      )}
+
+      {depotReportOpen && (
+        <DialogShell
+          title="Depot / Location Report"
+          eyebrow="Valuation report"
+          description="Export inventory grouped by storage location or depot with totals."
+          onClose={() => setDepotReportOpen(false)}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setDepotReportOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button onClick={exportDepotReportCsv}>Export CSV</Button>
+            </>
+          }
+        >
+          <div className="grid gap-4">
+            {notice && !depotReportOpen && (
+              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+                {notice}
+              </p>
+            )}
+            <div className="rounded-xl border border-theme bg-theme-inset p-4">
+              <p className="text-sm text-theme-secondary">
+                {depotReport.length === 0
+                  ? "No depots configured. Add depots to items before exporting."
+                  : `This report will include ${depotReport.length} location${depotReport.length === 1 ? "" : "s"} with a combined inventory value of ${formatCurrency(depotReport.reduce((sum, d) => sum + d.costValue, 0), currencyCode)}.`}
+              </p>
+            </div>
           </div>
         </DialogShell>
       )}

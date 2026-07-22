@@ -19,6 +19,7 @@ import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
+import SetAlertLevelDialog from "@/components/inventory/SetAlertLevelDialog";
 import StockMovementDialog from "@/components/inventory/StockMovementDialog";
 import { Button, DialogShell, Select } from "@/components/ui";
 import {
@@ -97,6 +98,7 @@ import {
   getPlanLimitMessage,
   getSubscriptionUsage,
   getUpgradeActionLabel,
+  getUpgradePlanForCurrentPlan,
   getUpgradeRequestHref,
   type UpgradePlan,
   type SubscriptionUsage,
@@ -591,6 +593,7 @@ export default function InventoryPage() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [pendingDeleteItem, setPendingDeleteItem] = useState<Item | null>(null);
   const [movementItem, setMovementItem] = useState<Item | null>(null);
+  const [alertLevelItem, setAlertLevelItem] = useState<Item | null>(null);
   const [detailsItem, setDetailsItem] = useState<ItemDetailsTarget>(null);
   const inventoryModalOpen =
     isModalOpen ||
@@ -600,6 +603,7 @@ export default function InventoryPage() {
     bulkDialogMode !== null ||
     pendingDeleteItem !== null ||
     movementItem !== null ||
+    alertLevelItem !== null ||
     detailsItem !== null ||
     lockedFeature !== null;
   const [inventoryContextReady, setInventoryContextReady] = useState(false);
@@ -2557,6 +2561,15 @@ export default function InventoryPage() {
         <button
           type="button"
           role="menuitem"
+          onClick={() => setAlertLevelItem(item)}
+          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+        >
+          <UiIcon name="alert" className="h-4 w-4" />
+          Set alert level
+        </button>
+        <button
+          type="button"
+          role="menuitem"
           onClick={() => openEditModal(item)}
           className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
         >
@@ -3232,6 +3245,7 @@ export default function InventoryPage() {
                     }
                     onCreateQrLabel={() => openQrCenterForItems([item.id])}
                     onAdjust={() => setMovementItem(item)}
+                    onSetAlertLevel={() => setAlertLevelItem(item)}
                     onEdit={() => openEditModal(item)}
                     onDelete={() => setPendingDeleteItem(item)}
                     detailsHref={`/dashboard/inventory/${item.id}?returnTo=${encodeURIComponent(
@@ -5091,6 +5105,28 @@ export default function InventoryPage() {
         onRecorded={async () => {
           setPageNotice("Stock movement recorded successfully.");
           await fetchItems();
+        }}
+      />
+
+      <SetAlertLevelDialog
+        open={alertLevelItem !== null}
+        item={alertLevelItem}
+        defaultThreshold={effectiveLowStockThreshold}
+        canUseItemThreshold={planCapabilities.customLowStockThreshold}
+        currentPlanLabel={currentPlanName}
+        upgradePlan={getUpgradePlanForCurrentPlan(
+          subscriptionUsage.subscription.plan
+        )}
+        onClose={() => setAlertLevelItem(null)}
+        onSaved={(itemId, minStockLevel) => {
+          setItems((currentItems) =>
+            currentItems.map((entry) =>
+              entry.id === itemId
+                ? { ...entry, min_stock_level: minStockLevel }
+                : entry
+            )
+          );
+          setPageNotice("Alert level updated.");
         }}
       />
 

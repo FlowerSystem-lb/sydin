@@ -130,6 +130,7 @@ export default function GlobalSearchDialog({
     const frame = window.requestAnimationFrame(() => {
       setRecentRoutes(getSafeRecentRoutes());
       setRecentQueries(getSafeRecentQueries());
+      inputRef.current?.scrollIntoView({ behavior: "auto", block: "center" });
       inputRef.current?.focus();
     });
 
@@ -169,7 +170,7 @@ export default function GlobalSearchDialog({
         'button:not([disabled]), input:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])'
       );
 
-      if (!focusable || focusable.length === 0) return;
+      if (!focusable || focusable.length <= 1) return; // Only input, no results
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -242,7 +243,7 @@ export default function GlobalSearchDialog({
                 setQuery(event.target.value);
               }}
               onKeyDown={handleSearchKeyDown}
-              placeholder="Search items, orders, suppliers, movements..."
+              placeholder={`Search items, orders, suppliers, movements… (${isMac() ? "⌘" : "Ctrl"}+K)`}
               className="global-search-input"
               aria-controls="global-search-results"
               aria-activedescendant={activeResult?.id}
@@ -302,8 +303,16 @@ export default function GlobalSearchDialog({
           role="listbox"
           aria-label="Global search results"
         >
+          <div aria-live="polite" aria-atomic="true" className="sr-only">
+            {loading && "Searching your workspace"}
+            {error && error}
+          </div>
+
           {loading && (
-            <p className="global-search-status-row">Searching...</p>
+            <div className="flex items-center justify-center gap-2 py-8">
+              <div className="animate-spin h-4 w-4 border-2 border-theme-accent border-t-transparent rounded-full" />
+              <p className="global-search-status-row">Searching...</p>
+            </div>
           )}
           {error && (
             <p role="alert" className="global-search-error-row">
@@ -390,10 +399,10 @@ export default function GlobalSearchDialog({
                         <UiIcon name={GROUP_ICON[result.group]} className="h-4 w-4" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-black text-theme-primary">
+                        <span className="block truncate text-sm font-black text-theme-primary" title={result.title}>
                           <HighlightedText text={result.title} query={trimmedQuery} />
                         </span>
-                        <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted">
+                        <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted" title={result.subtitle}>
                           {result.subtitle}
                         </span>
                       </span>
@@ -439,6 +448,9 @@ export default function GlobalSearchDialog({
           <span>
             <kbd>&uarr;</kbd>
             <kbd>&darr;</kbd> Navigate
+          </span>
+          <span>
+            <kbd>Tab</kbd> Cycle
           </span>
           <span>
             <kbd>&crarr;</kbd> Open

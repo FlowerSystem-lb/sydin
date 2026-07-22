@@ -78,6 +78,14 @@ export default function GlobalSearchPage() {
   }, []);
 
   useEffect(() => {
+    const q = searchParams.get("q") || "";
+    if (q !== queryInput && q !== syncedQueryRef.current) {
+      setQueryInput(q);
+      syncedQueryRef.current = q;
+    }
+  }, [searchParams, queryInput]);
+
+  useEffect(() => {
     if (queryInput === syncedQueryRef.current) return;
 
     const timeout = window.setTimeout(() => {
@@ -205,7 +213,7 @@ export default function GlobalSearchPage() {
       )}
 
       {isSearching && itemsGroupVisible && (activeGroup === "All" || activeGroup === "Items") && (
-        <FilterBar label="Filter by stock status" className="mt-2">
+        <FilterBar label="Filter items by stock status" className="mt-2">
           <FilterChip active={stockFilter === "all"} onClick={() => setStockFilter("all")}>
             All stock
           </FilterChip>

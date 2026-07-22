@@ -152,6 +152,33 @@ export const QUICK_ACTIONS: SearchResult[] = [
     keywords: "purchase order po supplier order",
   },
   {
+    id: "action-scanner",
+    group: "Operations",
+    title: "Scanner",
+    subtitle: "Open the scanner workspace for barcode and QR workflows",
+    chip: "Page",
+    href: "/dashboard/scanner",
+    keywords: "scanner scan barcode qr code scan-first workflow",
+  },
+  {
+    id: "action-alerts",
+    group: "Pages",
+    title: "Stock Alerts",
+    subtitle: "Review low-stock and out-of-stock inventory alerts",
+    chip: "Page",
+    href: "/dashboard/alerts",
+    keywords: "alerts stock alerts low stock out of stock inventory health",
+  },
+  {
+    id: "action-activity",
+    group: "Pages",
+    title: "Activity",
+    subtitle: "View unified timeline of inventory changes and events",
+    chip: "Page",
+    href: "/dashboard/activity",
+    keywords: "activity timeline events feed history stock movements",
+  },
+  {
     id: "action-qr-center",
     group: "Pages",
     title: "QR Center",
@@ -184,9 +211,12 @@ export const STATIC_ROUTES: Record<string, string> = {
   "/dashboard": "Overview",
   "/dashboard/inventory": "Inventory",
   "/dashboard/add-item": "Add item",
+  "/dashboard/scanner": "Scanner",
   "/dashboard/pick-lists": "Pick Lists",
   "/dashboard/purchase-orders": "Purchase Orders",
   "/dashboard/receiving": "Receiving",
+  "/dashboard/alerts": "Stock Alerts",
+  "/dashboard/activity": "Activity",
   "/dashboard/stock-movements": "Stock Movements",
   "/dashboard/stock-counts": "Stock Counts",
   "/dashboard/qr-center": "QR Center",
@@ -284,7 +314,7 @@ export function getSafeRecentQueries(): string[] {
 
 export function rememberRecentQuery(term: string) {
   const trimmed = term.trim();
-  if (trimmed.length < SEARCH_MIN_LENGTH) return;
+  if (trimmed.length < SEARCH_MIN_LENGTH || trimmed.length > 100) return;
 
   try {
     const current = getSafeRecentQueries().filter(

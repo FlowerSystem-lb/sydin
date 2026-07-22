@@ -34,6 +34,7 @@ export default function InventoryItemCard({
   selectable = false,
   selected = false,
   onAdjust,
+  onSetAlertLevel,
   onEdit,
   onDelete,
   onToggleSelected,
@@ -56,6 +57,7 @@ export default function InventoryItemCard({
   selectable?: boolean;
   selected?: boolean;
   onAdjust: () => void;
+  onSetAlertLevel?: () => void;
   onEdit: () => void;
   onDelete: () => void;
   onToggleSelected?: () => void;
@@ -293,6 +295,17 @@ export default function InventoryItemCard({
               <UiIcon name="movement" className="h-4 w-4" />
               Adjust stock
             </button>
+            {onSetAlertLevel && (
+              <button
+                type="button"
+                role="menuitem"
+                onClick={() => runMenuAction(onSetAlertLevel)}
+                className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold transition hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+              >
+                <UiIcon name="alert" className="h-4 w-4" />
+                Set alert level
+              </button>
+            )}
             <button
               type="button"
               role="menuitem"

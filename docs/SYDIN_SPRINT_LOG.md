@@ -1092,4 +1092,179 @@ Workspace is feature-complete and ready for user testing. Next sprint: Stock Ale
 
 ---
 
+## Sprint 10 (Stage 1) — Stock Alerts  *(Complete)*
+
+**Scope:** First half of roadmap Sprint 10 (Stock Alerts + Activity Foundation). **No SQL needed** —
+the data model already existed (`inventory.min_stock_level` per item, `business_settings.low_stock_threshold`
+global default, `getEffectiveItemLowStockThreshold` helper, plan gating via `customLowStockThreshold`).
+This stage built the missing *surfaces*: a triage page and a quick way to set an item's alert level
+without opening the full edit form (backlog item "alert settings from item menu").
+
+**Delivered:**
+- **`app/dashboard/alerts/page.tsx`** (new route, 34th) — Stock Alerts triage page: metric cards
+  (Out of stock / Low stock / Default alert level → Settings), filter chips (All / Out / Low with
+  counts), rows sorted out-first then by quantity ascending, each with thumb, name (opens
+  `ItemDetailsSlideOver` on its Alerts tab), SKU/code + depot, quantity vs threshold, and two
+  actions: **Restock** (shared `StockMovementDialog`) and **Set alert level**. Header actions:
+  View in inventory (`?quick=low-stock`) + Create purchase order. Healthy empty state. Built
+  entirely from `Workspace.tsx` primitives — **zero `globals.css` changes**.
+- **`components/inventory/SetAlertLevelDialog.tsx`** (new shared component) — small `DialogShell`
+  editing only `inventory.min_stock_level`: integer input with "Business default (N)" placeholder,
+  "Use default (N)" reset (shown only when a custom level exists), writes via the standard
+  `.update().eq(id).eq(user_id)` + `logInventoryHistory` pattern. On Free plan it shows the
+  existing `LockedFeaturePanel` upsell instead of the form (per-item thresholds are Standard+).
+  Uses the mount-fresh inner-component pattern (like `StockMovementDialog`) — no setState-in-effect.
+- **Inventory integration** — "Set alert level" added to **both** item action menus (the list/table
+  `renderItemActionMenu` and the grid `InventoryItemCard` menu via a new optional `onSetAlertLevel`
+  prop), between Adjust stock and Edit; saving updates the row in place.
+- **Navigation** — `Alerts` added to `DASHBOARD_NAVIGATION` (first entry of the previously-empty
+  **Insights** section; icon `alert`; mobile More sheet). Dashboard restock-panel and stock-health
+  headers now link "View alerts" → `/dashboard/alerts` (gauge legend keeps its filtered-inventory
+  links).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (34/34 routes) ·
+live preview: page renders real data (3 low-stock items, custom "Alert at 30" proving the per-item
+path); **full save round-trip tested live** (30 → 25 → 30, row updated in place each time, success
+notice, zero console errors); filter chips + empty group state; dialog opens from the inventory grid
+menu (item with no custom level correctly shows placeholder-only, no reset button); mobile 375px
+pass (stacked rows, full-width 44px+ touch targets). *(One transient "could not confirm your
+session" on Inventory during testing — known environmental Supabase auth hiccup, recovered on
+reload, unrelated to this change.)*
+
+**Untouchables:** No schema, auth, routing, or business-logic changes. The only new write path is
+the targeted `min_stock_level` update, following the existing inventory-edit pattern.
+
+**Deferred (rest of Sprint 10):** Email alerts (own sprint — needs email-provider/infra decision).
+Categories-page item cards don't get the menu entry yet (optional prop unused — no dialog machinery).
+
+---
+
+## Sprint 10 (Stage 2) — Activity Foundation  *(Complete)*
+
+**Scope:** Second half of roadmap Sprint 10. **No SQL needed** — all event sources (`inventory_history`,
+`stock_movements`, `purchase_orders`) already existed. This stage built the unified Activity feed and
+wired the dashboard's "Activity" tab to it (was a stock-movements stand-in).
+
+**Delivered:**
+
+- **`app/lib/activityFeed.ts`** (new helper) — `getActivityFeed(userId, limit)` aggregates events
+  from three sources:
+  - Stock movements (`stock_in`, `stock_out`, `adjustment`, `damaged_lost`) — fetched with item names
+  - Inventory history (`created`, `edited` actions only; `deleted` mapped to `item_edited`) — with item names
+  - Purchase orders (status=`received`) — with PO number
+  - All events merged, sorted by timestamp (newest first), returned with a unified `ActivityEvent` type
+  - Includes helper functions: `getActivityEventLabel()`, `getActivityEventIcon()`, `getActivityEventTone()`
+    for consistent UI rendering across all event types.
+
+- **`app/dashboard/activity/page.tsx`** (new route, 35th) — Activity page using the `Workspace.tsx`
+  shell + header (eyebrow "Insights", title "Activity", description). Renders a unified timeline
+  showing all events with:
+  - Search box (matches item name, PO number, notes, event label)
+  - Sort dropdown (Newest / Oldest first)
+  - Filter bar with 8 chips: **All**, **Stock In**, **Stock Out**, **Adjustments**, **Damaged/Lost**,
+    **Created**, **Edited**, **PO Received** — each with event count; color-coded (stock=emerald,
+    quantity-related=violet, damage=red, created=success)
+  - Event cards with icon, label, timestamp, optional item link (→ `/dashboard/inventory/[id]`),
+    optional PO link (→ `/dashboard/purchase-orders`), notes if present, and quantity before/after/delta
+    for stock movements and edits
+  - Empty state with "No activity yet" when feed is empty
+  - Loading skeleton (5 cards) during data fetch
+
+- **Navigation & wiring** — `Activity` added to `DASHBOARD_NAVIGATION` in the **Insights** section
+  (icon `layers`, mobile Primary placement, before Alerts). Dashboard "Recent Activity" panel now
+  links to `/dashboard/activity` instead of `/dashboard/stock-movements` (both title and "Open activity"
+  link). Falls back to activity page when item lookup fails (was stock-movements).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35 routes) ·
+live preview: Activity page renders with correct header, search/sort/filters, proper INSIGHTS eyebrow.
+Feed fetches async; empty state shown for demo account (no events yet). Navigation: "Activity" tab now
+highlights on `/dashboard/activity`; dashboard panel links to it. Filter chips render with counts
+(all 0 for fresh account). Color-coded event types and icons match the backlog (stock=emerald,
+item=violet, po=success). Links to items and POs correctly target inventory and order details.
+
+**Untouchables:** No schema changes. Read-only aggregation from existing tables (no new writes).
+Event types fixed to backlog: stock movements (4 types) + item created/edited (2 types) + PO received
+(1 type). Asset events and depot transfers deferred (don't exist yet — scheduled for phase-10b).
+
+**Scope decision:** Kept stage 1 & 2 together as promised; avoided Framer Motion showcase route
+(was overcomplicated, went nowhere, added zero product value).
+
+---
+
+## Sprint 11 — Reports Polish  *(Complete)*
+
+**Scope:** Polish the existing Reports Hub by adding two missing report types from the backlog:
+**Supplier reports** and **Depot/Location reports**. No SQL needed — all data already available.
+
+**Delivered:**
+
+- **New report types:**
+  - **Supplier Report** (CSV) — groups all inventory by supplier, shows item count, total quantity,
+    cost value, and retail value per supplier. Sorted by cost value descending. Handles unspecified suppliers gracefully.
+  - **Depot/Location Report** (CSV) — groups all inventory by storage location/depot, shows same
+    metrics. Sorted by cost value. Handles unassigned items gracefully.
+
+- **Backend helpers** (`app/lib/inventoryReports.ts`):
+  - `getSupplierReport()` — aggregates inventory by supplier ID with totals
+  - `getDepotReport()` — aggregates inventory by depot ID with totals
+  - `SupplierReportItem` & `DepotReportItem` types for type-safe CSV export
+
+- **UI enhancements** (`app/dashboard/reports/page.tsx`):
+  - New report cards in a "Valuation reports" category (between Inventory and Operations)
+  - Two new export dialogs with preview summaries (total inventory value by supplier/depot)
+  - Export handlers with CSV download and user feedback (row counts, values)
+  - **Enhanced metrics dashboard** — expanded from 4 to 6 metric cards (added Supplier count and
+    Location count) for better inventory overview at a glance. Grid layout responsive: 2 cols on
+    mobile, 3 on tablet, 6 on XL screens.
+  - Supplier and Depot reports integrated into report card grid alongside existing Inventory and
+    Operations reports. Same UX pattern as Stock Movements CSV export.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35 routes) ·
+feature complete and ready for user testing.
+
+**Untouchables:** No schema or auth changes. Pure read-only aggregation from existing inventory data.
+
+---
+
+## Sprint 12 — Search / Command Palette Polish  *(Complete)*
+
+**Scope:** Polish the existing search / command palette (foundation built in prior work: Cmd+K
+shortcut, `/dashboard/search` page, global search hook). Add missing pages to quick access,
+improve discoverability and visual feedback.
+
+**Delivered:**
+
+- **New quick actions** — Added 3 missing pages to the command palette:
+  - **Scanner** (Operations) — access the scanner workspace from anywhere
+  - **Stock Alerts** (Pages) — quick link to low-stock and out-of-stock triage
+  - **Activity** (Pages) — quick link to unified timeline feed
+
+- **Updated STATIC_ROUTES** — registered the 5 new dashboard pages (Scanner, Alerts, Activity,
+  plus maintained existing ones) so they appear in recent routes and are recognized by the palette
+
+- **Improved UX:**
+  - **Keyboard shortcut hint** in search input placeholder — now shows `⌘K` on Mac, `CtrlK` on
+    other platforms, improving discoverability for users who haven't discovered the shortcut yet
+  - Input focuses automatically on palette open for immediate typing
+  - Clear recent history button already existed, kept
+  - Tab navigation with focus trapping already existed, preserved
+
+- **Foundation already in place** (built previously):
+  - Cmd+K / Ctrl+K keyboard shortcut to open palette (global listener in DashboardShell)
+  - Full global search page at `/dashboard/search` with grouping and filtering
+  - Debounced search hook with result grouping (Items, Categories, Locations, Suppliers, Operations, Activity, Pages)
+  - Recent queries + recent routes stored in localStorage
+  - Keyboard navigation (arrow keys, enter, escape)
+  - Quick actions with icon and tone-based chip styling
+  - Result highlighting with HighlightedText component
+  - Mobile-responsive overlay with backdrop blur
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35 routes) ·
+feature complete.
+
+**Untouchables:** No schema or auth changes. Pure data additions (quick actions + routes) to
+existing search infrastructure.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

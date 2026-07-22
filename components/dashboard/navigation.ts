@@ -112,6 +112,20 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
+    label: "Activity",
+    href: "/dashboard/activity",
+    icon: "layers",
+    section: "insights",
+    mobilePlacement: "primary",
+  },
+  {
+    label: "Alerts",
+    href: "/dashboard/alerts",
+    icon: "alert",
+    section: "insights",
+    mobilePlacement: "more",
+  },
+  {
     label: "Settings",
     href: "/dashboard/settings",
     icon: "settings",

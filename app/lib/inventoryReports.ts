@@ -425,3 +425,97 @@ export function getMovementTimeBuckets({
 
   return buckets;
 }
+
+export interface SupplierReportItem {
+  supplierId: number | null;
+  supplierName: string;
+  itemCount: number;
+  totalQuantity: number;
+  costValue: number;
+  retailValue: number;
+}
+
+export interface DepotReportItem {
+  depotId: number | null;
+  depotName: string;
+  itemCount: number;
+  totalQuantity: number;
+  costValue: number;
+  retailValue: number;
+}
+
+export function getSupplierReport(
+  items: InventoryReportItem[],
+  supplierMap: Map<number | null, string>
+): SupplierReportItem[] {
+  const suppliers = new Map<number | null, SupplierReportItem>();
+
+  items.forEach((item) => {
+    const supplierId = item.supplier_id ?? null;
+    const supplierName = supplierMap.get(supplierId) || "Unspecified supplier";
+    const current = suppliers.get(supplierId) || {
+      supplierId,
+      supplierName,
+      itemCount: 0,
+      totalQuantity: 0,
+      costValue: 0,
+      retailValue: 0,
+    };
+
+    current.itemCount += 1;
+    current.totalQuantity += normalizeReportNumber(item.quantity);
+    current.costValue += getItemCostValue(item) || 0;
+    current.retailValue += getItemRetailValue(item) || 0;
+    suppliers.set(supplierId, current);
+  });
+
+  return [...suppliers.values()]
+    .map((supplier) => ({
+      ...supplier,
+      costValue: Math.round(supplier.costValue * 100) / 100,
+      retailValue: Math.round(supplier.retailValue * 100) / 100,
+    }))
+    .sort(
+      (left, right) =>
+        right.costValue - left.costValue ||
+        left.supplierName.localeCompare(right.supplierName)
+    );
+}
+
+export function getDepotReport(
+  items: InventoryReportItem[],
+  depotMap: Map<number | null, string>
+): DepotReportItem[] {
+  const depots = new Map<number | null, DepotReportItem>();
+
+  items.forEach((item) => {
+    const depotId = item.depot_id ?? null;
+    const depotName = depotMap.get(depotId) || "Unspecified location";
+    const current = depots.get(depotId) || {
+      depotId,
+      depotName,
+      itemCount: 0,
+      totalQuantity: 0,
+      costValue: 0,
+      retailValue: 0,
+    };
+
+    current.itemCount += 1;
+    current.totalQuantity += normalizeReportNumber(item.quantity);
+    current.costValue += getItemCostValue(item) || 0;
+    current.retailValue += getItemRetailValue(item) || 0;
+    depots.set(depotId, current);
+  });
+
+  return [...depots.values()]
+    .map((depot) => ({
+      ...depot,
+      costValue: Math.round(depot.costValue * 100) / 100,
+      retailValue: Math.round(depot.retailValue * 100) / 100,
+    }))
+    .sort(
+      (left, right) =>
+        right.costValue - left.costValue ||
+        left.depotName.localeCompare(right.depotName)
+    );
+}

@@ -704,8 +704,8 @@ export default function DashboardPage() {
             <DashboardPanelHeader
               icon="alert"
               title="Items that need restocking"
-              href={LOW_STOCK_INVENTORY_HREF}
-              hrefLabel="Low stock"
+              href="/dashboard/alerts"
+              hrefLabel="View alerts"
             />
 
             {loading ? (
@@ -838,8 +838,8 @@ export default function DashboardPage() {
             <DashboardPanelHeader
               icon="check"
               title="Stock health"
-              href={LOW_STOCK_INVENTORY_HREF}
-              hrefLabel="Low stock"
+              href="/dashboard/alerts"
+              hrefLabel="View alerts"
             />
 
             {loading ? (
@@ -971,7 +971,7 @@ export default function DashboardPage() {
             <DashboardPanelHeader
               icon="clock"
               title="Recent Activity"
-              href="/dashboard/stock-movements"
+              href="/dashboard/activity"
               hrefLabel="Activity"
             />
 
@@ -988,7 +988,7 @@ export default function DashboardPage() {
                 </span>
                 <strong>No recent activity</strong>
                 <p>Stock movements will appear here as the team works.</p>
-                <Link href="/dashboard/stock-movements">Open movements</Link>
+                <Link href="/dashboard/activity">Open activity</Link>
               </div>
             ) : (
               <div className="sydin-overview-activity-list">
@@ -1005,7 +1005,7 @@ export default function DashboardPage() {
                   );
                   const activityHref = item
                     ? getDashboardItemHref(item.id)
-                    : "/dashboard/stock-movements";
+                    : "/dashboard/activity";
 
                   return (
                     <Link
