@@ -1267,4 +1267,54 @@ existing search infrastructure.
 
 ---
 
+## Sprint 8 — QR & Labels Workspace Polish  *(Complete)*
+
+**Scope:** Polish the existing QR Center workspace (foundation already built: QR generation, PDF
+export, label layouts, business branding). Focus on UX clarity, mobile responsiveness, and
+multi-item navigation.
+
+**Delivered:**
+
+- **Label preview enhancements:**
+  - Added multi-item navigation with **prev/next buttons** when multiple items selected
+  - Display counter ("3 of 5") showing current preview position
+  - Users can now browse all selected labels before printing/exporting
+  - Navigation buttons styled to match dashboard button language
+
+- **Better empty states & messaging:**
+  - **Clarified page description** — "Generate QR codes and print labels for your inventory items"
+  - **Improved item selection heading** — "Select Items" with better guidance text about public links
+  - **Distinct empty states** — separate messaging for "no search results" vs "no items available"
+  - **Help text on preview empty state** — "Items need public links to generate QR codes—enable
+    this in Item Details"
+
+- **Branding UX improvements:**
+  - **Restructured branding options** with descriptions (was 3 buttons, now full-width cards with
+    explanatory text):
+    - **SydIN Mark + Wordmark** — "Clean, professional SydIN branding on every label"
+    - **Your Business Logo** — "Custom branding with your company logo (if configured)"
+    - **No Branding** — "Clean labels with QR code only"
+  - **Better upgrade messaging** — Styled in amber/red boxes with clearer explanation of
+    plan requirements (Standard/Pro + logo in Settings)
+  - **Logo error messaging** — Clearer text when business logo fails to load
+
+- **Mobile responsiveness:**
+  - Adjusted layout breakpoint from `xl` (1280px) to `lg` (1024px) for better tablet experience
+  - Changed column ratio from `1.4fr/0.6fr` to `1.2fr/0.8fr` for better proportions
+  - Better spacing and touch targets for mobile
+
+- **Quick action integration (already wired):**
+  - Inventory item menu + card footer button: "Generate QR / Label" option
+  - Clicking action navigates to `/dashboard/qr-center` with item pre-selected
+  - Found at line 3246 in `app/dashboard/inventory/page.tsx` (was already implemented)
+
+**Changed files:** `app/dashboard/qr-center/page.tsx` (polish only — no logic/schema changes).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35 routes).
+
+**Untouchables:** No schema or auth changes. QR generation, PDF export, and business settings
+all preserved. No changes to branding logic — only UI presentation improved.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
