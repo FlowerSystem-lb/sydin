@@ -17359,3 +17359,246 @@ body,
     transform: translateX(0) !important;
   }
 }
+
+/* ===[ MOBILE SHELL — Bottom navigation (375px–767px) ]=== */
+@media (max-width: 767px) {
+  .mobile-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100dvh;
+    overflow: hidden;
+    background: var(--sydin-bg);
+  }
+
+  .mobile-shell-content {
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 88px; /* Space for bottom nav (80px nav + 8px margin) */
+    scroll-behavior: smooth;
+  }
+
+  .mobile-shell-nav {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 80px;
+    background: var(--sydin-bg-elevated);
+    border-top: 1px solid var(--sydin-ui-border);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    padding-bottom: max(0px, env(safe-area-inset-bottom));
+    z-index: 40;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .mobile-nav-tab {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 8px;
+    color: var(--sydin-text-muted);
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 200ms ease;
+    -webkit-tap-highlight-color: transparent;
+    text-decoration: none;
+  }
+
+  .mobile-nav-tab:active {
+    background: rgba(56, 189, 248, 0.1);
+  }
+
+  .mobile-nav-tab-active {
+    color: var(--sydin-cyan);
+  }
+
+  .mobile-nav-tab-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    line-height: 1;
+  }
+
+  .mobile-nav-tab-center {
+    margin-top: -20px;
+  }
+
+  .mobile-nav-tab-icon-wrapper {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 8px 24px rgba(37, 99, 235, 0.24);
+    transition: all 200ms ease;
+  }
+
+  .mobile-nav-tab-center:active .mobile-nav-tab-icon-wrapper {
+    transform: scale(0.95);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.16);
+  }
+}
+
+/* Desktop: Hide mobile shell */
+@media (min-width: 768px) {
+  .mobile-shell {
+    display: contents;
+  }
+
+  .mobile-shell-nav {
+    display: none !important;
+  }
+
+  .mobile-shell-content {
+    padding-bottom: 0 !important;
+  }
+}
+
+/* ===[ MOBILE DASHBOARD ]=== */
+@media (max-width: 767px) {
+  .mobile-dashboard {
+    padding: 16px;
+    background: var(--sydin-bg);
+  }
+
+  .mobile-dashboard-header {
+    margin-bottom: 24px;
+  }
+
+  .mobile-dashboard-title {
+    font-size: 28px;
+    font-weight: 900;
+    color: var(--sydin-text);
+    margin: 0;
+  }
+
+  .mobile-dashboard-subtitle {
+    font-size: 13px;
+    color: var(--sydin-text-muted);
+    margin: 4px 0 0 0;
+    font-weight: 500;
+  }
+
+  .mobile-dashboard-alerts {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+
+  .mobile-alert-card {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid;
+    transition: all 200ms ease;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-alert-card-danger {
+    background: rgba(225, 29, 72, 0.12);
+    border-color: rgba(225, 29, 72, 0.24);
+    color: var(--sydin-danger-text);
+  }
+
+  .mobile-alert-card-danger:active {
+    background: rgba(225, 29, 72, 0.18);
+  }
+
+  .mobile-alert-card-warning {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: rgba(245, 158, 11, 0.24);
+    color: var(--sydin-warning-text);
+  }
+
+  .mobile-alert-card-warning:active {
+    background: rgba(245, 158, 11, 0.18);
+  }
+
+  .mobile-alert-card-icon {
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+
+  .mobile-alert-card-content {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .mobile-alert-card-label {
+    font-size: 13px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    opacity: 0.8;
+  }
+
+  .mobile-alert-card-value {
+    font-size: 24px;
+    font-weight: 900;
+    margin-top: 2px;
+  }
+
+  .mobile-dashboard-section {
+    margin-bottom: 20px;
+  }
+
+  .mobile-dashboard-section-title {
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--sydin-text-subtle);
+    margin: 0 0 12px 0;
+  }
+
+  .mobile-quick-actions {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .mobile-quick-action {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--sydin-ui-border);
+    background: var(--sydin-ui-surface);
+    color: var(--sydin-text);
+    text-decoration: none;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 200ms ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .mobile-quick-action:active {
+    background: var(--sydin-surface-hover);
+    transform: scale(0.97);
+  }
+
+  .mobile-activity-preview {
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--sydin-ui-border);
+    background: var(--sydin-ui-surface);
+  }
+}
