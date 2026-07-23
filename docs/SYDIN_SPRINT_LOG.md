@@ -1317,4 +1317,41 @@ all preserved. No changes to branding logic — only UI presentation improved.
 
 ---
 
+## Sprint 9 — Purchase Orders Workflow Polish  *(Complete)*
+
+**Scope:** Polish the existing Purchase Orders list view to make payment status immediately visible
+and improve visual hierarchy for at-a-glance scanning.
+
+**Delivered:**
+
+- **Always-visible payment status** — replaced conditional "Owe $X" chip with always-shown payment state:
+  - **Green "Paid"** badge when full payment received
+  - **Amber "Owe $X"** badge when balance pending (replaced previous hidden-if-zero chip)
+  - **Gray "Cancelled"** badge for cancelled orders
+  - Clear distinction between payment state and order status
+
+- **Better visual hierarchy:**
+  - Payment status + invoice attachment + order status all grouped together
+  - Larger badges with better spacing (improved readability)
+  - Color-coded payment states for quick visual scanning
+  - Invoice attachment badge styled consistently (blue with file icon)
+
+- **Mobile responsive layout:**
+  - Payment/status section wraps on mobile (`flex-wrap`)
+  - Single-line on desktop (`sm:flex-nowrap`)
+  - Touch-friendly badge sizes
+
+- **Quick action already in place:**
+  - "Create purchase order" quick action in command palette (Cmd+K / Ctrl+K)
+  - Navigates directly to `/dashboard/purchase-orders` list
+
+**Changed files:** `app/dashboard/purchase-orders/page.tsx` (UI polish only).
+
+**Verification:** `npm run lint` ✅ · `npm run build` ✅ (35/35 routes).
+
+**Untouchables:** No schema or auth changes. All PO functionality (create, receive, record payment,
+cancel, export) preserved and unchanged.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
