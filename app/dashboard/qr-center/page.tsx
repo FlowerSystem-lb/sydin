@@ -248,8 +248,9 @@ export default function QrCenterPage() {
       ),
     [items, selectedIds]
   );
-  const selectedItem = printableItems[0] || null;
   const selectedCount = printableItems.length;
+  const [previewIndex, setPreviewIndex] = useState(0);
+  const currentPreviewItem = selectedCount > 0 ? printableItems[previewIndex % selectedCount] : null;
   const currentContext = useMemo(() => {
     const params = new URLSearchParams();
     if (search.trim()) params.set("search", search.trim());
@@ -442,7 +443,7 @@ export default function QrCenterPage() {
         <DashboardPageHeader
           eyebrow="Operations"
           title="QR Center"
-          description="Create clean QR label documents or open the existing inventory scanner."
+          description="Generate QR codes and print labels for your inventory items."
           actions={
             <ActionButton icon="scan" onClick={openExistingScanner}>
               Start Scanner
@@ -456,15 +457,15 @@ export default function QrCenterPage() {
           </DashboardNotice>
         )}
 
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.6fr)]">
+        <div className="grid gap-4 lg:grid-cols-[minmax(0,1.2fr)_minmax(300px,0.8fr)]">
           <DashboardCard>
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-black text-theme-primary">
-                  Generate QR Codes
+                  Select Items
                 </h2>
                 <p className="mt-1 text-sm text-theme-muted">
-                  Select one or more items with public item links.
+                  Choose items to generate printable QR labels. Items shown here have public links enabled.
                 </p>
               </div>
               <button
@@ -591,12 +592,19 @@ export default function QrCenterPage() {
                     </div>
                   );
                 })
+              ) : search.trim() ? (
+                <DashboardEmptyState
+                  className="col-span-full"
+                  icon="search"
+                  title="No matching items found"
+                  description="Try a different search term."
+                />
               ) : (
                 <DashboardEmptyState
                   className="col-span-full"
                   icon="search"
-                  title="No matching inventory items"
-                  description="Adjust the search text to find label-ready items."
+                  title="No items available"
+                  description="All inventory items have been loaded. Items need a public link to generate QR codes—enable this in Item Details."
                 />
               )}
             </div>
@@ -613,13 +621,36 @@ export default function QrCenterPage() {
                     ?.label || "2 × 2"}
                 </span>
               </div>
-              {selectedItem ? (
+              {currentPreviewItem ? (
                 <div className="mt-4">
-                  {renderLabel(selectedItem)}
+                  {renderLabel(currentPreviewItem)}
+                  {selectedCount > 1 && (
+                    <div className="mt-3 flex items-center justify-between rounded-lg border border-theme bg-theme-inset px-3 py-2">
+                      <button
+                        type="button"
+                        onClick={() => setPreviewIndex((i) => (i - 1 + selectedCount) % selectedCount)}
+                        className="rounded-lg p-1.5 hover:bg-theme-surface"
+                        aria-label="Previous item"
+                      >
+                        <UiIcon name="chevron-left" className="h-4 w-4" />
+                      </button>
+                      <span className="text-xs font-semibold text-theme-secondary">
+                        {previewIndex + 1} of {selectedCount}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => setPreviewIndex((i) => (i + 1) % selectedCount)}
+                        className="rounded-lg p-1.5 hover:bg-theme-surface"
+                        aria-label="Next item"
+                      >
+                        <UiIcon name="chevron-right" className="h-4 w-4" />
+                      </button>
+                    </div>
+                  )}
                   <div className="mt-4 grid gap-2 sm:grid-cols-3">
                     <button
                       type="button"
-                      onClick={() => downloadQr(selectedItem)}
+                      onClick={() => downloadQr(currentPreviewItem)}
                       className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
                     >
                       Download QR
@@ -646,7 +677,7 @@ export default function QrCenterPage() {
                   className="mt-4"
                   icon="qr"
                   title="No label selected"
-                  description="Select an item to preview its label."
+                  description="Select one or more items from the list. Items need public links to generate QR codes."
                 />
               )}
             </DashboardCard>
@@ -722,17 +753,17 @@ export default function QrCenterPage() {
           </fieldset>
 
           <fieldset>
-            <legend className="mb-2 text-sm font-bold text-theme-secondary">
-              Branding
+            <legend className="mb-3 text-sm font-bold text-theme-secondary">
+              Label Branding
             </legend>
-            <div className="grid gap-2 sm:grid-cols-3">
+            <div className="space-y-2">
               {(
                 [
-                  ["sydin", "SydIN logo"],
-                  ["business", "Business logo"],
-                  ["none", "No logo"],
-                ] as [QrLabelBranding, string][]
-              ).map(([value, label]) => {
+                  ["sydin", "SydIN Mark + Wordmark", "Clean, professional SydIN branding on every label"],
+                  ["business", "Your Business Logo", "Custom branding with your company logo (if configured)"],
+                  ["none", "No Branding", "Clean labels with QR code only"],
+                ] as [QrLabelBranding, string, string][]
+              ).map(([value, label, desc]) => {
                 const businessDisabled =
                   value === "business" && !canUseBusinessLogo;
                 return (
@@ -742,28 +773,27 @@ export default function QrCenterPage() {
                     disabled={businessDisabled}
                     aria-pressed={settings.branding === value}
                     onClick={() => updateSettings({ branding: value })}
-                    className={`rounded-xl border px-3 py-3 text-sm font-bold ${
+                    className={`w-full rounded-xl border px-3 py-3 text-left transition ${
                       settings.branding === value
-                        ? "border-[#2563eb]/50 bg-[#2563eb]/12 text-theme-accent ring-4 ring-[#2563eb]/15"
-                        : "border-theme bg-theme-surface text-theme-secondary"
+                        ? "border-[#2563eb]/50 bg-[#2563eb]/12 ring-4 ring-[#2563eb]/15"
+                        : "border-theme bg-theme-surface hover:bg-theme-hover"
                     } disabled:cursor-not-allowed disabled:opacity-45`}
                   >
-                    {label}
+                    <div className="text-sm font-bold text-theme-primary">{label}</div>
+                    <div className="mt-0.5 text-xs text-theme-muted">{desc}</div>
                   </button>
                 );
               })}
             </div>
             {!canUseBusinessLogo && (
-              <p className="mt-2 text-xs leading-5 text-theme-muted">
-                Business-logo labels require an active Standard or Pro plan and
-                a logo in Settings. Current plan:{" "}
+              <p className="mt-3 rounded-lg border border-amber-200/50 bg-amber-50/60 px-3 py-2 text-xs leading-5 text-amber-900">
+                To use your business logo, upgrade to Standard or Pro and add a logo in Settings. Current plan:{" "}
                 <strong>{formatPlanName(subscription.plan)}</strong>.
               </p>
             )}
             {businessLogoError && (
-              <p className="mt-2 text-xs text-theme-danger">
-                The business logo could not be loaded. SydIN branding will be
-                used instead.
+              <p className="mt-3 rounded-lg border border-red-200/50 bg-red-50/60 px-3 py-2 text-xs text-red-900">
+                The business logo could not load. Using SydIN branding instead.
               </p>
             )}
           </fieldset>
