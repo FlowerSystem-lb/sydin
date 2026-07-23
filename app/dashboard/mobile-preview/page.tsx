@@ -56,7 +56,6 @@ export default function MobilePreviewPage() {
       <MobileDashboard
         lowStockCount={stats.lowStockCount}
         outOfStockCount={stats.outOfStockCount}
-        recentActivityCount={stats.recentActivityCount}
       />
     </MobileShell>
   );

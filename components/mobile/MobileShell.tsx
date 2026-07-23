@@ -13,7 +13,7 @@ interface MobileTab {
 }
 
 const MOBILE_TABS: MobileTab[] = [
-  { id: "home", label: "Home", icon: "home", href: "/dashboard" },
+  { id: "home", label: "Home", icon: "dashboard", href: "/dashboard" },
   { id: "inventory", label: "Inventory", icon: "box", href: "/dashboard/inventory" },
   { id: "scan", label: "Scan", icon: "scan", href: "/dashboard/scanner", center: true },
   { id: "activity", label: "Activity", icon: "clock", href: "/dashboard/activity" },
