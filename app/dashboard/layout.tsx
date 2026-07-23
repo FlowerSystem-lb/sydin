@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import DashboardShell from "@/components/dashboard/DashboardShell";
-import MobileShell from "@/components/mobile/MobileShell";
+import MobileShellWrapper from "@/components/mobile/MobileShellWrapper";
 import ThemeProvider from "@/components/ThemeProvider";
 
 export default function DashboardLayout({
@@ -74,11 +74,11 @@ export default function DashboardLayout({
 
   return (
     <ThemeProvider>
-      <MobileShell>
+      <MobileShellWrapper userId={user.id}>
         <DashboardShell userId={user.id} email={user.email}>
           {children}
         </DashboardShell>
-      </MobileShell>
+      </MobileShellWrapper>
     </ThemeProvider>
   );
 }
