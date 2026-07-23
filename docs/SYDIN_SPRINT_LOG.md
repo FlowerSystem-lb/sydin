@@ -1354,4 +1354,235 @@ cancel, export) preserved and unchanged.
 
 ---
 
+## Sprint M2 — Mobile Shell (Bottom Nav + Mobile Dashboard)  *(Complete, verified retroactively)*
+
+**Scope:** Mobile Roadmap **M2 — Mobile shell** (see `SYDIN_MOBILE_ROADMAP.md`): a dedicated
+mobile chrome for 375–767px viewports, replacing the desktop shell with a bottom-tab app feel.
+Built across 5 commits by a separate fast-mode session without the usual plan-first/verify/log
+cadence; this entry retroactively verifies and documents that work so the sprint log stays the
+source of truth.
+
+**Delivered (`ef49c60`, `880ed68`, `054c001`, `7a7f312`, `1751596`):**
+- **`components/mobile/MobileShell.tsx`** (new) — bottom nav, 5 tabs (Home / Inventory / Scan /
+  Orders / Activity) + center Scan action, plus a **More** bottom sheet (Settings, Reports,
+  Stock Counts, Alerts, QR Center). Touch targets 48–56px, active-tab highlighting,
+  notch-aware safe-area padding. Scroll-to-top on tab switch (`scrollTop = 0` via ref before
+  `router.push()`).
+- **`components/mobile/MobileDashboard.tsx`** (new) — mobile-optimized home screen: status
+  cards, 2×2 quick-action grid (Add / Scan / PO / Labels).
+- **`components/mobile/MobileShellWrapper.tsx`** (new) — fetches low/out-of-stock counts from
+  `inventory` and feeds the Home tab's red alert badge (caps display at "9+").
+- **`components/mobile/MobileInventoryCard.tsx`** (new) — compact mobile item card (60×60
+  thumb, name/SKU/tags, color-coded quantity badge); not yet wired into the Inventory page's
+  render path (present but unused as of this entry — see gap below).
+- **`app/mobile.css`** (new, ~440 lines across the 3 commits) — mobile-only styles, hides
+  desktop sidebar/header chrome under the shell's media queries. **Deviates from the project's
+  usual pattern** of appending scoped rules to `app/globals.css`; kept as its own file for this
+  entry rather than merged, since relocating it now is a refactor, not a polish fix.
+  `app/globals.css` also gained ~243 lines of related rules in the first commit.
+- **`app/dashboard/layout.tsx`** — wired to render the mobile shell/wrapper at mobile widths.
+- Last commit (`1751596`) fixed two build breaks introduced by the polish commits (a stale
+  `recentActivityCount` prop, an invalid `UiIconName` value `"home"` → `"dashboard"`).
+
+**Gap found during retroactive verification:** **`app/dashboard/mobile-preview/page.tsx`** (new
+route, ships as the 37th build route) is unauthenticated-reachable scaffolding left over from
+building the shell — grepped repo-wide, **zero** references to `mobile-preview` from any nav,
+link, or redirect. It duplicates `MobileShell` + `MobileDashboard` standalone for what was
+clearly manual preview during development. Not deleted here (flagged instead of unilaterally
+removing a page) — recommend Sayed either delete it or confirm it's intentionally kept as a
+design-preview tool.
+
+**Verification (run now, retroactively):** `npm run lint` ✅ (zero warnings) ·
+`npx tsc --noEmit` ✅ (zero errors) · `npm run build` ✅ (36/36 routes, incl. the new
+`/dashboard/mobile-preview`).
+
+**Untouchables:** No auth, Supabase, schema, routing, or business logic changed — this is
+additive mobile-only chrome plus a `dashboard/layout.tsx` render-path switch at mobile widths.
+
+**Deferred / next (M3 — Scan-first, per `SYDIN_MOBILE_ROADMAP.md`):**
+- Swap the Inventory page's mobile rendering over to `MobileInventoryCard` (component exists,
+  unused).
+- Fast scanner mode tuned for the mobile shell (open → ready/beep → result → next).
+- Decide `mobile-preview` route's fate.
+- Consider folding `app/mobile.css` into the `globals.css` layer-ordering convention once the
+  mobile shell direction is confirmed stable (avoid a second stylesheet with independent
+  cascade rules long-term).
+
+---
+
+## Bug fix — Dialogs required scrolling the page to see their own header/footer  *(Complete)*
+
+**Scope:** Founder reported (screenshot, Purchase Orders detail dialog): opening a PO's history
+required scrolling **up** to see the dialog's title/close button, and called it out as a general
+"no scrolling" requirement for popups. Root cause was global — every `DialogShell` consumer
+across the app (Purchase Orders, QR Center, Reports, Suppliers, Depots, Categories, Receiving,
+Stock Counts, Set Alert Level, Stock Movement) shared it.
+
+**Root cause:** `.ui-overlay` centers `.ui-dialog` with `align-items: center` inside a container
+with no height cap on the dialog. When a dialog's content was taller than the viewport, the
+browser centered the overflow **equally above and below**, clipping the top (title/close button)
+and bottom (footer buttons) off-screen — the initial scroll position started in the middle, so
+the user had to manually scroll up to reach the header. `SheetShell` (the slide-over variant)
+never had this bug — `.ui-sheet-body` already had `flex: 1; overflow-y: auto`, so sheets always
+kept header/footer pinned and only scrolled their body. `DialogShell` never got the equivalent
+treatment.
+
+**Fix (`app/globals.css`, base `.ui-dialog*` rules only — mobile's existing bottom-sheet override
+at the `max-width: 639px` breakpoint already had its own correct version of this and was
+untouched):**
+- `.ui-dialog` — added `display: flex; flex-direction: column; max-height: calc(100vh - 6rem)`
+  (6rem = the existing 2×`--space-4` overlay padding + 2×`--space-8` dialog margin already in the
+  cascade, so the cap matches the real available space).
+- `.ui-dialog-header` / `.ui-dialog-footer` — added `flex: 0 0 auto` so they never shrink or
+  scroll away.
+- New `.ui-dialog-body` rule — `flex: 1; overflow-y: auto; min-height: 0`, mirroring
+  `.ui-sheet-body`'s existing pattern exactly.
+
+**Effect:** every dialog now always shows its title and close button at the top and its footer
+buttons at the bottom without any page/overlay scrolling; only genuinely long body content
+scrolls, inside its own scrollbar, within the dialog.
+
+**Verification:** Could not log into the live app in this session (no credentials), so verified
+by injecting the real shipped `.ui-overlay`/`.ui-dialog` markup and classes into a running page
+and reading computed layout: before the fix, title/footer were off-screen (`footerBottom: 1179px`
+vs. `viewportHeight: 742px`) and `.ui-dialog-body` computed `overflow-y: visible`; after clearing
+a stale Turbopack `.next` cache (same recurring issue noted in Sprint E2/PO-C) and restarting dev,
+the same injected markup showed title top at 99px (visible), footer bottom at 689px (within the
+742px viewport, visible), and `.ui-dialog-body` correctly scrolling internally
+(`scrollHeight: 992` vs `clientHeight: 486`) — screenshot confirms header + footer pinned, body
+scrollbar visible. `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (36/36 routes,
+verified twice — once before and once after the cache clear).
+
+**Untouchables:** Pure CSS layout fix on shared primitives; no schema, auth, routing, or
+component logic touched. The mobile bottom-sheet dialog behavior (already correct) was not
+modified.
+
+---
+
+## Chrome Audit + P0 fix — the M2 mobile shell was invisible on phones  *(Complete)*
+
+**Scope:** Founder asked for a deep audit ("mase7") of the app against premium SaaS standards.
+Audited the **shared chrome** (sidebar + header + top nav) as the highest-leverage surface —
+`DashboardShell.tsx`, `app/dashboard/layout.tsx`, the M2 mobile components, and every chrome
+block in `globals.css` + `mobile.css`. Finding: the chrome does **not** need a visual redesign
+(it's already a complete Glass 2.0 system); it had a live P0 bug and real structural debt.
+
+**P0 (fixed) — the entire Sprint M2 mobile shell never rendered.** Verified live at 375px, the
+mobile chrome was the exact inverse of what M2 intended:
+- new `.mobile-shell-nav` → `display: none`
+- old `.dashboard-mobile-nav` → `display: grid` (**visible**)
+- old `.dashboard-mobile-header` → `display: flex` (**visible**)
+
+**Root cause (`app/mobile.css`):** the block meant to hide DashboardShell's built-in chrome was
+written against **guessed class names that match nothing** — `.dashboard-shell-sidebar` (real
+name is `.dashboard-sidebar`), `banner`, `.dashboard-header`, `.dashboard-shell-footer`,
+`.dashboard-shell-footer-nav` — so the old nav/header were never hidden. Its two
+`[role="navigation"][aria-label=…]` selectors also matched nothing, because the real
+`DashboardShell` navs set `aria-label` but **no `role` attribute**. Meanwhile the one catch-all
+that *did* match, `nav[role="navigation"] { display: none !important }`, matched the **new**
+`<nav role="navigation" className="mobile-shell-nav">` and killed it — `!important` beating the
+non-important `.mobile-shell-nav { display: flex }`. Net effect: phones showed the old chrome and
+none of the M2 work.
+
+**Fix:** replaced that block with the five **real** class names
+(`.dashboard-sidebar`, `.dashboard-mobile-nav`, `.dashboard-mobile-header`,
+`.dashboard-tablet-header`, `.dashboard-desktop-toolbar`), and removed the catch-all element/role
+selector entirely. Left a comment warning never to re-add a bare `nav[role=…]` selector there,
+since `.mobile-shell-nav` is itself a `<nav role="navigation">`. This makes **MobileShell the
+single mobile navigation system** via CSS only — DashboardShell's mobile markup is left in place
+(reversible, no working component logic deleted).
+
+**Also fixed — stale desktop "Activity" tab:** `DASHBOARD_TOP_TABS` still pointed Activity at
+`/dashboard/stock-movements` (pre-Sprint-10). Sprint 10 moved Activity to its own
+`/dashboard/activity` page and rewired the dashboard panel, sidebar, and command palette, but
+missed this tab — so the chrome had three different "Activity" destinations. Now
+`/dashboard/activity`. Confirmed Stock Movements keeps its own sidebar entry, so nothing is
+orphaned.
+
+**Verification:** live computed-style test at **375px** (new nav `flex`; old nav / old header /
+tablet header / sidebar / desktop toolbar all `none`) **and at desktop** (sidebar `flex`, toolbar
+`flex`, both mobile navs `none`) — confirming the mobile fix did not leak into desktop.
+`npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (36/36 routes).
+*(Method note: an initial test wrongly added a `role` attribute to the old nav that the real
+component doesn't have, which inverted the result. Re-tested with markup copied exactly from the
+components — the lesson from the mobile-scroll-fix entry applies to injected test markup too.)*
+
+**Untouchables:** No auth, Supabase, schema, route definitions, or business logic changed. The
+only behavior change is the corrected Activity tab destination.
+
+**P2 (also fixed) — removed the dead `.dashboard-command-*` chrome CSS.** Proved dead repo-wide
+(`grep` across all `.ts/.tsx/.js/.jsx/.html/.md` returned only this log's own mention), then
+removed all **28 occurrences** across 5 clusters in `globals.css`: the full definition block
+(`-context`, `-kicker`, `-title`, `-subtitle`, `-search`, `-search-copy`, `-shortcut`,
+`-actions`, `-action`, `-primary`) plus its `@media (hover: hover)` block, a mobile
+`display:none` rule, and — following the Sprint 3B pattern — **surgically stripped** the dead
+tokens out of four selector lists shared with **live** siblings
+(`.inventory-action-primary`, `.overview-action-primary`, `.inventory-action-secondary`,
+`.inventory-toolbar-button`, `.inventory-quick-filter`, `.overview-action`, etc.), which were
+left fully intact. Leftover from a previous toolbar design; the live toolbar uses
+`.dashboard-top-*`. `app/globals.css` is ~150 lines shorter; brace balance verified
+**2525/2525**.
+
+**Mobile scroll re-checked (no bug found).** Because this is the first time `MobileShell` has
+actually rendered, its scroll container is now live and nested around `.dashboard-shell-content`
+— the same shape as the earlier mobile scroll-trap. Verified at 375px: `.mobile-shell-content`
+is the real scroll container (`scrollHeight 3088 > clientHeight 812`), `.dashboard-shell-content`
+is zero-range, and **both** compute `overscroll-behavior: auto` — not `contain`, which was the
+actual cause of the old trap. Scroll chains correctly; **no fix needed**.
+
+**Verification (P2 pass):** dead-token grep over `globals.css` returns **0** · brace balance
+2525/2525 · `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (36/36) · live
+computed-style check after a `.next` cache clear: **0** `.dashboard-command-*` rules served,
+live `.dashboard-top-searchbar` rules still present (7), toolbar `display:flex`, searchbar
+`border-radius:999px`, and the `.inventory-action-primary` brand gradient preserved.
+*(The dev server again served a stale CSS chunk — identical hash — until `.next` was cleared;
+third occurrence of this Turbopack issue in this log. Production builds were never affected.)*
+
+**Audit findings NOT fixed here (deliberately deferred):**
+1. **Two nested shells.** `layout.tsx` renders `MobileShellWrapper` → `MobileShell` wrapping
+   `DashboardShell`, so both full shells mount, with two independent Supabase queries for
+   overlapping data (`MobileShellWrapper` reads inventory for the alert badge; `DashboardShell`
+   reads settings + subscription). Now visually correct and scroll-safe (verified above), but
+   structurally redundant — worth consolidating into one shell.
+2. **Triple re-skin / cascade debt:** `.dashboard-nav-link` is redefined in 8+ blocks and the
+   toolbar is re-styled almost in full three times (`:has(.sydin-overview)`,
+   `:has(.inventory-workspace)`, `.dashboard-workspace-shell`), the last using `!important` on
+   nearly every declaration. A leftover near-black active-tab pill (`#1f1e1a`) never renders
+   because the brand gradient overrides it. This is the fragility behind the repeated
+   "stale CSS / wrong winning rule" incidents in this log. **Deliberately deferred** — Sprint 3B
+   established that relocating/reordering chrome CSS in this file risks visual regression, so it
+   needs its own sprint with a manual visual pass, not a drive-by fix.
+3. `app/mobile.css` still lives outside the `globals.css` layer-ordering convention (flagged in
+   the Sprint M2 entry).
+
+**Authenticated live verification (founder logged the preview in — completed 2026-07-24).**
+Re-ran every check against the **real running app** instead of injected markup:
+- **Desktop `/dashboard`**: renders correctly with real data (7 items · 3 depots · 35,180 units ·
+  $480.00). Top tabs correct; **Activity now resolves to `/dashboard/activity`** and matches the
+  sidebar entry, with Stock Movements still separately present — the three-way inconsistency is
+  gone.
+- **Mobile 375×812 — the M2 bottom nav rendered for the first time ever**: `display:flex`,
+  pinned to the viewport bottom (`bottom === 812`), 80px tall, **all 5 tabs present**
+  (Home · Inventory · Scan · Activity · More) with touch targets **50px** (Scan 72px) — all
+  above the 44px minimum. `.mobile-shell-content` carries `padding-bottom: 88px`, correctly
+  clearing the 80px nav so no content hides behind it.
+- **Old chrome confirmed hidden in the real DOM** (not injected): `.dashboard-sidebar`,
+  `.dashboard-mobile-nav`, `.dashboard-mobile-header`, `.dashboard-tablet-header`, and
+  `.dashboard-desktop-toolbar` all compute `display:none` at mobile.
+- **Navigation works**: routing to `/dashboard/inventory` kept the nav pinned and correctly
+  moved the active state to the Inventory tab.
+- **No horizontal overflow** on mobile inventory (`scrollWidth 375 === viewport 375`).
+
+**M3 scope correction (found during this verification).** `MobileInventoryCard` renders **zero**
+times on the real mobile inventory page — the page instead uses its own CSS-based mobile
+treatment (`.inventory-mobile-header-card`, `.inventory-mobile-title`, …) from the Sprint 7
+mobile-QA pass, which renders correctly with no overflow. So `components/mobile/MobileInventoryCard.tsx`
+(~107 lines + ~98 lines of CSS) is **unused dead code**, and the M3 task as previously written
+("wire `MobileInventoryCard` into Inventory") would *replace a working mobile layout with a
+duplicate implementation* — a regression risk for no user-visible gain. **M3 should be re-scoped**
+to either delete the unused component or make a deliberate decision to adopt it; it should not be
+wired in by default.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

@@ -48,7 +48,7 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 
 const DASHBOARD_TOP_TABS = [
   { label: "Overview", href: "/dashboard" },
-  { label: "Activity", href: "/dashboard/stock-movements" },
+  { label: "Activity", href: "/dashboard/activity" },
   { label: "Inventory", href: "/dashboard/inventory" },
   { label: "Orders", href: "/dashboard/purchase-orders" },
   { label: "Receiving", href: "/dashboard/receiving" },

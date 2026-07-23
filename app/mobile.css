@@ -203,20 +203,19 @@
     transform: scale(0.96);
   }
 
-  /* Hide desktop elements and built-in mobile navs */
-  .dashboard-shell-sidebar,
-  .dashboard-shell > aside,
-  [role="navigation"][aria-label="Primary mobile navigation"],
-  [role="navigation"][aria-label="Dashboard sections"],
-  nav[role="navigation"],
-  banner,
-  .dashboard-header {
-    display: none !important;
-  }
-
-  /* Hide any leftover nav elements */
-  .dashboard-shell-footer,
-  .dashboard-shell-footer-nav {
+  /* Hide DashboardShell's own chrome so the MobileShell above is the single
+     mobile navigation system. These MUST be exact class names from
+     components/dashboard/DashboardShell.tsx — an earlier version of this block
+     used guessed names (.dashboard-shell-sidebar, .dashboard-header, banner,
+     .dashboard-shell-footer) that matched nothing, so the old nav/header stayed
+     visible, plus a catch-all `nav[role="navigation"]` that matched the NEW
+     .mobile-shell-nav and hid it. Never re-add a bare element/role selector
+     here: .mobile-shell-nav is a <nav role="navigation"> and would be caught. */
+  .dashboard-sidebar,
+  .dashboard-mobile-nav,
+  .dashboard-mobile-header,
+  .dashboard-tablet-header,
+  .dashboard-desktop-toolbar {
     display: none !important;
   }
 

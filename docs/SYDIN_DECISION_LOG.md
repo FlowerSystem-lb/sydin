@@ -110,4 +110,10 @@ offboarding. Accepted cost: typo variants ("J. Smith" / "john smith") will accum
 plus autocomplete mitigates. Promote to a real table when per-person features are actually asked
 for — the migration is a straightforward backfill from distinct names. **Status:** Revisit.
 
+### 2026-07-23 · Confirmed: phase-9 (PO payment timeline) migration is live in production
+**Decision/fact:** `sql/phase-9-purchase-order-payments.sql` was run — `purchase_order_payments`
+exists in the production Supabase project (`hllktjhewivxqumqktzj`) with 8 rows. Sprint B2's log
+entry said "code complete; awaiting phase-9 SQL run" with no follow-up confirming it — this entry
+closes that loop. **Status:** Active (Sprint B2 fully live, not just code-complete).
+
 <!-- Append the next decision below this line. -->
