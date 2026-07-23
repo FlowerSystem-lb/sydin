@@ -339,3 +339,101 @@
 .mobile-more-menu-item:last-child {
   border-bottom: none;
 }
+
+/* Mobile Inventory Cards */
+.mobile-inventory-card {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid var(--sydin-ui-border);
+  background: var(--sydin-ui-surface);
+  text-decoration: none;
+  transition: all 150ms ease;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-inventory-card:active {
+  background: var(--sydin-surface-hover);
+  transform: scale(0.99);
+}
+
+.mobile-inventory-card-image {
+  position: relative;
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--sydin-surface-inset);
+}
+
+.mobile-inventory-card-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.mobile-inventory-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sydin-text);
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-inventory-card-sku {
+  font-size: 12px;
+  color: var(--sydin-text-muted);
+  margin: 3px 0 0 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-inventory-card-tags {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+  flex-wrap: wrap;
+}
+
+.mobile-inventory-card-tag {
+  font-size: 11px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--sydin-cyan);
+  font-weight: 500;
+}
+
+.mobile-inventory-card-right {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.mobile-inventory-card-badge {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid;
+}
+
+.mobile-inventory-card-quantity {
+  font-size: 16px;
+  font-weight: 700;
+}
+
+.mobile-inventory-card-status {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  opacity: 0.8;
+}
