@@ -730,29 +730,45 @@ export default function PurchaseOrdersPage() {
                                 .join(" · ")}
                             </span>
                           </span>
-                          {remaining > 0 && (
-                            <span
-                              className="po-history-owe-chip"
-                              title="Balance still owed"
-                            >
-                              Owe {formatInventoryPrice(remaining, currencyCode)}
-                            </span>
-                          )}
-                          {order.attachment_url && (
-                            <span
-                              className="po-history-attachment-chip"
-                              title="Invoice attached"
-                            >
-                              <UiIcon name="file" className="h-3.5 w-3.5" />
-                              Invoice
-                            </span>
-                          )}
-                          <span className="shrink-0 text-sm font-black text-theme-primary">
+                          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-nowrap">
+                            {order.status === "cancelled" ? (
+                              <span
+                                className="rounded-lg border border-slate-300/50 bg-slate-50 px-2.5 py-1 text-xs font-semibold text-slate-600"
+                                title="Order cancelled"
+                              >
+                                Cancelled
+                              </span>
+                            ) : remaining > 0 ? (
+                              <span
+                                className="rounded-lg border border-amber-300/50 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
+                                title="Balance still owed"
+                              >
+                                Owe {formatInventoryPrice(remaining, currencyCode)}
+                              </span>
+                            ) : (
+                              <span
+                                className="rounded-lg border border-emerald-300/50 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
+                                title="Fully paid"
+                              >
+                                Paid
+                              </span>
+                            )}
+                            {order.attachment_url && (
+                              <span
+                                className="flex items-center gap-1.5 rounded-lg border border-blue-300/50 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700"
+                                title="Invoice attached"
+                              >
+                                <UiIcon name="file" className="h-3 w-3" />
+                                Invoice
+                              </span>
+                            )}
+                            <Badge tone={STATUS_TONES[order.status]}>
+                              {PURCHASE_ORDER_STATUS_LABELS[order.status]}
+                            </Badge>
+                          </div>
+                          <span className="shrink-0 text-right text-sm font-black text-theme-primary">
                             {formatInventoryPrice(total, currencyCode) || "—"}
                           </span>
-                          <Badge tone={STATUS_TONES[order.status]}>
-                            {PURCHASE_ORDER_STATUS_LABELS[order.status]}
-                          </Badge>
                         </button>
                       );
                     })}
