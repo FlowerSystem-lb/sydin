@@ -1,7 +1,7 @@
 "use client";
 
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 
 interface MobileTab {
@@ -47,8 +47,13 @@ export default function MobileShell({
   const router = useRouter();
   const activeTab = getActiveTab(pathname);
   const [moreMenuOpen, setMoreMenuOpen] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
 
   const handleNavigation = (href: string) => {
+    // Scroll content to top
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
     router.push(href);
     setMoreMenuOpen(false);
   };
@@ -56,7 +61,7 @@ export default function MobileShell({
   return (
     <div className="mobile-shell">
       {/* Main content */}
-      <div className="mobile-shell-content">
+      <div className="mobile-shell-content" ref={contentRef}>
         {children}
       </div>
 
