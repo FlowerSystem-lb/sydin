@@ -1780,4 +1780,58 @@ camera `<video>` uses `object-cover` (correct — a live feed should fill, not l
 
 ---
 
+## Item Details / Add-Edit forms audit — fixed a real duplicate-error render + form a11y gap  *(Complete)*
+
+**Scope:** Deep-scan of `app/dashboard/inventory/[id]/page.tsx` (1716 lines), `app/dashboard/add-item/page.tsx`
+(1345 lines), `app/dashboard/inventory/EditItemForm.tsx` (872 lines), `components/inventory/ItemDetailsSlideOver.tsx`
+(1022 lines) — the core item CRUD surface.
+
+**Confirmed as NON-issues (checked, no action):**
+- Image fitting is intentional and consistent: the compact grid/list thumbnails use `object-cover`
+  (checked in the earlier Inventory workspace audit); the Item Details hero image, Add-Item preview,
+  and Slide-over hero all use `object-contain` on a shared cream `#f4f0e8` background — a deliberate
+  "full product photo, no cropping" treatment at hero size, distinct from thumbnail size. The business
+  logo next to the QR code correctly uses `object-contain` per the project's photos-vs-logos rule.
+- Stat-card tone coloring (`inventory/[id]/page.tsx:152-161`) uses plain Tailwind utilities with no
+  competing unlayered class on the same element — not a repeat of the Inventory card-badge bug.
+- `ItemDetailsSlideOver`'s status pill (`item-details-status` + `-danger`/`-success`) is correctly
+  built: both classes are same-specificity same-file rules, and the modifier class is written **after**
+  the base in source, so it wins by normal CSS tie-break — this is the exact pattern later used to FIX
+  the Inventory bug, done correctly here from the start.
+- Hiding `.item-details-status` at ≤640px is not an information-loss bug: the same low-stock signal is
+  duplicated in a fuller alert card in the slide-over body (`ItemDetailsSlideOver.tsx:974-1006`).
+
+**Defects found + FIXED (verified via render-tree logic, not CSS-cascade guessing — deterministic,
+no browser needed):**
+1. **Duplicate error message rendered for the Unit field** (`EditItemForm.tsx`, was ~line 587-605).
+   `<Select error={fieldErrors.unitType} />` already renders its own `<p role="alert">{error}</p>`
+   internally (`components/ui/Select.tsx:339-346`) whenever `error` is truthy — but the form *also*
+   rendered a separate `<FieldError id="edit-unit-error" message={fieldErrors.unitType} />` right
+   after it, so the same validation message appeared twice, stacked, and would be double-announced to
+   screen readers. Fixed by removing the redundant external `<FieldError>` — `Select`'s own error
+   text (with `role="alert"` for immediate announcement) is sufficient and is the only place the Unit
+   error now renders.
+2. **`EditItemForm.tsx`'s 6 text/number inputs (name, quantity, custom unit label, min stock level,
+   cost price, selling price) had no `id`/`htmlFor`/`aria-describedby`** — labels were visually
+   adjacent but not programmatically associated with their inputs, and `FieldError` rendered an
+   `id` that nothing ever referenced. Confirmed this is a real regression/inconsistency, not a design
+   choice: the sibling `add-item/page.tsx` form (same field set, same `FieldError` component) already
+   has this fully wired (e.g. `product-name` / `product-name-error`) — `EditItemForm.tsx` was the
+   outlier. Added matching `id` + `htmlFor` + conditional `aria-describedby` to all 6 fields, mirroring
+   `add-item`'s existing pattern exactly. Zero visual change — pure semantic-HTML/ARIA additions.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (36/36 routes). No CSS
+touched, so no live-render risk; both fixes are deterministic JSX/markup corrections, not cascade
+guesses, so no browser check was needed for confidence (unlike the Inventory badge fix).
+
+**Deliberately left undone:** did not extend `Select`'s public API to accept an external `htmlFor`
+target for the Depot/Supplier/Unit label wrappers (`Select` generates its own internal `id` via
+`useId()`, not exposed) — those fields have no validation error today so the a11y gap there is lower
+value; revisit if `Select` gains error states for those fields. Did not audit the remaining ~4600 lines
+of these four files exhaustively (Item Details' QR/label actions menu, Slide-over's stock-movement
+sub-forms, Add-Item's supplier/depot creation modals) — time-boxed to the CRUD path most exercised by
+this fix's own surface.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

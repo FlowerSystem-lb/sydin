@@ -455,10 +455,11 @@ export default function EditItemForm({
 
         <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+            <label htmlFor="edit-name-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
               Product name <span className="text-theme-accent">*</span>
             </label>
             <input
+              id="edit-name-input"
               type="text"
               value={values.name}
               onChange={(event) => {
@@ -467,6 +468,7 @@ export default function EditItemForm({
               }}
               disabled={saving}
               aria-invalid={Boolean(fieldErrors.name)}
+              aria-describedby={fieldErrors.name ? "edit-name-error" : undefined}
               className={`${inputClassName} ${
                 fieldErrors.name ? errorInputClassName : ""
               }`}
@@ -547,10 +549,11 @@ export default function EditItemForm({
 
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+            <label htmlFor="edit-quantity-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
               Quantity <span className="text-theme-accent">*</span>
             </label>
             <input
+              id="edit-quantity-input"
               type="number"
               min="0"
               step="1"
@@ -570,6 +573,7 @@ export default function EditItemForm({
               }}
               disabled={saving}
               aria-invalid={Boolean(fieldErrors.quantity)}
+              aria-describedby={fieldErrors.quantity ? "edit-quantity-error" : undefined}
               className={`${inputClassName} ${
                 fieldErrors.quantity ? errorInputClassName : ""
               }`}
@@ -602,15 +606,15 @@ export default function EditItemForm({
                   label: INVENTORY_UNIT_LABELS[unit],
                 }))}
               />
-            <FieldError id="edit-unit-error" message={fieldErrors.unitType} />
           </div>
 
           {values.unitType === "custom" && (
             <div className="md:col-span-2">
-              <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+              <label htmlFor="edit-custom-unit-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
                 Custom unit label <span className="text-theme-accent">*</span>
               </label>
               <input
+                id="edit-custom-unit-input"
                 type="text"
                 value={values.customUnitLabel}
                 onChange={(event) => {
@@ -619,6 +623,7 @@ export default function EditItemForm({
                 }}
                 disabled={saving}
                 aria-invalid={Boolean(fieldErrors.customUnitLabel)}
+                aria-describedby={fieldErrors.customUnitLabel ? "edit-custom-unit-error" : undefined}
                 placeholder="e.g. Roll, Bottle, Tray"
                 className={`${inputClassName} ${
                   fieldErrors.customUnitLabel ? errorInputClassName : ""
@@ -632,10 +637,11 @@ export default function EditItemForm({
           )}
 
           <div className="md:col-span-2">
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+            <label htmlFor="edit-min-stock-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
               Minimum stock level
             </label>
             <input
+              id="edit-min-stock-input"
               type="number"
               min="0"
               step="1"
@@ -655,6 +661,7 @@ export default function EditItemForm({
               }}
               disabled={saving}
               aria-invalid={Boolean(fieldErrors.minStockLevel)}
+              aria-describedby={fieldErrors.minStockLevel ? "edit-min-stock-error" : undefined}
               placeholder="Use business default"
               className={`${inputClassName} ${
                 fieldErrors.minStockLevel ? errorInputClassName : ""
@@ -674,7 +681,7 @@ export default function EditItemForm({
       >
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+            <label htmlFor="edit-cost-price-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
               Cost price
             </label>
             <div className="relative">
@@ -682,6 +689,7 @@ export default function EditItemForm({
                 {currencyCode}
               </span>
               <input
+                id="edit-cost-price-input"
                 type="number"
                 min="0"
                 step="0.01"
@@ -698,6 +706,7 @@ export default function EditItemForm({
                 }}
                 disabled={saving}
                 aria-invalid={Boolean(fieldErrors.costPrice)}
+                aria-describedby={fieldErrors.costPrice ? "edit-cost-price-error" : undefined}
                 placeholder="0.00"
                 className={`${inputClassName} pl-[5.5rem] ${
                   fieldErrors.costPrice ? errorInputClassName : ""
@@ -711,7 +720,7 @@ export default function EditItemForm({
           </div>
 
           <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+            <label htmlFor="edit-selling-price-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
               Selling price
             </label>
             <div className="relative">
@@ -719,6 +728,7 @@ export default function EditItemForm({
                 {currencyCode}
               </span>
               <input
+                id="edit-selling-price-input"
                 type="number"
                 min="0"
                 step="0.01"
@@ -735,6 +745,7 @@ export default function EditItemForm({
                 }}
                 disabled={saving}
                 aria-invalid={Boolean(fieldErrors.sellingPrice)}
+                aria-describedby={fieldErrors.sellingPrice ? "edit-selling-price-error" : undefined}
                 placeholder="0.00"
                 className={`${inputClassName} pl-[5.5rem] ${
                   fieldErrors.sellingPrice ? errorInputClassName : ""
