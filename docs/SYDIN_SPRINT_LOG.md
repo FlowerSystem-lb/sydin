@@ -1909,4 +1909,33 @@ was no gap of this kind to fix.
 
 ---
 
+## Categories, Settings, Pick Lists audit — clean functionally, one consistency flag  *(Complete — audit only)*
+
+**Scope:** `app/dashboard/categories/page.tsx` (1796 lines), `app/dashboard/settings/page.tsx`
+(2085 lines), `app/dashboard/pick-lists/page.tsx` (626 lines) + `[id]/page.tsx` (1613 lines). No code
+changed.
+
+**Checked specifically for the a11y gap found in EditItemForm/Suppliers:** both Categories and
+Settings use the **wrapping-`<label>` pattern** (`<label>Text<input /></label>`), which is
+implicitly, correctly associated by the browser without needing explicit `id`/`htmlFor` — confirmed
+clean, not a repeat. Neither has field-level validation errors to associate (Categories: one
+form-level `role="alert"` message; Settings: no per-field errors at all).
+
+**Flagged for awareness (NOT fixed — consistency debt, not a functional bug):** Pick Lists (both
+pages) use **zero** of the shared `DashboardPageShell`/`DashboardEmptyState`/`LoadingSkeletonGroup`/
+`DashboardNotice` primitives that every other audited page this session uses. Functionally nothing is
+missing — both pages have real loading (custom `animate-pulse` skeleton grid), empty (a bespoke
+"Create your first Pick List" card), and error (`pageError` state, rendered) handling — but it's all
+hand-rolled instead of reusing the shared components CLAUDE.md calls out
+("reuse the primitives... only create new UI when repeated UI clearly deserves abstraction"). Not
+fixed here: swapping working custom UI for shared primitives is a visual change this session can't
+browser-verify, and the risk/reward doesn't justify a blind edit for a page with no functional gap.
+Worth a dedicated pass if/when Pick Lists gets its own polish sprint.
+
+**No functional defects found in any of the three.**
+
+**Verification:** read-only audit; no code changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
