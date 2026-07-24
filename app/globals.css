@@ -12138,7 +12138,9 @@ body [class*="tracking-["],
 }
 
 @media (hover: hover) {
-  .dashboard-top-tab:hover,
+  /* Note #12: the top tab must NOT lift on hover — the translateY made it jump
+     up into the divider line. It keeps its background-highlight hover instead
+     (see .dashboard-top-tab:hover below). Lift stays for the icon/pill buttons. */
   .dashboard-top-icon-button:hover,
   .dashboard-top-account-pill:hover,
   .fin-balance-actions a:hover,
@@ -14633,14 +14635,24 @@ body,
     color: #075985 !important;
   }
 
+  /* Dark chip (Sortly reference). This :has()-scoped block has higher
+     specificity than the .dashboard-workspace-shell one, so it is the winner on
+     the Overview / Inventory pages — it must carry the same dark styling or the
+     tooltip goes white on exactly those two pages. Keep in sync with the
+     .dashboard-workspace-shell .dashboard-nav-tooltip block. */
   .dashboard-shell:has(.sydin-overview) .dashboard-nav-tooltip,
   .dashboard-shell:has(.inventory-workspace) .dashboard-nav-tooltip {
-    left: calc(100% + 0.7rem) !important;
+    left: calc(100% + 0.55rem) !important;
     display: none;
-    border-color: #dce5ef !important;
-    background: #ffffff !important;
-    color: #071638 !important;
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 9px !important;
+    background: #1f2a37 !important;
+    padding: 0.32rem 0.62rem !important;
+    color: #ffffff !important;
+    font-size: 0.72rem !important;
+    font-weight: 650 !important;
+    letter-spacing: 0.01em !important;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.24) !important;
   }
 
   .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:hover .dashboard-nav-tooltip,
@@ -15004,13 +15016,20 @@ body,
     color: #075985 !important;
   }
 
+  /* Dark chip, matching the founder's Sortly reference — charcoal pill with
+     white text, sitting just off the collapsed rail. */
   .dashboard-workspace-shell .dashboard-nav-tooltip {
-    left: calc(100% + 0.7rem) !important;
+    left: calc(100% + 0.55rem) !important;
     display: none;
-    border-color: #dce5ef !important;
-    background: #ffffff !important;
-    color: #071638 !important;
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.12) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    border-radius: 9px !important;
+    background: #1f2a37 !important;
+    padding: 0.32rem 0.62rem !important;
+    color: #ffffff !important;
+    font-size: 0.72rem !important;
+    font-weight: 650 !important;
+    letter-spacing: 0.01em !important;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.24) !important;
   }
 
   .dashboard-workspace-shell .dashboard-nav-link:hover .dashboard-nav-tooltip,
@@ -17192,11 +17211,15 @@ body,
   .dashboard-workspace-shell .dashboard-nav-tooltip {
     display: block !important;
     opacity: 0;
-    transform: translateX(-8px);
+    transform: translateX(-6px) translateZ(0);
     pointer-events: none;
+    /* Composite on the GPU so the reveal stays at 60fps and never repaints
+       layout — only opacity + transform animate. */
+    will-change: opacity, transform;
+    backface-visibility: hidden;
     transition:
-      opacity 170ms ease,
-      transform 230ms cubic-bezier(0.22, 1, 0.36, 1);
+      opacity 140ms ease-out,
+      transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
   }
 
   .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:hover .dashboard-nav-tooltip,
@@ -17206,7 +17229,15 @@ body,
   .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
   .dashboard-workspace-shell .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
     opacity: 1 !important;
-    transform: translateX(0) !important;
+    transform: translateX(0) translateZ(0) !important;
+  }
+}
+
+/* Respect reduced-motion: reveal the name instantly, no slide. */
+@media (min-width: 900px) and (prefers-reduced-motion: reduce) {
+  .dashboard-workspace-shell .dashboard-nav-tooltip {
+    transition: none !important;
+    transform: none !important;
   }
 }
 

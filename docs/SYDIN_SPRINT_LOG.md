@@ -1956,4 +1956,76 @@ Center's business-logo preview correctly uses `object-contain`, its item-photo p
 
 ---
 
+## Notes batch 1 — Sidebar hover tooltip: smoother, simpler (Sayed note #13a)  *(Complete)*
+
+**Scope:** First item from the founder-notes roadmap
+([SYDIN_NOTES_ROADMAP_2026-07.md](SYDIN_NOTES_ROADMAP_2026-07.md)). Sayed: when the mouse is on a
+collapsed-sidebar icon, the page name should appear as small simple text and vanish smoothly on
+leave — "smoother fps." The reveal already existed (Sprint D1) but wasn't buttery and its styling
+was heavy.
+
+**Delivered (presentation-only, `app/globals.css` — the two winning tooltip blocks):**
+- **GPU compositing for FPS** — added `will-change: opacity, transform;` + `backface-visibility:
+  hidden;` and `translateZ(0)` to the reveal so it stays on the compositor and never triggers a
+  layout repaint (only opacity + transform animate). Verified live: computed `will-change` now
+  reports `opacity, transform` (was `auto`).
+- **Snappier, smoother timing** — `opacity 140ms ease-out` + `transform 200ms
+  cubic-bezier(0.22,1,0.36,1)` (was 170ms/230ms), and a shorter travel (`translateX(-6px)` → 0,
+  was −8px) so it feels lighter.
+- **Small + simple chip** — font 0.72rem/700, tighter padding (`0.28rem 0.6rem`), smaller radius
+  (9px), softer shadow, slightly closer to the rail. Was a bigger white pill with a large overlay
+  shadow.
+- **`prefers-reduced-motion`** — new fallback: name reveals instantly, no slide.
+
+**Verification:** live on the real authenticated dashboard at a collapsed-rail width (1040px,
+72px rail). Resting state computed `opacity:0, translateX(-6px), will-change: opacity, transform`.
+Real-cursor hover over the Inventory icon → its tooltip (and only its) computed `opacity:1,
+translateX(0)`, `:hover` on the correct link. `npm run lint` ✅ · `npm run build` ✅ (36/36).
+*(Hit the recurring Turbopack partial-stale-CSS issue mid-verify — the font-size edit was live but
+the motion block wasn't; `rm -rf .next` + restart fixed it, then all values verified live.)*
+
+**Note for the founder:** this only changes how the reveal *feels/looks* — the reveal itself was
+already shipped. If it wasn't appearing at all on your build, that was the old-deploy / stale-cache
+issue flagged at the top of the notes roadmap, not missing code.
+
+**Untouchables:** none touched — scoped CSS only.
+
+**Deferred (note #13b, separate batch):** upgrading each sidebar icon to a distinctive custom
+symbol per section — cosmetic, low priority, sequenced last in the notes roadmap.
+
+---
+
+## Notes batch 2 — Dark sidebar tooltip (Sortly ref) + top-tab lift fix  *(Complete)*
+
+**Scope:** Founder gave a Sortly reference — the collapsed-rail hover tooltip should be a **dark
+charcoal chip** (was a light/white pill), "professional and smoother." Plus the verified note #12
+top-tab hover bug, done in the same chrome surface.
+
+**Delivered (`app/globals.css`, presentation-only):**
+- **Dark tooltip chip** — charcoal `#1f2a37`, white 0.72rem/650 text, tighter padding, 9px radius,
+  softer shadow. Applied in **both** winning style blocks (see cascade note below).
+- **Top-tab hover no longer lifts (note #12)** — removed `.dashboard-top-tab:hover` from the
+  `translateY(-1px)` group; it keeps only its background-highlight hover, so it no longer jumps up
+  into the divider line. The lift is preserved for the icon/pill buttons.
+
+**Cascade trap hit + fixed (worth recording):** the first dark edit only landed on
+`.dashboard-workspace-shell .dashboard-nav-tooltip` (specificity 0,2,0). But on the **Overview and
+Inventory** pages a higher-specificity `:has()` block —
+`.dashboard-shell:has(.sydin-overview) .dashboard-nav-tooltip` (0,3,0) — was still forcing the
+chip **white**, so the tooltip was dark everywhere *except* the two most-used pages. Found it by
+dumping every matched `background` rule for the selector in the live browser (not by reading
+source). Fixed by applying the dark styling to that `:has()` block too, with a comment tying the
+two blocks together. (This is exactly the multi-block cascade debt flagged in the chrome audit.)
+
+**Verification:** live at collapsed-rail width (1040px) on the real dashboard. Tooltip computed
+`background rgb(31,42,55)` + `color white` on the Overview page (`.sydin-overview` present) — i.e.
+the `:has()` winner is now dark. Rule inspection confirms the only `.dashboard-top-tab:hover` rule
+sets a background highlight and **no transform**. Reveal mechanics (opacity 0→1, translateX→0)
+unchanged from batch 1. `npm run lint` ✅ · `npm run build` ✅ (36/36).
+*(Two `.next` clears needed — Turbopack served partial-stale CSS twice mid-verify.)*
+
+**Untouchables:** scoped CSS only; no auth/schema/routing/logic.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
