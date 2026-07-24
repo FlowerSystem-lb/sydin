@@ -75,12 +75,16 @@ export default function InventoryItemCard({
   const resolvedDetailsHref =
     detailsHref || `/dashboard/inventory/${item.id}`;
   const showImage = Boolean(item.image) && failedImageSrc !== item.image;
-  const statusClassName =
+  // Tone colors live in globals.css as `.inventory-card-tag.inventory-card-status--{tone}`
+  // (specificity 0,2,0) so they win over the unlayered `.inventory-card-tag` base, which
+  // otherwise overrides Tailwind color utilities on this pill. See inventory list view for
+  // the same red/amber palette.
+  const statusToneClass =
     stockStatusTone === "danger"
-      ? "border-violet-200 bg-violet-50 text-violet-700"
+      ? "inventory-card-status--danger"
       : stockStatusTone === "warning"
-        ? "border-amber-200 bg-amber-50 text-amber-700"
-        : "border-cyan-200 bg-cyan-50 text-cyan-700";
+        ? "inventory-card-status--warning"
+        : "inventory-card-status--success";
 
   const openDetails = useCallback(() => {
     if (selectable) {
@@ -373,7 +377,7 @@ export default function InventoryItemCard({
 
         <div className="inventory-card-tags">
           <span
-            className={`inventory-card-tag inventory-card-status ${statusClassName}`}
+            className={`inventory-card-tag inventory-card-status ${statusToneClass}`}
           >
             {stockStatusLabel || "In Stock"}
           </span>

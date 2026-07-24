@@ -17452,3 +17452,29 @@ body,
     background: var(--sydin-ui-surface);
   }
 }
+
+/* ===[ INVENTORY CARD — status badge tone colors ]===
+   The status pill carries `.inventory-card-tag`, whose background/color/border are
+   authored unlayered and therefore beat Tailwind's layered color utilities. That made the
+   grid/card status badge render a uniform neutral tone with no danger/warning/success
+   distinction (the list view's pill works only because it has no `.inventory-card-tag`).
+   These 2-class selectors (specificity 0,2,0) win over `.inventory-card-tag` (0,1,0)
+   deterministically, restoring the same red/amber palette used by the inventory list view.
+   Appended at end of file — no existing rule reordered. */
+.inventory-card-tag.inventory-card-status--danger {
+  border-color: #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.inventory-card-tag.inventory-card-status--warning {
+  border-color: #fde68a;
+  background: #fffbeb;
+  color: #b45309;
+}
+
+.inventory-card-tag.inventory-card-status--success {
+  border-color: #a5f3fc;
+  background: #ecfeff;
+  color: #0e7490;
+}

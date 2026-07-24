@@ -1585,4 +1585,143 @@ wired in by default.
 
 ---
 
+## Mobile Shell audit — dead-code removal + latent safe-area bug  *(Complete)*
+
+**Scope:** Deep-scan of the **Mobile Shell** surface only (`components/mobile/*`, `app/mobile.css`,
+and the mobile-shell blocks in `app/globals.css`) — audit-first, then surgical fixes. One surface,
+presentation-only, no auth/Supabase/schema/routing/business-logic touched.
+
+**Audit findings (evidence-backed):**
+1. **[HIGH — flagged, deliberately NOT fixed] Mobile shell nav CSS is fully duplicated across two
+   files with conflicting values.** `app/globals.css:17213-17316` **and** `app/mobile.css:3-256`
+   both define `.mobile-shell`, `.mobile-shell-content`, `.mobile-shell-nav`, `.mobile-nav-tab*`
+   and the desktop-hide block. Values diverge: `.mobile-nav-tab-center` margin-top `-20px`
+   (globals) vs `-18px` (mobile.css); `:active` bg `.10` vs `.08`; icon-wrapper radius `16px` vs
+   `14px`, press scale `.95` vs `.92`, transition `200ms` vs `150ms`. Import order
+   (`app/layout.tsx:2-3`: globals **then** mobile.css) means **mobile.css wins**, so it renders
+   coherently today — this is a regression-risk/maintainability defect, **not** a current visible
+   break. The copies have also diverged: globals.css still styles an older `.mobile-alert-card*` /
+   `.mobile-dashboard-subtitle` that the current `MobileDashboard` no longer renders (dead), while
+   mobile.css carries the live `.mobile-metric-card*`. **Deferred** — this is the previously-flagged
+   "fold `mobile.css` into `globals.css`" refactor (M2 deferred #4, Chrome-Audit deferred #3). It
+   needs a live device/browser computed-value pass, which this session's environment cannot do (no
+   browser-automation tool), and blind-refactoring the just-recovered nav is how it went invisible
+   before. Left for its own sprint with a real visual check.
+2. **[MEDIUM — fixed] Invalid `max(0, env(safe-area-inset-bottom))`** (`app/mobile.css:30`). Inside
+   CSS `max()`, unitless `0` is a `<number>` and cannot be compared to a `<length>`, so the parser
+   discards the whole `padding-bottom` declaration. It was **masked** because globals.css:17242 has
+   the correct `max(0px, …)` as a cascade fallback — but the moment the duplicate above is removed,
+   the safe-area padding silently breaks. Corrected to `max(0px, env(safe-area-inset-bottom))`.
+3. **[MEDIUM — fixed] Dead code.** `components/mobile/MobileInventoryCard.tsx` had **zero**
+   references repo-wide (grep across `.ts/.tsx/.css/.md`; only docs mention it). Deleted it plus its
+   sole CSS block `.mobile-inventory-card*` (`app/mobile.css`, ~97 lines). This resolves the M3
+   "delete or adopt `MobileInventoryCard`" open question in the delete direction (see Decision Log
+   2026-07-24). Confirmed `.mobile-inventory-card*` existed **only** in mobile.css (0 occurrences in
+   globals.css).
+
+**Also confirmed as NON-issues (checked, no action):**
+- Mobile nav's cyan/blue accent is **on-brand**: `--sydin-blue: #38bdf8` / `--sydin-blue-strong:
+  #2563eb` (globals.css:29-30) are the brand tokens; the Scan-button gradient matches them exactly.
+- `app/mobile.css` is live (imported at `app/layout.tsx:3`), not a dead file.
+
+**Deliberately left undone:** the CSS duplication consolidation (finding #1, needs live verification);
+the `mobile-preview` route + `MobileDashboard` (dead-in-production but a documented **founder**
+keep-or-delete decision — not mine to make unilaterally); safe-area *notch* height/padding tuning
+(cannot be verified without a real notched device/simulator, and touching the duplicated height/
+padding across both files is part of finding #1).
+
+**Verification:** `npm run lint` ✅ (clean) · `npx tsc --noEmit` ✅ (0 errors) · `npm run build` ✅
+(36/36 routes). **Live browser computed-value check: NOT performed** — no browser-automation tool in
+this environment. Mitigation: both applied fixes are chosen to be **rendering-neutral** (the `max()`
+value was already masked by globals' fallback; the deleted component rendered nowhere), so there is
+no visual delta to verify; the only surface that *would* need a live check (finding #1) was
+deliberately not touched.
+
+---
+
+## Inventory workspace audit — card status badge color-coding was dead (cascade override)  *(Complete)*
+
+**Scope:** Deep-scan of the **Inventory workspace** surface (`app/dashboard/inventory/page.tsx`
+[5204 lines], `components/inventory/InventoryItemCard.tsx`, and the `inventory-card-*` CSS in
+`app/globals.css`). Audit-first, targeted at high-signal defect classes — a full line-by-line audit
+of a 5204-line page is not something one pass can responsibly complete; findings below are
+evidence-backed, not exhaustive.
+
+**Confirmed as NON-issues (checked, no action needed):**
+- **Image fitting is correct:** item photos use `object-cover` (page.tsx:3314, 3481; card img:239),
+  the generic `InventoryThumbnail` default and the add-form preview use `object-contain p-1.5`
+  (page.tsx:346, 3825). Photos crop-to-fill, thumbnails/previews letterbox — correct.
+- **Page anatomy complete:** loading (`LoadingSkeletonGroup` p.3198), empty (`DashboardEmptyState`
+  p.3561), and error (`DashboardNotice` p.2795) states all present.
+- **`InventoryItemCard` interaction/a11y is solid:** menu button has `aria-haspopup`/`aria-expanded`,
+  Escape closes + refocuses, outside-click/scroll/resize close it, menu items are `min-h-11` (44px)
+  touch targets, card is keyboard-activatable.
+
+**Defect found + FIXED — grid/card status badge had no stock-status color distinction (verified):**
+- **Root cause (confirmed against COMPILED CSS, not source reasoning):** the card status pill is
+  `<span class="inventory-card-tag inventory-card-status {tone}">` where `{tone}` was raw Tailwind
+  color utilities (`bg-violet-50 text-violet-700` for danger, etc.). `app/globals.css` authors all
+  `.inventory-*` rules **unlayered**, while Tailwind color utilities compile **inside
+  `@layer utilities`**. Verified in the built CSS: `.inventory-card-tag{…}` → `insideLayer:false`,
+  `.bg-red-50` → `insideLayer:true`. Unlayered beats layered regardless of specificity/source order,
+  so `.inventory-card-tag`'s own `background`/`color`/`border` (defined **twice**: globals.css:10524
+  and 11648 — a duplicate) overrode the tone utilities. Net: **every card status badge rendered the
+  same neutral tone** — no danger/warning/success color. The inventory **list** view's pill
+  (page.tsx:3323) works only because it has no `.inventory-card-tag`. As a secondary tell, the card's
+  danger tone was also mapped to **violet** while the list view maps danger to **red** — same status,
+  two colors.
+- **Fix:** replaced the dead Tailwind tone utilities with tone **hook classes**
+  (`inventory-card-status--danger|warning|success`) in `InventoryItemCard.tsx`, and appended three
+  scoped rules to the **end** of `app/globals.css` as `.inventory-card-tag.inventory-card-status--{tone}`
+  (specificity 0,2,0 > `.inventory-card-tag` 0,1,0 → deterministic win; both unlayered so layering is
+  irrelevant). Palette mirrors the already-working list view (red `#dc2626`/`#fef2f2`/`#fecaca`, amber
+  `#b45309`/`#fffbeb`/`#fde68a`, plus cyan for success). **Scenario-independent:** correct whether or
+  not the old utilities rendered. No existing rule reordered/relocated (respects Sprint 3B + hard
+  constraint on globals.css source order).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (36/36) · globals.css
+brace balance **2528/2528** (was 2525; +3 rules) · **compiled-CSS check**: new rule present
+(`.inventory-card-status--danger{color:#dc2626;background:#fef2f2;border-color:#fecaca}`) and the
+unlayered-vs-layered diagnosis confirmed programmatically. **Live browser pixel check NOT performed**
+(no browser-automation tool in this environment); mitigated by (a) deterministic specificity, (b)
+colors copied from the list view's proven pills, (c) compiled-CSS confirmation. Founder should still
+eyeball the grid view once; trivially revertible.
+
+**Deliberately left undone:** exhaustive audit of the remaining ~5000 lines of the inventory page;
+the duplicate `.inventory-card-tag` definition (globals.css:10524 vs 11648) and broader inventory CSS
+cluster consolidation (Sprint 3B protects this file's source order — needs its own verified sprint);
+hardcoded light-mode colors in the card action menu (`bg-white`/`text-slate-700`, InventoryItemCard.tsx:278)
+and the add-form image preview (`bg-[#f4f0e8]`, page.tsx:3820) that don't adapt to the dark theme —
+noted, low priority (default theme is light), not touched.
+
+---
+
+## Dashboard home audit — clean, no code change  *(Complete — audit only)*
+
+**Scope:** Deep-scan of the **Dashboard home** surface (`app/dashboard/page.tsx` [1054 lines] + its
+`.sydin-overview-*` CSS in `app/globals.css`). No code changed — the surface is well-built; forcing an
+edit would have been busywork.
+
+**Verified correct (evidence):** image fitting (`.sydin-overview-thumb img { object-fit: cover }`,
+globals.css:13901); loading skeletons on all 6 panels; empty states on every panel (each with a CTA);
+error state (`role="alert"`, page.tsx:650) plus robust `.catch()` fallbacks in the data loader
+(page.tsx:375-424); hover/active states on every interactive row/card correctly gated behind
+`@media (hover: hover)` (globals.css:14150 — no sticky-hover on touch); reduced-motion respected in
+`CountUpNumber` and `StockHealthGauge`; SVG gauge has `aria-label`; `@container (max-width: 1100px)`
+handles summary/grid responsiveness (globals.css:14167).
+
+**Flagged for founder decision (NOT fixed — design/product calls, not bugs):**
+1. **Duplicate action set.** `topActions` (Add Item / Set Depots / QR Scan / Stock Count) renders in
+   both the hero action bar (page.tsx:633) and the "Top actions" panel (page.tsx:761, which also adds
+   Create PO + Receive). Those four appear twice on one screen — redundant. Fix = curate two distinct
+   sets; needs Sayed's call on which actions live where.
+2. **"Create PO" label vs destination.** Panel link (page.tsx:767) targets the PO list
+   (`/dashboard/purchase-orders`) while its label implies creation; the spending panel's CTA uses
+   `/dashboard/purchase-orders/new`. Minor mismatch — possibly intentional.
+
+**Verification:** read-only audit; no build run needed (no code changed). Prior surfaces' changes
+(mobile shell, inventory card) remain green per their entries.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

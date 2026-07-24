@@ -116,4 +116,35 @@ exists in the production Supabase project (`hllktjhewivxqumqktzj`) with 8 rows. 
 entry said "code complete; awaiting phase-9 SQL run" with no follow-up confirming it — this entry
 closes that loop. **Status:** Active (Sprint B2 fully live, not just code-complete).
 
+### 2026-07-24 · M3 open question resolved — `MobileInventoryCard` deleted, not adopted
+**Decision:** Removed `components/mobile/MobileInventoryCard.tsx` (+ its sole CSS block
+`.mobile-inventory-card*` in `app/mobile.css`) rather than wiring it into the Inventory page.
+**Why:** it had zero references repo-wide, and the Chrome-Audit entry already established that the
+live mobile inventory page renders correctly via its own Sprint-7 CSS treatment — adopting the
+component would *replace working layout with a duplicate* for no user-visible gain. This closes the
+"delete or adopt" question the Chrome-Audit sprint left open. Recoverable from git history if a
+deliberate adoption is ever wanted. **Status:** Active.
+
+### 2026-07-24 · Mobile shell CSS duplication consolidation stays a dedicated sprint (not a drive-by)
+**Decision:** The mobile-shell nav rules duplicated (with conflicting values) across
+`app/globals.css:17213-17316` and `app/mobile.css` will **not** be consolidated as part of a polish
+pass. **Why:** it is the same "fold `mobile.css` into `globals.css`" refactor already deferred (M2
+deferred #4, Chrome-Audit deferred #3); resolving it correctly requires a **live computed-value /
+device check** (the project's own METHOD rule: don't trust source-order reasoning here), and the
+mobile nav has already gone fully invisible once from this exact class of CSS fragility. Do it in its
+own sprint with a real browser/device visual pass, not blind. **Status:** Revisit (dedicated sprint).
+
+### 2026-07-24 · Engineering gotcha — unlayered `.inventory-*` (globals.css) silently override Tailwind color utilities
+**Fact/decision:** `app/globals.css` authors its custom rules **unlayered**, while Tailwind v4
+compiles utilities into `@layer utilities`. Per CSS cascade-layer rules, **unlayered always beats
+layered**, regardless of specificity or source order. Verified against compiled CSS
+(`.inventory-card-tag` → not in a layer; `.bg-red-50` → in a layer). **Consequence:** putting Tailwind
+color/background/border utilities (`bg-*`, `text-*`, `border-*`) on an element that also carries an
+unlayered class like `.inventory-card-tag` that sets those same properties means the **Tailwind
+classes are silently dead** — this is what killed the inventory card's status-badge color-coding
+(see Sprint Log 2026-07-24). **How to apply:** when an element needs both a hand-written globals class
+and tone/color variation, drive the color from a **higher-specificity unlayered selector**
+(e.g. `.base.base--tone`) or a hook class defined in globals.css — do **not** rely on a Tailwind color
+utility to override an unlayered base. **Status:** Active (reference).
+
 <!-- Append the next decision below this line. -->
