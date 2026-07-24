@@ -1869,4 +1869,44 @@ silent blank — a legitimate design choice distinct from `DashboardEmptyState`,
 
 ---
 
+## Stock Counts audit — clean, no code change  *(Complete — audit only)*
+
+**Scope:** `app/dashboard/stock-counts/page.tsx` (1493 lines, setup → count → review wizard). No code
+changed.
+
+**Verified correct:** item thumbnails use `object-cover`; all difference/status badges (e.g.
+`difference > 0` emerald / `< 0` red, lines 1012-1019, 1304-1309) are plain `<span>`s with only
+conditional Tailwind utilities — no competing custom class, no cascade risk; "start count" is
+correctly `disabled` when inventory is empty (line 810), with distinct messages for "inventory is
+empty" vs. "no items match this count's scope" (lines 848, 854) — thorough edge-case handling, not a
+gap, despite not using the shared `DashboardEmptyState` (this page is a setup wizard, not a list view,
+so inline contextual messages are the right pattern here, consistent with Receiving).
+
+**No defects found.**
+
+**Verification:** read-only audit; no code changed.
+
+---
+
+## Suppliers + Depots audit — fixed same a11y gap, Depots clean  *(Complete)*
+
+**Scope:** `app/dashboard/suppliers/page.tsx` (806 lines) + `app/dashboard/depots/page.tsx`
+(707 lines). Both have full page anatomy (`DashboardEmptyState`/`DashboardNotice`/
+`LoadingSkeletonGroup`) and no visual defects found — neither displays photos, so no image-fitting
+surface exists.
+
+**Fixed — same class of defect as the Item Details/Add-Edit forms audit:** `SupplierForm`'s two
+validated fields (Supplier name, Email) had inline error messages with no `id`/`htmlFor`/
+`aria-describedby` association, identical to the `EditItemForm.tsx` gap fixed earlier this session.
+Added the same wiring (`supplier-name-input`/`supplier-name-error`,
+`supplier-email-input`/`supplier-email-error`). Zero visual change.
+
+**Depots — confirmed clean, nothing to fix:** the depot form has no field-level validation-error
+state to associate (relies on native `required` only, no `FieldError`-equivalent rendering), so there
+was no gap of this kind to fix.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (36/36 routes).
+
+---
+
 <!-- Append the next sprint entry below this line. -->

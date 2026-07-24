@@ -119,23 +119,25 @@ function SupplierForm({
 
       <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+          <label htmlFor="supplier-name-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
             Supplier name <span className="text-theme-accent">*</span>
           </label>
           <input
+            id="supplier-name-input"
             autoFocus
             value={values.name}
             onBlur={() => setNameTouched(true)}
             onChange={(event) => onChange("name", event.target.value)}
             disabled={saving}
             aria-invalid={nameError}
+            aria-describedby={nameError ? "supplier-name-error" : undefined}
             placeholder="e.g. Cedar Wholesale"
             className={`${inputClassName} ${
               nameError ? "border-red-400/50 bg-red-500/[0.08]" : ""
             }`}
           />
           {nameError && (
-            <p className="mt-2 text-sm font-semibold text-theme-danger">
+            <p id="supplier-name-error" className="mt-2 text-sm font-semibold text-theme-danger">
               Supplier name is required.
             </p>
           )}
@@ -154,23 +156,25 @@ function SupplierForm({
           />
         </div>
         <div>
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
+          <label htmlFor="supplier-email-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
             Email
           </label>
           <input
+            id="supplier-email-input"
             type="email"
             value={values.email || ""}
             onBlur={() => setEmailTouched(true)}
             onChange={(event) => onChange("email", event.target.value)}
             disabled={saving}
             aria-invalid={emailError}
+            aria-describedby={emailError ? "supplier-email-error" : undefined}
             placeholder="orders@example.com"
             className={`${inputClassName} ${
               emailError ? "border-red-400/50 bg-red-500/[0.08]" : ""
             }`}
           />
           {emailError && (
-            <p className="mt-2 text-sm font-semibold text-theme-danger">
+            <p id="supplier-email-error" className="mt-2 text-sm font-semibold text-theme-danger">
               Enter a valid email address.
             </p>
           )}
