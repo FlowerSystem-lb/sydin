@@ -1834,4 +1834,39 @@ this fix's own surface.
 
 ---
 
+## Stock Alerts audit — clean, no code change  *(Complete — audit only)*
+
+**Scope:** `app/dashboard/alerts/page.tsx` (463 lines). No code changed.
+
+**Verified correct:** full page anatomy (`LoadingSkeletonGroup`, `DashboardEmptyState`,
+`DashboardNotice`); item thumbnail uses `object-cover` correctly; entirely built from shared
+primitives (`MetricCard`, `FilterBar`/`FilterChip`, `ActionButton`, `DashboardToolbar`) so no
+custom CSS cascade risk like the Inventory card bug; responsive grid collapses to single-column
+below `sm:`; reuses `ItemDetailsSlideOver`, `SetAlertLevelDialog`, `StockMovementDialog` rather than
+re-implementing.
+
+**No defects found.**
+
+**Verification:** read-only audit; no code changed.
+
+---
+
+## Receiving audit — clean, no code change  *(Complete — audit only)*
+
+**Scope:** `app/dashboard/receiving/page.tsx` (1937 lines, multi-step receiving wizard). No code
+changed.
+
+**Verified correct:** item thumbnails use `object-cover` (lines 1221-1226, 1360-1365); all
+status/warning/danger inline messages are plain Tailwind utilities with no competing unlayered
+custom class on the same element — no risk of the Inventory-style override; the page has no single
+"main empty state" (it's a step wizard, not a list view) but every contextual empty case has a real,
+informative inline message (empty inventory before receiving, no stock-in history yet) rather than a
+silent blank — a legitimate design choice distinct from `DashboardEmptyState`, not a gap.
+
+**No defects found.**
+
+**Verification:** read-only audit; no code changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
