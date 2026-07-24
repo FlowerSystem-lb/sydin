@@ -2074,4 +2074,26 @@ route and Cmd+K palette were left as-is.
 
 ---
 
+## Cleanup — removed the orphaned `/dashboard/mobile-preview` route  *(Complete)*
+
+**Scope:** Last open item from the Sprint M2 audit. `app/dashboard/mobile-preview/page.tsx` was
+dev scaffolding left over from building the mobile shell, but it **shipped as a real production
+route** (the 36th).
+
+**Why it was safe to delete:** zero references repo-wide (grepped `.ts`/`.tsx` outside its own
+file); it carried a hardcoded `recentActivityCount: 5, // Demo value`; and because
+`app/dashboard/layout.tsx` already wraps every dashboard page in `MobileShellWrapper` →
+`MobileShell`, visiting it would have mounted a **second, nested `MobileShell`** inside the first —
+a latent bug, not just dead weight.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ — route count
+**36 → 35**, with no `mobile-preview` entry in the manifest.
+
+**Note on parallel work:** the other item flagged in the M2 audit, the unused
+`components/mobile/MobileInventoryCard.tsx` (+ ~100 lines of `mobile.css`), was already removed by
+the parallel VS Code session in `9001afa`, so it is not re-handled here. Local `main` and
+`origin/main` were verified in sync before and after this change.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
