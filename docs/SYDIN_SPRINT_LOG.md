@@ -1938,4 +1938,22 @@ Worth a dedicated pass if/when Pick Lists gets its own polish sprint.
 
 ---
 
+## Reports, Activity, QR Center, Search audit — all clean  *(Complete — audit only)*
+
+**Scope:** `app/dashboard/reports/page.tsx` (1274 lines), `app/dashboard/activity/page.tsx`
+(365 lines), `app/dashboard/qr-center/page.tsx` (864 lines), `app/dashboard/search/page.tsx`
+(332 lines). No code changed.
+
+**Verified correct:** all four use the shared `DashboardPageShell`/`DashboardEmptyState`/
+`DashboardNotice`/`LoadingSkeletonGroup` primitives; Reports' `Select` filters use the wrapping-label
+pattern with no `error` prop, so no risk of the duplicate-render bug fixed in EditItemForm; QR
+Center's business-logo preview correctly uses `object-contain`, its item-photo preview correctly uses
+`object-cover`; Activity and Search have no image-fitting surface to check.
+
+**No defects found.**
+
+**Verification:** read-only audit; no code changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
