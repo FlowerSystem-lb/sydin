@@ -1753,4 +1753,31 @@ accidental duplication — left as-is.
 
 ---
 
+## Scanner Workspace audit — clean, no code change  *(Complete — audit only)*
+
+**Scope:** `app/dashboard/scanner/page.tsx` (1222 lines), `components/scanner/BarcodeScannerView.tsx`,
+`components/scanner/ScannerModal.tsx`. No code changed.
+
+**Checked specifically because this surface has settled business rules that are easy to violate in
+the UI:** confirmed Transfer mode's copy matches the 2026-07-19 decision exactly — hint "Move an item
+to another depot", button "Move to depot" (page.tsx:997-1000), no quantity input anywhere in the
+transfer flow.
+
+**Verified correct:** camera lifecycle (`BarcodeScannerView.tsx`) properly stops MediaStream tracks
+and clears `srcObject` on teardown, uses a ref-based callback pattern so the effect only reruns on
+`active`/`continuous` (not on every re-render), debounces duplicate scans in continuous mode
+(`DUPLICATE_SCAN_WINDOW_MS`); camera-permission/unsupported errors surface via
+`role="status" aria-live="polite"` with a working "Try Again" that remounts the view via `key`;
+migration-gated modes (Transfer, Assign/Repair/Return) show a visibly disabled state
+(`opacity-60`, `cursor-not-allowed`) *and* surface the reason both as a `title` tooltip and as an
+on-click error (works for touch, not just hover); mode buttons are `min-h-11` (44px) with
+`aria-pressed`; page anatomy (loading/empty/error) present at lines 661-674, 798-810, 1151, 1215; the
+camera `<video>` uses `object-cover` (correct — a live feed should fill, not letterbox).
+
+**No defects found.**
+
+**Verification:** read-only audit; no code changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
