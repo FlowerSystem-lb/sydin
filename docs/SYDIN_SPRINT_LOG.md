@@ -1724,4 +1724,33 @@ handles summary/grid responsiveness (globals.css:14167).
 
 ---
 
+## Purchase Orders audit — clean, no code change  *(Complete — audit only)*
+
+**Scope:** Deep-scan of `app/dashboard/purchase-orders/page.tsx` (1184 lines) and
+`app/dashboard/purchase-orders/new/page.tsx` (1240 lines) + their `.po-*` CSS. No code changed.
+
+**Checked specifically because Inventory had a real bug here:** status/state color-coding. This
+surface uses the generic `Badge`/`ui-badge-{tone}` component (`components/ui/Badge.tsx`), which sets
+its own colors from real design tokens (`--status-danger-text` etc.) — confirmed distinct per tone in
+globals.css:679-701, not a repeat of the Inventory unlayered-override bug. The "Owe / Paid / Invoice"
+inline pills (page.tsx:736-763) use bare Tailwind utility classes with no competing unlayered class on
+the same element (`.po-history-row` only styles the row container, not descendant spans) — no
+override risk.
+
+**Verified correct:** page anatomy (loading/empty/error via `LoadingSkeletonGroup`,
+`DashboardEmptyState`, `DashboardNotice` — page.tsx:615-644); schema-missing state has its own guided
+banner distinct from generic errors; attachment images use `object-contain` for full document review
+(list detail view, 480×280) and `object-cover` for the small 96×96 upload-preview thumbnail (new-order
+form) — a defensible photo-thumbnail-vs-full-review split, not an inconsistency; hover states on
+`.po-history-row` correctly gated behind `@media (hover: hover)` (globals.css:16573); both pages are
+referenced from real navigation (no dead route, unlike the earlier `mobile-preview` finding).
+
+**No defects found.** Two duplicate-looking `.po-history-row { }` blocks (globals.css:15783, 15804)
+are an intentional split (base rule + a commented "status color rail" border-left addition), not
+accidental duplication — left as-is.
+
+**Verification:** read-only audit; no code changed, so no build re-run needed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
