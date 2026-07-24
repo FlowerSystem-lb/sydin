@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import SydINMark from "@/components/brand/SydINMark";
 import GlobalSearchDialog from "@/components/dashboard/GlobalSearchDialog";
-import UiIcon from "@/components/UiIcon";
+import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
   Badge,
   Button,
@@ -46,12 +46,33 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
-const DASHBOARD_TOP_TABS = [
-  { label: "Overview", href: "/dashboard" },
-  { label: "Activity", href: "/dashboard/activity" },
-  { label: "Inventory", href: "/dashboard/inventory" },
-  { label: "Orders", href: "/dashboard/purchase-orders" },
-  { label: "Receiving", href: "/dashboard/receiving" },
+// Header "+ Add" menu. The header owns creation actions; the sidebar owns
+// navigation — so the old top tabs (which duplicated the five sidebar links)
+// were removed rather than kept alongside it.
+const ADD_MENU_ITEMS: {
+  label: string;
+  description: string;
+  href: string;
+  icon: UiIconName;
+}[] = [
+  {
+    label: "New item",
+    description: "Add a product to your inventory",
+    href: "/dashboard/add-item",
+    icon: "box",
+  },
+  {
+    label: "Purchase order",
+    description: "Record a purchase or expense",
+    href: "/dashboard/purchase-orders/new",
+    icon: "file",
+  },
+  {
+    label: "Receive stock",
+    description: "Log stock arriving without a PO",
+    href: "/dashboard/receiving",
+    icon: "download",
+  },
 ];
 
 function getDashboardPageContext(pathname: string, action?: string | null) {
@@ -217,6 +238,8 @@ export default function DashboardShell({
   const searchParams = useSearchParams();
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const accountTriggerRef = useRef<HTMLButtonElement>(null);
+  const addMenuRef = useRef<HTMLDivElement>(null);
+  const addTriggerRef = useRef<HTMLButtonElement>(null);
   const lastSearchTriggerRef = useRef<HTMLButtonElement | null>(null);
   const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const tabletSearchTriggerRef = useRef<HTMLButtonElement>(null);
@@ -226,6 +249,7 @@ export default function DashboardShell({
   const [tabletDrawerOpen, setTabletDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   const [searchShortcutKey, setSearchShortcutKey] = useState("Ctrl");
   const [businessSettings, setBusinessSettings] = useState(
@@ -314,6 +338,32 @@ export default function DashboardShell({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [accountMenuOpen]);
+
+  useEffect(() => {
+    if (!addMenuOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (
+        addMenuRef.current &&
+        !addMenuRef.current.contains(event.target as Node)
+      ) {
+        setAddMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setAddMenuOpen(false);
+        addTriggerRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [addMenuOpen]);
 
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
@@ -666,24 +716,9 @@ export default function DashboardShell({
 
       <div className="dashboard-main-canvas">
         <div className="dashboard-desktop-toolbar">
-          <nav className="dashboard-top-tabs" aria-label="Dashboard sections">
-            {DASHBOARD_TOP_TABS.map((tab) => {
-              const active = isDashboardRouteActive(pathname, tab.href);
-              return (
-                <Link
-                  key={tab.href}
-                  href={tab.href}
-                  aria-current={active ? "page" : undefined}
-                  className={cx(
-                    "dashboard-top-tab",
-                    active && "dashboard-top-tab-active"
-                  )}
-                >
-                  {tab.label}
-                </Link>
-              );
-            })}
-          </nav>
+          <div className="dashboard-top-context">
+            <p className="dashboard-top-context-title">{currentPage.label}</p>
+          </div>
 
           <button
             ref={desktopSearchTriggerRef}
@@ -704,15 +739,45 @@ export default function DashboardShell({
           </button>
 
           <div className="dashboard-top-tools">
-            {quickAddVisible && (
-              <Link
-                href="/dashboard/add-item"
+            <div ref={addMenuRef} className="dashboard-top-add">
+              <button
+                ref={addTriggerRef}
+                type="button"
                 className="dashboard-top-primary-button"
+                aria-haspopup="menu"
+                aria-expanded={addMenuOpen}
+                onClick={() => setAddMenuOpen((current) => !current)}
               >
                 <UiIcon name="plus" className="h-4 w-4" />
-                Add Item
-              </Link>
-            )}
+                Add
+                <UiIcon
+                  name="chevron-down"
+                  className={cx(
+                    "dashboard-top-add-chevron h-4 w-4",
+                    addMenuOpen && "dashboard-top-add-chevron-open"
+                  )}
+                />
+              </button>
+
+              {addMenuOpen && (
+                <MenuSurface className="dashboard-top-add-menu">
+                  {ADD_MENU_ITEMS.map((item) => (
+                    <Link
+                      key={item.href}
+                      href={item.href}
+                      role="menuitem"
+                      onClick={() => setAddMenuOpen(false)}
+                    >
+                      <UiIcon name={item.icon} className="h-4 w-4" />
+                      <span>
+                        <strong>{item.label}</strong>
+                        <small>{item.description}</small>
+                      </span>
+                    </Link>
+                  ))}
+                </MenuSurface>
+              )}
+            </div>
             <button
               type="button"
               onClick={requestScanner}

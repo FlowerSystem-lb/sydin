@@ -17509,3 +17509,106 @@ body,
   background: #ecfeff;
   color: #0e7490;
 }
+
+/* ===[ HEADER SLIM-DOWN — page title + "Add" menu (notes #4 / #12) ]=== */
+/* The five top tabs duplicated the sidebar links and were removed: the sidebar
+   owns navigation, the header owns actions. Their slot now shows the current
+   page name, and the single "Add Item" button became a small Add menu covering
+   item / purchase order / receiving. Appended last so it wins the cascade. */
+.dashboard-top-context {
+  display: flex;
+  min-width: 0;
+  flex: 1;
+  align-items: center;
+}
+
+.dashboard-top-context-title {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-top-add {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.dashboard-top-add-chevron {
+  margin-left: -0.15rem;
+  opacity: 0.85;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-top-add-chevron-open {
+  transform: rotate(180deg);
+}
+
+.dashboard-top-add-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 80;
+  display: grid;
+  min-width: 15rem;
+  gap: 0.15rem;
+}
+
+.dashboard-top-add-menu a {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border-radius: 10px;
+  padding: 0.55rem 0.6rem;
+  color: var(--text-primary);
+  text-decoration: none;
+  transition:
+    background-color 150ms ease,
+    color 150ms ease;
+}
+
+.dashboard-top-add-menu a > span {
+  display: grid;
+  min-width: 0;
+  gap: 0.1rem;
+}
+
+.dashboard-top-add-menu a strong {
+  font-size: 0.82rem;
+  font-weight: 750;
+  line-height: 1.15;
+}
+
+.dashboard-top-add-menu a small {
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.dashboard-top-add-menu a svg {
+  margin-top: 0.1rem;
+  flex: none;
+  color: var(--text-accent);
+}
+
+@media (hover: hover) {
+  .dashboard-top-add-menu a:hover {
+    background: rgba(148, 163, 184, 0.14);
+  }
+}
+
+.dashboard-top-add-menu a:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: -2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-top-add-chevron {
+    transition: none;
+  }
+}

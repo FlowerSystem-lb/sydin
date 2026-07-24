@@ -2028,4 +2028,50 @@ unchanged from batch 1. `npm run lint` ✅ · `npm run build` ✅ (36/36).
 
 ---
 
+## Notes batch 3 — Header slim-down: tabs removed + "Add" menu  *(Complete)*
+
+**Scope:** Notes #12 (top tabs / header rethink) and #4 (general "+ Add" instead of only "Add
+Item"), done together since both live in the desktop toolbar. Founder asked for a professional
+recommendation rather than choosing himself.
+
+**Decision (mine, recorded):** **remove the five top tabs.** They duplicated sidebar links exactly
+(Overview · Activity · Inventory · Orders · Receiving all exist in the sidebar), which is what made
+the header feel cluttered and what made the note-#12 hover bug possible. Mature SaaS (Linear,
+Stripe, Sortly, Notion) runs **one** nav system. New rule: **sidebar owns navigation, header owns
+actions.** Deliberately did **not** build a separate search page (note #12 suggested one) — Cmd+K
+and `/dashboard/search` already cover it.
+
+**Delivered:**
+- **`DashboardShell.tsx`** — removed `DASHBOARD_TOP_TABS` and its `<nav>`; the slot now renders the
+  **current page title** (`.dashboard-top-context`, from the existing `getDashboardPageContext`, so
+  it already handles "Inventory / Item Details" etc.). Replaced the lone "Add Item" button with an
+  **Add menu** (`ADD_MENU_ITEMS`): New item → `/dashboard/add-item`, Purchase order →
+  `/dashboard/purchase-orders/new`, Receive stock → `/dashboard/receiving`; each with a one-line
+  description. Reuses the existing `MenuSurface`; outside-click + Escape close mirror the
+  account-menu pattern (Escape restores focus to the trigger).
+- **`app/globals.css`** — appended scoped `.dashboard-top-context*` / `.dashboard-top-add*` block:
+  title ellipsis, menu positioning, hover/focus-visible states, chevron rotate with a
+  `prefers-reduced-motion` opt-out.
+
+**Note:** `quickAddVisible` is still used by the tablet/mobile headers, so it stays; the desktop Add
+menu is always available (it is now the primary create affordance, not a duplicate of a page button).
+
+**Lint catch worth keeping:** a first pass closed the menu on route change via
+`useEffect(() => setAddMenuOpen(false), [pathname])`, which tripped `react-hooks/set-state-in-effect`
+(cascading renders). Removed rather than suppressed — the menu items are `<Link>`s that already call
+`setAddMenuOpen(false)` on click, so the effect was redundant. Verified live: after navigating from
+the menu the dropdown is closed.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (36/36) · live on the
+logged-in app: header renders "Inventory" title + Add ▾ + scan + account with **0**
+`.dashboard-top-tab` nodes remaining; clicking Add opens the 3-item menu (chevron rotates); clicking
+"Purchase order" navigated to `/dashboard/purchase-orders/new`, closed the menu, and the header title
+updated to "Purchase Orders". Console errors were only the known environmental Supabase auth
+`Failed to fetch` timeouts — none from this change.
+
+**Untouchables:** no auth/schema/routing-definition/business-logic changes; the `/dashboard/search`
+route and Cmd+K palette were left as-is.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
