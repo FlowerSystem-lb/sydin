@@ -17656,3 +17656,81 @@ body,
     transition: none;
   }
 }
+
+/* ===[ INVENTORY DENSITY — note #7 "stats too wide, too much space" ]=== */
+/* Measured before this block at 1042px viewport: hero 160px + stats 82px +
+   toolbar 215px meant the first item card started 587px down a 742px viewport —
+   79% chrome, 21% actual inventory. The stat grid was `repeat(3, 1fr)` stretched
+   across the full 915px content width, so each card was ~298px wide holding a
+   label, a number, and a sub-label (~160px of real content).
+   Fix: cap each stat card and left-align the row so the cards read as compact
+   chips instead of stretched panels, and tighten the surrounding padding/gaps.
+   Selectors mirror the `:has()`-scoped winners above at equal specificity and
+   are appended last, so source order decides. */
+.dashboard-shell:has(.inventory-workspace) .inventory-stat-grid,
+.dashboard-workspace-shell .inventory-stat-grid {
+  grid-template-columns: repeat(3, minmax(0, 14.5rem));
+  justify-content: start;
+  gap: 0.6rem;
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-stat-grid .dashboard-metric-card,
+.dashboard-workspace-shell .inventory-stat-grid .dashboard-metric-card {
+  min-height: 4rem;
+  padding: 0.6rem 0.7rem;
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-stat-grid .dashboard-metric-card strong,
+.dashboard-workspace-shell .inventory-stat-grid .dashboard-metric-card strong {
+  font-size: 1.15rem;
+  line-height: 1.35rem;
+}
+
+/* Toolbar: trim padding and the row gap that pushed the item grid further down. */
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-panel,
+.dashboard-workspace-shell .inventory-toolbar-panel {
+  padding: 0.6rem;
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-stack,
+.dashboard-workspace-shell .inventory-toolbar-stack {
+  gap: 0.55rem;
+}
+
+/* Below the 3-up breakpoint the cap would leave a ragged gap, so let them fill. */
+@media (max-width: 900px) {
+  .dashboard-shell:has(.inventory-workspace) .inventory-stat-grid,
+  .dashboard-workspace-shell .inventory-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+}
+
+@media (max-width: 639px) {
+  .dashboard-shell:has(.inventory-workspace) .inventory-stat-grid,
+  .dashboard-workspace-shell .inventory-stat-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The action cluster (count · Filters · Compact · sort · view · Select) was
+   wrapping to a second row — measured 88px tall beside a 46px search box, which
+   alone added ~42px of chrome. Capping the search column frees enough width for
+   the actions to sit on one row. */
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
+.dashboard-workspace-shell .inventory-toolbar-main {
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-actions,
+.dashboard-workspace-shell .inventory-toolbar-actions {
+  gap: 0.4rem;
+}
+
+/* Restore the stacked layout where a single row genuinely cannot fit. */
+@media (max-width: 1100px) {
+  .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
+  .dashboard-workspace-shell .inventory-toolbar-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

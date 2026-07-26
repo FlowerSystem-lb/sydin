@@ -2192,4 +2192,53 @@ and every menu destination are the pre-existing ones, relocated only.
 
 ---
 
+## Inventory density — note #7 "stats too wide, too much space"  *(Complete)*
+
+**Scope:** Founder's most-repeated complaint. Measured first rather than eyeballed: at 1280×800
+with stats visible, the first item card started **515px** down — **64% of the viewport was chrome**
+(hero 140px · stats 82px · toolbar 156px) leaving ~285px of actual inventory.
+
+**Two distinct problems found:**
+1. **Too wide** — `.inventory-stat-grid` was `repeat(3, minmax(0, 1fr))` stretched across the full
+   content width, so each card was **377px** wide to hold a label, a number, and a sub-label
+   (~160px of real content).
+2. **Too much space** — `.inventory-toolbar-actions` (count · Filters · Compact · sort · view ·
+   Select) was **wrapping to a second row**: 88px tall next to a 46px search box, silently adding
+   ~42px of chrome. This was the larger vertical cost and was *not* visible as an obvious defect.
+
+**Delivered (`app/globals.css`, appended last, scoped CSS only):**
+- Stat grid → `repeat(3, minmax(0, 14.5rem))` + `justify-content: start`, so cards read as compact
+  chips instead of stretched panels; card `min-height` 4.75→4rem, padding 0.75→0.6/0.7rem, value
+  font 1.25→1.15rem.
+- Toolbar → `.inventory-toolbar-main` search column capped at `20rem` and the action gap tightened
+  to 0.4rem, which lets the whole action cluster sit on **one row**; panel padding 0.75→0.6rem and
+  stack gap 0.8→0.55rem.
+- Responsive preserved: 2-up (stretched) below 900px, 1-up below 639px, and the toolbar returns to
+  a stacked single column below 1100px where one row genuinely cannot fit.
+
+**Result (measured at 1280×800, stats visible, same viewport before/after):** first item card
+**515px → 459px**, chrome **64% → 57%**; stat card width **377px → 232px**; toolbar action row
+**88px → 42px**.
+
+**Honest limitation:** the width complaint is fully fixed, but the page is still **57% chrome**
+before the first item. The remaining cost is the hero card (140px) plus the stats block itself —
+reducing those further is a *design* decision (e.g. moving stats inline with the hero, or making
+Compact the default), not a padding tweak, so it was deliberately not done unilaterally. The
+existing **Compact** toggle already drops chrome to ~295px for users who want it.
+
+**Method note:** an intermediate measurement was invalid because the browser pane width changed
+between readings (915px → 861px content), which made the hero reflow taller and looked like a
+regression. Re-measured at a pinned 1280×800 and A/B'd by temporarily restoring the old values
+inline in the live page — that gave the real 515→459 delta. Also caught that the `Compact` toggle
+had been left on in `localStorage` from earlier testing, which briefly hid the stats and made the
+numbers look far better than they were.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35) · live at
+**1280px** (3-up capped chips, one-row toolbar), **900px** (2-up stretched, no overflow), and
+**375px** (1-up, no horizontal overflow, mobile bottom nav still rendering).
+
+**Untouchables:** no markup, component, auth, schema, routing, or logic changes — CSS only.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
