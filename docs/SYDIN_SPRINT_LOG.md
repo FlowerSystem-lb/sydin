@@ -2390,4 +2390,31 @@ element `scrollHeight` vs `clientHeight` on fixed rows inside a constrained flex
 
 ---
 
+## Visual Polish Pass — Compact Headers & Refined Cards  *(Complete)*
+
+**Scope:** Founder observation: page headers taking too much space, cards looking less refined than needed. Built a cohesive visual refinement pass across dashboard components.
+
+**Delivered (`app/globals.css` only):**
+- **Dashboard page headers** — reduced padding from `var(--space-4)` to `var(--space-3)`, changed flex direction to `row` (title and actions now horizontal on desktop), reduced font sizes and margins across eyebrow/heading/description. Result: **compact, professional top bar** matching Linear/Stripe aesthetic.
+- **Page section gaps** — reduced shell gap from `var(--space-4)` to `var(--space-3)` for tighter overall layout.
+- **Card refinements** — standardized border-radius from mixed 16px/18px to **14px** across all cards (page headers, content cards, table cards, metric cards, empty states, form sections). Updated box-shadows from `0 10px 30px / 0 12px 36px` to **`0 4px 12px` with reduced opacity** for a subtler, lighter aesthetic.
+- **Filter chips** — tightened min-height from 2.3rem to 2.15rem and padding to match refined density.
+- **Responsive preservation** — mobile rules updated to maintain compact look below 640px; header stacks vertically, actions go full-width, 12px radius on mobile cards.
+
+**Visual system standardized:**
+- **14px** = cards (headers, content, tables, metrics, empty states, forms)
+- **12px** = buttons
+- **999px** = pills/badges
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35 routes).
+
+**Results (measured in preview):**
+- Header now one-line horizontal layout: "INVENTORY OVERVIEW" + "North Studio" + "Add Item" button inline.
+- Cards have refined, cohesive appearance with lighter shadows and consistent radius.
+- Overall layout feels tighter, more professional, and more polished without sacrificing readability.
+
+**Untouchables:** no component markup, auth, schema, routing, business logic, or behavior changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
