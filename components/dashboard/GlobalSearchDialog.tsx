@@ -29,6 +29,13 @@ interface GlobalSearchDialogProps {
   userId: string;
   pathname: string;
   onClose: () => void;
+  /**
+   * `anchored` renders the panel as a dropdown beneath the header search bar
+   * (no full-screen scrim) — the header-bar click path. The default modal
+   * presentation is kept for the Ctrl/Cmd+K palette, which can be invoked from
+   * anywhere including screens where the bar is not visible.
+   */
+  anchored?: boolean;
 }
 
 function isMac() {
@@ -41,6 +48,7 @@ export default function GlobalSearchDialog({
   userId,
   pathname,
   onClose,
+  anchored = false,
 }: GlobalSearchDialogProps) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDivElement>(null);
@@ -209,19 +217,17 @@ export default function GlobalSearchDialog({
 
   if (!open) return null;
 
-  return (
-    <div
-      className="fixed inset-0 z-[95] flex items-start justify-center bg-[var(--bg-overlay)] p-3 pt-16 backdrop-blur-md sm:p-6 sm:pt-[10vh]"
-      onMouseDown={(event) => {
-        if (event.target === event.currentTarget) closeDialog();
-      }}
-    >
+  const panel = (
       <div
         ref={dialogRef}
         role="dialog"
-        aria-modal="true"
+        aria-modal={anchored ? undefined : "true"}
         aria-labelledby="global-search-title"
-        className="global-search-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-[42rem] flex-col overflow-hidden text-theme-primary sm:max-h-[38rem]"
+        className={
+          anchored
+            ? "global-search-panel global-search-panel-anchored flex max-h-[min(30rem,calc(100dvh-8rem))] w-full flex-col overflow-hidden text-theme-primary"
+            : "global-search-panel flex max-h-[calc(100dvh-2rem)] w-full max-w-[42rem] flex-col overflow-hidden text-theme-primary sm:max-h-[38rem]"
+        }
       >
         <div className="global-search-header">
           <UiIcon name="search" className="h-5 w-5 shrink-0 text-theme-subtle" />
@@ -464,6 +470,20 @@ export default function GlobalSearchDialog({
           </span>
         </div>
       </div>
+  );
+
+  // Anchored: the caller positions this inside a relative container beneath the
+  // search bar, so no scrim is rendered and the page stays visible behind it.
+  if (anchored) return panel;
+
+  return (
+    <div
+      className="fixed inset-0 z-[95] flex items-start justify-center bg-[var(--bg-overlay)] p-3 pt-16 backdrop-blur-md sm:p-6 sm:pt-[10vh]"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) closeDialog();
+      }}
+    >
+      {panel}
     </div>
   );
 }

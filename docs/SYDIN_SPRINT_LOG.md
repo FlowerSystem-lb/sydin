@@ -2276,4 +2276,48 @@ routing changed.
 
 ---
 
+## Header search — anchored dropdown (note #3)  *(Complete)*
+
+**Scope:** Clicking the header search bar opened a full-screen blurred modal. Founder wanted:
+click → cursor in the bar → type → results as a dropdown → click → go.
+
+**Decision:** split the two entry points rather than converting search wholesale —
+- **Header bar click → anchored dropdown** under the bar, page visible behind it.
+- **Ctrl/Cmd+K → centered modal palette**, unchanged. It can be pressed on screens where the bar
+  isn't rendered (tablet/mobile headers use icon buttons), so it still needs to be self-contained.
+
+This is the GitHub/Linear pattern. Deliberately did **not** build the separate search *page* the
+note also floated — `/dashboard/search` and the palette already cover that.
+
+**Delivered:**
+- **`GlobalSearchDialog.tsx`** — new optional `anchored` prop. The panel JSX was extracted to a
+  `panel` const and is returned bare when anchored, or wrapped in the existing
+  `fixed inset-0 … backdrop-blur-md` scrim otherwise. `aria-modal` is dropped in anchored mode
+  (it isn't modal). **All search logic — the `useGlobalSearch` hook, grouping, keyboard nav,
+  recents, "View all results" — is untouched and shared by both modes.**
+- **`DashboardShell.tsx`** — `searchAnchored` state; the desktop bar opens anchored (and toggles
+  closed on a second click, with `aria-haspopup`/`aria-expanded`), while Ctrl/Cmd+K and the
+  tablet/mobile icon buttons force modal. The bar and the dropdown share a `.dashboard-top-search`
+  wrapper, with an outside-`mousedown` effect that closes it (there's no scrim to catch clicks);
+  because the trigger is inside the wrapper, clicking the bar toggles rather than double-firing.
+- **`app/globals.css`** — `.dashboard-top-search` relative wrapper and
+  `.global-search-panel-anchored` positioning (below the bar, widened to 38rem ≥1100px so results
+  stay readable), reusing the existing `glass-pop-in` animation with a reduced-motion opt-out.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35) · live at
+1400px: clicking the bar gives `anchoredClass true`, **no full-screen scrim**, `aria-modal` absent,
+panel top 63 vs bar bottom 56 (drops below), left-aligned to the bar, 608px wide, fits on screen,
+and **the input is already focused** — i.e. exactly "click → cursor appears → type". Typing `test2`
+returned the matching item; Escape and outside-click both close it (`aria-expanded` returns to
+`false`); Ctrl/Cmd+K still renders the modal with its scrim.
+
+**False alarm worth recording:** searching `flower` returned "No results", which looked like a
+search bug — but the modal path returned the same, and the data has no item or category by that
+name (the category is literally `flwow`, and "Flower Plus" is artwork inside an item photo, not a
+field). Searching a real name (`test2`) works. **No bug; nothing was "fixed".**
+
+**Untouchables:** no search query/ranking logic, auth, schema, or routing changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

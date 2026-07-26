@@ -240,6 +240,7 @@ export default function DashboardShell({
   const accountTriggerRef = useRef<HTMLButtonElement>(null);
   const addMenuRef = useRef<HTMLDivElement>(null);
   const addTriggerRef = useRef<HTMLButtonElement>(null);
+  const searchWrapRef = useRef<HTMLDivElement>(null);
   const lastSearchTriggerRef = useRef<HTMLButtonElement | null>(null);
   const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const tabletSearchTriggerRef = useRef<HTMLButtonElement>(null);
@@ -251,6 +252,10 @@ export default function DashboardShell({
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
+  // Header-bar clicks open the search as a dropdown anchored under the bar;
+  // Ctrl/Cmd+K (and the tablet/mobile icon buttons, where no bar is visible)
+  // keep the centered modal palette.
+  const [searchAnchored, setSearchAnchored] = useState(false);
   const [searchShortcutKey, setSearchShortcutKey] = useState("Ctrl");
   const [businessSettings, setBusinessSettings] = useState(
     DEFAULT_BUSINESS_SETTINGS
@@ -339,6 +344,24 @@ export default function DashboardShell({
     };
   }, [accountMenuOpen]);
 
+  // The anchored dropdown has no scrim, so dismiss it on an outside click.
+  // The wrapper contains the trigger too, so clicking the bar just toggles.
+  useEffect(() => {
+    if (!globalSearchOpen || !searchAnchored) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (
+        searchWrapRef.current &&
+        !searchWrapRef.current.contains(event.target as Node)
+      ) {
+        setGlobalSearchOpen(false);
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    return () => window.removeEventListener("mousedown", handlePointerDown);
+  }, [globalSearchOpen, searchAnchored]);
+
   useEffect(() => {
     if (!addMenuOpen) return;
 
@@ -383,6 +406,7 @@ export default function DashboardShell({
 
       event.preventDefault();
       lastSearchTriggerRef.current = null;
+      setSearchAnchored(false);
       setGlobalSearchOpen(true);
     };
 
@@ -450,8 +474,12 @@ export default function DashboardShell({
     router.push("/dashboard/scanner?mode=lookup");
   }, [pathname, router]);
 
-  const openGlobalSearch = (trigger: HTMLButtonElement | null) => {
+  const openGlobalSearch = (
+    trigger: HTMLButtonElement | null,
+    { anchored = false }: { anchored?: boolean } = {}
+  ) => {
     lastSearchTriggerRef.current = trigger;
+    setSearchAnchored(anchored);
     setGlobalSearchOpen(true);
   };
 
@@ -654,23 +682,41 @@ export default function DashboardShell({
             <p className="dashboard-top-context-title">{currentPage.label}</p>
           </div>
 
-          <button
-            ref={desktopSearchTriggerRef}
-            type="button"
-            onClick={(event) => openGlobalSearch(event.currentTarget)}
-            className="dashboard-top-searchbar"
-            aria-label="Search SydIN"
-            title="Search (Ctrl/Cmd+K)"
-          >
-            <UiIcon name="search" className="h-4 w-4 shrink-0" />
-            <span className="dashboard-top-searchbar-label">
-              Search items, orders, suppliers...
-            </span>
-            <span className="dashboard-top-searchbar-kbd" aria-hidden="true">
-              <kbd>{searchShortcutKey}</kbd>
-              <kbd>K</kbd>
-            </span>
-          </button>
+          <div ref={searchWrapRef} className="dashboard-top-search">
+            <button
+              ref={desktopSearchTriggerRef}
+              type="button"
+              onClick={(event) =>
+                globalSearchOpen && searchAnchored
+                  ? setGlobalSearchOpen(false)
+                  : openGlobalSearch(event.currentTarget, { anchored: true })
+              }
+              className="dashboard-top-searchbar"
+              aria-label="Search SydIN"
+              aria-haspopup="dialog"
+              aria-expanded={globalSearchOpen && searchAnchored}
+              title="Search (Ctrl/Cmd+K)"
+            >
+              <UiIcon name="search" className="h-4 w-4 shrink-0" />
+              <span className="dashboard-top-searchbar-label">
+                Search items, orders, suppliers...
+              </span>
+              <span className="dashboard-top-searchbar-kbd" aria-hidden="true">
+                <kbd>{searchShortcutKey}</kbd>
+                <kbd>K</kbd>
+              </span>
+            </button>
+
+            {globalSearchOpen && searchAnchored && (
+              <GlobalSearchDialog
+                open
+                anchored
+                userId={userId}
+                pathname={pathname}
+                onClose={closeGlobalSearch}
+              />
+            )}
+          </div>
 
           <div className="dashboard-top-tools">
             <div ref={addMenuRef} className="dashboard-top-add">
@@ -934,7 +980,7 @@ export default function DashboardShell({
       </SheetShell>
 
       <GlobalSearchDialog
-        open={globalSearchOpen}
+        open={globalSearchOpen && !searchAnchored}
         userId={userId}
         pathname={pathname}
         onClose={closeGlobalSearch}
