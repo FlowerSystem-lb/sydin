@@ -162,3 +162,45 @@ context.  **Priority: P1/P2.**
 Scan-first UX · bottom nav (Home / Inventory / Scan / Activity / More) · large touch targets ·
 fast scanner mode · mobile item cards · offline mode (later) · push (later).
 **Priority: P1/P2.** Full detail in [SYDIN_MOBILE_ROADMAP.md](SYDIN_MOBILE_ROADMAP.md).
+
+---
+
+## 15. Settings & Account platform  *(migrated out of the Settings UI, 2026-07-25)*
+
+These were previously rendered **inside `/dashboard/settings`** as six "Roadmap" cards (~33
+chips) by an earlier ChatGPT-authored pass. They are genuine future features, so they are
+preserved here — but they were removed from the Settings UI because Settings is a utility
+surface: listing 33 controls a user cannot touch buries the ones that work, and it advertises
+how much of the platform is unbuilt (the Security section alone showed 9 missing controls).
+**Roadmaps live in this document; Settings shows only working controls.**
+
+### 15a. Branding  **Priority: P2**
+Report template colors · custom email sender · branded customer portal.
+*Deps:* existing business-settings logo/branding + an email provider (see 15d).
+
+### 15b. Reports automation  **Priority: P2**
+Saved report templates · scheduled email delivery · delivery preferences.
+*Deps:* email provider (15d). Report generation/export already exists (Sprint 11).
+
+### 15c. Billing system  **Priority: P1**
+Invoices · payment methods · checkout & upgrades · billing history · seat/team billing ·
+usage metering.
+*Deps:* payment provider decision — still open, see [SYDIN_PAYMENTS_STRATEGY.md](SYDIN_PAYMENTS_STRATEGY.md).
+Today's manual plan-request + admin-activation flow stays the supported path until then.
+
+### 15d. Email & notifications  **Priority: P1**
+Low-stock alerts · stock-movement alerts · receiving confirmations · pick-list updates ·
+scheduled report emails · branded sender · reply-to controls · domain verification.
+*Deps:* **email-provider/infra decision is the blocker** — this is the single dependency that
+unlocks 15a, 15b and half of Notification Center (§6). Highest-leverage unblock in this section.
+
+### 15e. Advanced security  **Priority: P2 → P3**
+MFA · active sessions · trusted devices · sign out of all devices · security notifications
+*(P2)* · team roles · audit log · approval flows · provider management *(P3 — enterprise, see
+Phase 5)*.
+*Note:* team roles/audit log overlap Phase 5 RBAC; build them there, not as Settings toggles.
+
+### 15f. Advanced data tools  **Priority: P2**
+Workspace backups · restore points · audit snapshots · advanced exports.
+*Caution:* restore/backup are destructive-adjacent; they need confirmation flows and a tested
+restore path before shipping. Import/export already exist today.

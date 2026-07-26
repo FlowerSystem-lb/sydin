@@ -43,14 +43,22 @@ import {
 type SettingsSectionId =
   | "workspace"
   | "profile"
-  | "branding"
-  | "reports"
   | "inventory"
-  | "operations"
   | "billing"
-  | "email"
   | "security"
   | "data";
+
+/**
+ * Sections merged during the 2026-07-25 reorganization (10 → 6). Kept so any
+ * existing deep link (bookmark, in-app href, docs) still lands on the panel that
+ * now contains that content instead of silently falling back to Workspace.
+ */
+const MERGED_SECTION_ALIASES: Record<string, SettingsSectionId> = {
+  branding: "workspace",
+  reports: "data",
+  operations: "inventory",
+  email: "security",
+};
 
 interface SettingsSection {
   id: SettingsSectionId;
@@ -63,7 +71,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "workspace",
     label: "Workspace",
-    description: "Business profile and public contact details",
+    description: "Business profile, contact details, and branding",
     icon: "dashboard",
   },
   {
@@ -73,28 +81,10 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     icon: "settings",
   },
   {
-    id: "branding",
-    label: "Branding",
-    description: "Logo and report identity",
-    icon: "qr",
-  },
-  {
-    id: "reports",
-    label: "Reports",
-    description: "Report defaults and scheduling roadmap",
-    icon: "reports",
-  },
-  {
     id: "inventory",
     label: "Inventory",
-    description: "Item defaults and organization links",
+    description: "Item defaults, alerts, and workflow modules",
     icon: "box",
-  },
-  {
-    id: "operations",
-    label: "Operations",
-    description: "Workflow modules and draft history notes",
-    icon: "movement",
   },
   {
     id: "billing",
@@ -103,22 +93,16 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     icon: "file",
   },
   {
-    id: "email",
-    label: "Email & Notifications",
-    description: "Sender identity and notification roadmap",
-    icon: "help",
+    id: "data",
+    label: "Data & Reports",
+    description: "Import, export, and report defaults",
+    icon: "upload",
   },
   {
     id: "security",
-    label: "Security",
-    description: "Authentication summary",
+    label: "Security & Email",
+    description: "Sign-in, data protection, and sender identity",
     icon: "check",
-  },
-  {
-    id: "data",
-    label: "Data",
-    description: "Import, export, and data tools",
-    icon: "upload",
   },
 ];
 
@@ -143,9 +127,12 @@ function getLogoExtension(fileName: string) {
 }
 
 function normalizeSectionId(value: string | null | undefined) {
-  return SECTION_IDS.has(value as SettingsSectionId)
-    ? (value as SettingsSectionId)
-    : "workspace";
+  if (SECTION_IDS.has(value as SettingsSectionId)) {
+    return value as SettingsSectionId;
+  }
+
+  // Resolve links that still point at a pre-merge section id.
+  return MERGED_SECTION_ALIASES[value ?? ""] ?? "workspace";
 }
 
 function StatusChip({
@@ -218,35 +205,6 @@ function SettingCard({
       </div>
       {children && <div className="mt-4 min-w-0">{children}</div>}
     </article>
-  );
-}
-
-function RoadmapCard({
-  title,
-  description,
-  items,
-}: {
-  title: string;
-  description: string;
-  items: string[];
-}) {
-  return (
-    <SettingCard
-      title={title}
-      description={description}
-      action={<StatusChip tone="info">Roadmap</StatusChip>}
-    >
-      <div className="flex min-w-0 flex-wrap gap-2">
-        {items.map((item) => (
-          <span
-            key={item}
-            className="inline-flex min-h-8 max-w-full items-center rounded-full border border-theme bg-theme-surface px-2.5 py-1 text-xs font-bold text-theme-secondary"
-          >
-            {item}
-          </span>
-        ))}
-      </div>
-    </SettingCard>
   );
 }
 
@@ -1164,15 +1122,6 @@ export default function SettingsPage() {
             </div>
           </SettingCard>
 
-          <RoadmapCard
-            title="Branding roadmap"
-            description="Later branding controls are grouped here so the active logo, contact, and report identity settings stay easy to scan."
-            items={[
-              "Report template colors",
-              "Custom email sender",
-              "Branded customer portal",
-            ]}
-          />
         </div>
       </div>
 
@@ -1195,12 +1144,12 @@ export default function SettingsPage() {
         <div className="grid gap-3 sm:grid-cols-3">
           <StatusChip tone="success">PDF inventory reports</StatusChip>
           <StatusChip tone="success">CSV movement export</StatusChip>
-          <StatusChip tone="info">Saved reports roadmap</StatusChip>
+          <StatusChip tone="success">Supplier &amp; depot reports</StatusChip>
         </div>
       </SettingCard>
       <SettingCard
         title="Report defaults"
-        description="Branding follows the existing business settings and plan capabilities. Scheduling and saved templates are grouped as roadmap items below."
+        description="Report branding follows your business settings and plan capabilities."
       >
         <div className="grid gap-3 sm:grid-cols-2">
           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
@@ -1222,15 +1171,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </SettingCard>
-      <RoadmapCard
-        title="Reports roadmap"
-        description="Planned report automation is summarized here without adding inactive controls to the current Settings surface."
-        items={[
-          "Saved report templates",
-          "Scheduled email delivery",
-          "Delivery preferences",
-        ]}
-      />
     </div>
   );
 
@@ -1496,7 +1436,7 @@ export default function SettingsPage() {
               type="button"
               variant="secondary"
               size="sm"
-              onClick={() => switchSection("branding")}
+              onClick={() => switchSection("workspace")}
             >
               Review Branding
             </Button>
@@ -1561,7 +1501,7 @@ export default function SettingsPage() {
 
         <SettingCard
           title="Usage and limits"
-          description="Item limit is available today. Detailed billing management is grouped in the roadmap summary below."
+          description="Your current plan and workspace item limit."
           action={<StatusChip tone="success">Limit visible</StatusChip>}
         >
           <div className="grid gap-3">
@@ -1576,18 +1516,6 @@ export default function SettingsPage() {
           </div>
         </SettingCard>
 
-        <RoadmapCard
-          title="Billing management roadmap"
-          description="Invoices, payment methods, checkout, and billing history remain planned billing-system work, separate from the current manual plan request flow."
-          items={[
-            "Invoices",
-            "Payment methods",
-            "Checkout and upgrades",
-            "Billing history",
-            "Seat and team billing",
-            "Usage metering",
-          ]}
-        />
       </div>
     </div>
   );
@@ -1625,7 +1553,7 @@ export default function SettingsPage() {
                 className={`mt-1 ${valueTextClassName}`}
               />
               <div className="mt-2">
-                <StatusChip tone="info">Roadmap item</StatusChip>
+                <StatusChip tone="neutral">Not available yet</StatusChip>
               </div>
             </div>
           </div>
@@ -1670,7 +1598,7 @@ export default function SettingsPage() {
                 type="button"
                 variant="secondary"
                 size="sm"
-                onClick={() => switchSection("branding")}
+                onClick={() => switchSection("workspace")}
               >
                 Review Branding
               </Button>
@@ -1697,7 +1625,7 @@ export default function SettingsPage() {
                 Scheduled delivery
               </p>
               <p className="mt-1 text-xs leading-5 text-theme-muted">
-                Summarized in the notification roadmap below.
+                Automated email alerts are not available yet.
               </p>
             </div>
           </div>
@@ -1713,20 +1641,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-4">
-        <RoadmapCard
-          title="Notification roadmap"
-          description="Automated alerts and sender customization are planned as a later email-provider phase, not inactive Settings toggles."
-          items={[
-            "Low-stock alerts",
-            "Stock movement alerts",
-            "Receiving confirmations",
-            "Pick list updates",
-            "Scheduled report emails",
-            "Branded sender",
-            "Reply-to controls",
-            "Domain verification",
-          ]}
-        />
 
         <SettingCard
           title="Operational context"
@@ -1742,7 +1656,6 @@ export default function SettingsPage() {
         >
           <div className="flex flex-wrap gap-2">
             <StatusChip tone="success">Stock history available</StatusChip>
-            <StatusChip tone="info">Workflow email roadmap</StatusChip>
           </div>
         </SettingCard>
       </div>
@@ -1854,7 +1767,7 @@ export default function SettingsPage() {
               type="button"
               variant="secondary"
               size="sm"
-              onClick={() => switchSection("email")}
+              onClick={() => switchSection("security")}
             >
               Review Email Settings
             </Button>
@@ -1888,21 +1801,6 @@ export default function SettingsPage() {
       </div>
 
       <div className="grid gap-4">
-        <RoadmapCard
-          title="Advanced security roadmap"
-          description="Advanced security controls are grouped here so the current account, sign-in, and data protection summaries stay focused."
-          items={[
-            "Multi-factor authentication",
-            "Active sessions",
-            "Trusted devices",
-            "Sign out of all devices",
-            "Security notifications",
-            "Team roles",
-            "Audit log",
-            "Approval flows",
-            "Provider management",
-          ]}
-        />
 
         <SettingCard
           title="Data protection"
@@ -1955,16 +1853,6 @@ export default function SettingsPage() {
           />
         </div>
       </SettingCard>
-      <RoadmapCard
-        title="Advanced data tools roadmap"
-        description="Backup, restore, and audit snapshot concepts are grouped here without adding destructive tools to Settings."
-        items={[
-          "Workspace backups",
-          "Restore points",
-          "Audit snapshots",
-          "Advanced exports",
-        ]}
-      />
     </div>
   );
 
@@ -1973,28 +1861,42 @@ export default function SettingsPage() {
       return <LoadingSkeletonGroup count={3} itemClassName="min-h-28" />;
     }
 
+    // Merged sections compose the existing panel renderers rather than
+    // rewriting them, so each panel's markup and save logic stay untouched.
     switch (activeSection) {
       case "profile":
         return renderProfilePanel();
-      case "branding":
-        return renderBrandingPanel();
-      case "reports":
-        return renderReportsPanel();
       case "inventory":
-        return renderInventoryPanel();
-      case "operations":
-        return renderOperationsPanel();
+        return (
+          <div className="grid gap-4">
+            {renderInventoryPanel()}
+            {renderOperationsPanel()}
+          </div>
+        );
       case "billing":
         return renderBillingPanel();
-      case "email":
-        return renderEmailPanel();
       case "security":
-        return renderSecurityPanel();
+        return (
+          <div className="grid gap-4">
+            {renderSecurityPanel()}
+            {renderEmailPanel()}
+          </div>
+        );
       case "data":
-        return renderDataPanel();
+        return (
+          <div className="grid gap-4">
+            {renderDataPanel()}
+            {renderReportsPanel()}
+          </div>
+        );
       case "workspace":
       default:
-        return renderWorkspacePanel();
+        return (
+          <div className="grid gap-4">
+            {renderWorkspacePanel()}
+            {renderBrandingPanel()}
+          </div>
+        );
     }
   };
 
@@ -2005,7 +1907,7 @@ export default function SettingsPage() {
           <DashboardPageHeader
             eyebrow="Control center"
             title="Settings"
-            description="Manage the workspace details SydIN already supports, with compact roadmap summaries for later branding, billing, email, team, security, and data controls."
+            description="Manage your workspace, branding, inventory defaults, plan, and data."
             className="settings-hero"
             actions={
               <div className="flex flex-wrap gap-2">

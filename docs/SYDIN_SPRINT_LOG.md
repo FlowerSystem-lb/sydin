@@ -2096,4 +2096,52 @@ the parallel VS Code session in `9001afa`, so it is not re-handled here. Local `
 
 ---
 
+## Settings reorganization — roadmap purge + 10 → 6 sections  *(Complete)*
+
+**Scope:** Founder asked me to read Settings, decide, and reorganize. An earlier ChatGPT-authored
+pass had embedded **six "Roadmap" cards holding ~33 chips** for unbuilt features, spread across the
+Settings UI.
+
+**Decision (mine):** remove the roadmap cards from the UI, but **preserve every item** — the founder
+confirmed they are genuine future features. Rationale: Settings is a *utility* surface. Listing 33
+controls a user cannot touch buries the ones that work, and it advertises how much of the platform
+is unbuilt (the Security section alone displayed 9 missing controls to a paying customer). Roadmaps
+belong in the backlog doc, which is where the work is actually planned from.
+
+**Delivered:**
+- **`docs/SYDIN_FEATURE_BACKLOG.md`** — new **§15 "Settings & Account platform"** capturing all 33
+  items in six sub-sections (branding · reports automation · billing system · email & notifications ·
+  advanced security · advanced data tools), each with a **priority** and its **real dependency**.
+  Two useful facts surfaced while triaging: the **email-provider decision is the single blocker**
+  gating 15a/15b and half of Notification Center, and team-roles/audit-log **overlap Phase 5 RBAC**
+  and should be built there rather than as Settings toggles.
+- **`app/dashboard/settings/page.tsx`** — deleted all six `RoadmapCard` usages **and** the
+  `RoadmapCard` component itself; rewrote the dangling copy that referenced them ("...grouped in the
+  roadmap summary below", the page description, two section descriptions); retoned three leftover
+  chips (`Saved reports roadmap` → a real `Supplier & depot reports` capability, `Roadmap item` →
+  neutral `Not available yet`, and dropped `Workflow email roadmap`). **Zero** "roadmap" strings
+  remain in the file.
+- **Sections merged 10 → 6**: Workspace *(+ Branding)* · Profile · Inventory *(+ Operations)* ·
+  Billing & Plan · Data & Reports · Security & Email. Implemented by **composing the existing panel
+  renderers** in the `renderActivePanel` switch — no panel markup or save logic was rewritten, which
+  kept the diff low-risk.
+- **`MERGED_SECTION_ALIASES`** maps the four retired ids (`branding`, `reports`, `operations`,
+  `email`) to their new parent, so existing deep links/bookmarks land on the panel that now holds
+  that content instead of silently falling back to Workspace.
+
+**Caught by tooling:** `tsc` flagged three in-page `switchSection("branding"|"email")` cross-links
+that would have become dead buttons after the merge — repointed to `workspace`/`security`. Worth
+noting the typed section id is what made that safe.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35) · live on the
+logged-in app: nav renders **6** sections; **0** roadmap chips anywhere on the page; Workspace shows
+both halves (Workspace profile … Brand identity, Logo, Report branding); `?section=email` resolves to
+**Security & Email** with both halves present (Account access … Current email setup); `?section=branding`
+resolves to Workspace with Brand identity visible. File 2,085 → 1,986 lines.
+
+**Untouchables:** no auth, Supabase, schema, routing, or save/business logic changed — panel
+internals were moved, not rewritten.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
