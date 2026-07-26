@@ -638,6 +638,10 @@ export default function NewPurchaseOrderPage() {
 
       {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
 
+      {/* Two-column layout: the short sections pair up, Lines and the invoice
+          dropzone span the full width. Placement is driven by CSS order/span in
+          `.po-new-grid` so the JSX order stays as-authored. */}
+      <div className="po-new-grid">
       <DashboardFormSection
         title="Order details"
         description="The PO number is generated automatically from the depot or business name — edit it any time."
@@ -1085,6 +1089,7 @@ export default function NewPurchaseOrderPage() {
           className={textareaClassName}
         />
       </DashboardFormSection>
+      </div>
 
       <DashboardCard className="po-receive-now-card">
         <label className="po-receive-now-toggle">

@@ -17734,3 +17734,44 @@ body,
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* ===[ NEW PURCHASE ORDER — two-column layout (founder sketch, note #3b) ]=== */
+/* The form was six full-width sections stacked vertically, so creating a PO
+   meant a long scroll. The sketch pairs the short sections two-up and keeps
+   Lines full width. JSX order is Order details · Depot & supplier · Lines ·
+   Payment · Invoice · Notes; `order` re-sequences them visually to
+   Order details | Depot & supplier / Payment | Notes / Lines / Invoice
+   without moving any markup. */
+@media (min-width: 1000px) {
+  .po-create-workspace .po-new-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-items: start;
+    gap: 0.85rem;
+  }
+
+  .po-create-workspace .po-new-grid > *:nth-child(1) { order: 1; } /* Order details */
+  .po-create-workspace .po-new-grid > *:nth-child(2) { order: 2; } /* Depot & supplier */
+  .po-create-workspace .po-new-grid > *:nth-child(4) { order: 3; } /* Payment */
+  .po-create-workspace .po-new-grid > *:nth-child(6) { order: 4; } /* Notes */
+
+  /* Lines and the invoice dropzone need the full width. */
+  .po-create-workspace .po-new-grid > *:nth-child(3) { /* Lines */
+    order: 5;
+    grid-column: 1 / -1;
+  }
+
+  .po-create-workspace .po-new-grid > *:nth-child(5) { /* Invoice or proof */
+    order: 6;
+    grid-column: 1 / -1;
+  }
+}
+
+/* Below the two-column breakpoint keep the original single-column stack. */
+@media (max-width: 999px) {
+  .po-create-workspace .po-new-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0.85rem;
+  }
+}

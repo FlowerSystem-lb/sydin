@@ -2241,4 +2241,39 @@ numbers look far better than they were.
 
 ---
 
+## New Purchase Order — two-column layout (note #3b)  *(Complete)*
+
+**Scope:** Founder's sketch: the New PO form should pair its short sections two-up with Lines full
+width, instead of one long vertical scroll ("y3ni simple not long"). Continues the density theme
+from note #7.
+
+**Delivered:**
+- **`app/dashboard/purchase-orders/new/page.tsx`** — wrapped the six existing `DashboardFormSection`
+  blocks in a single `.po-new-grid` container. **No section was moved, renamed, or rewritten** —
+  only two lines (an opening `<div>` and its `</div>`) were added.
+- **`app/globals.css`** — `.po-new-grid` is a 2-column grid ≥1000px; CSS `order` re-sequences the
+  as-authored JSX (Order details · Depot & supplier · Lines · Payment · Invoice · Notes) into the
+  sketch's layout — **Order details | Depot & supplier**, **Payment | Notes**, then **Lines** and
+  **Invoice** spanning `1 / -1`. Below 1000px it collapses to the original single-column stack.
+
+**Why `order` instead of reordering the JSX:** the Lines section is ~200 lines of interactive markup
+(inventory picker dialog, per-line stock toggles, totals). Moving it in source to satisfy a visual
+layout would have risked the form's behavior for a purely presentational gain; driving placement
+from CSS keeps the diff to two lines and leaves every handler untouched.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35) · live at
+**1400px**: measured placement confirms pairs share a row (Order details `left 92` / Depot & supplier
+`left 735`, both `top 259`; Payment / Notes both `top 613`) and Lines + Invoice span the full 1273px;
+at **375px** the grid is a single 375px column, stacked in order, with no horizontal overflow.
+
+**Stale-cache note:** the first live check showed `display: block` with all six children at `order: 0`
+— the wrapper and markup were correct but Turbopack was serving the previous stylesheet. Cleared
+`.next` and restarted to confirm. That is now the fourth occurrence this session; the pattern is
+recorded in memory.
+
+**Untouchables:** no form state, validation, line handlers, save/receive logic, auth, schema, or
+routing changed.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
