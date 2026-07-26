@@ -17852,3 +17852,18 @@ body,
     animation: none;
   }
 }
+
+/* ===[ SEARCH PANEL — stop the fixed rows collapsing ]=== */
+/* The panel is a flex column with a max-height, and the results list is the
+   intended scroll region (`min-h-0 flex-1 overflow-y-auto`). But the header,
+   tabs and footer kept the default `flex-shrink: 1`, so once results exceeded
+   the max-height the browser squashed those rows instead: measured the tab row
+   at 14.5px tall while its text needed 24px, which pushed the label out of its
+   pill and made the row look broken. Pin them. Applies to the modal too — the
+   bug predates the anchored dropdown, it was just less visible at the modal's
+   larger max-height. */
+.global-search-header,
+.global-search-tabs,
+.global-search-footer {
+  flex: 0 0 auto;
+}

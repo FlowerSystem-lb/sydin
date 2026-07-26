@@ -2354,4 +2354,40 @@ the composition reads well* — screenshots (or the founder's eye) remain the ch
 
 ---
 
+## Search panel — collapsed tab row + hint that never got hidden  *(Complete)*
+
+**Scope:** Founder pointed at a zoomed screenshot: *"why u cant see the bugs here."* He was right on
+both counts, and both were things my previous verification had missed.
+
+**Bug 1 — the tab row was being crushed (real layout bug, and it predates the dropdown).**
+`.global-search-panel` is a flex **column** with a `max-height`, and the results list is the intended
+scroll region (`min-h-0 flex-1 overflow-y-auto`). But `.global-search-header`, `.global-search-tabs`
+and `.global-search-footer` kept the default `flex-shrink: 1`, so once results exceeded the
+max-height the browser **squashed those fixed rows instead of scrolling the list**. Measured: the
+tab row rendered **14.5px tall while its text needed 24px** (`scrollHeight 24` vs `clientHeight 13`),
+pushing the "All" label out of its rounded pill — exactly the broken-looking chip in the screenshot.
+Fixed with `flex: 0 0 auto` on all three. **This also affected the Ctrl/Cmd+K modal** — the bug was
+just less visible at its larger max-height. Same root cause as the earlier `.ui-dialog` fix in this
+log; the search panel simply never got the same treatment.
+Verified: tab row **14.5px → 30.8px**, `scrollHeight === clientHeight` (no overflow).
+
+**Bug 2 — the "Type at least 2 characters…" hint was still rendering.** The previous commit added a
+`.global-search-hint` class and a rule to hide it in anchored mode, but a live rule-dump showed
+**the rule was not in the served CSS at all** — a stale Turbopack stylesheet, the fifth occurrence
+this session. The earlier "verified" screenshot had been taken *after typing*, where the hint is
+hidden by its own `!isSearching` condition anyway, so the check never actually exercised it.
+Confirmed fixed after a clean restart: `hintDisplay: "none"`.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35) · live at
+1400px with a clean `.next`: tabs render at full height with the pill correctly wrapping its label,
+no hint row, one input, no ✕, no footer.
+
+**Process correction (the real lesson):** I had been verifying the *specific properties I changed*
+(position, visibility) and reading screenshots too quickly, which is why a crushed tab row and an
+un-applied rule both slipped through. Measuring the thing you edited does not catch what your edit
+sits next to. For visual work: dump the served rule to confirm it actually shipped, and check
+element `scrollHeight` vs `clientHeight` on fixed rows inside a constrained flex column.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
