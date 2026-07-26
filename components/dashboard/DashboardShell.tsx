@@ -574,72 +574,6 @@ export default function DashboardShell({
           <NavigationGroups pathname={pathname} compact />
         </div>
 
-        <div
-          ref={accountMenuRef}
-          className="dashboard-account-area"
-        >
-          {accountMenuOpen && (
-            <MenuSurface className="dashboard-account-menu">
-              <div className="p-3">{accountSummary}</div>
-              <div className="dashboard-account-menu-links">
-                <Link
-                  href={upgradeHref}
-                  role="menuitem"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  <UiIcon name="usage" className="h-4 w-4" />
-                  Plan & usage
-                </Link>
-                <Link
-                  href="/dashboard/settings#appearance-heading"
-                  role="menuitem"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  <UiIcon name="appearance" className="h-4 w-4" />
-                  Workspace style
-                </Link>
-                <Link
-                  href="/dashboard/settings"
-                  role="menuitem"
-                  onClick={() => setAccountMenuOpen(false)}
-                >
-                  <UiIcon name="settings" className="h-4 w-4" />
-                  Settings
-                </Link>
-              </div>
-              <div className="dashboard-account-menu-signout">
-                <button type="button" role="menuitem" onClick={handleSignOut}>
-                  <UiIcon name="logout" className="h-4 w-4" />
-                  Sign out
-                </button>
-              </div>
-            </MenuSurface>
-          )}
-
-          <button
-            ref={accountTriggerRef}
-            type="button"
-            className="dashboard-account-trigger"
-            aria-label="Open account menu"
-            aria-haspopup="menu"
-            aria-expanded={accountMenuOpen}
-            onClick={() => setAccountMenuOpen((current) => !current)}
-          >
-            <AccountAvatar
-              logoUrl={businessSettings.business_logo_url}
-              businessName={businessSettings.business_name}
-              size="sm"
-            />
-            <span className="dashboard-account-copy">
-              <span>{businessSettings.business_name}</span>
-              <span>{planName} plan</span>
-            </span>
-            <UiIcon
-              name="chevron-up"
-              className="dashboard-account-chevron h-4 w-4"
-            />
-          </button>
-        </div>
       </aside>
 
       <header className="dashboard-tablet-header glass-navigation">
@@ -787,18 +721,72 @@ export default function DashboardShell({
             >
               <UiIcon name="scan" className="h-5 w-5" />
             </button>
-            <Link href="/dashboard/settings" className="dashboard-top-account-pill">
-              <AccountAvatar
-                logoUrl={businessSettings.business_logo_url}
-                businessName={businessSettings.business_name}
-                size="sm"
-              />
-              <span>
-                <strong>{businessSettings.business_name}</strong>
-                <small>{email || `${planName} plan`}</small>
-              </span>
-              <UiIcon name="chevron-down" className="h-4 w-4" />
-            </Link>
+            <div ref={accountMenuRef} className="dashboard-top-account">
+              <button
+                ref={accountTriggerRef}
+                type="button"
+                className="dashboard-top-account-pill"
+                aria-label="Open account menu"
+                aria-haspopup="menu"
+                aria-expanded={accountMenuOpen}
+                onClick={() => setAccountMenuOpen((current) => !current)}
+              >
+                <AccountAvatar
+                  logoUrl={businessSettings.business_logo_url}
+                  businessName={businessSettings.business_name}
+                  size="sm"
+                />
+                <span>
+                  <strong>{businessSettings.business_name}</strong>
+                  <small>{email || `${planName} plan`}</small>
+                </span>
+                <UiIcon
+                  name="chevron-down"
+                  className={cx(
+                    "dashboard-top-account-chevron h-4 w-4",
+                    accountMenuOpen && "dashboard-top-account-chevron-open"
+                  )}
+                />
+              </button>
+
+              {accountMenuOpen && (
+                <MenuSurface className="dashboard-account-menu">
+                  <div className="p-3">{accountSummary}</div>
+                  <div className="dashboard-account-menu-links">
+                    <Link
+                      href={upgradeHref}
+                      role="menuitem"
+                      onClick={() => setAccountMenuOpen(false)}
+                    >
+                      <UiIcon name="usage" className="h-4 w-4" />
+                      Plan &amp; usage
+                    </Link>
+                    <Link
+                      href="/dashboard/settings#appearance-heading"
+                      role="menuitem"
+                      onClick={() => setAccountMenuOpen(false)}
+                    >
+                      <UiIcon name="appearance" className="h-4 w-4" />
+                      Workspace style
+                    </Link>
+                    <Link
+                      href="/dashboard/settings"
+                      role="menuitem"
+                      onClick={() => setAccountMenuOpen(false)}
+                    >
+                      <UiIcon name="settings" className="h-4 w-4" />
+                      Settings
+                    </Link>
+                  </div>
+                  <div className="dashboard-account-menu-signout">
+                    <button type="button" role="menuitem" onClick={handleSignOut}>
+                      <UiIcon name="logout" className="h-4 w-4" />
+                      Sign out
+                    </button>
+                  </div>
+                </MenuSurface>
+              )}
+            </div>
           </div>
         </div>
 

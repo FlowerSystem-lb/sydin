@@ -2144,4 +2144,52 @@ internals were moved, not rewritten.
 
 ---
 
+## Account menu consolidated into the header  *(Complete)*
+
+**Scope:** Founder showed both account UIs and asked which is right. The app had **two**: a real
+menu at the sidebar bottom, and a header pill that showed a chevron but was just a
+`<Link href="/dashboard/settings">` — a broken affordance (chevron implies a dropdown), and
+**sign-out was unreachable from it**.
+
+**Decision (mine):** keep **one** menu, on the **header pill** (top-right). Rationale: it is the
+universal convention (users look top-right for account/sign-out); the header is always visible at
+full width, whereas the sidebar collapses to an icon rail where the account shrinks to a bare
+avatar with no name/plan; and it matches the rule set in the header slim-down — **sidebar owns
+navigation, header owns identity + actions**.
+
+**Delivered:**
+- **`DashboardShell.tsx`** — removed the entire `dashboard-account-area` block from the sidebar
+  (trigger + menu). Converted the header pill from a `<Link>` into a `<button>` with
+  `aria-haspopup="menu"` / `aria-expanded`, wrapped in a positioned `.dashboard-top-account`, and
+  moved the **existing** menu markup under it unchanged: account summary (name · email · plan chip ·
+  usage bar) → Plan & usage · Workspace style · Settings → **Sign out**. The existing
+  outside-click/Escape effect and `accountMenuRef`/`accountTriggerRef` were reused as-is, so
+  focus-restore-on-Escape still works.
+- **`app/globals.css`** — appended `.dashboard-top-account*` block: relative wrapper, chevron rotate
+  (with `prefers-reduced-motion` opt-out), and menu positioning under the pill.
+
+**Cascade fight worth recording (second time this pattern has bitten):** the menu first rendered
+**off-screen at `top: -327`**, then half-corrected to overflow the right edge. Dumping the matched
+rules live showed **five** older rules still anchoring `.dashboard-account-menu` to the sidebar
+bottom (`bottom: …; left: …; width: 18rem`), including a `:has(.sydin-overview)` /
+`:has(.inventory-workspace)` variant at specificity **0,3,0 with `!important`** — which beat a
+plain `.dashboard-top-account .dashboard-account-menu` (0,2,0) even with `!important` on mine.
+Fixed by raising the selector to
+`.dashboard-shell .dashboard-top-tools .dashboard-top-account .dashboard-account-menu` (**0,4,0**).
+Same lesson as the tooltip entry: on this stylesheet, **dump the matched rules in the browser** —
+`!important` alone does not guarantee a win when a higher-specificity `!important` exists.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35) · live on the
+logged-in app: header pill is a `BUTTON` with `aria-haspopup="menu"`; sidebar account block is
+**absent from the DOM**; opening the menu measures **right-aligned to the pill** (`menuRight 868 ===
+pillRight 868`), **below it** (`top 66 > pillBottom 58`), **fits horizontally** (304px wide inside a
+903px viewport); all four items present (Plan & usage · Workspace style · Settings · Sign out) with
+the plan chip and `7 / 1000 items` usage bar; verified on **both** `/dashboard` and
+`/dashboard/inventory` (the two `:has()`-scoped variants).
+
+**Untouchables:** no auth/schema/routing/business-logic changes — `handleSignOut`, the upgrade href,
+and every menu destination are the pre-existing ones, relocated only.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

@@ -17612,3 +17612,47 @@ body,
     transition: none;
   }
 }
+
+/* ===[ ACCOUNT MENU MOVED TO THE HEADER (top-right) ]=== */
+/* The account UI used to exist twice: a real menu at the sidebar bottom, and a
+   header pill with a chevron that only linked to Settings (a broken affordance,
+   and sign-out was unreachable from it). Consolidated into one menu on the
+   header pill — the conventional top-right position, always visible even when
+   the sidebar is collapsed to the icon rail. Appended last so these win over
+   the earlier sidebar-anchored .dashboard-account-menu rules. */
+.dashboard-top-account {
+  position: relative;
+  flex: 0 1 auto;
+  min-width: 0;
+}
+
+.dashboard-top-account-chevron {
+  flex: none;
+  opacity: 0.8;
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-top-account-chevron-open {
+  transform: rotate(180deg);
+}
+
+/* Five earlier rules still anchor .dashboard-account-menu to the sidebar bottom
+   (`bottom: …; left: …`), and one of them is `:has()`-scoped at higher
+   specificity than this selector — so the positional properties are forced here
+   rather than relying on source order. Without this the menu renders off-screen
+   above the viewport. */
+.dashboard-shell .dashboard-top-tools .dashboard-top-account .dashboard-account-menu {
+  position: absolute !important;
+  top: calc(100% + 0.5rem) !important;
+  right: 0 !important;
+  bottom: auto !important;
+  left: auto !important;
+  z-index: 80;
+  width: min(19rem, calc(100vw - 2rem)) !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-top-account-chevron {
+    transition: none;
+  }
+}
