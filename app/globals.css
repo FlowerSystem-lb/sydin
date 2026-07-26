@@ -17793,14 +17793,50 @@ body,
   width: 100%;
 }
 
+/* The panel opens *over* the bar, not below it, so its own input lands exactly
+   where the bar was. Otherwise two stacked search fields are visible at once
+   (the bar plus the panel's input) — which read as duplicated and unfinished. */
+.dashboard-top-search-open > .dashboard-top-searchbar {
+  visibility: hidden;
+}
+
 .global-search-panel-anchored {
   position: absolute;
-  top: calc(100% + 0.45rem);
+  top: 0;
   right: 0;
   left: 0;
   z-index: 90;
-  border-radius: 16px;
+  border-radius: 14px;
   animation: glass-pop-in 160ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Match the bar's height/rhythm so the swap is seamless. */
+.global-search-panel-anchored .global-search-header {
+  gap: 0.6rem;
+  padding: 0.55rem 0.85rem;
+}
+
+.global-search-panel-anchored .global-search-input {
+  min-height: 2rem;
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+/* Dropdown chrome should stay light: the close button and the keyboard legend
+   belong to the modal palette, not to a bar that closes on blur or Esc. */
+.global-search-panel-anchored .global-search-close,
+.global-search-panel-anchored .global-search-footer {
+  display: none;
+}
+
+.global-search-panel-anchored .global-search-tabs {
+  padding: 0.45rem 0.85rem;
+}
+
+/* The "type at least 2 characters" hint is guidance for a cold modal; in the
+   dropdown the placeholder already says it, so it is just extra height. */
+.global-search-panel-anchored .global-search-hint {
+  display: none;
 }
 
 /* The panel is wider than the bar on roomy screens so results stay readable. */

@@ -682,7 +682,13 @@ export default function DashboardShell({
             <p className="dashboard-top-context-title">{currentPage.label}</p>
           </div>
 
-          <div ref={searchWrapRef} className="dashboard-top-search">
+          <div
+            ref={searchWrapRef}
+            className={cx(
+              "dashboard-top-search",
+              globalSearchOpen && searchAnchored && "dashboard-top-search-open"
+            )}
+          >
             <button
               ref={desktopSearchTriggerRef}
               type="button"

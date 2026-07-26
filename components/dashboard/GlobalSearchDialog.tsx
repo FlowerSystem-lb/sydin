@@ -338,7 +338,7 @@ export default function GlobalSearchDialog({
           )}
           {!isSearching && (
             <>
-              <p className="px-3 pb-1 pt-1 text-xs font-semibold text-theme-muted">
+              <p className="global-search-hint px-3 pb-1 pt-1 text-xs font-semibold text-theme-muted">
                 Type at least 2 characters to search everywhere in SydIN.
               </p>
               {recentQueries.length > 0 && (

@@ -2320,4 +2320,38 @@ field). Searching a real name (`test2`) works. **No bug; nothing was "fixed".**
 
 ---
 
+## Header search dropdown — correction pass  *(Complete)*
+
+**Scope:** Founder's verdict on the first anchored-dropdown attempt: *"still look ugly and
+unprofessional."* He was right, and the screenshot showed why.
+
+**What was wrong (my mistake):** the previous pass anchored the **modal** under the bar without
+removing the modal's own chrome, so the open state showed **two stacked search fields** — the
+header bar *and* the panel's input directly beneath it — plus the modal's close **✕** and its
+keyboard-legend footer. It read as a modal squeezed into the wrong place rather than a search bar
+that expands.
+
+**Fix (presentation only — no logic touched):**
+- The panel now opens **over** the bar (`top: 0` instead of `top: calc(100% + …)`), and
+  `.dashboard-top-search-open > .dashboard-top-searchbar` is `visibility: hidden` — so the panel's
+  input lands exactly where the bar was. **One search field, not two**; the bar visually *becomes*
+  the dropdown.
+- Panel header padding/font tuned to match the bar's rhythm so the swap is seamless.
+- Hid the **✕** and the **footer legend** in anchored mode — both are modal affordances; the
+  dropdown closes on Esc, outside-click, or clicking the bar again.
+- Hid the *"Type at least 2 characters…"* hint in anchored mode (the placeholder already says it);
+  added a `.global-search-hint` hook to target it.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (35/35) · live at
+1400px: one input, no ✕, no footer; typing `test` returns grouped results — **ITEMS** (test1, test2
+with SKU/category/depot and IN STOCK badges) and **OPERATIONS** (a matching pick list, with the
+matched substring highlighted) — plus the "View all results" link. Modal palette via Ctrl/Cmd+K
+unchanged.
+
+**Process note:** this is the second time this session that a change looked right in the DOM
+measurements but wrong to the eye. Measuring position/visibility proves *placement*, not *whether
+the composition reads well* — screenshots (or the founder's eye) remain the check for that.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
