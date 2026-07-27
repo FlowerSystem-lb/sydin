@@ -153,12 +153,12 @@ export default function PublicItemPage() {
     Boolean(publicWebsite);
 
   return (
-    <main className="liquid-bg min-h-screen overflow-x-hidden px-4 py-5 text-white sm:px-6 sm:py-8">
+    <main className="liquid-bg min-h-screen overflow-x-hidden px-4 py-5 text-slate-900 sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
-        <header className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:p-7">
+        <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] text-lg font-black shadow-[0_20px_60px_rgba(37,99,235,0.35)]">
+              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white text-lg font-black">
                 {businessLogoUrl ? (
                   <Image
                     src={businessLogoUrl}
@@ -177,13 +177,13 @@ export default function PublicItemPage() {
                   {businessName}
                 </p>
 
-                <p className="text-sm text-slate-400">
+                <p className="text-sm text-slate-600">
                   Public inventory item
                 </p>
               </div>
             </div>
 
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-500">
+            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
               Powered by SydIN
             </p>
           </div>
@@ -191,23 +191,23 @@ export default function PublicItemPage() {
 
         {loading && (
           <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="min-h-[360px] overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
-              <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+            <div className="min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
+              <div className="h-full animate-pulse bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100" />
             </div>
 
-            <div className="min-h-[360px] overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.045] shadow-[0_28px_100px_rgba(0,0,0,0.28)]">
-              <div className="h-full animate-pulse bg-gradient-to-r from-white/[0.03] via-white/[0.08] to-white/[0.03]" />
+            <div className="min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
+              <div className="h-full animate-pulse bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100" />
             </div>
           </section>
         )}
 
         {!loading && (error || !item) && (
-          <section className="rounded-[30px] border border-white/10 bg-white/[0.045] p-8 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-xl">
+          <section className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl">
             <h1 className="text-3xl font-bold">
               Item not found
             </h1>
 
-            <p className="mx-auto mt-3 max-w-md text-slate-400">
+            <p className="mx-auto mt-3 max-w-md text-slate-600">
               {error || "This public item is unavailable."}
             </p>
 
@@ -223,7 +223,7 @@ export default function PublicItemPage() {
         {!loading && item && (
           <>
             <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="rounded-[30px] border border-white/10 bg-white/[0.045] p-4 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-5">
+              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-5">
                 <div className="flex min-h-[320px] items-center justify-center rounded-[26px] bg-[#f4f0e8] p-5 sm:min-h-[440px]">
                   {item.image ? (
                     <div className="relative h-[280px] w-full sm:h-[400px]">
@@ -237,7 +237,7 @@ export default function PublicItemPage() {
                       />
                     </div>
                   ) : (
-                    <div className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-slate-500">
+                    <div className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-slate-600">
                       <span className="text-sm font-black uppercase tracking-[0.18em]">
                         Image
                       </span>
@@ -250,20 +250,20 @@ export default function PublicItemPage() {
                 </div>
               </div>
 
-              <div className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#7d5cff]">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-700">
                     Product
                   </p>
 
-                  <h1 className="mt-2 break-words text-4xl font-bold tracking-tight text-white sm:text-5xl">
+                  <h1 className="mt-2 break-words text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
                     {item.name}
                   </h1>
                 </div>
 
                 <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <p className="text-sm font-semibold text-slate-500">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-600">
                       SKU
                     </p>
 
@@ -272,8 +272,8 @@ export default function PublicItemPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <p className="text-sm font-semibold text-slate-500">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-600">
                       Category
                     </p>
 
@@ -282,18 +282,18 @@ export default function PublicItemPage() {
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <p className="text-sm font-semibold text-slate-500">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-600">
                       Quantity
                     </p>
 
-                    <p className="mt-2 text-3xl font-black text-white">
+                    <p className="mt-2 text-3xl font-black text-slate-900">
                       {item.quantity}
                     </p>
                   </div>
 
-                  <div className="rounded-2xl border border-white/10 bg-black/25 p-4">
-                    <p className="text-sm font-semibold text-slate-500">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-slate-600">
                       Created
                     </p>
 
@@ -304,16 +304,16 @@ export default function PublicItemPage() {
                 </div>
 
                 {hasContact && (
-                  <div className="mt-5 rounded-2xl border border-[#7d5cff]/20 bg-[#7d5cff]/10 p-4">
-                    <p className="text-sm font-semibold text-[#7d5cff]">
+                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                    <p className="text-sm font-semibold text-violet-700">
                       Business contact
                     </p>
 
-                    <div className="mt-3 flex flex-col gap-2 text-sm font-semibold text-slate-300">
+                    <div className="mt-3 flex flex-col gap-2 text-sm font-semibold text-slate-700">
                       {item.contact_email && (
                         <a
                           href={`mailto:${item.contact_email}`}
-                          className="break-all transition hover:text-white"
+                          className="break-all transition hover:text-violet-700"
                         >
                           {item.contact_email}
                         </a>
@@ -322,7 +322,7 @@ export default function PublicItemPage() {
                       {item.contact_phone && (
                         <a
                           href={`tel:${item.contact_phone}`}
-                          className="break-all transition hover:text-white"
+                          className="break-all transition hover:text-violet-700"
                         >
                           {item.contact_phone}
                         </a>
@@ -331,7 +331,7 @@ export default function PublicItemPage() {
                       {publicWebsite && (
                         <a
                           href={publicWebsite}
-                          className="break-all transition hover:text-white"
+                          className="break-all transition hover:text-violet-700"
                           rel="noreferrer"
                           target="_blank"
                         >
@@ -344,13 +344,13 @@ export default function PublicItemPage() {
               </div>
             </section>
 
-            <section className="rounded-[30px] border border-white/10 bg-white/[0.045] p-5 text-center shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#7d5cff]">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-700">
                 Item QR Code
               </p>
 
               <div className="mt-5 flex flex-col items-center">
-                <div className="rounded-3xl bg-white p-4 shadow-[0_24px_80px_rgba(255,255,255,0.08)]">
+                <div className="rounded-3xl bg-white p-4 shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
                   {publicUrl ? (
                     <QRCode
                       value={publicUrl}
@@ -360,18 +360,18 @@ export default function PublicItemPage() {
                       level="M"
                     />
                   ) : (
-                    <div className="flex h-[180px] w-[180px] items-center justify-center text-sm font-semibold text-slate-500">
+                    <div className="flex h-[180px] w-[180px] items-center justify-center text-sm font-semibold text-slate-600">
                       Preparing QR...
                     </div>
                   )}
                 </div>
 
-                <p className="mt-5 text-slate-400">
+                <p className="mt-5 text-slate-600">
                   Scan to open this public item page.
                 </p>
 
                 {publicUrl && (
-                  <p className="mt-3 max-w-full break-all rounded-2xl border border-white/10 bg-white/[0.05] px-4 py-3 text-xs text-slate-400">
+                  <p className="mt-3 max-w-full break-all rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-xs text-slate-600">
                     {publicUrl}
                   </p>
                 )}

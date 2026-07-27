@@ -1044,15 +1044,36 @@ export default function InventoryPage() {
         return;
       }
 
-      await logInventoryHistory({
-        itemId: selectedItem.id,
-        userId: user.id,
-        action: "edited",
-        oldQuantity: oldItem.quantity,
-        newQuantity: (data[0] as Item).quantity,
-        oldValues: oldItem,
-        newValues: data[0],
+      // Only record history when a field actually changed. Saving the edit form
+      // untouched used to write an "Edited" row with identical old/new values,
+      // which buries genuine changes in noise and makes the audit trail lie
+      // about when the item was last modified.
+      const savedItem = data[0] as Item;
+      const changedFields = (
+        Object.keys(updatedItem) as (keyof typeof updatedItem)[]
+      ).filter((field) => {
+        const before = (oldItem as Record<string, unknown>)[field as string];
+        const after = (savedItem as unknown as Record<string, unknown>)[
+          field as string
+        ];
+        // Treat null/undefined/"" as equivalent — the form round-trips empty
+        // optional fields between those representations without user intent.
+        const normalize = (value: unknown) =>
+          value === null || value === undefined || value === "" ? "" : value;
+        return normalize(before) !== normalize(after);
       });
+
+      if (changedFields.length > 0) {
+        await logInventoryHistory({
+          itemId: selectedItem.id,
+          userId: user.id,
+          action: "edited",
+          oldQuantity: oldItem.quantity,
+          newQuantity: savedItem.quantity,
+          oldValues: oldItem,
+          newValues: savedItem,
+        });
+      }
 
       await fetchItems();
       setPageNotice("Item updated successfully.");

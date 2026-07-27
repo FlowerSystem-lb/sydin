@@ -2567,4 +2567,72 @@ founder's Stats preference restored to how it was found.
 
 ---
 
+## Two real bugs from the founder's list  *(Complete)* — plus what was deliberately not done
+
+**Scope:** Founder sent 13 requests spanning bug reports and an open-ended redesign of every inventory
+view ("new layout card items… grid/list/table view… recreate a new full page… act as engineer and
+uiux specialist"). Per [[sydin-mase7-prompt-pattern]] and the standing "few cohesive batches, not a
+big-bang rewrite of a live app" rule, this was **redirected to the concrete, verifiable bugs**. The
+restyling asks are recorded below as not-done rather than half-done.
+
+### Bug 1 — the edit form wrote false history entries *(data integrity)*
+
+`handleUpdateItem` logged an `"edited"` row **unconditionally on save**, so opening an item's edit
+form and saving it untouched appended a history entry with identical old/new values. Founder's
+screenshot showed exactly this: two `Edited` rows reading `34233 → 34233`.
+
+Measured before fixing — and **corrected my own first number**: a quantity-only heuristic suggested
+"more than half" of entries were noise, but comparing the full `old_values`/`new_values` JSONB
+(ignoring `updated_at`) gives the honest figure: **4 of 17** edited entries are truly identical.
+
+Fixed by diffing the saved row against the previous one and skipping the log when nothing changed,
+normalising `null`/`undefined`/`""` as equivalent since the form round-trips empty optional fields
+between those without user intent.
+
+**Verified live:** opened an item's edit form, pressed **Save Changes** with no edits → success notice
+shown, modal closed, no error — and the DB still reports **17** edited rows with `newest_entry`
+unchanged at 2026-07-23. Pre-existing bogus rows were left in place (deleting real audit history is
+the founder's call, not mine).
+
+### Bug 2 — the public QR item page was unreadable *(customer-facing)*
+
+`/item/[id]` — the page anyone gets when they **scan an item QR** — was still written for the old
+**dark** theme: `bg-white/[0.045]`, `bg-black/25`, `border-white/10`, `text-white`, `text-slate-300/400`.
+When the app moved to the light "liquid glass" design this page was left behind, so on the light
+canvas the cards were near-invisible and the text was washed out.
+
+**Measurement correction worth recording:** the first contrast audit was **wrong** — Tailwind v4 emits
+`lab()`/`oklch()` colours and the parser was reading `lab(48 -2 -16)` as if it were RGB, producing
+nonsense ratios (it "failed" elements that were obviously fine). Re-measured by resolving every colour
+through a 1×1 canvas to true sRGB. Honest before/after against the real page background
+`rgb(245,247,251)`:
+
+| element | before | after |
+|---|---|---|
+| product name (white text) | **1.12 : 1** | — |
+| contact email / phone (`slate-300`) | **1.33 : 1** | — |
+| field labels (`slate-400`) | **2.35 : 1** | — |
+| accent `#7d5cff` | 4.33 : 1 | — |
+| **whole page (18 text nodes)** | — | **0 failing AA, worst 6.98 : 1** |
+
+Also removed the blue/purple gradient tile + glow ring around the business logo and the violet contact
+panel, which the founder explicitly disliked; radii and shadows brought in line with the app's 14px /
+soft-shadow system.
+
+### Found but NOT fixed (honest list)
+
+- **"More" sheet renders rows of icons with no visible labels** (screenshot-confirmed). Investigation
+  was inconclusive — the probe kept resolving to `.dashboard-sidebar` rows, which are *correctly*
+  label-less in collapsed icon-rail mode, so the sheet's own markup was never isolated. **Real, worth a
+  scoped look; not guessed at.**
+- **Not attempted:** card/grid/list/table restyling, image fit + zoom, button re-arrangement, sort-menu
+  label truncation ("Quantity: low…"), item-details audit, replacing the "⋯ → Open full page" pattern,
+  and the dashboard item-detail page redesign. These are a redesign programme, not bug fixes, and
+  belong in scoped passes with before/after review — not a single overnight rewrite of the app's most
+  used screens.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37).
+
+---
+
 <!-- Append the next sprint entry below this line. -->
