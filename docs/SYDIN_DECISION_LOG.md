@@ -148,3 +148,20 @@ and tone/color variation, drive the color from a **higher-specificity unlayered 
 utility to override an unlayered base. **Status:** Active (reference).
 
 <!-- Append the next decision below this line. -->
+
+### 2026-07-27 · One Add Item implementation — the page; the Inventory quick-add modal is deleted
+**Decision:** "Create an inventory item" now exists **once**, at `/dashboard/add-item`. The ~528-line
+quick-add modal inside `app/dashboard/inventory/page.tsx` (plus `handleAddItem`, its 20 pieces of form
+state, and four image helpers — **846 lines total**) is removed; both Inventory entry points (header
+button and empty state) navigate to the page. **Why:** the page had **7 entry points** (Overview ×3,
+Categories with `?category=` deep-link, global search, onboarding, top-bar "+ Add") against the modal's
+**2**, and it is the only one that supports deep-linking. Decisively, the two had **already drifted** —
+the progressive quick-add built for note #14 landed on the page and never reached the modal, so the
+same task behaved differently depending on where you started it. Two implementations of one form means
+every future field must be added twice. **Rejected alternatives:** (a) delete the page and make
+everything modal — breaks `?category=` deep-links, requires rewiring 7 call sites, and the modal lacks
+the #14 form; (b) extract a shared `<AddItemForm />` used by both a route and a modal — architecturally
+the best answer and the right eventual target, but it means refactoring a 1,345-line form plus a
+528-line modal in one pass on a live app, which conflicts with the standing "few cohesive batches, not a
+big-bang rewrite" rule. **If the modal presentation is wanted again, do (b) — do not reintroduce a
+second copy of the form.** **Status:** Active.
