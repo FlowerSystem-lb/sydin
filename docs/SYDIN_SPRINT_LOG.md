@@ -2479,4 +2479,50 @@ expires_at < now() - interval '1 day'` cron later.
 
 ---
 
+## Page headers — stop printing the page name twice  *(Complete)*
+
+**Scope:** Founder, with screenshots: the top bar already says "Purchase Orders", then the page prints
+`OPERATIONS / Purchase Orders / description` again underneath. *"delete and merge with the top."*
+
+**Where the name actually comes from** (measured, not assumed): `≤639px` mobile header carries it as
+**`sr-only`**; `640–899px` tablet header prints it **visibly**; `≥900px` desktop toolbar prints it
+**visibly**. So the duplication exists only at **≥640px**, and on phones the page's own `<h1>` is the
+*only* visible title.
+
+**Delivered (`app/globals.css`, one shared component ⇒ all 17 pages using `DashboardPageHeader`):**
+- Eyebrow (`OPERATIONS`) hidden ≥640px — the sidebar section already says it.
+- `<h1>` **visually hidden ≥640px only**, via the standard clip pattern: it stays in the DOM, stays the
+  page's one `h1`, and is still announced by screen readers. **Below 640px it renders normally**, so
+  phones keep their title.
+- Card padding tightened and the description promoted to the header's single line, actions beside it.
+- **Measured: header card 120px → 63px** on Purchase Orders; verified `h1` still in DOM with correct
+  text, and still visible at 375px.
+
+### Regression this exposed — four pages were missing from the sidebar entirely
+
+Hiding the page heading made a **pre-existing** bug load-bearing: `getDashboardPageContext` falls back
+to `DASHBOARD_NAVIGATION[0]` ("Overview") for any route not in the nav table — and **Suppliers, Pick
+Lists, Reports and Help were never in it**. Previously cosmetic (the page's own `<h1>` said the right
+thing); after this change the wrong name was the *only* name on screen — the Suppliers page read
+"Overview".
+
+Those four are real features that were **unreachable from the sidebar at all** — only via deep links.
+Added them (`suppliers`/`picklists`/`reports`/`help` icons already existed in `UiIcon` and were unused,
+which is fairly clear evidence this was an oversight rather than a decision). Sidebar 14 → 19 links.
+
+Also added explicit top-bar contexts for `purchase-orders/new`, `inventory/import` and `scanner/phone`,
+which previously inherited the parent's label — fine when each page printed its own heading, wrong now
+that the bar is the sole title.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37) · live: all **22**
+dashboard routes resolve to their own name with **zero** falling back to "Overview"; Suppliers top bar
+reads "Suppliers"; mobile at 375px still shows a visible page title.
+
+**Deliberately not done:** Inventory, Add Item, Categories and Overview have their own bespoke hero
+markup rather than `DashboardPageHeader`, so they are untouched by this pass and still print their own
+title. Converting them is a separate change — worth doing, but it edits page markup rather than one
+shared component, so it carries real regression risk and belongs in its own sprint.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

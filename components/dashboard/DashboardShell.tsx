@@ -90,6 +90,31 @@ function getDashboardPageContext(pathname: string, action?: string | null) {
     };
   }
 
+  // Sub-routes would otherwise fall back to their parent's label ("Purchase
+  // Orders" while you are on the new-PO form). That was cosmetic when each page
+  // also printed its own <h1>; now that the heading is hidden wherever the
+  // chrome shows the name, this bar is the only page title on screen.
+  if (pathname === "/dashboard/purchase-orders/new") {
+    return {
+      label: "Purchase Orders / New",
+      shortLabel: "New PO",
+    };
+  }
+
+  if (pathname === "/dashboard/inventory/import") {
+    return {
+      label: "Inventory / Import",
+      shortLabel: "Import",
+    };
+  }
+
+  if (pathname === "/dashboard/scanner/phone") {
+    return {
+      label: "Scanner / Phone",
+      shortLabel: "Phone",
+    };
+  }
+
   if (/^\/dashboard\/inventory\/[^/]+$/.test(pathname)) {
     if (action === "edit") {
       return {

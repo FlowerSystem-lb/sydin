@@ -17893,3 +17893,48 @@ body,
 .global-search-footer {
   flex: 0 0 auto;
 }
+
+/* ===[ PAGE HEADERS — stop repeating the page name (founder note) ]=== */
+/* Every page rendered a hero card with an eyebrow + big <h1> + description,
+   while the app chrome ALREADY shows the page name: the desktop toolbar and the
+   tablet header both print it. So "Purchase Orders" appeared twice on screen,
+   and the hero cost ~130px above the actual content on every page.
+
+   The name is only genuinely absent below 640px — the mobile header carries it
+   as `sr-only` — so the <h1> stays visible there and is only hidden from sight
+   (never from the accessibility tree) at the widths where the chrome duplicates
+   it. The eyebrow goes entirely: the sidebar section already says "Operations". */
+@media (min-width: 640px) {
+  .dashboard-page-header-card .dashboard-eyebrow {
+    display: none;
+  }
+
+  /* Visually hidden, still announced by screen readers and still the page's
+     one <h1> for document structure. */
+  .dashboard-page-header-card .dashboard-page-heading {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* What's left is one compact row: description on the left, actions right. */
+  .dashboard-page-header-card {
+    padding: var(--space-2) var(--space-4);
+  }
+
+  .dashboard-page-header-card .dashboard-page-copy {
+    margin-top: 0;
+  }
+
+  /* A header with no description is just an action bar — don't reserve a card
+     full of empty space for it. */
+  .dashboard-page-header-card .dashboard-page-header-content {
+    min-height: 2.25rem;
+  }
+}
