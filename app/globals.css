@@ -17938,3 +17938,81 @@ body,
     min-height: 2.25rem;
   }
 }
+
+/* ===[ INVENTORY HERO — same de-duplication as the shared page header ]=== */
+/* Inventory builds its own hero instead of using DashboardPageHeader, so the
+   earlier pass did not reach it and it kept printing "Inventory" under a top
+   bar that already says "Inventory". Same rule, same reasoning: hide only at
+   the widths where the chrome shows the name, keep the <h1> in the DOM, and
+   leave it fully visible below 640px where the mobile header's title is
+   sr-only. The kicker is the business name, which the account menu already
+   shows top-right. */
+@media (min-width: 640px) {
+  .inventory-hero-card .inventory-hero-kicker {
+    display: none;
+  }
+
+  .inventory-hero-card .inventory-hero-title {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  .inventory-hero-card {
+    padding: 0.7rem 1.05rem;
+    border-radius: 14px;
+  }
+
+  .inventory-hero-card .inventory-hero-description {
+    margin-top: 0;
+    font-size: 0.85rem;
+  }
+
+  .inventory-hero-card .inventory-hero-badges {
+    margin-top: 0.45rem;
+  }
+}
+
+/* With the heading hidden above, the hero can end up holding nothing but the
+   action buttons — that happens whenever the user has toggled Stats off, since
+   `.inventory-workspace-summary-hidden` also hides the description and badges.
+   A bordered card wrapped around three buttons reads as an empty band, so in
+   that state drop the card chrome and let the actions sit as a plain row. When
+   Stats are on the description and badges are back and the card is justified. */
+@media (min-width: 640px) {
+  .inventory-workspace-summary-hidden .inventory-hero-card {
+    border-color: transparent;
+    background: none;
+    box-shadow: none;
+    padding: 0;
+  }
+}
+
+/* ===[ OVERVIEW HERO — same de-duplication ]=== */
+/* Overview also rolls its own header. Worth noting the page calls itself
+   "Dashboard" while the nav and top bar call it "Overview" — hiding the
+   heading above 640px removes the visible mismatch without renaming
+   user-facing copy, which is a product decision, not a CSS one. */
+@media (min-width: 640px) {
+  .sydin-overview-header .sydin-overview-kicker {
+    display: none;
+  }
+
+  .sydin-overview-header h1 {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+}

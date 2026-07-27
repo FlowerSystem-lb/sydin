@@ -2525,4 +2525,46 @@ shared component, so it carries real regression risk and belongs in its own spri
 
 ---
 
+## Page headers, part 2 — the four bespoke pages  *(Complete)*
+
+**Scope:** The first header pass only reached the 17 pages using `DashboardPageHeader`. Founder had
+asked for *all* pages, so this finishes Inventory, Add Item and Overview.
+
+**Same rule applied:** hide the eyebrow and visually hide the `<h1>` **only at ≥640px** (where the
+desktop toolbar / tablet header already print the page name), keep the heading in the DOM for screen
+readers, and leave it fully visible below 640px where the mobile header's title is `sr-only`.
+Boundary re-verified per page: hidden at 1400px, **visible at 639px**. Tailwind's `sm:` is 640px, so
+the Add Item markup edit lines up exactly with the CSS breakpoint used elsewhere.
+
+- **Inventory** — CSS only (clean `.inventory-hero-*` hooks).
+- **Add Item** — markup edit (`sm:hidden` / `sm:sr-only`); it styles its header with inline Tailwind
+  and has no class hook. Card also brought to the standard 14px radius / lighter shadow.
+- **Overview** — CSS only.
+- **Categories — deliberately left alone.** Its `<h1>` sits inside `organize-sidebar-header`, labelling
+  the category-list column of a two-column layout rather than the page. Different structural role, it
+  is already small (`text-xl`), and removing it would leave the "+ New category" button unlabelled.
+
+### Two things this surfaced
+
+1. **An empty band on Inventory.** After hiding the title the hero could contain *nothing but the
+   action buttons* — because `.inventory-workspace-summary-hidden` (set when the user toggles **Stats
+   off**) already hides the description and badges. A bordered card wrapped around three buttons reads
+   as a mistake. Now, in that state only, the card drops its border/background/shadow/padding and the
+   actions sit as a plain row. With Stats **on** the description and badges return and the card is
+   justified — both states checked live.
+2. **Overview calls itself "Dashboard" while the nav calls it "Overview."** Hiding the heading removes
+   the visible mismatch on desktop, but the two names still disagree on mobile. Left as-is: renaming
+   user-facing copy is a product decision, not a CSS one. **Worth Sayed picking one.**
+
+**Cascade trap, again (4th time — see [[sydin-css-cascade-trap]]):** the Overview rule appeared to have
+no effect; a live rule-dump showed it **was not in the served stylesheet at all** — stale Turbopack CSS,
+not specificity. Clean `.next` + restart fixed it. Dumping the served rule (rather than reasoning about
+source order) is what distinguished "didn't ship" from "lost the cascade" in seconds.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37) · live at 1400px
+and 639px on Inventory, Add Item and Overview; Inventory checked with Stats both on and off, and the
+founder's Stats preference restored to how it was found.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

@@ -621,16 +621,20 @@ export default function AddItemPage() {
     <div className="contents">
       <main className="operations-workspace operations-add-item">
         <div className="mx-auto flex w-full max-w-[1180px] flex-col gap-3">
-          <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_12px_34px_rgba(15,23,42,0.08)]">
+          {/* The top bar already reads "Inventory / Add Item", so the eyebrow and
+              heading only repeat it above 640px — hidden there, kept for screen
+              readers, and left visible on phones where the chrome title is
+              sr-only. Same rule as every other page header. */}
+          <section className="rounded-[14px] border border-theme bg-theme-surface px-4 py-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
+                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent sm:hidden">
                   New product
                 </p>
-                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary">
+                <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:sr-only sm:mt-0">
                   Add Item
                 </h1>
-                <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted">
+                <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted sm:mt-0">
                   Start with the basics. Add quantity, pricing, and more details
                   when you&rsquo;re ready.
                 </p>
