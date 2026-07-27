@@ -126,6 +126,14 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
+    label: "Import & Export",
+    shortLabel: "Data",
+    href: "/dashboard/import-export",
+    icon: "sheet",
+    section: "system",
+    mobilePlacement: "more",
+  },
+  {
     label: "Settings",
     href: "/dashboard/settings",
     icon: "settings",

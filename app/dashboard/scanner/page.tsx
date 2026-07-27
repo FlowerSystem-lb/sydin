@@ -17,6 +17,7 @@ import {
   DashboardPageShell,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import PhonePairingPanel from "@/components/scanner/PhonePairingPanel";
 import { resolveScannedCode, type ScanResolution } from "@/app/lib/scannerResolve";
 import { recordStockMovement } from "@/app/lib/stockMovements";
 import { applyScanToStockCountDraft } from "@/app/lib/stockCountDraft";
@@ -185,6 +186,7 @@ function ScannerWorkspace() {
   // Depots for transfer mode
   const [depots, setDepots] = useState<Depot[]>([]);
   const [selectedDepot, setSelectedDepot] = useState<number | null>(null);
+  const [userId, setUserId] = useState("");
 
   // Assets and assignees for asset modes
   const [scannedAssets, setScannedAssets] = useState<InventoryAsset[]>([]);
@@ -225,6 +227,8 @@ function ScannerWorkspace() {
       .getUser()
       .then(async ({ data: { user } }) => {
         if (!user) throw new Error("Please sign in again to use the scanner.");
+
+        if (active) setUserId(user.id);
 
         const [
           { data, error },
@@ -786,6 +790,18 @@ function ScannerWorkspace() {
               </p>
             )}
           </div>
+
+          {/* Laptops rarely have a usable barcode camera — let the phone feed
+              this scanner instead. Scans arrive through the same handleDecode
+              path as a local scan, so every mode behaves identically. */}
+          {userId && (
+            <div className="border-t border-theme p-4">
+              <PhonePairingPanel
+                userId={userId}
+                onBarcodeReceived={handleDecode}
+              />
+            </div>
+          )}
         </section>
 
         <div className="grid content-start gap-4">

@@ -28,6 +28,7 @@ import {
   type ParsedInventoryFile,
 } from "@/app/lib/inventoryImport";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
+import { logImportExport } from "@/app/lib/importExportHistory";
 import { supabase } from "@/app/lib/supabase";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -365,6 +366,16 @@ export default function InventoryImportPage() {
         .select("*");
 
       if (insertError || !createdItems) {
+        // Record the failure too — a history that only shows successes hides
+        // exactly the runs the user needs to investigate.
+        void logImportExport({
+          userId: user.id,
+          operation_type: "import",
+          file_name: parsedFile.fileName,
+          item_count: 0,
+          status: "error",
+          error_message: insertError?.message || "Import failed",
+        });
         setPageError(
           "We could not import these items. No success was recorded. Please try again."
         );
@@ -387,6 +398,14 @@ export default function InventoryImportPage() {
         ...freshUsage,
         usedItems: freshUsage.usedItems + createdItems.length,
       });
+      void logImportExport({
+        userId: user.id,
+        operation_type: "import",
+        file_name: parsedFile.fileName,
+        item_count: createdItems.length,
+        status: "success",
+      });
+
       setSuccess({
         importedCount: createdItems.length,
         skippedEmptyRows: parsedFile.skippedEmptyRows,

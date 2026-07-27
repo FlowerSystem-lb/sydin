@@ -56,6 +56,7 @@ import EditItemForm, {
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
+import { logImportExport } from "@/app/lib/importExportHistory";
 import {
   calculateInventoryValue,
   DEFAULT_INVENTORY_UNIT_TYPE,
@@ -1490,6 +1491,22 @@ export default function InventoryPage() {
       link.click();
       link.remove();
       URL.revokeObjectURL(downloadUrl);
+
+      // Record the export so it shows up on the Import & Export history page.
+      // Fire-and-forget: the file already downloaded, so a logging failure must
+      // never surface as an export failure.
+      const exportedFileName = link.download;
+      const exportedCount = itemsToExport.length;
+      void supabase.auth.getUser().then(({ data: { user } }) => {
+        if (!user) return;
+        return logImportExport({
+          userId: user.id,
+          operation_type: "export",
+          file_name: exportedFileName,
+          item_count: exportedCount,
+          status: "success",
+        });
+      });
 
       setPageNotice(`Exported ${itemsToExport.length} inventory item${itemsToExport.length === 1 ? "" : "s"}.`);
     } catch {

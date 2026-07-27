@@ -2417,4 +2417,66 @@ element `scrollHeight` vs `clientHeight` on fixed rows inside a constrained flex
 
 ---
 
+## Overnight batch — #14 / #6 / #5 made real, migrations applied  *(Complete)*
+
+**Scope:** Founder went to sleep with "start the both three… you have access to supabase and vercel".
+The first pass of all three had been committed but **none of them actually worked end to end** — this
+entry covers finding that out and fixing it.
+
+### What was broken after the first commits
+
+1. **#6 Import & Export** — page existed, but the `import_export_history` table did **not**, the page
+   was **not in `navigation.ts`** (unreachable except by typing the URL), and **nothing ever wrote a
+   row**, so the history could only ever be empty.
+2. **#5 Device pairing** — `devicePairing.ts` + `useDevicePairing` existed but **nothing imported
+   them**. Dead code, not a feature. The hook also had a stale-closure bug (inline `onBarcodeReceived`
+   in the dep array restarted the poll interval every render) and an unused `RealtimeChannel` ref.
+3. **#14 Add Item** — **shipped genuinely broken.** Quantity was a required field that now lived
+   inside the collapsed "Add Optional Details" section, so a name-only save failed with *"Review the
+   highlighted fields before saving"* pointing at a field the user **could not see**. Verified live:
+   the item was never created. The `lint ✓` claim in that commit was also false — `npm run build` was
+   grepped for `Compiled` only, which hid a `react/no-unescaped-entities` error from the new copy.
+
+### Delivered
+
+- **Migrations applied to production Supabase** (`hllktjhewivxqumqktzj`): `phase_11_import_export_history`,
+  `phase_12_device_pairing`. Additive only — new tables + RLS, no ALTER/DROP on existing tables.
+  **Caught while applying:** `phase-12`'s SQL file had SELECT and INSERT policies on `pairing_barcodes`
+  but **no UPDATE policy**, so `markBarcodesProcessed()` would have been silently dropped by RLS and the
+  laptop would have replayed the same barcode forever. Added to the live DB and to the file.
+- **#6 wired for real:** `Import & Export` added to `navigation.ts` (System section); `logImportExport`
+  called from the inventory CSV export and from the import page on **both** success **and** failure —
+  a history that hides failed runs hides exactly the runs worth investigating.
+- **#5 given a UI:** new `PhonePairingPanel` on the laptop scanner page (QR + 6-digit code + live
+  status + received counter) and a new `/dashboard/scanner/phone` page for the phone. The QR encodes a
+  normal URL, not a custom scheme, so any stock camera app opens it. Received codes are dispatched
+  through the scanner's existing `handleDecode`, so every mode behaves identically to a local scan.
+  Hook rewritten: callback in a ref, `inFlight` guard against overlapping polls, and rows marked
+  processed **before** dispatch (a lookup hit navigates and unmounts the hook mid-flight).
+- **#14 fixed:** blank quantity now means **0** instead of invalid, the `*` removed from its label, and
+  any validation error outside `name` force-opens the collapsed section as a safety net.
+
+### Verification (live, not just compiled)
+
+`npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ **37/37** (was 35 — both new routes registered).
+
+- **#6:** real CSV export through the UI → row in DB (`sayed-inventory-2026-07-27.csv`, 7 items,
+  `success`) → visible on the history page.
+- **#5:** flipped the pairing to `paired` in SQL → laptop badge changed itself to **PHONE CONNECTED**;
+  inserted a barcode row → scanner rendered *"Nothing matched TEST-BARCODE-9911"*, i.e. a code from
+  another device ran through `handleDecode`. Row left `processed: true`, so no replay.
+- **#14:** name-only save → redirect to Inventory, item created with `quantity 0` (the pre-fix attempt
+  created nothing).
+- All test data removed afterwards: inventory back to **19 items**, pairing/barcode test rows deleted.
+
+**Process note (third time this session):** compiling is not working. Each of these three passed
+`build` while being non-functional — unreachable, unimported, or failing at the first real interaction.
+Ship-checks for a feature must include *using* it, and for anything DB-backed, confirming the row.
+
+**Known housekeeping:** expired `device_pairings` rows are never purged. Harmless (10-minute expiry is
+enforced in the query) but the table grows; worth a cleanup job or a `delete from device_pairings where
+expires_at < now() - interval '1 day'` cron later.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

@@ -7,8 +7,6 @@ import {
   DashboardEmptyState,
   DashboardPageHeader,
   DashboardPageShell,
-  DashboardTable,
-  ActionButton,
 } from "@/components/dashboard/Workspace";
 import { supabase } from "@/app/lib/supabase";
 import {

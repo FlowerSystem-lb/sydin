@@ -415,7 +415,10 @@ export default function AddItemPage() {
 
     const trimmedName = name.trim();
     const trimmedCustomUnitLabel = customUnitLabel.trim();
-    const quantityValue = quantity === "" ? null : Number(quantity);
+    // Blank means 0, not invalid: quick add lets you save a name-only item and
+    // set stock later. Treating blank as an error would fail the form on a
+    // field that lives inside the collapsed "Add Optional Details" section.
+    const quantityValue = quantity === "" ? 0 : Number(quantity);
     const costPriceValue = costPrice === "" ? null : Number(costPrice);
     const sellingPriceValue =
       sellingPrice === "" ? null : Number(sellingPrice);
@@ -428,7 +431,6 @@ export default function AddItemPage() {
     }
 
     if (
-      quantityValue === null ||
       !Number.isFinite(quantityValue) ||
       !Number.isInteger(quantityValue) ||
       quantityValue < 0
@@ -471,6 +473,15 @@ export default function AddItemPage() {
     if (Object.keys(nextFieldErrors).length > 0) {
       setFieldErrors(nextFieldErrors);
       setFormError("Review the highlighted fields before saving.");
+
+      // Every field except the name lives inside "Add Optional Details". Asking
+      // someone to review a highlighted field while it is collapsed out of view
+      // is a dead end, so open the section whenever it holds an error.
+      const hasHiddenError = Object.keys(nextFieldErrors).some(
+        (field) => field !== "name"
+      );
+      if (hasHiddenError) setShowAdvanced(true);
+
       return;
     }
 
@@ -621,7 +632,7 @@ export default function AddItemPage() {
                 </h1>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted">
                   Start with the basics. Add quantity, pricing, and more details
-                  when you're ready.
+                  when you&rsquo;re ready.
                 </p>
               </div>
 
@@ -869,7 +880,7 @@ export default function AddItemPage() {
                     htmlFor="quantity"
                     className="mb-2 block text-sm font-semibold text-theme-secondary"
                   >
-                    Quantity <span className="text-theme-accent">*</span>
+                    Quantity
                   </label>
                   <input
                     id="quantity"

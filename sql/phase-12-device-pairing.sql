@@ -67,6 +67,18 @@ create policy "Users can insert barcodes for their pairings"
     )
   );
 
+-- Required by markBarcodesProcessed(): without an UPDATE policy RLS silently
+-- drops the write, so the laptop would re-receive the same barcode forever.
+create policy "Users can update barcodes for their pairings"
+  on public.pairing_barcodes for update
+  using (
+    exists (
+      select 1 from public.device_pairings dp
+      where dp.id = pairing_barcodes.pairing_id
+      and dp.user_id = auth.uid()
+    )
+  );
+
 comment on table public.device_pairings is 'Active pairings between laptop and phone for cross-device barcode scanning';
 comment on column public.device_pairings.pairing_code is '6-digit code user enters on phone to establish pairing';
 comment on column public.device_pairings.status is 'waiting (phone not joined yet), paired (both devices active), expired';
