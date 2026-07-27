@@ -273,6 +273,7 @@ export default function AddItemPage() {
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [usageLoading, setUsageLoading] = useState(true);
   const [backLabel, setBackLabel] = useState("Back to Inventory");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -619,8 +620,8 @@ export default function AddItemPage() {
                   Add Item
                 </h1>
                 <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted">
-                  Add the essentials now. Optional details can be filled in
-                  only when you need them.
+                  Start with the basics. Add quantity, pricing, and more details
+                  when you're ready.
                 </p>
               </div>
 
@@ -839,6 +840,22 @@ export default function AddItemPage() {
               </div>
             </section>
 
+            {/* Quick add: essentials only until user clicks expand */}
+            {!showAdvanced && (
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(true)}
+                className="w-full rounded-xl border border-indigo-300/30 bg-indigo-500/10 px-4 py-3 text-center text-sm font-semibold text-theme-accent transition hover:bg-indigo-500/20"
+              >
+                <span className="inline-flex items-center gap-2">
+                  <UiIcon name="plus" className="h-4 w-4" />
+                  Add Optional Details
+                </span>
+              </button>
+            )}
+
+            {showAdvanced && (
+            <>
             <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_12px_34px_rgba(15,23,42,0.07)]">
               <SectionHeading
                 eyebrow="Step 2"
@@ -1291,6 +1308,8 @@ export default function AddItemPage() {
                 className={`${inputClassName} min-h-[110px] resize-y`}
               />
             </DisclosureSection>
+            </>
+            )}
 
             {formError && (
               <div
