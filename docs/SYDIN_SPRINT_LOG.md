@@ -2635,4 +2635,48 @@ soft-shadow system.
 
 ---
 
+## Inventory list view — audit + three fixes  *(Complete)*
+
+**Scope:** First of the agreed one-surface passes. Founder reported "there are bugs in list view" and
+"fit image" / "fit words". Audited `?view=list`, found three concrete defects, fixed and measured each.
+
+### 1. Thumbnail overran its grid column on every row
+
+`.inventory-list-row` declared `grid-cols-[auto_2.5rem_…]` (40px) / `sm:…2.75rem…` (44px) while the
+thumbnail itself is `h-12 w-12` (48px) / `sm:h-14 sm:w-14` (56px). The image therefore overran its own
+track by **8px on mobile and 12px on desktop**, spilling into the text column and sitting on top of the
+first characters of the item name and SKU — which is why the founder's screenshot read `P007` instead
+of `FP007`. Track corrected to `3rem` / `sm:3.5rem` so it matches the element it holds.
+**Measured: max text/thumb overlap 2px → 0px across all 7 rows, at 1400px and at 375px.**
+
+### 2. Product images were cropped, not fitted
+
+List thumbnails used `object-cover`, which crops to the centre. For a wide product logo that renders a
+meaningless middle slice — the "Flower Plus" logo showed as `wer Pl`. Switched to `object-contain` on a
+white tile with 1px padding: these are labels and logos, not photography that can be cropped freely.
+This is the "fit image" ask, and the whole logo is now visible in every row.
+
+### 3. Sort menu truncated its own options *(shared `Select`, so this fixes every dropdown)*
+
+`components/ui/Select.tsx` pinned the popup to `width: rect.width` — the trigger's width. Any option
+longer than its trigger was ellipsised: **"Quantity: low to high" needed 140px in a 102px slot** and
+rendered as `Quantity: low…`. Since the two quantity options differ *only* in the clipped part, they
+were indistinguishable. The trigger width is now a **floor** (`minWidth`) with the menu free to grow to
+its content, bounded by `maxWidth: viewport − left − 16` so it can never cross the right edge.
+**Measured: menu 136px → 174px, 0 of 4 options truncated, still fully on-screen.**
+
+**Regression check on the shared component:** verified the Sort *and* View menus at 1400px (both fit),
+and at 700px — where the menu reported 663px wide. That looked like a regression until measurement
+showed the *trigger itself* is 663px at that breakpoint (toolbar controls go full-width), so the menu is
+correctly matching it exactly as before. Below 640px `positionMenu` returns early and the mobile overlay
+path is used, which this change does not touch.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37) · live at 1400px,
+700px and 375px; no horizontal page scroll introduced at mobile width.
+
+**Still open on this surface:** grid/table view restyling, image zoom, button re-arrangement, and the
+"⋯ → Open full page" pattern — deliberately untouched, same reasoning as the previous entry.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

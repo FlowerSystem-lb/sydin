@@ -123,10 +123,21 @@ export default function Select({
       const spaceBelow = window.innerHeight - rect.bottom;
       const maxHeight = Math.min(360, window.innerHeight - 32);
       const openAbove = spaceBelow < 260 && rect.top > spaceBelow;
+      const left = Math.max(
+        16,
+        Math.min(rect.left, window.innerWidth - rect.width - 16)
+      );
+      // The menu used to be pinned to `width: rect.width`, so any option longer
+      // than its trigger was ellipsised — "Quantity: low to high" needed 140px
+      // in a 102px slot and rendered as "Quantity: low…", which is unreadable
+      // when two options differ only in the clipped part. Treat the trigger
+      // width as a floor and let the menu grow to its content, bounded by the
+      // space actually left to the right edge so it can never overflow.
       setMenuStyle({
         position: "fixed",
-        left: Math.max(16, Math.min(rect.left, window.innerWidth - rect.width - 16)),
-        width: rect.width,
+        left,
+        minWidth: rect.width,
+        maxWidth: Math.max(rect.width, window.innerWidth - left - 16),
         maxHeight,
         top: openAbove ? undefined : rect.bottom + 6,
         bottom: openAbove ? window.innerHeight - rect.top + 6 : undefined,

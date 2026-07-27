@@ -2992,7 +2992,11 @@ export default function InventoryPage() {
                       }
                       setDetailsItem({ id: item.id, tab: "details" });
                     }}
-                    className={`inventory-list-row grid cursor-pointer grid-cols-[auto_2.5rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_2.75rem_minmax(0,1fr)_auto] ${
+                    /* The thumbnail track must match the thumbnail: it was
+                       2.5rem/2.75rem holding a 3rem/3.5rem image, so the image
+                       overran its column by 8px (mobile) / 12px (desktop) and
+                       sat on top of the first characters of the name and SKU. */
+                    className={`inventory-list-row grid cursor-pointer grid-cols-[auto_3rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_3.5rem_minmax(0,1fr)_auto] ${
                       selected
                         ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/30"
                         : "border-theme"
@@ -3010,11 +3014,15 @@ export default function InventoryPage() {
                     ) : (
                       <span className="h-4 w-4" aria-hidden="true" />
                     )}
-                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5 sm:h-14 sm:w-14">
+                    <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-white p-1 ring-1 ring-black/5 sm:h-14 sm:w-14">
+                      {/* `cover` crops to the centre, which turns a wide product
+                          logo into a meaningless middle slice. `contain` shows
+                          the whole image — these are labels and logos, not
+                          photography that can be cropped freely. */}
                       <InventoryThumbnail
                         src={item.image}
                         alt=""
-                        imgClassName="object-cover"
+                        imgClassName="object-contain"
                       />
                     </div>
                     <div className="min-w-0">
