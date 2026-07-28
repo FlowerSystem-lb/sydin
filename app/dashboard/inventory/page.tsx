@@ -3194,11 +3194,14 @@ export default function InventoryPage() {
                             </td>
                             <td className="px-3 py-2.5">
                               <div className="flex min-w-0 items-center gap-2.5">
-                                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
+                                {/* `contain` on white, matching grid and list:
+                                    cropping a wide logo to its centre makes the
+                                    thumbnail useless for recognising the item. */}
+                                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white p-1 ring-1 ring-black/5">
                                   <InventoryThumbnail
                                     src={item.image}
                                     alt=""
-                                    imgClassName="object-cover"
+                                    imgClassName="object-contain"
                                     iconClassName="h-4 w-4"
                                   />
                                 </div>
@@ -3206,9 +3209,16 @@ export default function InventoryPage() {
                                   <p className="font-black text-theme-primary [overflow-wrap:anywhere]" title={item.name}>
                                     {item.name}
                                   </p>
-                                  <p className="text-xs font-semibold text-theme-muted [overflow-wrap:anywhere]">
-                                    {item.barcode || "Inventory item"}
-                                  </p>
+                                  {/* Only show the barcode line when there is a
+                                      barcode. It used to fall back to the words
+                                      "Inventory item", which printed on every
+                                      row of a table that is entirely inventory
+                                      items — a line of noise per row. */}
+                                  {item.barcode && (
+                                    <p className="text-xs font-semibold text-theme-muted [overflow-wrap:anywhere]">
+                                      {item.barcode}
+                                    </p>
+                                  )}
                                 </div>
                               </div>
                             </td>
