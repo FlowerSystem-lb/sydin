@@ -240,7 +240,10 @@ export default function InventoryItemCard({
             decoding="async"
             draggable={false}
             onError={() => setFailedImageSrc(item.image)}
-            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            /* `contain`, not `cover`: product images here are labels and logos,
+               and cropping to the centre turns a wide logo into a meaningless
+               slice. Matches the list view, so an item looks the same in both. */
+            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">
@@ -396,16 +399,25 @@ export default function InventoryItemCard({
           )}
         </div>
 
-        <div className="inventory-card-meta">
-          <span>
-            <small>Location</small>
-            <strong>{depotLabel || "Unassigned"}</strong>
-          </span>
-          <span>
-            <small>{valueLabel ? "Value" : "Supplier"}</small>
-            <strong>{valueLabel || supplierLabel || "None"}</strong>
-          </span>
-        </div>
+        {/* Only render meta that says something. Every card used to carry
+            "LOCATION Unassigned / SUPPLIER None", which costs a row of height
+            on every tile to report the absence of information. */}
+        {(depotLabel || valueLabel || supplierLabel) && (
+          <div className="inventory-card-meta">
+            {depotLabel && (
+              <span>
+                <small>Location</small>
+                <strong>{depotLabel}</strong>
+              </span>
+            )}
+            {(valueLabel || supplierLabel) && (
+              <span>
+                <small>{valueLabel ? "Value" : "Supplier"}</small>
+                <strong>{valueLabel || supplierLabel}</strong>
+              </span>
+            )}
+          </div>
+        )}
 
         <div className="inventory-card-footer">
           <button

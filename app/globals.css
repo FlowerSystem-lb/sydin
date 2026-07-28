@@ -18016,3 +18016,49 @@ body,
     border: 0;
   }
 }
+
+/* ===[ INVENTORY CARDS — denser tiles, images that fit ]=== */
+/* Founder asked for smaller, more professional item cards. Three changes, and
+   the grid one has to be written against the selector that actually wins:
+   `.inventory-items-grid` is declared EIGHT times across this file and the
+   `:has(.inventory-workspace)` variant (0,3,0) beat every plain override I
+   could have appended. Verified live rather than reasoned from source order. */
+.dashboard-shell:has(.inventory-workspace) .inventory-items-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));
+}
+
+/* The media box was a 4/3 well on a blue-tinted gradient. With `object-contain`
+   the tint reads as a coloured frame around every logo — the same complaint as
+   the public item page — so it is plain white, and slightly shorter so the tile
+   spends its height on the product rather than on padding. */
+.inventory-item-card .inventory-card-media {
+  aspect-ratio: 5 / 4;
+  background: #ffffff;
+}
+
+/* Cards stretch to the tallest tile in their row, so with meta now rendered
+   only when it exists, the Adjust/QR row floated at a different height on every
+   card — measured 90px of drift across one row. Make the card a column and push
+   the footer to the bottom so the actions line up no matter how much meta a
+   given item has. */
+.inventory-item-card {
+  display: flex;
+  flex-direction: column;
+}
+
+/* The footer lives inside `.inventory-card-body`, not directly in the card, so
+   `margin-top:auto` on the footer alone did nothing. The body is a plain
+   stacked grid (gap + padding, no column structure), and grid `align-content`
+   packs rows rather than letting one push the rest down — measured 102px of
+   dead space under the footer. A flex column is equivalent for stacked rows and
+   makes `margin-top:auto` behave, so the actions sit on the card's bottom edge
+   whatever meta the item has. */
+.inventory-item-card .inventory-card-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+}
+
+.inventory-item-card .inventory-card-footer {
+  margin-top: auto;
+}
