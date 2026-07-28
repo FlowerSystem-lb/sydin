@@ -153,7 +153,7 @@ export default function PublicItemPage() {
     Boolean(publicWebsite);
 
   return (
-    <main className="liquid-bg min-h-screen overflow-x-hidden px-4 py-5 text-slate-900 sm:px-6 sm:py-8">
+    <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-5 text-slate-900 sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
         <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -224,7 +224,7 @@ export default function PublicItemPage() {
           <>
             <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-5">
-                <div className="flex min-h-[320px] items-center justify-center rounded-[26px] bg-[#f4f0e8] p-5 sm:min-h-[440px]">
+                <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-slate-200 bg-white p-5 sm:min-h-[440px]">
                   {item.image ? (
                     <div className="relative h-[280px] w-full sm:h-[400px]">
                       <Image
@@ -252,7 +252,7 @@ export default function PublicItemPage() {
 
               <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-700">
+                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
                     Product
                   </p>
 
@@ -305,7 +305,7 @@ export default function PublicItemPage() {
 
                 {hasContact && (
                   <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-violet-700">
+                    <p className="text-sm font-semibold text-slate-500">
                       Business contact
                     </p>
 
@@ -313,7 +313,7 @@ export default function PublicItemPage() {
                       {item.contact_email && (
                         <a
                           href={`mailto:${item.contact_email}`}
-                          className="break-all transition hover:text-violet-700"
+                          className="break-all transition hover:text-slate-900"
                         >
                           {item.contact_email}
                         </a>
@@ -322,7 +322,7 @@ export default function PublicItemPage() {
                       {item.contact_phone && (
                         <a
                           href={`tel:${item.contact_phone}`}
-                          className="break-all transition hover:text-violet-700"
+                          className="break-all transition hover:text-slate-900"
                         >
                           {item.contact_phone}
                         </a>
@@ -331,7 +331,7 @@ export default function PublicItemPage() {
                       {publicWebsite && (
                         <a
                           href={publicWebsite}
-                          className="break-all transition hover:text-violet-700"
+                          className="break-all transition hover:text-slate-900"
                           rel="noreferrer"
                           target="_blank"
                         >
@@ -345,7 +345,7 @@ export default function PublicItemPage() {
             </section>
 
             <section className="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-violet-700">
+              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
                 Item QR Code
               </p>
 
