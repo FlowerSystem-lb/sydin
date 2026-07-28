@@ -22,7 +22,7 @@ import EditItemForm, {
   type EditItemFieldName,
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
-import { logInventoryHistory } from "@/app/lib/inventoryHistory";
+import { hasTrackedItemChanges, logInventoryHistory } from "@/app/lib/inventoryHistory";
 import {
   calculateInventoryValue,
   formatInventoryPrice,
@@ -643,15 +643,24 @@ export default function ItemDetailsPage() {
 
       const updatedRecord = data[0] as Item;
 
-      await logInventoryHistory({
-        itemId: item.id,
-        userId: user.id,
-        action: "edited",
-        oldQuantity: oldItem.quantity,
-        newQuantity: updatedRecord.quantity,
-        oldValues: oldItem,
-        newValues: updatedRecord,
-      });
+      // Only record an edit that changed something — saving the form untouched
+      // used to append "Edited · 34233 → 34233" rows that describe nothing.
+      if (
+        hasTrackedItemChanges(
+          oldItem as unknown as Record<string, unknown>,
+          updatedRecord as unknown as Record<string, unknown>
+        )
+      ) {
+        await logInventoryHistory({
+          itemId: item.id,
+          userId: user.id,
+          action: "edited",
+          oldQuantity: oldItem.quantity,
+          newQuantity: updatedRecord.quantity,
+          oldValues: oldItem,
+          newValues: updatedRecord,
+        });
+      }
 
       setItem(updatedRecord);
       await fetchHistory(user.id, item.id);

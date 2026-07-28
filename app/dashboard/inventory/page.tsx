@@ -55,7 +55,7 @@ import EditItemForm, {
   type EditItemFieldName,
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
-import { logInventoryHistory } from "@/app/lib/inventoryHistory";
+import { hasTrackedItemChanges, logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { logImportExport } from "@/app/lib/importExportHistory";
 import {
   calculateInventoryValue,
@@ -1617,15 +1617,24 @@ export default function InventoryPage() {
         }
 
         successCount += 1;
-        await logInventoryHistory({
-          itemId: item.id,
-          userId: user.id,
-          action: "edited",
-          oldQuantity: item.quantity,
-          newQuantity: (data as Item).quantity,
-          oldValues: item,
-          newValues: data,
-        });
+        // A bulk action can include items the payload doesn't actually change
+        // (setting a depot on items already in it). Don't log those as edits.
+        if (
+          hasTrackedItemChanges(
+            item as unknown as Record<string, unknown>,
+            data as Record<string, unknown>
+          )
+        ) {
+          await logInventoryHistory({
+            itemId: item.id,
+            userId: user.id,
+            action: "edited",
+            oldQuantity: item.quantity,
+            newQuantity: (data as Item).quantity,
+            oldValues: item,
+            newValues: data,
+          });
+        }
       }
 
       await fetchItems();
