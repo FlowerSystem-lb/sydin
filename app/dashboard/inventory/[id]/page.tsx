@@ -7,6 +7,7 @@ import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import BrandMark from "@/components/BrandMark";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
+import ImageLightbox from "@/components/inventory/ImageLightbox";
 import { LoadingSkeletonGroup } from "@/components/dashboard/Workspace";
 import {
   getCategoriesForUser,
@@ -228,6 +229,7 @@ export default function ItemDetailsPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const [movementType, setMovementType] =
     useState<StockMovementType>("stock_in");
   const [movementQuantity, setMovementQuantity] = useState("");
@@ -965,9 +967,17 @@ export default function ItemDetailsPage() {
             <>
               <div className="grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
               <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-4">
-                <div className="flex min-h-[260px] items-center justify-center rounded-[18px] bg-[#f4f0e8] p-4 sm:min-h-[320px]">
+                {/* Plain white rather than the old cream tile — with
+                    object-contain a tinted well reads as a coloured frame
+                    around every product photo. */}
+                <div className="flex min-h-[260px] items-center justify-center rounded-[18px] border border-theme bg-white p-4 sm:min-h-[320px]">
                   {item.image ? (
-                    <div className="relative h-[240px] w-full sm:h-[300px]">
+                    <button
+                      type="button"
+                      onClick={() => setLightboxOpen(true)}
+                      className="group relative h-[240px] w-full cursor-zoom-in sm:h-[300px]"
+                      aria-label={`Enlarge image of ${item.name}`}
+                    >
                       <Image
                         src={item.image}
                         alt={item.name}
@@ -976,7 +986,10 @@ export default function ItemDetailsPage() {
                         sizes="(min-width: 1280px) 42vw, 100vw"
                         className="object-contain"
                       />
-                    </div>
+                      <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-slate-900/72 px-2.5 py-1 text-[11px] font-bold text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+                        Click to zoom
+                      </span>
+                    </button>
                   ) : (
                     <div className="flex min-h-[300px] w-full flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface text-center text-theme-subtle">
                       <span className="text-sm font-black uppercase tracking-[0.18em]">
@@ -1719,6 +1732,16 @@ export default function ItemDetailsPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Mounted only while open, so zoom and pan reset on close by unmounting
+          rather than by an effect syncing state back to its defaults. */}
+      {item?.image && lightboxOpen && (
+        <ImageLightbox
+          src={item.image}
+          alt={item.name}
+          onClose={() => setLightboxOpen(false)}
+        />
       )}
     </div>
   );
