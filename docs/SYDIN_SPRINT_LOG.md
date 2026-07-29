@@ -2477,6 +2477,11 @@ Ship-checks for a feature must include *using* it, and for anything DB-backed, c
 enforced in the query) but the table grows; worth a cleanup job or a `delete from device_pairings where
 expires_at < now() - interval '1 day'` cron later.
 
+**2026-07-29 — confirmed working on real hardware.** Every check above was done by inserting rows
+directly, because the dev browser has no camera; the laptop↔phone flow itself was therefore never
+exercised end to end from this side. **Sayed has since tested it on his own devices and reports it
+works.** Treat cross-device pairing as verified — do not re-flag it as untested.
+
 ---
 
 ## Page headers — stop printing the page name twice  *(Complete)*
