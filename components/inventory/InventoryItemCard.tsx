@@ -365,13 +365,19 @@ export default function InventoryItemCard({
 
       <div className="inventory-card-body">
         <div className="inventory-card-heading">
+          {/* Name leads, code follows: the product name is what you scan for,
+              the code is a lookup detail. It also drops the "Inventory item"
+              fallback, which printed on every card without a code to say
+              nothing at all. */}
           <div className="min-w-0">
-            <p className="inventory-card-code">
-              {itemCode || (item.sku ? `SKU ${item.sku}` : "Inventory item")}
-            </p>
             <h2 className="inventory-card-title" title={item.name}>
               {item.name}
             </h2>
+            {(itemCode || item.sku) && (
+              <p className="inventory-card-code">
+                {itemCode || `SKU ${item.sku}`}
+              </p>
+            )}
           </div>
           <span className="inventory-card-quantity">
             {quantityLabel}
@@ -397,27 +403,19 @@ export default function InventoryItemCard({
               {supplierLabel}
             </span>
           )}
+          {valueLabel && (
+            <span className="inventory-card-tag inventory-card-tag-blue">
+              {valueLabel}
+            </span>
+          )}
         </div>
 
-        {/* Only render meta that says something. Every card used to carry
-            "LOCATION Unassigned / SUPPLIER None", which costs a row of height
-            on every tile to report the absence of information. */}
-        {(depotLabel || valueLabel || supplierLabel) && (
-          <div className="inventory-card-meta">
-            {depotLabel && (
-              <span>
-                <small>Location</small>
-                <strong>{depotLabel}</strong>
-              </span>
-            )}
-            {(valueLabel || supplierLabel) && (
-              <span>
-                <small>{valueLabel ? "Value" : "Supplier"}</small>
-                <strong>{valueLabel || supplierLabel}</strong>
-              </span>
-            )}
-          </div>
-        )}
+        {/* The LOCATION / SUPPLIER boxes that used to sit here printed the same
+            depot and supplier already shown as chips directly above — the same
+            fact twice on every card that had one. Worse, they were fixed
+            blocks, so a card without a depot left a hole while a card with both
+            grew taller, and a grid of them looked ragged. Chips carry the same
+            information and simply wrap, so every card keeps the same shape. */}
 
         <div className="inventory-card-footer">
           <button

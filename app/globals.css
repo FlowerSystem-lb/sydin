@@ -18156,3 +18156,54 @@ body,
     transition: none;
   }
 }
+
+/* ===[ SOLID CARD SURFACES — remove the grey cast ]=== */
+/* Founder: "there is grey color between border and section, not nice."
+   The cards were not white. Measured on Purchase Orders: card background
+   rgba(255,255,255,0.62) — 62% translucent white — sitting on a #f5f7fb page,
+   so the page tint showed through and the fill read grey, while the border was
+   pure white. That white edge against a muddy fill is the "grey" he was seeing.
+   Translucency is the liquid-glass look, but at this opacity over a tinted page
+   it just reads as dirty. Surfaces are opaque now; the border carries the edge. */
+/* `!important` throughout: the existing surface rules for these classes are
+   themselves `!important` (verified in the browser — `.inventory-items-grid
+   article` sets `background` and `border-color` with the flag), so a normal
+   declaration silently loses no matter how specific or how late it is. */
+.dashboard-page-header-card,
+.dashboard-card,
+.inventory-item-card,
+.inventory-hero-card,
+.inventory-table-shell,
+.inventory-list-row,
+.glass-panel {
+  background-color: #ffffff !important;
+  background-image: none !important;
+}
+
+/* A white border on a white card is invisible, so the edge has to come from a
+   real hairline rather than from the fill/border contrast that was doing the
+   job before. */
+.dashboard-page-header-card,
+.dashboard-card,
+.inventory-item-card,
+.inventory-table-shell,
+.inventory-list-row,
+.glass-panel {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
+
+/* `.inventory-items-grid article` (0,1,1) outranks a bare `.inventory-item-card`
+   (0,1,0), and its `background` shorthand resets the colour to transparent while
+   painting a gradient — so the block above silently lost for the item cards
+   only. Verified in the browser rather than inferred: computed
+   backgroundColor was rgba(0,0,0,0) with the gradient still on
+   backgroundImage. Matching that specificity fixes it. */
+/* The competing rule uses `!important` on both `background` and `border-color`,
+   so neither higher specificity nor later source order can beat it — matching
+   `!important` is the only way to win without editing that rule in place, which
+   the project's CSS policy forbids (append-or-edit-in-place, never reorder). */
+.inventory-items-grid article.inventory-item-card {
+  background-color: #ffffff !important;
+  background-image: none !important;
+  border-color: rgba(15, 23, 42, 0.08) !important;
+}
