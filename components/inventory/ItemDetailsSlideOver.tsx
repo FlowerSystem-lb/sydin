@@ -173,13 +173,11 @@ export default function ItemDetailsSlideOver({
   const activityPanelId = useId();
   const alertsPanelId = useId();
   const panelRef = useRef<HTMLElement>(null);
-  const menuRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
   const [closing, setClosing] = useState(false);
   const [tab, setTab] = useState<ItemDetailsTab>(initialTab);
-  const [menuOpen, setMenuOpen] = useState(false);
   const [item, setItem] = useState<SlideOverInventoryItem | null>(null);
   const [history, setHistory] = useState<InventoryHistoryEntry[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
@@ -310,7 +308,6 @@ export default function ItemDetailsSlideOver({
 
   const beginClose = useCallback(() => {
     if (savingMovement || closing) return;
-    setMenuOpen(false);
     setClosing(true);
     closeTimerRef.current = window.setTimeout(() => {
       onClose();
@@ -355,20 +352,6 @@ export default function ItemDetailsSlideOver({
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [beginClose]);
-
-  useEffect(() => {
-    if (!menuOpen) return;
-
-    const handlePointerDown = (event: MouseEvent) => {
-      const target = event.target as Node;
-      if (!menuRef.current?.contains(target)) {
-        setMenuOpen(false);
-      }
-    };
-
-    window.addEventListener("mousedown", handlePointerDown);
-    return () => window.removeEventListener("mousedown", handlePointerDown);
-  }, [menuOpen]);
 
   const assignedDepot =
     depots.find((depot) => depot.id === item?.depot_id) || null;
@@ -479,7 +462,6 @@ export default function ItemDetailsSlideOver({
 
   const handleFullDetails = () => {
     if (!fullDetailsHref) return;
-    setMenuOpen(false);
     router.push(fullDetailsHref);
   };
 
@@ -650,32 +632,20 @@ export default function ItemDetailsSlideOver({
             <UiIcon name="appearance" className="h-4 w-4" />
             Edit
           </button>
-          <div ref={menuRef} className="item-details-menu-wrap">
-            <button
-              type="button"
-              onClick={() => setMenuOpen((current) => !current)}
-              className="item-details-icon-button"
-              aria-label="More item actions"
-              aria-haspopup="menu"
-              aria-expanded={menuOpen}
-              disabled={!item}
-            >
-              <UiIcon name="more" className="h-5 w-5" />
-            </button>
-            {menuOpen && (
-              <div className="item-details-menu" role="menu">
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={handleFullDetails}
-                  className="item-details-menu-item"
-                >
-                  <UiIcon name="file" className="h-4 w-4" />
-                  Open full page
-                </button>
-              </div>
-            )}
-          </div>
+          {/* This was a "⋯" dropdown whose entire contents were this one action.
+              A menu costs a click, hides the action, and carries open/close
+              state plus outside-click handling — none of it earned by a single
+              item. It is a plain button now. */}
+          <button
+            type="button"
+            onClick={handleFullDetails}
+            className="item-details-action"
+            disabled={!item}
+            title="Open the full item page"
+          >
+            <UiIcon name="file" className="h-4 w-4" />
+            Full page
+          </button>
           <button
             type="button"
             onClick={beginClose}
