@@ -623,7 +623,9 @@ export default function DashboardPage() {
         <section className="sydin-overview-header" aria-labelledby="dashboard-title">
           <div>
             <p className="sydin-overview-kicker">SydIN workspace</p>
-            <h1 id="dashboard-title">Dashboard</h1>
+            {/* Matches the sidebar and top bar, which both call this page
+                "Overview". Two names for one page is worse than either name. */}
+            <h1 id="dashboard-title">Overview</h1>
             <p>
               Inventory snapshot across items, depots, and recent stock
               activity.
