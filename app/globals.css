@@ -18207,3 +18207,49 @@ body,
   background-image: none !important;
   border-color: rgba(15, 23, 42, 0.08) !important;
 }
+
+/* ===[ SCROLL-REACTIVE PAGE BACKGROUND ]=== */
+/* Founder asked for the Purchase Orders colouring on every page, moving as you
+   scroll. Worth recording: the gradient was ALREADY identical on every page —
+   Inventory and Purchase Orders computed byte-for-byte the same
+   `background-image`. It only *looks* stronger on Purchase Orders because that
+   page has more empty space, so less of the wash sits behind white cards.
+   So this does not unify anything; it makes the existing wash visible and moves
+   it.
+   The gradients move to a fixed pseudo-element so the shift can be a `transform`
+   (GPU-composited, no repaint) rather than `background-position`, which would
+   repaint a full-viewport gradient on every scroll frame. The base element's own
+   image is cleared so the two don't stack and double the saturation. */
+.dashboard-workspace-shell.liquid-bg {
+  position: relative;
+  isolation: isolate;
+  background-image: none !important;
+}
+
+.dashboard-workspace-shell.liquid-bg::before {
+  content: "";
+  position: fixed;
+  /* Overscan top and bottom so the layer never reveals an edge as it travels. */
+  inset: -25vh 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: #f2f5f8;
+  background-image:
+    radial-gradient(closest-side, rgba(255, 193, 77, 0.5), rgba(255, 166, 60, 0.2) 55%, transparent 74%),
+    radial-gradient(closest-side, rgba(255, 122, 60, 0.24), transparent 70%),
+    radial-gradient(closest-side, rgba(56, 189, 248, 0.28), transparent 72%),
+    radial-gradient(closest-side, rgba(125, 92, 255, 0.16), transparent 70%);
+  background-size: 78rem 78rem, 52rem 52rem, 72rem 72rem, 60rem 60rem;
+  background-position: -14rem -20rem, 42% -14rem, 106% 108%, 8% 92%;
+  background-repeat: no-repeat;
+  transform: translate3d(0, var(--liquid-shift, 0px), 0);
+  will-change: transform;
+}
+
+/* Motion is a preference, not a given — the colour stays, the movement stops. */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-workspace-shell.liquid-bg::before {
+    transform: none;
+    will-change: auto;
+  }
+}

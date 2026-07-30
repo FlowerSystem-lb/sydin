@@ -266,6 +266,45 @@ export default function DashboardShell({
   const addMenuRef = useRef<HTMLDivElement>(null);
   const addTriggerRef = useRef<HTMLButtonElement>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
+
+  // Drives the page background's parallax. Scroll fires far more often than the
+  // screen refreshes, so the work is coalesced into one rAF per frame and only
+  // writes a CSS custom property — the actual movement is a GPU-composited
+  // transform in globals.css, so this never triggers layout or paint.
+  useEffect(() => {
+    if (
+      typeof window === "undefined" ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+
+    let frame = 0;
+
+    const update = () => {
+      frame = 0;
+      // Damped so a full page of scrolling moves the wash a little, not with it.
+      const shift = Math.min(window.scrollY * 0.12, 160);
+      document.documentElement.style.setProperty(
+        "--liquid-shift",
+        `${shift.toFixed(1)}px`
+      );
+    };
+
+    const onScroll = () => {
+      if (frame) return;
+      frame = window.requestAnimationFrame(update);
+    };
+
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (frame) window.cancelAnimationFrame(frame);
+      document.documentElement.style.removeProperty("--liquid-shift");
+    };
+  }, []);
   const lastSearchTriggerRef = useRef<HTMLButtonElement | null>(null);
   const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const tabletSearchTriggerRef = useRef<HTMLButtonElement>(null);
