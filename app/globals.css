@@ -18380,3 +18380,24 @@ body.sydin-shell {
     radial-gradient(closest-side, rgba(56, 189, 248, 0.18), transparent 100%),
     radial-gradient(closest-side, rgba(125, 92, 255, 0.12), transparent 100%);
 }
+
+/* ===[ MOVING BACKGROUND — REVERTED ]=== */
+/* Engineering call after four rounds of "this still looks wrong". The effect
+   itself worked — the layer painted and tracked scroll — but this layout gives
+   it nowhere to live: the sidebar is opaque, the cards are opaque, and a wash
+   with only narrow slivers to show through reads as stray blocks rather than as
+   a background.
+   Making it visible at all required turning five source declarations
+   transparent. That is real architectural debt to carry for decoration in a
+   data tool, so the layer is off and the page carries a flat colour again.
+   The transparent declarations are left as they are ON PURPOSE: the colour now
+   comes from one place instead of five competing !important fills, which is
+   strictly better regardless of whether the wash ever returns. Re-enabling is
+   deleting this block. */
+.dashboard-workspace-shell.liquid-bg::before {
+  display: none;
+}
+
+.dashboard-shell.dashboard-workspace-shell.liquid-bg {
+  background-color: #f4f7fb !important;
+}
