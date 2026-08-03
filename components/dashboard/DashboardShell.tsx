@@ -283,8 +283,10 @@ export default function DashboardShell({
 
     const update = () => {
       frame = 0;
-      // Damped so a full page of scrolling moves the wash a little, not with it.
-      const shift = Math.min(window.scrollY * 0.12, 160);
+      // Damped so the wash drifts rather than scrolling with the page. First
+      // pass used 0.12 capped at 160px, which measured as real movement but was
+      // imperceptible — 84px of travel on a soft gradient over a 700px scroll.
+      const shift = Math.min(window.scrollY * 0.3, 320);
       document.documentElement.style.setProperty(
         "--liquid-shift",
         `${shift.toFixed(1)}px`

@@ -18253,3 +18253,82 @@ body,
     will-change: auto;
   }
 }
+
+/* ===[ SOLID SURFACES — remove the grey cast (founder note) ]=== */
+/* The grey Sayed kept pointing at is not a border artefact. The main surfaces
+   were `rgba(255,255,255,0.62)` — 62% translucent white — with a white border,
+   sitting on a tinted page. The page colour bled through the fill while the
+   border stayed pure white, so cards read as dirty grey with a bright edge.
+   Solid white with a real hairline instead. The backdrop-filter goes too: it
+   does nothing behind an opaque fill and blur is expensive on every surface.
+   Needs to out-specify the `!important` glass rule above, hence the extra class
+   and the !important here. */
+.dashboard-shell .sydin-overview-panel,
+.dashboard-shell .sydin-overview-header,
+.dashboard-shell .inventory-hero-card,
+.dashboard-shell .inventory-toolbar-panel,
+.dashboard-shell .inventory-table-shell,
+.dashboard-shell .inventory-insight-card,
+.dashboard-shell .po-month-group,
+.dashboard-shell .dashboard-card,
+.dashboard-shell .dashboard-page-header-card,
+.dashboard-shell .inventory-item-card {
+  border-color: rgba(15, 23, 42, 0.08) !important;
+  background: #ffffff !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* With opaque cards the wash only shows in the gaps between them, so it has to
+   carry more colour than it did when every surface was letting it through. */
+.dashboard-workspace-shell.liquid-bg::before {
+  background-image:
+    radial-gradient(closest-side, rgba(255, 186, 64, 0.72), rgba(255, 166, 60, 0.3) 55%, transparent 76%),
+    radial-gradient(closest-side, rgba(255, 112, 52, 0.36), transparent 72%),
+    radial-gradient(closest-side, rgba(56, 189, 248, 0.42), transparent 74%),
+    radial-gradient(closest-side, rgba(125, 92, 255, 0.26), transparent 72%);
+}
+
+/* The wash was rendering correctly and then being painted over: the shell and
+   its content wrapper each set their own opaque background, which covers a
+   z-index:-1 layer. Clearing the shell's `background-image` was not enough —
+   the background COLOUR was doing the hiding. The base colour now lives on the
+   fixed layer only, and everything above it is transparent so it shows through
+   the gaps between cards. */
+.dashboard-shell.dashboard-workspace-shell.liquid-bg {
+  background-color: transparent !important;
+}
+
+.dashboard-shell.dashboard-workspace-shell.liquid-bg .dashboard-shell-content,
+.dashboard-shell.dashboard-workspace-shell.liquid-bg .dashboard-theme {
+  background-color: transparent !important;
+}
+
+/* The wash was invisible even once the covering layers were transparent: the
+   gradient positions were inherited from the original rule (-14rem -20rem,
+   42% -14rem, 106% 108%) which pushed three of the four blobs outside the
+   painted area, and the -25vh overscan moved them further out still. Placed
+   inside the visible band instead, and sized in vw so they scale with the
+   window rather than staying fixed while it grows. */
+.dashboard-workspace-shell.liquid-bg::before {
+  background-size: 70vw 70vw, 55vw 55vw, 65vw 65vw, 50vw 50vw;
+  background-position: 8% 22%, 62% 6%, 92% 78%, 18% 88%;
+}
+
+/* The real cover. A red-paint diagnostic showed the background layer was not
+   merely too subtle — it was completely hidden. `.dashboard-main-canvas` is a
+   descendant of the shell carrying an opaque `rgb(244,247,251)` across the full
+   scroll height, and descendant content paints above a `z-index:-1` pseudo, so
+   it masked the layer entirely. `.dashboard-theme` does the same one level up.
+   Both transparent so the fixed wash is what you actually see. */
+.dashboard-theme,
+.dashboard-main-canvas {
+  background-color: transparent !important;
+}
+
+/* The base page colour now belongs to the fixed layer, not to the scrolling
+   boxes, so it stays put while the gradients drift over it. */
+body.sydin-shell {
+  background-color: #f2f5f8;
+}
