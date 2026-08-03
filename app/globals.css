@@ -18346,3 +18346,18 @@ body,
 body.sydin-shell {
   background-color: #f2f5f8;
 }
+
+/* Founder reported hard-edged blocks of colour in the wash. Cause: each
+   radial faded to `transparent` at 72–76% of its background-size box, but the
+   box is `no-repeat`, so anything the gradient had not finished fading by the
+   box edge became a visible rectangle. Fading fully to 100% removes the edge,
+   and the larger boxes keep the colour soft rather than concentrated. */
+.dashboard-workspace-shell.liquid-bg::before {
+  background-image:
+    radial-gradient(closest-side, rgba(255, 186, 64, 0.55), rgba(255, 166, 60, 0.22) 45%, rgba(255, 166, 60, 0.06) 72%, transparent 100%),
+    radial-gradient(closest-side, rgba(255, 112, 52, 0.28), rgba(255, 112, 52, 0.05) 62%, transparent 100%),
+    radial-gradient(closest-side, rgba(56, 189, 248, 0.32), rgba(56, 189, 248, 0.06) 62%, transparent 100%),
+    radial-gradient(closest-side, rgba(125, 92, 255, 0.2), rgba(125, 92, 255, 0.04) 62%, transparent 100%);
+  background-size: 95vw 95vw, 80vw 80vw, 88vw 88vw, 75vw 75vw;
+  background-position: 2% 18%, 58% -4%, 96% 74%, 12% 92%;
+}
