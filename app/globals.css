@@ -13581,7 +13581,11 @@ body,
 .dashboard-shell-content:has(.sydin-overview),
 .dashboard-shell-content:has(.inventory-workspace),
 .dashboard-shell-content:has(.settings-workspace) {
-  background: #f4f7fb;
+  /* Transparent so the fixed background layer shows through. This used to
+     paint #f4f7fb, which is the same flat colour the layer carries as its
+     base — so nothing is lost visually, but the gradients are no longer
+     hidden behind it. */
+  background: transparent;
 }
 
 .dashboard-shell-content:has(.sydin-overview),
@@ -14725,7 +14729,10 @@ body,
     overflow: visible !important;
     border: 0 !important;
     border-radius: 0 !important;
-    background: #f4f7fb !important;
+    /* was #f4f7fb !important — this opaque fill sat above the fixed
+       background layer and hid it completely. The page colour now
+       lives on that layer so the wash shows through. */
+    background: transparent !important;
     box-shadow: none !important;
   }
 
@@ -14760,7 +14767,10 @@ body,
     overflow: visible !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
-    background: #f4f7fb !important;
+    /* was #f4f7fb !important — this opaque fill sat above the fixed
+       background layer and hid it completely. The page colour now
+       lives on that layer so the wash shows through. */
+    background: transparent !important;
     padding: 1.25rem !important;
   }
 
@@ -15096,7 +15106,10 @@ body,
     overflow: visible !important;
     border: 0 !important;
     border-radius: 0 !important;
-    background: #f4f7fb !important;
+    /* was #f4f7fb !important — this opaque fill sat above the fixed
+       background layer and hid it completely. The page colour now
+       lives on that layer so the wash shows through. */
+    background: transparent !important;
     box-shadow: none !important;
   }
 
@@ -15130,7 +15143,10 @@ body,
     overflow: visible !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
-    background: #f4f7fb !important;
+    /* was #f4f7fb !important — this opaque fill sat above the fixed
+       background layer and hid it completely. The page colour now
+       lives on that layer so the wash shows through. */
+    background: transparent !important;
     padding: 1.25rem !important;
   }
 
@@ -18316,14 +18332,12 @@ body,
   background-position: 8% 22%, 62% 6%, 92% 78%, 18% 88%;
 }
 
-/* The real cover. A red-paint diagnostic showed the background layer was not
-   merely too subtle — it was completely hidden. `.dashboard-main-canvas` is a
-   descendant of the shell carrying an opaque `rgb(244,247,251)` across the full
-   scroll height, and descendant content paints above a `z-index:-1` pseudo, so
-   it masked the layer entirely. `.dashboard-theme` does the same one level up.
-   Both transparent so the fixed wash is what you actually see. */
-.dashboard-theme,
-.dashboard-main-canvas {
+/* The masking fills were removed at source (four workspace-scoped
+   `#f4f7fb !important` declarations plus one unlayered rule) rather than
+   out-specified here — a sixth competing override would have made this file
+   worse. `.dashboard-theme` still needs clearing because it sits above the
+   fixed layer in paint order. */
+.dashboard-theme {
   background-color: transparent !important;
 }
 
