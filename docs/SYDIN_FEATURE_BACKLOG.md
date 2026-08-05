@@ -204,3 +204,65 @@ Phase 5)*.
 Workspace backups · restore points · audit snapshots · advanced exports.
 *Caution:* restore/backup are destructive-adjacent; they need confirmation flows and a tested
 restore path before shipping. Import/export already exist today.
+
+---
+
+## 16. Founder edit list — 2026-08-04 (handwritten notes)
+
+Captured verbatim-in-substance from Sayed's handwritten pages so a cold session can act on
+them. **Next action: item 3 (Dashboard).** He will open a new session and say "start dash".
+
+**Already done from this list:** F (white page background) · 4 (dialogs opening half off-screen —
+root cause was `.dashboard-route-transition` retaining a transform via `animation-fill-mode: both`,
+which broke `position: fixed` app-wide) · the `flwow` → `Flower` category typo.
+
+### 3. Dashboard — **next up, his stated priority**
+"Finish the full Dashboard page, start finishing and deploying each page. Dashboard should connect
+from all the pages and make a full summary, smart and professional, about stats."
+
+Approach agreed before writing code:
+1. **Decide what the stats answer first.** "What needs my attention today?" is a different page from
+   "how is my business doing?" Today it shows counts without conclusions.
+2. **Every card links to its filtered view** — that is the "connect from all the pages" part.
+3. Design last, not first.
+
+### 1. Add items by barcode scan  *(P1 — approved)*
+Scan the QR/barcode printed on the carton, then fill in the rest (photo, cost, details). Manual
+entry of the number as a fallback. Correct as specified: a barcode identifies a **product type**,
+not a physical unit, so "same barcode = same item" is right for inventory.
+
+### 2. Batch add + Excel import with photos  *(P2 — biggest, do last)*
+POS-style batch adding of several items by barcode, plus batch photo upload for several items at
+once, compounded with the Excel import.
+
+**Do NOT match photos to rows by order (1,2,3,4).** One failed upload or a phone sorting by date
+instead of name shifts every subsequent photo onto the wrong item, silently. **Match by filename
+against the SKU in the row** (`FP007.jpg` → row with SKU FP007) — order-independent, and a mismatch
+is visible immediately. Same effort, cannot scramble.
+
+### Inventory sub-list
+- **A.** New header inside the page for buttons + the three-dot (More) menu.
+- **B.** Reorder/organize the buttons — decide what is actually important. *(Toolbar currently
+  stacks into ~5 rows at some widths.)*
+- **C.** New card design sourced from the web. **Deferred** — cards were just made uniform; revisit
+  after D/E. He offered to send Pinterest references; ask for them at that point.
+- **D.** Quick preview (slide-over) needs a new prototype — more classic, reorganised; Activity tab
+  needs its own design.
+- **E.** Full item page needs a new layout — text too large, dead space on the left.
+- **G.** Three-dot menu: decide what Import inventory / Export CSV / Export PDF / Export Excel do.
+  *(An Import & Export page already exists at `/dashboard/import-export` to point at.)*
+
+### Standing instructions from the notes
+- Act as software engineer **and** UI/UX designer; prototype, organise, be **strict** and say when
+  an idea is not good.
+- Target **laptop / tablet / PC**. Phones come later as a separate Sortly-style mobile pass.
+- He will keep adding edits; organise them rather than doing them in arrival order.
+- He is happy to supply design references from Pinterest when asked.
+- **Scanner page: he likes it as-is — leave it alone.**
+
+### Open, his decision
+- 4 no-op rows remain in `inventory_history` (ids 31, 32, 37, 39). Blocked for me by the safety
+  classifier — deleting audit rows needs to be run by him. Harmless if left; the bug that created
+  them is fixed.
+- Category `hj` (id 2) belongs to a **different** `user_id` than his other categories — likely an
+  old test account. FK is `ON DELETE SET NULL`, so deleting it is safe.
