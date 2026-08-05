@@ -17150,7 +17150,16 @@ body,
 
 .dashboard-route-transition {
   min-height: 100%;
-  animation: glass-route-in 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  /* `backwards`, not `both`. With `both` the final keyframe's
+     `transform: translateY(0)` stays applied after the animation ends, and ANY
+     transform — even an identity one — makes this element the containing block
+     for every `position: fixed` descendant inside it. That is why dialogs were
+     sizing to the whole scrolled page instead of the screen: the Adjust scrim
+     measured 1365px tall starting at -265 in a 720px viewport, so the dialog
+     landed past the bottom edge and had to be scrolled to.
+     `backwards` still applies the opening state before the animation starts, so
+     the entrance looks identical, but nothing is retained afterwards. */
+  animation: glass-route-in 260ms cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -18418,4 +18427,28 @@ body.sydin-shell {
 body.sydin-shell,
 .dashboard-theme {
   background-color: #ffffff;
+}
+
+/* ===[ DIALOGS MUST FIT THE SCREEN (founder note 4) ]=== */
+/* "it is open like half hide ... I need to scroll Down or up to make it fit to
+   screen and proceed The Record Movement."
+   Measured at 1280x720: dialog 613px tall, top 111, bottom 724 — 4px past the
+   viewport, so the scrim scrolled and the action buttons sat below the fold.
+   The cause is double-counted spacing: max-height reserved 6rem, but the dialog
+   also carried 2rem margin top AND bottom, plus 1rem of scrim padding each
+   side. At max height that totals exactly the viewport, so any rounding pushes
+   it over.
+   The scrim already provides the outer spacing, so the dialog's own margin goes
+   and max-height now reserves all of it. dvh rather than vh so mobile browser
+   chrome is accounted for instead of guessed at. */
+.ui-dialog {
+  margin-block: 0;
+  max-height: calc(100dvh - 4rem);
+}
+
+/* Long dialogs scroll in their body, never by moving the whole dialog — the
+   header and footer stay reachable without hunting for them. */
+.ui-overlay {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
