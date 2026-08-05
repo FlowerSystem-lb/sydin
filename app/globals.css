@@ -18401,3 +18401,21 @@ body.sydin-shell {
 .dashboard-shell.dashboard-workspace-shell.liquid-bg {
   background-color: #f4f7fb !important;
 }
+
+/* ===[ FLAT WHITE PAGE BACKGROUND (founder decision) ]=== */
+/* Sayed's note F: "Make the full Background of inventory's page white / Same
+   Colors u use for others pages". This supersedes the scroll-reactive wash —
+   the gradients only ever showed as slivers between the sidebar and the white
+   cards, which read as stray blocks rather than as a background. One flat
+   surface across every page instead. The parallax layer and its scroll handler
+   stay in place but paint nothing, so re-enabling it later is a colour change
+   rather than a rebuild. */
+.dashboard-workspace-shell.liquid-bg::before {
+  background-image: none;
+  background-color: #ffffff;
+}
+
+body.sydin-shell,
+.dashboard-theme {
+  background-color: #ffffff;
+}
