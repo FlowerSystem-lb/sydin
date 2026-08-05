@@ -133,6 +133,7 @@ type CategoryFilter = "all" | "uncategorized" | string;
 type StockFilter = "all" | "low";
 type QuickFilter =
   | "all"
+  | "in-stock"
   | "low-stock"
   | "out-of-stock"
   | "no-image"
@@ -165,6 +166,7 @@ const SORT_SELECT_BUTTON_CLASS =
   "inventory-sort-trigger min-h-10 rounded-xl px-3 py-2 text-xs font-bold";
 const QUICK_FILTER_OPTIONS: { value: QuickFilter; label: string }[] = [
   { value: "all", label: "All" },
+  { value: "in-stock", label: "In stock" },
   { value: "low-stock", label: "Low stock" },
   { value: "out-of-stock", label: "Out of stock" },
   { value: "no-image", label: "No image" },
@@ -768,6 +770,7 @@ export default function InventoryPage() {
       const requestedQuick = params.get("quick");
       if (
         requestedQuick === "all" ||
+        requestedQuick === "in-stock" ||
         requestedQuick === "low-stock" ||
         requestedQuick === "out-of-stock" ||
         requestedQuick === "no-image" ||
@@ -2090,6 +2093,8 @@ export default function InventoryPage() {
   });
 
   const quickFilteredItems = filteredItems.filter((item) => {
+    if (quickFilter === "in-stock")
+      return Number(item.quantity || 0) > 0 && !isItemLowStock(item);
     if (quickFilter === "low-stock") return isItemLowStock(item);
     if (quickFilter === "out-of-stock") return Number(item.quantity || 0) <= 0;
     if (quickFilter === "no-image") return !item.image?.trim();

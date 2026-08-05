@@ -867,7 +867,13 @@ export default function DashboardPage() {
                   outCount={stockBreakdown.out}
                 />
                 <div className="sydin-health-legend">
-                  <Link href="/dashboard/inventory" className="sydin-health-row">
+                  {/* Was linking to unfiltered inventory, so clicking
+                      "In stock 7" showed every item including the low and
+                      out-of-stock ones it excludes from its own count. */}
+                  <Link
+                    href="/dashboard/inventory?quick=in-stock"
+                    className="sydin-health-row"
+                  >
                     <span className="sydin-health-dot sydin-distribution-in" />
                     <span>In stock</span>
                     <em>{formatNumber(stockBreakdown.in)}</em>
