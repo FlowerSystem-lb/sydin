@@ -2759,6 +2759,28 @@ Menu contents and position confirmed open at 1280.
 **Untouchables:** no auth, Supabase, schema, routing, or business-logic changes. Every menu
 destination and every export handler is the pre-existing one.
 
+### Follow-up same day — the search bar had to be capped, not just flexed
+
+Founder, on a wide monitor: *"sho hal space and bugs search bar."* Correct call, and it was a
+regression from the row above: `minmax(13rem, 1fr)` let the search take the whole leftover share, which
+measured **1090px of empty input at a 1792px viewport** for a 230px placeholder. Note #7 had capped that
+same column at 20rem, and dropping the cap is what produced the void.
+
+Capping it at `minmax(13rem, 24rem)` also fixed a second defect found while testing it: at `1fr` the
+input absorbed every change in container width, so filtering a result set removed the page scrollbar and
+the bar grew **1090px → 1105px while typing**, shifting the whole control row. At a fixed max the
+leftover space goes to the gap instead — **measured jump is now 0px**.
+
+Search is now 384px from 1792px down to ~1010px of viewport, then flexes down to the 13rem floor and
+takes its own full-width row below the 880px container threshold (normal for a row whose only element it
+is). Re-verified at **1792 / 1440 / 1280 / 1070 / 1000 / 900 / 375** — one control row, no overflow, no
+width jump while typing.
+
+*Checked and not a bug:* the focus ring is intact (cyan border + 4px glow). An earlier reading showed it
+missing, but that was an artifact of measuring `:focus` while the browser window itself was unfocused.
+*Still absent:* the field has no clear (×) button — pre-existing, and much more noticeable now that the
+bar is a deliberate size. Small addition, worth doing if he wants it.
+
 ---
 
 <!-- Append the next sprint entry below this line. -->

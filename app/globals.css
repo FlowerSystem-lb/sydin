@@ -18460,9 +18460,19 @@ body.sydin-shell,
    Select 122 = 582px + 4 gaps = ~608px, so one row survives to ~880px of
    container once the search floor (13rem) is added. */
 
+/* The search FLEXES BUT IS CAPPED (founder: "sho hal space", 2026-08-06).
+   Letting it take a `1fr` share of the row measured 1090px of empty input at a
+   1792px viewport for a 230px placeholder — it read as a broken field rather than
+   a search box, and note #7 had capped this same column at 20rem for a reason.
+   Capping also kills a second defect: at `1fr` the input absorbed every change in
+   container width, so filtering a result set removed the page scrollbar and the
+   bar visibly grew 1090px → 1105px *while typing*, shifting the whole row. At a
+   fixed max the leftover space goes to the gap instead, and nothing moves.
+   24rem is the band note #7 proved comfortable (20rem) plus a little room; below
+   ~24rem of available width it still flexes down to the 13rem floor. */
 .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
 .dashboard-workspace-shell .inventory-toolbar-main {
-  grid-template-columns: minmax(13rem, 1fr) auto;
+  grid-template-columns: minmax(13rem, 24rem) auto;
   gap: 0.5rem;
   align-items: center;
 }
