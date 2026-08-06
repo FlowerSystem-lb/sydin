@@ -214,11 +214,14 @@ const CSV_HEADERS = [
 
 function InventoryActionMenu({
   label,
+  labelHidden = false,
   buttonClassName,
   menuClassName,
   children,
 }: {
   label: string;
+  /** Renders the trigger as icon-only; `label` stays as the accessible name. */
+  labelHidden?: boolean;
   buttonClassName: string;
   menuClassName?: string;
   children: ReactNode;
@@ -311,9 +314,11 @@ function InventoryActionMenu({
           setOpen((current) => !current);
         }}
         className={buttonClassName}
+        aria-label={labelHidden ? label : undefined}
+        title={labelHidden ? label : undefined}
       >
         <UiIcon name="more" />
-        {label}
+        {labelHidden ? <span className="sr-only">{label}</span> : label}
       </button>
       {open &&
         createPortal(
@@ -2401,8 +2406,9 @@ export default function InventoryPage() {
                 </ActionButton>
 
                 <InventoryActionMenu
-                  label="More"
-                  buttonClassName="dashboard-action-button dashboard-action-button-secondary inventory-action-secondary"
+                  label="More inventory actions"
+                  labelHidden
+                  buttonClassName="dashboard-action-button dashboard-action-button-secondary inventory-action-secondary inventory-action-more"
                 >
                     <Link
                       href="/dashboard/inventory/import"
@@ -2416,6 +2422,7 @@ export default function InventoryPage() {
                         "Import inventory"
                       )}
                     </Link>
+                    <div className="my-1 border-t border-slate-200" />
                     <button
                       type="button"
                       role="menuitem"
@@ -2456,6 +2463,15 @@ export default function InventoryPage() {
                           ? "Exporting Excel..."
                           : "Export Excel"}
                     </button>
+                    <div className="my-1 border-t border-slate-200" />
+                    <Link
+                      href="/dashboard/import-export"
+                      role="menuitem"
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold hover:bg-slate-50"
+                    >
+                      <UiIcon name="clock" className="h-4 w-4" />
+                      Import &amp; export history
+                    </Link>
                 </InventoryActionMenu>
               </div>
             </div>
@@ -2539,9 +2555,6 @@ export default function InventoryPage() {
                 </div>
 
                 <div className="inventory-toolbar-actions">
-                  <p className="inventory-showing-pill">
-                    Showing {visibleItems.length} of {items.length} items
-                  </p>
                   <button
                     type="button"
                     onClick={toggleFiltersOpen}
@@ -2613,48 +2626,54 @@ export default function InventoryPage() {
               </div>
 
               <div className="inventory-toolbar-secondary">
-                <FilterBar
-                  label="Quick inventory filters"
-                  className="inventory-quick-filters"
-                >
-                  {QUICK_FILTER_OPTIONS.map((option) => {
-                    const active = quickFilter === option.value;
-
-                    return (
-                      <FilterChip
-                        key={option.value}
-                        onClick={() => setQuickFilter(option.value)}
-                        active={active}
-                        className="inventory-quick-filter"
-                      >
-                        {option.label}
-                      </FilterChip>
-                    );
-                  })}
-                </FilterBar>
-
-                {activeFilterChips.length > 0 && (
-                <div className="inventory-active-chips">
-                  {activeFilterChips.map((chip) => (
-                    <button
-                      key={chip.label}
-                      type="button"
-                      onClick={chip.onClear}
-                      className="inventory-active-chip"
-                    >
-                      {chip.label}
-                      <UiIcon name="close" className="h-3 w-3" />
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={resetInventoryControls}
-                    className="inventory-clear-chips"
+                <div className="inventory-toolbar-chips">
+                  <FilterBar
+                    label="Quick inventory filters"
+                    className="inventory-quick-filters"
                   >
-                    Clear all
-                  </button>
+                    {QUICK_FILTER_OPTIONS.map((option) => {
+                      const active = quickFilter === option.value;
+
+                      return (
+                        <FilterChip
+                          key={option.value}
+                          onClick={() => setQuickFilter(option.value)}
+                          active={active}
+                          className="inventory-quick-filter"
+                        >
+                          {option.label}
+                        </FilterChip>
+                      );
+                    })}
+                  </FilterBar>
+
+                  {activeFilterChips.length > 0 && (
+                  <div className="inventory-active-chips">
+                    {activeFilterChips.map((chip) => (
+                      <button
+                        key={chip.label}
+                        type="button"
+                        onClick={chip.onClear}
+                        className="inventory-active-chip"
+                      >
+                        {chip.label}
+                        <UiIcon name="close" className="h-3 w-3" />
+                      </button>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={resetInventoryControls}
+                      className="inventory-clear-chips"
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  )}
                 </div>
-                )}
+
+                <p className="inventory-toolbar-count">
+                  Showing {visibleItems.length} of {items.length} items
+                </p>
               </div>
 
               {filtersOpen && (

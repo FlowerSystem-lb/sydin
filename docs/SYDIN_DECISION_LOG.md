@@ -166,6 +166,34 @@ the best answer and the right eventual target, but it means refactoring a 1,345-
 big-bang rewrite" rule. **If the modal presentation is wanted again, do (b) — do not reintroduce a
 second copy of the form.** **Status:** Active.
 
+### 2026-08-06 · Inventory responsive thresholds are `@container`, never viewport `@media`
+**Decision:** Anything that decides how the inventory workspace **lays itself out** must be keyed to
+`@container`, because `.inventory-workspace` is an `inline-size` container. Viewport `@media` stays only
+for things that genuinely track the screen (mobile shell, safe-area insets, hover capability).
+**Why (measured):** the container is ~127px narrower than the viewport — **1153px at a 1280px viewport,
+943px at 1070px**. A rule written as `@media (max-width: 1100px)` therefore fires while the row it
+governs still has 943px to work with. That mismatch is exactly what produced the founder's five-row
+toolbar: the viewport rule stacked the row early *and* a `@container (max-width: 1040px)` rule split the
+controls into a 2-column grid, so both fired at once at ~1070px. **How to apply:** when a toolbar, grid,
+or action cluster inside the inventory workspace needs a breakpoint, derive the number from a measured
+container width (`.inventory-workspace` bounding box), not from a screen size, and write it as
+`@container`. Note the corollary: the shell wrappers (`.dashboard-shell`, `.dashboard-workspace-shell`)
+**are** present at mobile widths too, inside `.mobile-shell` — so `:has()`-scoped rules apply at every
+width and a plainer `.inventory-workspace` selector will lose to them on specificity.
+**Status:** Active (reference). See Sprint Log "Inventory toolbar — three-tier layout".
+
+### 2026-08-06 · Inventory's ⋯ menu owns import/export; the Import & Export page owns history
+**Decision:** The Inventory three-dot menu keeps the **real actions** — Import inventory (straight to
+`/dashboard/inventory/import`) and the three in-page exports — and gains one link to
+`/dashboard/import-export` for **history**. The menu does **not** route through the Import & Export page.
+**Why:** that page is a history log; its own Export button is permanently disabled with the caption
+"Export from inventory page", and its Import button only forwards to the wizard. Routing through it
+would add a hop to the import and export nothing. Conversely its history table had no entry point from
+Inventory, which is the gap worth closing. **Open for Sayed:** CSV and Excel export **all** items while
+PDF exports the **filtered** view. Recommendation is to make all three follow the current view (what you
+are looking at is what you export), but that changes working export behaviour, so it needs his word.
+**Status:** Active.
+
 ### 2026-08-04 · Dashboard "conclusions" pass deferred to last — the data cannot support it yet
 **Decision:** The Dashboard rework (founder note 3, backlog §16) moves to the **end** of the queue.
 Predictive stats — "what will run out", "cash tied up in dead stock", "what hasn't moved" — are

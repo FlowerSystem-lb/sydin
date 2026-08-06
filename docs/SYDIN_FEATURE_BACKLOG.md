@@ -214,7 +214,8 @@ them. **Next action: item 3 (Dashboard).** He will open a new session and say "s
 
 **Already done from this list:** F (white page background) · 4 (dialogs opening half off-screen —
 root cause was `.dashboard-route-transition` retaining a transform via `animation-fill-mode: both`,
-which broke `position: fixed` app-wide) · the `flwow` → `Flower` category typo.
+which broke `position: fixed` app-wide) · the `flwow` → `Flower` category typo · **A / B / G**
+(inventory three-tier toolbar, 2026-08-06 — see the sub-list below).
 
 ### 3. Dashboard — **next up, his stated priority**
 "Finish the full Dashboard page, start finishing and deploying each page. Dashboard should connect
@@ -241,16 +242,27 @@ against the SKU in the row** (`FP007.jpg` → row with SKU FP007) — order-inde
 is visible immediately. Same effort, cannot scramble.
 
 ### Inventory sub-list
-- **A.** New header inside the page for buttons + the three-dot (More) menu.
-- **B.** Reorder/organize the buttons — decide what is actually important. *(Toolbar currently
-  stacks into ~5 rows at some widths.)*
+- **A. Done (2026-08-06).** Page actions sit in the page header: **Add item** filled, **Scan** and **⋯**
+  outline (⋯ is now icon-only). The outline is finally *visible* — those buttons had white borders left
+  over from the glass era, invisible since the page went flat white.
+- **B. Done (2026-08-06).** Three tiers: page actions in the header · one control row (search flexes,
+  Filters/Compact/sort/view/Select fixed) · chips + count below, with "Showing X of Y" as plain text.
+  The ~5-row stack was two rules firing together at ~1070px — a viewport `@media` and a `@container`
+  rule disagreeing about the width. Measured 1070×800: toolbar **252px → 114px**, control rows
+  **4 → 1**. All inventory-layout thresholds are now `@container`.
 - **C.** New card design sourced from the web. **Deferred** — cards were just made uniform; revisit
   after D/E. He offered to send Pinterest references; ask for them at that point.
 - **D.** Quick preview (slide-over) needs a new prototype — more classic, reorganised; Activity tab
-  needs its own design.
+  needs its own design. *(Also fix here: clicking a card's own ⋯ opens this preview instead of the
+  card's menu — the click reaches the card button underneath it. Pre-existing, spotted 2026-08-06.)*
 - **E.** Full item page needs a new layout — text too large, dead space on the left.
-- **G.** Three-dot menu: decide what Import inventory / Export CSV / Export PDF / Export Excel do.
-  *(An Import & Export page already exists at `/dashboard/import-export` to point at.)*
+- **G. Done (2026-08-06).** Menu = Import inventory → the wizard · Export CSV / PDF / Excel → the
+  in-page exports · **Import & export history** → `/dashboard/import-export` (new link). The menu does
+  not route *through* that page: it is a history log whose own Export button is disabled with the note
+  "Export from inventory page", and whose Import button just forwards to the wizard.
+  **Still Sayed's call:** CSV and Excel export **all** items, but PDF exports the **filtered** view.
+  Recommendation: make all three follow the current view — what you're looking at is what you export.
+  Left unchanged because it alters working export behaviour.
 
 ### Standing instructions from the notes
 - Act as software engineer **and** UI/UX designer; prototype, organise, be **strict** and say when

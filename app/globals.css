@@ -10333,7 +10333,6 @@ body [class*="tracking-["],
   gap: 0.5rem;
 }
 
-.inventory-showing-pill,
 .inventory-toolbar-button {
   display: inline-flex;
   min-height: 2.55rem;
@@ -10348,10 +10347,6 @@ body [class*="tracking-["],
   font-size: 0.78rem;
   font-weight: 850;
   white-space: nowrap;
-}
-
-.inventory-showing-pill {
-  color: var(--text-secondary);
 }
 
 .inventory-toolbar-button-active {
@@ -11054,10 +11049,6 @@ body [class*="tracking-["],
     width: 100%;
   }
 
-  .inventory-showing-pill {
-    grid-column: 1 / -1;
-  }
-
   .inventory-active-chips {
     justify-content: flex-start;
   }
@@ -11590,17 +11581,11 @@ body [class*="tracking-["],
 }
 
 .inventory-quick-filter,
-.inventory-toolbar-button,
-.inventory-showing-pill {
+.inventory-toolbar-button {
   min-height: 2.35rem;
   border-color: #dde6f1;
   background: #ffffff;
   color: #071638;
-}
-
-.inventory-showing-pill {
-  background: #f8fafc;
-  color: #64748b;
 }
 
 .inventory-quick-filter-active,
@@ -11847,10 +11832,6 @@ body [class*="tracking-["],
   .inventory-quick-filters {
     overflow-x: auto;
     padding-bottom: 0.15rem;
-  }
-
-  .inventory-showing-pill {
-    justify-content: flex-start;
   }
 
   .inventory-active-chips {
@@ -17778,13 +17759,16 @@ body,
   gap: 0.4rem;
 }
 
-/* Restore the stacked layout where a single row genuinely cannot fit. */
-@media (max-width: 1100px) {
-  .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
-  .dashboard-workspace-shell .inventory-toolbar-main {
-    grid-template-columns: minmax(0, 1fr);
-  }
-}
+/* Restore the stacked layout where a single row genuinely cannot fit.
+   NOTE (backlog §16B): this was `@media (max-width: 1100px)`, i.e. keyed to the
+   *viewport*. The toolbar lives inside `.inventory-workspace`, which is an
+   inline-size container ~127px narrower than the viewport (sidebar + shell
+   padding), so the viewport number and the width the row actually gets never
+   matched. Measured at 1280 viewport the container is 1153px; at 1070 it is
+   ~943px — enough for one row — yet this rule had already stacked it. The
+   stacking decision now lives with the container query in the §16 block at the
+   end of this file, which measures the space the row really has. Padding and
+   gap tightening from note #7 are untouched. */
 
 /* ===[ NEW PURCHASE ORDER — two-column layout (founder sketch, note #3b) ]=== */
 /* The form was six full-width sections stacked vertically, so creating a PO
@@ -18451,4 +18435,171 @@ body.sydin-shell,
 .ui-overlay {
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* ===[ INVENTORY TOOLBAR — three-tier layout (backlog §16 A/B) ]=== */
+/* Founder note B: "the toolbar stacks into ~5 rows at some widths."
+   Measured cause at a 1070px viewport (container 943px): TWO rules fired at
+   once — a viewport `@media (max-width: 1100px)` collapsed
+   `.inventory-toolbar-main` to a single column, and `@container (max-width:
+   1040px)` turned the six-control cluster into a 2-column grid. One column of
+   search plus three rows of paired buttons is the five-row stack he drew.
+
+   The approved anatomy is three tiers:
+     1. page actions            -> the hero header (Add item filled, Scan + ⋯ outline)
+     2. one control row         -> search flexes, Filters/Compact/sort/view/Select fixed
+     3. chips + count           -> below the row, count as plain text
+   Tier 1 already existed; the count moving out of tier 2 into tier 3 is what
+   frees the ~155px that lets the control row hold on one line.
+
+   Everything here is keyed to `@container`, not `@media`: `.inventory-workspace`
+   is the inline-size container, so these thresholds are the width the row
+   actually gets rather than the width of the screen. Appended last and mirrored
+   at the specificity of the `:has()`-scoped rules above so source order decides.
+   Measured control widths: Filters 86 · Compact 102 · sort 136 · view 136 ·
+   Select 122 = 582px + 4 gaps = ~608px, so one row survives to ~880px of
+   container once the search floor (13rem) is added. */
+
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
+.dashboard-workspace-shell .inventory-toolbar-main {
+  grid-template-columns: minmax(13rem, 1fr) auto;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+/* The cluster is a single nowrap row: `auto` sizes the column to its content,
+   so wrapping here would silently buy height instead of reporting it. */
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-actions,
+.dashboard-workspace-shell .inventory-toolbar-actions {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.4rem;
+}
+
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-actions > *,
+.dashboard-workspace-shell .inventory-toolbar-actions > * {
+  flex: 0 0 auto;
+  width: auto;
+}
+
+/* Tier 3: chips carry the row, the count is plain text at the end of it —
+   not a button, so it stops reading as something to click. */
+.inventory-workspace .inventory-toolbar-chips {
+  display: flex;
+  flex: 1 1 auto;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.inventory-workspace .inventory-toolbar-count {
+  flex: 0 0 auto;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--text-secondary);
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+/* Tier 1: with ⋯ reduced to an icon the three page actions need ~280px, so they
+   stay an inline row far past the point the old 2-column grid stretched them. */
+.inventory-workspace .inventory-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+}
+
+.inventory-workspace .inventory-action-more {
+  gap: 0;
+  padding-inline: 0.7rem;
+}
+
+/* "Scan and ⋯ outline" needs a border that is actually visible. The frosted-glass
+   block above paints every secondary surface with a 70%-white border and an
+   `!important`, which was legible over the old washed background but disappeared
+   when the page went flat white (founder decision F) — measured
+   rgba(255,255,255,0.7) on #ffffff. Same border the sort/view triggers already
+   use, so the header trio and the control row read as one family. Scoped to the
+   two inventory-only classes: the shared `.ui-button-secondary` /
+   `.dashboard-action-button-secondary` styling is left alone. */
+.inventory-workspace .inventory-action-secondary,
+.inventory-workspace .inventory-toolbar-button {
+  border-color: rgba(40, 72, 112, 0.2) !important;
+  background: #ffffff !important;
+}
+
+/* One control row means one control height — the buttons sat at 37.6px beside
+   42px select triggers, which read as two mismatched clusters. */
+.dashboard-shell:has(.inventory-workspace) .inventory-toolbar-button,
+.dashboard-workspace-shell .inventory-toolbar-button {
+  min-height: 2.625rem;
+  border-radius: 12px;
+}
+
+/* Below ~880px of container the search floor and the cluster genuinely collide,
+   so tier 2 becomes two rows: search, then the controls left-aligned. The
+   controls themselves still fit one line down to ~620px. */
+@container (max-width: 880px) {
+  .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
+  .dashboard-workspace-shell .inventory-toolbar-main {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-actions,
+  .dashboard-workspace-shell .inventory-toolbar-actions {
+    flex-wrap: wrap;
+    justify-content: flex-start;
+  }
+}
+
+/* Once the hero stacks its title block and actions into a column, right-aligned
+   page actions float in the middle of nothing — line them up with the title. */
+@container (max-width: 900px) {
+  .inventory-workspace .inventory-hero-actions {
+    justify-content: flex-start;
+  }
+}
+
+/* Phones. The control row needs nothing extra here: with the count gone and the
+   controls at their natural widths, the `flex-wrap` from the 880px block lands
+   them 3 + 2 across two rows at 375 — one row fewer than forcing them into a
+   2-column grid of stretched buttons, which is what the older mobile rules did.
+   The full mobile pass is a separate Sortly-style sprint.
+   Note on scoping: the shell wrappers ARE present at 375 (the workspace sits
+   inside `.dashboard-shell.dashboard-workspace-shell` within `.mobile-shell`), so
+   anything that has to beat the base rules above needs the same `:has()` form,
+   not a plainer `.inventory-workspace` selector. */
+@container (max-width: 639px) {
+  /* One row, not three: the pre-existing mobile rule stacked the page actions one
+     per row, which left the now icon-only ⋯ alone on a 49px row. Add item takes
+     the slack; Scan and ⋯ hold their content width.
+     The full-width behaviour comes from a global `@media (max-width: 639px)
+     .dashboard-action-button { width: 100% }` (line ~1246), so it has to be
+     answered per button — undoing it on the flex items alone leaves the ⋯ trigger
+     shrunk to 29px with its 24px icon clipped. */
+  .inventory-workspace .inventory-hero-actions {
+    display: flex;
+    flex-wrap: nowrap;
+    grid-template-columns: none;
+    justify-content: flex-start;
+  }
+
+  .inventory-workspace .inventory-hero-actions .dashboard-action-button {
+    width: auto;
+  }
+
+  .inventory-workspace .inventory-hero-actions > * {
+    flex: 0 0 auto;
+  }
+
+  .inventory-workspace .inventory-action-primary {
+    flex: 1 1 auto;
+  }
 }

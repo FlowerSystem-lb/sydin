@@ -2684,4 +2684,81 @@ path is used, which this change does not touch.
 
 ---
 
+## Inventory toolbar — three-tier layout (backlog §16 A/B/G)  *(Complete)*
+
+**Scope:** Founder note B — "the toolbar stacks into ~5 rows at some widths" — plus note A (page
+actions live in the page header with the three-dot menu) and note G (decide what the three-dot menu
+items do). Approved anatomy: **(1)** page actions in the header — Add item filled, Scan and ⋯ outline;
+**(2)** one control row — search flexes, Filters/Compact/sort/view/Select fixed; **(3)** chips + count
+below, with "Showing X of Y" as plain text rather than something that looks clickable.
+
+### The five-row stack: two rules firing at once, both keyed to the wrong number
+
+`.inventory-workspace` is an **inline-size container**, and it is ~127px narrower than the viewport
+(sidebar + shell padding): measured **1153px of container at a 1280px viewport, 943px at 1070px**. The
+toolbar was being laid out by a mix of viewport `@media` and `@container` rules, so the thresholds and
+the width the row actually gets never referred to the same thing. At a 1070px viewport:
+
+- `@media (max-width: 1100px)` (from note #7) collapsed `.inventory-toolbar-main` to one column —
+  while the container still had 943px, enough for one row.
+- `@container (max-width: 1040px)` turned the six-control cluster into a 2-column grid — three rows of
+  paired buttons.
+
+Search on its own row plus three rows of pairs **is** the five-row stack in his sketch.
+
+**A/B'd at a pinned 1070×800** by re-injecting the two old declarations into the live page:
+toolbar panel **252px → 114px**, control rows **4 → 1**, first item card **550px → 412px** down the
+page. At 1280 the panel was already one row and stays 114px.
+
+**Delivered:**
+- **`app/globals.css`** — new appended `§16` section. `.inventory-toolbar-main` is
+  `minmax(13rem, 1fr) auto`; the cluster is a nowrap flex row; **every threshold is now `@container`**,
+  so it responds to the space the row has rather than the size of the screen. One row holds to ~880px
+  of container (measured floor: 5 controls = 582px + gaps ≈ 608px, plus the 13rem search floor), below
+  which search takes its own row and the controls stay together on one line down to ~620px.
+- The note #7 `@media (max-width: 1100px)` collapse is replaced by that container query, with a comment
+  explaining the viewport/container mismatch. **Note #7's density work is untouched** — capped stat
+  chips, panel padding, and gap tightening all still apply, and the Compact toggle still drops the
+  stats block (re-verified at 1280: one row, no overflow, in both stats and Compact states).
+- **`app/dashboard/inventory/page.tsx`** — the count `<p>` moves out of the control row into tier 3
+  beside the chips as `.inventory-toolbar-count` (plain text: no border, no background, no padding).
+  Removing it from the row is what frees the ~155px that keeps the controls on one line. Chips and
+  active chips are wrapped in `.inventory-toolbar-chips` so the count can sit at the end of that row.
+- ⋯ is now **icon-only** (`InventoryActionMenu` gained an optional `labelHidden`; the label stays as
+  `aria-label` + `title`, verified in the a11y tree as "More inventory actions").
+- **Outline that is actually visible.** Scan and ⋯ carried `rgba(255,255,255,0.7)` borders from the
+  frosted-glass block — legible over the old washed background, invisible since the page went flat
+  white (decision F). They now use the same `rgba(40,72,112,0.2)` border as the sort/view triggers, and
+  the control buttons were raised from 37.6px to match the 42px selects, so the row reads as one
+  cluster instead of three borderless buttons beside two outlined dropdowns. Scoped to the two
+  inventory-only classes — shared `.ui-button-secondary` / `.dashboard-action-button-secondary` are
+  untouched.
+
+### §16G — what the three-dot menu does
+Menu is now: **Import inventory** → `/dashboard/inventory/import` (the real wizard) · **Export CSV /
+PDF / Excel** → the existing in-page exports · **Import & export history** → `/dashboard/import-export`.
+Reasoning: `/dashboard/import-export` is a **history log** whose own Export button is disabled and
+labelled "Export from inventory page", and whose Import button just forwards to the wizard — so
+routing the menu through it would add a hop and export nothing. The one thing it does own, history,
+had no entry point from Inventory; that is the added link. Grouped by dividers: import · exports ·
+history.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37) · live at
+**1280** (one row, count at the end of the chips row), **1070** (the reported break — now one row),
+**1010/1000** (clean transition across the 880px container threshold), **900** (search row, controls
+one row, chips, count), **375** (header trio on one row, controls 3 + 2, no horizontal overflow).
+Menu contents and position confirmed open at 1280.
+
+**Two findings left alone, both pre-existing:**
+- CSV and Excel export **all** items while PDF exports the **filtered** view — a real inconsistency,
+  but changing it is a behaviour change to working exports, so it is written up in the backlog as
+  Sayed's call rather than changed unilaterally.
+- Clicking a card's own ⋯ opens the item preview instead of its menu (the click reaches the card
+  button underneath). Unrelated to this work — logged under §16D, which already covers that surface.
+
+**Untouchables:** no auth, Supabase, schema, routing, or business-logic changes. Every menu
+destination and every export handler is the pre-existing one.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
