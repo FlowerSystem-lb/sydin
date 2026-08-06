@@ -165,3 +165,20 @@ the best answer and the right eventual target, but it means refactoring a 1,345-
 528-line modal in one pass on a live app, which conflicts with the standing "few cohesive batches, not a
 big-bang rewrite" rule. **If the modal presentation is wanted again, do (b) — do not reintroduce a
 second copy of the form.** **Status:** Active.
+
+### 2026-08-04 · Dashboard "conclusions" pass deferred to last — the data cannot support it yet
+**Decision:** The Dashboard rework (founder note 3, backlog §16) moves to the **end** of the queue.
+Predictive stats — "what will run out", "cash tied up in dead stock", "what hasn't moved" — are
+**not computable on the current data** and would have to be fabricated. **Why (measured, not
+assumed):** the production database holds **12 stock movements total**, of which only **2 are
+`stock_out`, across 2 items**, spanning Jun 11 – Jul 27; and only **2 of 19 items carry a
+`cost_price`**. A consumption rate cannot be derived from two outflow events, and a "dead stock
+value" cannot be derived from 2 priced items. "Hasn't moved in 90 days" computes but returns 17 of
+19 items, which is noise. **Consequence already live:** the Dashboard's **"Inventory Value"** card
+is computed from those 2 priced items and presented as the workspace total — it currently
+understates by ~90% and is misleading. Worth fixing or captioning regardless of when the rework
+happens. **What the Dashboard should do in the meantime:** drive **data completeness** (items
+missing a cost price, items with no movement history), which is true today and is precisely what
+unlocks the predictive metrics later. **Revisit** after ~2–3 months of real operating use, when
+there is genuine movement history. **Next work instead:** backlog §16 items A/B/G (inventory
+header, button ordering, three-dot menu), which need no data maturity. **Status:** Active.
