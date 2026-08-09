@@ -79,3 +79,24 @@ All three must pass.
 ## Current branch
 
 `uiux-light-liquid-glass-redesign` (main branch: `main`).
+
+## Claude Code agent setup (2026-08-09 audit)
+
+- **[.claude/agents/sydin-ui.md](.claude/agents/sydin-ui.md)** — a UI/UX-scoped subagent for
+  SydIN dashboard work. Hard-codes the doc-reading order, the untouchables, component reuse, the
+  `@container`-vs-`@media` rule, and the verification gate, so those don't have to be re-explained
+  every session. Invoke via the Agent tool for focused UI implementation/review; the main session
+  should apply the same rules directly for everyday work.
+- **`/sprint-start`** ([.claude/commands/sprint-start.md](.claude/commands/sprint-start.md)) —
+  runs the Founder Operating Manual's pre-sprint checklist (clean git status, correct branch, docs
+  read, Plan Mode for risky work).
+- **`/sprint-done`** ([.claude/commands/sprint-done.md](.claude/commands/sprint-done.md)) — runs
+  the post-sprint checklist (verification gate, UI rules review, drafts the sprint log + decision
+  log entries). Does not auto-commit.
+
+**Deliberately not installed:** generic marketplace "frontend-design", "motion/animation",
+"accessibility", or "feature-dev" skills. SydIN's own docs (`SYDIN_UI_RULES.md`,
+`SYDIN_PRODUCT_PRINCIPLES.md`, `SYDIN_DECISION_LOG.md`) already cover this ground more precisely
+than a generic skill would, and a generic skill risks quietly disagreeing with a decision already
+recorded in the decision log. If UI/UX capability ever feels insufficient, extend
+`sydin-ui.md` or the docs it points to — don't bolt on an unrelated marketplace skill.
