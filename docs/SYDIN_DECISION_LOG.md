@@ -182,6 +182,34 @@ container width (`.inventory-workspace` bounding box), not from a screen size, a
 width and a plainer `.inventory-workspace` selector will lose to them on specificity.
 **Status:** Active (reference). See Sprint Log "Inventory toolbar — three-tier layout".
 
+### 2026-08-10 · Detail-panel grouping stays local (`DetailField`); don't reach for `DashboardFormSection`
+**Decision:** When a screen needs a titled/grouped section **inside a component that already uses
+flat solid surfaces** (no frosted-glass), extend the local field-grid pattern (`DetailField` /
+`DetailGroup` in `ItemDetailsSlideOver.tsx`) rather than importing `DashboardFormSection` from
+`components/dashboard/Workspace.tsx`. **Why:** `DashboardFormSection` (and every
+`.dashboard-form-section` selector) picks up a dashboard-wide frosted-glass `!important` treatment
+(`app/globals.css` ~16711: `backdrop-filter: blur(16px) saturate(1.45)`) intended for full page-level
+cards. Surfaces like the item slide-over were deliberately kept flat/solid in Sprint 5
+(`.item-details-panel` has no backdrop-filter anywhere), so dropping in the shared primitive as-is
+would inject a mismatched frosted card into an otherwise flat panel. This is a **narrow exception**
+to "prefer the shared primitives" (`SYDIN_UI_RULES.md`) — it applies specifically when a primitive's
+*styling*, not its shape, conflicts with the target surface's established visual language. When
+that's not the case, still prefer `DashboardFormSection`. **Status:** Active.
+
+### 2026-08-10 · `getActivityFeed` is user-scoped only; do not filter its output by item client-side
+**Decision:** `app/lib/activityFeed.ts`'s `getActivityFeed(userId, limit)` has no `itemId`
+parameter and its `po_received` events carry no `itemId` (a PO can cover many items with no
+per-item attribution available without a join to order lines that doesn't exist yet). **Do not**
+call it and filter the result by `itemId` to get "an item's activity" — its `limit` caps the
+*global* feed before your filter ever runs, so an item's own older events silently disappear once
+other items' activity fills that window first. Correct today at low activity volume, a latent bug
+once usage grows. If a future surface needs a genuinely per-item feed that includes PO events, add
+a real `itemId` filter to the function itself (joining through order lines for POs), don't
+filter its output. The item slide-over's Activity tab (backlog §16D) instead merges its own
+already-item-scoped queries (`getStockMovementsForItem` + `inventory_history` filtered by
+`item_id`) and reuses only `activityFeed.ts`'s pure presentation helpers
+(`getActivityEventIcon/Label/Tone`). **Status:** Active.
+
 ### 2026-08-06 · Inventory's ⋯ menu owns import/export; the Import & Export page owns history
 **Decision:** The Inventory three-dot menu keeps the **real actions** — Import inventory (straight to
 `/dashboard/inventory/import`) and the three in-page exports — and gains one link to

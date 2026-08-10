@@ -2783,4 +2783,90 @@ bar is a deliberate size. Small addition, worth doing if he wants it.
 
 ---
 
+## Item quick preview — regrouped details + merged activity feed (backlog §16D)  *(Complete)*
+
+**Scope:** Founder's stated priority after §16 A/B/G. Handwritten note: the Inventory quick-preview
+slide-over "needs a new prototype — more classic, reorganised; Activity tab needs its own design."
+
+**Audit first (live-tested at 1440px and 375px, both call sites re-verified after the change):**
+this component (`components/inventory/ItemDetailsSlideOver.tsx`, shared by Inventory, Stock
+Movements, QR Center, Categories, and Alerts) already went through Sprint 5 polish and a later
+deep-scan audit, so this was treated as a wide/shared-surface change needing a plan first, not a
+direct rewrite. Three concrete problems found:
+1. Details tab order was backwards: a fixed-height image slot (`clamp(12.5rem, 27vh, 15.5rem)`,
+   reserved even with no photo) and the entire "Adjust stock" form appeared **before** any fact
+   that identifies the item — category, depot, supplier.
+2. Activity tab was two visually disconnected lists glued together: a styled stock-movements list
+   above a plainer, differently-styled `inventory_history` list, no shared visual language.
+3. (Checked, not fixed) broken product-photo rendering this session (`net::ERR_CONNECTION_CLOSED` /
+   `UNABLE_TO_VERIFY_LEAF_SIGNATURE` in the dev server log) is a **local machine TLS issue** in
+   `next/image`'s server-side optimizer fetch to Supabase storage — confirmed via server logs, not
+   an app bug. Production/Vercel unaffected. No code change made for this.
+
+**Reuse research done before writing code:** the full item page
+(`app/dashboard/inventory/[id]/page.tsx`) already has an established "classic" order — identity/
+category basics → Stock & Unit → Supplier → Pricing & Value → Tracking Codes → Notes — via a local
+`DetailCard` + `<section>` grouping pattern. Considered reusing the exported `DashboardFormSection`
+(`components/dashboard/Workspace.tsx`) for the new group headers, but it (and every
+`.dashboard-form-section` selector) picks up a dashboard-wide frosted-glass `!important` treatment
+(`app/globals.css` ~16711) that would visually clash with this panel's deliberately flat, solid
+`.item-details-*` surfaces (confirmed via `.item-details-panel`'s own CSS — no backdrop-filter
+anywhere in this component). Used a small local `DetailGroup` helper instead, same tier as the
+file's existing local `DetailField` helper, reusing the existing `.item-details-field-grid` class
+per group rather than inventing new grid CSS.
+
+**Also considered and rejected:** reusing `getActivityFeed` (`app/lib/activityFeed.ts`, powers
+`/dashboard/activity`) to merge in PO-received events "for free." Rejected after reading the
+function: it has no `itemId` parameter, and its `po_received` events carry no `itemId` at all (a PO
+can cover many items with no per-item attribution available without a join to order lines that
+doesn't exist). Filtering its global, `limit`-capped output by `itemId` client-side would silently
+truncate an item's own older history once *other* items' activity fills the limit window first —
+correct at today's low activity volume, a real bug once usage grows. Not touching
+`app/lib/activityFeed.ts`. Instead merged the slide-over's own, already-item-scoped queries
+(`getStockMovementsForItem` + the `inventory_history` query, both pre-existing and correctly
+filtered by `item_id` at the DB level) into one client-side sorted array, reusing only
+`activityFeed.ts`'s pure presentation helpers (`getActivityEventIcon/Label/Tone`) — no new query,
+no shared-file edits, no correctness regression.
+
+**Delivered:**
+- **`components/inventory/ItemDetailsSlideOver.tsx`** — `detailFields` (one flat 14-row array)
+  replaced with `detailGroups` (Identity — unlabeled, stays at top — · Stock & Unit · Supplier ·
+  Pricing & Value · Tracking Codes), each rendered via the new local `DetailGroup` helper and
+  suppressed entirely when empty (verified: items with no price set correctly show no "Pricing &
+  Value" heading). The "Adjust stock" form moved below the fact groups, Notes stays last. Activity
+  tab now renders a single `combinedActivity` array (movements + history merged, sorted desc) with
+  one row style — icon badge (tone-colored via `getActivityEventTone`) + title/date/notes + values
+  — instead of two mismatched lists. Removed now-dead `formatAction` helper (only caller was the
+  deleted history block).
+- **`app/globals.css`** — added `.item-details-group`/`.item-details-group-title` (reusing the
+  existing eyebrow-label styling) and `.item-details-activity-icon` + 4 tone modifiers (reusing the
+  app's existing `--status-success/danger/warning/info-*` tokens — the same ones
+  `.item-details-status`/`.item-details-alert-card` already use, no new colors invented). Removed
+  the now-dead `.item-details-history` rules (3 blocks, including one mobile responsive override) —
+  grepped the whole repo first to confirm no other file referenced the class before deleting.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37) · live at
+**1440px** and **375px** (no horizontal overflow either width): confirmed group order, confirmed
+empty groups correctly suppressed (no orphaned headers), confirmed the Adjust Stock form sits below
+the fact groups, confirmed the Activity tab merges movements + history into one consistently-styled
+feed with distinguishable per-type icon colors. Re-verified the shared-component contract from a
+**second call site** (`/dashboard/categories`'s item link, not just Inventory) — same grouped
+layout rendered correctly; component props (`itemId`/`returnTo`/`initialTab`/`onClose`/
+`onItemUpdated`) were never touched, and `tsc` passing across the whole app confirms no call site
+broke. (One retry was needed on the second call site after a transient
+`net::ERR_CONNECTION_CLOSED` on the Supabase auth fetch — unrelated to this change, not reproduced
+on retry.)
+
+**Explicitly not done this pass:** the image slot's fixed height/behavior (smaller, separate CSS
+change, not what "reorganised" was pointing at) · §16E (full item page redesign — separate backlog
+item) · the local dev TLS image issue (environment-only) · the documented Sprint 5 mobile
+header-icon collapse tradeoff (unrelated, intentionally left alone).
+
+**Untouchables:** no auth, Supabase queries, schema, routing, or business-logic changes —
+`getStockMovementsForItem`, the `inventory_history` query, `recordStockMovement`, and
+`app/lib/activityFeed.ts` are all unmodified; only presentation/grouping inside the slide-over
+changed. All 5 call sites' props are unchanged.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

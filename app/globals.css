@@ -1720,7 +1720,6 @@ canvas {
 .item-details-adjust,
 .item-details-field,
 .item-details-notes,
-.item-details-history,
 .item-details-alert-card {
   border: 1px solid var(--sydin-ui-border);
   border-radius: 0.95rem;
@@ -1734,13 +1733,23 @@ canvas {
 
 .item-details-quantity-strip p,
 .item-details-field dt,
-.item-details-notes p {
+.item-details-notes p,
+.item-details-group-title {
   color: var(--sydin-text-subtle);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.1em;
   line-height: 1rem;
   text-transform: uppercase;
+}
+
+/* backlog §16D: groups the flat field grid into labeled sections (Stock &
+   Unit / Supplier / Pricing & Value / Tracking Codes), mirroring the order
+   already established on the full item page. Shares the field-grid's own
+   styling — no card/border of its own, just a heading + its grid. */
+.item-details-group {
+  display: grid;
+  gap: 0.5rem;
 }
 
 .item-details-quantity-strip strong {
@@ -1944,8 +1953,8 @@ canvas {
 
 .item-details-activity-list article {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 0.75rem;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.65rem;
   align-items: start;
   border: 1px solid var(--sydin-ui-border);
   border-radius: 0.9rem;
@@ -1957,14 +1966,55 @@ canvas {
   animation: item-details-row-in 220ms ease-out both;
 }
 
+/* backlog §16D: merged movements + history feed needed a per-type icon so the
+   two former lists' events are still visually distinguishable in one list.
+   Tone modifiers reuse the app's existing --status-* tokens (same ones
+   .item-details-status/.item-details-alert-card already use) rather than
+   inventing a new color set. */
+.item-details-activity-icon {
+  display: flex;
+  height: 2rem;
+  width: 2rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--sydin-ui-border);
+  border-radius: 0.7rem;
+  background: var(--sydin-ui-surface);
+  color: var(--sydin-text-muted);
+}
+
+.item-details-activity-icon-success {
+  border-color: var(--status-success-border);
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.item-details-activity-icon-danger {
+  border-color: var(--status-danger-border);
+  background: var(--status-danger-surface);
+  color: var(--status-danger-text);
+}
+
+.item-details-activity-icon-warning {
+  border-color: var(--status-warning-border);
+  background: var(--status-warning-surface);
+  color: var(--status-warning-text);
+}
+
+.item-details-activity-icon-accent {
+  border-color: var(--status-info-border);
+  background: var(--status-info-surface);
+  color: var(--status-info-text);
+}
+
 .item-details-activity-list strong {
   display: block;
   color: var(--sydin-text);
   font-size: 0.92rem;
 }
 
-.item-details-activity-list span,
-.item-details-history div span {
+.item-details-activity-list span {
   color: var(--sydin-text-muted);
   font-size: 0.75rem;
   font-weight: 700;
@@ -1992,29 +2042,6 @@ canvas {
 
 .item-details-activity-values span:last-child {
   color: var(--sydin-accent-text);
-}
-
-.item-details-history {
-  display: grid;
-  gap: 0.45rem;
-  margin-top: 0.75rem;
-  padding: 0.8rem;
-}
-
-.item-details-history h3 {
-  color: var(--sydin-text);
-  font-size: 0.9rem;
-  font-weight: 850;
-}
-
-.item-details-history div {
-  display: grid;
-  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1fr) auto;
-  gap: 0.5rem;
-  min-width: 0;
-  align-items: center;
-  border-top: 1px solid var(--sydin-ui-border);
-  padding-top: 0.45rem;
 }
 
 .item-details-empty {
@@ -2180,10 +2207,6 @@ canvas {
 
   .item-details-field-grid,
   .item-details-quantity-strip {
-    grid-template-columns: 1fr;
-  }
-
-  .item-details-history div {
     grid-template-columns: 1fr;
   }
 }

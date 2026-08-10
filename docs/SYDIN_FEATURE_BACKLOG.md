@@ -252,9 +252,15 @@ is visible immediately. Same effort, cannot scramble.
   **4 → 1**. All inventory-layout thresholds are now `@container`.
 - **C.** New card design sourced from the web. **Deferred** — cards were just made uniform; revisit
   after D/E. He offered to send Pinterest references; ask for them at that point.
-- **D.** Quick preview (slide-over) needs a new prototype — more classic, reorganised; Activity tab
-  needs its own design. *(Also fix here: clicking a card's own ⋯ opens this preview instead of the
-  card's menu — the click reaches the card button underneath it. Pre-existing, spotted 2026-08-06.)*
+- **D. Done (2026-08-10).** Regrouped the flat 14-row Details tab into Identity · Stock & Unit ·
+  Supplier · Pricing & Value · Tracking Codes, mirroring the order already established on the full
+  item page — that's the "more classic, reorganised" part. Adjust Stock moved below the fact groups
+  (previously it sat *above* every fact about the item). Activity tab now merges movements +
+  history into one design (icon badge + consistent row style) instead of two visually different
+  lists glued together. *(Still open, unrelated to this fix: clicking a card's own ⋯ in the
+  Inventory grid opens this preview instead of the card's menu — the click reaches the card button
+  underneath it. Pre-existing, spotted 2026-08-06, lives in the Inventory grid/card component, not
+  in the slide-over touched here.)*
 - **E.** Full item page needs a new layout — text too large, dead space on the left.
 - **G. Done (2026-08-06).** Menu = Import inventory → the wizard · Export CSV / PDF / Excel → the
   in-page exports · **Import & export history** → `/dashboard/import-export` (new link). The menu does

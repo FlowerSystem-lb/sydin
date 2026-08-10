@@ -9,9 +9,10 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import { createPortal } from "react-dom";
-import UiIcon from "@/components/UiIcon";
+import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { Select } from "@/components/ui";
 import {
   ActionButton,
@@ -20,6 +21,12 @@ import {
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import { cx } from "@/components/ui/utils";
+import {
+  getActivityEventIcon,
+  getActivityEventLabel,
+  getActivityEventTone,
+  type ActivityEventType,
+} from "@/app/lib/activityFeed";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -114,10 +121,6 @@ function formatDelta(delta: number) {
   return delta > 0 ? `+${delta}` : String(delta);
 }
 
-function formatAction(value: string) {
-  return value.charAt(0).toUpperCase() + value.slice(1);
-}
-
 function isFocusable(element: Element) {
   if (!(element instanceof HTMLElement)) return false;
   if (element.hasAttribute("disabled") || element.getAttribute("aria-hidden")) {
@@ -148,6 +151,62 @@ function DetailField({
       <dd className={mono ? "font-mono" : undefined}>{value}</dd>
     </div>
   );
+}
+
+// backlog §16D: group related facts (Stock & Unit / Supplier / Pricing & Value /
+// Tracking Codes) instead of one flat 14-row list, mirroring the order already
+// established on the full item page (app/dashboard/inventory/[id]/page.tsx).
+// A local helper, not `DashboardFormSection` from Workspace.tsx: that primitive
+// picks up the dashboard-wide frosted-glass `!important` treatment
+// (app/globals.css ~16711), which would visually clash with this panel's
+// deliberately flat, solid-surface `.item-details-*` design (Sprint 5).
+function DetailGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <section className="item-details-group">
+      <h3 className="item-details-group-title">{title}</h3>
+      <dl className="item-details-field-grid">{children}</dl>
+    </section>
+  );
+}
+
+// A merged, chronologically-sorted view of this item's stock movements and
+// created/edited history, so the Activity tab is one design instead of two.
+// Deliberately NOT `getActivityFeed` from app/lib/activityFeed.ts: that function
+// has no itemId filter, and its po_received events carry no itemId at all (a PO
+// can cover many items with no per-item attribution available). Filtering its
+// global, limit-capped output by itemId client-side would silently truncate an
+// item's own older history once other items' activity fills the limit window —
+// correct at today's low activity volume, a real bug once usage grows. This
+// reuses only its pure presentation helpers (icon/label/tone), not its query.
+interface SlideOverActivityEvent {
+  id: string;
+  type: ActivityEventType;
+  createdAt: string;
+  notes?: string | null;
+  quantityBefore?: number | null;
+  quantityAfter?: number | null;
+  quantityDelta?: number;
+}
+
+const HISTORY_ACTION_TO_EVENT_TYPE: Record<string, ActivityEventType> = {
+  created: "item_created",
+  edited: "item_edited",
+  deleted: "item_edited",
+};
+
+function getActivityToneClass(type: ActivityEventType) {
+  switch (getActivityEventTone(type)) {
+    case "success":
+      return "item-details-activity-icon-success";
+    case "danger":
+      return "item-details-activity-icon-danger";
+    case "warning":
+      return "item-details-activity-icon-warning";
+    case "accent":
+      return "item-details-activity-icon-accent";
+    default:
+      return "";
+  }
 }
 
 export default function ItemDetailsSlideOver({
@@ -391,25 +450,31 @@ export default function ItemDetailsSlideOver({
     ? calculateInventoryValue(item.quantity, item.selling_price)
     : null;
 
-  const detailFields = useMemo(() => {
-    if (!item) return [];
+  // backlog §16D: grouped, not one flat 14-row list — order mirrors the full
+  // item page's established sections (app/dashboard/inventory/[id]/page.tsx:
+  // identity/category basics -> Stock & Unit -> Supplier -> Pricing & Value ->
+  // Tracking Codes), so the two views of the same item read the same way.
+  const detailGroups = useMemo(() => {
+    const empty = { identity: [], stock: [], supplier: [], pricing: [], tracking: [] };
+    if (!item) return empty;
 
-    return [
-      {
-        label: "Item code",
-        value: item.item_code?.trim() || "",
-        mono: true,
-      },
-      { label: "SKU", value: item.sku?.trim() || "", mono: true },
-      {
-        label: "Category",
-        value: resolveCategoryDisplay(item, assignedCategory),
-      },
+    const identity = [
+      { label: "Category", value: resolveCategoryDisplay(item, assignedCategory) },
       { label: "Depot", value: formatDepotLabel(assignedDepot) },
-      { label: "Supplier", value: assignedSupplier?.name || "No supplier" },
+      { label: "Created", value: formatDateTime(item.created_at) },
+    ].filter((field) => field.value);
+
+    const stock = [
       { label: "Quantity", value: quantityLabel },
       { label: "Unit", value: unitLabel },
       { label: "Minimum stock", value: String(itemLowStockThreshold) },
+    ].filter((field) => field.value);
+
+    const supplier = [
+      { label: "Supplier", value: assignedSupplier?.name || "No supplier" },
+    ].filter((field) => field.value);
+
+    const pricing = [
       { label: "Cost price", value: costPrice || "" },
       {
         label: "Stock cost value",
@@ -426,9 +491,15 @@ export default function ItemDetailsSlideOver({
             ? formatInventoryPrice(stockRetailValue, currencyCode) || ""
             : "",
       },
-      { label: "Barcode", value: item.barcode?.trim() || "", mono: true },
-      { label: "Created", value: formatDateTime(item.created_at) },
     ].filter((field) => field.value);
+
+    const tracking = [
+      { label: "Item code", value: item.item_code?.trim() || "", mono: true },
+      { label: "SKU", value: item.sku?.trim() || "", mono: true },
+      { label: "Barcode", value: item.barcode?.trim() || "", mono: true },
+    ].filter((field) => field.value);
+
+    return { identity, stock, supplier, pricing, tracking };
   }, [
     assignedCategory,
     assignedDepot,
@@ -443,6 +514,30 @@ export default function ItemDetailsSlideOver({
     stockRetailValue,
     unitLabel,
   ]);
+
+  const combinedActivity = useMemo<SlideOverActivityEvent[]>(() => {
+    const movementEvents: SlideOverActivityEvent[] = movements.map((movement) => ({
+      id: `sm-${movement.id}`,
+      type: movement.movement_type,
+      createdAt: movement.created_at,
+      notes: movement.notes,
+      quantityBefore: movement.quantity_before,
+      quantityAfter: movement.quantity_after,
+      quantityDelta: movement.quantity_delta,
+    }));
+
+    const historyEvents: SlideOverActivityEvent[] = history.map((entry) => ({
+      id: `ih-${entry.id}`,
+      type: HISTORY_ACTION_TO_EVENT_TYPE[entry.action] || "item_edited",
+      createdAt: entry.created_at,
+      quantityBefore: entry.old_quantity,
+      quantityAfter: entry.new_quantity,
+    }));
+
+    return [...movementEvents, ...historyEvents].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+  }, [history, movements]);
 
   const editHref = item
     ? `/dashboard/inventory/${item.id}?action=edit${
@@ -777,6 +872,74 @@ export default function ItemDetailsSlideOver({
                       </div>
                     </section>
 
+                    {/* backlog §16D: facts before the action. Category / Depot /
+                        Created lead (identity, unlabeled — matches the full
+                        item page's top grouping), then the labeled groups,
+                        then Adjust Stock, then Notes last. Previously the
+                        Adjust Stock form sat here, ahead of every fact about
+                        the item — you had to scroll past a form to find out
+                        what depot or supplier it belonged to. */}
+                    {detailGroups.identity.length > 0 && (
+                      <dl className="item-details-field-grid">
+                        {detailGroups.identity.map((field) => (
+                          <DetailField
+                            key={field.label}
+                            label={field.label}
+                            value={field.value}
+                          />
+                        ))}
+                      </dl>
+                    )}
+
+                    {detailGroups.stock.length > 0 && (
+                      <DetailGroup title="Stock & Unit">
+                        {detailGroups.stock.map((field) => (
+                          <DetailField
+                            key={field.label}
+                            label={field.label}
+                            value={field.value}
+                          />
+                        ))}
+                      </DetailGroup>
+                    )}
+
+                    {detailGroups.supplier.length > 0 && (
+                      <DetailGroup title="Supplier">
+                        {detailGroups.supplier.map((field) => (
+                          <DetailField
+                            key={field.label}
+                            label={field.label}
+                            value={field.value}
+                          />
+                        ))}
+                      </DetailGroup>
+                    )}
+
+                    {detailGroups.pricing.length > 0 && (
+                      <DetailGroup title="Pricing & Value">
+                        {detailGroups.pricing.map((field) => (
+                          <DetailField
+                            key={field.label}
+                            label={field.label}
+                            value={field.value}
+                          />
+                        ))}
+                      </DetailGroup>
+                    )}
+
+                    {detailGroups.tracking.length > 0 && (
+                      <DetailGroup title="Tracking Codes">
+                        {detailGroups.tracking.map((field) => (
+                          <DetailField
+                            key={field.label}
+                            label={field.label}
+                            value={field.value}
+                            mono={field.mono}
+                          />
+                        ))}
+                      </DetailGroup>
+                    )}
+
                     <form
                       onSubmit={handleMovementSubmit}
                       className="item-details-adjust"
@@ -856,16 +1019,6 @@ export default function ItemDetailsSlideOver({
                       </div>
                     </form>
 
-                    <dl className="item-details-field-grid">
-                      {detailFields.map((field) => (
-                        <DetailField
-                          key={field.label}
-                          label={field.label}
-                          value={field.value}
-                          mono={field.mono}
-                        />
-                      ))}
-                    </dl>
                     {item.notes?.trim() && (
                       <div className="item-details-notes">
                         <p>Notes</p>
@@ -877,61 +1030,66 @@ export default function ItemDetailsSlideOver({
 
                 {tab === "activity" && (
                   <div className="item-details-tab-content">
-                    {movements.length > 0 ? (
+                    {/* backlog §16D: one merged, one-styled feed instead of a
+                        stock-movements list followed by a separately-styled
+                        inventory-history list. See combinedActivity above. */}
+                    {combinedActivity.length > 0 ? (
                       <div className="item-details-activity-list">
-                        {movements.map((movement, index) => (
+                        {combinedActivity.map((event, index) => (
                           <article
-                            key={movement.id}
+                            key={event.id}
                             className={index === 0 && quantityChanged ? "is-new" : undefined}
                           >
+                            <div
+                              className={cx(
+                                "item-details-activity-icon",
+                                getActivityToneClass(event.type)
+                              )}
+                            >
+                              <UiIcon
+                                name={getActivityEventIcon(event.type) as UiIconName}
+                                className="h-4 w-4"
+                              />
+                            </div>
                             <div>
-                              <strong>
-                                {STOCK_MOVEMENT_LABELS[movement.movement_type]}
-                              </strong>
-                              <span>{formatDateTime(movement.created_at)}</span>
-                              {movement.notes && (
-                                <p>{formatStockMovementNotes(movement.notes)}</p>
+                              <strong>{getActivityEventLabel(event.type)}</strong>
+                              <span>{formatDateTime(event.createdAt)}</span>
+                              {event.notes && (
+                                <p>{formatStockMovementNotes(event.notes)}</p>
                               )}
                             </div>
-                            <div className="item-details-activity-values">
-                              <span
-                                className={
-                                  movement.quantity_delta < 0
-                                    ? "text-theme-danger"
-                                    : movement.quantity_delta > 0
-                                      ? "text-theme-success"
-                                      : "text-theme-secondary"
-                                }
-                              >
-                                {formatDelta(movement.quantity_delta)}
-                              </span>
-                              <span>{movement.quantity_after}</span>
-                            </div>
+                            {event.quantityDelta !== undefined ? (
+                              <div className="item-details-activity-values">
+                                <span
+                                  className={
+                                    event.quantityDelta < 0
+                                      ? "text-theme-danger"
+                                      : event.quantityDelta > 0
+                                        ? "text-theme-success"
+                                        : "text-theme-secondary"
+                                  }
+                                >
+                                  {formatDelta(event.quantityDelta)}
+                                </span>
+                                <span>{event.quantityAfter}</span>
+                              </div>
+                            ) : (
+                              <div className="item-details-activity-values">
+                                <span className="text-theme-secondary">
+                                  {event.quantityBefore ?? "N/A"} to{" "}
+                                  {event.quantityAfter ?? "N/A"}
+                                </span>
+                              </div>
+                            )}
                           </article>
                         ))}
                       </div>
                     ) : (
                       <DashboardEmptyState
                         icon="movement"
-                        title="No stock movements yet"
-                        description="Stock in, stock out, adjustments, and damaged or lost activity for this item will appear here."
+                        title="No activity yet"
+                        description="Stock in, stock out, adjustments, edits, and other updates for this item will appear here."
                       />
-                    )}
-
-                    {history.length > 0 && (
-                      <section className="item-details-history">
-                        <h3>Inventory history</h3>
-                        {history.slice(0, 6).map((entry) => (
-                          <div key={entry.id}>
-                            <span>{formatAction(entry.action)}</span>
-                            <span>{formatDateTime(entry.created_at)}</span>
-                            <span>
-                              {entry.old_quantity ?? "N/A"} to{" "}
-                              {entry.new_quantity ?? "N/A"}
-                            </span>
-                          </div>
-                        ))}
-                      </section>
                     )}
                   </div>
                 )}
