@@ -8,7 +8,13 @@ import QRCode from "react-qr-code";
 import BrandMark from "@/components/BrandMark";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
 import ImageLightbox from "@/components/inventory/ImageLightbox";
+import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { LoadingSkeletonGroup } from "@/components/dashboard/Workspace";
+import {
+  getActivityEventIcon,
+  getActivityEventTone,
+  type ActivityEventType,
+} from "@/app/lib/activityFeed";
 import {
   getCategoriesForUser,
   resolveCategoryDisplay,
@@ -125,6 +131,33 @@ function formatCreatedDate(date?: string) {
 
 function formatAction(action: string) {
   return action.charAt(0).toUpperCase() + action.slice(1);
+}
+
+// backlog §16E: Stock Movements / Item History rows used a single first-letter
+// avatar ("S" for Stock In, "C" for Created) — ambiguous, and this page had its
+// own hand-rolled version of the same idea the Activity page and item
+// slide-over already solved with real icons. Reuses only the pure
+// icon/tone helpers from app/lib/activityFeed.ts, not its data-fetching —
+// same boundary already recorded in SYDIN_DECISION_LOG.md for this file.
+const HISTORY_ACTION_TO_EVENT_TYPE: Record<string, ActivityEventType> = {
+  created: "item_created",
+  edited: "item_edited",
+  deleted: "item_edited",
+};
+
+function getActivityToneClasses(type: ActivityEventType) {
+  switch (getActivityEventTone(type)) {
+    case "success":
+      return "border-emerald-300/25 bg-emerald-500/15 text-theme-success";
+    case "danger":
+      return "border-red-300/25 bg-red-500/15 text-theme-danger";
+    case "warning":
+      return "border-amber-300/25 bg-amber-500/15 text-theme-warning";
+    case "accent":
+      return "border-indigo-300/25 bg-indigo-500/15 text-theme-accent";
+    default:
+      return "border-theme bg-theme-inset text-theme-secondary";
+  }
 }
 
 function formatQuantity(quantity: number | null) {
@@ -967,15 +1000,21 @@ export default function ItemDetailsPage() {
             <>
               <div className="grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
               <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-4">
-                {/* Plain white rather than the old cream tile — with
-                    object-contain a tinted well reads as a coloured frame
-                    around every product photo. */}
-                <div className="flex min-h-[260px] items-center justify-center rounded-[18px] border border-theme bg-white p-4 sm:min-h-[320px]">
+                {/* backlog §16E: was a fixed h-240/300px box stretched across
+                    the whole ~0.95fr column (~550-580px wide) — a ~1.82:1
+                    letterbox shape. Measured with real product photos: a 4:3
+                    photo (1200x900) pillarboxed to ~27% empty space per side;
+                    a portrait phone photo would waste ~59%. That mismatch,
+                    not a rendering bug, is the "dead space on the left."
+                    Fixed by sizing the frame off `aspect-[4/3]` (matches the
+                    common case) capped to a sane width instead of a fixed
+                    pixel height stretched to the column's full width. */}
+                <div className="mx-auto flex w-full max-w-[26rem] items-center justify-center rounded-[18px] border border-theme bg-white p-4">
                   {item.image ? (
                     <button
                       type="button"
                       onClick={() => setLightboxOpen(true)}
-                      className="group relative h-[240px] w-full cursor-zoom-in sm:h-[300px]"
+                      className="group relative aspect-[4/3] w-full cursor-zoom-in"
                       aria-label={`Enlarge image of ${item.name}`}
                     >
                       <Image
@@ -983,7 +1022,7 @@ export default function ItemDetailsPage() {
                         alt={item.name}
                         fill
                         priority
-                        sizes="(min-width: 1280px) 42vw, 100vw"
+                        sizes="(min-width: 1280px) 26rem, 100vw"
                         className="object-contain"
                       />
                       <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-slate-900/72 px-2.5 py-1 text-[11px] font-bold text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
@@ -991,7 +1030,7 @@ export default function ItemDetailsPage() {
                       </span>
                     </button>
                   ) : (
-                    <div className="flex min-h-[300px] w-full flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface text-center text-theme-subtle">
+                    <div className="flex aspect-[4/3] w-full flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface text-center text-theme-subtle">
                       <span className="text-sm font-black uppercase tracking-[0.18em]">
                         Image
                       </span>
@@ -1006,25 +1045,25 @@ export default function ItemDetailsPage() {
 
               <section className="flex flex-col gap-6">
                 <div className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
-                        Product
-                      </p>
-
-                      <h2 className="mt-1 break-normal text-2xl font-black tracking-tight text-theme-primary sm:text-3xl">
-                        {item.name}
-                      </h2>
-                    </div>
+                  {/* backlog §16E: the item name was shown here again, right
+                      below the page's own H1 with the same name a few
+                      hundred pixels up — pure duplication, no new
+                      information. Dropped; the Low Stock badge (the one
+                      thing this row actually added) now sits with the
+                      section label instead of framing a repeated title. */}
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+                      Item details
+                    </p>
 
                     {itemIsLowStock && (
-                      <span className="self-start rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-theme-danger">
+                      <span className="rounded-full border border-red-400/30 bg-red-500/15 px-3 py-1 text-xs font-bold text-theme-danger">
                         Low Stock
                       </span>
                     )}
                   </div>
 
-                  <div className="mt-4 grid grid-cols-1 gap-3 md:grid-cols-3">
+                  <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
                     <DetailCard
                       label="Category"
                       value={resolveCategoryDisplay(item, assignedCategory)}
@@ -1054,12 +1093,11 @@ export default function ItemDetailsPage() {
                       </span>
                     </div>
 
-                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <DetailCard
-                        label="Current stock"
-                        value={itemQuantityLabel}
-                        accent="indigo"
-                      />
+                    {/* backlog §16E: this grid used to repeat the section's
+                        own quantity a second time as a "Current stock" card
+                        directly below the h3 showing the same value. Minimum
+                        stock is the only fact this row actually adds. */}
+                    <div className="mt-3">
                       <DetailCard
                         label="Minimum stock"
                         value={
@@ -1226,16 +1264,13 @@ export default function ItemDetailsPage() {
                       )}
                     </div>
 
-                    <h3 className="mt-5 text-2xl font-bold">
-                      Item QR Code
-                    </h3>
-
-                    <p className="mt-2 text-theme-muted">
-                      Scan to open this public item page.
-                    </p>
-
-                    <p className="mt-2 text-sm text-theme-accent">
-                      This QR opens the public item page.
+                    {/* backlog §16E: this heading repeated the section's own
+                        "Item QR Code" eyebrow above, and the two sentences
+                        that followed it said the same thing twice ("Scan to
+                        open this public item page" / "This QR opens the
+                        public item page"). Collapsed to one line. */}
+                    <p className="mt-4 text-sm leading-6 text-theme-muted">
+                      Scan to open this item&rsquo;s public page.
                     </p>
 
                     {qrUrl && (
@@ -1278,7 +1313,7 @@ export default function ItemDetailsPage() {
                       Stock activity
                     </p>
 
-                    <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
+                    <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
                       Stock Movements
                     </h2>
                   </div>
@@ -1297,15 +1332,24 @@ export default function ItemDetailsPage() {
                         className="rounded-[18px] border border-theme bg-theme-inset p-4"
                       >
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                          <div className="flex items-start gap-4">
-                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-emerald-300/25 bg-emerald-500/15 text-sm font-black text-theme-success">
-                              {STOCK_MOVEMENT_LABELS[
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${getActivityToneClasses(
                                 movement.movement_type
-                              ].charAt(0)}
+                              )}`}
+                            >
+                              <UiIcon
+                                name={
+                                  getActivityEventIcon(
+                                    movement.movement_type
+                                  ) as UiIconName
+                                }
+                                className="h-4 w-4"
+                              />
                             </div>
 
                             <div>
-                              <h3 className="text-xl font-bold text-theme-primary">
+                              <h3 className="text-lg font-bold text-theme-primary">
                                 {
                                   STOCK_MOVEMENT_LABELS[
                                     movement.movement_type
@@ -1325,24 +1369,24 @@ export default function ItemDetailsPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[520px]">
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[460px]">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
                               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 Before
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-theme-primary">
+                              <p className="mt-1.5 text-xl font-black text-theme-primary">
                                 {movement.quantity_before}
                               </p>
                             </div>
 
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
                               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 Change
                               </p>
 
                               <p
-                                className={`mt-2 text-2xl font-black ${
+                                className={`mt-1.5 text-xl font-black ${
                                   movement.quantity_delta < 0
                                     ? "text-theme-danger"
                                     : movement.quantity_delta > 0
@@ -1354,12 +1398,12 @@ export default function ItemDetailsPage() {
                               </p>
                             </div>
 
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
                               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 After
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-theme-accent">
+                              <p className="mt-1.5 text-xl font-black text-theme-accent">
                                 {movement.quantity_after}
                               </p>
                             </div>
@@ -1370,15 +1414,15 @@ export default function ItemDetailsPage() {
                   </div>
                 ) : (
                   <div className="mt-5 rounded-[18px] border border-dashed border-emerald-300/25 bg-theme-inset px-5 py-8 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-lg font-black text-theme-success">
-                      0
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-theme-success">
+                      <UiIcon name="movement" className="h-5 w-5" />
                     </div>
 
-                    <h3 className="mt-5 text-2xl font-bold text-theme-primary">
+                    <h3 className="mt-4 text-xl font-bold text-theme-primary">
                       No stock movements yet
                     </h3>
 
-                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-theme-muted">
+                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-theme-muted">
                       Stock in, stock out, adjustments, and damaged or lost
                       activity will appear here.
                     </p>
@@ -1393,7 +1437,7 @@ export default function ItemDetailsPage() {
                       Audit trail
                     </p>
 
-                    <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
+                    <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
                       Item History
                     </h2>
                   </div>
@@ -1405,19 +1449,35 @@ export default function ItemDetailsPage() {
 
                 {history.length > 0 ? (
                   <div className="mt-6 space-y-4">
-                    {history.map((entry) => (
+                    {history.map((entry) => {
+                      const historyEventType =
+                        HISTORY_ACTION_TO_EVENT_TYPE[entry.action] ||
+                        "item_edited";
+
+                      return (
                       <div
                         key={entry.id}
                         className="relative rounded-[18px] border border-theme bg-theme-inset p-4"
                       >
                         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                          <div className="flex items-start gap-4">
-                            <div className="mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-indigo-300/25 bg-indigo-500/15 text-sm font-black text-theme-accent">
-                              {formatAction(entry.action).charAt(0)}
+                          <div className="flex items-start gap-3">
+                            <div
+                              className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${getActivityToneClasses(
+                                historyEventType
+                              )}`}
+                            >
+                              <UiIcon
+                                name={
+                                  getActivityEventIcon(
+                                    historyEventType
+                                  ) as UiIconName
+                                }
+                                className="h-4 w-4"
+                              />
                             </div>
 
                             <div>
-                              <h3 className="text-xl font-bold text-theme-primary">
+                              <h3 className="text-lg font-bold text-theme-primary">
                                 {formatAction(entry.action)}
                               </h3>
 
@@ -1427,42 +1487,43 @@ export default function ItemDetailsPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-w-[340px]">
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-w-[300px]">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
                               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 Old quantity
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-theme-primary">
+                              <p className="mt-1.5 text-xl font-black text-theme-primary">
                                 {formatQuantity(entry.old_quantity)}
                               </p>
                             </div>
 
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
                               <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                                 New quantity
                               </p>
 
-                              <p className="mt-2 text-2xl font-black text-theme-accent">
+                              <p className="mt-1.5 text-xl font-black text-theme-accent">
                                 {formatQuantity(entry.new_quantity)}
                               </p>
                             </div>
                           </div>
                         </div>
                       </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 ) : (
                   <div className="mt-5 rounded-[18px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-8 text-center">
-                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-lg font-black text-theme-accent">
-                      0
+                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
+                      <UiIcon name="clock" className="h-5 w-5" />
                     </div>
 
-                    <h3 className="mt-5 text-2xl font-bold text-theme-primary">
+                    <h3 className="mt-4 text-xl font-bold text-theme-primary">
                       No history yet
                     </h3>
 
-                    <p className="mx-auto mt-2 max-w-md text-base leading-7 text-theme-muted">
+                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-theme-muted">
                       Create, edit, and delete activity for this item will appear here as the record changes.
                     </p>
                   </div>

@@ -2869,4 +2869,68 @@ changed. All 5 call sites' props are unchanged.
 
 ---
 
+## Full item page — dead space, duplication, oversized type (backlog §16E)  *(Complete)*
+
+**Scope:** Founder's note: the full item page "needs a new layout — text too large, dead space on
+the left." Both complaints turned out to have concrete, measurable causes — plus four content
+duplications found while auditing that nobody had listed.
+
+**"Dead space on the left" — measured, not guessed.** The image panel was a **fixed-height** box
+(`h-[240px]`/`sm:h-[300px]`, `min-h-[260px]`/`sm:min-h-[320px]`) stretched across the full width of
+the left grid column, producing a **547×300px area — a ~1.82:1 letterbox**. Product photos are not
+that shape. Checked two real photos from the workspace's own Supabase storage: `1200×900` (4:3) and
+`360×206`. With `object-contain`, a 4:3 photo in a 1.82:1 frame pillarboxes to **~27% empty space**,
+and a portrait phone photo would waste **~59%**. That mismatch *is* the dead space — the frame's
+shape, not a rendering bug.
+**Fix:** the frame is now sized by `aspect-[4/3]` (the common case) inside a `max-w-[26rem]`
+centered container, instead of a fixed pixel height stretched to the column's width.
+**Measured after: image area 547×300 (1.82:1) → 382×287 (1.331:1); waste for a 4:3 photo ~27% → 0%.**
+
+**Four duplications removed (all verified live in the rendered page text, not just read in source):**
+1. The item name rendered **twice** — the page `<h1>` and again as "PRODUCT / {name}" a few hundred
+   px below. Dropped the second; the Low Stock badge (the only thing that row actually added) now
+   sits inline with the section label.
+2. "Item QR Code" appeared **twice** — as the section eyebrow and again as an `<h3>` below the code.
+3. Two sentences under the QR said the same thing ("Scan to open this public item page." / "This QR
+   opens the public item page."). Collapsed to one.
+4. The Stock & Unit section showed the quantity as its own `<h3>`, then repeated the identical value
+   in a "Current stock" `DetailCard` directly beneath it. Removed the card; Minimum stock is the
+   only fact that row adds.
+
+**"Text too large":** section `<h2>`s went `text-2xl` → `text-xl`, row `<h3>`s `text-xl` →
+`text-lg`, the Before/Change/After and Old/New quantity figures `text-2xl` → `text-xl` with padding
+`p-4` → `p-3`, and empty-state headings `text-2xl` → `text-xl` with body copy `text-base/leading-7`
+→ `text-sm/leading-6`. Checked the page `<h1>` **against the Inventory list page's own hero-title
+convention** (`.inventory-hero-title`, `clamp(1.75rem, 2.2vw, 2.25rem)`) before touching it — it
+already matches, so it was **left alone**; the oversized type was inside the sections, not the title.
+
+**Also fixed while in here — first-letter avatars replaced with real icons.** Stock Movements and
+Item History rows identified each event with a single letter ("S" for Stock In, "C" for Created) —
+ambiguous (Stock In/Stock Out both start with S), and a third hand-rolled version of the same idea
+the Activity page and the item slide-over already solved properly. Now uses `UiIcon` with
+`getActivityEventIcon`/`getActivityEventTone` from `app/lib/activityFeed.ts` — **pure presentation
+helpers only, not its data-fetching**, the same boundary already recorded in the decision log for
+this file family. Icon badges 11×11 → 10×10 to match the reduced type scale. Empty-state "0"
+circles became the matching icons too.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37) · live at
+**1440px** and **375px** (no horizontal overflow at either): confirmed all four duplications gone
+from the rendered page text, confirmed the new image ratio by measurement, confirmed the icon rows
+render real tone-colored icons. Re-tested the **`?action=edit` route mode** on this same page
+(shares the component, edited around it) — the full edit form still renders and the "Back to Item
+Details" path is intact.
+
+**Untouchables:** no auth, Supabase queries, schema, routing, or business-logic changes. Every
+handler (`handleUpdateItem`, `handleRecordMovement`, `deleteItem`, `copyQrLink`, `downloadQrCode`),
+all data loading, and the edit/movement/delete modals are unmodified — presentation only.
+
+**Not done here:** the `/dashboard/activity` page and this page still duplicate the same
+movement-row markup a third time; extracting one shared `<ActivityRow>` component is the real
+cleanup but it spans three surfaces and deserves its own pass rather than being smuggled into a
+§16E layout fix. The local dev TLS issue that breaks `next/image` for Supabase-hosted photos is
+still environment-only (raw Supabase URLs fetch fine; the optimizer's outbound fetch 500s) — no
+code change, production unaffected.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

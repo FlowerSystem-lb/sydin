@@ -215,7 +215,9 @@ them. **Next action: item 3 (Dashboard).** He will open a new session and say "s
 **Already done from this list:** F (white page background) · 4 (dialogs opening half off-screen —
 root cause was `.dashboard-route-transition` retaining a transform via `animation-fill-mode: both`,
 which broke `position: fixed` app-wide) · the `flwow` → `Flower` category typo · **A / B / G**
-(inventory three-tier toolbar, 2026-08-06 — see the sub-list below).
+(inventory three-tier toolbar, 2026-08-06) · **D** (item quick preview, 2026-08-10) · **E** (full
+item page, 2026-08-11) — see the sub-list below. **C is now unblocked** and needs his Pinterest
+references before it starts.
 
 ### 3. Dashboard — **next up, his stated priority**
 "Finish the full Dashboard page, start finishing and deploying each page. Dashboard should connect
@@ -250,8 +252,9 @@ is visible immediately. Same effort, cannot scramble.
   The ~5-row stack was two rules firing together at ~1070px — a viewport `@media` and a `@container`
   rule disagreeing about the width. Measured 1070×800: toolbar **252px → 114px**, control rows
   **4 → 1**. All inventory-layout thresholds are now `@container`.
-- **C.** New card design sourced from the web. **Deferred** — cards were just made uniform; revisit
-  after D/E. He offered to send Pinterest references; ask for them at that point.
+- **C.** New card design sourced from the web. **Deferred, now unblocked** — the deferral condition
+  was "revisit after D/E," and both D (2026-08-10) and E (2026-08-11) are now done. He offered to
+  send Pinterest references; **ask for them before starting this one.**
 - **D. Done (2026-08-10).** Regrouped the flat 14-row Details tab into Identity · Stock & Unit ·
   Supplier · Pricing & Value · Tracking Codes, mirroring the order already established on the full
   item page — that's the "more classic, reorganised" part. Adjust Stock moved below the fact groups
@@ -261,7 +264,15 @@ is visible immediately. Same effort, cannot scramble.
   Inventory grid opens this preview instead of the card's menu — the click reaches the card button
   underneath it. Pre-existing, spotted 2026-08-06, lives in the Inventory grid/card component, not
   in the slide-over touched here.)*
-- **E.** Full item page needs a new layout — text too large, dead space on the left.
+- **E. Done (2026-08-11).** The "dead space" was measurable: the image panel was a fixed-height box
+  stretched across its column into a **~1.82:1 letterbox**, so a real 4:3 product photo pillarboxed
+  to **~27% empty space** (a portrait phone photo, ~59%). Reframed to `aspect-[4/3]` capped at 26rem
+  — **waste for a 4:3 photo ~27% → 0%**. Section headings/figures scaled down one step (the page
+  `<h1>` was checked against the Inventory hero convention and left alone — it already matched).
+  Also removed **four content duplications** found in the audit: the item name shown twice, "Item QR
+  Code" twice, two sentences saying the same thing under the QR, and the quantity repeated as a
+  "Current stock" card right under the heading already showing it. First-letter avatars ("S", "C")
+  in Stock Movements / Item History replaced with real tone-colored icons.
 - **G. Done (2026-08-06).** Menu = Import inventory → the wizard · Export CSV / PDF / Excel → the
   in-page exports · **Import & export history** → `/dashboard/import-export` (new link). The menu does
   not route *through* that page: it is a history log whose own Export button is disabled with the note
