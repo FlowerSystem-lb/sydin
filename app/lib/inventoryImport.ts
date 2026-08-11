@@ -47,7 +47,10 @@ export interface ParsedInventoryRow {
 
 export interface ParsedInventoryFile {
   fileName: string;
-  format: "CSV" | "Excel";
+  // "Scan" (backlog item 2, part 2): POS-style batch barcode add feeds rows
+  // into this same shape so it reuses the review/validate/photo/import
+  // pipeline below unchanged — no separate save path.
+  format: "CSV" | "Excel" | "Scan";
   totalRows: number;
   skippedEmptyRows: number;
   rows: ParsedInventoryRow[];

@@ -242,7 +242,7 @@ same-item rule, enforced. Inventory's own Scan button no longer dead-ends on an 
 with the code carried over. `/dashboard/scanner` itself was not touched, per standing instruction.
 **Still open:** manually *typing* a duplicate barcode isn't checked yet — only the scan path is.
 
-### 2. Batch add + Excel import with photos  *(P2 — biggest, do last)* — **Half done (2026-08-11)**
+### 2. Batch add + Excel import with photos  *(P2 — biggest, do last)* — **Done (2026-08-11)**
 POS-style batch adding of several items by barcode, plus batch photo upload for several items at
 once, compounded with the Excel import.
 
@@ -251,12 +251,13 @@ instead of name shifts every subsequent photo onto the wrong item, silently. **M
 against the SKU in the row** (`FP007.jpg` → row with SKU FP007) — order-independent, and a mismatch
 is visible immediately. Same effort, cannot scramble.
 
-**Done:** the Excel/CSV import already existed (a full wizard at `/dashboard/inventory/import`) and
-needed no rebuilding. Added the missing photo half exactly to this spec — filename-to-SKU matching,
-never by order, with every non-match (no SKU match / duplicate SKU claim / wrong file type) reported
-by filename, not hidden. A failed photo upload doesn't block the item's import.
-**Not done:** POS-style batch adding by barcode — a rapid-scan loop that builds a list before saving
-anything, distinct from the file-upload flow above. Still open.
+The Excel/CSV import already existed (a full wizard at `/dashboard/inventory/import`) and needed no
+rebuilding. Added: filename-to-SKU photo matching, never by order, with every non-match (no SKU
+match / duplicate SKU claim / wrong file type) reported by filename, not hidden — a failed photo
+upload doesn't block the item's import. And a "Start Scanning" entry point on the same page: scan
+several new items POS-style, name each one, then continue straight into the same review/import flow
+the Excel path uses — one save path, two ways in. A scanned code that already matches an existing
+item is skipped, never duplicated, same rule as item 1.
 
 ### Inventory sub-list
 - **A. Done (2026-08-06).** Page actions sit in the page header: **Add item** filled, **Scan** and **⋯**

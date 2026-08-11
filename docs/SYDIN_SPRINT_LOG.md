@@ -3084,4 +3084,64 @@ import, not yet started.
 
 ---
 
+## POS-style batch barcode add (backlog item 2, part 2 of 2)  *(Complete — item 2 fully done)*
+
+**Scope:** the remaining half of item 2 — "POS-style batch adding of several items by barcode,"
+compounded with the Excel import pipeline built in part 1.
+
+**Design, decided before writing code:** rather than build a second save path, batch-scanned rows
+are converted into the exact same `ParsedInventoryFile`/`ParsedInventoryRow` shape the CSV/Excel
+path already produces, then handed to the same `setParsedFile(...)` call. Everything downstream —
+validation, the review table, plan-limit checks, the photo-matching step from part 1, the
+confirm-import logic — runs completely unchanged. This is "compounded with the Excel import" taken
+literally: one save path, two ways in.
+
+**Reused, not touched:** `BarcodeScannerView`'s existing `continuous` mode (already built for the
+Scanner Workspace's repeated-scan modes — this is now its third consumer, alongside Inventory's
+`ScannerModal` and the Scanner Workspace itself) and `resolveScannedCode()` (same shared resolution
+every scan surface in the app uses). `/dashboard/scanner` itself was not touched.
+
+**Duplicate prevention, same rule as item 1:** a scanned code is checked against a lean snapshot of
+existing inventory (fetched once when the scan panel opens, not per scan — a real POS burst can be
+many codes in a few seconds) before it's allowed to become a new row. A match is logged as
+"skipped — already in your inventory" (with a running count if scanned repeatedly) rather than
+creating a duplicate, and — deliberately — does **not** interrupt the scan burst with a dialog.
+Scanning the *same new* code twice increments that row's quantity instead of creating a second row.
+
+**The one thing that couldn't come from the code alone:** a barcode gives no name, and the shared
+review table has no inline cell editing (a CSV error is fixed by editing the file and re-uploading —
+there's no "file" here to edit). So the scan panel has its own small editable list (Name required,
+Quantity editable, Barcode read-only) that must be filled in before "Continue to Review" unlocks —
+this is genuinely new UI, not reused from the import table.
+
+**Delivered:**
+- **`app/lib/inventoryImport.ts`** — `ParsedInventoryFile.format` gained a third value, `"Scan"`,
+  alongside `"CSV"` and `"Excel"` (additive; existing two values and every existing caller
+  unaffected).
+- **`app/dashboard/inventory/import/page.tsx`** — a "Start Scanning" entry point beside the
+  file-upload dropzone; a two-pane modal (camera + running list) using `BarcodeScannerView` in
+  `continuous` mode directly (not `ScannerModal` — its chrome doesn't fit a camera-plus-list
+  layout, so this follows the Scanner Workspace's own pattern of composing the lower-level
+  component directly); the format label in the Review step now reads "Scanned batch" instead of
+  the CSV/Excel-oriented text when applicable.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37). Live-tested
+opening the panel: confirmed the existing-items duplicate-check query completes before the panel is
+allowed to open (proven by the code path — the modal only opens inside the success branch, after
+the query), confirmed the empty state, confirmed close/reopen, confirmed no new console or network
+errors beyond the already-known unrelated local image-optimizer issue. **Not exercised**: an actual
+camera decode end-to-end — this sandboxed test browser has no camera, the same disclosed limitation
+as every other scan feature tested this session. The decode-handling logic itself
+(`handleBatchDecode`) is synchronous, has no I/O, and was verified by code review and type-checking;
+its correctness doesn't depend on the camera, only on `resolveScannedCode`, which is unmodified and
+already proven elsewhere.
+
+**Untouchables:** no changes to `/dashboard/scanner`, `resolveScannedCode`, or the CSV/Excel
+validation/import logic — only additive code and one additive type-union member.
+
+**Item 2 is now fully done**, both halves. Remaining from the founder's original list: item 3
+(Dashboard, blocked on real usage data) and Notification Center.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

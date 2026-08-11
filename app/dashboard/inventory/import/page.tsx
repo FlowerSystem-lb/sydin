@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import UiIcon from "@/components/UiIcon";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import BarcodeScannerView, {
+  type ScannerViewStatus,
+} from "@/components/scanner/BarcodeScannerView";
 import {
   ActionButton,
   DashboardPageHeader,
@@ -30,9 +33,11 @@ import {
   validateInventoryImportRows,
   type InventoryImportValidation,
   type ParsedInventoryFile,
+  type ParsedInventoryRow,
 } from "@/app/lib/inventoryImport";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { logImportExport } from "@/app/lib/importExportHistory";
+import { resolveScannedCode, type ScannableItem } from "@/app/lib/scannerResolve";
 import { supabase } from "@/app/lib/supabase";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -49,6 +54,29 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
+
+// backlog item 2, part 2: POS-style batch barcode add. Minimal shape for
+// checking a scanned code against existing inventory before it's allowed
+// to become a new batch row — same duplicate-prevention boundary as the
+// Add Item scan feature (see the "same barcode = same item" decision log
+// entry), reusing resolveScannedCode() rather than inventing new matching.
+interface BatchScanCandidateItem extends ScannableItem {
+  id: number;
+  name: string;
+}
+
+interface BatchScanRow {
+  id: string;
+  barcode: string;
+  name: string;
+  quantity: number;
+}
+
+interface BatchScanSkipped {
+  barcode: string;
+  name: string;
+  count: number;
+}
 
 function formatFileSize(size: number) {
   if (size < 1024 * 1024) {
@@ -140,6 +168,21 @@ export default function InventoryImportPage() {
     photosAttached: number;
     photosFailed: number;
   } | null>(null);
+
+  // backlog item 2, part 2: POS-style batch barcode add.
+  const [isBatchScanOpen, setIsBatchScanOpen] = useState(false);
+  const [isBatchScanLoading, setIsBatchScanLoading] = useState(false);
+  const [batchExistingItems, setBatchExistingItems] = useState<
+    BatchScanCandidateItem[]
+  >([]);
+  const [batchRows, setBatchRows] = useState<BatchScanRow[]>([]);
+  const [batchSkipped, setBatchSkipped] = useState<BatchScanSkipped[]>([]);
+  const [batchScanStatus, setBatchScanStatus] = useState<ScannerViewStatus>({
+    starting: false,
+    status: "",
+    error: "",
+  });
+  const [batchScanRetryNonce, setBatchScanRetryNonce] = useState(0);
 
   useEffect(() => {
     let isActive = true;
@@ -265,6 +308,162 @@ export default function InventoryImportPage() {
     );
   };
 
+  // backlog item 2, part 2: POS-style batch barcode add. Opens the scan
+  // panel; fetches a lean existing-items snapshot once, up front, so every
+  // decode in the session can be checked against it without a query per
+  // scan (a real POS scan burst can be many codes in a few seconds).
+  const openBatchScan = async () => {
+    if (isBatchScanLoading) return;
+
+    try {
+      setIsBatchScanLoading(true);
+      setPageError("");
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setPageError("Please sign in again before scanning items.");
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("inventory")
+        .select("id, name, sku, barcode, public_id")
+        .eq("user_id", user.id);
+
+      if (error) {
+        setPageError(
+          "We could not check your existing inventory for duplicates. Please try again."
+        );
+        return;
+      }
+
+      setBatchExistingItems((data as BatchScanCandidateItem[]) || []);
+      setBatchRows([]);
+      setBatchSkipped([]);
+      setBatchScanStatus({ starting: false, status: "", error: "" });
+      setIsBatchScanOpen(true);
+    } finally {
+      setIsBatchScanLoading(false);
+    }
+  };
+
+  const closeBatchScan = () => setIsBatchScanOpen(false);
+
+  const retryBatchScan = () => {
+    setBatchScanStatus({ starting: true, status: "Starting camera...", error: "" });
+    setBatchScanRetryNonce((current) => current + 1);
+  };
+
+  // Same duplicate-prevention boundary as the Add Item scan feature: a code
+  // that already belongs to an item is never added as a new row — it's
+  // logged as skipped instead, so the person scanning sees why nothing new
+  // appeared without the scan burst being interrupted by a dialog.
+  const handleBatchDecode = (scannedValue: string) => {
+    const scannedText = scannedValue.trim();
+    if (!scannedText) return;
+
+    const resolution = resolveScannedCode(scannedText, batchExistingItems);
+
+    if (resolution.kind === "item" || resolution.kind === "ambiguous") {
+      const existingName =
+        resolution.kind === "item"
+          ? resolution.item.name || "Existing item"
+          : `${resolution.items.length} items share this code`;
+
+      setBatchSkipped((current) => {
+        const index = current.findIndex((row) => row.barcode === scannedText);
+        if (index >= 0) {
+          const next = [...current];
+          next[index] = { ...next[index], count: next[index].count + 1 };
+          return next;
+        }
+        return [...current, { barcode: scannedText, name: existingName, count: 1 }];
+      });
+      return;
+    }
+
+    setBatchRows((current) => {
+      const index = current.findIndex((row) => row.barcode === scannedText);
+      if (index >= 0) {
+        const next = [...current];
+        next[index] = { ...next[index], quantity: next[index].quantity + 1 };
+        return next;
+      }
+      return [
+        ...current,
+        { id: crypto.randomUUID(), barcode: scannedText, name: "", quantity: 1 },
+      ];
+    });
+  };
+
+  const updateBatchRowName = (id: string, name: string) => {
+    setBatchRows((current) =>
+      current.map((row) => (row.id === id ? { ...row, name } : row))
+    );
+  };
+
+  const updateBatchRowQuantity = (id: string, quantity: number) => {
+    setBatchRows((current) =>
+      current.map((row) =>
+        row.id === id
+          ? { ...row, quantity: Number.isFinite(quantity) ? quantity : row.quantity }
+          : row
+      )
+    );
+  };
+
+  const removeBatchRow = (id: string) => {
+    setBatchRows((current) => current.filter((row) => row.id !== id));
+  };
+
+  const canContinueBatch =
+    batchRows.length > 0 && batchRows.every((row) => row.name.trim().length > 0);
+
+  // The hand-off: batch rows become the same ParsedInventoryFile shape the
+  // CSV/Excel path produces, so everything downstream — validation, the
+  // review table, plan-limit checks, the photo step, the confirm-import
+  // logic — runs completely unchanged. This is the "compounded with the
+  // Excel import" part of the spec, literally: one save path, two ways in.
+  const continueBatchToReview = () => {
+    if (!canContinueBatch) return;
+
+    const rows: ParsedInventoryRow[] = batchRows.map((row, index) => ({
+      rowNumber: index + 2,
+      values: {
+        name: row.name.trim(),
+        sku: "",
+        category: "",
+        quantity: String(row.quantity),
+        depot: "",
+        notes: "",
+        unit_type: "",
+        custom_unit_label: "",
+        cost_price: "",
+        selling_price: "",
+        min_stock_level: "",
+        barcode: row.barcode,
+      },
+    }));
+
+    setSelectedFile(null);
+    setFileError("");
+    setPageError("");
+    setSuccess(null);
+    clearPhotos();
+    setParsedFile({
+      fileName: "Scanned barcodes",
+      format: "Scan",
+      totalRows: rows.length,
+      skippedEmptyRows: 0,
+      rows,
+      ignoredItemCodeColumn: false,
+    });
+    setIsBatchScanOpen(false);
+  };
+
   const resetImport = () => {
     setSelectedFile(null);
     setParsedFile(null);
@@ -272,6 +471,8 @@ export default function InventoryImportPage() {
     setPageError("");
     setSuccess(null);
     clearPhotos();
+    setBatchRows([]);
+    setBatchSkipped([]);
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -785,6 +986,34 @@ export default function InventoryImportPage() {
                   </p>
                 )}
               </section>
+
+              {/* backlog item 2, part 2: POS-style batch barcode add — a
+                  second way into the same review/import pipeline above,
+                  for adding several new items by scanning rather than by
+                  file. */}
+              <section className="rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-6">
+                <div className="flex flex-col items-center gap-3 text-center">
+                  <span className="flex h-14 w-14 items-center justify-center rounded-2xl border border-emerald-300/25 bg-emerald-500/15 text-theme-success">
+                    <UiIcon name="scan" className="h-6 w-6" />
+                  </span>
+                  <h2 className="text-xl font-bold text-theme-primary">
+                    Or add items by scanning barcodes
+                  </h2>
+                  <p className="max-w-lg text-sm leading-6 text-theme-muted">
+                    Scan several new items in a row, POS-style. Each new code becomes a row here —
+                    scanning the same code again just adds to its quantity. A code that already
+                    belongs to an item in your inventory is skipped, never duplicated.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => void openBatchScan()}
+                    disabled={isBatchScanLoading}
+                    className="mt-1 rounded-xl border border-emerald-300/25 bg-emerald-500/10 px-5 py-3 text-sm font-black text-theme-success transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    {isBatchScanLoading ? "Preparing scanner..." : "Start Scanning"}
+                  </button>
+                </div>
+              </section>
             </>
           ) : validation ? (
             <>
@@ -792,14 +1021,21 @@ export default function InventoryImportPage() {
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0">
                     <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
-                      File ready for review
+                      {parsedFile.format === "Scan"
+                        ? "Scanned items ready for review"
+                        : "File ready for review"}
                     </p>
                     <h2 className="mt-2 break-words text-2xl font-bold text-theme-primary">
                       {parsedFile.fileName}
                     </h2>
                     <p className="mt-2 text-sm text-theme-muted">
-                      {parsedFile.format} file | {parsedFile.totalRows} parsed row
-                      {parsedFile.totalRows === 1 ? "" : "s"} | {parsedFile.skippedEmptyRows} empty skipped
+                      {parsedFile.format === "Scan"
+                        ? `Scanned batch | ${parsedFile.totalRows} item${
+                            parsedFile.totalRows === 1 ? "" : "s"
+                          }`
+                        : `${parsedFile.format} file | ${parsedFile.totalRows} parsed row${
+                            parsedFile.totalRows === 1 ? "" : "s"
+                          } | ${parsedFile.skippedEmptyRows} empty skipped`}
                     </p>
                   </div>
 
@@ -1438,6 +1674,172 @@ export default function InventoryImportPage() {
             <p className="mt-3 text-sm leading-6 text-theme-muted">
               Keep this page open while SydIN safely creates the inventory records.
             </p>
+          </div>
+        </div>
+      )}
+
+      {isBatchScanOpen && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+          <div className="my-8 w-full max-w-3xl overflow-hidden rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(15,23,42,0.28)] backdrop-blur-2xl">
+            <div className="flex items-start justify-between gap-4 border-b border-theme p-5 sm:p-6">
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-success">
+                  Batch add
+                </p>
+                <h2 className="mt-2 text-2xl font-bold tracking-tight text-theme-primary sm:text-3xl">
+                  Scan items to add
+                </h2>
+                <p className="mt-2 max-w-md text-sm leading-6 text-theme-muted">
+                  Keep scanning — each new code adds a row below. Close this when you&apos;re done.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeBatchScan}
+                className="shrink-0 rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
+                aria-label="Close scanner"
+              >
+                <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 18 18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-5 p-5 sm:p-6 lg:grid-cols-[minmax(0,20rem)_minmax(0,1fr)]">
+              <div>
+                <BarcodeScannerView
+                  key={batchScanRetryNonce}
+                  active={isBatchScanOpen}
+                  continuous
+                  onDecode={handleBatchDecode}
+                  onStatusChange={setBatchScanStatus}
+                  readyStatus="Scan the next item."
+                  className="overflow-hidden rounded-[24px] border border-[#2563eb]/20 bg-black"
+                />
+                <div
+                  className="mt-3 rounded-2xl border border-theme bg-theme-surface px-4 py-3"
+                  role="status"
+                  aria-live="polite"
+                >
+                  {batchScanStatus.error ? (
+                    <p className="text-sm font-semibold text-theme-danger">
+                      {batchScanStatus.error}
+                    </p>
+                  ) : (
+                    <p className="text-sm font-semibold text-theme-secondary">
+                      {batchScanStatus.starting
+                        ? "Starting camera..."
+                        : batchScanStatus.status || "Point the camera at a code."}
+                    </p>
+                  )}
+                </div>
+                {batchScanStatus.error && (
+                  <button
+                    type="button"
+                    onClick={retryBatchScan}
+                    className="mt-3 w-full rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                  >
+                    Try Again
+                  </button>
+                )}
+
+                {batchSkipped.length > 0 && (
+                  <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-500/10 p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-warning">
+                      Skipped — already in your inventory
+                    </p>
+                    <ul className="mt-2 flex flex-col gap-1">
+                      {batchSkipped.map((skip) => (
+                        <li key={skip.barcode} className="text-xs text-theme-secondary">
+                          {skip.name}
+                          {skip.count > 1 ? ` (scanned ${skip.count}×)` : ""}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex min-h-0 flex-col">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
+                    New items ({batchRows.length})
+                  </p>
+                </div>
+
+                {batchRows.length === 0 ? (
+                  <div className="mt-3 flex flex-1 flex-col items-center justify-center rounded-2xl border border-dashed border-theme bg-theme-inset px-5 py-10 text-center">
+                    <UiIcon name="scan" className="h-6 w-6 text-theme-subtle" />
+                    <p className="mt-3 text-sm font-semibold text-theme-secondary">
+                      Scanned items will appear here
+                    </p>
+                    <p className="mt-1 text-xs text-theme-subtle">
+                      Each one needs a name before you can continue.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="mt-3 flex-1 space-y-2 overflow-y-auto pr-1" style={{ maxHeight: "22rem" }}>
+                    {batchRows.map((row) => (
+                      <div
+                        key={row.id}
+                        className={`rounded-2xl border p-3 ${
+                          row.name.trim()
+                            ? "border-theme bg-theme-inset"
+                            : "border-amber-300/30 bg-amber-500/10"
+                        }`}
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="truncate font-mono text-xs text-theme-subtle">
+                            {row.barcode}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => removeBatchRow(row.id)}
+                            className="shrink-0 text-xs font-bold text-theme-muted hover:text-theme-danger"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div className="mt-2 grid grid-cols-[minmax(0,1fr)_5rem] gap-2">
+                          <input
+                            type="text"
+                            value={row.name}
+                            onChange={(event) =>
+                              updateBatchRowName(row.id, event.target.value)
+                            }
+                            placeholder="Item name *"
+                            className="min-h-10 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50"
+                          />
+                          <input
+                            type="number"
+                            min="1"
+                            step="1"
+                            value={row.quantity}
+                            onChange={(event) =>
+                              updateBatchRowQuantity(row.id, Number(event.target.value))
+                            }
+                            className="min-h-10 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50"
+                          />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={continueBatchToReview}
+                  disabled={!canContinueBatch}
+                  className="mt-4 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  {batchRows.length === 0
+                    ? "Scan an item to continue"
+                    : canContinueBatch
+                      ? `Continue to Review (${batchRows.length})`
+                      : "Name every item to continue"}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
