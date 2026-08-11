@@ -238,3 +238,32 @@ missing a cost price, items with no movement history), which is true today and i
 unlocks the predictive metrics later. **Revisit** after ~2–3 months of real operating use, when
 there is genuine movement history. **Next work instead:** backlog §16 items A/B/G (inventory
 header, button ordering, three-dot menu), which need no data maturity. **Status:** Active.
+
+### 2026-08-11 · A scanned code matching an existing item never creates a duplicate — it points at it
+**Decision:** Anywhere a scan can lead to creating a new item, resolving the code against existing
+inventory first is mandatory, and a match **blocks** creation rather than silently prefilling a
+duplicate. **Why:** the founder specified this himself when approving barcode-scan-to-add ("a
+barcode identifies a product type, not a physical unit, so 'same barcode = same item' is right for
+inventory") — this is implementing his own stated rule, not a judgment call. **How it's
+implemented:** `app/dashboard/add-item/page.tsx`'s scan handler queries a lean candidate list and
+runs it through the existing `resolveScannedCode()` (`app/lib/scannerResolve.ts`, unmodified) before
+ever touching the Barcode field's value — `kind: "item"` shows a link to the existing item instead
+of filling the field. **Scope note:** this check currently runs only on the **scan** path; manually
+*typing* a barcode that happens to match an existing item is still unchecked (pre-existing gap, not
+introduced here). Extending the same `resolveScannedCode` check to manual entry (e.g. on blur) would
+directly serve this same decision and is a reasonable small follow-up — do it as its own explicit
+step, not folded silently into an unrelated change. **Status:** Active.
+
+### 2026-08-11 · Scanner Workspace stays off-limits; new scan entry points build on the layer below it
+**Decision:** "Leave the Scanner page alone" means the `/dashboard/scanner` route/page and its 8
+modes specifically — it does **not** mean scanning capability can't be added anywhere else. New
+scan-driven features should build on `components/scanner/BarcodeScannerView.tsx` (camera/decode) and
+`components/scanner/ScannerModal.tsx` (the generic modal wrapper already decoupled from the Scanner
+Workspace, already used by Inventory's own Scan button) plus `app/lib/scannerResolve.ts`'s
+`resolveScannedCode()` — all three already existed and were already used somewhere other than
+`/dashboard/scanner` before this decision, confirmed by reading the code rather than assumed. The
+barcode-scan-to-add-item feature (backlog item 1) added a new call site on the Add Item page to
+these existing pieces; it added zero lines to `/dashboard/scanner/page.tsx`. **How to apply:**
+before concluding a scan-related request requires touching the Scanner Workspace, check whether the
+underlying camera/decode/resolve pieces are already reusable independently — they usually are.
+**Status:** Active.

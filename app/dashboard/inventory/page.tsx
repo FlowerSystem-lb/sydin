@@ -930,9 +930,17 @@ export default function InventoryPage() {
       return;
     }
 
-    setSearch(resolution.query);
-    setPageNotice("No exact match found. Showing search results for the scanned code.");
+    // backlog item 1 (P1, approved): a code that matches nothing used to
+    // fall back to a search that was guaranteed to show zero results — a
+    // dead end. Per the approved spec ("scan the barcode... then fill in the
+    // rest"), route straight into Add Item with the code prefilled instead
+    // of leaving the user at an empty results page.
     closeScanner();
+    router.push(
+      `/dashboard/add-item?barcode=${encodeURIComponent(
+        resolution.query
+      )}&returnTo=${encodeURIComponent("/dashboard/inventory")}`
+    );
   }, [closeScanner, items, router]);
 
   const openEditModal = (item: Item) => {

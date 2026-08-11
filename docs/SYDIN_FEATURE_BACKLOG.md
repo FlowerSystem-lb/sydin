@@ -229,10 +229,18 @@ Approach agreed before writing code:
 2. **Every card links to its filtered view** — that is the "connect from all the pages" part.
 3. Design last, not first.
 
-### 1. Add items by barcode scan  *(P1 — approved)*
+### 1. Add items by barcode scan  *(P1 — approved)* — **Done (2026-08-11)**
 Scan the QR/barcode printed on the carton, then fill in the rest (photo, cost, details). Manual
 entry of the number as a fallback. Correct as specified: a barcode identifies a **product type**,
 not a physical unit, so "same barcode = same item" is right for inventory.
+
+Add Item gained a **Scan** button next to the manual Barcode field (opens the same scanner modal
+Inventory already uses). A code that matches nothing pre-fills the field; a code that already
+belongs to an item shows a link to that item instead of creating a duplicate — the same-barcode-
+same-item rule, enforced. Inventory's own Scan button no longer dead-ends on an unmatched code
+(it used to fall back to a search guaranteed to find nothing); it now routes straight into Add Item
+with the code carried over. `/dashboard/scanner` itself was not touched, per standing instruction.
+**Still open:** manually *typing* a duplicate barcode isn't checked yet — only the scan path is.
 
 ### 2. Batch add + Excel import with photos  *(P2 — biggest, do last)*
 POS-style batch adding of several items by barcode, plus batch photo upload for several items at

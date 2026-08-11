@@ -2933,4 +2933,84 @@ code change, production unaffected.
 
 ---
 
+## Add items by barcode scan (backlog item 1, P1 — approved)  *(Complete)*
+
+**Scope:** "Scan the QR/barcode printed on the carton, then fill in the rest (photo, cost,
+details). Manual entry of the number as a fallback." Founder also specified the exact business
+rule up front: "a barcode identifies a product type, not a physical unit, so 'same barcode = same
+item' is right for inventory" — i.e. scanning a code that already belongs to an item must not
+create a duplicate.
+
+**Constraint respected:** "Scanner page: he likes it as-is — leave it alone." `/dashboard/scanner`
+(the Scanner Workspace, its 8 modes) was **not touched**. Confirmed before writing any code that
+the reusable scanning pieces already live one layer below that page:
+`components/scanner/BarcodeScannerView.tsx` (camera/decode) and
+`components/scanner/ScannerModal.tsx` (a generic modal wrapper around it, already used by
+Inventory's own "Scan" button, decoupled from the Scanner Workspace entirely) — plus
+`app/lib/scannerResolve.ts`'s `resolveScannedCode()`, the pure function every scan surface in the
+app already uses to interpret a code. This feature adds new call sites to existing shared pieces;
+it does not add new scanning infrastructure or touch the Scanner Workspace page.
+
+**The gap, found by audit:** every existing scan surface's "nothing matched this code" path was a
+dead end. Scanner Workspace's Lookup mode showed "No matching item" with only a "Scan again"
+button. Inventory's own Scan button fell back to a text search that was *guaranteed* to show zero
+results (searching for a raw barcode as text finds nothing). Neither offered a way to actually add
+the scanned item.
+
+**Delivered:**
+- **`app/dashboard/add-item/page.tsx`** — new "Scan" button next to the manual Barcode field,
+  opening the same `ScannerModal` Inventory already uses. On decode: fetches a lean candidate list
+  (`id, name, sku, barcode, public_id`) for the signed-in user and runs it through the same
+  `resolveScannedCode()` every other surface uses — no new resolution logic. `kind: "none"` → fills
+  the Barcode field and shows a success notice. `kind: "item"` → does **not** fill the field;
+  shows "This code already belongs to '{name}'" with a link to that item, per the founder's own
+  same-barcode-same-item rule. `kind: "ambiguous"` → tells the user multiple items already share
+  it. Gated behind the existing `scanner` plan capability, reusing the same `LockedActionLabel` /
+  `UpgradeDialog` pattern Inventory and Scanner already use — no new gating mechanism.
+  Also added `?barcode=` deep-link support (mirroring the existing `?category=` pattern on this
+  same page) so a code resolved as new *elsewhere* arrives here pre-filled.
+- **Found and fixed while wiring the deep link:** a scanned barcode arriving via URL landed in
+  form state correctly but was **invisible** — the Tracking Codes field sits behind two nested
+  disclosures (the page's own "Add Optional Details" toggle, then the Tracking Codes section's own
+  native `<details>`), both closed by default. Added a `defaultOpen` prop to the shared
+  `DisclosureSection` helper and an `arrivedFromScan` flag so both auto-expand specifically when a
+  barcode arrives from a scan — the other 4 sections keep their default-closed behavior unchanged.
+- **`app/dashboard/inventory/page.tsx`** — `handleScannedText`'s `kind === "none"` branch no longer
+  runs a search known to return nothing; it now routes straight to
+  `/dashboard/add-item?barcode=<code>&returnTo=/dashboard/inventory`, matching the approved flow
+  ("scan... then fill in the rest") instead of leaving the user at an empty results page. The
+  `"ambiguous"` branch (multiple items already share a code) is untouched — there *is* useful data
+  to show there, so it still does.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37). Live at
+1440px and 375px (no horizontal overflow at either): confirmed the `?barcode=` deep link both
+pre-fills the field *and* auto-opens the two disclosures so it's actually visible; confirmed the
+success notice text and styling; confirmed the Scan button opens `ScannerModal` correctly labeled
+"Scan Barcode". The duplicate-detection branches (`kind: "item"` / `"ambiguous"`) were verified by
+setting a real duplicate barcode on an existing item (`test2`, id 27, cleaned up afterward — no
+data left changed) and by code review + type-checking, but **not exercised end-to-end live**: this
+sandboxed browser has no camera, so `BarcodeScannerView`'s decode callback can't fire here — the
+same disclosed limitation as the Inventory "Scan" button testing earlier this session. The
+resolution logic itself (`resolveScannedCode`) is unmodified and already proven correct in
+production by every other scan surface in the app.
+
+**Also found and fixed in passing, unrelated to this feature:** `/dashboard/inventory/[id]`
+briefly 404'd on direct navigation during testing. Traced to a stale Turbopack dev-server cache
+(a restart fixed it instantly; re-verified the full item page — §16E's work — rendered correctly
+afterward), not a code regression from any change in this repo.
+
+**Untouchables:** `/dashboard/scanner` (Scanner Workspace) untouched, per explicit instruction.
+`app/lib/scannerResolve.ts` unmodified — reused as-is. No auth, schema, or unrelated business-logic
+changes. The "ambiguous" and duplicate-item flows reuse existing plan-gating and existing routes;
+no new tables, columns, or endpoints.
+
+**Still open, not part of this pass:** manual barcode entry (typed, not scanned) still has zero
+duplicate-checking — only the new scan path checks. Extending the same check to manual entry would
+directly serve the same "same barcode = same item" principle and is a natural small follow-up, but
+it changes existing manual-entry behavior, so it wasn't bundled in unasked. Backlog items 2 (batch
+add + Excel import, P2, do last) and 3 (Dashboard, deferred pending real usage data) remain from
+the founder's original list.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

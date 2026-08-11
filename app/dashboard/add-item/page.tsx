@@ -8,6 +8,8 @@ import UiIcon from "@/components/UiIcon";
 import CategorySelector from "@/components/CategorySelector";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
 import Select from "@/components/ui/Select";
+import ScannerModal from "@/components/scanner/ScannerModal";
+import { LockedActionLabel, UpgradeDialog } from "@/components/UpgradePrompt";
 import {
   getCategoriesForUser,
   type Category,
@@ -27,6 +29,7 @@ import {
   normalizeCurrencyCode,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
+import { resolveScannedCode, type ScannableItem } from "@/app/lib/scannerResolve";
 import { supabase } from "@/app/lib/supabase";
 import {
   getSuppliersForUser,
@@ -36,10 +39,12 @@ import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
   getPlanLimitMessage,
+  getSubscriptionCapabilities,
   getSubscriptionUsage,
   getUpgradeActionLabel,
   getUpgradeRequestHref,
   type SubscriptionUsage,
+  type UpgradePlan,
 } from "@/app/lib/subscription";
 
 const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
@@ -49,6 +54,13 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
+
+// Minimal shape for the duplicate-barcode check — a leaner query than
+// loading the full inventory list this page has never needed before.
+interface ScanCandidateItem extends ScannableItem {
+  id: number;
+  name: string;
+}
 
 type FieldName =
   | "name"
@@ -191,15 +203,19 @@ function DisclosureSection({
   description,
   summary,
   children,
+  defaultOpen = false,
 }: {
   eyebrow: string;
   title: string;
   description: string;
   summary: string;
   children: ReactNode;
+  defaultOpen?: boolean;
 }) {
   return (
-    <details className="group overflow-hidden rounded-[18px] border border-theme bg-theme-surface">
+    <details
+      open={defaultOpen}
+      className="group overflow-hidden rounded-[18px] border border-theme bg-theme-surface">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 outline-none transition hover:bg-theme-hover focus-visible:ring-4 focus-visible:ring-indigo-400/20 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
           <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -274,6 +290,30 @@ export default function AddItemPage() {
   const [usageLoading, setUsageLoading] = useState(true);
   const [backLabel, setBackLabel] = useState("Back to Inventory");
   const [showAdvanced, setShowAdvanced] = useState(false);
+  // Set once, on mount, from the `?barcode=` deep link — drives the Tracking
+  // Codes section's initial open state so a scanned code is immediately
+  // visible instead of hidden behind two disclosure levels (Add Optional
+  // Details, then Tracking Codes itself).
+  const [arrivedFromScan, setArrivedFromScan] = useState(false);
+
+  // backlog item 1 (P1, approved): scan the barcode on the carton, then fill
+  // in the rest. `isScannerOpen` drives the shared ScannerModal (already used
+  // by Inventory's own Scan button — nothing new built here); `barcodeNotice`
+  // reports what the scan found; `lockedFeature` reuses the same
+  // plan-gate pattern Inventory/Scanner already use for this capability.
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isCheckingBarcode, setIsCheckingBarcode] = useState(false);
+  const [barcodeNotice, setBarcodeNotice] = useState<{
+    tone: "success" | "warning";
+    text: string;
+    existingItemId?: number;
+  } | null>(null);
+  const [lockedFeature, setLockedFeature] = useState<{
+    feature: string;
+    benefit: string;
+    requiredPlan: UpgradePlan;
+    source: string;
+  } | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -327,6 +367,22 @@ export default function AddItemPage() {
                 )
               ) {
                 setSelectedCategoryId(requestedCategoryId);
+              }
+              // Arriving from Inventory's Scan button after a code matched no
+              // existing item (see handleScannedText there) — the code was
+              // already resolved as new there, so it's trusted here as-is.
+              const requestedBarcode = navigationParams.get("barcode");
+              if (requestedBarcode) {
+                setBarcode(requestedBarcode);
+                setBarcodeNotice({
+                  tone: "success",
+                  text: `Barcode ${requestedBarcode} added from your scan. Fill in the rest below.`,
+                });
+                // Otherwise this lands in a field hidden behind two closed
+                // disclosures — the whole point of scanning first is seeing
+                // it landed.
+                setShowAdvanced(true);
+                setArrivedFromScan(true);
               }
               setCurrencyCode(loadedCurrency);
               setUsageLoading(false);
@@ -607,6 +663,106 @@ export default function AddItemPage() {
   };
 
   const currentPlanName = formatPlanName(subscriptionUsage.subscription.plan);
+  const planCapabilities = getSubscriptionCapabilities(
+    subscriptionUsage.subscription
+  );
+  const canUseScanner = Boolean(planCapabilities.scanner);
+
+  const openBarcodeScanner = () => {
+    if (!canUseScanner) {
+      setLockedFeature({
+        feature: "Barcode scanner",
+        benefit:
+          "Scan a product's barcode to fill it in instantly instead of typing it.",
+        requiredPlan: "Standard",
+        source: "add-item-scan",
+      });
+      return;
+    }
+
+    setBarcodeNotice(null);
+    setIsScannerOpen(true);
+  };
+
+  const closeBarcodeScanner = () => setIsScannerOpen(false);
+
+  // backlog item 1: "a barcode identifies a product type, not a physical
+  // unit, so 'same barcode = same item' is right for inventory." Scanning a
+  // code that already belongs to an item must not silently create a
+  // duplicate — it should point at the existing item instead. Reuses the
+  // same resolveScannedCode() every other scan surface in the app uses, so a
+  // code is interpreted identically everywhere; this page just adds a new
+  // call site, no new resolution logic.
+  const handleBarcodeScanned = async (scannedValue: string) => {
+    const scannedText = scannedValue.trim();
+    closeBarcodeScanner();
+
+    if (!scannedText) {
+      setBarcodeNotice({
+        tone: "warning",
+        text: "We could not read that code. Try scanning again, or type it in below.",
+      });
+      return;
+    }
+
+    try {
+      setIsCheckingBarcode(true);
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (!user) {
+        setBarcode(scannedText);
+        setBarcodeNotice({
+          tone: "success",
+          text: `Barcode ${scannedText} added. Fill in the rest below.`,
+        });
+        return;
+      }
+
+      const { data } = await supabase
+        .from("inventory")
+        .select("id, name, sku, barcode, public_id")
+        .eq("user_id", user.id);
+
+      const resolution = resolveScannedCode<ScanCandidateItem>(
+        scannedText,
+        (data as ScanCandidateItem[] | null) || []
+      );
+
+      if (resolution.kind === "item") {
+        setBarcodeNotice({
+          tone: "warning",
+          text: `This code already belongs to “${resolution.item.name}.” Go there to adjust its stock instead of creating a duplicate.`,
+          existingItemId: resolution.item.id,
+        });
+        return;
+      }
+
+      if (resolution.kind === "ambiguous") {
+        setBarcodeNotice({
+          tone: "warning",
+          text: `${resolution.items.length} existing items share that code — check Inventory before adding a new one.`,
+        });
+        return;
+      }
+
+      setBarcode(scannedText);
+      setBarcodeNotice({
+        tone: "success",
+        text: `Barcode ${scannedText} added. Fill in the rest below.`,
+      });
+    } catch {
+      setBarcode(scannedText);
+      setBarcodeNotice({
+        tone: "success",
+        text: `Barcode ${scannedText} added. Fill in the rest below.`,
+      });
+    } finally {
+      setIsCheckingBarcode(false);
+    }
+  };
   const itemUsageText = `${subscriptionUsage.usedItems} / ${subscriptionUsage.subscription.item_limit} items`;
   const formattedCostValue =
     stockCostValue === null
@@ -1230,6 +1386,7 @@ export default function AddItemPage() {
                   : "SKU and barcode not added"
               }
               description="Each code has a different role. Add only the codes your business already uses."
+              defaultOpen={arrivedFromScan}
             >
               <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
                 <div className="md:col-span-2">
@@ -1272,17 +1429,40 @@ export default function AddItemPage() {
                 </div>
 
                 <div>
-                  <label
-                    htmlFor="barcode"
-                    className="mb-2 block text-sm font-semibold text-theme-secondary"
-                  >
-                    Barcode
-                  </label>
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <label
+                      htmlFor="barcode"
+                      className="block text-sm font-semibold text-theme-secondary"
+                    >
+                      Barcode
+                    </label>
+                    {/* backlog item 1 (P1): scan the carton's barcode instead
+                        of typing it — manual entry below stays as the
+                        fallback, unchanged. */}
+                    <button
+                      type="button"
+                      onClick={openBarcodeScanner}
+                      disabled={loading || isCheckingBarcode}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                      <UiIcon name="scan" className="h-3.5 w-3.5" />
+                      {!usageLoading && !canUseScanner ? (
+                        <LockedActionLabel>Scan</LockedActionLabel>
+                      ) : isCheckingBarcode ? (
+                        "Checking..."
+                      ) : (
+                        "Scan"
+                      )}
+                    </button>
+                  </div>
                   <input
                     id="barcode"
                     type="text"
                     value={barcode}
-                    onChange={(event) => setBarcode(event.target.value)}
+                    onChange={(event) => {
+                      setBarcode(event.target.value);
+                      if (barcodeNotice) setBarcodeNotice(null);
+                    }}
                     disabled={loading}
                     autoComplete="off"
                     spellCheck={false}
@@ -1292,6 +1472,29 @@ export default function AddItemPage() {
                   <p className="mt-2 text-xs leading-5 text-theme-subtle">
                     Product or scanned code. Leading zeroes are preserved.
                   </p>
+                  {barcodeNotice && (
+                    <p
+                      role="status"
+                      className={`mt-2 rounded-lg border px-3 py-2 text-xs font-semibold leading-5 ${
+                        barcodeNotice.tone === "warning"
+                          ? "border-amber-400/30 bg-amber-500/10 text-theme-warning"
+                          : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
+                      }`}
+                    >
+                      {barcodeNotice.text}
+                      {barcodeNotice.existingItemId && (
+                        <>
+                          {" "}
+                          <Link
+                            href={`/dashboard/inventory/${barcodeNotice.existingItemId}`}
+                            className="underline hover:no-underline"
+                          >
+                            View item
+                          </Link>
+                        </>
+                      )}
+                    </p>
+                  )}
                 </div>
               </div>
             </DisclosureSection>
@@ -1374,6 +1577,25 @@ export default function AddItemPage() {
           </form>
         </div>
       </main>
+
+      <ScannerModal
+        open={isScannerOpen}
+        onClose={closeBarcodeScanner}
+        onDecode={handleBarcodeScanned}
+        eyebrow="Add item"
+        title="Scan Barcode"
+        description="Scan the barcode or QR code printed on the item."
+      />
+
+      <UpgradeDialog
+        open={Boolean(lockedFeature)}
+        onClose={() => setLockedFeature(null)}
+        feature={lockedFeature?.feature || ""}
+        benefit={lockedFeature?.benefit || ""}
+        currentPlan={currentPlanName}
+        requiredPlan={lockedFeature?.requiredPlan || "Standard"}
+        source={lockedFeature?.source || "add-item"}
+      />
     </div>
   );
 }
