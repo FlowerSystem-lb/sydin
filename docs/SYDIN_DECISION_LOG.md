@@ -267,3 +267,18 @@ these existing pieces; it added zero lines to `/dashboard/scanner/page.tsx`. **H
 before concluding a scan-related request requires touching the Scanner Workspace, check whether the
 underlying camera/decode/resolve pieces are already reusable independently — they usually are.
 **Status:** Active.
+
+### 2026-08-12 · `as UiIconName` casts are a lint/tsc blind spot — verify icon names live
+**Decision:** Any place that does `someString as UiIconName` (rather than passing a value TypeScript
+can check against the real union) needs its actual rendered output verified in the browser at least
+once — `npm run lint`/`tsc --noEmit` cannot catch a string that isn't a real case inside `UiIcon`,
+because the cast tells TypeScript to trust it. **Why this matters, concretely:**
+`getActivityEventIcon()` (`app/lib/activityFeed.ts`, Sprint 10) returned 4 icon names —
+`arrow-down`/`arrow-up`/`sliders`/`edit` — that had no matching case in `components/UiIcon.tsx`.
+Every caller cast the result `as UiIconName`, so this passed lint, `tsc`, and `build` for weeks
+across three surfaces before being caught by directly counting each icon `<svg>`'s child nodes live
+(see Sprint Log "Fix: four activity icon types rendered blank since Sprint 10"). A screenshot alone
+didn't catch it either at first — a same-size, same-color, empty circle reads as "an icon" at a
+glance. **How to apply:** when reviewing or reusing a call site with an `as UiIconName` (or any
+similar string-union cast), check the DOM (child node count, not just visual size/color) rather than
+trusting the cast or a cursory screenshot. **Status:** Active (reference).

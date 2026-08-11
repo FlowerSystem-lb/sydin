@@ -32,7 +32,11 @@ export type UiIconName =
   | "appearance"
   | "logout"
   | "movement"
-  | "qr";
+  | "qr"
+  | "arrow-down"
+  | "arrow-up"
+  | "sliders"
+  | "edit";
 
 export default function UiIcon({
   name,
@@ -228,6 +232,29 @@ export default function UiIcon({
           <rect x="15" y="3" width="6" height="6" rx="1" />
           <rect x="3" y="15" width="6" height="6" rx="1" />
           <path d="M15 15h2v2h-2zM19 15h2v4h-2M15 19h2v2h-2M19 21h2" />
+        </>
+      )}
+      {/* Added to fix a real bug: getActivityEventIcon() (app/lib/activityFeed.ts)
+          already returned these four names for stock_in/stock_out/adjustment/
+          item_edited — the most common activity types — but no case here
+          matched them, so every one of those rows rendered a blank icon badge
+          on /dashboard/activity and (since backlog §16D/E) the item slide-over
+          and full item page too. Confirmed live: "Item Edited"/"Stock In" badges
+          had 0 SVG children before this fix. */}
+      {name === "arrow-down" && <path d="M12 4v16M6 14l6 6 6-6" />}
+      {name === "arrow-up" && <path d="M12 20V4M6 10l6-6 6 6" />}
+      {name === "sliders" && (
+        <>
+          <path d="M4 6h16M4 12h16M4 18h16" />
+          <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
+          <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
+          <circle cx="8" cy="18" r="2" fill="currentColor" stroke="none" />
+        </>
+      )}
+      {name === "edit" && (
+        <>
+          <path d="M12 20h9" />
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" />
         </>
       )}
     </svg>

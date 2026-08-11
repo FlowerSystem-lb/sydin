@@ -3144,4 +3144,40 @@ validation/import logic — only additive code and one additive type-union membe
 
 ---
 
+## Fix: four activity icon types rendered blank since Sprint 10  *(Complete)*
+
+**Found while auditing for Notification Center**, not something reported — worth catching because
+I widened this bug's reach twice this session without knowing it existed.
+
+**The bug:** `getActivityEventIcon()` (`app/lib/activityFeed.ts`, built in Sprint 10) returns
+`"arrow-down"` / `"arrow-up"` / `"sliders"` / `"edit"` for `stock_in` / `stock_out` / `adjustment` /
+`item_edited` — but `components/UiIcon.tsx` had no render case for any of those four names. Every
+call site casts the return value `as UiIconName`, which suppresses the TypeScript error at compile
+time, so this shipped silently: the icon badge renders (right size, right tone color) but the `<svg>`
+inside it is empty — no glyph. **Confirmed live, precisely, not just suspected:** sampled 10 rows on
+`/dashboard/activity` — "Item Created" (uses `"plus"`, a valid case) had 2 SVG children; "Item
+Edited" and "Stock In" (the two invalid names) had exactly 0.
+
+**Why this surfaced now:** `item_edited` and `stock_in` are the two most common event types in real
+usage — meaning most rows on the original Activity page have likely shown blank icons since Sprint
+10. This session's own §16D and §16E work then **reused these same helpers** on two more surfaces
+(the item slide-over's Activity tab, the full item page's Stock Movements/Item History) specifically
+*to fix* a different problem (single-letter avatars) — inheriting this existing bug onto both of
+them without introducing it originally.
+
+**Delivered:** added the 4 missing icon names to `UiIconName` and 4 matching render cases in
+`components/UiIcon.tsx` — a down arrow, an up arrow, a 3-line "sliders" glyph (matching the existing
+mixed `<path>`/`<circle>` style already used by `more`/`appearance`), and a pencil for `edit`. Purely
+additive: no existing icon name's rendering changed.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37). Live,
+precisely re-measured on all three affected surfaces: `/dashboard/activity` ("Item Edited" 0 → 2
+children, "Stock In" 0 → 1), the item slide-over's Activity tab (5/5 icons now render), and the full
+item page's Audit Trail section (5/5 icons now render, both "Edited" and "Created" rows).
+
+**Untouchables:** `activityFeed.ts` unmodified — the fix is entirely in the icon component, which is
+the correct side to fix (the strings were reasonable choices; the icon set was just incomplete).
+
+---
+
 <!-- Append the next sprint entry below this line. -->
