@@ -608,6 +608,108 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(downloadUrl);
 }
 
+// backlog item 2 (P2): batch photo upload, compounded with the Excel import.
+// Founder's explicit rule: "Do NOT match photos to rows by order (1,2,3,4).
+// One failed upload or a phone sorting by date instead of name shifts every
+// subsequent photo onto the wrong item, silently. Match by filename against
+// the SKU in the row — order-independent, and a mismatch is visible
+// immediately." This is that matching, kept pure and separate from the page
+// so the rule can be read and verified on its own.
+
+export const ALLOWED_IMPORT_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
+export const MAX_IMPORT_IMAGE_SIZE = 5 * 1024 * 1024;
+
+export interface ImportPhotoMatch {
+  row: ValidatedInventoryRow;
+  file: File;
+}
+
+export interface ImportPhotoInvalidFile {
+  file: File;
+  reason: string;
+}
+
+export interface ImportPhotoMatchResult {
+  /** One file per row, order-independent — the whole point of this function. */
+  matches: ImportPhotoMatch[];
+  /** No valid row's SKU equals this file's name (minus extension). */
+  unmatched: File[];
+  /** A row whose SKU was already claimed by an earlier file in the list. */
+  duplicates: File[];
+  /** Matched a row, but failed type/size validation — not silently dropped. */
+  invalid: ImportPhotoInvalidFile[];
+  /** Valid rows with no SKU at all — can never be matched by this scheme. */
+  rowsWithoutSku: number;
+}
+
+function getImportPhotoValidationError(file: File): string {
+  if (!ALLOWED_IMPORT_IMAGE_TYPES.includes(file.type)) {
+    return "Not a JPG, PNG, or WebP image.";
+  }
+
+  if (file.size > MAX_IMPORT_IMAGE_SIZE) {
+    return "Image is larger than 5MB.";
+  }
+
+  return "";
+}
+
+function stripExtension(fileName: string) {
+  return fileName.replace(/\.[^./\\]+$/, "").trim().toLowerCase();
+}
+
+export function matchImportPhotosToRows(
+  files: File[],
+  rows: ValidatedInventoryRow[]
+): ImportPhotoMatchResult {
+  const rowBySku = new Map<string, ValidatedInventoryRow>();
+  let rowsWithoutSku = 0;
+
+  for (const row of rows) {
+    const sku = row.values.sku.trim().toLowerCase();
+    if (sku) {
+      rowBySku.set(sku, row);
+    } else {
+      rowsWithoutSku += 1;
+    }
+  }
+
+  const matches: ImportPhotoMatch[] = [];
+  const unmatched: File[] = [];
+  const duplicates: File[] = [];
+  const invalid: ImportPhotoInvalidFile[] = [];
+  const claimedRowNumbers = new Set<number>();
+
+  for (const file of files) {
+    const row = rowBySku.get(stripExtension(file.name));
+
+    if (!row) {
+      unmatched.push(file);
+      continue;
+    }
+
+    if (claimedRowNumbers.has(row.rowNumber)) {
+      // A second file names the same SKU — keep the first match and surface
+      // the second as a duplicate rather than silently overwriting it. The
+      // founder's rule is "a mismatch is visible immediately"; a silent
+      // overwrite here would be exactly the kind of mismatch that hides.
+      duplicates.push(file);
+      continue;
+    }
+
+    const validationError = getImportPhotoValidationError(file);
+    if (validationError) {
+      invalid.push({ file, reason: validationError });
+      continue;
+    }
+
+    claimedRowNumbers.add(row.rowNumber);
+    matches.push({ row, file });
+  }
+
+  return { matches, unmatched, duplicates, invalid, rowsWithoutSku };
+}
+
 export function downloadInventoryCsvTemplate() {
   const csv = Papa.unparse({
     fields: [...INVENTORY_IMPORT_HEADERS],

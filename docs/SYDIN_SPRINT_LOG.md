@@ -3013,4 +3013,75 @@ the founder's original list.
 
 ---
 
+## Batch photo upload for Excel/CSV import (backlog item 2, part 1 of 2)  *(Complete)*
+
+**Scope:** Item 2 is "POS-style batch adding of several items by barcode, plus batch photo upload
+for several items at once, compounded with the Excel import." This sprint delivers the **photo +
+Excel** half; the POS-style barcode batch-add is a separate mechanism and is tracked as its own
+remaining piece (see below).
+
+**Audited first:** `/dashboard/inventory/import` already existed — a complete, working CSV/Excel
+wizard (templates, drag-drop, client-side parsing, per-row validation against depots/categories/
+existing SKUs, a 3-step Upload → Review → Complete flow, plan-limit re-checking immediately before
+commit, import/export history logging). It explicitly did not import images: "Images and private
+IDs are never imported." Nothing here needed rebuilding — only the photo gap needed filling.
+
+**The founder's exact rule, made load-bearing:** "Do NOT match photos to rows by order (1,2,3,4).
+One failed upload or a phone sorting by date instead of name shifts every subsequent photo onto the
+wrong item, silently. Match by filename against the SKU in the row — order-independent, and a
+mismatch is visible immediately." Implemented as `matchImportPhotosToRows()` in
+`app/lib/inventoryImport.ts`, kept pure and separate from the page: strips each file's extension,
+matches case-insensitively against each valid row's SKU, and explicitly reports four outcomes
+instead of silently doing the wrong thing —
+**matched**, **unmatched** (no row has that SKU), **duplicate** (a second file claims a SKU an
+earlier file already matched — the one case that would otherwise silently overwrite), and
+**invalid** (matched a row, but fails type/size validation). Rows with no SKU at all are counted
+separately since they can never be auto-matched by this scheme.
+
+**Delivered:**
+- **`app/lib/inventoryImport.ts`** — `matchImportPhotosToRows()`, `ALLOWED_IMPORT_IMAGE_TYPES`,
+  `MAX_IMPORT_IMAGE_SIZE` (values mirror Add Item's own image constants exactly).
+- **`app/dashboard/inventory/import/page.tsx`** — new "Add product photos" section in the Review
+  step: multi-file drag-drop, live match counts (Matched / No SKU match / Duplicate SKU / Invalid
+  file), a per-match list with per-photo Remove, and explicit call-outs listing *which* files fell
+  into each non-matched bucket by name — never just a count. In `handleImport`, matched photos
+  upload to the same `products` Supabase Storage bucket Add Item uses (same path convention:
+  `${userId}/${timestamp}-${random}.${ext}`, via a locally mirrored `createImportImagePath`,
+  consistent with this codebase's existing tolerance for small per-page helper duplication over
+  premature shared abstraction — `formatFileSize` was already duplicated the same way between
+  these two pages before this change). Upload happens **before** insert, since the row's `image`
+  column needs the final URL at insert time. **A failed photo upload does not block the batch** —
+  the item still imports, without a photo, and the success screen reports the count separately
+  ("3 items added. 1 photo could not be uploaded — that item saved without a photo").
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37). Live
+end-to-end test (not just component-level): built a real 3-row CSV, uploaded it, attached 5 test
+photos exercising all four match outcomes simultaneously (one exact match, one case-insensitive
+match, one unmatched file, one duplicate-SKU file, one wrong-file-type), confirmed all four buckets
+reported the correct file in the correct bucket, then confirmed the import end-to-end — the created
+item's card in Inventory rendered the actual uploaded photo from Supabase Storage. Verified the
+"invalid file" path separately (a `.txt` file named after a real SKU) with its exact reason text.
+Verified at 375px — no horizontal overflow, drop zone and match summary both readable. All test
+items and their uploaded test images were then deleted; no data left behind beyond the (harmless,
+orphaned) test image blobs in storage.
+
+**One live bug found and fixed via testing, not spotted by lint/tsc:** the "N row(s) have no SKU"
+helper text read as "**itcan't**" with no space — a JSX whitespace-collapsing gotcha (an expression
+immediately followed by a newline then text loses the space, silently). Rewritten as a single
+computed string per plural case instead of interleaved JSX text nodes, which have already
+demonstrated one silent whitespace bug won't happen the same way. Reinforces exactly why
+`lint`/`tsc`/`build` alone were called insufficient earlier in this session — this was live-caught,
+not caught by any automated check.
+
+**Untouchables:** no changes to the existing CSV/Excel parsing, validation, plan-limit, or history
+logging logic — only new, additive code for the photo step. `app/dashboard/add-item/page.tsx`'s own
+upload path is unmodified; the constants/pattern are mirrored, not shared, so neither page can break
+the other.
+
+**Remaining for item 2:** POS-style batch adding of several items by barcode (repeated rapid-scan
+loop, building a list before any save happens) — a genuinely different UI mechanism from a file
+import, not yet started.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

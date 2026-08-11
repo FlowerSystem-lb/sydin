@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import UiIcon from "@/components/UiIcon";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   ActionButton,
@@ -18,9 +19,12 @@ import {
   type Depot,
 } from "@/app/lib/depots";
 import {
+  ALLOWED_IMPORT_IMAGE_TYPES,
   downloadInventoryCsvTemplate,
   downloadInventoryExcelTemplate,
+  matchImportPhotosToRows,
   MAX_IMPORT_FILE_SIZE,
+  MAX_IMPORT_IMAGE_SIZE,
   MAX_IMPORT_ROWS,
   parseInventoryImportFile,
   validateInventoryImportRows,
@@ -52,6 +56,28 @@ function formatFileSize(size: number) {
   }
 
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Mirrors app/dashboard/add-item/page.tsx's image upload helpers exactly
+// (same bucket, same path shape) so a photo added here or on Add Item lands
+// in storage the same way.
+function getImportImageExtension(file: File) {
+  const extensionByType: Record<string, string> = {
+    "image/jpeg": "jpg",
+    "image/png": "png",
+    "image/webp": "webp",
+  };
+
+  return extensionByType[file.type] || "jpg";
+}
+
+function createImportImagePath(userId: string, file: File) {
+  const random =
+    typeof crypto !== "undefined" && "randomUUID" in crypto
+      ? crypto.randomUUID()
+      : Math.random().toString(36).slice(2, 12);
+
+  return `${userId}/${Date.now()}-${random}.${getImportImageExtension(file)}`;
 }
 
 function getFieldErrorClass(
@@ -102,10 +128,17 @@ export default function InventoryImportPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const [isDownloadingExcel, setIsDownloadingExcel] = useState(false);
+  // backlog item 2: batch photo upload, matched to rows by filename -> SKU
+  // (never by list order — see matchImportPhotosToRows for why).
+  const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  const [isPhotoDragging, setIsPhotoDragging] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement | null>(null);
   const [success, setSuccess] = useState<{
     importedCount: number;
     skippedEmptyRows: number;
     unmatchedCategoryRows: number;
+    photosAttached: number;
+    photosFailed: number;
   } | null>(null);
 
   useEffect(() => {
@@ -182,6 +215,13 @@ export default function InventoryImportPage() {
         : null,
     [categories, depots, existingSkus, parsedFile]
   );
+  const photoMatch = useMemo(
+    () =>
+      validation
+        ? matchImportPhotosToRows(photoFiles, validation.validRows)
+        : null,
+    [photoFiles, validation]
+  );
   const projectedItemCount =
     usage.usedItems + (validation?.validRows.length || 0);
   const exceedsPlanLimit =
@@ -195,12 +235,43 @@ export default function InventoryImportPage() {
     ? [...validation.invalidRows, ...validation.validRows].slice(0, 100)
     : [];
 
+  const clearPhotos = () => {
+    setPhotoFiles([]);
+
+    if (photoInputRef.current) {
+      photoInputRef.current.value = "";
+    }
+  };
+
+  const addPhotoFiles = (fileList: FileList | File[] | null) => {
+    if (!fileList || fileList.length === 0) return;
+
+    const incoming = Array.from(fileList);
+
+    // De-dupe by name+size so re-selecting the same folder twice (a natural
+    // habit) doesn't double the file list or double-flag "duplicate SKU."
+    setPhotoFiles((current) => {
+      const known = new Set(current.map((file) => `${file.name}:${file.size}`));
+      const additions = incoming.filter(
+        (file) => !known.has(`${file.name}:${file.size}`)
+      );
+      return [...current, ...additions];
+    });
+  };
+
+  const removePhotoFile = (target: File) => {
+    setPhotoFiles((current) =>
+      current.filter((file) => file !== target)
+    );
+  };
+
   const resetImport = () => {
     setSelectedFile(null);
     setParsedFile(null);
     setFileError("");
     setPageError("");
     setSuccess(null);
+    clearPhotos();
 
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
@@ -213,6 +284,7 @@ export default function InventoryImportPage() {
     try {
       setIsParsing(true);
       setFileError("");
+      clearPhotos();
       setPageError("");
       setSuccess(null);
       setSelectedFile(file);
@@ -337,6 +409,49 @@ export default function InventoryImportPage() {
         return;
       }
 
+      // backlog item 2: upload matched photos before the insert, so the row
+      // it belongs to (found by SKU, never by position) already has a URL to
+      // write. A failed upload does not block the batch — see the decision
+      // log entry for why silently skipping a photo beats aborting an
+      // otherwise-clean import over one bad file.
+      const photoFileByRowNumber = new Map(
+        (photoMatch?.matches || []).map(({ row, file }) => [
+          row.rowNumber,
+          file,
+        ])
+      );
+      const imageUrlByRowNumber = new Map<number, string>();
+      let photosAttached = 0;
+      let photosFailed = 0;
+
+      if (photoFileByRowNumber.size > 0) {
+        const uploadOutcomes = await Promise.allSettled(
+          [...photoFileByRowNumber.entries()].map(async ([rowNumber, file]) => {
+            const fileName = createImportImagePath(user.id, file);
+            const { error: uploadError } = await supabase.storage
+              .from("products")
+              .upload(fileName, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data } = supabase.storage
+              .from("products")
+              .getPublicUrl(fileName);
+
+            return { rowNumber, url: data.publicUrl };
+          })
+        );
+
+        for (const outcome of uploadOutcomes) {
+          if (outcome.status === "fulfilled") {
+            imageUrlByRowNumber.set(outcome.value.rowNumber, outcome.value.url);
+            photosAttached += 1;
+          } else {
+            photosFailed += 1;
+          }
+        }
+      }
+
       const newItems = freshValidation.validRows.map((row) => ({
         name: row.values.name,
         sku: row.values.sku,
@@ -357,7 +472,7 @@ export default function InventoryImportPage() {
         barcode: row.values.barcode || null,
         notes: row.values.notes,
         depot_id: row.depotId,
-        image: "",
+        image: imageUrlByRowNumber.get(row.rowNumber) || "",
         user_id: user.id,
       }));
       const { data: createdItems, error: insertError } = await supabase
@@ -406,10 +521,13 @@ export default function InventoryImportPage() {
         status: "success",
       });
 
+      clearPhotos();
       setSuccess({
         importedCount: createdItems.length,
         skippedEmptyRows: parsedFile.skippedEmptyRows,
         unmatchedCategoryRows: freshValidation.unmatchedCategoryRows,
+        photosAttached,
+        photosFailed,
       });
     } catch (error) {
       setPageError(
@@ -505,6 +623,16 @@ export default function InventoryImportPage() {
                   ? ` ${success.unmatchedCategoryRows} category name${
                       success.unmatchedCategoryRows === 1 ? " was" : "s were"
                     } kept as legacy text because no managed category matched.`
+                  : ""}
+                {success.photosAttached > 0
+                  ? ` ${success.photosAttached} product photo${
+                      success.photosAttached === 1 ? "" : "s"
+                    } attached.`
+                  : ""}
+                {success.photosFailed > 0
+                  ? ` ${success.photosFailed} photo${
+                      success.photosFailed === 1 ? "" : "s"
+                    } could not be uploaded — those items saved without a photo; add it from the item page.`
                   : ""}
               </p>
 
@@ -990,6 +1118,237 @@ export default function InventoryImportPage() {
                     </article>
                   ))}
                 </div>
+              </section>
+
+              {/* backlog item 2: batch photo upload. Matched to rows by
+                  filename === SKU only — never by list order, per the
+                  founder's explicit anti-scramble rule (see
+                  matchImportPhotosToRows). Optional: importing with zero
+                  photos is unchanged from before this feature existed. */}
+              <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-5">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
+                      Optional
+                    </p>
+                    <h2 className="mt-1 text-2xl font-bold text-theme-primary">
+                      Add product photos
+                    </h2>
+                    <p className="mt-2 max-w-xl text-sm leading-6 text-theme-muted">
+                      Name each photo after the row&apos;s SKU exactly — e.g.{" "}
+                      <code className="rounded bg-theme-inset px-1.5 py-0.5 font-mono text-xs">
+                        FP007.jpg
+                      </code>{" "}
+                      matches the row with SKU <code className="font-mono">FP007</code>. Matching
+                      is by filename, never by upload order, so a mismatch never happens silently.
+                    </p>
+                  </div>
+
+                  {photoFiles.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={clearPhotos}
+                      className="shrink-0 rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
+                    >
+                      Clear photos
+                    </button>
+                  )}
+                </div>
+
+                <div
+                  onDragEnter={(event) => {
+                    event.preventDefault();
+                    setIsPhotoDragging(true);
+                  }}
+                  onDragOver={(event) => event.preventDefault()}
+                  onDragLeave={(event) => {
+                    event.preventDefault();
+                    if (event.currentTarget === event.target) {
+                      setIsPhotoDragging(false);
+                    }
+                  }}
+                  onDrop={(event) => {
+                    event.preventDefault();
+                    setIsPhotoDragging(false);
+                    addPhotoFiles(event.dataTransfer.files);
+                  }}
+                  className={`mt-4 rounded-2xl border border-dashed p-4 transition ${
+                    isPhotoDragging
+                      ? "border-[#2563eb]/60 bg-[#2563eb]/15"
+                      : "border-[#2563eb]/25 bg-theme-inset"
+                  }`}
+                >
+                  <button
+                    type="button"
+                    onClick={() => photoInputRef.current?.click()}
+                    className="flex min-h-[96px] w-full flex-col items-center justify-center gap-2 rounded-xl px-4 py-4 text-center transition hover:bg-[var(--sydin-input-bg)]"
+                  >
+                    <UiIcon name="upload" className="h-5 w-5 text-theme-accent" />
+                    <span className="text-sm font-bold text-theme-primary">
+                      Drop photos here or choose from device
+                    </span>
+                    <span className="text-xs text-theme-subtle">
+                      JPG, PNG, or WebP — {formatFileSize(MAX_IMPORT_IMAGE_SIZE)} max each
+                    </span>
+                  </button>
+
+                  <input
+                    ref={photoInputRef}
+                    type="file"
+                    accept={ALLOWED_IMPORT_IMAGE_TYPES.join(",")}
+                    multiple
+                    onChange={(event) => {
+                      addPhotoFiles(event.target.files);
+                      event.target.value = "";
+                    }}
+                    className="sr-only"
+                  />
+                </div>
+
+                {photoMatch && photoFiles.length > 0 && (
+                  <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                        Matched
+                      </p>
+                      <p className="mt-1 text-xl font-black text-theme-primary">
+                        {photoMatch.matches.length}
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-2xl border p-3 ${
+                        photoMatch.unmatched.length > 0
+                          ? "border-amber-300/25 bg-amber-500/10"
+                          : "border-theme bg-theme-inset"
+                      }`}
+                    >
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                        No SKU match
+                      </p>
+                      <p className="mt-1 text-xl font-black text-theme-primary">
+                        {photoMatch.unmatched.length}
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-2xl border p-3 ${
+                        photoMatch.duplicates.length > 0
+                          ? "border-amber-300/25 bg-amber-500/10"
+                          : "border-theme bg-theme-inset"
+                      }`}
+                    >
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                        Duplicate SKU
+                      </p>
+                      <p className="mt-1 text-xl font-black text-theme-primary">
+                        {photoMatch.duplicates.length}
+                      </p>
+                    </div>
+                    <div
+                      className={`rounded-2xl border p-3 ${
+                        photoMatch.invalid.length > 0
+                          ? "border-red-400/20 bg-red-500/10"
+                          : "border-theme bg-theme-inset"
+                      }`}
+                    >
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                        Invalid file
+                      </p>
+                      <p className="mt-1 text-xl font-black text-theme-primary">
+                        {photoMatch.invalid.length}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {photoMatch && photoMatch.matches.length > 0 && (
+                  <ul className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    {photoMatch.matches.map(({ row, file }) => (
+                      <li
+                        key={`${row.rowNumber}-${file.name}`}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-emerald-400/20 bg-emerald-500/[0.06] px-3 py-2 text-sm"
+                      >
+                        <span className="min-w-0 truncate">
+                          <span className="font-mono text-xs text-theme-subtle">
+                            {row.values.sku}
+                          </span>{" "}
+                          <span className="font-semibold text-theme-primary">
+                            {row.values.name || `Row ${row.rowNumber}`}
+                          </span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => removePhotoFile(file)}
+                          className="shrink-0 text-xs font-bold text-theme-muted hover:text-theme-danger"
+                        >
+                          Remove
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+
+                {photoMatch && photoMatch.unmatched.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-500/10 p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-warning">
+                      No row has this SKU — not uploaded
+                    </p>
+                    <p className="mt-2 flex flex-wrap gap-2">
+                      {photoMatch.unmatched.map((file) => (
+                        <span
+                          key={file.name}
+                          className="rounded-lg border border-amber-300/25 bg-theme-surface px-2.5 py-1 font-mono text-xs text-theme-secondary"
+                        >
+                          {file.name}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+                )}
+
+                {photoMatch && photoMatch.duplicates.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-500/10 p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-warning">
+                      Another file already claimed that SKU — not uploaded
+                    </p>
+                    <p className="mt-2 flex flex-wrap gap-2">
+                      {photoMatch.duplicates.map((file) => (
+                        <span
+                          key={file.name}
+                          className="rounded-lg border border-amber-300/25 bg-theme-surface px-2.5 py-1 font-mono text-xs text-theme-secondary"
+                        >
+                          {file.name}
+                        </span>
+                      ))}
+                    </p>
+                  </div>
+                )}
+
+                {photoMatch && photoMatch.invalid.length > 0 && (
+                  <div className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 p-3">
+                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-danger">
+                      Matched a row, but can&apos;t be uploaded
+                    </p>
+                    <ul className="mt-2 flex flex-col gap-1">
+                      {photoMatch.invalid.map(({ file, reason }) => (
+                        <li
+                          key={file.name}
+                          className="font-mono text-xs text-theme-danger"
+                        >
+                          {file.name} — {reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {photoMatch && photoMatch.rowsWithoutSku > 0 && (
+                  <p className="mt-4 text-xs leading-5 text-theme-subtle">
+                    {photoMatch.rowsWithoutSku === 1
+                      ? "1 row has no SKU, so it can’t be matched to a photo automatically."
+                      : `${photoMatch.rowsWithoutSku} rows have no SKU, so they can’t be matched to a photo automatically.`}{" "}
+                    Add a SKU to the row, or add the photo from the item page after import.
+                  </p>
+                )}
               </section>
 
               <section className="rounded-[20px] border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
