@@ -478,6 +478,14 @@ export default function DashboardPage() {
       (sum, entry) => sum + (entry.value || 0),
       0
     );
+    // Only items carrying a price contribute to totalValue, so the figure is a
+    // partial sum whenever any item is unpriced. Surfaced on the card (see
+    // summaryCards) rather than left implied — measured 2026-08-12 on the real
+    // workspace: "Inventory Value $480.00" was computed from 2 of 10 items
+    // holding 8 of 35,185 units, presented as the workspace total. Flagged as
+    // misleading in the 2026-08-04 decision-log entry that deferred the wider
+    // Dashboard rework; captioning it is the part that did not need to wait.
+    const pricedItemCount = valueItems.length;
     const lowStockItems = enrichedItems
       .filter((entry) => entry.state !== "in")
       .sort((left, right) => {
@@ -497,6 +505,7 @@ export default function DashboardPage() {
       totalQuantity,
       totalValue,
       hasValue: valueItems.length > 0,
+      pricedItemCount,
       totalDepots: Math.max(depots.length, activeDepotIds.size),
       lowStockItems: lowStockItems.slice(0, 5),
       lowStockCount: lowStockItems.length,
@@ -553,7 +562,16 @@ export default function DashboardPage() {
       label: "Inventory Value",
       rawValue: dashboardData.hasValue ? dashboardData.totalValue : null,
       format: (n: number) => formatCurrency(n, currencyCode),
-      detail: dashboardData.hasValue ? currencyCode : "Add prices to track value",
+      // Say what the number actually covers. Unpriced items contribute nothing,
+      // so with even one item unpriced this is a partial sum — showing only the
+      // currency code next to it read as a confident workspace total.
+      detail: !dashboardData.hasValue
+        ? "Add prices to track value"
+        : dashboardData.pricedItemCount < dashboardData.totalItems
+          ? `${currencyCode} · priced items only (${formatNumber(
+              dashboardData.pricedItemCount
+            )} of ${formatNumber(dashboardData.totalItems)})`
+          : currencyCode,
       icon: "usage" as UiIconName,
       href: "/dashboard/inventory",
       accent: "sydin-kpi-emerald",

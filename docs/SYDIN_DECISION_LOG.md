@@ -233,7 +233,12 @@ value" cannot be derived from 2 priced items. "Hasn't moved in 90 days" computes
 19 items, which is noise. **Consequence already live:** the Dashboard's **"Inventory Value"** card
 is computed from those 2 priced items and presented as the workspace total — it currently
 understates by ~90% and is misleading. Worth fixing or captioning regardless of when the rework
-happens. **What the Dashboard should do in the meantime:** drive **data completeness** (items
+happens. **→ The captioning half is DONE (2026-08-12):** the card now reads
+`"USD · priced items only (2 of 10)"` whenever any item is unpriced, so the number no longer
+presents itself as a workspace total (see Sprint Log, "Inventory Value presented a partial sum").
+Re-measuring at that point showed the "~90%" estimate here was far too kind — the $480 came from 2
+items holding **8 of 35,185 units**. The wider completeness-driving Dashboard remains deferred, as
+below. **What the Dashboard should do in the meantime:** drive **data completeness** (items
 missing a cost price, items with no movement history), which is true today and is precisely what
 unlocks the predictive metrics later. **Revisit** after ~2–3 months of real operating use, when
 there is genuine movement history. **Next work instead:** backlog §16 items A/B/G (inventory

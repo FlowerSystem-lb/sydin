@@ -3234,4 +3234,40 @@ explicit go-ahead when the founder wants it, not something to slip in as a "v2" 
 
 ---
 
+## Fix: "Inventory Value" presented a partial sum as the workspace total  *(Complete)*
+
+**Not a new feature — closing a loop I left open.** The 2026-08-04 decision-log entry that deferred
+the Dashboard rework explicitly flagged this as "**worth fixing or captioning regardless of when the
+rework happens**," and it was still live 8 days later. Picked it up ahead of starting Phase 4
+because it misreports money on the first screen after login, and unlike Phase 4 it needed no schema
+change and no data maturity.
+
+**Measured, on the real workspace, before changing anything:** the card read **"Inventory Value ·
+$480.00 · USD"**. Per-item value is `quantity × (selling_price ?? cost_price)`, and only items
+carrying a price contribute, so — confirmed row-by-row in table view — that $480 came from **2 of
+10 items** (`ead` $180, `Satc` $300; the other 8 showed `--`). Those 2 items hold **8 of the
+workspace's 35,185 units**. The largest holdings (`test2` 34,233 boxes, `ali` 533 pcs, `sadw` 343
+pcs, `test1` 43 boxes) contributed exactly $0. The old caption showed only the currency code next
+to it, so a partial sum over 0.02% of stock read as a confident workspace total. Note the 2026-08-04
+entry estimated "understates by ~90%" — the real figure is far worse than that estimate.
+
+**Delivered — `app/dashboard/page.tsx` only:** the card's `detail` line now states coverage when any
+item is unpriced: `"USD · priced items only (2 of 10)"`. When every item is priced it shows just the
+currency code as before; with nothing priced it keeps the existing "Add prices to track value".
+Added `pricedItemCount` to the memoised dashboard data to drive it.
+
+**Deliberately NOT done:** the value figure itself is unchanged, and no new dashboard section, "data
+completeness" card, or unpriced-items filter was added. The 2026-08-04 entry recommended a
+completeness-driving Dashboard as the *eventual* rework; building that now would be starting the
+rework this same entry deferred. Captioning the misleading number was the separable part.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · live at 1440px (reads
+"$480.00 / USD · priced items only (2 of 10)", fits one line) and 375px (wraps normally, not
+clipped, no horizontal overflow). `npm run build` run at commit time.
+
+**Untouchables:** no change to how value is computed, to `calculateInventoryValue`, to the Reports
+valuation report, or to any schema. Presentation of an existing number only.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
