@@ -3180,4 +3180,58 @@ the correct side to fix (the strings were reasonable choices; the icon set was j
 
 ---
 
+## Notification Center — light v1 (backlog §6)  *(Complete)*
+
+**Scope decided with the founder first, not assumed:** the backlog spec for this item was just a
+category list ("Unread · Inventory · Billing · AI · System · Updates · Team · Low stock · Stock
+movement · Product announcements") — no described UI or behavior, unlike items 1/2 which had exact
+rules to build from. A real, persisted notification system needs a **new database table** — a
+schema change on the live database, which this project's rules require explicit sign-off for
+regardless of a general "keep going" instruction. Presented the choice plainly (light v1 vs. full
+persisted version) and built the one picked: **live-computed, zero schema change.**
+
+**Delivered:**
+- **`app/lib/notificationsPreview.ts`** (new) — `getNotificationsPreview(userId, subscription,
+  businessSettings)`. The low-stock half **exactly mirrors** `app/dashboard/alerts/page.tsx`'s own
+  `alertEntries` calculation (same threshold resolution via `getEffectiveLowStockThreshold` /
+  `getEffectiveItemLowStockThreshold`, same out/low/in classification, same sort) rather than a
+  simplified variant, so the bell's count always agrees with what Stock Alerts itself shows. The
+  activity half calls `getActivityFeed(userId, 5)` — unmodified, its normal user-scoped case, no
+  special handling needed (unlike the item-scoped case documented in the §16D decision log entry).
+- **`components/dashboard/DashboardShell.tsx`** — a bell icon in the desktop top bar (between Scan
+  and the account menu), badge showing the low-stock count ("9+" past 9), a dropdown with two
+  sections (Needs attention / Recent activity), each row linking to the relevant item or the full
+  Alerts/Activity page. Fetches once on mount, chained onto the settings/usage fetch already there
+  (reuses those values — no duplicate subscription/business-settings query). Ref/outside-click/
+  Escape wiring copied from the existing account-menu pattern already in this file, not reinvented.
+- **`components/UiIcon.tsx`** — added a `bell` icon (deliberately not reusing the existing `alert`
+  icon, which is already the sidebar's distinct Alerts glyph — reusing it here would put two
+  different meanings on one shape in two places on screen at once).
+
+**Found and fixed in passing, before building this:** while checking `getActivityEventIcon`'s
+output would render correctly inside the new dropdown, found that 4 of its 7 possible icon names
+had no matching case in `UiIcon` at all — a real, live, pre-existing bug now fixed separately (see
+the entry above this one). Worth noting here because it's *why* this sprint checked icon rendering
+by DOM child count rather than trusting the existing helper.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37). Live at
+1440px: badge showed "3" matching 3 real low-stock items, dropdown listed them correctly with
+working `href`s to each item's page, activity rows showed non-blank icons (confirmed by child-node
+count, not just a screenshot glance — see the decision log entry on why), outside-click and Escape
+both dismiss it. At 900px (tablet): bell visible, dropdown opens, no horizontal overflow. At 375px
+(mobile): bell correctly does not render — confirmed this matches the *existing* Scan/Add/Account
+icons' identical behavior (`.dashboard-desktop-toolbar` is `display: none` below 640px already,
+mobile is a separate deliberate future pass per the founder's standing instruction), not a defect
+introduced here.
+
+**Untouchables:** no schema change, no new table, no changes to `app/dashboard/alerts/page.tsx` or
+`app/lib/activityFeed.ts` — both reused exactly as they already work. `alert` icon's existing
+meaning (sidebar Alerts) is unchanged.
+
+**Upgrade path, left open on purpose:** if this proves useful, the natural next step is a real
+`notifications` table with read/unread state and triggers — a schema change, so it needs its own
+explicit go-ahead when the founder wants it, not something to slip in as a "v2" unasked.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

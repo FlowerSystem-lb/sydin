@@ -36,7 +36,8 @@ export type UiIconName =
   | "arrow-down"
   | "arrow-up"
   | "sliders"
-  | "edit";
+  | "edit"
+  | "bell";
 
 export default function UiIcon({
   name,
@@ -255,6 +256,12 @@ export default function UiIcon({
         <>
           <path d="M12 20h9" />
           <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5Z" />
+        </>
+      )}
+      {name === "bell" && (
+        <>
+          <path d="M6 8a6 6 0 1 1 12 0c0 3.6 1 5.4 1.6 6.2.3.4 0 1-.5 1H4.9c-.5 0-.8-.6-.5-1C5 13.4 6 11.6 6 8Z" />
+          <path d="M9.5 19a2.5 2.5 0 0 0 5 0" />
         </>
       )}
     </svg>

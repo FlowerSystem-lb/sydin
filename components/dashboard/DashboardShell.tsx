@@ -26,6 +26,16 @@ import {
   getUpgradeRequestHref,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
+import {
+  getActivityEventIcon,
+  getActivityEventLabel,
+  getActivityEventTone,
+} from "@/app/lib/activityFeed";
+import { formatStockMovementNotes } from "@/app/lib/stockMovements";
+import {
+  getNotificationsPreview,
+  type NotificationsPreview,
+} from "@/app/lib/notificationsPreview";
 import { SCANNER_REQUEST_EVENT } from "@/app/lib/scannerNavigation";
 import { supabase } from "@/app/lib/supabase";
 import {
@@ -45,6 +55,16 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
+
+function formatNotificationDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("en", {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(date);
+}
 
 // Header "+ Add" menu. The header owns creation actions; the sidebar owns
 // navigation — so the old top tabs (which duplicated the five sidebar links)
@@ -266,6 +286,8 @@ export default function DashboardShell({
   const addMenuRef = useRef<HTMLDivElement>(null);
   const addTriggerRef = useRef<HTMLButtonElement>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
+  const notificationsMenuRef = useRef<HTMLDivElement>(null);
+  const notificationsTriggerRef = useRef<HTMLButtonElement>(null);
 
   const lastSearchTriggerRef = useRef<HTMLButtonElement | null>(null);
   const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
@@ -277,6 +299,12 @@ export default function DashboardShell({
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  // Notification Center, light v1 (backlog §6): computed live from existing
+  // data (Stock Alerts' own low-stock logic + the Activity feed), no new
+  // table, no read/unread persistence. See app/lib/notificationsPreview.ts.
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [notificationsPreview, setNotificationsPreview] =
+    useState<NotificationsPreview | null>(null);
   const [globalSearchOpen, setGlobalSearchOpen] = useState(false);
   // Header-bar clicks open the search as a dropdown anchored under the bar;
   // Ctrl/Cmd+K (and the tablet/mobile icon buttons, where no bar is visible)
@@ -336,6 +364,15 @@ export default function DashboardShell({
         if (!active) return;
         setBusinessSettings(settings);
         setUsage(loadedUsage);
+
+        // Chained on the settings/usage this just resolved, rather than a
+        // separate effect keyed off state, so this never runs twice (once
+        // against the DEFAULT_* placeholders, once against the real values).
+        getNotificationsPreview(userId, loadedUsage.subscription, settings)
+          .then((preview) => {
+            if (active) setNotificationsPreview(preview);
+          })
+          .catch(() => undefined);
       })
       .catch(() => undefined);
 
@@ -369,6 +406,32 @@ export default function DashboardShell({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [accountMenuOpen]);
+
+  useEffect(() => {
+    if (!notificationsOpen) return;
+
+    const handlePointerDown = (event: MouseEvent) => {
+      if (
+        notificationsMenuRef.current &&
+        !notificationsMenuRef.current.contains(event.target as Node)
+      ) {
+        setNotificationsOpen(false);
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setNotificationsOpen(false);
+        notificationsTriggerRef.current?.focus();
+      }
+    };
+
+    window.addEventListener("mousedown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("mousedown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [notificationsOpen]);
 
   // The anchored dropdown has no scrim, so dismiss it on an outside click.
   // The wrapper contains the trigger too, so clicking the bar just toggles.
@@ -799,6 +862,141 @@ export default function DashboardShell({
             >
               <UiIcon name="scan" className="h-5 w-5" />
             </button>
+            <div ref={notificationsMenuRef} className="dashboard-top-notifications">
+              <button
+                ref={notificationsTriggerRef}
+                type="button"
+                onClick={() => setNotificationsOpen((current) => !current)}
+                className="dashboard-top-icon-button"
+                aria-label="Notifications"
+                aria-haspopup="menu"
+                aria-expanded={notificationsOpen}
+                title="Notifications"
+              >
+                <UiIcon name="bell" className="h-5 w-5" />
+                {(notificationsPreview?.lowStockTotal || 0) > 0 && (
+                  <span className="dashboard-top-notification-badge">
+                    {notificationsPreview!.lowStockTotal > 9
+                      ? "9+"
+                      : notificationsPreview!.lowStockTotal}
+                  </span>
+                )}
+              </button>
+
+              {notificationsOpen && (
+                <MenuSurface className="dashboard-notifications-menu">
+                  <div className="dashboard-notifications-header">
+                    <strong>Notifications</strong>
+                    <span>Needs attention + recent activity</span>
+                  </div>
+
+                  {!notificationsPreview ? (
+                    <div className="dashboard-notifications-empty">
+                      Loading...
+                    </div>
+                  ) : notificationsPreview.lowStock.length === 0 &&
+                    notificationsPreview.activity.length === 0 ? (
+                    <div className="dashboard-notifications-empty">
+                      You&apos;re all caught up.
+                    </div>
+                  ) : (
+                    <>
+                      {notificationsPreview.lowStock.length > 0 && (
+                        <div className="dashboard-notifications-section">
+                          <p className="dashboard-notifications-section-title">
+                            Needs attention
+                          </p>
+                          {notificationsPreview.lowStock.map((entry) => (
+                            <Link
+                              key={entry.id}
+                              href={`/dashboard/inventory/${entry.id}`}
+                              role="menuitem"
+                              className="dashboard-notifications-row"
+                              onClick={() => setNotificationsOpen(false)}
+                            >
+                              <span
+                                className={cx(
+                                  "dashboard-notifications-dot",
+                                  entry.state === "out"
+                                    ? "dashboard-notifications-dot-danger"
+                                    : "dashboard-notifications-dot-warning"
+                                )}
+                              />
+                              <span className="dashboard-notifications-row-text">
+                                <strong>{entry.name}</strong>
+                                <small>
+                                  {entry.state === "out"
+                                    ? "Out of stock"
+                                    : `Low stock — ${entry.quantity} left`}
+                                </small>
+                              </span>
+                            </Link>
+                          ))}
+                          {notificationsPreview.lowStockTotal >
+                            notificationsPreview.lowStock.length && (
+                            <Link
+                              href="/dashboard/alerts"
+                              role="menuitem"
+                              className="dashboard-notifications-viewall"
+                              onClick={() => setNotificationsOpen(false)}
+                            >
+                              View all {notificationsPreview.lowStockTotal} alerts
+                            </Link>
+                          )}
+                        </div>
+                      )}
+
+                      {notificationsPreview.activity.length > 0 && (
+                        <div className="dashboard-notifications-section">
+                          <p className="dashboard-notifications-section-title">
+                            Recent activity
+                          </p>
+                          {notificationsPreview.activity.map((event) => (
+                            <div
+                              key={event.id}
+                              className="dashboard-notifications-row"
+                            >
+                              <span
+                                className={cx(
+                                  "dashboard-notifications-icon",
+                                  `dashboard-notifications-icon-${getActivityEventTone(
+                                    event.type
+                                  )}`
+                                )}
+                              >
+                                <UiIcon
+                                  name={getActivityEventIcon(event.type) as UiIconName}
+                                  className="h-3.5 w-3.5"
+                                />
+                              </span>
+                              <span className="dashboard-notifications-row-text">
+                                <strong>
+                                  {getActivityEventLabel(event.type)}
+                                  {event.itemName ? ` · ${event.itemName}` : ""}
+                                </strong>
+                                <small>
+                                  {event.notes
+                                    ? formatStockMovementNotes(event.notes)
+                                    : formatNotificationDate(event.createdAt)}
+                                </small>
+                              </span>
+                            </div>
+                          ))}
+                          <Link
+                            href="/dashboard/activity"
+                            role="menuitem"
+                            className="dashboard-notifications-viewall"
+                            onClick={() => setNotificationsOpen(false)}
+                          >
+                            View all activity
+                          </Link>
+                        </div>
+                      )}
+                    </>
+                  )}
+                </MenuSurface>
+              )}
+            </div>
             <div ref={accountMenuRef} className="dashboard-top-account">
               <button
                 ref={accountTriggerRef}

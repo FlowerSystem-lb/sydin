@@ -109,10 +109,17 @@ push (later) · notification-center alert · future automatic PO draft.
 | Email alerts | P1 | Med | Med | 3 | Email infra (verify Supabase/provider) |
 | Auto PO draft on low stock | P3 | High | High | 4 | Automation + PO |
 
-## 6. Notification Center
+## 6. Notification Center — **Light v1 done (2026-08-12)**
 
 Unread · Inventory · Billing · AI · System · Updates · Team · Low stock · Stock movement ·
 Product announcements.  **Priority: P2**, after Activity/Timeline foundation.
+
+Shipped a bell icon (desktop/tablet top bar) with a badge and dropdown, computed live from
+existing data — Stock Alerts' own low-stock logic + the Activity feed. No new database table, no
+read/unread state; this was an explicit scoping choice (the alternative needed schema changes, so
+it was surfaced rather than assumed). **Upgrade path, not yet built:** a real `notifications` table
+with persistence, mark-as-read, and category filtering (Billing/AI/System/Team/Updates categories
+above aren't meaningful yet without that — Billing has no events to notify on, AI doesn't exist).
 
 ## 7. Dashboard  *(answers "what needs attention right now?")*
 

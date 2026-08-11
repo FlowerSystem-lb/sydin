@@ -18636,3 +18636,209 @@ body.sydin-shell,
     flex: 1 1 auto;
   }
 }
+
+/* ===[ NOTIFICATION CENTER — light v1 (backlog §6) ]=== */
+/* Computed live from existing data (Stock Alerts' low-stock logic + the
+   Activity feed) — no new table, no read/unread persistence. Founder's own
+   scoping call, to revisit with real infrastructure once this proves useful.
+   See app/lib/notificationsPreview.ts and components/dashboard/DashboardShell.tsx. */
+
+.dashboard-top-notifications {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+/* Shared with the Scan button; adding `relative` here is a no-op for it
+   (no absolutely-positioned child there) and is what the badge below needs. */
+.dashboard-top-icon-button {
+  position: relative;
+}
+
+.dashboard-top-notification-badge {
+  position: absolute;
+  top: -0.15rem;
+  right: -0.15rem;
+  display: inline-flex;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #fbfaf8;
+  border-radius: 999px;
+  background: var(--status-danger-text, #dc2626);
+  padding-inline: 0.2rem;
+  color: #fff;
+  font-size: 0.62rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.dashboard-notifications-menu {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  right: 0;
+  z-index: 80;
+  display: flex;
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+  max-height: 28rem;
+  flex-direction: column;
+  gap: 0.3rem;
+  overflow-y: auto;
+}
+
+.dashboard-notifications-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem 0.6rem;
+  border-bottom: 1px solid var(--border-divider, rgba(15, 23, 42, 0.08));
+}
+
+.dashboard-notifications-header strong {
+  font-size: 0.95rem;
+  color: var(--text-primary);
+}
+
+.dashboard-notifications-header span {
+  font-size: 0.72rem;
+  color: var(--text-subtle);
+}
+
+.dashboard-notifications-empty {
+  padding: 1.5rem 0.75rem;
+  text-align: center;
+  color: var(--text-subtle);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.dashboard-notifications-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  padding: 0.4rem 0.3rem;
+}
+
+.dashboard-notifications-section + .dashboard-notifications-section {
+  border-top: 1px solid var(--border-divider, rgba(15, 23, 42, 0.08));
+}
+
+.dashboard-notifications-section-title {
+  padding: 0.2rem 0.4rem 0.35rem;
+  color: var(--text-subtle);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.dashboard-notifications-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border-radius: 10px;
+  padding: 0.5rem 0.6rem;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+}
+
+a.dashboard-notifications-row:hover {
+  background: var(--bg-hover, rgba(15, 23, 42, 0.04));
+}
+
+.dashboard-notifications-row-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.dashboard-notifications-row-text strong {
+  overflow: hidden;
+  color: var(--text-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-notifications-row-text small {
+  overflow: hidden;
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dashboard-notifications-dot {
+  margin-top: 0.3rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  flex: none;
+  border-radius: 999px;
+}
+
+.dashboard-notifications-dot-danger {
+  background: var(--status-danger-text, #dc2626);
+}
+
+.dashboard-notifications-dot-warning {
+  background: var(--status-warning-text, #d97706);
+}
+
+/* Same tone tokens the item slide-over's merged activity feed uses
+   (backlog §16D) — kept consistent rather than inventing a second palette. */
+.dashboard-notifications-icon {
+  display: flex;
+  height: 1.5rem;
+  width: 1.5rem;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.5rem;
+  background: var(--bg-inset, rgba(15, 23, 42, 0.05));
+  color: var(--text-muted);
+}
+
+.dashboard-notifications-icon-success {
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.dashboard-notifications-icon-danger {
+  background: var(--status-danger-surface);
+  color: var(--status-danger-text);
+}
+
+.dashboard-notifications-icon-warning {
+  background: var(--status-warning-surface);
+  color: var(--status-warning-text);
+}
+
+.dashboard-notifications-icon-accent {
+  background: var(--status-info-surface);
+  color: var(--status-info-text);
+}
+
+.dashboard-notifications-viewall {
+  margin-top: 0.15rem;
+  padding: 0.45rem 0.6rem;
+  color: var(--text-accent, #2563eb);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+}
+
+.dashboard-notifications-viewall:hover {
+  text-decoration: underline;
+}
+
+@media (max-width: 639px) {
+  .dashboard-notifications-menu {
+    width: min(22rem, calc(100vw - 1.5rem));
+  }
+}
