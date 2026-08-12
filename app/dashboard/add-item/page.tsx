@@ -693,6 +693,51 @@ export default function AddItemPage() {
   // same resolveScannedCode() every other scan surface in the app uses, so a
   // code is interpreted identically everywhere; this page just adds a new
   // call site, no new resolution logic.
+  // Shared by the Scan button and by typing a barcode in by hand, so both
+  // paths interpret a code identically. Returns null when the check could not
+  // run (not signed in / query failed) — callers treat that as "unknown", never
+  // as "no duplicate", so a failed lookup can't silently green-light a dupe.
+  const lookupBarcodeOwner = async (code: string) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from("inventory")
+      .select("id, name, sku, barcode, public_id")
+      .eq("user_id", user.id);
+
+    if (error) return null;
+
+    return resolveScannedCode<ScanCandidateItem>(
+      code,
+      (data as ScanCandidateItem[] | null) || []
+    );
+  };
+
+  const describeBarcodeConflict = (
+    resolution: NonNullable<Awaited<ReturnType<typeof lookupBarcodeOwner>>>
+  ) => {
+    if (resolution.kind === "item") {
+      return {
+        tone: "warning" as const,
+        text: `This code already belongs to “${resolution.item.name}.” Go there to adjust its stock instead of creating a duplicate.`,
+        existingItemId: resolution.item.id,
+      };
+    }
+
+    if (resolution.kind === "ambiguous") {
+      return {
+        tone: "warning" as const,
+        text: `${resolution.items.length} existing items share that code — check Inventory before adding a new one.`,
+      };
+    }
+
+    return null;
+  };
+
   const handleBarcodeScanned = async (scannedValue: string) => {
     const scannedText = scannedValue.trim();
     closeBarcodeScanner();
@@ -705,60 +750,67 @@ export default function AddItemPage() {
       return;
     }
 
+    const acceptScannedCode = () => {
+      setBarcode(scannedText);
+      setBarcodeNotice({
+        tone: "success",
+        text: `Barcode ${scannedText} added. Fill in the rest below.`,
+      });
+    };
+
     try {
       setIsCheckingBarcode(true);
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+      const resolution = await lookupBarcodeOwner(scannedText);
 
-      if (!user) {
-        setBarcode(scannedText);
-        setBarcodeNotice({
-          tone: "success",
-          text: `Barcode ${scannedText} added. Fill in the rest below.`,
-        });
+      if (!resolution) {
+        acceptScannedCode();
         return;
       }
 
-      const { data } = await supabase
-        .from("inventory")
-        .select("id, name, sku, barcode, public_id")
-        .eq("user_id", user.id);
+      const conflict = describeBarcodeConflict(resolution);
 
-      const resolution = resolveScannedCode<ScanCandidateItem>(
-        scannedText,
-        (data as ScanCandidateItem[] | null) || []
-      );
-
-      if (resolution.kind === "item") {
-        setBarcodeNotice({
-          tone: "warning",
-          text: `This code already belongs to “${resolution.item.name}.” Go there to adjust its stock instead of creating a duplicate.`,
-          existingItemId: resolution.item.id,
-        });
+      if (conflict) {
+        setBarcodeNotice(conflict);
         return;
       }
 
-      if (resolution.kind === "ambiguous") {
-        setBarcodeNotice({
-          tone: "warning",
-          text: `${resolution.items.length} existing items share that code — check Inventory before adding a new one.`,
-        });
-        return;
-      }
-
-      setBarcode(scannedText);
-      setBarcodeNotice({
-        tone: "success",
-        text: `Barcode ${scannedText} added. Fill in the rest below.`,
-      });
+      acceptScannedCode();
     } catch {
-      setBarcode(scannedText);
-      setBarcodeNotice({
-        tone: "success",
-        text: `Barcode ${scannedText} added. Fill in the rest below.`,
-      });
+      acceptScannedCode();
+    } finally {
+      setIsCheckingBarcode(false);
+    }
+  };
+
+  // backlog item 1 follow-up: only the scan path checked for duplicates, so a
+  // barcode TYPED by hand could still create the "same barcode, two items"
+  // state the founder's own rule rules out. Checked on blur (once the field is
+  // finished) rather than per keystroke, which would query on every character.
+  // Warns rather than blocks the save: the scan path already prevents the dupe
+  // at source, and hard-blocking an existing working form is a bigger
+  // behaviour change than this gap warrants. If duplicates still show up in
+  // practice, promoting this to a blocking validation is the next step.
+  const handleBarcodeBlur = async () => {
+    const typedText = barcode.trim();
+
+    if (!typedText || isCheckingBarcode) return;
+    // Don't re-warn about a conflict already on screen for this same code.
+    if (barcodeNotice?.tone === "warning" && barcodeNotice.existingItemId) return;
+
+    try {
+      setIsCheckingBarcode(true);
+
+      const resolution = await lookupBarcodeOwner(typedText);
+
+      if (!resolution) return;
+
+      const conflict = describeBarcodeConflict(resolution);
+
+      if (conflict) setBarcodeNotice(conflict);
+    } catch {
+      // A failed check leaves the typed value alone and says nothing rather
+      // than claiming the code is free.
     } finally {
       setIsCheckingBarcode(false);
     }
@@ -1463,6 +1515,7 @@ export default function AddItemPage() {
                       setBarcode(event.target.value);
                       if (barcodeNotice) setBarcodeNotice(null);
                     }}
+                    onBlur={() => void handleBarcodeBlur()}
                     disabled={loading}
                     autoComplete="off"
                     spellCheck={false}

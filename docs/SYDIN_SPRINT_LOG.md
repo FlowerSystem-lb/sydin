@@ -3270,4 +3270,66 @@ valuation report, or to any schema. Presentation of an existing number only.
 
 ---
 
+## Data-completeness pass: "No price" filter · manual barcode dupe check · one retracted bug  *(Complete)*
+
+**Why these three:** with §16 and items 1–2 shipped, every *remaining* roadmap item is gated on
+something outside my control — Phase 4 forecasting/AI/automation need real operating data (the
+2026-08-04 measurement still holds), §16C needs the founder's Pinterest references, and Notification
+Center persistence needs an approved schema change. These three needed none of that.
+
+### 1. "No price" quick filter — makes the Inventory Value gap actionable
+The previous entry captioned the Dashboard card as `"priced items only (2 of 10)"`. That made the
+gap **visible**; this makes it **fixable in one click**. Added a `no-price` quick filter alongside
+the existing `no-image` one (deliberately the same pattern, at all five sites the type is
+enumerated: type union · `QUICK_FILTER_OPTIONS` · `?quick=` URL validation · mobile folder strip ·
+the filter predicate). The Dashboard's Inventory Value card now links to
+`/dashboard/inventory?quick=no-price` **only when the figure is partial**, so the caption and the
+click go to the same place.
+
+Extracted `itemHasNoPrice()` as the single definition of "unpriced": an item counts as priced if
+**either** `cost_price` or `selling_price` is set, matching the Dashboard's
+`quantity × (selling_price ?? cost_price)` exactly — kept in one function so the filter and that
+calculation cannot drift apart.
+
+**Verified live:** filter returns **8 of 10 items**, every row showing `--` for price, with the two
+priced items (`ead`, `Satc`) correctly excluded; chip renders and reports active; the Dashboard
+card's `href` resolves to the filtered URL end-to-end.
+
+### 2. Manual barcode duplicate check — closing the gap item 1 left open
+Item 1 only checked duplicates on the **scan** path, so a barcode **typed by hand** could still
+create the "same barcode, two items" state the founder's own rule rules out. Refactored the lookup
+into `lookupBarcodeOwner()` + `describeBarcodeConflict()`, now shared by both paths so a code is
+interpreted identically however it arrives.
+
+Two deliberate calls, both documented in-code:
+- **Checked on blur**, not per keystroke — per-keystroke would query on every character typed.
+- **Warns rather than blocks the save.** The scan path already prevents the duplicate at source, and
+  hard-blocking a working form is a bigger behaviour change than this gap warrants. Noted in-code
+  that promoting it to a blocking validation is the next step if duplicates still appear in practice.
+- A failed lookup returns `null` and says **nothing**, rather than claiming the code is free — a
+  broken check must never green-light a duplicate.
+
+**Verified live, both directions:** typing `4005900640741` (owned by `Nivea blue`) surfaces the
+warning with a working "View item" link to `/dashboard/inventory/33`; typing an unused code produces
+**no** notice (no false positive).
+
+### 3. Retracted a bug I reported that does not exist
+The §16D entry and an earlier commit message both claimed "clicking a card's ⋯ opens the preview
+instead of its menu." **That was my misdiagnosis, and it is now retracted in the backlog.** Clicking
+the ⋯ element directly opens its menu with all 7 items and does not open the preview;
+`toggleMenu` already calls `preventDefault()` + `stopPropagation()`, and the card root is an
+`<article role="button">` (no nested-`<button>` problem). The "reproduction" was a **harness
+coordinate artifact** — viewport 1440×900 vs 800×500 screenshots, a 1.8× factor — and delegated
+event logging proved the click target was an `<img>` in a *different* card (`inMenuBtn=false`), so
+the ⋯ was never hit. No code changed. The backlog now records the retraction **and** the method that
+would have caught it sooner (coordinate-free test, or assert `elementFromPoint` right before
+clicking).
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · live at 1440px.
+
+**Untouchables:** no schema, auth, or Supabase-integration changes. Item 2's warning is additive to
+the Add Item form; no existing validation or save behaviour was altered.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

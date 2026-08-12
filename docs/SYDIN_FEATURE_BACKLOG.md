@@ -283,10 +283,19 @@ item is skipped, never duplicated, same rule as item 1.
   item page — that's the "more classic, reorganised" part. Adjust Stock moved below the fact groups
   (previously it sat *above* every fact about the item). Activity tab now merges movements +
   history into one design (icon badge + consistent row style) instead of two visually different
-  lists glued together. *(Still open, unrelated to this fix: clicking a card's own ⋯ in the
-  Inventory grid opens this preview instead of the card's menu — the click reaches the card button
-  underneath it. Pre-existing, spotted 2026-08-06, lives in the Inventory grid/card component, not
-  in the slide-over touched here.)*
+  lists glued together.
+  - ~~*Still open: clicking a card's own ⋯ in the Inventory grid opens this preview instead of the
+    card's menu.*~~ **RETRACTED 2026-08-12 — this was never a real bug; I misdiagnosed it.**
+    Re-tested properly: clicking the ⋯ element directly opens its menu with all 7 items and does
+    **not** open the preview. `toggleMenu` in `components/inventory/InventoryItemCard.tsx` already
+    calls both `preventDefault()` and `stopPropagation()`, and the card root is an
+    `<article role="button">`, so there is no nested-`<button>` problem either. The original
+    "reproduction" was a **test-harness coordinate artifact**: the browser viewport is 1440×900
+    while its screenshots are 800×500 (a 1.8× factor), so coordinate clicks landed ~1.8× off —
+    delegated event logging proved the click target was an `<img>` in a *different* card
+    (`inMenuBtn=false`), i.e. the ⋯ was never hit. **Lesson for future sessions:** verify
+    click-target bugs with a coordinate-free test (dispatch on the element, or assert
+    `elementFromPoint` immediately before clicking) before believing a harness click.
 - **E. Done (2026-08-11).** The "dead space" was measurable: the image panel was a fixed-height box
   stretched across its column into a **~1.82:1 letterbox**, so a real 4:3 product photo pillarboxed
   to **~27% empty space** (a portrait phone photo, ~59%). Reframed to `aspect-[4/3]` capped at 26rem

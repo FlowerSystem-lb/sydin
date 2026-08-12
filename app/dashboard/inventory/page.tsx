@@ -137,6 +137,7 @@ type QuickFilter =
   | "low-stock"
   | "out-of-stock"
   | "no-image"
+  | "no-price"
   | "unassigned";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
 type ViewMode = "grid" | "list" | "table";
@@ -170,8 +171,24 @@ const QUICK_FILTER_OPTIONS: { value: QuickFilter; label: string }[] = [
   { value: "low-stock", label: "Low stock" },
   { value: "out-of-stock", label: "Out of stock" },
   { value: "no-image", label: "No image" },
+  // Finds items contributing nothing to Inventory Value. Added 2026-08-12
+  // alongside the "priced items only (N of M)" caption on the Dashboard card:
+  // that caption makes the gap visible, this makes it actionable in one click.
+  { value: "no-price", label: "No price" },
   { value: "unassigned", label: "Unassigned" },
 ];
+
+// "No price" means the item cannot contribute to inventory value at all — the
+// Dashboard computes per-item value as quantity × (selling_price ?? cost_price),
+// so an item counts as priced if EITHER price is set. Kept in one place so the
+// filter and that calculation cannot drift apart.
+function itemHasNoPrice(item: { cost_price?: number | string | null; selling_price?: number | string | null }) {
+  const hasCost = item.cost_price !== null && item.cost_price !== undefined && String(item.cost_price).trim() !== "";
+  const hasSelling =
+    item.selling_price !== null && item.selling_price !== undefined && String(item.selling_price).trim() !== "";
+
+  return !hasCost && !hasSelling;
+}
 const DEFAULT_PDF_SETTINGS: PdfSettings = {
   reportType: "summary",
   scope: "all",
@@ -779,6 +796,7 @@ export default function InventoryPage() {
         requestedQuick === "low-stock" ||
         requestedQuick === "out-of-stock" ||
         requestedQuick === "no-image" ||
+        requestedQuick === "no-price" ||
         requestedQuick === "unassigned"
       ) {
         setQuickFilter(requestedQuick);
@@ -1928,6 +1946,19 @@ export default function InventoryPage() {
       },
     },
     {
+      key: "no-price",
+      label: "No Price",
+      count: items.filter(itemHasNoPrice).length,
+      icon: "usage" as UiIconName,
+      active: quickFilter === "no-price",
+      onSelect: () => {
+        setCategoryFilter("all");
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("no-price");
+      },
+    },
+    {
       key: "unassigned",
       label: "Unassigned",
       count: items.filter((item) => !item.depot_id).length,
@@ -2111,6 +2142,7 @@ export default function InventoryPage() {
     if (quickFilter === "low-stock") return isItemLowStock(item);
     if (quickFilter === "out-of-stock") return Number(item.quantity || 0) <= 0;
     if (quickFilter === "no-image") return !item.image?.trim();
+    if (quickFilter === "no-price") return itemHasNoPrice(item);
     if (quickFilter === "unassigned") return !item.depot_id;
     return true;
   });

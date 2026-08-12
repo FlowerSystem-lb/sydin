@@ -573,7 +573,12 @@ export default function DashboardPage() {
             )} of ${formatNumber(dashboardData.totalItems)})`
           : currencyCode,
       icon: "usage" as UiIconName,
-      href: "/dashboard/inventory",
+      // When the figure is partial, send the click to the items causing that —
+      // the caption states the gap, this is how you act on it.
+      href:
+        dashboardData.pricedItemCount < dashboardData.totalItems
+          ? "/dashboard/inventory?quick=no-price"
+          : "/dashboard/inventory",
       accent: "sydin-kpi-emerald",
       showBreakdown: false,
     },
