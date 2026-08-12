@@ -290,3 +290,36 @@ didn't catch it either at first — a same-size, same-color, empty circle reads 
 glance. **How to apply:** when reviewing or reusing a call site with an `as UiIconName` (or any
 similar string-union cast), check the DOM (child node count, not just visual size/color) rather than
 trusting the cast or a cursory screenshot. **Status:** Active (reference).
+
+### 2026-08-12 · Notification Center: generation lives in the TypeScript wrapper, not the SQL RPC
+**Decision:** `notifyIfCrossedIntoLowStock()` is called from `recordStockMovement()`
+(`app/lib/stockMovements.ts`) — the TypeScript wrapper every one of the 6 movement call sites already
+goes through — not added to the `record_stock_movement` Postgres RPC that wrapper calls. **Why:**
+low-stock threshold resolution (`getEffectiveLowStockThreshold` / `getEffectiveItemLowStockThreshold`
+in `app/lib/subscription.ts` / `app/lib/inventoryItemModel.ts`) depends on plan-capability gating
+(`customLowStockThreshold`) and business settings — real business logic that already lives in
+TypeScript. Porting it into the SQL function would duplicate that logic in two languages with no
+shared source of truth, and the two would eventually drift. Putting the notification check in the
+wrapper instead keeps threshold logic in exactly one place while still getting complete coverage,
+since every call site already funnels through this same function — verified by grep, all 6 call
+sites (Scanner, item page, slide-over, Receiving, Stock Counts, Stock Movement dialog) go through
+`recordStockMovement()`, none call the RPC directly. **Corollary:** if a future notification type
+needs data the RPC doesn't currently return, extend the RPC's return columns before reaching for a
+second query inside the wrapper — but keep all *business rules* (thresholds, plan gates) in
+TypeScript. **Status:** Active.
+
+### 2026-08-12 · Notification Center only generates categories with a real trigger
+**Decision:** Of the backlog's full category list (Inventory · Billing · AI · System · Updates ·
+Team · Low stock · Stock movement · Product announcements), only **low_stock** and **out_of_stock**
+generate real notification rows. **Why:** Billing needs a payment webhook that doesn't exist, AI
+needs the Assistant (not started, Phase 4), Team needs multi-user (this is a single-user account
+today), Product announcements need an authoring surface for someone to write them. Generating rows
+for any of these would mean fabricating notifications with no real event behind them — the same
+category of mistake already corrected twice this session (the Inventory Value card presenting a
+partial sum as a total; the retracted "card ⋯ opens preview" bug report). A notification center that
+occasionally lies is worse than a small one that's always true. **How to apply:** when one of the
+missing categories gets real infrastructure (a billing webhook, the AI Assistant, multi-user
+support), add its notification generation at that point — don't pre-build the UI/schema for
+categories with nothing to say yet. The `notifications.type` check constraint in
+`sql/phase-13-notifications.sql` intentionally only allows the two values that exist today; widen it
+when a third one earns its place. **Status:** Active.

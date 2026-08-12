@@ -1,3 +1,4 @@
+import { notifyIfCrossedIntoLowStock } from "@/app/lib/notifications";
 import { supabase } from "@/app/lib/supabase";
 
 export type StockMovementType =
@@ -124,5 +125,29 @@ export async function recordStockMovement({
     throw error;
   }
 
-  return normalizeMovement(data as Partial<StockMovement>);
+  const movement = normalizeMovement(data as Partial<StockMovement>);
+
+  // backlog §6: every stock-change path in the app (Scanner's 8 modes, the
+  // item page, the slide-over, Receiving, Stock Counts) already calls this
+  // one function, so this is the single, complete-coverage place to generate
+  // a low/out-of-stock notification — not each of those 6 call sites
+  // individually. Best-effort: a notification failure must never surface
+  // here or undo a movement that already succeeded.
+  supabase.auth
+    .getUser()
+    .then(({ data: { user } }) => {
+      if (!user) return;
+
+      return notifyIfCrossedIntoLowStock({
+        userId: user.id,
+        itemId,
+        quantityBefore: movement.quantity_before,
+        quantityAfter: movement.quantity_after,
+      });
+    })
+    .catch(() => {
+      // Best-effort, by design — see comment above.
+    });
+
+  return movement;
 }

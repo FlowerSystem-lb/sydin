@@ -109,10 +109,19 @@ push (later) · notification-center alert · future automatic PO draft.
 | Email alerts | P1 | Med | Med | 3 | Email infra (verify Supabase/provider) |
 | Auto PO draft on low stock | P3 | High | High | 4 | Automation + PO |
 
-## 6. Notification Center — **Light v1 done (2026-08-12)**
+## 6. Notification Center — **Persisted upgrade done (2026-08-12), needs one manual step**
 
 Unread · Inventory · Billing · AI · System · Updates · Team · Low stock · Stock movement ·
 Product announcements.  **Priority: P2**, after Activity/Timeline foundation.
+
+Real persisted rows for **low_stock** and **out_of_stock** only — the two categories above with an
+actual trigger in the app today. Billing/AI/Team/Product announcements need infrastructure that
+doesn't exist yet (payment webhook, the Assistant, multi-user, an authoring surface) and won't get
+fabricated rows just to fill out the category list. **⚠️ `sql/phase-13-notifications.sql` has not
+been run yet** — Sayed needs to run it in the Supabase SQL editor before the new "Alerts" section
+in the bell dropdown will show anything (the app works fine either way; it just stays empty until
+then). See Sprint Log for the full writeup and Decision Log for why generation lives in
+`recordStockMovement()` and not the SQL RPC.
 
 Shipped a bell icon (desktop/tablet top bar) with a badge and dropdown, computed live from
 existing data — Stock Alerts' own low-stock logic + the Activity feed. No new database table, no

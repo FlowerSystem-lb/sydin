@@ -18755,10 +18755,18 @@ body.sydin-shell,
 
 .dashboard-notifications-header {
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
   padding: 0.5rem 0.6rem 0.6rem;
   border-bottom: 1px solid var(--border-divider, rgba(15, 23, 42, 0.08));
+}
+
+.dashboard-notifications-header > div {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
 }
 
 .dashboard-notifications-header strong {
@@ -18769,6 +18777,26 @@ body.sydin-shell,
 .dashboard-notifications-header span {
   font-size: 0.72rem;
   color: var(--text-subtle);
+}
+
+/* backlog §6, persisted alerts */
+.dashboard-notifications-mark-all {
+  flex: none;
+  border: 0;
+  background: none;
+  padding: 0.2rem 0;
+  color: var(--text-accent);
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.dashboard-notifications-mark-all:hover {
+  text-decoration: underline;
+}
+
+.dashboard-notifications-dot-read {
+  opacity: 0.35;
 }
 
 .dashboard-notifications-empty {

@@ -3377,4 +3377,66 @@ against it. No auth or business-logic changes.
 
 ---
 
+## Notification Center — persisted upgrade (backlog §6)  *(Complete, needs a manual SQL step)*
+
+Founder explicitly approved a schema change for this ("ok go" in response to being asked directly)
+— the one line I don't cross on a general "continue the roadmap." Upgrades the existing light v1
+(`7df30c9`, computed live, no persistence) with real notification rows and read state, without
+touching or regressing the light v1's UI.
+
+**New table, `sql/phase-13-notifications.sql`** — matches the existing migration convention exactly
+(same RLS pattern as `phase-11-import-export-history.sql`). **Not yet applied to Supabase — this
+needs Sayed to run it manually**, same as every prior phase-N file in this repo. Everything degrades
+gracefully until then: `getNotifications`/`getUnreadNotificationCount` catch a missing-table error
+(`42P01`/`PGRST204`) and return `[]`/`0` rather than throwing, so the app works identically before
+and after the migration — verified live by loading the dashboard with the table still missing:
+no crash, no exposed error, the new "Alerts" section simply doesn't render.
+
+**Scoped to two notification types only: `low_stock` and `out_of_stock`.** The backlog's full
+category list (Inventory · Billing · AI · System · Updates · Team · Low stock · Stock movement ·
+Product announcements) has real triggers for exactly two of those today. Billing needs a payment
+webhook, AI needs the Assistant, Team needs multi-user, Product announcements need an authoring
+surface — building notifications for categories with no real trigger would mean fabricating rows,
+which is the same mistake already corrected twice this session (Inventory Value, the retracted ⋯
+bug). Documented in the SQL file's own header so a future session doesn't have to re-derive why.
+
+**Generation lives in exactly one place: `recordStockMovement()`** (`app/lib/stockMovements.ts`), not
+duplicated across its 6 call sites (Scanner's 8 modes, the item page, the slide-over, Receiving,
+Stock Counts, the Stock Movement dialog) — every one of them already funnels through this one
+function, so hooking in here gives complete coverage for free. Fires only on a genuine **crossing**
+(quantity was above the effective threshold, now isn't) — not on every movement of an
+already-low item, which would just be noise on top of the Stock Alerts page that already shows
+current state live. Threshold computed with the same `getEffectiveLowStockThreshold` /
+`getEffectiveItemLowStockThreshold` functions the rest of the app uses, not a simplified copy.
+Best-effort and silent by design — wrapped so a notification failure can never surface to the user
+or undo a movement that already succeeded; verified live by recording a real movement with the table
+still missing and confirming it completed normally with no new console errors.
+
+**Known gap, documented rather than silently accepted:** direct quantity edits via the Edit Item form
+bypass `recordStockMovement` (they write straight to the `inventory` row), so they don't trigger a
+crossing notification. Only the movement-recording path is covered in this pass.
+
+**UI — additive, not a replacement.** The existing light-v1 "Needs attention" section (live,
+recomputed every load, proven) and its bell badge count are **untouched** — still the same reliable
+signal. A new "Alerts" section was added above it, sourced from the persisted table, with per-row
+unread dots and a "Mark all read" action; it simply doesn't render when there are no persisted rows
+yet (fresh migration, or nothing has crossed since), rather than showing an empty/placeholder state
+that would contradict "Needs attention" sitting right below it with real entries. Deliberately did
+**not** repoint the bell's badge number at the persisted count — a fresh migration starts at 0 rows,
+and swapping the badge to that immediately would have been a visible regression (3 → 0) until new
+crossings happen, for a number that was already correct.
+
+**Verified live:** dashboard loads correctly with the table missing (no crash); a real stock movement
+completes normally with the table missing (no new errors, success notice shown); lint/tsc/build all
+pass. Dropdown UI not yet exercised with real notification rows, since that requires the migration to
+be run first — will verify read/unread + "Mark all read" once Sayed confirms the SQL ran.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37).
+
+**Untouchables:** no changes to the `record_stock_movement` Postgres RPC (threshold logic stays in
+TypeScript, where it already lives, rather than being duplicated into SQL) — only a new table and a
+new call site in the existing wrapper function around it.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
