@@ -3332,4 +3332,49 @@ the Add Item form; no existing validation or save behaviour was altered.
 
 ---
 
+## Item 3: Dashboard "Get your data ready" — the data-honest half  *(Complete)*
+
+**Not the full item 3.** The 2026-08-04 decision explicitly split item 3 in two: predictive
+conclusions ("what will run out", "dead stock value") stay deferred — the account still has nowhere
+near the 2–3 months of operating history that needs — but **data-completeness** was named as "true
+today and precisely what unlocks the predictive metrics later." This sprint builds exactly that
+second half, no more. Founder said "continue the roadmap" after I flagged the predictive half was
+still blocked; this is the honest way to do both at once.
+
+**New Dashboard panel, "Get your data ready":** four linked counts, each going straight to the
+Inventory filter that fixes it — no-price (8), no-photo (3), no-activity (6), no-depot (6). A zero
+count renders in the "resolved" muted style instead of the amber attention style, so completing a
+gap visibly removes it rather than just changing a number.
+
+**New: "No activity" quick filter** on Inventory — the specific gap the 2026-08-04 entry named
+("items with no movement history"), not something invented for this sprint. Backed by a new, lean
+`select item_id from stock_movements` query (a Set of moved item IDs), added at all five sites the
+quick-filter type is already enumerated for consistency with `no-price`/`no-image`. A failed lookup
+leaves the set empty rather than guessing — the chip stays visible with a count that's honestly
+wrong-safe (every item reads as "no activity") rather than silently reporting zero.
+
+**Correctness note:** the Dashboard already fetched movements via `getRecentStockMovements(user.id,
+8)` for the "recent activity" list. Reusing that as-is for the completeness count would have
+undercounted — any item whose only movement fell outside the 8 most recent would wrongly show as "no
+activity." Bumped the limit to 250 (the function's cap; current volume is nowhere near it) and kept
+`recentMovements = movements.slice(0, 6)` for display, so the two concerns don't fight over one
+query's limit.
+
+**Verified live, numbers cross-checked two ways** (Dashboard chip vs. Inventory's own filtered
+count): No price 8/10, No photo 3/10, No activity 6/10, No depot 6/10 — exact match. Clicked through
+"No photo" end-to-end: Dashboard said 3, Inventory filtered view showed exactly 3. Checked 1440px and
+375px, no horizontal overflow either width.
+
+**Deliberately NOT done:** no forecasting, no "days until stockout," no dead-stock valuation, no
+consumption-rate math — building any of those now would mean fabricating conclusions the account's
+12 lifetime stock movements cannot support, which is precisely what the 2026-08-04 decision warned
+against. Revisit that half on its own schedule, not bundled into this.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ (37/37).
+
+**Untouchables:** no schema change — `stock_movements` already existed, this only adds a read query
+against it. No auth or business-logic changes.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

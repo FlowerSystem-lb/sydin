@@ -374,7 +374,12 @@ export default function DashboardPage() {
           getOrCreateBusinessSettings(user.id),
           getCategoriesForUser(user.id).catch(() => []),
           getDepotsForUser(user.id).catch(() => []),
-          getRecentStockMovements(user.id, 8).catch(() => []),
+          // 250 (the function's cap), not 8: the "no activity" completeness
+          // stat below needs to know about every movement, not just the
+          // handful shown in the recent-activity list, or it would overcount
+          // items as having no history whenever more than 8 movements exist.
+          // recentMovements still slices to 6 for display.
+          getRecentStockMovements(user.id, 250).catch(() => []),
           // Empty when the phase-8 SQL has not been run yet — the panel
           // falls back to its empty state instead of breaking the dashboard.
           getPurchaseOrdersForUser(user.id).catch(() => []),
@@ -498,6 +503,26 @@ export default function DashboardPage() {
         .filter((depotId): depotId is number => typeof depotId === "number")
     );
 
+    // Data-completeness counts (backlog item 3 / 2026-08-04 decision): the
+    // predictive Dashboard is deferred until there's real operating history,
+    // but "what's missing that's blocking that history" is true today and
+    // computable now. Each count feeds a card below that links to the exact
+    // same Inventory quick filter, so the number and the fix are one click
+    // apart — same pattern as the Inventory Value caption's ?quick=no-price.
+    const movedItemIds = new Set(
+      movements
+        .map((movement) => movement.item_id)
+        .filter((id): id is number => id !== null && id !== undefined)
+    );
+    const noImageCount = items.filter((item) => !item.image?.trim()).length;
+    const noPriceCount = items.length - pricedItemCount;
+    const noActivityCount = items.filter(
+      (item) => !movedItemIds.has(item.id)
+    ).length;
+    const unassignedDepotCount = items.filter(
+      (item) => !item.depot_id
+    ).length;
+
     return {
       enrichedItems,
       recentItems: enrichedItems.slice(0, 6),
@@ -506,6 +531,10 @@ export default function DashboardPage() {
       totalValue,
       hasValue: valueItems.length > 0,
       pricedItemCount,
+      noImageCount,
+      noPriceCount,
+      noActivityCount,
+      unassignedDepotCount,
       totalDepots: Math.max(depots.length, activeDepotIds.size),
       lowStockItems: lowStockItems.slice(0, 5),
       lowStockCount: lowStockItems.length,
@@ -519,6 +548,7 @@ export default function DashboardPage() {
     depots.length,
     effectiveLowStockThreshold,
     items,
+    movements,
   ]);
 
   const stockBreakdown = {
@@ -777,6 +807,75 @@ export default function DashboardPage() {
                   </Link>
                 ))}
               </div>
+            )}
+          </section>
+
+          {/* backlog item 3 / 2026-08-04 decision: predictive metrics ("what
+              will run out", "dead stock value") are deferred until there's
+              real operating history — but "what's missing that's blocking
+              that history" is true today. Each count links to the exact
+              Inventory filter that fixes it. */}
+          <section className="sydin-overview-panel sydin-overview-completeness">
+            <DashboardPanelHeader icon="check" title="Get your data ready" />
+
+            {loading ? (
+              <div className="sydin-overview-skeleton-list" aria-hidden="true">
+                {[1, 2].map((item) => (
+                  <span key={item} />
+                ))}
+              </div>
+            ) : dashboardData.totalItems === 0 ? (
+              <div className="sydin-overview-empty">
+                <span>
+                  <UiIcon name="box" className="h-5 w-5" />
+                </span>
+                <strong>No items yet</strong>
+                <p>Add items to start tracking what needs completing.</p>
+                <Link href="/dashboard/add-item">Add Item</Link>
+              </div>
+            ) : (
+              <>
+                <p className="sydin-overview-completeness-note">
+                  Complete these to unlock trend and forecast metrics later.
+                </p>
+                <div className="sydin-overview-completeness-grid">
+                  {[
+                    {
+                      key: "no-price",
+                      count: dashboardData.noPriceCount,
+                      label: "No price",
+                    },
+                    {
+                      key: "no-image",
+                      count: dashboardData.noImageCount,
+                      label: "No photo",
+                    },
+                    {
+                      key: "no-activity",
+                      count: dashboardData.noActivityCount,
+                      label: "No activity",
+                    },
+                    {
+                      key: "unassigned",
+                      count: dashboardData.unassignedDepotCount,
+                      label: "No depot",
+                    },
+                  ].map((gap) => (
+                    <Link
+                      key={gap.key}
+                      href={`/dashboard/inventory?quick=${gap.key}`}
+                      className={`sydin-overview-completeness-chip ${
+                        gap.count === 0
+                          ? "sydin-overview-completeness-chip-clear"
+                          : ""
+                      }`}
+                    >
+                      <strong>{formatNumber(gap.count)}</strong>
+                      <span>{gap.label}</span>
+                    </Link>
+                  ))}
+                </div>
+              </>
             )}
           </section>
 

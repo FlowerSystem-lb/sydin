@@ -14005,6 +14005,72 @@ body,
   overflow-wrap: anywhere;
 }
 
+/* ===[ DATA COMPLETENESS — backlog item 3, 2026-08-04 decision ]=== */
+.sydin-overview-completeness-note {
+  margin: 0 0.85rem 0.7rem;
+  color: var(--overview-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.sydin-overview-completeness-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.55rem;
+  padding: 0 0.85rem 0.85rem;
+}
+
+.sydin-overview-completeness-chip {
+  display: flex;
+  min-width: 0;
+  min-height: 3.35rem;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.15rem;
+  border: 1px solid rgba(217, 119, 6, 0.24);
+  border-radius: 10px;
+  background: rgba(245, 158, 11, 0.08);
+  padding: 0.55rem 0.7rem;
+  color: var(--overview-ink);
+  text-decoration: none;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.sydin-overview-completeness-chip strong {
+  font-size: 1.15rem;
+  font-weight: 900;
+  color: #92400e;
+}
+
+.sydin-overview-completeness-chip span {
+  font-size: 0.74rem;
+  font-weight: 800;
+  color: var(--overview-muted);
+}
+
+/* Zero is the goal, not a gap — reads as resolved rather than another stat. */
+.sydin-overview-completeness-chip-clear {
+  border-color: var(--overview-line);
+  background: var(--overview-soft);
+}
+
+.sydin-overview-completeness-chip-clear strong {
+  color: var(--overview-muted);
+}
+
+@media (hover: hover) {
+  .sydin-overview-completeness-chip:hover {
+    border-color: rgba(217, 119, 6, 0.4);
+    background: rgba(245, 158, 11, 0.14);
+  }
+
+  .sydin-overview-completeness-chip-clear:hover {
+    border-color: var(--overview-line);
+    background: var(--overview-soft);
+  }
+}
+
 .sydin-overview-items-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr));

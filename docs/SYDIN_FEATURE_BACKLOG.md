@@ -226,7 +226,7 @@ which broke `position: fixed` app-wide) · the `flwow` → `Flower` category typ
 design — shown mockups, decided to keep current, 2026-08-12) · **E** (full
 item page, 2026-08-11) — see the sub-list below.
 
-### 3. Dashboard — **next up, his stated priority**
+### 3. Dashboard — **split in two by the 2026-08-04 decision**
 "Finish the full Dashboard page, start finishing and deploying each page. Dashboard should connect
 from all the pages and make a full summary, smart and professional, about stats."
 
@@ -235,6 +235,13 @@ Approach agreed before writing code:
    "how is my business doing?" Today it shows counts without conclusions.
 2. **Every card links to its filtered view** — that is the "connect from all the pages" part.
 3. Design last, not first.
+
+- **Data-completeness half: Done (2026-08-12).** "Get your data ready" panel — No price (8) · No
+  photo (3) · No activity (6) · No depot (6), each linking to its Inventory filter. This is
+  principle 2 above, applied to gaps instead of alerts.
+- **Predictive half: still deferred.** Forecasting, "days until stockout," dead-stock valuation need
+  real consumption history — the account has 12 lifetime stock movements. Revisit per the
+  2026-08-04 decision, not on request alone; check the actual movement count first.
 
 ### 1. Add items by barcode scan  *(P1 — approved)* — **Done (2026-08-11)**
 Scan the QR/barcode printed on the carton, then fill in the rest (photo, cost, details). Manual

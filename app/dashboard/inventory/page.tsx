@@ -138,6 +138,7 @@ type QuickFilter =
   | "out-of-stock"
   | "no-image"
   | "no-price"
+  | "no-activity"
   | "unassigned";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
 type ViewMode = "grid" | "list" | "table";
@@ -175,6 +176,11 @@ const QUICK_FILTER_OPTIONS: { value: QuickFilter; label: string }[] = [
   // alongside the "priced items only (N of M)" caption on the Dashboard card:
   // that caption makes the gap visible, this makes it actionable in one click.
   { value: "no-price", label: "No price" },
+  // The specific gap named in the 2026-08-04 decision ("items with no
+  // movement history... is precisely what unlocks the predictive metrics
+  // later"). Backed by movedItemIds, populated from a lean stock_movements
+  // query on mount.
+  { value: "no-activity", label: "No activity" },
   { value: "unassigned", label: "Unassigned" },
 ];
 
@@ -521,6 +527,12 @@ export default function InventoryPage() {
 
   // Modal State
   const [depots, setDepots] = useState<Depot[]>([]);
+  // Dashboard's "data completeness" section (backlog item 3, the 2026-08-04
+  // decision: predictive stats aren't computable yet, but completeness gaps
+  // are) links here via ?quick=no-activity. A lean item_id-only query, not a
+  // reuse of getRecentStockMovements — that one is capped/ordered for a
+  // "recent" list, this only needs "has this item ever moved at all."
+  const [movedItemIds, setMovedItemIds] = useState<Set<number>>(new Set());
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [subscriptionUsage, setSubscriptionUsage] =
@@ -692,6 +704,14 @@ export default function InventoryPage() {
         getSuppliersForUser(user.id).catch(() => []),
         getCategoriesForUser(user.id).catch(() => []),
         getBusinessCurrency(user.id),
+        supabase
+          .from("stock_movements")
+          .select("item_id")
+          .eq("user_id", user.id)
+          .then(
+            (result) => result,
+            () => ({ data: null, error: null })
+          ),
       ])
         .then(
           ([
@@ -702,6 +722,7 @@ export default function InventoryPage() {
             loadedSuppliers,
             loadedCategories,
             loadedCurrency,
+            { data: movementRows },
           ]) => {
           if (!isActive) return;
 
@@ -719,6 +740,17 @@ export default function InventoryPage() {
           setSuppliers(loadedSuppliers);
           setCategories(loadedCategories);
           setEditCurrencyCode(loadedCurrency);
+          // A failed lookup here (movementRows null) leaves the set empty,
+          // meaning "no activity" would list every item — the filter chip
+          // stays available but its count staying wrong is more visible than
+          // the page breaking, so this is deliberately non-fatal.
+          setMovedItemIds(
+            new Set(
+              (movementRows || [])
+                .map((row: { item_id: number | null }) => row.item_id)
+                .filter((id: number | null): id is number => id !== null)
+            )
+          );
           setLoadingItems(false);
           setUsageLoading(false);
           }
@@ -797,6 +829,7 @@ export default function InventoryPage() {
         requestedQuick === "out-of-stock" ||
         requestedQuick === "no-image" ||
         requestedQuick === "no-price" ||
+        requestedQuick === "no-activity" ||
         requestedQuick === "unassigned"
       ) {
         setQuickFilter(requestedQuick);
@@ -1959,6 +1992,19 @@ export default function InventoryPage() {
       },
     },
     {
+      key: "no-activity",
+      label: "No Activity",
+      count: items.filter((item) => !movedItemIds.has(item.id)).length,
+      icon: "movement" as UiIconName,
+      active: quickFilter === "no-activity",
+      onSelect: () => {
+        setCategoryFilter("all");
+        setDepotFilter("all");
+        setStockFilter("all");
+        setQuickFilter("no-activity");
+      },
+    },
+    {
       key: "unassigned",
       label: "Unassigned",
       count: items.filter((item) => !item.depot_id).length,
@@ -2143,6 +2189,7 @@ export default function InventoryPage() {
     if (quickFilter === "out-of-stock") return Number(item.quantity || 0) <= 0;
     if (quickFilter === "no-image") return !item.image?.trim();
     if (quickFilter === "no-price") return itemHasNoPrice(item);
+    if (quickFilter === "no-activity") return !movedItemIds.has(item.id);
     if (quickFilter === "unassigned") return !item.depot_id;
     return true;
   });

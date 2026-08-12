@@ -237,12 +237,15 @@ happens. **→ The captioning half is DONE (2026-08-12):** the card now reads
 `"USD · priced items only (2 of 10)"` whenever any item is unpriced, so the number no longer
 presents itself as a workspace total (see Sprint Log, "Inventory Value presented a partial sum").
 Re-measuring at that point showed the "~90%" estimate here was far too kind — the $480 came from 2
-items holding **8 of 35,185 units**. The wider completeness-driving Dashboard remains deferred, as
-below. **What the Dashboard should do in the meantime:** drive **data completeness** (items
-missing a cost price, items with no movement history), which is true today and is precisely what
-unlocks the predictive metrics later. **Revisit** after ~2–3 months of real operating use, when
-there is genuine movement history. **Next work instead:** backlog §16 items A/B/G (inventory
-header, button ordering, three-dot menu), which need no data maturity. **Status:** Active.
+items holding **8 of 35,185 units**. **What the Dashboard should do in the meantime:** drive **data
+completeness** (items missing a cost price, items with no movement history), which is true today and
+is precisely what unlocks the predictive metrics later. **→ DONE (2026-08-12):** "Get your data
+ready" panel on the Dashboard — no-price/no-photo/no-activity/no-depot counts, each linking to the
+matching Inventory filter (see Sprint Log, "Item 3: Dashboard 'Get your data ready'"). **The
+predictive half remains deferred** — 12 lifetime stock movements is still nowhere near enough for
+forecasting or dead-stock valuation. **Revisit that half** after ~2–3 months of real operating use,
+when there is genuine movement history — check the actual count before starting, don't assume time
+alone is sufficient. **Status:** Active (predictive half only).
 
 ### 2026-08-11 · A scanned code matching an existing item never creates a duplicate — it points at it
 **Decision:** Anywhere a scan can lead to creating a new item, resolving the code against existing
