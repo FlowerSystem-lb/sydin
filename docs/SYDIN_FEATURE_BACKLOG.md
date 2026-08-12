@@ -222,9 +222,9 @@ them. **Next action: item 3 (Dashboard).** He will open a new session and say "s
 **Already done from this list:** F (white page background) · 4 (dialogs opening half off-screen —
 root cause was `.dashboard-route-transition` retaining a transform via `animation-fill-mode: both`,
 which broke `position: fixed` app-wide) · the `flwow` → `Flower` category typo · **A / B / G**
-(inventory three-tier toolbar, 2026-08-06) · **D** (item quick preview, 2026-08-10) · **E** (full
-item page, 2026-08-11) — see the sub-list below. **C is now unblocked** and needs his Pinterest
-references before it starts.
+(inventory three-tier toolbar, 2026-08-06) · **D** (item quick preview, 2026-08-10) · **C** (card
+design — shown mockups, decided to keep current, 2026-08-12) · **E** (full
+item page, 2026-08-11) — see the sub-list below.
 
 ### 3. Dashboard — **next up, his stated priority**
 "Finish the full Dashboard page, start finishing and deploying each page. Dashboard should connect
@@ -275,9 +275,13 @@ item is skipped, never duplicated, same rule as item 1.
   The ~5-row stack was two rules firing together at ~1070px — a viewport `@media` and a `@container`
   rule disagreeing about the width. Measured 1070×800: toolbar **252px → 114px**, control rows
   **4 → 1**. All inventory-layout thresholds are now `@container`.
-- **C.** New card design sourced from the web. **Deferred, now unblocked** — the deferral condition
-  was "revisit after D/E," and both D (2026-08-10) and E (2026-08-11) are now done. He offered to
-  send Pinterest references; **ask for them before starting this one.**
+- **C. Closed, keep current (2026-08-12).** Unblocked after D/E, then decided rather than deferred:
+  shown three mockups against a real item (`ead`) — Compact (same layout, ~40% shorter, status
+  collapsed to one dot instead of a pill *and* a badge saying it twice), a data-first row (rejected
+  outright — it's the existing list view; building it as the card would make two views look
+  identical), and a visual-first card (rejected — 8 of 10 items have no photo today, so it would
+  render mostly empty placeholders). **His call: current is good.** No Pinterest references sent;
+  none needed. Not revisiting without a specific complaint.
 - **D. Done (2026-08-10).** Regrouped the flat 14-row Details tab into Identity · Stock & Unit ·
   Supplier · Pricing & Value · Tracking Codes, mirroring the order already established on the full
   item page — that's the "more classic, reorganised" part. Adjust Stock moved below the fact groups
