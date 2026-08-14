@@ -129,7 +129,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
   {
     label: "Activity",
     href: "/dashboard/activity",
-    icon: "layers",
+    icon: "clock",
     section: "insights",
     mobilePlacement: "primary",
   },
