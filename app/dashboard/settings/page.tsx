@@ -427,10 +427,16 @@ export default function SettingsPage() {
 
     if (saving) return;
 
-    const businessName = settings.business_name.trim();
+    // `settings` is shared across every tab's form, not scoped per panel. The
+    // business name field only exists on Workspace -- if it was cleared there
+    // and never saved, then Save was pressed from a different tab, this must
+    // not (a) block an unrelated save with a field the user can't see, or
+    // (b) silently blank out the name that's still saved in the database.
+    const businessNameDraft = settings.business_name.trim();
+    const businessName = businessNameDraft || savedSettings.business_name;
     const lowStockThreshold = Number(settings.low_stock_threshold);
 
-    if (!businessName) {
+    if (activeSection === "workspace" && !businessNameDraft) {
       setError("Add a business name before saving.");
       setSuccess("");
       return;
@@ -969,40 +975,26 @@ export default function SettingsPage() {
             </div>
 
             {canShowPublicContact || savedSettings.show_contact_publicly ? (
-              <label className="mt-4 flex min-w-0 cursor-pointer flex-col gap-3 rounded-xl border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="min-w-0">
-                  <span className={`block ${valueTextClassName}`}>
-                    Show contact on public item pages
-                  </span>
-                  <span className={`mt-1 block ${mutedTextClassName}`}>
-                    Applies to public QR/item pages. Private workspace data
-                    stays private.
-                    {!canShowPublicContact &&
-                      " You can turn off the existing setting, but Standard is required to enable it again."}
-                  </span>
-                </span>
-                <span className="relative shrink-0">
-                  <input
-                    type="checkbox"
-                    checked={settings.show_contact_publicly}
-                    onChange={(event) =>
-                      setSettings((current) => {
-                        if (!canShowPublicContact && event.target.checked) {
-                          return current;
-                        }
-
-                        return {
-                          ...current,
-                          show_contact_publicly: event.target.checked,
-                        };
-                      })
-                    }
-                    className="peer sr-only"
-                  />
-                  <span className="block h-7 w-12 rounded-full border border-theme bg-[var(--sydin-input-bg)] transition peer-checked:border-sky-300/40 peer-checked:bg-sky-400/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sky-300" />
-                  <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-cyan-100" />
-                </span>
-              </label>
+              <div className="mt-4 flex min-w-0 flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0">
+                  <p className={valueTextClassName}>
+                    Show contact on public item pages:{" "}
+                    {settings.show_contact_publicly ? "On" : "Off"}
+                  </p>
+                  <p className={`mt-1 ${mutedTextClassName}`}>
+                    This toggle lives in Workspace, next to the contact
+                    fields it controls.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => switchSection("workspace")}
+                >
+                  Edit in Workspace
+                </Button>
+              </div>
             ) : (
               <div className="mt-4">
                 <LockedFeaturePanel
@@ -1593,14 +1585,6 @@ export default function SettingsPage() {
                 onClick={() => switchSection("workspace")}
               >
                 Edit Workspace
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => switchSection("workspace")}
-              >
-                Review Branding
               </Button>
             </div>
           </div>
