@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import UiIcon from "@/components/UiIcon";
 import { Button, DialogShell, Select } from "@/components/ui";
@@ -976,9 +977,9 @@ export default function ReceivingPage() {
                       <UiIcon name="info" className="h-4 w-4 shrink-0" />
                       <span>
                         Buying from a supplier? A{" "}
-                        <a href="/dashboard/purchase-orders/new">
+                        <Link href="/dashboard/purchase-orders/new">
                           purchase order
-                        </a>{" "}
+                        </Link>{" "}
                         also tracks cost, payment, and the invoice — and adds
                         stock when received.
                       </span>
@@ -1845,10 +1846,10 @@ export default function ReceivingPage() {
           <section className="receiving-history" aria-label="Recent stock in">
             <div className="receiving-history-header">
               <h2>Recent stock in</h2>
-              <a href="/dashboard/stock-movements" className="receiving-history-link">
+              <Link href="/dashboard/stock-movements" className="receiving-history-link">
                 All movements
                 <UiIcon name="chevron-right" className="h-4 w-4" />
-              </a>
+              </Link>
             </div>
 
             <div className="receiving-history-summary">
