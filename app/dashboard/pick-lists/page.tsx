@@ -5,6 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
+import {
   addPickListItem,
   createPickList,
   getPickListErrorMessage,
@@ -102,7 +110,7 @@ function PickListForm({
           <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
             Order preparation
           </p>
-          <h2 className="mt-2 text-3xl font-black text-theme-primary">
+          <h2 className="mt-2 text-xl font-black text-theme-primary">
             Create Pick List
           </h2>
           <p className="mt-2 text-sm leading-6 text-theme-muted">
@@ -203,7 +211,7 @@ function PickListForm({
         <button
           type="submit"
           disabled={saving || !values.title.trim()}
-          className="glass-button px-6 py-3.5 font-bold disabled:opacity-50"
+          className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
         >
           {saving ? "Creating..." : "Create Pick List"}
         </button>
@@ -387,40 +395,24 @@ export default function PickListsPage() {
   return (
     <div className="contents">
       <main className="operations-workspace operations-pick-lists">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
-          <section className="glass-panel p-5 sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Order preparation
-                </p>
-                <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-                  Pick Lists
-                </h1>
-                <p className="mt-4 max-w-2xl text-base leading-7 text-theme-muted sm:text-lg">
-                  Prepare orders, events, and projects without changing stock
-                  until the work is complete.
-                </p>
-              </div>
-
-              <button
-                type="button"
+        <DashboardPageShell>
+          <DashboardPageHeader
+            eyebrow="Order preparation"
+            title="Pick Lists"
+            description="Prepare orders, events, and projects without changing stock until the work is complete."
+            actions={
+              <ActionButton
                 onClick={openCreateForm}
                 disabled={loading || limitReached}
-                className="glass-button px-6 py-3.5 font-bold disabled:cursor-not-allowed disabled:opacity-50"
+                icon="plus"
               >
                 Create Pick List
-              </button>
-            </div>
-          </section>
+              </ActionButton>
+            }
+          />
 
           {pageError && (
-            <div
-              role="alert"
-              className="rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-4 text-sm font-semibold text-theme-danger"
-            >
-              {pageError}
-            </div>
+            <DashboardNotice tone="danger">{pageError}</DashboardNotice>
           )}
 
           {!loading && limitReached && pickListLimit !== null && (
@@ -434,7 +426,7 @@ export default function PickListsPage() {
             />
           )}
 
-          <section className="glass-card p-4 sm:p-5">
+          <section className="dashboard-toolbar-card">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
               <div className="flex-1">
                 <label className="mb-2 block text-sm font-semibold text-theme-muted">
@@ -482,11 +474,11 @@ export default function PickListsPage() {
           )}
 
           {loading ? (
-            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-              {[1, 2, 3].map((key) => (
-                <div key={key} className="glass-card h-72 animate-pulse" />
-              ))}
-            </div>
+            <LoadingSkeletonGroup
+              count={3}
+              className="md:grid-cols-2 xl:grid-cols-3"
+              itemClassName="min-h-72"
+            />
           ) : visibleLists.length > 0 ? (
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visibleLists.map((list) => {
@@ -496,7 +488,7 @@ export default function PickListsPage() {
                   <Link
                     key={list.id}
                     href={`/dashboard/pick-lists/${list.id}`}
-                    className="glass-card group flex min-h-72 flex-col p-5 transition hover:-translate-y-0.5 hover:border-[#2563eb]/25 sm:p-6"
+                    className="dashboard-card group flex min-h-72 flex-col transition hover:-translate-y-0.5 hover:border-[#2563eb]/25"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
@@ -571,38 +563,26 @@ export default function PickListsPage() {
               })}
             </div>
           ) : lists.length === 0 ? (
-            <section className="glass-card px-5 py-16 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 text-2xl font-black text-theme-accent">
-                +
-              </div>
-              <h2 className="mt-5 text-3xl font-black text-theme-primary">
-                Create your first Pick List
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl leading-7 text-theme-muted">
-                Add the items needed for an order or event, track preparation,
-                and create a pick sheet without changing inventory stock.
-              </p>
-              {!limitReached && (
-                <button
-                  type="button"
-                  onClick={openCreateForm}
-                  className="glass-button mt-6 px-6 py-3.5 font-bold"
-                >
-                  Create Pick List
-                </button>
-              )}
-            </section>
+            <DashboardEmptyState
+              icon="picklists"
+              title="Create your first Pick List"
+              description="Add the items needed for an order or event, track preparation, and create a pick sheet without changing inventory stock."
+              action={
+                limitReached ? undefined : (
+                  <ActionButton onClick={openCreateForm} icon="plus">
+                    Create Pick List
+                  </ActionButton>
+                )
+              }
+            />
           ) : (
-            <section className="glass-card px-5 py-14 text-center">
-              <h2 className="text-2xl font-black text-theme-primary">
-                No matching Pick Lists
-              </h2>
-              <p className="mt-2 text-sm text-theme-subtle">
-                Try another filter, title, or customer name.
-              </p>
-            </section>
+            <DashboardEmptyState
+              icon="search"
+              title="No matching Pick Lists"
+              description="Try another filter, title, or customer name."
+            />
           )}
-        </div>
+        </DashboardPageShell>
       </main>
 
       {formOpen && (
