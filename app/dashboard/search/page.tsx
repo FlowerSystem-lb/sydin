@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
+import ContextBackButton from "@/components/navigation/ContextBackButton";
 import {
   DashboardEmptyState,
   DashboardNotice,
@@ -167,15 +168,19 @@ export default function GlobalSearchPage() {
 
   return (
     <DashboardPageShell width="wide">
-      <DashboardPageHeader
-        eyebrow="Workspace"
-        title="Search"
-        description={
-          isSearching
-            ? `Results for “${trimmedQuery}”`
-            : "Search items, categories, suppliers, locations, operations, and recent activity across SydIN."
-        }
-      />
+      <div className="flex flex-col gap-3">
+        <ContextBackButton fallbackHref="/dashboard" label="Back" />
+
+        <DashboardPageHeader
+          eyebrow="Workspace"
+          title="Search"
+          description={
+            isSearching
+              ? `Results for “${trimmedQuery}”`
+              : "Search items, categories, suppliers, locations, operations, and recent activity across SydIN."
+          }
+        />
+      </div>
 
       <DashboardToolbar className="grid gap-2 sm:grid-cols-1">
         <label className="relative block">
