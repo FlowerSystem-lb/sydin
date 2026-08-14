@@ -3,6 +3,13 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
+  ActionButton,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
+import {
   FAQ_ITEMS,
   QUICK_GUIDES,
   TROUBLESHOOTING_ITEMS,
@@ -155,58 +162,41 @@ export default function HelpCenterPage() {
 
   return (
     <div className="contents">
-      <main>
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-8">
-          <section className="glass-panel p-5 sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Guidance and support
-                </p>
-                <h1 className="mt-2 text-5xl font-black tracking-tight sm:text-6xl lg:text-7xl">
-                  Help Center
-                </h1>
-                <p className="mt-4 max-w-3xl text-base leading-7 text-theme-muted sm:text-lg">
-                  How can we help? Follow the recommended setup steps, learn
-                  each SydIN workflow, or contact the team directly.
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-[#2563eb]/15 bg-[#2563eb]/[0.07] px-5 py-4">
+      <main className="support-workspace support-help">
+        <DashboardPageShell>
+          <DashboardPageHeader
+            eyebrow="Guidance and support"
+            title="Help Center"
+            description="How can we help? Follow the recommended setup steps, learn each SydIN workflow, or contact the team directly."
+            actions={
+              <div className="rounded-xl border border-[#2563eb]/15 bg-[#2563eb]/[0.07] px-4 py-3">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Current workspace
                 </p>
-                <p className="mt-2 max-w-xs truncate font-black text-theme-primary">
+                <p className="mt-1.5 max-w-xs truncate font-black text-theme-primary">
                   {loading
                     ? "Loading workspace..."
                     : businessSettings.business_name}
                 </p>
-                <p className="mt-1 text-sm font-semibold text-theme-muted">
+                <p className="mt-0.5 text-sm font-semibold text-theme-muted">
                   {currentPlanName} plan
                   {usage.subscription.plan === "pro"
                     ? " / Priority manual support"
                     : ""}
                 </p>
               </div>
-            </div>
-          </section>
+            }
+          />
 
-          {error && (
-            <div
-              role="alert"
-              className="rounded-2xl border border-red-400/25 bg-red-500/10 px-5 py-4 text-sm font-semibold text-theme-danger"
-            >
-              {error}
-            </div>
-          )}
+          {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
 
-          <section className="glass-card p-5 sm:p-7">
+          <section className="dashboard-card">
             <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Recommended setup
                 </p>
-                <h2 className="mt-2 text-3xl font-black sm:text-4xl">
+                <h2 className="mt-2 text-xl font-black">
                   Getting Started
                 </h2>
                 <p className="mt-3 max-w-2xl leading-7 text-theme-muted">
@@ -241,14 +231,11 @@ export default function HelpCenterPage() {
             </div>
 
             {loading ? (
-              <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
-                {[1, 2, 3, 4, 5].map((key) => (
-                  <div
-                    key={key}
-                    className="h-40 animate-pulse rounded-2xl border border-theme bg-theme-surface"
-                  />
-                ))}
-              </div>
+              <LoadingSkeletonGroup
+                count={5}
+                className="mt-6 md:grid-cols-2 xl:grid-cols-5"
+                itemClassName="min-h-40"
+              />
             ) : onboarding ? (
               <>
                 <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
@@ -308,12 +295,9 @@ export default function HelpCenterPage() {
                         {onboarding.nextStep.title}
                       </p>
                     </div>
-                    <Link
-                      href={onboarding.nextStep.href}
-                      className="glass-button px-5 py-3 font-bold"
-                    >
+                    <ActionButton href={onboarding.nextStep.href}>
                       {onboarding.nextStep.action}
-                    </Link>
+                    </ActionButton>
                   </div>
                 ) : (
                   <div className="mt-5 rounded-2xl border border-emerald-300/20 bg-emerald-400/[0.08] p-5">
@@ -347,7 +331,7 @@ export default function HelpCenterPage() {
               <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                 Learn SydIN
               </p>
-              <h2 className="mt-2 text-3xl font-black sm:text-4xl">
+              <h2 className="mt-2 text-xl font-black">
                 Quick Guides
               </h2>
             </div>
@@ -356,7 +340,7 @@ export default function HelpCenterPage() {
               {QUICK_GUIDES.map((guide) => (
                 <article
                   key={guide.title}
-                  className="glass-card flex min-h-52 flex-col p-5 sm:p-6"
+                  className="dashboard-card flex min-h-52 flex-col"
                 >
                   <h3 className="text-xl font-black">{guide.title}</h3>
                   <p className="mt-3 leading-7 text-theme-muted">
@@ -427,11 +411,11 @@ export default function HelpCenterPage() {
           </section>
 
           <section className="grid gap-6 xl:grid-cols-2">
-            <div className="glass-card p-5 sm:p-6">
+            <div className="dashboard-card">
               <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-warning">
                 Common issues
               </p>
-              <h2 className="mt-2 text-3xl font-black">Troubleshooting</h2>
+              <h2 className="mt-2 text-xl font-black">Troubleshooting</h2>
               <div className="mt-5 space-y-3">
                 {TROUBLESHOOTING_ITEMS.map((item) => (
                   <ExpandableHelpCard key={item.title} item={item} />
@@ -439,11 +423,11 @@ export default function HelpCenterPage() {
               </div>
             </div>
 
-            <div className="glass-card p-5 sm:p-6">
+            <div className="dashboard-card">
               <p className="text-xs font-black uppercase tracking-[0.17em] text-[#7d5cff]">
                 Product questions
               </p>
-              <h2 className="mt-2 text-3xl font-black">
+              <h2 className="mt-2 text-xl font-black">
                 Frequently Asked Questions
               </h2>
               <div className="mt-5 space-y-3">
@@ -454,13 +438,13 @@ export default function HelpCenterPage() {
             </div>
           </section>
 
-          <section className="glass-panel overflow-hidden p-5 sm:p-7 lg:p-8">
+          <section className="dashboard-card overflow-hidden">
             <div className="grid gap-7 lg:grid-cols-[0.9fr_1.1fr] lg:items-center">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Direct manual support
                 </p>
-                <h2 className="mt-2 text-3xl font-black sm:text-4xl">
+                <h2 className="mt-2 text-xl font-black">
                   Contact SydIN
                 </h2>
                 <p className="mt-4 leading-7 text-theme-muted">
@@ -486,7 +470,7 @@ export default function HelpCenterPage() {
                   <div className="mt-5 grid gap-2">
                     <a
                       href={mailtoUrl}
-                      className="glass-button px-4 py-3 text-sm font-bold"
+                      className="dashboard-action-button dashboard-action-button-primary"
                     >
                       Email Support
                     </a>
@@ -537,7 +521,7 @@ export default function HelpCenterPage() {
               </div>
             </div>
           </section>
-        </div>
+        </DashboardPageShell>
       </main>
     </div>
   );
