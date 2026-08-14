@@ -1,9 +1,16 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
+import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  DashboardPageHeader,
+  DashboardPageShell,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 import {
   addPickListItem,
   cancelPickList,
@@ -614,11 +621,9 @@ export default function PickListDetailPage() {
     return (
       <div className="contents">
         <main className="operations-workspace operations-pick-list-detail">
-          <div className="mx-auto max-w-[1400px] space-y-6">
-            <div className="glass-panel h-64 animate-pulse" />
-            <div className="glass-card h-40 animate-pulse" />
-            <div className="glass-card h-72 animate-pulse" />
-          </div>
+          <DashboardPageShell>
+            <LoadingSkeletonGroup count={3} itemClassName="min-h-40" />
+          </DashboardPageShell>
         </main>
       </div>
     );
@@ -628,19 +633,21 @@ export default function PickListDetailPage() {
     return (
       <div className="contents">
         <main className="operations-workspace operations-pick-list-detail">
-          <section className="glass-panel mx-auto max-w-2xl p-7 text-center">
-            <h1 className="text-3xl font-black">Pick List unavailable</h1>
-            <p className="mt-3 leading-7 text-theme-muted">
-              {pageError ||
-                "This Pick List does not exist or you do not have access to it."}
-            </p>
-            <Link
-              href="/dashboard/pick-lists"
-              className="glass-button mt-6 px-6 py-3.5 font-bold"
-            >
-              Back to Pick Lists
-            </Link>
-          </section>
+          <DashboardPageShell>
+            <DashboardEmptyState
+              icon="picklists"
+              title="Pick List unavailable"
+              description={
+                pageError ||
+                "This Pick List does not exist or you do not have access to it."
+              }
+              action={
+                <ActionButton href="/dashboard/pick-lists">
+                  Back to Pick Lists
+                </ActionButton>
+              }
+            />
+          </DashboardPageShell>
         </main>
       </div>
     );
@@ -649,46 +656,44 @@ export default function PickListDetailPage() {
   return (
     <div className="contents">
       <main className="operations-workspace operations-pick-list-detail">
-        <div className="mx-auto flex w-full max-w-[1400px] flex-col gap-7">
-          <section className="glass-panel p-5 sm:p-7 lg:p-8">
-            <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
-              <div className="min-w-0">
-                <ContextBackButton
-                  fallbackHref="/dashboard/pick-lists"
-                  label="Back to Pick Lists"
-                  className="mb-4"
-                />
-                <div className="flex flex-wrap items-center gap-3">
-                  <Link
-                    href="/dashboard/pick-lists"
-                    className="text-sm font-bold text-theme-accent transition hover:text-theme-primary"
-                  >
-                    Pick Lists
-                  </Link>
-                  <span className="text-theme-subtle">/</span>
-                  <span
-                    className={`rounded-full border px-3 py-1.5 text-xs font-black ${statusClasses[detail.status]}`}
-                  >
-                    {statusLabels[detail.status]}
-                  </span>
-                </div>
+        <DashboardPageShell>
+          <div className="flex flex-col gap-3">
+            <ContextBackButton
+              fallbackHref="/dashboard/pick-lists"
+              label="Back to Pick Lists"
+            />
 
-                <h1 className="mt-4 break-words text-4xl font-black tracking-tight sm:text-5xl lg:text-6xl">
-                  {detail.title}
-                </h1>
-                <div className="mt-4 flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-theme-muted">
-                  <span>{detail.customer_name || "No customer name"}</span>
-                  <span>{formatDate(detail.due_date)}</span>
-                  <span>{detail.items.length} items</span>
-                </div>
-                {detail.notes && (
-                  <p className="mt-5 max-w-3xl whitespace-pre-wrap leading-7 text-theme-secondary">
-                    {detail.notes}
-                  </p>
-                )}
-              </div>
+            <DashboardPageHeader
+              eyebrow="Order preparation"
+              title={detail.title}
+              description={[
+                detail.customer_name || "No customer name",
+                formatDate(detail.due_date),
+                `${detail.items.length} items`,
+              ].join("  ·  ")}
+              actions={
+                <span
+                  className={`rounded-full border px-3 py-1.5 text-xs font-black ${statusClasses[detail.status]}`}
+                >
+                  {statusLabels[detail.status]}
+                </span>
+              }
+            />
+          </div>
 
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap xl:max-w-xl xl:justify-end">
+          {detail.notes && (
+            <section className="dashboard-card">
+              <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-subtle">
+                Notes
+              </p>
+              <p className="mt-2 whitespace-pre-wrap leading-7 text-theme-secondary">
+                {detail.notes}
+              </p>
+            </section>
+          )}
+
+          <section className="dashboard-toolbar-card">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <button
                   type="button"
                   onClick={() => window.print()}
@@ -725,7 +730,7 @@ export default function PickListDetailPage() {
                       type="button"
                       onClick={openAddItem}
                       disabled={Boolean(busyAction)}
-                      className="glass-button px-5 py-3.5 font-bold disabled:opacity-50"
+                      className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
                     >
                       Add Item
                     </button>
@@ -762,20 +767,12 @@ export default function PickListDetailPage() {
                   </>
                 )}
               </div>
-            </div>
           </section>
 
           {(pageError || pageNotice) && (
-            <div
-              role={pageError ? "alert" : "status"}
-              className={`rounded-2xl border px-5 py-4 text-sm font-semibold ${
-                pageError
-                  ? "border-red-400/25 bg-red-500/10 text-theme-danger"
-                  : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
-              }`}
-            >
+            <DashboardNotice tone={pageError ? "danger" : "success"}>
               {pageError || pageNotice}
-            </div>
+            </DashboardNotice>
           )}
 
           {!editable && (
@@ -799,17 +796,17 @@ export default function PickListDetailPage() {
             </section>
           )}
 
-          <section className="glass-card p-5 sm:p-6">
+          <section className="dashboard-card">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Preparation progress
                 </p>
-                <h2 className="mt-2 text-3xl font-black">
+                <h2 className="mt-2 text-xl font-black">
                   {progress.prepared} / {progress.required} prepared
                 </h2>
               </div>
-              <span className="text-3xl font-black text-theme-accent">
+              <span className="text-xl font-black text-theme-accent">
                 {progress.percent}%
               </span>
             </div>
@@ -837,7 +834,7 @@ export default function PickListDetailPage() {
                   <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                     Line items
                   </p>
-                  <h2 className="mt-2 text-3xl font-black">Preparation Items</h2>
+                  <h2 className="mt-2 text-xl font-black">Preparation Items</h2>
                 </div>
                 {editable && (
                   <button
@@ -864,7 +861,7 @@ export default function PickListDetailPage() {
                 return (
                   <article
                     key={item.id}
-                    className="glass-card overflow-hidden p-5 sm:p-6"
+                    className="dashboard-card overflow-hidden"
                   >
                     <div className="flex flex-col gap-5 xl:flex-row xl:items-start xl:justify-between">
                       <div className="min-w-0">
@@ -1064,7 +1061,7 @@ export default function PickListDetailPage() {
                             type="button"
                             onClick={() => void saveLine(item)}
                             disabled={savingLineId === item.id}
-                            className="glass-button px-5 py-3 text-sm font-bold disabled:opacity-50"
+                            className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
                           >
                             {savingLineId === item.id
                               ? "Saving..."
@@ -1084,8 +1081,8 @@ export default function PickListDetailPage() {
               })}
             </section>
           ) : (
-            <section className="glass-card border-dashed px-5 py-16 text-center">
-              <h2 className="text-3xl font-black">
+            <section className="dashboard-card border-dashed px-5 py-16 text-center">
+              <h2 className="text-xl font-black">
                 {editable ? "Add preparation items" : "No line items"}
               </h2>
               <p className="mx-auto mt-3 max-w-xl leading-7 text-theme-muted">
@@ -1097,14 +1094,14 @@ export default function PickListDetailPage() {
                 <button
                   type="button"
                   onClick={openAddItem}
-                  className="glass-button mt-6 px-6 py-3.5 font-bold"
+                  className="dashboard-action-button dashboard-action-button-primary mt-6"
                 >
                   Add First Item
                 </button>
               )}
             </section>
           )}
-        </div>
+        </DashboardPageShell>
       </main>
 
       {metadataOpen && (
@@ -1116,7 +1113,7 @@ export default function PickListDetailPage() {
                   <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                     Pick List details
                   </p>
-                  <h2 className="mt-2 text-3xl font-black">Edit Details</h2>
+                  <h2 className="mt-2 text-xl font-black">Edit Details</h2>
                 </div>
                 <ModalCloseButton
                   label="Close details form"
@@ -1214,7 +1211,7 @@ export default function PickListDetailPage() {
                     busyAction === "metadata" ||
                     !metadataValues.title.trim()
                   }
-                  className="glass-button px-6 py-3.5 font-bold disabled:opacity-50"
+                  className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
                 >
                   {busyAction === "metadata" ? "Saving..." : "Save Details"}
                 </button>
@@ -1232,7 +1229,7 @@ export default function PickListDetailPage() {
                 <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
                   Private inventory
                 </p>
-                <h2 className="mt-2 text-3xl font-black">Add Item</h2>
+                <h2 className="mt-2 text-xl font-black">Add Item</h2>
                 <p className="mt-2 text-sm leading-6 text-theme-muted">
                   Search by name, code, SKU, barcode, category, or supplier.
                 </p>
@@ -1388,7 +1385,7 @@ export default function PickListDetailPage() {
                   disabled={
                     busyAction === "add-item" || !selectedInventory
                   }
-                  className="glass-button px-6 py-3.5 font-bold disabled:opacity-50"
+                  className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
                 >
                   {busyAction === "add-item" ? "Adding..." : "Add to Pick List"}
                 </button>
@@ -1496,7 +1493,7 @@ export default function PickListDetailPage() {
                 </p>
                 <h2
                   id="complete-pick-list-title"
-                  className="mt-2 text-3xl font-black"
+                  className="mt-2 text-xl font-black"
                 >
                   Complete Pick List
                 </h2>
