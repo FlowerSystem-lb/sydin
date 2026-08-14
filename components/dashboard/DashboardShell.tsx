@@ -155,6 +155,16 @@ function getDashboardPageContext(pathname: string, action?: string | null) {
     };
   }
 
+  // Without this, /dashboard/pick-lists/[id] falls through to the generic
+  // matcher below and reads just "Pick Lists" -- indistinguishable from the
+  // list page itself. Same fix as Inventory above.
+  if (/^\/dashboard\/pick-lists\/[^/]+$/.test(pathname)) {
+    return {
+      label: "Pick Lists / Details",
+      shortLabel: "Pick List",
+    };
+  }
+
   const navigationItem = getDashboardNavigationItem(pathname);
   return {
     label: navigationItem.label,
