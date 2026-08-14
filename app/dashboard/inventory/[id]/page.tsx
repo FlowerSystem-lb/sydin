@@ -9,7 +9,10 @@ import BrandMark from "@/components/BrandMark";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
 import ImageLightbox from "@/components/inventory/ImageLightbox";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
-import { LoadingSkeletonGroup } from "@/components/dashboard/Workspace";
+import {
+  ActionButton,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 import {
   getActivityEventIcon,
   getActivityEventTone,
@@ -881,30 +884,26 @@ export default function ItemDetailsPage() {
 
                 {item && (
                   <>
-                    <button
-                      type="button"
+                    <ActionButton
                       onClick={openMovementModal}
-                      className="min-h-10 rounded-xl border border-emerald-300/25 bg-emerald-500/15 px-3.5 py-2 text-sm font-bold text-theme-success transition hover:border-emerald-300/45 hover:bg-emerald-500/25"
+                      variant="secondary"
+                      icon="movement"
                     >
                       Record Movement
-                    </button>
+                    </ActionButton>
 
-                    <button
-                      type="button"
-                      onClick={openEditModal}
-                      className="min-h-10 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-3.5 py-2 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
-                    >
+                    <ActionButton onClick={openEditModal} icon="edit">
                       Edit Item
-                    </button>
+                    </ActionButton>
 
-                    <button
-                      type="button"
+                    <ActionButton
                       onClick={() => setIsDeleteDialogOpen(true)}
                       disabled={isDeleting}
-                      className="min-h-10 rounded-xl border border-red-400/25 bg-red-500/15 px-3.5 py-2 text-sm font-bold text-theme-danger transition hover:bg-red-500/25 disabled:opacity-50"
+                      variant="danger"
+                      icon="trash"
                     >
                       {isDeleting ? "Deleting..." : "Delete Item"}
-                    </button>
+                    </ActionButton>
                   </>
                 )}
               </div>

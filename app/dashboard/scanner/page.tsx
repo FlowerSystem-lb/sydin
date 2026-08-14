@@ -709,12 +709,9 @@ function ScannerWorkspace() {
         title="Scanner"
         description={activeMode.hint}
         actions={
-          <Link
-            href="/dashboard/inventory"
-            className="dashboard-action-button dashboard-action-button-secondary"
-          >
+          <ActionButton href="/dashboard/inventory" variant="secondary">
             Inventory
-          </Link>
+          </ActionButton>
         }
       />
 

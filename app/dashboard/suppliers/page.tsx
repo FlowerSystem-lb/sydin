@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon from "@/components/UiIcon";
 import {
@@ -521,12 +520,13 @@ export default function SuppliersPage() {
             description="Keep vendor contacts organized and connect them to inventory when useful."
             actions={
               <>
-                <Link
+                <ActionButton
                   href="/dashboard/inventory"
-                  className="organize-inventory-link dashboard-action-button dashboard-action-button-secondary"
+                  variant="secondary"
+                  className="organize-inventory-link"
                 >
                   Inventory
-                </Link>
+                </ActionButton>
                 <ActionButton
                   onClick={openCreateForm}
                   disabled={loading || limitReached}
