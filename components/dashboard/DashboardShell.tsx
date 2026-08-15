@@ -225,10 +225,35 @@ function NavigationLink({
 }) {
   const active = isDashboardRouteActive(pathname, item.href);
 
+  // The name chip has to be position: fixed to escape the sidebar's scroll
+  // container, which clips it at the 72px rail edge (overflow-y: auto forces
+  // overflow-x to compute to auto too, so it can't just be allowed to spill).
+  // Fixed means viewport coordinates, so they're measured here on hover.
+  // Written straight to the DOM rather than through state -- this fires on
+  // every icon the pointer crosses and must not re-render the whole nav.
+  const positionTooltip = (
+    event:
+      | React.MouseEvent<HTMLAnchorElement>
+      | React.FocusEvent<HTMLAnchorElement>
+  ) => {
+    const link = event.currentTarget;
+    const tooltip = link.querySelector<HTMLElement>(".dashboard-nav-tooltip");
+    if (!tooltip) return;
+
+    const rect = link.getBoundingClientRect();
+    tooltip.style.setProperty("--nav-tip-left", `${Math.round(rect.right + 10)}px`);
+    tooltip.style.setProperty(
+      "--nav-tip-top",
+      `${Math.round(rect.top + rect.height / 2)}px`
+    );
+  };
+
   return (
     <Link
       href={item.href}
       onClick={onNavigate}
+      onMouseEnter={positionTooltip}
+      onFocus={positionTooltip}
       aria-current={active ? "page" : undefined}
       aria-label={compact ? item.label : undefined}
       className={cx(
@@ -380,7 +405,9 @@ export default function DashboardShell({
   const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const tabletSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileSearchTriggerRef = useRef<HTMLButtonElement>(null);
-  const [collapsed, setCollapsed] = useState(false);
+  // Closed by default: the sidebar is a rail you peek open by hovering it,
+  // so the resting state is narrow and the page gets the width instead.
+  const [collapsed, setCollapsed] = useState(true);
   const [routeCollapsed, setRouteCollapsed] = useState<boolean | null>(null);
   const [tabletDrawerOpen, setTabletDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
@@ -427,16 +454,19 @@ export default function DashboardShell({
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       try {
+        // Only an explicit "false" pins the sidebar open -- absent or
+        // unreadable storage keeps the collapsed rail default.
         setCollapsed(
-          window.localStorage.getItem(SIDEBAR_STORAGE_KEY) === "true"
+          window.localStorage.getItem(SIDEBAR_STORAGE_KEY) !== "false"
         );
       } catch {
-        setCollapsed(false);
+        setCollapsed(true);
       }
     });
 
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
 
   useEffect(() => {
     const handleRouteCollapse = (event: Event) => {

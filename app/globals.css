@@ -17454,11 +17454,61 @@ body,
   }
 }
 
+/* The reveal above never actually reached the screen: .dashboard-sidebar-scroll
+   needs overflow-y: auto for 18 items, and per spec that forces overflow-x from
+   `visible` to `auto` as well -- so the chip, which sits at left: 100% + 0.55rem,
+   was clipped at the 72px rail edge with only ~9px poking out. Measured live:
+   chip spans x=54..127, container clips at x=63.
+
+   Fix is to take the chip out of that container's flow entirely with
+   position: fixed (verified no transformed/filtered ancestor, so it resolves
+   against the viewport). Fixed coordinates can't be expressed relative to the
+   link in CSS, so NavigationLink measures the row on hover and writes
+   --nav-tip-left / --nav-tip-top. translateY(-50%) centres the chip on the icon;
+   the -6px x-offset is the existing slide-in, now folded into the same
+   transform so it doesn't overwrite the centring. */
+@media (min-width: 900px) {
+  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
+    .dashboard-nav-tooltip {
+    position: fixed !important;
+    top: var(--nav-tip-top, -999px) !important;
+    left: var(--nav-tip-left, -999px) !important;
+    z-index: 80 !important;
+    transform: translate(-6px, -50%) translateZ(0) !important;
+  }
+
+  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
+    .dashboard-nav-link:hover
+    .dashboard-nav-tooltip,
+  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
+    .dashboard-nav-link:focus-visible
+    .dashboard-nav-tooltip {
+    transform: translate(0, -50%) translateZ(0) !important;
+  }
+
+  /* Pinned open, every row already shows its name -- the chip would just
+     repeat it under the cursor. */
+  .dashboard-shell.dashboard-workspace-shell:not(.dashboard-shell-collapsed)
+    .dashboard-nav-tooltip {
+    display: none !important;
+  }
+}
+
 /* Respect reduced-motion: reveal the name instantly, no slide. */
 @media (min-width: 900px) and (prefers-reduced-motion: reduce) {
   .dashboard-workspace-shell .dashboard-nav-tooltip {
     transition: none !important;
-    transform: none !important;
+  }
+
+  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
+    .dashboard-nav-tooltip,
+  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
+    .dashboard-nav-link:hover
+    .dashboard-nav-tooltip,
+  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
+    .dashboard-nav-link:focus-visible
+    .dashboard-nav-tooltip {
+    transform: translate(0, -50%) !important;
   }
 }
 
