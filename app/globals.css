@@ -17400,8 +17400,13 @@ body,
   .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
     .dashboard-nav-tooltip {
     position: fixed !important;
-    top: var(--nav-tip-top, -999px) !important;
-    left: var(--nav-tip-left, -999px) !important;
+    /* Fallback is `auto`, not an off-screen value: with position: fixed and
+       auto offsets the chip falls back to its static position, which still
+       escapes the scroll container's clip. So if the hover handler hasn't run
+       yet -- first paint, or a browser holding stale JS against fresh CSS --
+       the chip is merely imprecise rather than parked off-screen. */
+    top: var(--nav-tip-top, auto) !important;
+    left: var(--nav-tip-left, auto) !important;
     z-index: 80 !important;
     transform: translate(-6px, -50%) translateZ(0) !important;
   }
