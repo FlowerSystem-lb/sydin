@@ -15105,69 +15105,6 @@ body,
     display: none !important;
   }
 
-  /* The collapse toggle must stay visible in BOTH states. It used to be in
-     the hide list above, which was harmless only while the expanded sidebar
-     was unreachable anyway -- once expanding actually works, hiding the
-     toggle while collapsed is a one-way trap with no way back to labels.
-     Specificity is deliberately (0,3,0) to outrank the earlier
-     `.dashboard-shell:has(.sydin-overview) .dashboard-sidebar-toggle` hide
-     rules, which would otherwise still win on Overview and Inventory. */
-  .dashboard-shell.dashboard-workspace-shell .dashboard-sidebar-toggle {
-    display: inline-flex !important;
-  }
-
-  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
-    .dashboard-sidebar-header {
-    flex-direction: column !important;
-    min-height: auto !important;
-    gap: 0.4rem !important;
-  }
-
-  /* The rules above force icon-only rail width unconditionally, on every
-     page, with no way to reach the labeled sidebar the collapse toggle was
-     built for -- this block never checked .dashboard-shell-collapsed at all.
-     Everything below restores that toggle's actual job: full width and
-     labels when the user has NOT collapsed it (the default), narrow rail
-     only when they have. Kept as a higher-specificity companion rule next
-     to the block above instead of editing it, so the already-shipped
-     collapsed-state look is untouched. */
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) {
-    /* --dashboard-sidebar-width itself is locked to 4.5rem by the block
-       above (a custom property, so !important on `width` elsewhere can't
-       touch it) -- restore the app's actual expanded width here so the
-       `var()` reads below resolve to something real. */
-    --dashboard-sidebar-width: 17.25rem;
-  }
-
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-sidebar {
-    width: var(--dashboard-sidebar-width) !important;
-  }
-
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-brand-logo,
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-nav-label,
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-account-chevron {
-    display: initial !important;
-  }
-
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-sidebar-workspace {
-    display: flex !important;
-  }
-
-  /* .dashboard-nav-group-label is a button with its own flex layout (label +
-     chevron) -- display: initial would collapse that back to a plain inline
-     button and shove the chevron out of place. */
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-nav-group-label {
-    display: flex !important;
-  }
-
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-account-copy {
-    display: grid !important;
-  }
-
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-brand-mark {
-    display: none !important;
-  }
-
   .dashboard-workspace-shell .dashboard-sidebar-scroll {
     min-height: 0 !important;
     flex: 1 1 auto !important;
@@ -15273,14 +15210,6 @@ body,
        lives on that layer so the wash shows through. */
     background: transparent !important;
     box-shadow: none !important;
-  }
-
-  /* Companion to the expand/collapse fix above -- the sidebar is
-     position: fixed, so the content area's offset must grow to match it
-     when expanded, or the wider sidebar simply overlaps the page content. */
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-main-canvas {
-    width: calc(100% - var(--dashboard-sidebar-width)) !important;
-    margin-left: var(--dashboard-sidebar-width) !important;
   }
 
   .dashboard-workspace-shell .dashboard-desktop-toolbar {
@@ -17486,12 +17415,6 @@ body,
     transform: translate(0, -50%) translateZ(0) !important;
   }
 
-  /* Pinned open, every row already shows its name -- the chip would just
-     repeat it under the cursor. */
-  .dashboard-shell.dashboard-workspace-shell:not(.dashboard-shell-collapsed)
-    .dashboard-nav-tooltip {
-    display: none !important;
-  }
 }
 
 /* Respect reduced-motion: reveal the name instantly, no slide. */

@@ -55,7 +55,6 @@ import {
 } from "@/components/dashboard/navigation";
 import { cx } from "@/components/ui/utils";
 
-const SIDEBAR_STORAGE_KEY = "sydin:sidebar-collapsed";
 const SIDEBAR_ROUTE_EVENT = "sydin:sidebar-route-collapse";
 
 const DEFAULT_USAGE: SubscriptionUsage = {
@@ -405,10 +404,9 @@ export default function DashboardShell({
   const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const tabletSearchTriggerRef = useRef<HTMLButtonElement>(null);
   const mobileSearchTriggerRef = useRef<HTMLButtonElement>(null);
-  // Closed by default: the sidebar is a rail you peek open by hovering it,
-  // so the resting state is narrow and the page gets the width instead.
-  const [collapsed, setCollapsed] = useState(true);
-  const [routeCollapsed, setRouteCollapsed] = useState<boolean | null>(null);
+  // Still tracked because the Categories page dispatches SIDEBAR_ROUTE_EVENT,
+  // but the rail no longer has an expanded state for it to switch between.
+  const [, setRouteCollapsed] = useState<boolean | null>(null);
   const [tabletDrawerOpen, setTabletDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
@@ -450,23 +448,6 @@ export default function DashboardShell({
 
     return () => window.cancelAnimationFrame(frame);
   }, []);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      try {
-        // Only an explicit "false" pins the sidebar open -- absent or
-        // unreadable storage keeps the collapsed rail default.
-        setCollapsed(
-          window.localStorage.getItem(SIDEBAR_STORAGE_KEY) !== "false"
-        );
-      } catch {
-        setCollapsed(true);
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
 
   useEffect(() => {
     const handleRouteCollapse = (event: Event) => {
@@ -699,23 +680,9 @@ export default function DashboardShell({
     []
   );
 
-  const toggleCollapsed = () => {
-    if (routeCollapsed !== null) {
-      setRouteCollapsed((current) => !current);
-      return;
-    }
-
-    setCollapsed((current) => {
-      const next = !current;
-      try {
-        window.localStorage.setItem(SIDEBAR_STORAGE_KEY, String(next));
-      } catch {
-        // The preference still applies for this session.
-      }
-      return next;
-    });
-  };
-  const effectiveCollapsed = routeCollapsed ?? collapsed;
+  // The sidebar is a rail, full stop -- there is no expanded mode and no
+  // toggle to reach one. Page names are read from the hover chip instead.
+  const effectiveCollapsed = true;
 
   const requestScanner = useCallback(() => {
     // The Inventory page keeps its own quick-scan modal, so stay in place when
@@ -823,18 +790,6 @@ export default function DashboardShell({
               className="dashboard-brand-logo object-contain"
             />
           </Link>
-          <IconButton
-            label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            icon={
-              <UiIcon
-                name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
-                className="h-4 w-4"
-              />
-            }
-            size="sm"
-            onClick={toggleCollapsed}
-            className="dashboard-sidebar-toggle"
-          />
         </div>
 
         <div className="dashboard-sidebar-workspace" aria-label="Current workspace">
