@@ -247,7 +247,12 @@ export default function StockAlertsPage() {
               >
                 View in inventory
               </ActionButton>
-              <ActionButton icon="file" href="/dashboard/purchase-orders/new">
+              <ActionButton
+                icon="file"
+                href={`/dashboard/purchase-orders/new?returnTo=${encodeURIComponent(
+                  "/dashboard/alerts"
+                )}`}
+              >
                 Create purchase order
               </ActionButton>
             </>

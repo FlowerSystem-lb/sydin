@@ -1045,7 +1045,11 @@ export default function DashboardPage() {
                   Record stock restocks and general purchases to track spending
                   here.
                 </p>
-                <Link href="/dashboard/purchase-orders/new">
+                <Link
+                  href={`/dashboard/purchase-orders/new?returnTo=${encodeURIComponent(
+                    "/dashboard"
+                  )}`}
+                >
                   New purchase order
                 </Link>
               </div>

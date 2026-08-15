@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
+import ContextBackButton from "@/components/navigation/ContextBackButton";
 import { Button, DialogShell, Select } from "@/components/ui";
 import {
   ActionButton,
@@ -626,13 +627,10 @@ export default function NewPurchaseOrderPage() {
         title="New Purchase Order"
         description="Record anything you buy — stock for inventory, or general purchases like equipment and supplies for a depot."
         actions={
-          <ActionButton
-            href="/dashboard/purchase-orders"
-            variant="secondary"
-            icon="chevron-left"
-          >
-            Back to history
-          </ActionButton>
+          <ContextBackButton
+            fallbackHref="/dashboard/purchase-orders"
+            label="Back"
+          />
         }
       />
 

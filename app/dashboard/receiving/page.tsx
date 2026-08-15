@@ -977,7 +977,11 @@ export default function ReceivingPage() {
                       <UiIcon name="info" className="h-4 w-4 shrink-0" />
                       <span>
                         Buying from a supplier? A{" "}
-                        <Link href="/dashboard/purchase-orders/new">
+                        <Link
+                          href={`/dashboard/purchase-orders/new?returnTo=${encodeURIComponent(
+                            "/dashboard/receiving"
+                          )}`}
+                        >
                           purchase order
                         </Link>{" "}
                         also tracks cost, payment, and the invoice — and adds

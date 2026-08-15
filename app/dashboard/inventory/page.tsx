@@ -2124,8 +2124,8 @@ export default function InventoryPage() {
   const openPurchaseOrderForItems = (ids: number[]) => {
     const params = new URLSearchParams();
     if (ids.length > 0) params.set("items", ids.join(","));
-    const query = params.toString();
-    router.push(`/dashboard/purchase-orders/new${query ? `?${query}` : ""}`);
+    params.set("returnTo", "/dashboard/inventory");
+    router.push(`/dashboard/purchase-orders/new?${params.toString()}`);
   };
 
   const openReceivingForItems = (ids: number[]) => {
