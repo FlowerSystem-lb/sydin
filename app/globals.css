@@ -15096,7 +15096,6 @@ body,
   }
 
   .dashboard-workspace-shell .dashboard-brand-logo,
-  .dashboard-workspace-shell .dashboard-sidebar-toggle,
   .dashboard-workspace-shell .dashboard-sidebar-workspace,
   .dashboard-workspace-shell .dashboard-nav-group-label,
   .dashboard-workspace-shell .dashboard-nav-label,
@@ -15104,6 +15103,24 @@ body,
   .dashboard-workspace-shell .dashboard-account-copy,
   .dashboard-workspace-shell .dashboard-account-chevron {
     display: none !important;
+  }
+
+  /* The collapse toggle must stay visible in BOTH states. It used to be in
+     the hide list above, which was harmless only while the expanded sidebar
+     was unreachable anyway -- once expanding actually works, hiding the
+     toggle while collapsed is a one-way trap with no way back to labels.
+     Specificity is deliberately (0,3,0) to outrank the earlier
+     `.dashboard-shell:has(.sydin-overview) .dashboard-sidebar-toggle` hide
+     rules, which would otherwise still win on Overview and Inventory. */
+  .dashboard-shell.dashboard-workspace-shell .dashboard-sidebar-toggle {
+    display: inline-flex !important;
+  }
+
+  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
+    .dashboard-sidebar-header {
+    flex-direction: column !important;
+    min-height: auto !important;
+    gap: 0.4rem !important;
   }
 
   /* The rules above force icon-only rail width unconditionally, on every
@@ -15130,10 +15147,6 @@ body,
   .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-nav-label,
   .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-account-chevron {
     display: initial !important;
-  }
-
-  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-sidebar-toggle {
-    display: inline-flex !important;
   }
 
   .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-sidebar-workspace {
