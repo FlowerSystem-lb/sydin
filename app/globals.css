@@ -3113,13 +3113,43 @@ select.glass-input option {
 }
 
 .dashboard-nav-group-label {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   padding-inline: var(--space-3);
+  border: 0;
+  background: none;
   color: var(--text-subtle);
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;
   line-height: 1.2;
+  text-align: left;
   text-transform: uppercase;
+  cursor: pointer;
+  transition: color var(--motion-fast, 150ms) ease;
+}
+
+.dashboard-nav-group-label:hover,
+.dashboard-nav-group-label:focus-visible {
+  color: var(--text-secondary);
+}
+
+.dashboard-nav-group-label:focus-visible {
+  outline: 2px solid var(--focus-ring, #2563eb);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm, 4px);
+}
+
+.dashboard-nav-group-chevron {
+  flex-shrink: 0;
+  transition: transform var(--motion-fast, 150ms) ease;
+}
+
+.dashboard-nav-group-chevron-collapsed {
+  transform: rotate(-90deg);
 }
 
 .dashboard-nav-group-items {
@@ -15076,6 +15106,55 @@ body,
     display: none !important;
   }
 
+  /* The rules above force icon-only rail width unconditionally, on every
+     page, with no way to reach the labeled sidebar the collapse toggle was
+     built for -- this block never checked .dashboard-shell-collapsed at all.
+     Everything below restores that toggle's actual job: full width and
+     labels when the user has NOT collapsed it (the default), narrow rail
+     only when they have. Kept as a higher-specificity companion rule next
+     to the block above instead of editing it, so the already-shipped
+     collapsed-state look is untouched. */
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) {
+    /* --dashboard-sidebar-width itself is locked to 4.5rem by the block
+       above (a custom property, so !important on `width` elsewhere can't
+       touch it) -- restore the app's actual expanded width here so the
+       `var()` reads below resolve to something real. */
+    --dashboard-sidebar-width: 17.25rem;
+  }
+
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-sidebar {
+    width: var(--dashboard-sidebar-width) !important;
+  }
+
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-brand-logo,
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-nav-label,
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-account-chevron {
+    display: initial !important;
+  }
+
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-sidebar-toggle {
+    display: inline-flex !important;
+  }
+
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-sidebar-workspace {
+    display: flex !important;
+  }
+
+  /* .dashboard-nav-group-label is a button with its own flex layout (label +
+     chevron) -- display: initial would collapse that back to a plain inline
+     button and shove the chevron out of place. */
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-nav-group-label {
+    display: flex !important;
+  }
+
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-account-copy {
+    display: grid !important;
+  }
+
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-brand-mark {
+    display: none !important;
+  }
+
   .dashboard-workspace-shell .dashboard-sidebar-scroll {
     min-height: 0 !important;
     flex: 1 1 auto !important;
@@ -15181,6 +15260,14 @@ body,
        lives on that layer so the wash shows through. */
     background: transparent !important;
     box-shadow: none !important;
+  }
+
+  /* Companion to the expand/collapse fix above -- the sidebar is
+     position: fixed, so the content area's offset must grow to match it
+     when expanded, or the wider sidebar simply overlaps the page content. */
+  .dashboard-workspace-shell:not(.dashboard-shell-collapsed) .dashboard-main-canvas {
+    width: calc(100% - var(--dashboard-sidebar-width)) !important;
+    margin-left: var(--dashboard-sidebar-width) !important;
   }
 
   .dashboard-workspace-shell .dashboard-desktop-toolbar {
