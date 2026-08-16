@@ -263,6 +263,17 @@ function showRailChip(link: HTMLElement, label: string) {
   chip.textContent = label;
   railChipAnchor = link;
   placeRailChip(chip, link);
+
+  // The fade+slide only plays if the browser has actually painted the
+  // hidden state before the visible one is requested. On this element's very
+  // first reveal, getRailChip() just created and appended it in this same
+  // call -- creation, positioning, and "visible" would all land in one
+  // synchronous pass with no frame in between, so the transition has no
+  // starting point to animate from and the chip would just snap in instead
+  // of sliding. Reading offsetHeight forces the browser to flush the pending
+  // style (hidden) before the next line changes it, so there is always a
+  // committed "before" frame for the transition to animate away from.
+  void chip.offsetHeight;
   chip.dataset.visible = "true";
 }
 
