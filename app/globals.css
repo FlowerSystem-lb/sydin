@@ -3735,10 +3735,17 @@ select.glass-input option {
 
 .marketing-hero-title {
   color: var(--marketing-ink);
+  /* Steep reference: display serif at regular weight even at this size --
+     the restraint is the signature, not boldness. Falls back to the system
+     serif stack if the Google Font hasn't loaded yet (font-display: swap).
+     No letter-spacing override here: a later !important rule
+     (body [class~="tracking-tight"]... .marketing-hero-title) already pins
+     this to 0, and 0 tracking reads fine on a serif face at this size --
+     not worth fighting that rule for an imperceptible difference. */
+  font-family: var(--font-serif-display), ui-serif, Georgia, serif;
   font-size: clamp(3rem, 8vw, 6.25rem);
-  font-weight: 750;
-  letter-spacing: -0.065em;
-  line-height: 0.96;
+  font-weight: 400;
+  line-height: 1.04;
 }
 
 .marketing-gradient-text {
@@ -3758,8 +3765,9 @@ select.glass-input option {
 
 .marketing-section-title {
   color: var(--marketing-ink);
+  font-family: var(--font-serif-display), ui-serif, Georgia, serif;
   font-size: clamp(2rem, 5vw, 3.5rem);
-  font-weight: 750;
+  font-weight: 400;
   letter-spacing: -0.045em;
   line-height: 1.05;
 }
@@ -3924,7 +3932,7 @@ select.glass-input option {
 .marketing-workflow-card,
 .marketing-pricing-card {
   border: 1px solid var(--marketing-line);
-  border-radius: 16px;
+  border-radius: var(--radius-card);
   background: var(--marketing-card);
   box-shadow: var(--marketing-shadow);
   transition:
@@ -9149,7 +9157,10 @@ body [class*="tracking-["],
 .action-button,
 .glass-button,
 .marketing-button {
-  border-radius: 14px;
+  /* This is the rule that wins over the base 11px (later, same specificity).
+     Pill instead of 14px to match the dashboard's own button pass and
+     Steep's pill-CTA signature. */
+  border-radius: var(--radius-pill);
   letter-spacing: 0;
 }
 
@@ -9303,7 +9314,10 @@ body [class*="tracking-["],
   max-width: 11ch;
   margin-inline: auto;
   font-size: clamp(3rem, 7.2vw, 5.9rem);
-  font-weight: 850;
+  /* Was 850 -- a later rule (~line 13297) already overrode this back to 400
+     for the serif signature, so this was dead weight left disagreeing with
+     the value that actually ships. */
+  font-weight: 400;
   line-height: 0.98;
 }
 
@@ -13292,7 +13306,11 @@ body,
 
 .marketing-hero-title {
   max-width: 13ch;
-  font-weight: 900;
+  /* This is the rule that actually wins for weight (last of four stacked
+     .marketing-hero-title declarations, all equal specificity) -- the base
+     rule's font-weight: 400 for the Steep-style serif never reached the
+     page until this one stopped overriding it back to bold. */
+  font-weight: 400;
 }
 
 .marketing-hero-kicker,
