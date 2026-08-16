@@ -738,16 +738,21 @@ canvas {
 .dashboard-page-header-card,
 .dashboard-card,
 .dashboard-toolbar-card {
+  /* One radius, one quiet shadow, read from the tokens rather than each
+     hardcoding its own literal -- these three surfaces used to disagree
+     (12/14px, plus a heavier one-off shadow) even though nothing about them
+     is visually different. --radius-card / --shadow-subtle are the values
+     that already win in the cascade (verified live); this just makes them
+     the actual source instead of a coincidence. */
   border: 1px solid var(--border-default);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   background: var(--bg-surface);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  box-shadow: var(--shadow-subtle);
   color: var(--text-primary);
 }
 
 .dashboard-page-header-card {
   padding: var(--space-3) var(--space-4);
-  border-radius: 12px;
 }
 
 .dashboard-page-header-content {
@@ -864,7 +869,7 @@ canvas {
 
 .dashboard-notice {
   border: 1px solid var(--border-default);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
   font-weight: 700;
@@ -902,7 +907,11 @@ canvas {
   justify-content: center;
   gap: var(--space-2);
   border: 1px solid transparent;
-  border-radius: 12px;
+  /* Full pill instead of the old 12px corner. Cards keep --radius-card so
+     they still read as content; buttons get their own shape so a CTA is
+     never confused for a surface -- same two-radii discipline, just applied
+     app-wide instead of only where the design happened to need it before. */
+  border-radius: var(--radius-pill);
   padding: 0.75rem var(--space-4);
   font-size: 0.875rem;
   font-weight: 800;
@@ -948,7 +957,7 @@ canvas {
   align-items: center;
   gap: var(--space-3);
   border: 1px solid var(--border-default);
-  border-radius: 14px;
+  border-radius: var(--radius-card);
   background: var(--bg-surface);
   padding: var(--space-4);
   color: var(--text-primary);
@@ -4226,7 +4235,13 @@ select.glass-input option {
 .dashboard-shell-content .ui-section-card,
 .dashboard-shell-content .glass-card,
 .dashboard-shell-content main > div > section {
-  border-radius: 14px;
+  /* This generic `section` catch-all has higher specificity than the
+     .dashboard-page-header-card rule it structurally matches on most pages
+     (three type selectors beat one class), so it was the one actually
+     winning -- silently reintroducing the old 14px this pass just replaced
+     with the token. Reading the same token here means it no longer matters
+     which of the two rules wins; both resolve to the same value. */
+  border-radius: var(--radius-card);
   box-shadow: var(--shadow-subtle);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
@@ -15246,7 +15261,11 @@ body,
 .dashboard-shell:has(.inventory-workspace) .inventory-workspace .dashboard-action-button,
 .dashboard-shell:has(.inventory-workspace) .inventory-workspace .action-button {
   min-height: 2.45rem;
-  border-radius: 12px;
+  /* Was a hardcoded 12px, a leftover from before buttons went pill --
+     this compound :has() selector outranks the shared rule, so left alone
+     it would have kept Inventory's hero buttons square while every other
+     page went round. */
+  border-radius: var(--radius-pill);
   padding: 0.58rem 0.85rem;
   font-size: 0.8rem;
   font-weight: 850;
@@ -18285,6 +18304,17 @@ body,
   background: #ffffff !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
+}
+
+/* Split from the shared rule above: a static header at the top of the page
+   doesn't need the same shadow weight as a clickable item card sitting in a
+   grid. Quiet shadow is the point of this pass -- this !important is only
+   here to match the specificity it's replacing, not to add a new one. */
+.dashboard-shell .dashboard-page-header-card {
+  box-shadow: var(--shadow-subtle) !important;
+}
+
+.dashboard-shell .inventory-item-card {
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
 }
 
