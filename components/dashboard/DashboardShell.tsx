@@ -226,6 +226,9 @@ function AccountAvatar({
 // for every icon the pointer crosses, and routing it through state would
 // re-render the entire shell on each one.
 let railChipNode: HTMLDivElement | null = null;
+// The icon the chip is currently describing, so a scroll can re-measure
+// against it instead of blindly dismissing.
+let railChipAnchor: HTMLElement | null = null;
 
 function getRailChip(): HTMLDivElement | null {
   if (typeof document === "undefined") return null;
@@ -240,10 +243,7 @@ function getRailChip(): HTMLDivElement | null {
   return railChipNode;
 }
 
-function showRailChip(link: HTMLElement, label: string) {
-  const chip = getRailChip();
-  if (!chip) return;
-
+function placeRailChip(chip: HTMLDivElement, link: HTMLElement) {
   const rect = link.getBoundingClientRect();
   // Anchor to the rail's right edge, not the icon's: the icon sits inside the
   // rail's padding, so measuring from it would tuck the chip under the rail
@@ -252,14 +252,41 @@ function showRailChip(link: HTMLElement, label: string) {
     link.closest<HTMLElement>(".dashboard-sidebar")?.getBoundingClientRect()
       .right ?? rect.right;
 
-  chip.textContent = label;
   chip.style.top = `${Math.round(rect.top + rect.height / 2)}px`;
   chip.style.left = `${Math.round(railRight + 10)}px`;
+}
+
+function showRailChip(link: HTMLElement, label: string) {
+  const chip = getRailChip();
+  if (!chip) return;
+
+  chip.textContent = label;
+  railChipAnchor = link;
+  placeRailChip(chip, link);
   chip.dataset.visible = "true";
 }
 
 function hideRailChip() {
+  railChipAnchor = null;
   if (railChipNode) railChipNode.dataset.visible = "false";
+}
+
+// Tabbing to a link below the fold makes the browser scroll it into view, and
+// that scroll fires *after* focus -- so dismissing on scroll would erase the
+// chip for exactly the links a keyboard user has to scroll to reach. While the
+// anchor still holds focus the chip is still wanted; just re-measure it.
+function syncRailChip() {
+  if (!railChipNode || railChipNode.dataset.visible !== "true") return;
+
+  if (
+    railChipAnchor?.isConnected &&
+    document.activeElement === railChipAnchor
+  ) {
+    placeRailChip(railChipNode, railChipAnchor);
+    return;
+  }
+
+  hideRailChip();
 }
 
 function NavigationLink({
@@ -385,7 +412,14 @@ function NavigationGroups({
         const hasActiveItem = items.some((item) =>
           isDashboardRouteActive(pathname, item.href)
         );
-        const isCollapsed = collapsedSections.has(section) && !hasActiveItem;
+        // Never collapse in the icon rail. Section headers are display: none
+        // there, so the toggle that reopens a section is unreachable -- yet the
+        // rail reads the same persisted key as the drawer, so one collapse in
+        // the tablet drawer silently deleted those icons from the desktop rail
+        // with no way to bring them back (18 links down to 12, or 6 with three
+        // sections collapsed). Collapsing only makes sense where labels show.
+        const isCollapsed =
+          !compact && collapsedSections.has(section) && !hasActiveItem;
 
         return (
           <div key={section} className="dashboard-nav-group">
@@ -491,15 +525,16 @@ export default function DashboardShell({
 
   // The chip is position: fixed against the viewport, so anything that moves
   // the rail underneath it (scrolling the nav list, resizing) leaves it
-  // pointing at the wrong icon. Cheapest correct answer is to dismiss it.
+  // pointing at the wrong icon. syncRailChip re-measures if the icon still has
+  // focus, and dismisses otherwise.
   useEffect(() => {
-    const dismiss = () => hideRailChip();
+    const sync = () => syncRailChip();
 
-    window.addEventListener("scroll", dismiss, true);
-    window.addEventListener("resize", dismiss);
+    window.addEventListener("scroll", sync, true);
+    window.addEventListener("resize", sync);
     return () => {
-      window.removeEventListener("scroll", dismiss, true);
-      window.removeEventListener("resize", dismiss);
+      window.removeEventListener("scroll", sync, true);
+      window.removeEventListener("resize", sync);
     };
   }, []);
 

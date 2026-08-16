@@ -3195,22 +3195,6 @@ select.glass-input option {
   content: "";
 }
 
-.dashboard-nav-tooltip {
-  pointer-events: none;
-  position: absolute;
-  left: calc(100% + var(--space-2));
-  z-index: 70;
-  display: none;
-  white-space: nowrap;
-  border: 1px solid var(--border-default);
-  border-radius: var(--radius-control);
-  background: var(--bg-surface-strong);
-  padding: var(--space-2) var(--space-3);
-  color: var(--text-primary);
-  box-shadow: var(--shadow-overlay);
-  font-size: 0.75rem;
-}
-
 .dashboard-account-trigger {
   display: flex;
   min-width: 0;
@@ -3422,11 +3406,6 @@ select.glass-input option {
     padding: 0;
   }
 
-  .dashboard-nav-link:hover .dashboard-nav-tooltip,
-  .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
-    display: block;
-  }
-
   .dashboard-account-area {
     position: relative;
     border-top: 1px solid var(--border-divider);
@@ -3574,13 +3553,6 @@ select.glass-input option {
 
   .dashboard-shell-collapsed .dashboard-nav-group-items {
     margin-top: 0;
-  }
-
-  .dashboard-shell-collapsed .dashboard-nav-link:hover
-    .dashboard-nav-tooltip,
-  .dashboard-shell-collapsed .dashboard-nav-link:focus-visible
-    .dashboard-nav-tooltip {
-    display: block;
   }
 
   .dashboard-shell-collapsed .dashboard-account-menu {
@@ -11169,10 +11141,6 @@ body [class*="tracking-["],
   display: none;
 }
 
-.dashboard-nav-tooltip {
-  display: none !important;
-}
-
 .dashboard-nav-icon {
   color: inherit;
 }
@@ -14765,33 +14733,6 @@ body,
     color: #075985 !important;
   }
 
-  /* Dark chip (Sortly reference). This :has()-scoped block has higher
-     specificity than the .dashboard-workspace-shell one, so it is the winner on
-     the Overview / Inventory pages — it must carry the same dark styling or the
-     tooltip goes white on exactly those two pages. Keep in sync with the
-     .dashboard-workspace-shell .dashboard-nav-tooltip block. */
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-tooltip,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-tooltip {
-    left: calc(100% + 0.55rem) !important;
-    display: none;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    border-radius: 9px !important;
-    background: #1f2a37 !important;
-    padding: 0.32rem 0.62rem !important;
-    color: #ffffff !important;
-    font-size: 0.72rem !important;
-    font-weight: 650 !important;
-    letter-spacing: 0.01em !important;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.24) !important;
-  }
-
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:hover .dashboard-nav-tooltip,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:hover .dashboard-nav-tooltip,
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
-    display: block !important;
-  }
-
   .dashboard-shell:has(.sydin-overview) .dashboard-account-area,
   .dashboard-shell:has(.inventory-workspace) .dashboard-account-area {
     border-top: 1px solid #e4ebf3 !important;
@@ -15149,27 +15090,6 @@ body,
     border-color: rgba(14, 165, 198, 0.28) !important;
     background: linear-gradient(135deg, rgba(16, 196, 220, 0.15), rgba(37, 99, 235, 0.12), rgba(125, 92, 255, 0.12)) !important;
     color: #075985 !important;
-  }
-
-  /* Dark chip, matching the founder's Sortly reference — charcoal pill with
-     white text, sitting just off the collapsed rail. */
-  .dashboard-workspace-shell .dashboard-nav-tooltip {
-    left: calc(100% + 0.55rem) !important;
-    display: none;
-    border-color: rgba(255, 255, 255, 0.08) !important;
-    border-radius: 9px !important;
-    background: #1f2a37 !important;
-    padding: 0.32rem 0.62rem !important;
-    color: #ffffff !important;
-    font-size: 0.72rem !important;
-    font-weight: 650 !important;
-    letter-spacing: 0.01em !important;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.24) !important;
-  }
-
-  .dashboard-workspace-shell .dashboard-nav-link:hover .dashboard-nav-tooltip,
-  .dashboard-workspace-shell .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
-    display: block !important;
   }
 
   .dashboard-workspace-shell .dashboard-account-area {
@@ -17350,94 +17270,6 @@ body,
 
 .inventory-workspace-summary-hidden .inventory-hero-title {
   font-size: clamp(1.3rem, 1.8vw, 1.6rem) !important;
-}
-
-/* ===[ NAV CHROME OVERHAUL — softer sidebar hover-reveal (desktop rail) ]=== */
-/* Replaces the instant display none/block toggle with a soft slide-in reveal of
-   the page name. Appended last so it wins over the earlier scoped toggles. */
-@media (min-width: 900px) {
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-tooltip,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-tooltip,
-  .dashboard-workspace-shell .dashboard-nav-tooltip {
-    display: block !important;
-    opacity: 0;
-    transform: translateX(-6px) translateZ(0);
-    pointer-events: none;
-    /* Composite on the GPU so the reveal stays at 60fps and never repaints
-       layout — only opacity + transform animate. */
-    will-change: opacity, transform;
-    backface-visibility: hidden;
-    transition:
-      opacity 140ms ease-out,
-      transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
-  }
-
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:hover .dashboard-nav-tooltip,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:hover .dashboard-nav-tooltip,
-  .dashboard-workspace-shell .dashboard-nav-link:hover .dashboard-nav-tooltip,
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link:focus-visible .dashboard-nav-tooltip,
-  .dashboard-workspace-shell .dashboard-nav-link:focus-visible .dashboard-nav-tooltip {
-    opacity: 1 !important;
-    transform: translateX(0) translateZ(0) !important;
-  }
-}
-
-/* The reveal above never actually reached the screen: .dashboard-sidebar-scroll
-   needs overflow-y: auto for 18 items, and per spec that forces overflow-x from
-   `visible` to `auto` as well -- so the chip, which sits at left: 100% + 0.55rem,
-   was clipped at the 72px rail edge with only ~9px poking out. Measured live:
-   chip spans x=54..127, container clips at x=63.
-
-   Fix is to take the chip out of that container's flow entirely with
-   position: fixed (verified no transformed/filtered ancestor, so it resolves
-   against the viewport). Fixed coordinates can't be expressed relative to the
-   link in CSS, so NavigationLink measures the row on hover and writes
-   --nav-tip-left / --nav-tip-top. translateY(-50%) centres the chip on the icon;
-   the -6px x-offset is the existing slide-in, now folded into the same
-   transform so it doesn't overwrite the centring. */
-@media (min-width: 900px) {
-  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
-    .dashboard-nav-tooltip {
-    position: fixed !important;
-    /* Fallback is `auto`, not an off-screen value: with position: fixed and
-       auto offsets the chip falls back to its static position, which still
-       escapes the scroll container's clip. So if the hover handler hasn't run
-       yet -- first paint, or a browser holding stale JS against fresh CSS --
-       the chip is merely imprecise rather than parked off-screen. */
-    top: var(--nav-tip-top, auto) !important;
-    left: var(--nav-tip-left, auto) !important;
-    z-index: 80 !important;
-    transform: translate(-6px, -50%) translateZ(0) !important;
-  }
-
-  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
-    .dashboard-nav-link:hover
-    .dashboard-nav-tooltip,
-  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
-    .dashboard-nav-link:focus-visible
-    .dashboard-nav-tooltip {
-    transform: translate(0, -50%) translateZ(0) !important;
-  }
-
-}
-
-/* Respect reduced-motion: reveal the name instantly, no slide. */
-@media (min-width: 900px) and (prefers-reduced-motion: reduce) {
-  .dashboard-workspace-shell .dashboard-nav-tooltip {
-    transition: none !important;
-  }
-
-  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
-    .dashboard-nav-tooltip,
-  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
-    .dashboard-nav-link:hover
-    .dashboard-nav-tooltip,
-  .dashboard-shell.dashboard-workspace-shell.dashboard-shell-collapsed
-    .dashboard-nav-link:focus-visible
-    .dashboard-nav-tooltip {
-    transform: translate(0, -50%) !important;
-  }
 }
 
 /* ===[ MOBILE SHELL — Bottom navigation (375px–767px) ]=== */
