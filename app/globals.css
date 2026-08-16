@@ -19014,3 +19014,57 @@ a.dashboard-notifications-row:hover {
     width: min(22rem, calc(100vw - 1.5rem));
   }
 }
+
+/* ===[ SIDEBAR RAIL — page-name chip ]=================================== */
+/* Lives on <body>, created by DashboardShell's showRailChip(). It is not
+   nested in the sidebar because .dashboard-sidebar carries backdrop-filter,
+   and a non-`none` backdrop-filter makes that element the containing block
+   for position: fixed descendants -- which anchored the old chip to the 72px
+   rail instead of the viewport and left it clipped or invisible depending on
+   the browser's compositor. Parented to <body> there is nothing to escape:
+   no filtered ancestor, no overflow container, no competing stacking context.
+   Appended at the end of the file so no earlier block outranks it. */
+.dashboard-rail-chip {
+  position: fixed;
+  top: -999px;
+  left: -999px;
+  z-index: 2147483000;
+  display: block;
+  width: max-content;
+  max-width: 15rem;
+  border-radius: 9px;
+  background: #1f2a37;
+  padding: 0.32rem 0.62rem;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 650;
+  letter-spacing: 0.01em;
+  line-height: 1.35;
+  white-space: nowrap;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.24);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-6px, -50%);
+  transition:
+    opacity 140ms ease-out,
+    transform 200ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dashboard-rail-chip[data-visible="true"] {
+  opacity: 1;
+  transform: translate(0, -50%);
+}
+
+/* Touch devices have no hover, and the chip would otherwise linger after a tap. */
+@media (hover: none) {
+  .dashboard-rail-chip {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-rail-chip {
+    transition: none;
+    transform: translate(0, -50%);
+  }
+}

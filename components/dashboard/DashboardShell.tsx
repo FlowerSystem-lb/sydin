@@ -211,6 +211,57 @@ function AccountAvatar({
   );
 }
 
+// One name chip, parented to <body>, shared by every rail icon.
+//
+// It cannot live inside the sidebar. `.dashboard-sidebar` carries
+// backdrop-filter (via .glass-navigation), and per spec any non-`none`
+// backdrop-filter makes that element the containing block for its
+// position: fixed descendants -- so a chip nested in the rail is anchored to
+// the 72px rail, not the viewport, and whether it survives depends on the
+// browser's compositor. That is why it drew on one machine and not another.
+// On <body> there is no filtered ancestor, no scroll container, and no
+// stacking context to escape.
+//
+// Driven imperatively rather than through React state on purpose: this fires
+// for every icon the pointer crosses, and routing it through state would
+// re-render the entire shell on each one.
+let railChipNode: HTMLDivElement | null = null;
+
+function getRailChip(): HTMLDivElement | null {
+  if (typeof document === "undefined") return null;
+  if (railChipNode?.isConnected) return railChipNode;
+
+  railChipNode = document.createElement("div");
+  railChipNode.className = "dashboard-rail-chip";
+  // Purely decorative: the rail's links already carry aria-label, so exposing
+  // this to assistive tech would just read every name twice.
+  railChipNode.setAttribute("aria-hidden", "true");
+  document.body.appendChild(railChipNode);
+  return railChipNode;
+}
+
+function showRailChip(link: HTMLElement, label: string) {
+  const chip = getRailChip();
+  if (!chip) return;
+
+  const rect = link.getBoundingClientRect();
+  // Anchor to the rail's right edge, not the icon's: the icon sits inside the
+  // rail's padding, so measuring from it would tuck the chip under the rail
+  // and leave a different gap per icon.
+  const railRight =
+    link.closest<HTMLElement>(".dashboard-sidebar")?.getBoundingClientRect()
+      .right ?? rect.right;
+
+  chip.textContent = label;
+  chip.style.top = `${Math.round(rect.top + rect.height / 2)}px`;
+  chip.style.left = `${Math.round(railRight + 10)}px`;
+  chip.dataset.visible = "true";
+}
+
+function hideRailChip() {
+  if (railChipNode) railChipNode.dataset.visible = "false";
+}
+
 function NavigationLink({
   item,
   pathname,
@@ -224,35 +275,27 @@ function NavigationLink({
 }) {
   const active = isDashboardRouteActive(pathname, item.href);
 
-  // The name chip has to be position: fixed to escape the sidebar's scroll
-  // container, which clips it at the 72px rail edge (overflow-y: auto forces
-  // overflow-x to compute to auto too, so it can't just be allowed to spill).
-  // Fixed means viewport coordinates, so they're measured here on hover.
-  // Written straight to the DOM rather than through state -- this fires on
-  // every icon the pointer crosses and must not re-render the whole nav.
-  const positionTooltip = (
+  // Only the icon-only rail needs the chip; the drawer renders real labels.
+  const reveal = (
     event:
       | React.MouseEvent<HTMLAnchorElement>
       | React.FocusEvent<HTMLAnchorElement>
   ) => {
-    const link = event.currentTarget;
-    const tooltip = link.querySelector<HTMLElement>(".dashboard-nav-tooltip");
-    if (!tooltip) return;
-
-    const rect = link.getBoundingClientRect();
-    tooltip.style.setProperty("--nav-tip-left", `${Math.round(rect.right + 10)}px`);
-    tooltip.style.setProperty(
-      "--nav-tip-top",
-      `${Math.round(rect.top + rect.height / 2)}px`
-    );
+    if (!compact) return;
+    showRailChip(event.currentTarget, item.label);
   };
 
   return (
     <Link
       href={item.href}
-      onClick={onNavigate}
-      onMouseEnter={positionTooltip}
-      onFocus={positionTooltip}
+      onClick={() => {
+        hideRailChip();
+        onNavigate?.();
+      }}
+      onMouseEnter={reveal}
+      onFocus={reveal}
+      onMouseLeave={hideRailChip}
+      onBlur={hideRailChip}
       aria-current={active ? "page" : undefined}
       aria-label={compact ? item.label : undefined}
       className={cx(
@@ -266,9 +309,6 @@ function NavigationLink({
       </span>
       <span className="dashboard-nav-label">{item.label}</span>
       <span className="dashboard-nav-active-mark" aria-hidden="true" />
-      <span className="dashboard-nav-tooltip" role="tooltip">
-        {item.label}
-      </span>
     </Link>
   );
 }
@@ -448,6 +488,25 @@ export default function DashboardShell({
 
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  // The chip is position: fixed against the viewport, so anything that moves
+  // the rail underneath it (scrolling the nav list, resizing) leaves it
+  // pointing at the wrong icon. Cheapest correct answer is to dismiss it.
+  useEffect(() => {
+    const dismiss = () => hideRailChip();
+
+    window.addEventListener("scroll", dismiss, true);
+    window.addEventListener("resize", dismiss);
+    return () => {
+      window.removeEventListener("scroll", dismiss, true);
+      window.removeEventListener("resize", dismiss);
+    };
+  }, []);
+
+  // A navigation can unmount the hovered link before its mouseleave lands.
+  useEffect(() => {
+    hideRailChip();
+  }, [pathname]);
 
   useEffect(() => {
     const handleRouteCollapse = (event: Event) => {
@@ -766,6 +825,11 @@ export default function DashboardShell({
           "dashboard-sidebar glass-navigation",
           effectiveCollapsed && "dashboard-sidebar-collapsed"
         )}
+        // Safety net for the name chip. The per-link handler covers the normal
+        // case, but a fast exit, a pointer warped out of the window, or a link
+        // unmounting under the cursor can all skip it -- and because the chip
+        // lives on <body> it would then hang there with nothing to clear it.
+        onMouseLeave={hideRailChip}
       >
         <div className="dashboard-sidebar-header">
           <Link
