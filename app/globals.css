@@ -18948,3 +18948,73 @@ a.dashboard-notifications-row:hover {
     transform: translate(0, -50%);
   }
 }
+
+/* ===[ MARKETING — scroll reveal + hover motion ]======================== */
+/* The three earlier .sydin-reveal blocks all resolve to `opacity: 1;
+   transform: none`, so the entrance animation the component was written for
+   never actually ran -- sections just appeared. Re-enabled here, at the end
+   of the file, gated on [data-reveal-armed] which Reveal.tsx only sets
+   client-side for elements that start below the fold. Nothing is ever
+   hidden by CSS alone: no JS, reduced motion, or an element already on
+   screen all mean no attribute, hence no dimming. */
+.sydin-reveal[data-reveal-armed="true"]:not(.sydin-reveal-visible) {
+  opacity: 0;
+  transform: translateY(18px);
+}
+
+.sydin-reveal[data-reveal-armed="true"] {
+  transition:
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+  will-change: opacity, transform;
+}
+
+.sydin-reveal[data-reveal-armed="true"].sydin-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+  /* Released once the animation is done so the compositor isn't holding a
+     layer per section for the life of the page. */
+  will-change: auto;
+}
+
+/* Quiet lift on the cards -- Steep's surfaces are weightless, so this is a
+   small translate with a soft shadow, not a scale or a colour change. */
+@media (hover: hover) {
+  .marketing-feature-card,
+  .marketing-workflow-card,
+  .marketing-pricing-card {
+    transition:
+      transform 260ms cubic-bezier(0.22, 1, 0.36, 1),
+      box-shadow 260ms ease,
+      border-color 260ms ease;
+  }
+
+  .marketing-feature-card:hover,
+  .marketing-workflow-card:hover,
+  .marketing-pricing-card:hover {
+    transform: translateY(-3px);
+    border-color: rgba(37, 99, 235, 0.24);
+    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sydin-reveal[data-reveal-armed="true"],
+  .sydin-reveal[data-reveal-armed="true"]:not(.sydin-reveal-visible) {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .marketing-feature-card,
+  .marketing-workflow-card,
+  .marketing-pricing-card {
+    transition: none;
+  }
+
+  .marketing-feature-card:hover,
+  .marketing-workflow-card:hover,
+  .marketing-pricing-card:hover {
+    transform: none;
+  }
+}

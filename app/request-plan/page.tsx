@@ -252,7 +252,7 @@ function RequestPlanContent() {
                     </svg>
                   </div>
 
-                  <h1 className="mt-6 max-w-xl text-3xl font-black tracking-tight sm:text-4xl">
+                  <h1 className="marketing-section-title mt-6 max-w-xl">
                     Request received.
                   </h1>
 
@@ -435,7 +435,7 @@ function RequestPlanContent() {
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-sky-300">
                 Manual activation
               </p>
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+              <h2 className="marketing-section-title mt-3">
                 Early access payment methods
               </h2>
               <p className="mt-4 text-base leading-7 text-slate-400">

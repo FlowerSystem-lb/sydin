@@ -44,7 +44,7 @@ export default function DemoPage() {
                 Public demo
               </p>
 
-              <h1 className="mt-4 text-5xl font-black tracking-tight sm:text-6xl">
+              <h1 className="marketing-section-title mt-4">
                 See how SydIN turns item records into a visual workflow.
               </h1>
 
@@ -131,7 +131,7 @@ export default function DemoPage() {
                 QR workflow
               </p>
 
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+              <h2 className="marketing-section-title mt-3">
                 Generate, download, scan, and open the item page.
               </h2>
 

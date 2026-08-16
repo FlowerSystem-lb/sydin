@@ -80,7 +80,11 @@ export default function ContactPage() {
                   Ready when you are
                 </p>
 
-                <h2 className="mt-3 text-3xl font-black tracking-tight text-white sm:text-4xl">
+                {/* `text-white` dropped, not converted: the section reverted to
+                    a light background in an earlier pass, so a later rule was
+                    already forcing this dark (computed rgb(8,21,43)). Keeping
+                    the class would just misdescribe what renders. */}
+                <h2 className="marketing-section-title mt-3">
                   Start free or request a plan for a larger inventory.
                 </h2>
 

@@ -26,7 +26,7 @@ export default function FeaturesPage() {
                 Features
               </p>
 
-              <h1 className="mt-4 text-5xl font-black tracking-tight sm:text-6xl">
+              <h1 className="marketing-section-title mt-4">
                 Inventory tools built around real product visibility.
               </h1>
 
@@ -78,7 +78,7 @@ export default function FeaturesPage() {
                 QR item pages
               </p>
 
-              <h2 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
+              <h2 className="marketing-section-title mt-3">
                 Every item can become scan-ready.
               </h2>
 
