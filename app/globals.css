@@ -19351,3 +19351,56 @@ a.dashboard-notifications-row:hover {
 .marketing-site [class*="rounded-[28px]"] {
   border-radius: 24px !important;
 }
+
+/* ===[ AUTH — Refero/Steep treatment, form side only ]==================== */
+/* Sayed's instruction: match the new design on the left form, keep the blue
+   animated panel on the right exactly as it is. So every selector here is
+   scoped to the form column -- nothing touches .login-visual or its glows. */
+
+.login-heading h1 {
+  font-family: var(--font-serif-display), ui-serif, Georgia, serif;
+  font-size: clamp(2.4rem, 3.6vw, 3.4rem);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+/* The gradient-filled word came from the old look. One ink colour reads as
+   deliberate next to a serif; a gradient inside a serif reads as leftover. */
+.login-heading h1 span {
+  background: none;
+  background-clip: border-box;
+  -webkit-background-clip: border-box;
+  color: #17191c;
+}
+
+.login-heading p {
+  color: #777b86;
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* Filled ink pill, matching the marketing CTA. */
+.login-submit {
+  border-radius: var(--radius-pill);
+  background: #17191c;
+  box-shadow: none;
+  font-weight: 700;
+}
+
+.login-submit:not(:disabled):hover {
+  background: #2c2f34;
+  filter: none;
+}
+
+/* Ghost pill, the matched pair from the reference. */
+.login-provider-button {
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+}
+
+.login-form input,
+.login-input-wrap input {
+  border-radius: 16px;
+}
