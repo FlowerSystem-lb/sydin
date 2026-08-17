@@ -46,6 +46,38 @@ const coreFeatures: Array<{
   },
 ];
 
+// Every answer here is checked against what the app actually does, not what
+// would sell best: CSV export really is on every plan including Free
+// (capabilities.csvExport), scanning and Excel/PDF really do start at Standard,
+// and plan activation really is manual during early access. A pricing FAQ that
+// overpromises is the fastest way to lose a first customer in a small market.
+const faqs = [
+  {
+    q: "Do I need a credit card to start?",
+    a: "No. The Free plan holds up to 50 items and stays free — there is no card field anywhere in signup. Standard and Pro are activated manually while SydIN is in early access, so you talk to a person before you ever pay.",
+  },
+  {
+    q: "What happens if I outgrow the Free plan?",
+    a: "Nothing breaks and nothing is deleted. You keep every item you already added — you are simply asked to upgrade before adding more. Moving up raises the limits; nothing about your existing records changes.",
+  },
+  {
+    q: "Can I get my data out?",
+    a: "Yes, on every plan including Free. CSV export is always available. Standard adds Excel and PDF exports, plus CSV and Excel import if you are moving off a spreadsheet.",
+  },
+  {
+    q: "Is my inventory private?",
+    a: "Yes. Each workspace is isolated at the database level, so no other SydIN customer can read your items, suppliers, or prices. The only thing that can be public is a QR item page, and only for the items you choose to share.",
+  },
+  {
+    q: "Do I need a barcode scanner device?",
+    a: "No. SydIN uses your phone camera to scan barcodes and QR codes, and pairs it with the laptop you are working on. Scanning is included from the Standard plan.",
+  },
+  {
+    q: "Does it work on my phone?",
+    a: "Yes. SydIN runs in the browser on phone, tablet, and laptop — nothing to install. Scanning is designed for the phone specifically, since that is where stock work actually happens.",
+  },
+];
+
 const workflow = [
   ["01", "Create an item", "Add the product details your team actually uses."],
   ["02", "Track stock", "Record quantities and keep a dependable movement history."],
@@ -119,7 +151,15 @@ export default function Home() {
         <div className="marketing-feature-grid mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-5 md:grid-cols-3">
           {coreFeatures.map((feature, index) => (
             <Reveal key={feature.title} delay={index * 70}>
-              <article className="marketing-feature-card">
+              {/* Exactly one accent card, on the first feature. The reference
+                  treats its coloured card as rare punctuation -- "at most once
+                  per page" -- so this is index-gated rather than a variant
+                  every card could opt into and dilute. */}
+              <article
+                className={`marketing-feature-card${
+                  index === 0 ? " marketing-feature-card-accent" : ""
+                }`}
+              >
                 <span className="marketing-feature-icon">
                   <UiIcon name={feature.icon} className="h-6 w-6" />
                 </span>
@@ -175,6 +215,37 @@ export default function Home() {
         />
         <div className="mx-auto mt-12 max-w-7xl">
           <PricingCards compact />
+        </div>
+      </section>
+
+      {/* Directly after pricing on purpose: these are the questions that stop
+          someone clicking Start Free, so they belong where the hesitation
+          happens rather than buried at the bottom of the page. */}
+      <section className="marketing-soft-section px-4 py-20 sm:px-6 lg:px-8">
+        <SectionIntro
+          eyebrow="Before you start"
+          title="The questions people ask first."
+          text="Straight answers about limits, your data, and what happens as you grow."
+        />
+
+        <div className="marketing-faq mx-auto mt-12 max-w-3xl">
+          {faqs.map((faq, index) => (
+            <Reveal key={faq.q} delay={index * 50}>
+              {/* Native <details> rather than a JS accordion: it works before
+                  hydration, it is keyboard and screen-reader accessible for
+                  free, and search engines can read the answers. */}
+              <details className="marketing-faq-item">
+                <summary>
+                  <span>{faq.q}</span>
+                  <UiIcon
+                    name="chevron-down"
+                    className="marketing-faq-chevron h-4 w-4"
+                  />
+                </summary>
+                <p>{faq.a}</p>
+              </details>
+            </Reveal>
+          ))}
         </div>
       </section>
 

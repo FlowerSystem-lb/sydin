@@ -19582,3 +19582,109 @@ a.dashboard-notifications-row:hover {
     transform: translateY(-7px);
   }
 }
+
+/* ===[ MARKETING — accent feature card + FAQ ]=========================== */
+
+/* The single accent card. SydIN's blue stands in for the reference's peach,
+   but the rule it illustrates is the same: one chromatic surface per page, so
+   it has to stay rare to keep working. Still flat -- an accent card earns
+   colour, not elevation. */
+.marketing-site .marketing-feature-card-accent {
+  border-color: rgba(37, 99, 235, 0.18);
+  background: linear-gradient(
+    150deg,
+    rgba(16, 196, 220, 0.1),
+    rgba(37, 99, 235, 0.09) 55%,
+    rgba(125, 92, 255, 0.1)
+  );
+  box-shadow: none;
+}
+
+.marketing-site .marketing-feature-card-accent .marketing-feature-icon {
+  border-color: rgba(37, 99, 235, 0.22);
+  background: rgba(255, 255, 255, 0.72);
+  color: #1d4ed8;
+}
+
+@media (hover: hover) {
+  .marketing-site .marketing-feature-card-accent:hover {
+    border-color: rgba(37, 99, 235, 0.32);
+    background: linear-gradient(
+      150deg,
+      rgba(16, 196, 220, 0.14),
+      rgba(37, 99, 235, 0.12) 55%,
+      rgba(125, 92, 255, 0.14)
+    );
+  }
+}
+
+/* --- FAQ --- */
+.marketing-site .marketing-faq {
+  display: grid;
+  gap: 0.6rem;
+}
+
+.marketing-site .marketing-faq-item {
+  border: 1px solid transparent;
+  border-radius: 16px;
+  background: var(--m-paper);
+  padding: 0.15rem 1.15rem;
+}
+
+.marketing-site .marketing-faq-item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1.05rem;
+  color: var(--m-ink);
+  font-size: 1.0625rem;
+  font-weight: 500;
+  line-height: 1.4;
+  cursor: pointer;
+  /* Removes the default disclosure triangle so the chevron is the only marker,
+     in both Safari and everything else. */
+  list-style: none;
+}
+
+.marketing-site .marketing-faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.marketing-site .marketing-faq-item summary:focus-visible {
+  outline: 2px solid var(--m-accent);
+  outline-offset: 4px;
+  border-radius: 10px;
+}
+
+.marketing-site .marketing-faq-chevron {
+  flex: 0 0 auto;
+  color: var(--m-ash);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.marketing-site .marketing-faq-item[open] .marketing-faq-chevron {
+  transform: rotate(180deg);
+}
+
+.marketing-site .marketing-faq-item p {
+  margin: 0;
+  padding-bottom: 1.15rem;
+  color: var(--m-slate);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+  max-width: 60ch;
+}
+
+@media (hover: hover) {
+  .marketing-site .marketing-faq-item:hover {
+    border-color: var(--m-line);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-site .marketing-faq-chevron {
+    transition: none;
+  }
+}
