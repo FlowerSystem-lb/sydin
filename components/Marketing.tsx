@@ -526,3 +526,65 @@ export function MarketingCTA() {
     </section>
   );
 }
+
+/**
+ * Floating product artifacts for the hero.
+ *
+ * The reference page doesn't put its product shot in a frame under the
+ * headline -- it scatters cropped UI fragments around the type so the text and
+ * the product read as one composition. These are the SydIN equivalents: the
+ * numbers a shop owner actually looks at, not decorative shapes.
+ *
+ * Desktop only. They're absolutely positioned against the hero and would
+ * collide with the headline on a narrow screen, and mobile is its own design
+ * pass (Phase 5b) rather than a squeezed version of this one -- so below the
+ * lg breakpoint they don't render at all and the centred preview carries the
+ * hero on its own.
+ *
+ * aria-hidden throughout: every number here is illustrative, and a screen
+ * reader announcing invented stock figures between the headline and the CTA
+ * would be actively misleading.
+ */
+export function HeroArtifacts() {
+  return (
+    <div className="marketing-hero-artifacts" aria-hidden="true">
+      <div className="marketing-artifact marketing-artifact-stock">
+        <p className="marketing-artifact-label">Low stock</p>
+        <ul>
+          {[
+            ["Ceramic planter", "4 left"],
+            ["Linen apron", "7 left"],
+            ["Brass hooks", "2 left"],
+          ].map(([name, count]) => (
+            <li key={name}>
+              <span>{name}</span>
+              <strong>{count}</strong>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="marketing-artifact marketing-artifact-value">
+        <p className="marketing-artifact-label">Inventory value</p>
+        <strong className="marketing-artifact-metric">$18,420</strong>
+        <span className="marketing-artifact-delta">
+          <UiIcon name="arrow-up" className="h-3.5 w-3.5" />
+          6.2% vs last month
+        </span>
+      </div>
+
+      <div className="marketing-artifact marketing-artifact-scan">
+        <span className="marketing-artifact-scan-icon">
+          <UiIcon name="scan" className="h-4 w-4" />
+        </span>
+        <div className="min-w-0">
+          <p className="marketing-artifact-label">Scanned</p>
+          <strong>FP-0142</strong>
+        </div>
+        <span className="marketing-artifact-check">
+          <UiIcon name="check" className="h-3.5 w-3.5" />
+        </span>
+      </div>
+    </div>
+  );
+}

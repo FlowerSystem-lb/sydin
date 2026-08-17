@@ -2,6 +2,7 @@ import Link from "next/link";
 import {
   CTAButtons,
   DashboardPreview,
+  HeroArtifacts,
   MarketingCTA,
   MarketingPage,
   PricingCards,
@@ -57,6 +58,11 @@ export default function Home() {
     <MarketingPage active="home">
       <section className="marketing-hero px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8">
         <div className="marketing-hero-shell mx-auto w-full max-w-7xl">
+          {/* Sits behind the copy block, not inside it -- the artifacts have to
+              overlap the headline's margins the way the reference does, and
+              nesting them in the centred column would constrain them to it. */}
+          <HeroArtifacts />
+
           <Reveal className="marketing-hero-copy-block mx-auto max-w-4xl text-center">
             <p className="marketing-hero-kicker">
               Smart inventory for growing teams

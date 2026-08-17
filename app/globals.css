@@ -19404,3 +19404,181 @@ a.dashboard-notifications-row:hover {
 .login-input-wrap input {
   border-radius: 16px;
 }
+
+/* ===[ MARKETING — hero floating artifacts ]============================== */
+/* Cropped product fragments scattered around the headline, per the reference's
+   hero composition. These are the only elements on the page that carry a real
+   shadow -- everything else was flattened in the pass above, and that contrast
+   is what makes them read as floating rather than as more cards. */
+
+.marketing-hero-shell {
+  position: relative;
+}
+
+.marketing-hero-artifacts {
+  display: none;
+}
+
+/* Desktop only: below this the cards would sit on top of the headline, and
+   mobile gets its own composition in the mobile phase rather than a
+   scaled-down version of this one. */
+@media (min-width: 1100px) {
+  .marketing-hero-artifacts {
+    position: absolute;
+    inset: 0;
+    display: block;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .marketing-artifact {
+    position: absolute;
+    border: 1px solid rgba(23, 25, 28, 0.08);
+    border-radius: 20px;
+    background: #ffffff;
+    box-shadow:
+      0 0 0 1px rgba(4, 23, 43, 0.05),
+      0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    padding: 0.85rem 1rem;
+    text-align: left;
+  }
+
+  .marketing-artifact-label {
+    margin: 0 0 0.5rem;
+    color: #979799;
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Left of the headline, roughly level with its first line. */
+  .marketing-artifact-stock {
+    top: 3.5rem;
+    left: 0;
+    width: 13.5rem;
+  }
+
+  .marketing-artifact-stock ul {
+    display: grid;
+    gap: 0.5rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .marketing-artifact-stock li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    color: #17191c;
+    font-size: 0.78rem;
+    font-weight: 450;
+  }
+
+  .marketing-artifact-stock strong {
+    color: #b4530f;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* Right side, higher up so the pair isn't symmetrical -- the reference
+     offsets them deliberately. */
+  .marketing-artifact-value {
+    top: 1.5rem;
+    right: 0;
+    width: 12rem;
+  }
+
+  .marketing-artifact-metric {
+    display: block;
+    color: #17191c;
+    font-size: 1.6rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1.1;
+  }
+
+  .marketing-artifact-delta {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    margin-top: 0.35rem;
+    color: #15803d;
+    font-size: 0.72rem;
+    font-weight: 500;
+  }
+
+  /* Lower right, overlapping the gap between the CTA row and the preview. */
+  .marketing-artifact-scan {
+    top: 15.5rem;
+    right: 2.5rem;
+    display: flex;
+    width: 13rem;
+    align-items: center;
+    gap: 0.65rem;
+  }
+
+  .marketing-artifact-scan .marketing-artifact-label {
+    margin-bottom: 0.15rem;
+  }
+
+  .marketing-artifact-scan strong {
+    color: #17191c;
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 0.82rem;
+    font-weight: 500;
+  }
+
+  .marketing-artifact-scan-icon {
+    display: grid;
+    width: 2rem;
+    height: 2rem;
+    flex: 0 0 auto;
+    place-items: center;
+    border-radius: 999px;
+    background: #f2f2f3;
+    color: #17191c;
+  }
+
+  .marketing-artifact-check {
+    display: grid;
+    width: 1.4rem;
+    height: 1.4rem;
+    flex: 0 0 auto;
+    place-items: center;
+    margin-left: auto;
+    border-radius: 999px;
+    background: rgba(21, 128, 61, 0.12);
+    color: #15803d;
+  }
+
+  /* A slow drift so they feel suspended rather than pinned. Tiny amplitude on
+     purpose -- this should be barely perceptible, not a carousel. */
+  @media (prefers-reduced-motion: no-preference) {
+    .marketing-artifact-stock {
+      animation: sydin-artifact-drift 9s ease-in-out infinite;
+    }
+
+    .marketing-artifact-value {
+      animation: sydin-artifact-drift 11s ease-in-out infinite 0.6s;
+    }
+
+    .marketing-artifact-scan {
+      animation: sydin-artifact-drift 10s ease-in-out infinite 1.2s;
+    }
+  }
+}
+
+@keyframes sydin-artifact-drift {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
