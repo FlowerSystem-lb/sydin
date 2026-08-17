@@ -19018,3 +19018,336 @@ a.dashboard-notifications-row:hover {
     transform: none;
   }
 }
+
+/* ===[ MARKETING — Refero/Steep reference adoption ]====================== */
+/* Scoped to .marketing-site and appended last on purpose. The marketing
+   classes carry six passes of stacked overrides earlier in this file, so
+   redefining them in place means hunting every duplicate; a scoped block at
+   the end wins on specificity (.marketing-site raises each selector by one
+   class) without touching that history. Nothing here leaks into the
+   dashboard -- .marketing-site only exists on the public pages.
+
+   Adapted, not copied: SydIN keeps blue where Steep uses peach. What is
+   taken is the discipline -- a near-achromatic page, colour rationed to one
+   accent, flat surfaces, and pill controls sitting flat on the page. */
+
+.marketing-site {
+  --m-ink: #17191c;
+  --m-paper: #ffffff;
+  --m-mist: #f2f2f3;
+  --m-fog: #fafafb;
+  --m-slate: #777b86;
+  --m-ash: #979799;
+  --m-line: rgba(23, 25, 28, 0.1);
+  --m-accent: #2563eb;
+
+  /* Steep's canvas is plain paper. The old radial blue wash fought the
+     "near-monochrome" premise more than any single component did. */
+  background: var(--m-paper);
+  color: var(--m-ink);
+}
+
+/* --- Rhythm: sections breathe at a consistent 80px --- */
+.marketing-site > section {
+  padding-block: clamp(3.5rem, 6vw, 5rem);
+}
+
+.marketing-site > section:first-of-type {
+  padding-block: clamp(3rem, 5vw, 4.5rem) clamp(3.5rem, 6vw, 5rem);
+}
+
+/* --- Type --- */
+.marketing-site .marketing-hero-copy,
+.marketing-site .marketing-section-copy {
+  color: var(--m-slate);
+}
+
+/* Ghost typographic labels, not badges -- they group without visual weight. */
+.marketing-site .marketing-eyebrow,
+.marketing-site .marketing-hero-kicker {
+  color: var(--m-ash);
+  font-weight: 700;
+}
+
+/* --- Surfaces: flat, soft-edged, no elevation --- */
+/* Steep gives elevation only to floating product artifacts; content cards
+   are flat. These were carrying a 22px/70px shadow, the loudest on the
+   page. */
+.marketing-site .marketing-feature-card,
+.marketing-site .marketing-workflow-card,
+.marketing-site .marketing-pricing-card {
+  border: 1px solid transparent;
+  border-radius: 24px;
+  background: var(--m-mist);
+  box-shadow: none;
+}
+
+.marketing-site .marketing-cta,
+.marketing-site .marketing-soft-section {
+  border-radius: 24px;
+  background: var(--m-fog);
+  box-shadow: none;
+}
+
+/* The product screenshot is the one "floating artifact", so it keeps a
+   real shadow -- that contrast is the point of flattening everything else. */
+.marketing-site .marketing-product-frame {
+  border: 1px solid var(--m-line);
+  border-radius: 20px;
+  background: var(--m-paper);
+  box-shadow:
+    0 0 0 1px rgba(4, 23, 43, 0.05),
+    0 20px 25px -5px rgba(0, 0, 0, 0.1),
+    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+}
+
+/* --- Controls: filled ink pill paired with a ghost pill --- */
+.marketing-site .marketing-button {
+  border-radius: var(--radius-pill);
+  font-weight: 700;
+}
+
+.marketing-site .marketing-button-primary {
+  border-color: var(--m-ink);
+  background: var(--m-ink);
+  box-shadow: none;
+  color: var(--m-paper);
+}
+
+.marketing-site .marketing-button-secondary {
+  border-color: var(--m-ink);
+  background: transparent;
+  box-shadow: none;
+  color: var(--m-ink);
+}
+
+@media (hover: hover) {
+  .marketing-site .marketing-button-primary:hover {
+    background: #2c2f34;
+  }
+
+  .marketing-site .marketing-button-secondary:hover {
+    background: var(--m-mist);
+  }
+
+  /* Flat cards can't lift on a shadow they don't have, so the hover cue is
+     the border arriving instead. */
+  .marketing-site .marketing-feature-card:hover,
+  .marketing-site .marketing-workflow-card:hover,
+  .marketing-site .marketing-pricing-card:hover {
+    border-color: var(--m-line);
+    background: var(--m-fog);
+    box-shadow: none;
+  }
+}
+
+/* --- Accent, rationed --- */
+/* One accent, and only on things that are genuinely interactive or
+   genuinely the recommended plan. */
+.marketing-site .marketing-inline-link,
+.marketing-site .marketing-workflow-card > span {
+  color: var(--m-accent);
+}
+
+.marketing-site .marketing-pricing-card-featured {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: var(--m-paper);
+}
+
+.marketing-site .marketing-trust-strip svg {
+  color: var(--m-ash);
+}
+
+/* --- Chrome --- */
+.marketing-site .marketing-header {
+  border-bottom: 1px solid var(--m-line);
+  background: rgba(255, 255, 255, 0.86);
+  box-shadow: none;
+}
+
+.marketing-site .marketing-nav-link {
+  border-radius: var(--radius-pill);
+  color: var(--m-slate);
+}
+
+.marketing-site .marketing-nav-link:hover,
+.marketing-site .marketing-nav-link-active {
+  background: var(--m-mist);
+  color: var(--m-ink);
+}
+
+/* ===[ MARKETING — Refero/Steep, part 2: type scale, hero wash, chrome ]== */
+
+/* --- Typographic signature: tighter tracking as size grows --------------
+   The reference calls this out explicitly ("tighter tracking at larger
+   sizes is the typographic signature"). An earlier pass had pinned every
+   heading to `letter-spacing: 0 !important` via a broad
+   `body [class*="tracking-["]` rule, which flattened exactly that. Matching
+   the !important here rather than removing that rule, because it also
+   guards unrelated Tailwind tracking utilities elsewhere. */
+.marketing-site .marketing-hero-title {
+  letter-spacing: -0.025em !important;
+  line-height: 1.08;
+}
+
+.marketing-site .marketing-section-title {
+  letter-spacing: -0.015em !important;
+  line-height: 1.14;
+}
+
+/* --- Body scale: 17px body, 15px caption, no jump straight to bold ----- */
+.marketing-site .marketing-hero-copy {
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.marketing-site .marketing-section-copy {
+  font-size: 1.0625rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.marketing-site .marketing-feature-card p,
+.marketing-site .marketing-workflow-card p {
+  color: var(--m-slate);
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.marketing-site .marketing-feature-card h2,
+.marketing-site .marketing-feature-card h3,
+.marketing-site .marketing-workflow-card h3 {
+  color: var(--m-ink);
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: -0.009em;
+}
+
+/* --- Hero wash ---------------------------------------------------------
+   The reference page isn't flat white behind its headline -- a single soft
+   colour bloom sits under the display type, and it's the one place colour
+   appears at scale. SydIN's blue/violet stands in for the peach, kept low
+   enough to stay a wash rather than a background. Confined to the hero so
+   the rest of the page stays achromatic. */
+.marketing-site .marketing-hero {
+  position: relative;
+  isolation: isolate;
+}
+
+.marketing-site .marketing-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  z-index: -1;
+  height: 34rem;
+  background:
+    radial-gradient(
+      42rem 22rem at 32% 28%,
+      rgba(16, 196, 220, 0.16),
+      transparent 70%
+    ),
+    radial-gradient(
+      38rem 20rem at 68% 22%,
+      rgba(125, 92, 255, 0.14),
+      transparent 70%
+    ),
+    radial-gradient(
+      34rem 18rem at 50% 46%,
+      rgba(37, 99, 235, 0.1),
+      transparent 72%
+    );
+  filter: blur(6px);
+  pointer-events: none;
+}
+
+/* --- Chrome: whisper-quiet nav ----------------------------------------
+   Reference: "no background, no shadow, no separator". Kept a blur so the
+   bar stays legible once content scrolls under it. */
+.marketing-site .marketing-header {
+  border-bottom: 1px solid transparent;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: none;
+}
+
+.marketing-site .marketing-announcement {
+  border-bottom: 1px solid var(--m-line);
+  background: var(--m-fog);
+  color: var(--m-slate);
+}
+
+/* --- Remaining radii from the spec ------------------------------------ */
+.marketing-site input,
+.marketing-site textarea,
+.marketing-site select {
+  border-radius: 16px;
+}
+
+.marketing-site img {
+  border-radius: 12px;
+}
+
+/* Text links carry their affordance in the arrow, not an underline. */
+.marketing-site .marketing-inline-link {
+  text-decoration: none;
+}
+
+@media (hover: hover) {
+  .marketing-site .marketing-inline-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.25em;
+  }
+}
+
+/* ===[ MARKETING — retire leftover dark-theme utilities ]================= */
+/* The public pages predate the light redesign and still carry inline
+   dark-theme Tailwind (bg-white/[0.045], bg-black/25, border-white/10,
+   text-white, text-slate-300/400, text-indigo-300, heavy black shadows).
+   Earlier passes patched a handful of these by hand, which is why single
+   sections still rendered purple-on-white while their neighbours had gone
+   achromatic -- the Pricing "Private beta activation" panel was one.
+   Mapping them to the palette here catches every occurrence at once,
+   including the ones a page-by-page sweep would miss. The markup keeps its
+   class names; only what they resolve to changes. */
+
+.marketing-site [class*="bg-white/["],
+.marketing-site [class*="bg-black/"] {
+  background-color: var(--m-mist) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.marketing-site [class*="border-white/"] {
+  border-color: var(--m-line) !important;
+}
+
+/* Buttons excluded: the filled pill sets its own white-on-ink and would
+   otherwise be recoloured to near-black text on a near-black fill. */
+.marketing-site [class~="text-white"]:not(.marketing-button):not(.marketing-button *) {
+  color: var(--m-ink) !important;
+}
+
+.marketing-site [class~="text-slate-300"],
+.marketing-site [class~="text-slate-400"],
+.marketing-site [class~="text-slate-500"] {
+  color: var(--m-slate) !important;
+}
+
+.marketing-site [class~="text-indigo-300"],
+.marketing-site [class~="text-indigo-200"] {
+  color: var(--m-ash) !important;
+}
+
+/* Content surfaces don't earn elevation in this system -- only the
+   floating product frame does, and that keeps its own rule above. */
+.marketing-site [class*="shadow-[0_2"],
+.marketing-site [class*="shadow-[0_3"] {
+  box-shadow: none !important;
+}
+
+/* Radii below 16px aren't part of the system; normalise the ad-hoc ones. */
+.marketing-site [class*="rounded-[3"],
+.marketing-site [class*="rounded-[28px]"] {
+  border-radius: 24px !important;
+}

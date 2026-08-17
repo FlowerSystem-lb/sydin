@@ -96,14 +96,14 @@ export default function ContactPage() {
               <div className="flex flex-col gap-3 sm:flex-row lg:flex-col">
                 <PlanCtaLink
                   plan="standard"
-                  className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-white px-7 py-4 text-base font-black text-black shadow-[0_22px_70px_rgba(255,255,255,0.14)] transition hover:bg-slate-200"
+                  className="marketing-button marketing-button-primary min-h-13 px-7 py-3 text-base"
                 >
                   Request Standard
                 </PlanCtaLink>
 
                 <PlanCtaLink
                   plan="free"
-                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-7 py-4 text-base font-black text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                  className="marketing-button marketing-button-secondary min-h-13 px-7 py-3 text-base"
                 >
                   Start Free
                 </PlanCtaLink>

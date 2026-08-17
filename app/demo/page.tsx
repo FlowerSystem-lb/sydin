@@ -52,17 +52,21 @@ export default function DemoPage() {
                 This sample demo shows inventory cards, QR workflow, and item detail previews without requiring login.
               </p>
 
+              {/* Were hand-rolled dark-theme buttons: the primary was a white
+                  fill with black text, which on the light page rendered as a
+                  white button on white. Now the shared filled/ghost pill pair
+                  like every other CTA on the site. */}
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <PlanCtaLink
                   plan="free"
-                  className="inline-flex min-h-14 items-center justify-center rounded-2xl bg-white px-7 py-4 text-base font-black text-black shadow-[0_22px_70px_rgba(255,255,255,0.14)] transition hover:bg-slate-200"
+                  className="marketing-button marketing-button-primary min-h-13 px-7 py-3 text-base"
                 >
                   Start Free
                 </PlanCtaLink>
 
                 <Link
                   href="/features"
-                  className="inline-flex min-h-14 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] px-7 py-4 text-base font-black text-white transition hover:border-white/20 hover:bg-white/[0.1]"
+                  className="marketing-button marketing-button-secondary min-h-13 px-7 py-3 text-base"
                 >
                   View Features
                 </Link>

@@ -415,7 +415,7 @@ function RequestPlanContent() {
                     <button
                       type="submit"
                       disabled={submitting}
-                      className="inline-flex min-h-12 items-center justify-center rounded-2xl bg-white px-6 py-3 text-sm font-black text-black shadow-[0_18px_60px_rgba(255,255,255,0.12)] transition hover:bg-slate-200 disabled:cursor-not-allowed disabled:opacity-60"
+                      className="marketing-button marketing-button-primary min-h-12 px-6 py-3 text-sm disabled:cursor-not-allowed disabled:opacity-60"
                     >
                       {submitting ? "Sending request..." : `Request ${selectedPlan}`}
                     </button>

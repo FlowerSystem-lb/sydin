@@ -61,14 +61,18 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="px-4 py-8 sm:px-6 lg:px-8">
+      {/* Was raw dark-theme markup (bg-white/[0.045], text-white, bg-black/25,
+          indigo label) left over from before the site went light -- later
+          rules were half-patching it, which is why this one block still read
+          purple-on-white while every other section had gone achromatic.
+          Rebuilt on the shared marketing classes so it inherits the design
+          instead of being patched again. */}
+      <section className="px-4 sm:px-6 lg:px-8">
         <Reveal>
-          <div className="mx-auto max-w-5xl rounded-[30px] border border-white/10 bg-white/[0.045] p-6 text-center shadow-[0_24px_90px_rgba(0,0,0,0.24)] backdrop-blur-2xl sm:p-7">
-            <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-300">
-              Private beta activation
-            </p>
+          <div className="marketing-cta mx-auto max-w-5xl p-6 text-center sm:p-7">
+            <p className="marketing-eyebrow">Private beta activation</p>
 
-            <h2 className="mt-3 text-2xl font-black text-white sm:text-3xl">
+            <h2 className="marketing-section-title mt-3">
               Human-reviewed plans, without billing surprises.
             </h2>
 
@@ -78,13 +82,10 @@ export default function PricingPage() {
                 ["Safe plan changes", "Inventory data is never deleted when plans change."],
                 ["CSV access", "Free users can always access and export their inventory."],
               ].map(([title, text]) => (
-                <div
-                  key={title}
-                  className="rounded-2xl border border-white/10 bg-black/25 p-4"
-                >
-                  <p className="font-black text-white">{title}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">{text}</p>
-                </div>
+                <article key={title} className="marketing-feature-card p-4">
+                  <h3>{title}</h3>
+                  <p className="mt-2">{text}</p>
+                </article>
               ))}
             </div>
           </div>
