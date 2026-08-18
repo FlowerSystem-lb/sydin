@@ -193,7 +193,12 @@ function SettingCard({
   action?: React.ReactNode;
 }) {
   return (
-    <article className="min-w-0 rounded-xl border border-theme bg-theme-inset p-4">
+    // settings-card, not raw Tailwind: these are nested inside the panel card,
+    // so they need the quiet nested-surface treatment (matching radius, no
+    // shadow of their own) rather than a second full card competing with the
+    // one containing them. Styling lives in globals.css with the other
+    // dashboard surfaces so it cannot drift from them again.
+    <article className="settings-card min-w-0 p-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h3 className="text-base font-black text-theme-primary">{title}</h3>

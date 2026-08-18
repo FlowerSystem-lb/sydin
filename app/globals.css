@@ -19792,3 +19792,16 @@ a.dashboard-notifications-row:hover {
   border-radius: var(--radius-card) !important;
   box-shadow: var(--shadow-subtle) !important;
 }
+
+/* ===[ SETTINGS — nested card surface ]================================== */
+/* These sit inside the settings panel, so they are a nested layer, not a
+   second competing card: same radius as every other surface, a quiet inset
+   fill, hairline border, and no shadow of their own. Previously
+   `rounded-xl` + translucent white, which rendered 12px against the app's
+   16px and washed out next to the crisp surfaces around them. */
+.dashboard-shell .settings-card {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--bg-inset);
+  box-shadow: none;
+}
