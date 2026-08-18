@@ -19755,3 +19755,40 @@ a.dashboard-notifications-row:hover {
     transition: none;
   }
 }
+
+/* ===[ DASHBOARD — one radius, one shadow hierarchy ]==================== */
+/* Measured before writing this, on /dashboard/inventory: item cards sat at
+   18px while every other surface was 16px, and the hero, toolbar and insight
+   panels still carried `0 18px 48px` from the old frosted-glass pass -- the
+   loudest shadow left in the app, on the three biggest surfaces, directly
+   contradicting the quiet-surface pass done for .dashboard-card.
+   Selectors are (0,2,0) and appended last because the rules being corrected
+   use !important; this matches that rather than adding a new escalation. */
+
+.dashboard-shell .dashboard-card,
+.dashboard-shell .dashboard-toolbar-card,
+.dashboard-shell .dashboard-table-card,
+.dashboard-shell .dashboard-form-section,
+.dashboard-shell .sydin-overview-panel,
+.dashboard-shell .sydin-overview-header,
+.dashboard-shell .inventory-hero-card,
+.dashboard-shell .inventory-toolbar-panel,
+.dashboard-shell .inventory-insight-card,
+.dashboard-shell .inventory-table-shell,
+.dashboard-shell .po-month-group {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-subtle) !important;
+}
+
+/* Item cards are the one interactive surface in the grid, so they keep a
+   slight lift -- that is the only shadow difference left, and now it means
+   something ("you can click this") instead of being an accident of which
+   pass last touched the file. */
+.dashboard-shell .inventory-item-card {
+  border-radius: var(--radius-card) !important;
+}
+
+.dashboard-shell .dashboard-metric-card {
+  border-radius: var(--radius-card) !important;
+  box-shadow: var(--shadow-subtle) !important;
+}
