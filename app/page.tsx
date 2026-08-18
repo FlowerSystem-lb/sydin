@@ -11,17 +11,21 @@ import {
 import Reveal from "@/components/Reveal";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 
+// Copy is written for one buyer: a wholesale accessories depot in Lebanon whose
+// actual daily problem is not knowing what is still in the depot. Everything
+// below names cartons, orders, and customers on the phone rather than abstract
+// "inventory management", because that is the language the buyer uses.
 const highlights = [
-  "Photos and item records",
-  "QR and barcode workflows",
-  "Stock history",
-  "Reports and Pick Lists",
+  "A photo on every item",
+  "Scan with your phone",
+  "See what is running low",
+  "Prepare orders faster",
 ];
 
 const heroStats = [
-  ["50", "free starter items"],
-  ["4", "daily work modes"],
-  ["1", "visual inventory hub"],
+  ["50", "items free to start"],
+  ["0", "cost to try it"],
+  ["1", "place for every depot"],
 ];
 
 const coreFeatures: Array<{
@@ -30,18 +34,18 @@ const coreFeatures: Array<{
   icon: UiIconName;
 }> = [
   {
-    title: "See every item clearly",
-    text: "Keep photos, codes, categories, suppliers, stock, and notes together in one dependable record.",
+    title: "Recognise an item by its photo",
+    text: "Accessories all look alike in a code list. Every item in SydIN carries its own photo, so you find the right one without opening the carton.",
     icon: "box",
   },
   {
-    title: "Know what needs attention",
-    text: "Review low-stock priorities, inventory value, and recent activity without searching through spreadsheets.",
+    title: "Know what is running low",
+    text: "SydIN tells you which items are nearly finished before a customer asks for them, so you reorder in time instead of losing the sale.",
     icon: "reports",
   },
   {
-    title: "Move work forward",
-    text: "Scan items, record stock changes, and prepare Pick Lists from the same responsive workspace.",
+    title: "Prepare an order without hunting",
+    text: "Build a pick list for each wholesale order, scan items with your phone as you pack, and keep a record of exactly what went out.",
     icon: "scan",
   },
 ];
@@ -79,10 +83,10 @@ const faqs = [
 ];
 
 const workflow = [
-  ["01", "Create an item", "Add the product details your team actually uses."],
-  ["02", "Track stock", "Record quantities and keep a dependable movement history."],
-  ["03", "Scan and share", "Use item QR pages and supported barcode workflows."],
-  ["04", "Act on insights", "Review reports and prepare work with Pick Lists."],
+  ["01", "Add your items once", "A photo, a code, and how many you have. Import from Excel if you already keep a sheet."],
+  ["02", "Record what goes out", "Every order out of the depot is recorded, so the count on screen matches the shelf."],
+  ["03", "Scan instead of searching", "Scan a barcode with your phone and the item opens straight away."],
+  ["04", "Reorder before you run out", "SydIN flags what is nearly finished so you buy in time."],
 ];
 
 export default function Home() {
@@ -97,17 +101,18 @@ export default function Home() {
 
           <Reveal className="marketing-hero-copy-block mx-auto max-w-4xl text-center">
             <p className="marketing-hero-kicker">
-              Smart inventory for growing teams
+              Built in Lebanon for wholesale depots
             </p>
 
             <h1 className="marketing-hero-title mt-6">
-              SydIN visual inventory
+              Know what is in your depot
             </h1>
 
             <p className="marketing-hero-copy mx-auto mt-6 max-w-2xl">
-              A premium workspace for product photos, stock counts, QR and
-              barcode work, Pick Lists, and the daily decisions that keep
-              inventory under control.
+              SydIN is a visual stock system for accessories wholesalers. Give
+              every item a photo, record what leaves with each order, and see
+              what is running low &mdash; before a customer asks for something
+              you cannot find.
             </p>
 
             <CTAButtons align="center" />
@@ -143,9 +148,9 @@ export default function Home() {
 
       <section className="px-4 py-14 sm:px-6 sm:py-16 lg:px-8">
         <SectionIntro
-          eyebrow="Made for daily operations"
-          title="The essentials are easy to find and easy to use."
-          text="SydIN keeps the interface calm so your inventory, not the software, stays at the center of the work."
+          eyebrow="Made for daily depot work"
+          title="Built around what actually slows you down."
+          text="Not another spreadsheet. SydIN is shaped around the three things that cost a wholesaler money: not finding an item, not knowing it ran out, and packing the wrong order."
         />
 
         <div className="marketing-feature-grid mx-auto mt-12 grid max-w-7xl grid-cols-1 gap-5 md:grid-cols-3">
@@ -175,13 +180,13 @@ export default function Home() {
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[0.85fr_1.15fr] lg:items-center">
           <Reveal>
             <div>
-              <p className="marketing-eyebrow">A clear workflow</p>
+              <p className="marketing-eyebrow">How it works</p>
               <h2 className="marketing-section-title mt-3">
-                From first item to reliable operations.
+                From one carton to the whole depot.
               </h2>
               <p className="marketing-section-copy mt-4">
-                Start small, keep your records clean, and add operational tools
-                as the business grows.
+                Start with the items that move the most. You do not have to
+                count everything on the first day for SydIN to be useful.
               </p>
               <Link
                 href="/features"
@@ -209,9 +214,9 @@ export default function Home() {
 
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <SectionIntro
-          eyebrow="Straightforward plans"
-          title="Start free, then add capacity when it matters."
-          text="Every plan keeps the same clear workspace. Higher plans add capacity and operational tools, not clutter."
+          eyebrow="Simple plans"
+          title="Start free. Pay only when the depot grows."
+          text="Every plan is the same SydIN. Paid plans raise the limits and add scanning, import, and reports — they do not unlock a different product."
         />
         <div className="mx-auto mt-12 max-w-7xl">
           <PricingCards compact />
