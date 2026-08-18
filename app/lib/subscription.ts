@@ -51,6 +51,14 @@ export interface PlanDefinition {
   id: PublicPlanId;
   name: string;
   priceMonthly: number | null;
+  /**
+   * Yearly price in USD, billed once. Set at 10x the monthly rate, so two
+   * months are effectively free -- the standard SaaS discount, and worth more
+   * than usual here: it collects cash up front and spares the customer eleven
+   * more manual transfers, since plans are activated by hand (Whish/OMT)
+   * rather than by a card on file.
+   */
+  priceYearly: number | null;
   description: string;
   audience: string;
   featured?: boolean;
@@ -111,6 +119,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
     id: "free",
     name: "Free",
     priceMonthly: 0,
+    priceYearly: 0,
     description: "A complete starting point for small visual inventories.",
     audience: "For trying SydIN with real business inventory.",
     available: true,
@@ -151,7 +160,8 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
   standard: {
     id: "standard",
     name: "Standard",
-    priceMonthly: 19,
+    priceMonthly: 9,
+    priceYearly: 90,
     description: "Daily inventory tools for growing small businesses.",
     audience: "For teams ready to import, scan, and organize across locations.",
     featured: true,
@@ -193,7 +203,8 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
   pro: {
     id: "pro",
     name: "Pro",
-    priceMonthly: 29,
+    priceMonthly: 19,
+    priceYearly: 190,
     description: "More capacity for advanced inventory operations.",
     audience: "For established businesses with larger catalogs and active order preparation.",
     available: true,

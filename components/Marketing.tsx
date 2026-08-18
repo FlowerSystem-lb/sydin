@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import SydINMark from "@/components/brand/SydINMark";
 import PlanCtaLink from "@/components/PlanCtaLink";
+import PricingCardsClient from "@/components/PricingCardsClient";
 import Reveal from "@/components/Reveal";
 import UiIcon from "@/components/UiIcon";
 import {
@@ -422,85 +423,10 @@ export function MiniQrPreview() {
 export function PricingCards({
   compact = false,
 }: PricingCardsProps) {
-  return (
-    <div className="grid grid-cols-1 gap-5 md:grid-cols-3">
-      {pricingPlans.map((plan, index) => (
-        <Reveal key={plan.name} delay={index * 80}>
-          <div
-            className={`marketing-pricing-card flex h-full flex-col p-6 ${
-              plan.featured
-                ? "marketing-pricing-card-featured"
-                : ""
-            }`}
-          >
-            <div className="mb-5 flex min-h-7 items-center justify-between gap-3">
-              {plan.featured ? (
-                <span className="marketing-plan-badge">
-                  Most popular
-                </span>
-              ) : (
-                <span />
-              )}
-
-              {!plan.available && (
-                <span className="marketing-plan-badge">
-                  Future
-                </span>
-              )}
-            </div>
-
-            <h3 className="text-2xl font-bold text-slate-950">
-              {plan.name}
-            </h3>
-
-            <p className="mt-3 text-sm leading-6 text-slate-600">
-              {plan.description}
-            </p>
-
-            <div className="mt-6 flex items-end gap-1">
-              <span className="text-5xl font-bold text-slate-950">
-                {plan.priceMonthly === null ? "Custom" : `$${plan.priceMonthly}`}
-              </span>
-              {plan.priceMonthly !== null && (
-                <span className="pb-2 text-sm font-bold text-slate-500">
-                  /month
-                </span>
-              )}
-            </div>
-
-            <ul className={`mt-6 space-y-3 ${compact ? "text-sm" : "text-base"}`}>
-              {plan.highlights.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex gap-3 text-slate-600"
-                >
-                  <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-blue-500" />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-
-            {plan.available ? (
-              <PlanCtaLink
-                plan={plan.id}
-                className={`marketing-button mt-8 min-h-12 px-5 py-3 text-sm ${
-                  plan.featured
-                    ? "marketing-button-primary"
-                    : "marketing-button-secondary"
-                }`}
-              >
-                {plan.ctaLabel}
-              </PlanCtaLink>
-            ) : (
-              <span className="mt-8 inline-flex min-h-12 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.035] px-5 py-3 text-sm font-black text-slate-500">
-                {plan.ctaLabel}
-              </span>
-            )}
-          </div>
-        </Reveal>
-      ))}
-    </div>
-  );
+  // Delegates to a client component because the monthly/yearly switch needs
+  // state. Kept as a wrapper so every page importing PricingCards from
+  // Marketing.tsx is unaffected, and the rest of this module stays server-side.
+  return <PricingCardsClient compact={compact} />;
 }
 
 export function MarketingCTA() {

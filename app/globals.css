@@ -19688,3 +19688,70 @@ a.dashboard-notifications-row:hover {
     transition: none;
   }
 }
+
+/* ===[ MARKETING — billing period toggle ]=============================== */
+/* flex + max-content + auto margins so it centres without needing a wrapper
+   element around it. */
+.marketing-site .marketing-billing-toggle {
+  display: flex;
+  width: max-content;
+  align-items: center;
+  gap: 0.25rem;
+  margin: 0 auto 2rem;
+  border: 1px solid var(--m-line);
+  border-radius: var(--radius-pill);
+  background: var(--m-mist);
+  padding: 0.25rem;
+}
+
+.marketing-site .marketing-billing-toggle button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 2.4rem;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  padding-inline: 1.1rem;
+  color: var(--m-slate);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background-color 180ms ease,
+    color 180ms ease;
+}
+
+.marketing-site .marketing-billing-toggle button:focus-visible {
+  outline: 2px solid var(--m-accent);
+  outline-offset: 2px;
+}
+
+.marketing-site .marketing-billing-toggle-active {
+  background: var(--m-paper);
+  color: var(--m-ink);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+.marketing-site .marketing-billing-save {
+  border-radius: var(--radius-pill);
+  background: rgba(37, 99, 235, 0.12);
+  padding: 0.1rem 0.45rem;
+  color: #1d4ed8;
+  font-size: 0.68rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.marketing-site .marketing-price-note {
+  margin: 0.5rem 0 0;
+  color: var(--m-slate);
+  font-size: 0.8rem;
+  font-weight: 400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .marketing-site .marketing-billing-toggle button {
+    transition: none;
+  }
+}
