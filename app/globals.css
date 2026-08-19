@@ -9605,13 +9605,13 @@ body [class*="tracking-["],
 .inventory-list-row,
 .quick-add-more,
 .quick-add-subsection,
+/* The frosted gradient and 0 14px 40px lift are from the glass era; this is
+   the largest surface on the page and was the loudest one left in the app.
+   .dashboard-card on the element now supplies the fill, border and shadow. */
 .organize-category-shell {
-  border-color: rgba(255, 255, 255, 0.76);
-  background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.88), rgba(247, 251, 254, 0.72));
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.86),
-    0 14px 40px rgba(36, 79, 135, 0.08);
+  border-color: var(--border-default);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-subtle);
 }
 
 .inventory-mobile-header-card {

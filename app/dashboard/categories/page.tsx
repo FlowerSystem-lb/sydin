@@ -947,7 +947,7 @@ export default function CategoriesPage() {
           </div>
         )}
 
-        <div className="organize-category-shell overflow-hidden rounded-[24px] border border-theme bg-theme-surface shadow-[0_18px_60px_rgba(15,23,42,0.08)] lg:grid lg:min-h-[calc(100vh-8rem)] lg:grid-cols-[19rem_minmax(0,1fr)]">
+        <div className="organize-category-shell dashboard-card overflow-hidden !p-0 lg:grid lg:min-h-[calc(100vh-8rem)] lg:grid-cols-[19rem_minmax(0,1fr)]">
           <aside
             className={`organize-sidebar border-theme bg-theme-inset lg:border-r ${
               mobileDetailOpen ? "hidden lg:flex" : "flex"
