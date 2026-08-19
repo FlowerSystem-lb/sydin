@@ -18932,3 +18932,19 @@ a.dashboard-notifications-row:hover {
   background: var(--bg-inset);
   box-shadow: none;
 }
+
+/* ===[ PHASE 3 — one page-title scale on the core customer pages ]======= */
+/* Measured at 1440px before changing anything: Overview 37.6px/900,
+   Inventory 31.7px/950, Add Item 28.8px/900. Three sizes and two weights for
+   the same thing -- the page title -- across the four screens a new customer
+   touches first, which is exactly what Phase 3 is meant to settle.
+   All three now use the same scale as .dashboard-page-heading, the value every
+   other page in the app already renders. Selectors match the specificity of
+   the rules they correct so this stays a value change, not a new override
+   layer. */
+.dashboard-shell .sydin-overview-header h1,
+.dashboard-shell:has(.inventory-workspace) .inventory-hero-title {
+  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  font-weight: 900;
+  line-height: 1.1;
+}
