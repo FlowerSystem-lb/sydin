@@ -4,9 +4,27 @@
     {
       "name": "sydin-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
-      "port": 3000,
-      "autoPort": true
+      "runtimeArgs": [
+        "--prefix",
+        "C:/Users/sa219/sydinapp",
+        "run",
+        "dev"
+      ],
+      "port": 3000
+    },
+    {
+      "name": "sydin-prod",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "C:/Users/sa219/sydinapp",
+        "run",
+        "start",
+        "--",
+        "-p",
+        "3100"
+      ],
+      "port": 3100
     }
   ]
 }
