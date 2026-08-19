@@ -83,7 +83,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "inventory",
     label: "Inventory",
-    description: "Item defaults, alerts, and workflow modules",
+    description: "Low-stock threshold and item defaults",
     icon: "box",
   },
   {
@@ -1191,85 +1191,7 @@ export default function SettingsPage() {
         )}
       </SettingCard>
 
-      <SettingCard
-        title="Organization"
-        description="Use existing modules to manage categories, depots, suppliers, QR labels, imports, and item defaults."
-      >
-        <div className="grid gap-2 md:grid-cols-2">
-          <ModuleLink
-            href="/dashboard/categories"
-            label="Categories"
-            description="Organize item groups"
-            icon="categories"
-          />
-          <ModuleLink
-            href="/dashboard/depots"
-            label="Depots"
-            description="Manage locations"
-            icon="depots"
-          />
-          <ModuleLink
-            href="/dashboard/suppliers"
-            label="Suppliers"
-            description="Manage supplier records"
-            icon="suppliers"
-          />
-          <ModuleLink
-            href="/dashboard/qr-center"
-            label="QR Center"
-            description="Print labels and public item links"
-            icon="qr"
-          />
-        </div>
-      </SettingCard>
 
-    </div>
-  );
-
-  const renderOperationsPanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Operations workflows"
-        description="Operational modules keep their existing v1 behavior. This section gives a compact control-center map without changing workflow storage."
-      >
-        <div className="grid gap-2 md:grid-cols-2">
-          <ModuleLink
-            href="/dashboard/stock-movements"
-            label="Stock Movements"
-            description="Audit stock in, out, adjustments, receiving, and counts"
-            icon="movement"
-          />
-          <ModuleLink
-            href="/dashboard/stock-counts"
-            label="Stock Counts"
-            description="Device draft count workflow in v1"
-            icon="check"
-          />
-          <ModuleLink
-            href="/dashboard/pick-lists"
-            label="Pick Lists"
-            description="Saved pick lists and pick sheets"
-            icon="picklists"
-          />
-          <ModuleLink
-            href="/dashboard/purchase-orders"
-            label="Purchase Orders"
-            description="Device draft PO workflow in v1"
-            icon="file"
-          />
-          <ModuleLink
-            href="/dashboard/receiving"
-            label="Receiving"
-            description="Receive stock and create stock-in movement records"
-            icon="upload"
-          />
-        </div>
-      </SettingCard>
-      <SettingCard
-        title="Workflow notes"
-        description="Stock movement records are saved. Stock count sessions and purchase order history stay on this device in the current workflow."
-        action={<StatusChip>Current workflow</StatusChip>}
-      />
     </div>
   );
 
@@ -1855,7 +1777,6 @@ export default function SettingsPage() {
         return (
           <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
             {renderInventoryPanel()}
-            {renderOperationsPanel()}
             {renderNotice()}
             <SaveBar saving={saving} onCancel={resetBusinessFields} />
           </form>
