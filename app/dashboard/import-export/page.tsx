@@ -8,7 +8,7 @@ import {
   DashboardEmptyState,
   DashboardPageHeader,
   DashboardPageShell,
-  LoadingSkeletonGroup,
+  DashboardTable,
 } from "@/components/dashboard/Workspace";
 import { supabase } from "@/app/lib/supabase";
 import {
@@ -106,22 +106,28 @@ export default function ImportExportPage() {
         </div>
 
         {/* History section */}
-        {loading ? (
-          <LoadingSkeletonGroup count={4} itemClassName="min-h-16" />
-        ) : history.length === 0 ? (
-          <DashboardEmptyState
-            icon="file"
-            title="No import or export history yet"
-            description="Your import and export operations will appear here. Get started by importing or exporting inventory."
-            action={
-              <ActionButton href="/dashboard/inventory/import" icon="upload">
-                Start an Import
-              </ActionButton>
-            }
-          />
-        ) : (
-          <div className="overflow-x-auto rounded-xl border border-theme bg-theme-surface">
-            <table className="w-full">
+        {/* DashboardTable owns the loading, empty and horizontal-scroll cases,
+            so this page no longer hand-rolls its own ternary chain and its own
+            scroll container. It was the first consumer of a primitive that had
+            been built, given loading/empty props, and then used nowhere. */}
+        <DashboardTable
+          loading={loading}
+          loadingRows={4}
+          empty={
+            history.length === 0 ? (
+              <DashboardEmptyState
+                icon="file"
+                title="No import or export history yet"
+                description="Your import and export operations will appear here. Get started by importing or exporting inventory."
+                action={
+                  <ActionButton href="/dashboard/inventory/import" icon="upload">
+                    Start an Import
+                  </ActionButton>
+                }
+              />
+            ) : undefined
+          }
+        >
               <thead>
                 <tr className="border-b border-theme">
                   <th className="px-4 py-3 text-left text-xs font-bold uppercase tracking-wider text-theme-secondary">
@@ -213,9 +219,7 @@ export default function ImportExportPage() {
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
-        )}
+        </DashboardTable>
       </div>
     </DashboardPageShell>
   );

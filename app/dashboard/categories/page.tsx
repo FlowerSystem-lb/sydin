@@ -187,12 +187,9 @@ function CategoryForm({
       </div>
 
       {error && (
-        <p
-          role="alert"
-          className="mt-4 rounded-xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger"
-        >
+        <DashboardNotice tone="danger" className="mt-4">
           {error}
-        </p>
+        </DashboardNotice>
       )}
 
       <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">

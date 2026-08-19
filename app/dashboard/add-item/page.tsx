@@ -7,6 +7,10 @@ import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
 import CategorySelector from "@/components/CategorySelector";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
+import {
+  ActionButton,
+  DashboardNotice,
+} from "@/components/dashboard/Workspace";
 import Select from "@/components/ui/Select";
 import ScannerModal from "@/components/scanner/ScannerModal";
 import { LockedActionLabel, UpgradeDialog } from "@/components/UpgradePrompt";
@@ -1583,26 +1587,23 @@ export default function AddItemPage() {
             )}
 
             {formError && (
-              <div
-                role="alert"
-                className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger"
-              >
+              <DashboardNotice tone="danger">
                 <p className="font-semibold">{formError}</p>
 
                 {isLimitError && (
-                  <Link
+                  <ActionButton
                     href={getUpgradeRequestHref(
                       subscriptionUsage.subscription.plan,
                       "item-limit"
                     )}
-                    className="mt-4 inline-flex min-h-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                    className="mt-4"
                   >
                     {getUpgradeActionLabel(
                       subscriptionUsage.subscription.plan
                     )}
-                  </Link>
+                  </ActionButton>
                 )}
-              </div>
+              </DashboardNotice>
             )}
 
             <div className="mt-1 flex flex-col-reverse gap-3 rounded-[18px] border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
