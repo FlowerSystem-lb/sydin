@@ -15,6 +15,8 @@ export type BooleanPlanCapability =
   | "scanner"
   | "csvExcelImport"
   | "excelExport"
+  | "purchaseOrders"
+  | "receiving"
   | "advancedReports"
   | "dashboardAnalytics"
   | "helpCenter"
@@ -40,6 +42,14 @@ export interface PlanCapabilities {
   csvExcelImport: boolean;
   excelExport: boolean;
   pdfExport: "none" | "basic";
+  /**
+   * The buying side of the depot: raising purchase orders and booking stock in
+   * against them. Free deliberately stops at "know what you have" -- which is
+   * the promise the landing page makes -- so the purchasing workflow is the
+   * first thing a growing wholesaler pays for.
+   */
+  purchaseOrders: boolean;
+  receiving: boolean;
   advancedReports: boolean;
   dashboardAnalytics: boolean;
   helpCenter: boolean;
@@ -125,11 +135,11 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
     available: true,
     ctaLabel: "Start Free",
     highlights: [
-      "Up to 50 items",
+      "Up to 50 items with photos",
       "1 depot, 3 suppliers, 5 categories",
-      "3 active Pick Lists",
+      "Stock history and low-stock alerts",
       "Public QR item pages",
-      "Help Center and light workspace",
+      "CSV export included",
     ],
     capabilities: {
       itemLimit: PLAN_ITEM_LIMITS.free,
@@ -150,6 +160,8 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExcelImport: false,
       excelExport: false,
       pdfExport: "none",
+      purchaseOrders: false,
+      receiving: false,
       advancedReports: false,
       dashboardAnalytics: false,
       helpCenter: true,
@@ -170,9 +182,9 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
     highlights: [
       "Up to 250 items",
       "3 depots, 25 suppliers, 50 categories",
-      "50 active Pick Lists",
-      "Import, scanner, Excel and PDF export",
-      "Advanced reports and QR branding",
+      "Purchase orders and receiving",
+      "Phone barcode scanner",
+      "Excel/CSV import, Excel and PDF export",
     ],
     capabilities: {
       itemLimit: PLAN_ITEM_LIMITS.standard,
@@ -193,6 +205,8 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExcelImport: true,
       excelExport: true,
       pdfExport: "basic",
+      purchaseOrders: true,
+      receiving: true,
       advancedReports: true,
       dashboardAnalytics: true,
       helpCenter: true,
@@ -214,7 +228,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       "10 depots, 100 suppliers, 200 categories",
       "Unlimited active Pick Lists",
       "Everything in Standard",
-      "Priority manual support during beta",
+      "Priority support during early access",
     ],
     capabilities: {
       itemLimit: PLAN_ITEM_LIMITS.pro,
@@ -235,6 +249,8 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       csvExcelImport: true,
       excelExport: true,
       pdfExport: "basic",
+      purchaseOrders: true,
+      receiving: true,
       advancedReports: true,
       dashboardAnalytics: true,
       helpCenter: true,
@@ -283,6 +299,18 @@ export const PLAN_COMPARISON_ROWS = [
   {
     feature: "Public QR item pages",
     values: PUBLIC_PLAN_ORDER.map(() => "Included"),
+  },
+  {
+    feature: "Purchase orders",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.purchaseOrders ? "Included" : "—"
+    ),
+  },
+  {
+    feature: "Receiving stock",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      PLAN_DEFINITIONS[plan].capabilities.receiving ? "Included" : "—"
+    ),
   },
   {
     feature: "Product photos and stock movements",

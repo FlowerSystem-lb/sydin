@@ -49,6 +49,14 @@ import {
   type PurchaseOrderStatus,
 } from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionCapabilities,
+  getUserSubscription,
+  type UserSubscription,
+} from "@/app/lib/subscription";
 
 type StatusFilter = "all" | PurchaseOrderStatus;
 
@@ -95,6 +103,8 @@ export default function PurchaseOrdersPage() {
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [schemaMissing, setSchemaMissing] = useState(false);
+  const [subscription, setSubscription] =
+    useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [loadError, setLoadError] = useState("");
   const [settings, setSettings] = useState<BusinessSettings>(
     DEFAULT_BUSINESS_SETTINGS
@@ -143,9 +153,13 @@ export default function PurchaseOrdersPage() {
       if (!active) return;
       setUserId(user.id);
 
-      const loadedSettings = await getOrCreateBusinessSettings(user.id);
+      const [loadedSettings, loadedSubscription] = await Promise.all([
+        getOrCreateBusinessSettings(user.id),
+        getUserSubscription(user.id),
+      ]);
       if (!active) return;
       setSettings(loadedSettings);
+      setSubscription(loadedSubscription);
 
       try {
         const loadedOrders = await getPurchaseOrdersForUser(user.id);
@@ -525,6 +539,29 @@ export default function PurchaseOrdersPage() {
       setActionBusy(false);
     }
   };
+
+  // Purchasing is where Free stops. The landing page promises "know what is in
+  // your depot", and Free delivers exactly that; raising orders against
+  // suppliers is the first thing a growing wholesaler pays for. Gated here
+  // rather than only described on the pricing page, so the two agree.
+  if (!getSubscriptionCapabilities(subscription).purchaseOrders) {
+    return (
+      <DashboardPageShell className="po-history-workspace" as="main">
+        <DashboardPageHeader
+          eyebrow="Operations"
+          title="Purchase Orders"
+          description="Record what you buy, what you paid, and what arrived."
+        />
+        <LockedFeaturePanel
+          feature="Purchase orders"
+          benefit="Record every purchase with its cost, payment status and invoice, then receive the stock straight into your depot."
+          currentPlan={formatPlanName(subscription.plan)}
+          requiredPlan="Standard"
+          source="purchase-orders"
+        />
+      </DashboardPageShell>
+    );
+  }
 
   return (
     <DashboardPageShell className="po-history-workspace" as="main">

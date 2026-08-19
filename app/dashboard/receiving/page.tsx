@@ -38,6 +38,14 @@ import {
 } from "@/app/lib/stockMovements";
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
 import { supabase } from "@/app/lib/supabase";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionCapabilities,
+  getUserSubscription,
+  type UserSubscription,
+} from "@/app/lib/subscription";
 
 type WorkflowStep = "setup" | "receive" | "review" | "finalized";
 type ReceivingSource =
@@ -196,6 +204,8 @@ function getLineUnitCost(line: ReceivingLine) {
 export default function ReceivingPage() {
   const handoffAppliedRef = useRef(false);
   const [items, setItems] = useState<ReceivingInventoryItem[]>([]);
+  const [subscription, setSubscription] =
+    useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [businessSettings, setBusinessSettings] =
@@ -447,6 +457,7 @@ export default function ReceivingPage() {
         loadedDepots,
         settings,
         loadedMovements,
+        loadedSubscription,
       ] = await Promise.all([
         supabase
           .from("inventory")
@@ -461,11 +472,13 @@ export default function ReceivingPage() {
           () => DEFAULT_BUSINESS_SETTINGS
         ),
         getRecentStockMovements(user.id, 150).catch(() => []),
+        getUserSubscription(user.id),
       ]);
 
       if (inventoryError) throw inventoryError;
       if (!active) return;
 
+      setSubscription(loadedSubscription);
       setItems((inventoryRows || []) as ReceivingInventoryItem[]);
       setSuppliers(loadedSuppliers);
       setDepots(loadedDepots);
@@ -887,6 +900,29 @@ export default function ReceivingPage() {
     { id: "review", label: "Review" },
     { id: "finalized", label: "Finalize" },
   ];
+
+  // Same boundary as purchase orders: Free tells you what you have, paid plans
+  // run the buying workflow that changes it.
+  if (!getSubscriptionCapabilities(subscription).receiving) {
+    return (
+      <main className="operations-workspace operations-receiving">
+        <DashboardPageShell width="wide">
+          <DashboardPageHeader
+            eyebrow="Operations"
+            title="Receiving"
+            description="Book arriving stock into the depot."
+          />
+          <LockedFeaturePanel
+            feature="Receiving"
+            benefit="Book arriving stock into a depot in one pass, with supplier, cost and quantity recorded against every item."
+            currentPlan={formatPlanName(subscription.plan)}
+            requiredPlan="Standard"
+            source="receiving"
+          />
+        </DashboardPageShell>
+      </main>
+    );
+  }
 
   return (
     <main className="operations-workspace operations-receiving">
