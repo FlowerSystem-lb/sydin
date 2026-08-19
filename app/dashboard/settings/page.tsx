@@ -594,7 +594,7 @@ export default function SettingsPage() {
     );
 
   const renderWorkspacePanel = () => (
-    <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
+    <div className="grid gap-4">
       <SettingCard
         title="Workspace profile"
         description="Manage the business details used across the dashboard, public QR pages, reports, and exports."
@@ -733,9 +733,7 @@ export default function SettingsPage() {
         )}
       </SettingCard>
 
-      {renderNotice()}
-      <SaveBar saving={saving} onCancel={resetBusinessFields} />
-    </form>
+    </div>
   );
 
   const renderProfilePanel = () => (
@@ -810,7 +808,7 @@ export default function SettingsPage() {
   );
 
   const renderBrandingPanel = () => (
-    <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
+    <div className="grid gap-4">
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
         <div className="grid gap-4">
           <SettingCard
@@ -842,18 +840,14 @@ export default function SettingsPage() {
                   {settings.business_name ||
                     DEFAULT_BUSINESS_SETTINGS.business_name}
                 </p>
+                {/* The button that used to sit here switched to the Workspace
+                    section -- from inside the Workspace section. Now that both
+                    panels share one form on this tab, the field it pointed at is
+                    a few rows further up the same page. */}
                 <p className={`mt-1 ${mutedTextClassName}`}>
-                  Business name and contact fields are edited in Workspace.
+                  Edit this in Workspace profile, above.
                 </p>
               </div>
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => switchSection("workspace")}
-              >
-                Edit in Workspace
-              </Button>
             </div>
           </SettingCard>
 
@@ -987,18 +981,10 @@ export default function SettingsPage() {
                     {settings.show_contact_publicly ? "On" : "Off"}
                   </p>
                   <p className={`mt-1 ${mutedTextClassName}`}>
-                    This toggle lives in Workspace, next to the contact
-                    fields it controls.
+                    Change it in Contact details, above, next to the fields it
+                    controls.
                   </p>
                 </div>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  onClick={() => switchSection("workspace")}
-                >
-                  Edit in Workspace
-                </Button>
               </div>
             ) : (
               <div className="mt-4">
@@ -1122,9 +1108,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {renderNotice()}
-      <SaveBar saving={saving} onCancel={resetBusinessFields} />
-    </form>
+    </div>
   );
 
   const renderReportsPanel = () => (
@@ -1172,7 +1156,7 @@ export default function SettingsPage() {
   );
 
   const renderInventoryPanel = () => (
-    <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
+    <div className="grid gap-4">
       <SettingCard
         title="Low-stock behavior"
         description="The dashboard and reports use the existing plan-aware low-stock threshold behavior."
@@ -1239,9 +1223,7 @@ export default function SettingsPage() {
         </div>
       </SettingCard>
 
-      {renderNotice()}
-      <SaveBar saving={saving} onCancel={resetBusinessFields} />
-    </form>
+    </div>
   );
 
   const renderOperationsPanel = () => (
@@ -1840,6 +1822,16 @@ export default function SettingsPage() {
             description="Generate PDF and CSV reports"
             icon="reports"
           />
+          {/* The Import & Export page carries the same name as this section and
+              was the one destination it never linked to -- so the section named
+              "Data & Reports" sent people everywhere except the page built for
+              exactly this. */}
+          <ModuleLink
+            href="/dashboard/import-export"
+            label="Import & Export"
+            description="Full import and export history in one place"
+            icon="sheet"
+          />
         </div>
       </SettingCard>
     </div>
@@ -1850,17 +1842,23 @@ export default function SettingsPage() {
       return <LoadingSkeletonGroup count={3} itemClassName="min-h-28" />;
     }
 
-    // Merged sections compose the existing panel renderers rather than
-    // rewriting them, so each panel's markup and save logic stay untouched.
+    // Sections that contain editable fields are wrapped in exactly one form
+    // with one notice and one save bar, here. Previously each panel carried its
+    // own <form> + SaveBar, so a tab composed from two editable panels rendered
+    // two of each -- the Workspace tab showed two "Save settings" and two
+    // "Reset" buttons for the same handleSave and the same state, which is
+    // what made Settings feel broken rather than merely busy.
     switch (activeSection) {
       case "profile":
         return renderProfilePanel();
       case "inventory":
         return (
-          <div className="grid gap-4">
+          <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
             {renderInventoryPanel()}
             {renderOperationsPanel()}
-          </div>
+            {renderNotice()}
+            <SaveBar saving={saving} onCancel={resetBusinessFields} />
+          </form>
         );
       case "billing":
         return renderBillingPanel();
@@ -1881,10 +1879,12 @@ export default function SettingsPage() {
       case "workspace":
       default:
         return (
-          <div className="grid gap-4">
+          <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
             {renderWorkspacePanel()}
             {renderBrandingPanel()}
-          </div>
+            {renderNotice()}
+            <SaveBar saving={saving} onCancel={resetBusinessFields} />
+          </form>
         );
     }
   };
