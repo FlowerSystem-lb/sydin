@@ -874,7 +874,7 @@ export default function AddItemPage() {
                   </p>
                   <p className="text-sm font-black text-theme-primary">
                     {usageLoading ? (
-                      <span className="block h-8 w-28 animate-pulse rounded-2xl bg-theme-surface" />
+                      <span className="dashboard-skeleton-block block h-8 w-28 min-h-0" />
                     ) : (
                       currentPlanName
                     )}

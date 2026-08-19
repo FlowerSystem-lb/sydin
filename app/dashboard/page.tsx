@@ -40,6 +40,7 @@ import {
   type PurchaseOrder,
 } from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
+import { DashboardNotice } from "@/components/dashboard/Workspace";
 
 interface Item {
   id: number;
@@ -702,10 +703,12 @@ export default function DashboardPage() {
           </div>
         </section>
 
+        {/* Was .sydin-overview-alert: a one-off amber box at 10px radius, the
+            only error style in the app that did not match the others. Overview
+            is the first screen after sign-in, so an error here should look like
+            an error anywhere else. */}
         {error && (
-          <p role="alert" className="sydin-overview-alert">
-            {error}
-          </p>
+          <DashboardNotice tone="warning">{error}</DashboardNotice>
         )}
 
         <section className="sydin-overview-summary" aria-label="Inventory summary">
