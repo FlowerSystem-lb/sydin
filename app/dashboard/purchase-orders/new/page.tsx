@@ -614,14 +614,14 @@ export default function NewPurchaseOrderPage() {
 
   if (loading) {
     return (
-      <DashboardPageShell>
+      <DashboardPageShell as="main">
         <LoadingSkeletonGroup count={4} itemClassName="min-h-28" />
       </DashboardPageShell>
     );
   }
 
   return (
-    <DashboardPageShell className="po-create-workspace">
+    <DashboardPageShell className="po-create-workspace" as="main">
       <DashboardPageHeader
         eyebrow="Operations"
         title="New Purchase Order"

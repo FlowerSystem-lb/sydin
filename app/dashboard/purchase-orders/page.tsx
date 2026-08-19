@@ -527,7 +527,7 @@ export default function PurchaseOrdersPage() {
   };
 
   return (
-    <DashboardPageShell className="po-history-workspace">
+    <DashboardPageShell className="po-history-workspace" as="main">
       <DashboardPageHeader
         eyebrow="Operations"
         title="Purchase Orders"

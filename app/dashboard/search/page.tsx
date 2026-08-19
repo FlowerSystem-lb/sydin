@@ -167,7 +167,7 @@ export default function GlobalSearchPage() {
   const itemsGroupVisible = groupCounts.has("Items");
 
   return (
-    <DashboardPageShell width="wide">
+    <DashboardPageShell width="wide" as="main">
       <div className="flex flex-col gap-3">
         <ContextBackButton fallbackHref="/dashboard" label="Back" />
 

@@ -4,9 +4,11 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import UiIcon from "@/components/UiIcon";
 import {
+  ActionButton,
   DashboardEmptyState,
   DashboardPageHeader,
   DashboardPageShell,
+  LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import { supabase } from "@/app/lib/supabase";
 import {
@@ -74,7 +76,7 @@ export default function ImportExportPage() {
   };
 
   return (
-    <DashboardPageShell>
+    <DashboardPageShell as="main">
       <DashboardPageHeader
         eyebrow="Data"
         title="Import & Export"
@@ -105,24 +107,16 @@ export default function ImportExportPage() {
 
         {/* History section */}
         {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="flex flex-col items-center gap-2">
-              <div className="h-5 w-5 animate-spin rounded-full border-2 border-theme-accent border-t-transparent" />
-              <p className="text-sm text-theme-muted">Loading history...</p>
-            </div>
-          </div>
+          <LoadingSkeletonGroup count={4} itemClassName="min-h-16" />
         ) : history.length === 0 ? (
           <DashboardEmptyState
             icon="file"
             title="No import or export history yet"
             description="Your import and export operations will appear here. Get started by importing or exporting inventory."
             action={
-              <Link
-                href="/dashboard/inventory/import"
-                className="mt-4 inline-flex items-center justify-center rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
-              >
+              <ActionButton href="/dashboard/inventory/import" icon="upload">
                 Start an Import
-              </Link>
+              </ActionButton>
             }
           />
         ) : (

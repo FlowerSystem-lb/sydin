@@ -126,7 +126,7 @@ export default function ActivityPage() {
   };
 
   return (
-    <DashboardPageShell>
+    <DashboardPageShell as="main">
       <DashboardPageHeader
         eyebrow="Insights"
         title="Activity"

@@ -656,7 +656,7 @@ function ScannerWorkspace() {
 
   if (loading) {
     return (
-      <DashboardPageShell>
+      <DashboardPageShell as="main">
         <DashboardPageHeader
           eyebrow="Operations"
           title="Scanner"
@@ -669,7 +669,7 @@ function ScannerWorkspace() {
 
   if (loadError) {
     return (
-      <DashboardPageShell>
+      <DashboardPageShell as="main">
         <DashboardPageHeader
           eyebrow="Operations"
           title="Scanner"
@@ -682,7 +682,7 @@ function ScannerWorkspace() {
 
   if (!canUseScanner) {
     return (
-      <DashboardPageShell>
+      <DashboardPageShell as="main">
         <DashboardPageHeader
           eyebrow="Operations"
           title="Scanner"
@@ -703,7 +703,7 @@ function ScannerWorkspace() {
     resolution?.kind === "item" ? resolution.item : null;
 
   return (
-    <DashboardPageShell>
+    <DashboardPageShell as="main">
       <DashboardPageHeader
         eyebrow="Operations"
         title="Scanner"
@@ -1224,7 +1224,7 @@ export default function ScannerPage() {
   return (
     <Suspense
       fallback={
-        <DashboardPageShell>
+        <DashboardPageShell as="main">
           <LoadingSkeletonGroup count={3} itemClassName="min-h-32" />
         </DashboardPageShell>
       }

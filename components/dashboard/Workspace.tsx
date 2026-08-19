@@ -15,13 +15,23 @@ export function DashboardPageShell({
   children,
   className,
   width = "default",
+  as = "div",
 }: {
   children: ReactNode;
   className?: string;
   width?: WorkspaceWidth;
+  /**
+   * Render as <main> on pages whose root is this shell, so they get a main
+   * landmark. Defaults to <div> because most pages already sit inside their
+   * own <main> -- and those elements carry layout classes the stylesheet
+   * depends on (.inventory-workspace, .organize-workspace, .settings-workspace),
+   * so they cannot simply be replaced by this one.
+   */
+  as?: "div" | "main";
 }) {
+  const Tag = as;
   return (
-    <div
+    <Tag
       className={cx(
         "dashboard-page-shell",
         workspaceWidthClass[width],
@@ -29,7 +39,7 @@ export function DashboardPageShell({
       )}
     >
       {children}
-    </div>
+    </Tag>
   );
 }
 
