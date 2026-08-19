@@ -603,7 +603,7 @@ export default function SuppliersPage() {
                 return (
                   <article
                     key={supplier.id}
-                    className="organize-row organize-supplier-row flex flex-col rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-6"
+                    className="organize-row organize-supplier-row dashboard-card flex flex-col"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
@@ -646,7 +646,7 @@ export default function SuppliersPage() {
                       </div>
                     )}
 
-                    <div className="organize-row-actions mt-auto pt-6">
+                    <div className="organize-row-actions mt-auto pt-4">
                       <div className="grid grid-cols-3 gap-2">
                         <a
                           href={supplier.phone ? `tel:${supplier.phone}` : undefined}
@@ -685,21 +685,20 @@ export default function SuppliersPage() {
                         </a>
                       </div>
 
-                      <div className="organize-desktop-actions mt-3 grid grid-cols-2 gap-3">
-                        <button
-                          type="button"
-                          onClick={() => openEditForm(supplier)}
-                          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
-                        >
+                      {/* Was a full-width 2-column grid of bespoke buttons on
+                          its own row, which is most of why a supplier card ran
+                          to 267px against Depots' 123px. Shared buttons, sized
+                          to their content. */}
+                      <div className="organize-desktop-actions mt-2 flex flex-wrap gap-2">
+                        <ActionButton onClick={() => openEditForm(supplier)}>
                           Edit
-                        </button>
-                        <button
-                          type="button"
+                        </ActionButton>
+                        <ActionButton
+                          variant="danger"
                           onClick={() => setPendingDelete(supplier)}
-                          className="rounded-2xl border border-red-400/25 bg-red-500/15 px-4 py-3 font-bold text-theme-danger transition hover:bg-red-500/25"
                         >
                           Delete
-                        </button>
+                        </ActionButton>
                       </div>
                       <details className="organize-action-menu organize-mobile-actions mt-2">
                         <summary aria-label={`More actions for ${supplier.name}`}>
