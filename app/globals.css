@@ -18955,3 +18955,21 @@ a.dashboard-notifications-row:hover {
   font-weight: 900;
   line-height: 1.1;
 }
+
+/* ===[ Hand-inlined brand buttons: at least make them the right shape ]=== */
+/* 29 buttons across 13 files re-declare the brand gradient by hand instead of
+   using ActionButton. Seven were converted properly during the redesign; the
+   rest live inside dialogs and forms, which is why page-level audits kept
+   reporting zero -- the modals were closed.
+   They are a genuine visual bug, not just duplication: measured in the stock
+   movement dialog, a hand-rolled button renders at 12px while every real
+   button in the app is a 999px pill, so dialogs look square against a rounded
+   product.
+   Matching the Tailwind arbitrary-value class by substring corrects the shape
+   for all of them in one place. This is a stopgap for the symptom -- the
+   duplication itself should still be removed by converting each to
+   ActionButton when those files are next touched. */
+button[class*="linear-gradient(135deg,#10c4dc"],
+a[class*="linear-gradient(135deg,#10c4dc"] {
+  border-radius: var(--radius-pill);
+}
