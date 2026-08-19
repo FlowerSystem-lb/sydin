@@ -861,7 +861,7 @@ export default function CategoriesPage() {
   const renderCompactRow = (item: CategoryInventoryItem) => (
     <article
       key={item.id}
-      className="organize-compact-row flex min-w-0 flex-col gap-3 rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_8px_24px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center"
+      className="organize-compact-row flex min-w-0 flex-col gap-3 rounded-2xl border border-theme bg-theme-surface p-3 shadow-[0_1px_2px_rgba(15,23,42,0.05)] sm:flex-row sm:items-center"
     >
       <button
         type="button"

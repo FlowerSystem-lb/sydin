@@ -3239,7 +3239,7 @@ export default function InventoryPage() {
                   );
                 })}
               </div>
-              <div className="inventory-table-shell hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface shadow-[0_8px_24px_rgba(15,23,42,0.06)] md:block">
+              <div className="inventory-table-shell hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface md:block">
                 <div className="inventory-table-scroll">
                   <table className="inventory-table table-fixed text-left text-sm">
                     <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
