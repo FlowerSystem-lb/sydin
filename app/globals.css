@@ -719,7 +719,14 @@ canvas {
   width: 100%;
   min-width: 0;
   flex-direction: column;
-  gap: var(--space-3);
+  /* --space-4, not --space-3, and set here rather than inherited from a
+     structural selector. The page rhythm used to come from
+     `.dashboard-shell-content main > div`, which only matched when the shell
+     sat *inside* a <main>. Giving six pages `as="main"` for their missing
+     landmark stopped them matching it, and their section gaps silently fell
+     from 16px to 12px. Spacing should not depend on which element happens to
+     be the landmark. */
+  gap: var(--space-4);
   margin-inline: auto;
 }
 

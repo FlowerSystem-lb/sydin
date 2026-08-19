@@ -355,13 +355,13 @@ export default function DepotsPage() {
             <form
               onSubmit={handleCreateDepot}
               aria-busy={saving}
-              className="organize-depot-form rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]"
+              className="dashboard-card organize-depot-form"
             >
               <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
                 New depot
               </p>
 
-              <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
+              <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
                 Add Location
               </h2>
 
@@ -458,7 +458,7 @@ export default function DepotsPage() {
                     Saved locations
                   </p>
 
-                  <h2 className="mt-1 text-2xl font-black tracking-tight text-theme-primary">
+                  <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
                     Depot List
                   </h2>
                 </div>
@@ -491,7 +491,7 @@ export default function DepotsPage() {
                   {visibleDepots.map((depot) => (
                     <div
                       key={depot.id}
-                      className="organize-row organize-depot-row relative rounded-[26px] border border-theme bg-theme-inset p-4 sm:p-5"
+                      className="organize-row organize-depot-row relative rounded-2xl border border-theme bg-theme-inset p-4"
                     >
                       {editingId === depot.id ? (
                         <form
@@ -583,7 +583,7 @@ export default function DepotsPage() {
                         <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
                           <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="break-words text-2xl font-bold text-theme-primary">
+                              <h3 className="break-words text-base font-extrabold text-theme-primary">
                                 {depot.name}
                               </h3>
 
@@ -607,23 +607,22 @@ export default function DepotsPage() {
                             </p>
                           </div>
 
-                          <div className="organize-row-actions organize-desktop-actions flex shrink-0 flex-col gap-3 sm:flex-row lg:flex-col">
-                            <button
-                              type="button"
-                              onClick={() => startEditing(depot)}
-                              className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
-                            >
+                          {/* Actions stay on one line instead of stacking at lg.
+                              The stack was what set the row height (107px of
+                              buttons against 90px of copy); side by side, the
+                              copy sets it again. */}
+                          <div className="organize-row-actions organize-desktop-actions flex shrink-0 flex-row gap-2">
+                            <ActionButton onClick={() => startEditing(depot)}>
                               Edit
-                            </button>
+                            </ActionButton>
 
-                            <button
-                              type="button"
+                            <ActionButton
+                              variant="danger"
                               onClick={() => setPendingDeleteDepot(depot)}
                               disabled={deletingId === depot.id}
-                              className="rounded-2xl border border-red-400/25 bg-red-500/15 px-5 py-3 text-sm font-bold text-theme-danger transition hover:bg-red-500/25 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                               {deletingId === depot.id ? "Deleting..." : "Delete"}
-                            </button>
+                            </ActionButton>
                           </div>
                           <details className="organize-action-menu organize-mobile-actions">
                             <summary aria-label={`More actions for ${formatDepotLabel(depot)}`}>
