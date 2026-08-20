@@ -40,7 +40,12 @@ import {
   type PurchaseOrder,
 } from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
-import { DashboardNotice } from "@/components/dashboard/Workspace";
+import {
+  ActionButton,
+  DashboardEmptyState,
+  DashboardNotice,
+  LoadingSkeletonGroup,
+} from "@/components/dashboard/Workspace";
 
 interface Item {
   id: number;
@@ -122,20 +127,6 @@ function formatDateDistance(value: string) {
   }).format(date);
 }
 
-function formatDateTime(value: string) {
-  if (!value) return "No date";
-
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "No date";
-
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-  }).format(date);
-}
-
 function getMovementStatus(movementType: StockMovement["movement_type"]) {
   if (movementType === "damaged_lost") {
     return {
@@ -182,37 +173,10 @@ function getStockLabel(state: StockState) {
   return "In stock";
 }
 
-function DashboardPanelHeader({
-  icon,
-  title,
-  href,
-  hrefLabel = "View all",
-}: {
-  icon: UiIconName;
-  title: string;
-  href?: string;
-  hrefLabel?: string;
-}) {
-  return (
-    <div className="sydin-overview-panel-header">
-      <div className="sydin-overview-panel-title">
-        <UiIcon name={icon} className="h-4 w-4" />
-        <h2>{title}</h2>
-      </div>
-      {href && (
-        <Link href={href} className="sydin-overview-text-link">
-          {hrefLabel}
-          <UiIcon name="chevron-right" className="h-4 w-4" />
-        </Link>
-      )}
-    </div>
-  );
-}
-
 function ItemThumb({ item }: { item: Item }) {
   if (item.image) {
     return (
-      <span className="sydin-overview-thumb">
+      <span className="ov-thumb">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img src={item.image} alt="" loading="lazy" decoding="async" />
       </span>
@@ -220,7 +184,7 @@ function ItemThumb({ item }: { item: Item }) {
   }
 
   return (
-    <span className="sydin-overview-thumb">
+    <span className="ov-thumb">
       <UiIcon name="box" className="h-4 w-4" />
     </span>
   );
@@ -260,62 +224,6 @@ function CountUpNumber({
   }, [value]);
 
   return <>{format(display)}</>;
-}
-
-/** Semicircle gauge of real stock health: % of items above their low-stock threshold. */
-function StockHealthGauge({
-  inCount,
-  lowCount,
-  outCount,
-}: {
-  inCount: number;
-  lowCount: number;
-  outCount: number;
-}) {
-  const total = inCount + lowCount + outCount;
-  const percent = total === 0 ? 0 : Math.round((inCount / total) * 100);
-  const [arc, setArc] = useState(0);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => setArc(percent));
-    return () => window.cancelAnimationFrame(frame);
-  }, [percent]);
-
-  const toneClass =
-    percent >= 70
-      ? "sydin-health-good"
-      : percent >= 40
-        ? "sydin-health-warn"
-        : "sydin-health-bad";
-
-  return (
-    <div className={`sydin-health-gauge ${toneClass}`}>
-      <svg viewBox="0 0 200 112" role="img" aria-label={`${percent}% of items in stock`}>
-        <path
-          d="M 18 104 A 82 82 0 0 1 182 104"
-          fill="none"
-          className="sydin-health-track"
-          strokeWidth="15"
-          strokeLinecap="round"
-        />
-        <path
-          d="M 18 104 A 82 82 0 0 1 182 104"
-          fill="none"
-          className="sydin-health-arc"
-          strokeWidth="15"
-          strokeLinecap="round"
-          pathLength={100}
-          strokeDasharray={`${arc} 100`}
-        />
-      </svg>
-      <div className="sydin-health-center">
-        <strong>
-          <CountUpNumber value={percent} format={(n) => `${Math.round(n)}%`} />
-        </strong>
-        <small>items in stock</small>
-      </div>
-    </div>
-  );
 }
 
 export default function DashboardPage() {
@@ -566,8 +474,6 @@ export default function DashboardPage() {
       detail: `${formatNumber(dashboardData.lowStockCount)} need attention`,
       icon: "box" as UiIconName,
       href: "/dashboard/inventory",
-      accent: "sydin-kpi-teal",
-      showBreakdown: true,
     },
     {
       label: "Depots / Locations",
@@ -576,8 +482,6 @@ export default function DashboardPage() {
       detail: "Inventory locations",
       icon: "depots" as UiIconName,
       href: "/dashboard/depots",
-      accent: "sydin-kpi-indigo",
-      showBreakdown: false,
     },
     {
       label: "Total Quantity",
@@ -586,8 +490,6 @@ export default function DashboardPage() {
       detail: "Units across items",
       icon: "layers" as UiIconName,
       href: "/dashboard/inventory",
-      accent: "sydin-kpi-violet",
-      showBreakdown: false,
     },
     {
       label: "Inventory Value",
@@ -610,8 +512,6 @@ export default function DashboardPage() {
         dashboardData.pricedItemCount < dashboardData.totalItems
           ? "/dashboard/inventory?quick=no-price"
           : "/dashboard/inventory",
-      accent: "sydin-kpi-emerald",
-      showBreakdown: false,
     },
   ];
 
@@ -646,489 +546,196 @@ export default function DashboardPage() {
     };
   }, [purchaseOrders]);
 
-  const topActions = [
-    {
-      label: "Add Item",
-      href: "/dashboard/add-item",
-      icon: "plus" as UiIconName,
-      primary: true,
-    },
-    {
-      label: "Set Depots",
-      href: "/dashboard/depots",
-      icon: "depots" as UiIconName,
-    },
-    {
-      label: "QR Scan",
-      href: "/dashboard/qr-center",
-      icon: "qr" as UiIconName,
-    },
-    {
-      label: "Stock Count",
-      href: "/dashboard/stock-counts",
-      icon: "check" as UiIconName,
-    },
-  ];
   const recentMovements = movements.slice(0, 6);
 
+  const hasNoItems = !loading && dashboardData.totalItems === 0;
+  const setupGaps = [
+    {
+      key: "no-price",
+      count: dashboardData.noPriceCount,
+      label: "missing a price",
+    },
+    {
+      key: "no-image",
+      count: dashboardData.noImageCount,
+      label: "missing a photo",
+    },
+    {
+      key: "unassigned",
+      count: dashboardData.unassignedDepotCount,
+      label: "not in a depot",
+    },
+    {
+      key: "no-activity",
+      count: dashboardData.noActivityCount,
+      label: "with no activity",
+    },
+  ].filter((gap) => gap.count > 0);
+
   return (
-    <main className="dashboard-overview sydin-overview">
-      <div className="sydin-overview-inner">
-        <section className="sydin-overview-header" aria-labelledby="dashboard-title">
-          <div>
-            <p className="sydin-overview-kicker">SydIN workspace</p>
-            {/* Matches the sidebar and top bar, which both call this page
-                "Overview". Two names for one page is worse than either name. */}
-            <h1 id="dashboard-title">Overview</h1>
-            <p>
-              Inventory snapshot across items, depots, and recent stock
-              activity.
-            </p>
-          </div>
-          <div className="sydin-overview-header-actions">
-            {topActions.map((action) => (
-              <Link
-                key={action.href}
-                href={action.href}
-                className={
-                  action.primary
-                    ? "sydin-overview-action sydin-overview-action-primary"
-                    : "sydin-overview-action"
-                }
-              >
-                <UiIcon name={action.icon} className="h-4 w-4" />
-                {action.label}
-              </Link>
-            ))}
-          </div>
-        </section>
+    <main
+      className="dashboard-overview ov-page"
+      aria-labelledby="dashboard-title"
+    >
+      {/* Padding lives on this wrapper, not on <main>: a global mobile rule
+          sets `main { padding: 0 !important }` under 767px so each page owns
+          its own gutters there. Fighting that with another !important would
+          have been the third one on this property. */}
+      <div className="ov-inner">
+      <header className="ov-head">
+        <div className="ov-head-text">
+          <p className="ov-eyebrow">{businessSettings.business_name}</p>
+          {/* Matches the sidebar and top bar, which both call this page
+              "Overview". Two names for one page is worse than either name. */}
+          <h1 id="dashboard-title" className="ov-title">
+            Overview
+          </h1>
+        </div>
+      </header>
 
-        {/* Was .sydin-overview-alert: a one-off amber box at 10px radius, the
-            only error style in the app that did not match the others. Overview
-            is the first screen after sign-in, so an error here should look like
-            an error anywhere else. */}
-        {error && (
-          <DashboardNotice tone="warning">{error}</DashboardNotice>
-        )}
+      {/* Was .sydin-overview-alert: a one-off amber box at 10px radius, the
+          only error style in the app that did not match the others. Overview
+          is the first screen after sign-in, so an error here should look like
+          an error anywhere else. */}
+      {error && <DashboardNotice tone="warning">{error}</DashboardNotice>}
 
-        <section className="sydin-overview-summary" aria-label="Inventory summary">
-          {summaryCards.map((card) => (
-            <Link
-              key={card.label}
-              href={card.href}
-              className="sydin-overview-summary-card"
-            >
-              <span className={`sydin-overview-summary-icon ${card.accent}`}>
-                <UiIcon name={card.icon} className="h-4 w-4" />
-              </span>
-              <span>
-                <small>{card.label}</small>
-                <strong>
-                  {loading || card.rawValue === null ? (
-                    "--"
-                  ) : (
-                    <CountUpNumber value={card.rawValue} format={card.format} />
-                  )}
-                </strong>
-                <em>{card.detail}</em>
-                {card.showBreakdown &&
-                  !loading &&
-                  dashboardData.totalItems > 0 && (
-                    <span
-                      className="sydin-overview-distribution"
-                      aria-hidden="true"
-                    >
-                      <span
-                        className="sydin-distribution-in"
-                        style={{ flexGrow: stockBreakdown.in }}
-                      />
-                      <span
-                        className="sydin-distribution-low"
-                        style={{ flexGrow: stockBreakdown.low }}
-                      />
-                      <span
-                        className="sydin-distribution-out"
-                        style={{ flexGrow: stockBreakdown.out }}
-                      />
-                    </span>
-                  )}
-              </span>
-            </Link>
-          ))}
-        </section>
+      {/* Key figures. Hairline separators, no boxes: these four numbers used to
+          be four cards, spending four borders and four shadows to say what
+          whitespace says on its own. */}
+      {/* A div, not a <section>: `main > div > section` is what turns any
+          section on a dashboard page into a white card, and this row is
+          deliberately not a card. Avoiding the selector beats overriding it. */}
+      <div className="ov-figures" role="group" aria-label="Inventory summary">
+        {summaryCards.map((card) => (
+          <Link key={card.label} href={card.href} className="ov-figure">
+            <span className="ov-figure-label">{card.label}</span>
+            <span className="ov-figure-value">
+              {loading || card.rawValue === null ? (
+                "--"
+              ) : (
+                <CountUpNumber value={card.rawValue} format={card.format} />
+              )}
+            </span>
+            <span className="ov-figure-note">{card.detail}</span>
+          </Link>
+        ))}
+      </div>
 
-        <div className="sydin-overview-grid">
-          <section className="sydin-overview-panel sydin-overview-restock">
-            <DashboardPanelHeader
-              icon="alert"
-              title="Items that need restocking"
-              href="/dashboard/alerts"
-              hrefLabel="View alerts"
-            />
-
-            {loading ? (
-              <div className="sydin-overview-skeleton-list" aria-hidden="true">
-                {[1, 2, 3].map((item) => (
-                  <span key={item} />
-                ))}
-              </div>
-            ) : dashboardData.lowStockItems.length === 0 ? (
-              <div className="sydin-overview-empty">
-                <span>
-                  <UiIcon name="check" className="h-5 w-5" />
-                </span>
-                <strong>No restocking needed</strong>
-                <p>Your current items are above their low-stock thresholds.</p>
-              </div>
-            ) : (
-              <div className="sydin-overview-restock-list">
-                {dashboardData.lowStockItems.map((entry) => (
-                  <Link
-                    key={entry.item.id}
-                    href={getDashboardItemHref(entry.item.id)}
-                    className="sydin-overview-restock-row"
-                  >
-                    <ItemThumb item={entry.item} />
-                    <span className="min-w-0">
-                      <strong>{entry.item.name}</strong>
-                      <small>
-                        {entry.depot} - reorder at {formatNumber(entry.threshold)}
-                      </small>
-                    </span>
-                    <span
-                      className={`sydin-overview-status sydin-overview-status-${entry.state}`}
-                    >
-                      {getStockLabel(entry.state)}
-                    </span>
-                    <em>
-                      {getInventoryQuantityLabel(
-                        entry.item.quantity,
-                        entry.item.unit_type,
-                        entry.item.custom_unit_label
-                      )}
-                    </em>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* backlog item 3 / 2026-08-04 decision: predictive metrics ("what
-              will run out", "dead stock value") are deferred until there's
-              real operating history — but "what's missing that's blocking
-              that history" is true today. Each count links to the exact
-              Inventory filter that fixes it. */}
-          <section className="sydin-overview-panel sydin-overview-completeness">
-            <DashboardPanelHeader icon="check" title="Get your data ready" />
-
-            {loading ? (
-              <div className="sydin-overview-skeleton-list" aria-hidden="true">
-                {[1, 2].map((item) => (
-                  <span key={item} />
-                ))}
-              </div>
-            ) : dashboardData.totalItems === 0 ? (
-              <div className="sydin-overview-empty">
-                <span>
-                  <UiIcon name="box" className="h-5 w-5" />
-                </span>
-                <strong>No items yet</strong>
-                <p>Add items to start tracking what needs completing.</p>
-                <Link href="/dashboard/add-item">Add Item</Link>
-              </div>
-            ) : (
-              <>
-                <p className="sydin-overview-completeness-note">
-                  Complete these to unlock trend and forecast metrics later.
-                </p>
-                <div className="sydin-overview-completeness-grid">
-                  {[
-                    {
-                      key: "no-price",
-                      count: dashboardData.noPriceCount,
-                      label: "No price",
-                    },
-                    {
-                      key: "no-image",
-                      count: dashboardData.noImageCount,
-                      label: "No photo",
-                    },
-                    {
-                      key: "no-activity",
-                      count: dashboardData.noActivityCount,
-                      label: "No activity",
-                    },
-                    {
-                      key: "unassigned",
-                      count: dashboardData.unassignedDepotCount,
-                      label: "No depot",
-                    },
-                  ].map((gap) => (
-                    <Link
-                      key={gap.key}
-                      href={`/dashboard/inventory?quick=${gap.key}`}
-                      className={`sydin-overview-completeness-chip ${
-                        gap.count === 0
-                          ? "sydin-overview-completeness-chip-clear"
-                          : ""
-                      }`}
-                    >
-                      <strong>{formatNumber(gap.count)}</strong>
-                      <span>{gap.label}</span>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
-          </section>
-
-          <section className="sydin-overview-panel sydin-overview-actions-panel">
-            <DashboardPanelHeader icon="plus" title="Top actions" />
-            <div className="sydin-overview-action-grid">
-              {topActions.map((action) => (
-                <Link key={action.href} href={action.href}>
-                  <UiIcon name={action.icon} className="h-4 w-4" />
-                  <span>{action.label}</span>
-                </Link>
-              ))}
-              <Link href="/dashboard/purchase-orders">
-                <UiIcon name="file" className="h-4 w-4" />
-                <span>Create PO</span>
-              </Link>
-              <Link href="/dashboard/receiving">
-                <UiIcon name="movement" className="h-4 w-4" />
-                <span>Receive</span>
+      {hasNoItems ? (
+        /* One empty state for the whole screen. The old Overview stacked three
+           separate "No items yet / Add Item" blocks on a new workspace. */
+        <DashboardEmptyState
+          icon="box"
+          title="Your workspace is empty"
+          description="Add your first item to start tracking stock, depots and activity. Everything on this screen fills in as you go."
+          action={
+            <ActionButton href="/dashboard/add-item" icon="plus">
+              Add your first item
+            </ActionButton>
+          }
+        />
+      ) : (
+        <div className="ov-columns">
+          {/* Needs attention = the old "Items that need restocking" and "Stock
+              health" panels, which rendered the same in/low/out split twice,
+              about 600px apart. */}
+          <section className="ov-section" aria-labelledby="ov-attention-title">
+            <div className="ov-section-head">
+              <h2 id="ov-attention-title" className="ov-section-title">
+                Needs attention
+              </h2>
+              <Link href={LOW_STOCK_INVENTORY_HREF} className="ov-link">
+                All low stock
+                <UiIcon name="chevron-right" className="h-4 w-4" />
               </Link>
             </div>
-          </section>
 
-          <section className="sydin-overview-panel sydin-overview-recent">
-            <DashboardPanelHeader
-              icon="box"
-              title="Recent Items"
-              href="/dashboard/inventory"
-              hrefLabel="All items"
-            />
-
-            {loading ? (
-              <div className="sydin-overview-items-grid">
-                {[1, 2, 3].map((item) => (
-                  <span key={item} className="sydin-overview-item-skeleton" />
-                ))}
-              </div>
-            ) : dashboardData.recentItems.length === 0 ? (
-              <div className="sydin-overview-empty">
-                <span>
-                  <UiIcon name="box" className="h-5 w-5" />
-                </span>
-                <strong>No items yet</strong>
-                <p>Add your first item to start building inventory history.</p>
-                <Link href="/dashboard/add-item">Add Item</Link>
-              </div>
-            ) : (
-              <div className="sydin-overview-items-grid">
-                {dashboardData.recentItems.map((entry) => (
-                  <Link
-                    key={entry.item.id}
-                    href={getDashboardItemHref(entry.item.id)}
-                    className="sydin-overview-item-card"
-                  >
-                    <ItemThumb item={entry.item} />
-                    <span className="min-w-0">
-                      <strong>{entry.item.name}</strong>
-                      <small>
-                        {entry.item.item_code || entry.item.sku || "No SKU"}
-                      </small>
-                    </span>
-                    <em>
-                      {getInventoryQuantityLabel(
-                        entry.item.quantity,
-                        entry.item.unit_type,
-                        entry.item.custom_unit_label
-                      )}
-                    </em>
-                    <span
-                      className={`sydin-overview-status sydin-overview-status-${entry.state}`}
-                    >
-                      {getStockLabel(entry.state)}
-                    </span>
-                    <small className="sydin-overview-item-meta">
-                      {[entry.category, entry.depot].filter(Boolean).join(" - ")}
-                    </small>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </section>
-
-          <section className="sydin-overview-panel sydin-overview-health">
-            <DashboardPanelHeader
-              icon="check"
-              title="Stock health"
-              href="/dashboard/alerts"
-              hrefLabel="View alerts"
-            />
-
-            {loading ? (
-              <div className="sydin-overview-skeleton-list" aria-hidden="true">
-                {[1, 2, 3].map((item) => (
-                  <span key={item} />
-                ))}
-              </div>
-            ) : dashboardData.totalItems === 0 ? (
-              <div className="sydin-overview-empty">
-                <span>
-                  <UiIcon name="box" className="h-5 w-5" />
-                </span>
-                <strong>No items yet</strong>
-                <p>Add items to see your stock health at a glance.</p>
-                <Link href="/dashboard/add-item">Add Item</Link>
-              </div>
-            ) : (
-              <div className="sydin-health-body">
-                <StockHealthGauge
-                  inCount={stockBreakdown.in}
-                  lowCount={stockBreakdown.low}
-                  outCount={stockBreakdown.out}
-                />
-                <div className="sydin-health-legend">
-                  {/* Was linking to unfiltered inventory, so clicking
-                      "In stock 7" showed every item including the low and
-                      out-of-stock ones it excludes from its own count. */}
-                  <Link
-                    href="/dashboard/inventory?quick=in-stock"
-                    className="sydin-health-row"
-                  >
-                    <span className="sydin-health-dot sydin-distribution-in" />
-                    <span>In stock</span>
-                    <em>{formatNumber(stockBreakdown.in)}</em>
-                  </Link>
-                  <Link
-                    href={LOW_STOCK_INVENTORY_HREF}
-                    className="sydin-health-row"
-                  >
-                    <span className="sydin-health-dot sydin-distribution-low" />
-                    <span>Low stock</span>
-                    <em>{formatNumber(stockBreakdown.low)}</em>
-                  </Link>
-                  <Link
-                    href="/dashboard/inventory?quick=out-of-stock"
-                    className="sydin-health-row"
-                  >
-                    <span className="sydin-health-dot sydin-distribution-out" />
-                    <span>Out of stock</span>
-                    <em>{formatNumber(stockBreakdown.out)}</em>
-                  </Link>
+            {!loading && dashboardData.totalItems > 0 && (
+              <div className="ov-health">
+                <div className="ov-health-bar" aria-hidden="true">
+                  <span
+                    className="ov-health-in"
+                    style={{ flexGrow: stockBreakdown.in }}
+                  />
+                  <span
+                    className="ov-health-low"
+                    style={{ flexGrow: stockBreakdown.low }}
+                  />
+                  <span
+                    className="ov-health-out"
+                    style={{ flexGrow: stockBreakdown.out }}
+                  />
                 </div>
-              </div>
-            )}
-          </section>
-
-          <section className="sydin-overview-panel sydin-overview-spending">
-            <DashboardPanelHeader
-              icon="reports"
-              title="Spending this month"
-              href="/dashboard/purchase-orders"
-              hrefLabel="All purchases"
-            />
-
-            {loading ? (
-              <div className="sydin-overview-skeleton-list" aria-hidden="true">
-                {[1, 2, 3].map((item) => (
-                  <span key={item} />
-                ))}
-              </div>
-            ) : spending.monthCount === 0 ? (
-              <div className="sydin-overview-empty">
-                <span>
-                  <UiIcon name="file" className="h-5 w-5" />
-                </span>
-                <strong>No purchases this month</strong>
-                <p>
-                  Record stock restocks and general purchases to track spending
-                  here.
+                <p className="ov-health-legend">
+                  <span className="ov-dot ov-dot-success" />
+                  {formatNumber(stockBreakdown.in)} in stock
+                  <span className="ov-dot ov-dot-neutral" />
+                  {formatNumber(stockBreakdown.low)} low
+                  <span className="ov-dot ov-dot-warning" />
+                  {formatNumber(stockBreakdown.out)} out
                 </p>
-                <Link
-                  href={`/dashboard/purchase-orders/new?returnTo=${encodeURIComponent(
-                    "/dashboard"
-                  )}`}
-                >
-                  New purchase order
-                </Link>
               </div>
+            )}
+
+            {loading ? (
+              <LoadingSkeletonGroup count={3} />
+            ) : dashboardData.lowStockItems.length === 0 ? (
+              <p className="ov-quiet">
+                Every item is above its low-stock level. Nothing to restock.
+              </p>
             ) : (
-              <div className="sydin-overview-spending-body">
-                <div className="sydin-overview-spending-total">
-                  <small>Total spent</small>
-                  <strong>
-                    {formatCurrency(spending.monthTotal, currencyCode)}
-                  </strong>
-                  <em>
-                    {formatNumber(spending.monthCount)} purchase
-                    {spending.monthCount === 1 ? "" : "s"} this month
-                  </em>
-                </div>
-                <div className="sydin-overview-spending-split">
-                  <Link
-                    href="/dashboard/purchase-orders"
-                    className="sydin-overview-spending-row"
-                  >
-                    <span className="sydin-overview-spending-icon">
-                      <UiIcon name="box" className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <strong>Stock purchases</strong>
-                      <small>Items bought for inventory</small>
-                    </span>
-                    <em>
-                      {formatCurrency(spending.inventoryTotal, currencyCode)}
-                    </em>
-                  </Link>
-                  <Link
-                    href="/dashboard/purchase-orders"
-                    className="sydin-overview-spending-row"
-                  >
-                    <span className="sydin-overview-spending-icon">
-                      <UiIcon name="file" className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0">
-                      <strong>General purchases</strong>
-                      <small>Equipment, supplies, services</small>
-                    </span>
-                    <em>
-                      {formatCurrency(spending.expenseTotal, currencyCode)}
-                    </em>
-                  </Link>
-                </div>
-              </div>
+              <ul className="ov-list">
+                {dashboardData.lowStockItems.map((entry) => (
+                  <li key={entry.item.id}>
+                    <Link
+                      href={getDashboardItemHref(entry.item.id)}
+                      className="ov-row"
+                    >
+                      <ItemThumb item={entry.item} />
+                      <span className="ov-row-text">
+                        <strong>{entry.item.name}</strong>
+                        <small>
+                          {[
+                            entry.depot,
+                            `${getStockLabel(entry.state)} · min ${formatNumber(
+                              entry.threshold
+                            )}`,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ")}
+                        </small>
+                      </span>
+                      <span className={`ov-row-value ov-value-${entry.state}`}>
+                        {getInventoryQuantityLabel(
+                          entry.item.quantity,
+                          entry.item.unit_type,
+                          entry.item.custom_unit_label
+                        )}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
 
-          <section className="sydin-overview-panel sydin-overview-activity">
-            <DashboardPanelHeader
-              icon="clock"
-              title="Recent Activity"
-              href="/dashboard/activity"
-              hrefLabel="Activity"
-            />
+          {/* Recent activity = the old "Recent Items" and "Recent Activity"
+              panels merged. Both answered "what changed lately". */}
+          <section className="ov-section" aria-labelledby="ov-activity-title">
+            <div className="ov-section-head">
+              <h2 id="ov-activity-title" className="ov-section-title">
+                Recent activity
+              </h2>
+              <Link href="/dashboard/activity" className="ov-link">
+                All activity
+                <UiIcon name="chevron-right" className="h-4 w-4" />
+              </Link>
+            </div>
 
             {loading ? (
-              <div className="sydin-overview-skeleton-list" aria-hidden="true">
-                {[1, 2, 3, 4].map((item) => (
-                  <span key={item} />
-                ))}
-              </div>
-            ) : recentMovements.length === 0 ? (
-              <div className="sydin-overview-empty">
-                <span>
-                  <UiIcon name="movement" className="h-5 w-5" />
-                </span>
-                <strong>No recent activity</strong>
-                <p>Stock movements will appear here as the team works.</p>
-                <Link href="/dashboard/activity">Open activity</Link>
-              </div>
-            ) : (
-              <div className="sydin-overview-activity-list">
+              <LoadingSkeletonGroup count={3} />
+            ) : recentMovements.length > 0 ? (
+              <ul className="ov-list">
                 {recentMovements.map((movement) => {
                   const item = movement.item_id
                     ? itemById.get(movement.item_id)
@@ -1140,51 +747,172 @@ export default function DashboardPage() {
                   const movementStatus = getMovementStatus(
                     movement.movement_type
                   );
-                  const activityHref = item
-                    ? getDashboardItemHref(item.id)
-                    : "/dashboard/activity";
 
                   return (
-                    <Link
-                      key={movement.id}
-                      href={activityHref}
-                      className="sydin-overview-activity-row"
-                    >
-                      <span className="sydin-overview-activity-icon">
-                        <UiIcon name="movement" className="h-3.5 w-3.5" />
-                      </span>
-                      <span className="min-w-0">
-                        <strong>{movementLabel}</strong>
-                        <small>
-                          {STOCK_MOVEMENT_LABELS[movement.movement_type]} -{" "}
-                          {formatDateTime(movement.created_at)}
-                        </small>
-                      </span>
-                      <em
-                        className={
-                          movement.quantity_delta < 0
-                            ? "sydin-overview-delta-negative"
-                            : movement.quantity_delta > 0
-                              ? "sydin-overview-delta-positive"
-                              : ""
+                    <li key={movement.id}>
+                      <Link
+                        href={
+                          item
+                            ? getDashboardItemHref(item.id)
+                            : "/dashboard/activity"
                         }
+                        className="ov-row"
                       >
-                        {movement.quantity_delta > 0 ? "+" : ""}
-                        {formatNumber(movement.quantity_delta)}
-                      </em>
-                      <span
-                        className={`sydin-overview-activity-status sydin-overview-activity-${movementStatus.tone}`}
-                      >
-                        {movementStatus.label}
-                      </span>
-                      <small>{formatDateDistance(movement.created_at)}</small>
-                    </Link>
+                        <span
+                          className={`ov-dot ov-dot-${movementStatus.tone}`}
+                          aria-hidden="true"
+                        />
+                        <span className="ov-row-text">
+                          <strong>{movementLabel}</strong>
+                          <small>
+                            {STOCK_MOVEMENT_LABELS[movement.movement_type]}
+                          </small>
+                        </span>
+                        <span className="ov-row-value ov-row-time">
+                          {formatDateDistance(movement.created_at)}
+                        </span>
+                      </Link>
+                    </li>
                   );
                 })}
-              </div>
+              </ul>
+            ) : (
+              /* No movements yet but items exist: show the newest items, so the
+                 section still answers "what changed lately". */
+              <ul className="ov-list">
+                {dashboardData.recentItems.map((entry) => (
+                  <li key={entry.item.id}>
+                    <Link
+                      href={getDashboardItemHref(entry.item.id)}
+                      className="ov-row"
+                    >
+                      <ItemThumb item={entry.item} />
+                      <span className="ov-row-text">
+                        <strong>{entry.item.name}</strong>
+                        <small>
+                          {[
+                            entry.item.item_code || entry.item.sku,
+                            entry.category,
+                          ]
+                            .filter(Boolean)
+                            .join(" · ") || "Added to inventory"}
+                        </small>
+                      </span>
+                      <span className="ov-row-value">
+                        {getInventoryQuantityLabel(
+                          entry.item.quantity,
+                          entry.item.unit_type,
+                          entry.item.custom_unit_label
+                        )}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
+
+          <section className="ov-section" aria-labelledby="ov-spending-title">
+            <div className="ov-section-head">
+              <h2 id="ov-spending-title" className="ov-section-title">
+                Spending this month
+              </h2>
+              <Link href="/dashboard/purchase-orders" className="ov-link">
+                All purchases
+                <UiIcon name="chevron-right" className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <LoadingSkeletonGroup count={2} />
+            ) : spending.monthCount === 0 ? (
+              <p className="ov-quiet">
+                No purchases recorded this month. Record restocks and expenses
+                to track spending here.
+              </p>
+            ) : (
+              <>
+                <p className="ov-spend-total">
+                  {formatCurrency(spending.monthTotal, currencyCode)}
+                </p>
+                <p className="ov-figure-note">
+                  {formatNumber(spending.monthCount)} purchase
+                  {spending.monthCount === 1 ? "" : "s"} this month
+                </p>
+                <ul className="ov-list">
+                  <li>
+                    <Link href="/dashboard/purchase-orders" className="ov-row">
+                      <span className="ov-row-text">
+                        <strong>Stock purchases</strong>
+                        <small>Items bought for inventory</small>
+                      </span>
+                      <span className="ov-row-value">
+                        {formatCurrency(spending.inventoryTotal, currencyCode)}
+                      </span>
+                    </Link>
+                  </li>
+                  <li>
+                    <Link href="/dashboard/purchase-orders" className="ov-row">
+                      <span className="ov-row-text">
+                        <strong>General purchases</strong>
+                        <small>Equipment, supplies, services</small>
+                      </span>
+                      <span className="ov-row-value">
+                        {formatCurrency(spending.expenseTotal, currencyCode)}
+                      </span>
+                    </Link>
+                  </li>
+                </ul>
+              </>
+            )}
+          </section>
+
+          {/* Finish setup. Unique data, but it did not need four amber boxes:
+              gaps that are already closed are simply not listed. */}
+          <section className="ov-section" aria-labelledby="ov-setup-title">
+            <div className="ov-section-head">
+              <h2 id="ov-setup-title" className="ov-section-title">
+                Finish setup
+              </h2>
+              <Link href="/dashboard/inventory" className="ov-link">
+                Open inventory
+                <UiIcon name="chevron-right" className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <LoadingSkeletonGroup count={2} />
+            ) : setupGaps.length === 0 ? (
+              <p className="ov-quiet">
+                Every item has a price, a photo and a depot. Your data is ready
+                for trends and forecasting.
+              </p>
+            ) : (
+              <ul className="ov-list">
+                {setupGaps.map((gap) => (
+                  <li key={gap.key}>
+                    <Link
+                      href={`/dashboard/inventory?quick=${gap.key}`}
+                      className="ov-row"
+                    >
+                      <span className="ov-row-text">
+                        <strong>
+                          {formatNumber(gap.count)}{" "}
+                          {gap.count === 1 ? "item" : "items"} {gap.label}
+                        </strong>
+                      </span>
+                      <UiIcon
+                        name="chevron-right"
+                        className="h-4 w-4 ov-row-chevron"
+                      />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
             )}
           </section>
         </div>
+      )}
       </div>
     </main>
   );

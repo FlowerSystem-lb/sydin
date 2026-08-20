@@ -254,11 +254,11 @@ export default function InventoryItemCard({
           </div>
         )}
 
-        {lowStock && (
-          <span className="inventory-card-alert-pill">
-            {stockStatusLabel || "Low stock"}
-          </span>
-        )}
+        {/* The alert pill printed the same words as the status pill in the body
+            below -- "Low Stock" twice on every low-stock card. It also only
+            appeared for low stock, so cards changed shape depending on their
+            state and a grid of them looked ragged. The body pill always shows,
+            for every state, which is what a grid needs. */}
 
         <button
           ref={menuButtonRef}
@@ -384,31 +384,31 @@ export default function InventoryItemCard({
           </span>
         </div>
 
-        <div className="inventory-card-tags">
+        {/* Five pills became one pill and a line of text. Category, depot and
+            supplier are facts you read; only stock status is a STATE, and a
+            state is the thing that earns a shape and a colour. Measured on the
+            real workspace: the old card drew up to six bordered boxes, so ten
+            cards put 60 boxes on one screen and every one of them competed
+            with the product photo for attention. */}
+        <div className="inventory-card-meta">
           <span
-            className={`inventory-card-tag inventory-card-status ${statusToneClass}`}
+            className={`inventory-card-status ${statusToneClass}`}
           >
             {stockStatusLabel || "In Stock"}
           </span>
-          <span className="inventory-card-tag">
-            {categoryLabel}
-          </span>
-          {depotLabel && (
-            <span className="inventory-card-tag inventory-card-tag-blue">
-              {depotLabel}
-            </span>
-          )}
-          {supplierLabel && (
-            <span className="inventory-card-tag inventory-card-tag-green">
-              {supplierLabel}
-            </span>
-          )}
           {valueLabel && (
-            <span className="inventory-card-tag inventory-card-tag-blue">
-              {valueLabel}
-            </span>
+            <span className="inventory-card-value">{valueLabel}</span>
           )}
         </div>
+
+        {[categoryLabel, depotLabel, supplierLabel].filter(Boolean).length >
+          0 && (
+          <p className="inventory-card-facts">
+            {[categoryLabel, depotLabel, supplierLabel]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        )}
 
         {/* The LOCATION / SUPPLIER boxes that used to sit here printed the same
             depot and supplier already shown as chips directly above — the same

@@ -14392,10 +14392,6 @@ body,
   padding: 0.9rem 1rem;
 }
 
-.dashboard-shell:has(.inventory-workspace) .inventory-hero-title {
-  font-size: clamp(1.75rem, 2.2vw, 2.25rem);
-}
-
 .dashboard-shell:has(.inventory-workspace) .inventory-hero-description {
   max-width: 44rem;
   margin-top: 0.35rem;
@@ -14418,9 +14414,11 @@ body,
      it would have kept Inventory's hero buttons square while every other
      page went round. */
   border-radius: var(--radius-pill);
-  padding: 0.58rem 0.85rem;
-  font-size: 0.8rem;
-  font-weight: 850;
+  padding: 0.58rem 0.9rem;
+  /* Phase 2 scale: 14px/500. Was 0.8rem/850 -- a button label heavier than the
+     product names it sat above. */
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .dashboard-shell:has(.inventory-workspace) .inventory-stat-grid {
@@ -15868,36 +15866,89 @@ body,
 
 /* --- Background: soft ice + warm orb glow (top-left) + teal tint (bottom) --- */
 @media (min-width: 900px) {
+  /* The workspace ground.
+     Was three drifting amber/orange orbs over #f2f5f8 -- a warm decoration
+     sitting behind a blue brand, which is the colour clash Sayed reported:
+     nothing on the screen agreed on a temperature. The light now has one
+     source and one hue, and it is the logo's.
+
+     Everything here keeps !important because earlier passes in this file set
+     the same properties on the same selectors; this block is the one that
+     should win, so it states so rather than being appended after them. */
   .dashboard-theme:has(.dashboard-shell),
   .dashboard-workspace-shell {
     background:
-      radial-gradient(closest-side, rgba(255, 193, 77, 0.55), rgba(255, 166, 60, 0.22) 55%, transparent 74%),
-      radial-gradient(closest-side, rgba(255, 122, 60, 0.26), transparent 70%),
-      radial-gradient(closest-side, rgba(18, 184, 214, 0.24), transparent 70%),
-      #f2f5f8 !important;
-    background-attachment: fixed, fixed, fixed, fixed !important;
+      /* near bloom, centred on the logo mark */
+      radial-gradient(
+        360px 260px at 36px 40px,
+        rgba(37, 99, 235, 0.22),
+        rgba(37, 99, 235, 0) 72%
+      ),
+      /* the cyan half of the logo gradient, thrown further so the light has
+         somewhere to travel to */
+      radial-gradient(
+        780px 400px at 10px 8px,
+        rgba(16, 196, 220, 0.15),
+        rgba(16, 196, 220, 0) 68%
+      ),
+      /* deeper and cooler than the panel it carries: without this difference
+         the curved seam below has nothing to separate */
+      #e9eef7 !important;
+    background-attachment: fixed, fixed, fixed !important;
     background-repeat: no-repeat !important;
-    background-size: 78rem 78rem, 52rem 52rem, 72rem 72rem, auto !important;
-    background-position: -14rem -20rem, 42% -14rem, 106% 108%, 0 0 !important;
-    animation: glass-orb-drift 24s ease-in-out infinite alternate;
+    animation: none;
   }
 
-  .dashboard-workspace-shell .dashboard-main-canvas,
+  /* The one continuous line: up the rail's edge, around the corner, and along
+     the top of the header to its end. Left + top borders on the panel; the
+     corner radius draws the curve.
+
+     Not overflow:hidden -- the account and notification menus live inside this
+     element and would be clipped. The toolbar carries the matching corner. */
+  .dashboard-workspace-shell .dashboard-main-canvas {
+    background: #ffffff !important;
+    border-left: 1px solid rgba(18, 38, 74, 0.09) !important;
+    border-top: 1px solid rgba(18, 38, 74, 0.09) !important;
+    border-top-left-radius: 22px !important;
+  }
+
+  /* A last trace of the same light inside the page, so the content is lit by
+     the shell rather than pasted onto it. Very low alpha on purpose: any
+     stronger and this stops being light and becomes a coloured box. */
   .dashboard-workspace-shell .dashboard-shell-content {
-    background: transparent !important;
+    background:
+      radial-gradient(
+        620px 240px at 0% 0%,
+        rgba(37, 99, 235, 0.05),
+        rgba(37, 99, 235, 0) 64%
+      ),
+      transparent !important;
   }
 
-  /* Frosted chrome: icon rail + top toolbar */
+  /* The rail keeps no edge of its own -- the panel draws the seam for both --
+     and stays translucent so the brand light passes through it instead of
+     stopping at a white wall. */
   .dashboard-workspace-shell .dashboard-sidebar {
-    border-right: 1px solid rgba(255, 255, 255, 0.55) !important;
-    background: rgba(255, 255, 255, 0.58) !important;
+    border-right: 0 !important;
+    background: rgba(255, 255, 255, 0.34) !important;
+    box-shadow: 22px 0 44px -20px rgba(37, 99, 235, 0.34) !important;
     -webkit-backdrop-filter: blur(18px) saturate(1.5);
     backdrop-filter: blur(18px) saturate(1.5);
   }
 
+  /* The header continues the bloom off the rail and runs it out across its own
+     width, so the light reads as one source travelling, not two glows. */
   .dashboard-workspace-shell .dashboard-desktop-toolbar {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.6) !important;
-    background: rgba(255, 255, 255, 0.55) !important;
+    border-bottom: 0 !important;
+    border-top-left-radius: 22px !important;
+    background:
+      linear-gradient(
+        90deg,
+        rgba(37, 99, 235, 0.16),
+        rgba(37, 99, 235, 0.06) 28%,
+        rgba(37, 99, 235, 0) 62%
+      ),
+      rgba(255, 255, 255, 0.8) !important;
     -webkit-backdrop-filter: blur(18px) saturate(1.5);
     backdrop-filter: blur(18px) saturate(1.5);
   }
@@ -17126,22 +17177,17 @@ body,
    leave it fully visible below 640px where the mobile header's title is
    sr-only. The kicker is the business name, which the account menu already
    shows top-right. */
-@media (min-width: 640px) {
-  .inventory-hero-card .inventory-hero-kicker {
-    display: none;
-  }
+/* Phase 2 update: the <h1> is visible again, and the duplicate it was hiding
+   from is removed instead. The reasoning above was sound -- the name really was
+   printed twice -- but it deleted the wrong copy. A page should carry its own
+   title; the top bar's copy is chrome. So the h1 stays, the top bar's label is
+   switched off on the pages that print their own (see the rule below), and
+   nothing says "Inventory" twice.
 
-  .inventory-hero-card .inventory-hero-title {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
-  }
+   The compaction rules from that pass are kept: the title sits in the existing
+   header row rather than reserving a block of its own, so this costs about
+   24px, not the ~130px the original hero cost. */
+@media (min-width: 640px) {
 
   .inventory-hero-card {
     padding: 0.7rem 1.05rem;
@@ -17412,14 +17458,23 @@ body,
   inset: -25vh 0;
   z-index: -1;
   pointer-events: none;
-  background-color: #f2f5f8;
+  /* This layer IS the workspace ground -- it sits above the shell's own
+     background, so anything set on .dashboard-workspace-shell never shows.
+     It used to carry four drifting orbs, two of them amber and orange. A warm
+     decoration behind a blue brand is the colour clash Sayed reported: the
+     screen had no agreed temperature, and the black action pill then fought
+     the blue Add button for the only strong colour left.
+
+     One light source now, and it is the logo: the brand blue close in, the
+     logo gradient's cyan thrown wider, both anchored at the mark in the top
+     left and falling off with distance. Nothing warm. */
+  background-color: #e9eef7;
   background-image:
-    radial-gradient(closest-side, rgba(255, 193, 77, 0.5), rgba(255, 166, 60, 0.2) 55%, transparent 74%),
-    radial-gradient(closest-side, rgba(255, 122, 60, 0.24), transparent 70%),
-    radial-gradient(closest-side, rgba(56, 189, 248, 0.28), transparent 72%),
-    radial-gradient(closest-side, rgba(125, 92, 255, 0.16), transparent 70%);
-  background-size: 78rem 78rem, 52rem 52rem, 72rem 72rem, 60rem 60rem;
-  background-position: -14rem -20rem, 42% -14rem, 106% 108%, 8% 92%;
+    radial-gradient(closest-side, rgba(37, 99, 235, 0.26), rgba(37, 99, 235, 0.08) 52%, transparent 76%),
+    radial-gradient(closest-side, rgba(16, 196, 220, 0.2), transparent 72%),
+    radial-gradient(closest-side, rgba(99, 138, 255, 0.12), transparent 74%);
+  background-size: 46rem 46rem, 68rem 68rem, 56rem 56rem;
+  background-position: -16rem -18rem, -10rem -14rem, 4% 96%;
   background-repeat: no-repeat;
   transform: translate3d(0, var(--liquid-shift, 0px), 0);
   will-change: transform;
@@ -17442,10 +17497,14 @@ body,
    does nothing behind an opaque fill and blur is expensive on every surface.
    Needs to out-specify the `!important` glass rule above, hence the extra class
    and the !important here. */
+/* Phase 2: `.inventory-hero-card` and `.inventory-toolbar-panel` were removed
+   from this list. A page header and a filter bar are level-1 regions -- they
+   are separated by whitespace, not by an edge. Drawing them as cards is what
+   put a box around every region on Inventory and left nothing able to out-rank
+   anything else. They are made transparent in the Phase 2 block at the end of
+   this file; keeping them here as well would just be two rules fighting. */
 .dashboard-shell .sydin-overview-panel,
 .dashboard-shell .sydin-overview-header,
-.dashboard-shell .inventory-hero-card,
-.dashboard-shell .inventory-toolbar-panel,
 .dashboard-shell .inventory-table-shell,
 .dashboard-shell .inventory-insight-card,
 .dashboard-shell .po-month-group,
@@ -17470,16 +17529,6 @@ body,
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
 }
 
-/* With opaque cards the wash only shows in the gaps between them, so it has to
-   carry more colour than it did when every surface was letting it through. */
-.dashboard-workspace-shell.liquid-bg::before {
-  background-image:
-    radial-gradient(closest-side, rgba(255, 186, 64, 0.72), rgba(255, 166, 60, 0.3) 55%, transparent 76%),
-    radial-gradient(closest-side, rgba(255, 112, 52, 0.36), transparent 72%),
-    radial-gradient(closest-side, rgba(56, 189, 248, 0.42), transparent 74%),
-    radial-gradient(closest-side, rgba(125, 92, 255, 0.26), transparent 72%);
-}
-
 /* The wash was rendering correctly and then being painted over: the shell and
    its content wrapper each set their own opaque background, which covers a
    z-index:-1 layer. Clearing the shell's `background-image` was not enough —
@@ -17493,17 +17542,6 @@ body,
 .dashboard-shell.dashboard-workspace-shell.liquid-bg .dashboard-shell-content,
 .dashboard-shell.dashboard-workspace-shell.liquid-bg .dashboard-theme {
   background-color: transparent !important;
-}
-
-/* The wash was invisible even once the covering layers were transparent: the
-   gradient positions were inherited from the original rule (-14rem -20rem,
-   42% -14rem, 106% 108%) which pushed three of the four blobs outside the
-   painted area, and the -25vh overscan moved them further out still. Placed
-   inside the visible band instead, and sized in vw so they scale with the
-   window rather than staying fixed while it grows. */
-.dashboard-workspace-shell.liquid-bg::before {
-  background-size: 70vw 70vw, 55vw 55vw, 65vw 65vw, 50vw 50vw;
-  background-position: 8% 22%, 62% 6%, 92% 78%, 18% 88%;
 }
 
 /* The masking fills were removed at source (four workspace-scoped
@@ -17521,21 +17559,6 @@ body.sydin-shell {
   background-color: #f2f5f8;
 }
 
-/* Founder reported hard-edged blocks of colour in the wash. Cause: each
-   radial faded to `transparent` at 72–76% of its background-size box, but the
-   box is `no-repeat`, so anything the gradient had not finished fading by the
-   box edge became a visible rectangle. Fading fully to 100% removes the edge,
-   and the larger boxes keep the colour soft rather than concentrated. */
-.dashboard-workspace-shell.liquid-bg::before {
-  background-image:
-    radial-gradient(closest-side, rgba(255, 186, 64, 0.55), rgba(255, 166, 60, 0.22) 45%, rgba(255, 166, 60, 0.06) 72%, transparent 100%),
-    radial-gradient(closest-side, rgba(255, 112, 52, 0.28), rgba(255, 112, 52, 0.05) 62%, transparent 100%),
-    radial-gradient(closest-side, rgba(56, 189, 248, 0.32), rgba(56, 189, 248, 0.06) 62%, transparent 100%),
-    radial-gradient(closest-side, rgba(125, 92, 255, 0.2), rgba(125, 92, 255, 0.04) 62%, transparent 100%);
-  background-size: 95vw 95vw, 80vw 80vw, 88vw 88vw, 75vw 75vw;
-  background-position: 2% 18%, 58% -4%, 96% 74%, 12% 92%;
-}
-
 /* ===[ CRISP HAIRLINES + CALMER WASH ]=== */
 /* No border override here. The smeared line beside the sidebar is not a CSS
    bug: the display runs at 125% scaling (devicePixelRatio 1.25), so a 1px
@@ -17543,17 +17566,6 @@ body.sydin-shell {
    half-strength greys. The computed 0.8px is just 1px / 1.25. Nothing in the
    stylesheet can make a 1px hairline land on a whole device pixel at that
    ratio — a heavier border would be crisp but visually wrong at 100%. */
-
-/* The wash only has narrow slivers to show through between the sidebar and the
-   white cards, and at that width strong colour reads as stray blocks rather
-   than as a background. Lowered so it tints the page instead of patching it. */
-.dashboard-workspace-shell.liquid-bg::before {
-  background-image:
-    radial-gradient(closest-side, rgba(255, 186, 64, 0.3), rgba(255, 166, 60, 0.1) 45%, transparent 100%),
-    radial-gradient(closest-side, rgba(255, 112, 52, 0.15), transparent 100%),
-    radial-gradient(closest-side, rgba(56, 189, 248, 0.18), transparent 100%),
-    radial-gradient(closest-side, rgba(125, 92, 255, 0.12), transparent 100%);
-}
 
 /* ===[ MOVING BACKGROUND — REVERTED ]=== */
 /* Engineering call after four rounds of "this still looks wrong". The effect
@@ -18899,14 +18911,17 @@ a.dashboard-notifications-row:hover {
    Selectors are (0,2,0) and appended last because the rules being corrected
    use !important; this matches that rather than adding a new escalation. */
 
+/* Phase 2 note: `.inventory-hero-card` and `.inventory-toolbar-panel` were
+   taken out of this list. Forcing one radius and one shadow onto every
+   container was technically consistent and visually fatal -- it removed the
+   last way the eye could tell a page region from a card, so every container
+   read as equally important. A page header and a filter bar are regions. */
 .dashboard-shell .dashboard-card,
 .dashboard-shell .dashboard-toolbar-card,
 .dashboard-shell .dashboard-table-card,
 .dashboard-shell .dashboard-form-section,
 .dashboard-shell .sydin-overview-panel,
 .dashboard-shell .sydin-overview-header,
-.dashboard-shell .inventory-hero-card,
-.dashboard-shell .inventory-toolbar-panel,
 .dashboard-shell .inventory-insight-card,
 .dashboard-shell .inventory-table-shell,
 .dashboard-shell .po-month-group {
@@ -18924,7 +18939,6 @@ a.dashboard-notifications-row:hover {
 
 .dashboard-shell .dashboard-metric-card {
   border-radius: var(--radius-card) !important;
-  box-shadow: var(--shadow-subtle) !important;
 }
 
 /* ===[ SETTINGS — nested card surface ]================================== */
@@ -18951,9 +18965,12 @@ a.dashboard-notifications-row:hover {
    layer. */
 .dashboard-shell .sydin-overview-header h1,
 .dashboard-shell:has(.inventory-workspace) .inventory-hero-title {
-  font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
-  font-weight: 900;
-  line-height: 1.1;
+  /* Phase 2: one page-title style app-wide. Weight 900 was the single loudest
+     thing on the screen and it out-shouted the data underneath it. */
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
 }
 
 /* ===[ Hand-inlined brand buttons: at least make them the right shape ]=== */
@@ -18972,4 +18989,1119 @@ a.dashboard-notifications-row:hover {
 button[class*="linear-gradient(135deg,#10c4dc"],
 a[class*="linear-gradient(135deg,#10c4dc"] {
   border-radius: var(--radius-pill);
+}
+
+/* ==========================================================================
+   Overview — rebuilt composition (2026-08-20)
+   --------------------------------------------------------------------------
+   New `.ov-*` namespace on purpose. `.sydin-overview-*` is declared across six
+   separate blocks in this file, so a rebuild that reused those names would be
+   a specificity fight, not a redesign. Nothing here needs `!important`.
+
+   Two rules the old Overview broke, and the reason this file exists:
+
+   1. SIZE carries hierarchy, weight does not. The old screen drew 85% of its
+      text at weight >= 800 across eight weights, so nothing could out-rank
+      anything. Five steps only, nothing above 600.
+   2. A box must MEAN something. Level 0 page, level 1 section (whitespace and
+      a hairline, no border, no shadow), level 2 interactive row (hairline
+      only), level 3 floating (the only shadow, and none of it is on this
+      page). 33 boxed regions became fewer than 12.
+
+   Responsive thresholds are `@container`, not `@media`: `.ov-page` is the
+   inline-size container, and the dashboard rail changes its width without the
+   viewport changing at all.
+   ========================================================================== */
+
+.ov-page {
+  container-type: inline-size;
+  color: #0f1729;
+}
+
+.ov-inner {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+  padding: var(--space-6) var(--space-6) 48px;
+}
+
+/* ---- header ---- */
+
+.ov-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.ov-head-text {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+.ov-eyebrow {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7a92;
+}
+
+/* The old rule clipped this heading to zero height, so Overview was the only
+   screen in the app with no visible title while the sidebar and top bar both
+   called it "Overview". */
+.ov-title {
+  margin: 0;
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+  color: #0b1220;
+  clip: auto;
+  clip-path: none;
+  position: static;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  white-space: normal;
+}
+
+/* ---- key figures: four numbers, hairline separators, no boxes ---- */
+
+.ov-figures {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.ov-figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+  padding: var(--space-5) var(--space-5) var(--space-5) 0;
+  transition: opacity 160ms ease;
+}
+
+.ov-figure + .ov-figure {
+  padding-left: var(--space-5);
+  border-left: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.ov-figure:hover {
+  opacity: 0.62;
+}
+
+.ov-figure-label {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #6b7a92;
+}
+
+.ov-figure-value,
+.ov-spend-total {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: #0b1220;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-spend-total {
+  margin: 0;
+}
+
+.ov-figure-note {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #6b7a92;
+  overflow-wrap: anywhere;
+}
+
+/* ---- sections ---- */
+
+.ov-columns {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-6) 48px;
+  align-items: start;
+}
+
+.ov-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.ov-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding-bottom: var(--space-2);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.ov-section-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+  color: #0b1220;
+}
+
+.ov-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  flex: none;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.3;
+  color: #4a5a75;
+  transition: color 160ms ease;
+}
+
+.ov-link:hover {
+  color: #0b1220;
+}
+
+.ov-quiet {
+  margin: 0;
+  padding: var(--space-2) 0 var(--space-4);
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.55;
+  color: #6b7a92;
+}
+
+/* ---- stock health: one thin bar, replacing a second copy of the numbers ---- */
+
+.ov-health {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-bottom: var(--space-1);
+}
+
+.ov-health-bar {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+}
+
+.ov-health-bar > span {
+  display: block;
+  min-width: 0;
+  border-radius: var(--radius-pill);
+}
+
+.ov-health-in {
+  background: #16a34a;
+}
+
+.ov-health-low {
+  background: #d97706;
+}
+
+.ov-health-out {
+  background: #dc2626;
+}
+
+.ov-health-legend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #6b7a92;
+}
+
+.ov-dot {
+  display: inline-block;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  border-radius: var(--radius-pill);
+  background: #94a3b8;
+}
+
+.ov-health-legend .ov-dot {
+  margin-left: var(--space-2);
+}
+
+.ov-health-legend .ov-dot:first-child {
+  margin-left: 0;
+}
+
+.ov-dot-success {
+  background: #16a34a;
+}
+
+.ov-dot-neutral {
+  background: #d97706;
+}
+
+.ov-dot-warning {
+  background: #dc2626;
+}
+
+/* ---- rows: level 2. Hairline separators, no card per row ---- */
+
+.ov-list {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.ov-list > li + li {
+  border-top: 1px solid rgba(15, 23, 42, 0.07);
+}
+
+.ov-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: var(--space-3) var(--space-2);
+  margin: 0 calc(-1 * var(--space-2));
+  border-radius: 10px;
+  transition: background 140ms ease;
+}
+
+.ov-row:hover {
+  background: rgba(15, 23, 42, 0.04);
+}
+
+.ov-row-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ov-row-text strong {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #0b1220;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ov-row-text small {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: #6b7a92;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ov-row-value {
+  flex: none;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: #0b1220;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-row-time {
+  font-weight: 400;
+  color: #6b7a92;
+}
+
+.ov-value-low {
+  color: #b45309;
+}
+
+.ov-value-out {
+  color: #b91c1c;
+}
+
+.ov-row-chevron {
+  flex: none;
+  color: #94a3b8;
+}
+
+.ov-thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: rgba(15, 23, 42, 0.05);
+  color: #6b7a92;
+}
+
+.ov-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- responsive ---- */
+
+@container (max-width: 900px) {
+  .ov-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ov-figure {
+    padding: var(--space-4) var(--space-4) var(--space-4) 0;
+  }
+
+  .ov-figure:nth-child(odd) {
+    padding-left: 0;
+    border-left: 0;
+  }
+
+  .ov-figure:nth-child(n + 3) {
+    border-top: 1px solid rgba(15, 23, 42, 0.1);
+  }
+
+  .ov-columns {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-6);
+  }
+}
+
+@container (max-width: 560px) {
+  .ov-inner {
+    padding: var(--space-4) var(--space-4) 40px;
+    gap: var(--space-5);
+  }
+
+  .ov-title {
+    font-size: 24px;
+  }
+
+  .ov-figure-value,
+  .ov-spend-total {
+    font-size: 26px;
+  }
+
+  .ov-head {
+    align-items: stretch;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-figure,
+  .ov-row,
+  .ov-link {
+    transition: none;
+  }
+}
+
+/* Undo the structural card. `.dashboard-shell-content main > div > section`
+   (declared three times in this file) paints EVERY section inside a page grid
+   as a white 16px card with a shadow — which is why "make it consistent" kept
+   producing a screen where nothing could out-rank anything: the box was applied
+   by position in the DOM, not by meaning. Scoped one step deeper so it wins on
+   specificity rather than on source order. */
+.ov-page .ov-section {
+  background: transparent;
+  background-image: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 0;
+}
+
+/* ==========================================================================
+   Workspace shell — search field and header controls (2026-08-20)
+   --------------------------------------------------------------------------
+   The ground, the seam and the brand light are set in the @media (min-width:
+   900px) block earlier in this file, next to the rules they replace. What is
+   left here is the header's own controls.
+   ========================================================================== */
+
+/* ---- search field ----------------------------------------------------- */
+
+/* Was a white pill with a white border on a white bar: the control had no
+   edge you could see, so it read as text floating in the header. */
+.dashboard-workspace-shell .dashboard-top-searchbar {
+  height: 38px;
+  /* !important only to clear the frosted-glass rule earlier in this file, which
+     fills the bar with translucent white -- invisible on a white header. */
+  background: rgba(18, 38, 74, 0.045) !important;
+  border: 1px solid rgba(18, 38, 74, 0.07) !important;
+  box-shadow: none;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.dashboard-workspace-shell .dashboard-top-searchbar:hover {
+  background: rgba(18, 38, 74, 0.07) !important;
+  border-color: rgba(18, 38, 74, 0.12) !important;
+}
+
+.dashboard-workspace-shell .dashboard-top-searchbar:focus-visible,
+.dashboard-workspace-shell .dashboard-top-search-open .dashboard-top-searchbar {
+  background: #ffffff !important;
+  border-color: rgba(37, 99, 235, 0.42) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  outline: none;
+}
+
+.dashboard-workspace-shell .dashboard-top-searchbar-kbd kbd {
+  background: rgba(18, 38, 74, 0.06);
+  border-color: transparent;
+  color: #6b7a92;
+}
+
+/* Icon buttons lose their white-on-white border for the same reason. */
+.dashboard-workspace-shell .dashboard-top-icon-button {
+  background: transparent;
+  border-color: transparent;
+}
+
+.dashboard-workspace-shell .dashboard-top-icon-button:hover {
+  background: rgba(18, 38, 74, 0.06);
+}
+
+/* ==========================================================================
+   THE WORKSPACE GROUND — one definition (2026-08-20)
+   --------------------------------------------------------------------------
+   Sayed's note: "make a shadow blue comes from logo to sidebar and header but
+   not fully like shadow and appear with distance", and "blue and black wrong".
+
+   This does not reverse his earlier "make the page background white" decision.
+   Those are two different surfaces, and separating them is the whole point:
+
+     PAGE   stays white. It is where the data lives and it takes no colour.
+     GROUND is the plane the rail sits on. It is tinted, and it carries the
+            light from the logo mark: brand blue close in, the logo gradient's
+            cyan thrown wider, both falling off before they reach the page.
+
+   The rail and header are translucent, so the light passes THROUGH them rather
+   than being painted ON them — which is what makes it read as light with
+   distance rather than as a blue panel.
+
+   The ground had been declared in eight places across this file (four of them
+   repainting a layer that is display:none). Four are deleted; this is the one
+   that paints. The scroll-parallax layer stays off — re-enabling it is still
+   just deleting its `display: none`, and it would now inherit this palette.
+   ========================================================================== */
+.dashboard-shell.dashboard-workspace-shell.liquid-bg {
+  background-color: #e9eef7 !important;
+  background-image:
+    /* near bloom, centred on the logo mark in the rail's top-left */
+    radial-gradient(
+      420px 340px at 34px 38px,
+      rgba(37, 99, 235, 0.38),
+      rgba(37, 99, 235, 0) 76%
+    ),
+    /* the cyan half of the logo gradient, thrown further so the light has
+       somewhere to travel to */
+    radial-gradient(
+      880px 520px at 6px 0px,
+      rgba(16, 196, 220, 0.22),
+      rgba(16, 196, 220, 0) 72%
+    ) !important;
+  background-repeat: no-repeat !important;
+  background-attachment: fixed !important;
+}
+
+/* ==========================================================================
+   INVENTORY — type scale and surfaces (Phase 2, 2026-08-20)
+   --------------------------------------------------------------------------
+   Measured on the real workspace before this block, at 1152px signed in:
+
+     65  boxed regions on the first screen
+     23  distinct font-size/weight pairs
+     94% of all visible text drawn heavier than weight 600, up to weight 950
+         (the product card title was 950 — heavier than the page title)
+
+   Sizes ran 9.92 / 10.88 / 11.2 / 11.52 / 12 / 12.48 / 15.2 / 18.4 / 27.52px:
+   nine steps inside a 2px band, differences the eye cannot rank. So weight was
+   left doing all the ranking, and weight was saturated. Nothing could stand out
+   because everything was already shouting.
+
+   Same seven pairs as the rebuilt Overview, so the two screens finally agree:
+
+     12px/500 uppercase   label, eyebrow, column header, status pill
+     12px/400             secondary text, codes, meta
+     14px/400             body
+     14px/500             row and card titles, buttons, numbers in rows
+     18px/600             section heading
+     28px/600             page title
+     32px/500             a headline figure
+
+   Nothing above 600. Scoped under `.inventory-workspace` and declared last so
+   it wins on order without adding another !important to this file.
+   ========================================================================== */
+
+/* ---- page header ---- */
+
+.inventory-workspace .inventory-hero-kicker,
+.inventory-workspace .inventory-mobile-kicker {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  line-height: 1.4;
+}
+
+.inventory-workspace .inventory-hero-title,
+.inventory-workspace .inventory-mobile-title {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.inventory-workspace .inventory-hero-description,
+.inventory-workspace .inventory-mobile-description {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+/* ---- item card ---- */
+
+.inventory-workspace .inventory-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  letter-spacing: 0;
+}
+
+.inventory-workspace .inventory-card-code {
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.inventory-workspace .inventory-card-quantity {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  /* Was a bordered pill. A quantity is a number you read, not a state. */
+  background: transparent;
+  border: 0;
+  padding: 0;
+}
+
+.inventory-workspace .inventory-card-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+/* The one pill left on the card. It survives because stock status is a state:
+   the colour and the shape are carrying meaning, not decoration. */
+.inventory-workspace .inventory-card-status {
+  display: inline-flex;
+  align-items: center;
+  flex: none;
+  padding: 3px 9px;
+  border-radius: var(--radius-pill);
+  border: 0;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.inventory-workspace .inventory-card-value {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.inventory-workspace .inventory-card-facts {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.45;
+  color: #6b7a92;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.inventory-workspace .inventory-card-alert-pill {
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.inventory-workspace .inventory-card-footer button {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* ---- toolbar, chips, table ---- */
+
+.inventory-workspace .inventory-toolbar-button,
+.inventory-workspace .inventory-action-primary,
+.inventory-workspace .inventory-search-input,
+.inventory-workspace .ui-select-trigger {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.inventory-workspace .inventory-quick-filter,
+.inventory-workspace .inventory-active-chip,
+.inventory-workspace .inventory-toolbar-count {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.inventory-workspace .inventory-table th {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.inventory-workspace .inventory-table td {
+  font-size: 14px;
+  font-weight: 400;
+}
+
+.inventory-workspace .inventory-table td strong,
+.inventory-workspace .inventory-list-quantity {
+  font-size: 14px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- surfaces: a shadow means "floating", and nothing on this page floats --- */
+
+.inventory-workspace .inventory-card,
+.inventory-workspace .inventory-item-card,
+.inventory-workspace .inventory-hero-card,
+.inventory-workspace .inventory-toolbar-panel,
+.inventory-workspace .inventory-table-shell,
+.inventory-workspace .dashboard-metric-card {
+  box-shadow: none;
+}
+
+/* Metric figures get the headline size — they are the only numbers on the page
+   that are meant to be read from across the room. */
+.inventory-workspace .dashboard-metric-card strong,
+.inventory-workspace .dashboard-metric-value {
+  font-size: 32px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.inventory-workspace .dashboard-metric-card small,
+.inventory-workspace .dashboard-metric-label {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Buttons inside the workspace inherited weight 900 from a generic rule. */
+.inventory-workspace button,
+.inventory-workspace .dashboard-action-button,
+.inventory-workspace .dashboard-filter-chip {
+  font-weight: 500;
+}
+
+/* ==========================================================================
+   INVENTORY — surface census (Phase 2, 2026-08-20)
+   --------------------------------------------------------------------------
+   Counted live at 1152px with 10 real items on screen: 49 bordered or shadowed
+   regions. Grouped, most were borders that carried no meaning --
+
+     8  Adjust / QR buttons, each outlined INSIDE an already-outlined card
+     7  quick-filter pills, all outlined whether chosen or not
+     4  card overflow-menu buttons
+     3  icon frames inside the metric cards
+     2  "10 visible" / "Pro plan" badges, which are facts, not controls
+
+   A border should say "this is a separate surface" or "this is a control you
+   can press". A button sitting inside a card it belongs to is neither, and an
+   unselected filter is not a state worth drawing. What stays outlined: the item
+   card, the search field, the selected filter, and stock-status pills.
+   ========================================================================== */
+
+/* Actions that live inside a card: the card is already the edge. */
+.inventory-workspace .inventory-card-footer button,
+.inventory-workspace .inventory-card-menu-button {
+  border: 0;
+  box-shadow: none;
+  background: transparent;
+  transition: background 140ms ease, color 140ms ease;
+}
+
+.inventory-workspace .inventory-card-footer button:hover,
+.inventory-workspace .inventory-card-menu-button:hover {
+  background: rgba(18, 38, 74, 0.07);
+}
+
+/* Only the chosen filter is drawn. The rest are text until you pick one --
+   which is also how you can tell at a glance which one is active, something
+   seven identical outlines actively prevented. */
+.inventory-workspace .inventory-quick-filter {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.inventory-workspace .inventory-quick-filter:hover {
+  background: rgba(18, 38, 74, 0.06);
+}
+
+.inventory-workspace .inventory-quick-filter.dashboard-filter-chip-active {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.08);
+  color: #1d4ed8;
+}
+
+/* An icon does not need a frame inside a card that already has one. */
+.inventory-workspace .dashboard-metric-icon {
+  border: 0;
+  box-shadow: none;
+}
+
+/* Level 1: the page header and the toolbar are regions, not cards. */
+.dashboard-shell .inventory-workspace .inventory-hero-card,
+.dashboard-shell .inventory-workspace .inventory-toolbar-panel {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+/* "10 visible", "Pro plan" -- facts you read, not controls you press. */
+.inventory-workspace .inventory-hero-badges span {
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: #6b7a92;
+}
+
+.inventory-workspace .inventory-hero-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+/* ---- the last heavy weights ----
+   These come from Tailwind utilities and from element selectors that the
+   class-based rules above do not reach. Capped here rather than edited in 40
+   places; `font-black` on a workspace label was never a deliberate choice. */
+.inventory-workspace .dashboard-metric-card em,
+.inventory-workspace .dashboard-metric-card small {
+  font-size: 12px;
+  font-weight: 400;
+  font-style: normal;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.inventory-workspace .dashboard-filter-chip span,
+.inventory-workspace .inventory-quick-filter span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+.inventory-workspace .font-black,
+.inventory-workspace .font-extrabold,
+.inventory-workspace .font-bold {
+  font-weight: 500;
+}
+
+/* The three summary figures now match Overview's: hairline separators, no
+   boxes. Two screens that show the same kind of number in two different
+   shapes is the whole reason this app read as unfinished. */
+.dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  background: transparent;
+  padding: var(--space-4) var(--space-5) var(--space-4) 0;
+  min-height: 0;
+}
+
+.dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card + .dashboard-metric-card {
+  padding-left: var(--space-5);
+  border-left: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+.dashboard-shell .inventory-workspace .inventory-stat-grid {
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  gap: 0;
+}
+
+/* ==========================================================================
+   ONE PAGE NAME, NOT TWO (Phase 2, 2026-08-20)
+   --------------------------------------------------------------------------
+   The top bar prints the current page's name at far left. On pages that now
+   carry their own visible <h1> -- Overview and Inventory -- that is the same
+   word twice, about 60px apart. The chrome copy is the one that goes: a
+   document should be titled by its own heading, and the breadcrumb is only
+   useful when the page below it is untitled.
+
+   Scoped with :has() so it switches off per page rather than globally. Pages
+   still using the shared DashboardPageHeader keep their h1 visually hidden and
+   keep the top-bar label, so nothing is left untitled; each will drop off this
+   list as it is rebuilt.
+   ========================================================================== */
+.dashboard-workspace-shell:has(.ov-page) .dashboard-top-context-title,
+.dashboard-workspace-shell:has(.inventory-workspace) .dashboard-top-context-title {
+  display: none;
+}
+
+/* The metric fill is set by the frosted-glass pass as a bare, !important
+   declaration, so a scoped rule cannot reach it without matching that. Kept
+   narrow: this applies only to the Inventory summary row. */
+.dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card {
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card
+  + .dashboard-metric-card {
+  border-left: 1px solid rgba(15, 23, 42, 0.1) !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-stat-grid {
+  border-top: 1px solid rgba(15, 23, 42, 0.1);
+  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+}
+
+/* The header row: title and description stack, actions stay right. */
+.inventory-workspace .inventory-hero-title-block {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+/* --------------------------------------------------------------------------
+   Phase 2 type scale — the stragglers.
+   These same declarations exist above at (0,2,0) and lost to page-scoped
+   `.dashboard-shell:has(.inventory-workspace)` rules at (0,3,0). Repeated here
+   at matching specificity rather than promoted to !important, and measured
+   after: the card title was still rendering 15.2px, the metric figure 18.4px,
+   and the insight headers 12.48px/900.
+   -------------------------------------------------------------------------- */
+.dashboard-shell .inventory-workspace .inventory-card-title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+.dashboard-shell .inventory-workspace .inventory-hero-description {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.dashboard-shell .inventory-workspace .dashboard-metric-card strong {
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-shell .inventory-workspace .dashboard-metric-card small,
+.dashboard-shell .inventory-workspace .dashboard-metric-card em {
+  font-size: 12px;
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Right-hand insight panels ("Low Stock Alerts", "Stock by Location"). Their
+   headers were 12.48px at weight 900 -- a label heavier than the numbers it
+   introduced. */
+.dashboard-shell .inventory-workspace .inventory-insight-card-header strong,
+.dashboard-shell .inventory-workspace .inventory-insight-card-header span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* Tailwind weight utilities used inside the insight panels and the card media.
+   `font-bold` / `font-black` on a 10px caption was never a design decision. */
+.dashboard-shell .inventory-workspace .font-bold,
+.dashboard-shell .inventory-workspace .font-semibold,
+.dashboard-shell .inventory-workspace .font-extrabold,
+.dashboard-shell .inventory-workspace .font-black {
+  font-weight: 500;
+}
+
+.dashboard-shell .inventory-workspace .inventory-insight-card .text-base {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* The last weight-700 text on the page: the figures in the Stock by Location /
+   Stock by Category panels are bare <strong>, so no class rule reached them.
+   A number does not need bold to read as a number when it is the only thing
+   right-aligned in its row. */
+.dashboard-shell .inventory-workspace .inventory-insight-card strong {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ==========================================================================
+   ITEM DETAIL — type scale (Phase 2, 2026-08-20)
+   --------------------------------------------------------------------------
+   Measured before this block, at 1152px on a real item:
+
+     15  distinct font-size/weight pairs
+     63% of visible text heavier than weight 600
+     SIX different weights at the same 14px -- 400, 500, 600, 700, 800 and 900
+
+   Six weights at one size is the clearest possible statement of the problem on
+   this page: size was not ranking anything, so weight was asked to rank
+   everything, and six steps of weight at identical size is a distinction the
+   eye cannot make. "Record Movement", "Edit Item" and "Delete Item" were all
+   14px/800; the item name was 900.
+
+   Same seven pairs as Overview and Inventory. This page is built from raw
+   Tailwind utilities, so the rules below target those utilities directly --
+   unlayered rules in this file beat Tailwind utilities regardless of
+   specificity, which is what makes a scope this small possible.
+   ========================================================================== */
+
+/* Raised to (0,2,1) to match `.dashboard-shell-content h1[class~="text-3xl"]`,
+   which clamps this heading to 1.65rem and would otherwise win. */
+.dashboard-shell-content .item-detail h1 {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.item-detail h2 {
+  font-size: 18px;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
+}
+
+.item-detail h3 {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.35;
+}
+
+/* The eyebrow above the item name, and every uppercase section label. */
+.item-detail .uppercase {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+}
+
+/* Every Tailwind weight utility on this page collapses to one emphasis step.
+   Nothing here was a considered choice -- `font-black` on a button label is
+   what you get when a page is assembled utility by utility over months. */
+.item-detail .font-black,
+.item-detail .font-extrabold,
+.item-detail .font-bold,
+.item-detail .font-semibold {
+  font-weight: 500;
+}
+
+/* Sizes: the page used 12 / 14 / 15 / 16 / 18 / 26.4px. The middle three all
+   read as "body" and none of them ranked above the others, so they collapse. */
+.item-detail .text-base,
+.item-detail .text-\[15px\] {
+  font-size: 14px;
+}
+
+.item-detail .text-lg,
+.item-detail .text-xl {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.item-detail .text-2xl,
+.item-detail .text-3xl,
+.item-detail .text-4xl {
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+.item-detail .text-xs {
+  font-size: 12px;
+}
+
+.item-detail .text-sm {
+  font-size: 14px;
+}
+
+/* A figure on a detail page is the one thing allowed to be large and light. */
+.item-detail .item-detail-figure {
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Surfaces: the detail page is a stack of regions, so the outer section loses
+   its heavy drop shadow. Cards inside it keep a hairline. */
+.item-detail > div > section {
+  box-shadow: none;
+}
+
+/* The three header actions rendered at weight 800 -- their weight comes from a
+   shared button rule, not from a Tailwind utility, so the utility collapse
+   above does not reach them. */
+.item-detail .dashboard-action-button,
+.item-detail button {
+  font-weight: 500;
 }

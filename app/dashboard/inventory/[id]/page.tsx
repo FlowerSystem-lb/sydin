@@ -857,7 +857,12 @@ export default function ItemDetailsPage() {
 
   return (
     <div className="contents">
-      <main>
+      {/* `item-detail` is the page scope for the Phase 2 type scale. This page
+          is built from raw Tailwind utilities rather than a class namespace, so
+          without a hook there is nothing for the scale to attach to -- it was
+          rendering six different weights (400 through 900) all at 14px, which
+          is weight doing every job and none of them well. */}
+      <main className="item-detail">
         <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-5">
           <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -1029,14 +1034,15 @@ export default function ItemDetailsPage() {
                       </span>
                     </button>
                   ) : (
-                    <div className="flex aspect-[4/3] w-full flex-col items-center justify-center rounded-3xl border border-theme bg-theme-surface text-center text-theme-subtle">
-                      <span className="text-sm font-black uppercase tracking-[0.18em]">
-                        Image
-                      </span>
-
-                      <span className="mt-2 text-base font-semibold">
-                        Not added yet
-                      </span>
+                    /* An item with no photo was reserving a full 4:3 frame --
+                       on a 26rem column that is ~250px of empty box, inside
+                       another box, filling the first screen of the page before
+                       any actual item data. An absent photo is worth one line,
+                       and the frame it would have filled is not worth drawing
+                       twice. */
+                    <div className="flex w-full flex-col items-center justify-center gap-1 py-8 text-center text-theme-subtle">
+                      <UiIcon name="box" className="h-6 w-6" />
+                      <span className="text-sm">No photo yet</span>
                     </div>
                   )}
                 </div>
