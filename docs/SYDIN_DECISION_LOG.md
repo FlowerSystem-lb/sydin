@@ -323,3 +323,61 @@ support), add its notification generation at that point — don't pre-build the 
 categories with nothing to say yet. The `notifications.type` check constraint in
 `sql/phase-13-notifications.sql` intentionally only allows the two values that exist today; widen it
 when a third one earns its place. **Status:** Active.
+
+### 2026-08-20 · Size carries hierarchy; weight stops at 600
+**Decision:** One type scale across every workspace screen — 12/500 uppercase label, 12/400
+secondary, 14/400 body, 14/500 emphasis, 18/600 section heading, 28/600 page title, 28–32/500
+figure. **Nothing above weight 600.** **Why:** measured on the live app, Inventory drew 94% of its
+text heavier than 600 across weights up to 950, and item detail used six different weights
+(400–900) at the same 14px. Six steps of weight at one size is a distinction the eye cannot make,
+so nothing could out-rank anything — which is precisely what "it still looks messy" was describing.
+Sizes were equally broken: nine steps inside a 2px band (9.92 / 10.88 / 11.2 / 11.52 / 12 / 12.48px).
+**How to apply:** when a new element needs emphasis, move it up a *size* step, never past weight
+600. If a page appears to need an eighth pair, the composition is wrong, not the scale.
+**Status:** Active.
+
+### 2026-08-20 · A border must mean "separate surface" or "pressable"
+**Decision:** Four levels only — page (no box) · section (whitespace and an optional hairline, no
+border, no shadow) · interactive row or card (hairline only) · floating dialog/menu/popover (the
+only thing that gets a shadow). **Why:** an earlier pass in this repo forced one radius and one
+shadow onto eleven card classes with `!important`, and `.dashboard-shell-content main > div >
+section` painted every section inside a page grid as a card by DOM position rather than by meaning.
+The result was technically consistent and visually fatal: every container looked equally important,
+so none were. Overview carried 33 boxed regions on its first screen, Inventory 65 — of which 8 were
+buttons outlined *inside* an already-outlined card and 7 were filter pills outlined whether selected
+or not, which made the selected one unfindable. **How to apply:** before adding a border, say which
+of the four levels the element is. A button inside a card it belongs to is not a separate surface.
+An unselected filter is not a state worth drawing. **Status:** Active.
+
+### 2026-08-20 · A page is titled by its own heading, not by the chrome
+**Decision:** Overview, Inventory and item detail each render a visible `<h1>`; the top bar's
+page-name label is switched off (via `:has()`) on exactly those pages. Pages still using the shared
+`DashboardPageHeader` keep the chrome label and their visually-hidden `<h1>`. **Why:** an earlier
+pass correctly identified that the page name printed twice — and then deleted the wrong copy,
+leaving screens with no title of their own. Deleting the chrome copy instead keeps the document
+self-titling. **How to apply:** as each remaining page is rebuilt, unhide its `<h1>` and add it to
+the `:has()` list in the "ONE PAGE NAME, NOT TWO" block, so no page is ever left untitled *and* none
+prints its name twice. **Status:** Active — list grows as pages are converted.
+
+### 2026-08-20 · Revoking a Postgres privilege means revoking it from PUBLIC
+**Decision:** Function grants are managed by revoking `EXECUTE` from `PUBLIC` (plus
+`ALTER DEFAULT PRIVILEGES` for future functions), then granting explicitly to `authenticated` — and
+to `anon` only for `get_public_item`. **Why:** `sql/phase-15` revoked from `anon` and
+`authenticated`, every statement succeeded, and nothing changed: PostgreSQL grants `EXECUTE` to
+`PUBLIC` on function creation, and a named-role revoke is a no-op while `PUBLIC` still holds the
+privilege. It showed in the ACL as an entry with an empty grantee (`=X/postgres`). Caught only
+because the migration shipped with its own verification query. **How to apply:** never conclude a
+permission change worked because the statement parsed — check `proacl`/`has_*_privilege` after, and
+ship migrations with a verification query that states the expected row count. **Status:** Active.
+
+### 2026-08-20 · The workspace ground carries the brand light; the page stays white
+**Decision:** The plane behind the sidebar is tinted and carries a blue bloom anchored on the logo
+mark; the content panel stays white. The rail and header are translucent so the light passes
+through them. **Why:** this reconciles two of Sayed's notes that read as contradictory — "make the
+page background white" (2026-08 founder decision, still honoured: the *page* takes no colour) and
+"make a shadow blue come from the logo to the sidebar and header, not fully, appear with distance".
+They are two different surfaces. It also removed the actual colour clash he was reporting: the
+ground was four drifting **amber and orange** orbs sitting under a blue brand. **How to apply:** the
+ground is defined in exactly one place (the "THE WORKSPACE GROUND" block at the end of
+`globals.css`). It had previously been declared eight times, four of them repainting a layer a later
+rule set to `display: none` — do not add a ninth; edit that block. **Status:** Active.

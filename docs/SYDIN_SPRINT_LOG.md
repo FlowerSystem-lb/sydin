@@ -3439,4 +3439,89 @@ new call site in the existing wrapper function around it.
 
 ---
 
+## Phases 1 & 2 — production security, and one design language across three screens  *(Complete; one dashboard checkbox outstanding)*
+
+Triggered by Sayed supplying `SydIN_Final_Production_Master_Prompt.pdf` (14 pages, 76 items) as the
+governing brief, and by his standing complaint that the dashboard still felt messy after weeks of
+consistency work. Its process rules now apply to all future work: audit before implementing, stop
+between phases, report in business language, name what was *not* checked.
+
+Branch: `phase-1-2-security-and-workspace-redesign` (two commits, off `main`).
+Status artifact: https://claude.ai/code/artifact/223456e6-d8a4-46ec-a005-5cd4b4463cde
+
+### The audit, and why polish never fixed "messy"
+
+Measured live at 1440x900, signed in. The problem was composition and hierarchy, not paint —
+and part of it was self-inflicted by an earlier pass in this repo.
+
+| Screen | Boxes on first screen | size/weight pairs | text heavier than 600 |
+|---|---|---|---|
+| Overview | 33 → **0** | 15 → **7** | — → **0%** |
+| Inventory | 65 → **19** | 23 → **11** | 94% → **0%** |
+| Item detail | 13 (all meaningful) | 15 → **6** | 63% → **0%** |
+
+Item detail rendered **six different weights at the same 14px** (400–900). That is the whole
+diagnosis in one measurement: size ranked nothing, so weight was asked to rank everything, and
+six steps of weight at one size is a distinction the eye cannot make. A product card title
+rendered at weight 950 — heavier than the page title above it.
+
+**Two self-inflicted causes, both corrected at source rather than overridden:**
+
+1. A previous consistency pass forced one radius and one shadow onto eleven card classes with
+   `!important`. Technically consistent, visually fatal — it removed the last way the eye could
+   rank a page region against a card.
+2. `.dashboard-shell-content main > div > section` painted *every* section inside a page grid as
+   a white card, by position in the DOM rather than by meaning.
+
+### Phase 1 — security
+
+- **Six headers added** (CSP, HSTS, nosniff, X-Frame-Options, Referrer-Policy, Permissions-Policy).
+  The app loads no third-party scripts, analytics or external fonts, so the CSP is far tighter than
+  usual. Verified against a real **production** build — dev alone would have proven nothing, since
+  production drops `unsafe-eval`.
+- **8 npm vulnerabilities → 2**, all five high-severity gone (Next 16.2.6 → 16.3.1 also pulled
+  patched sharp + postcss). The remaining two are `uuid` via `exceljs`; the only offered fix is a
+  multi-major downgrade that would break Excel export. **Left deliberately.**
+- **Database grants** — `sql/phase-15` + `sql/phase-16`. Supabase advisor findings **26 → 9**;
+  `anon` now executes exactly one function (`get_public_item`, the customer QR page), down from 24.
+
+### Phase 2 — the design language
+
+Three screens now share one type scale (12/500 label, 12/400 secondary, 14/400 body, 14/500
+emphasis, 18/600 section, 28/600 title, 28–32/500 figure; **nothing above 600**) and one surface
+rule (page → section separated by whitespace → hairline row/card → shadow means floating, and
+nothing on these pages floats).
+
+Composition changes, not just paint: Overview 8 panels → 5 with **the data layer untouched**;
+the item card's five pills → one status pill plus a text line; duplicate "Low Stock" per card
+removed; seven identically-outlined filter pills → only the selected one drawn; the empty-photo
+frame on item detail (~250px of box inside a box) → an icon and a line.
+
+**The shell** got the change Sayed asked for directly: the workspace ground was four drifting
+amber/orange orbs under a blue brand — no agreed temperature anywhere. Replaced with one light
+source, the logo. The two hairlines between rail, header and page became one continuous border
+that curves at the top-left. That ground layer had been **declared eight times** in `globals.css`,
+four of them repainting an element a later rule had set to `display: none`; now one definition.
+
+### A mistake worth recording
+
+`sql/phase-15` revoked EXECUTE from `anon` and `authenticated` and appeared to succeed — but
+changed nothing, because **PostgreSQL grants EXECUTE to PUBLIC by default**, and revoking from a
+named role is a no-op while PUBLIC still holds it. Caught only because the migration shipped with
+its own verification query, which Sayed ran and pasted back. `sql/phase-16` fixes it in one
+statement and sets the default for functions added later. *Check how a privilege is actually held,
+not just that the statement parsed.*
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · production server
+run and driven under the real CSP ✅ · no horizontal overflow at 1440px or 375px ✅.
+
+**Untouchables:** no auth, schema, routing or business-logic changes. Overview's `dashboardData`
+memo, loaders and auth effect are byte-identical. Mobile deliberately unchanged — it gets its own
+phase, per Sayed.
+
+**Outstanding:** leaked-password protection (Supabase → Authentication, one checkbox). Next
+recommended: **Phase 3 — pagination, indexes, image sizes**, which blocks the 500-product test.
+
+---
+
 <!-- Append the next sprint entry below this line. -->
