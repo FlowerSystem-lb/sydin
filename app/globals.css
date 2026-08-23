@@ -15899,48 +15899,67 @@ body,
     animation: none;
   }
 
-  /* The one continuous line: up the rail's edge, around the corner, and along
-     the top of the header to its end. Left + top borders on the panel; the
-     corner radius draws the curve.
+  /* CHROME AND PAGE.
+     The rail and the header are ONE piece: same translucent fill, same blur,
+     same brand light passing through them. They frame the page rather than
+     sitting beside and above it.
 
-     Not overflow:hidden -- the account and notification menus live inside this
-     element and would be clipped. The toolbar carries the matching corner. */
+     The page is the inner rectangle. Its top-left corner is rounded, so the
+     single hairline runs up the rail's edge, turns the curve, and continues
+     right along the underside of the header -- one line, bottom to top to
+     right, with the corner BELOW the header rather than above it.
+
+     The canvas between them carries nothing: it is just the box that holds the
+     header and the page. */
   .dashboard-workspace-shell .dashboard-main-canvas {
-    background: #ffffff !important;
-    border-left: 1px solid rgba(18, 38, 74, 0.09) !important;
-    border-top: 1px solid rgba(18, 38, 74, 0.09) !important;
-    border-top-left-radius: 22px !important;
+    background: transparent !important;
+    border: 0 !important;
+    border-radius: 0 !important;
   }
 
-  /* A last trace of the same light inside the page, so the content is lit by
-     the shell rather than pasted onto it. Very low alpha on purpose: any
-     stronger and this stops being light and becomes a coloured box. */
   .dashboard-workspace-shell .dashboard-shell-content {
     background:
+      /* the last trace of the logo light, landing where the chrome meets the
+         page so the page reads as lit by the shell rather than pasted onto it */
       radial-gradient(
         620px 240px at 0% 0%,
         rgba(37, 99, 235, 0.05),
         rgba(37, 99, 235, 0) 64%
       ),
-      transparent !important;
+      #ffffff !important;
+    border-left: 1px solid rgba(18, 38, 74, 0.09) !important;
+    border-top: 1px solid rgba(18, 38, 74, 0.09) !important;
+    border-top-left-radius: 22px !important;
+    /* The chrome's shadow falling onto the page. An INSET shadow rather than
+       two outer shadows (one from the rail, one from the header) because an
+       inset follows the rounded corner exactly -- two outer shadows would meet
+       at the curve and show a seam, which is the opposite of "one piece". */
+    box-shadow: inset 20px 20px 40px -26px rgba(37, 99, 235, 0.42) !important;
+    /* A short page (an empty state, a "not found") would otherwise end early
+       and let the tinted ground show below the panel, which reads as the layout
+       breaking rather than as a page with little on it. */
+    min-height: calc(100dvh - 4rem) !important;
   }
 
-  /* The rail keeps no edge of its own -- the panel draws the seam for both --
-     and stays translucent so the brand light passes through it instead of
-     stopping at a white wall. */
+  /* The rail: no edge of its own, translucent so the brand light passes
+     through it instead of stopping at a white wall. Its shadow is now drawn by
+     the page above, so it casts none itself. */
   .dashboard-workspace-shell .dashboard-sidebar {
     border-right: 0 !important;
     background: rgba(255, 255, 255, 0.34) !important;
-    box-shadow: 22px 0 44px -20px rgba(37, 99, 235, 0.34) !important;
+    box-shadow: none !important;
     -webkit-backdrop-filter: blur(18px) saturate(1.5);
     backdrop-filter: blur(18px) saturate(1.5);
   }
 
-  /* The header continues the bloom off the rail and runs it out across its own
-     width, so the light reads as one source travelling, not two glows. */
+  /* The header IS the rail, turned through 90 degrees: identical fill and blur
+     so the two read as one continuous piece of chrome. The gradient carries the
+     logo light out across it, so the light looks like one source travelling
+     rather than two separate glows. No corner radius here any more -- the curve
+     belongs to the page below. */
   .dashboard-workspace-shell .dashboard-desktop-toolbar {
-    border-bottom: 0 !important;
-    border-top-left-radius: 22px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
     background:
       linear-gradient(
         90deg,
@@ -15948,7 +15967,7 @@ body,
         rgba(37, 99, 235, 0.06) 28%,
         rgba(37, 99, 235, 0) 62%
       ),
-      rgba(255, 255, 255, 0.8) !important;
+      rgba(255, 255, 255, 0.34) !important;
     -webkit-backdrop-filter: blur(18px) saturate(1.5);
     backdrop-filter: blur(18px) saturate(1.5);
   }
@@ -17539,7 +17558,12 @@ body,
   background-color: transparent !important;
 }
 
-.dashboard-shell.dashboard-workspace-shell.liquid-bg .dashboard-shell-content,
+/* `.dashboard-shell-content` was in this list while the scroll wash was being
+   made visible through the page. The wash is off and the page is now an opaque
+   panel framed by the chrome, so it has to be able to paint itself -- forcing
+   it transparent here left the tinted ground showing through the content area.
+   `.dashboard-theme` still needs clearing: it sits above the fixed layer in
+   paint order. */
 .dashboard-shell.dashboard-workspace-shell.liquid-bg .dashboard-theme {
   background-color: transparent !important;
 }
