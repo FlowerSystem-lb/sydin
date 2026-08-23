@@ -15941,36 +15941,53 @@ body,
     min-height: calc(100dvh - 4rem) !important;
   }
 
-  /* The rail: no edge of its own, translucent so the brand light passes
-     through it instead of stopping at a white wall. Its shadow is now drawn by
-     the page above, so it casts none itself. */
-  .dashboard-workspace-shell .dashboard-sidebar {
-    border-right: 0 !important;
-    background: rgba(255, 255, 255, 0.34) !important;
-    box-shadow: none !important;
-    -webkit-backdrop-filter: blur(18px) saturate(1.5);
-    backdrop-filter: blur(18px) saturate(1.5);
-  }
+  /* ONE PIECE OF COLOUR.
+     The rail and the header are two separate elements that must read as a
+     single surface. Two things were stopping that, and both are removed here:
 
-  /* The header IS the rail, turned through 90 degrees: identical fill and blur
-     so the two read as one continuous piece of chrome. The gradient carries the
-     logo light out across it, so the light looks like one source travelling
-     rather than two separate glows. No corner radius here any more -- the curve
-     belongs to the page below. */
+     1. Each ran its own `backdrop-filter`. A backdrop-filter blurs only the
+        area behind its own element, so two neighbours blur two regions
+        independently and the result never matches across the boundary -- that
+        is the line Sayed could see beside the logo.
+     2. The header carried an extra 90deg blue gradient the rail did not, so at
+        x = rail-width the colour stepped from "no overlay" to
+        rgba(37,99,235,0.16). A real seam, not an artefact.
+
+     Now both paint the SAME background, and every layer is
+     `background-attachment: fixed` -- anchored to the viewport rather than to
+     each element's own box. That means both elements sample the identical
+     gradient in the identical coordinate space, so the colour continues across
+     the join exactly. The bloom still radiates from the logo mark, which is
+     what makes it look like one lit surface rather than two tinted panels.
+
+     Opaque, because the page now scrolls underneath the header. */
+  .dashboard-workspace-shell .dashboard-sidebar,
   .dashboard-workspace-shell .dashboard-desktop-toolbar {
     border: 0 !important;
     border-radius: 0 !important;
+    box-shadow: none !important;
     background:
-      linear-gradient(
-        90deg,
-        rgba(37, 99, 235, 0.16),
-        rgba(37, 99, 235, 0.06) 28%,
-        rgba(37, 99, 235, 0) 62%
+      /* white veil, so the chrome sits lighter than the ground it stands on */
+      linear-gradient(rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.64)),
+      /* the logo's blue, close in */
+      radial-gradient(
+        460px 360px at 36px 40px,
+        rgba(37, 99, 235, 0.4),
+        rgba(37, 99, 235, 0) 76%
       ),
-      rgba(255, 255, 255, 0.34) !important;
-    -webkit-backdrop-filter: blur(18px) saturate(1.5);
-    backdrop-filter: blur(18px) saturate(1.5);
+      /* the logo gradient's cyan, thrown wider */
+      radial-gradient(
+        920px 540px at 6px 0px,
+        rgba(16, 196, 220, 0.24),
+        rgba(16, 196, 220, 0) 72%
+      ),
+      #e9eef7 !important;
+    background-attachment: fixed, fixed, fixed, fixed !important;
+    background-repeat: no-repeat !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
   }
+
 }
 
 @keyframes glass-orb-drift {
@@ -20128,4 +20145,81 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .item-detail .dashboard-action-button,
 .item-detail button {
   font-weight: 500;
+}
+
+/* ==========================================================================
+   THE CHROME HOLDS STILL (2026-08-24)
+   --------------------------------------------------------------------------
+   Founder note: "fix the curve with header, don't let it move when scroll."
+
+   The header was already sticky, but the page panel was not: the DOCUMENT
+   scrolled, so the panel's rounded top-left corner slid up and disappeared
+   under the header. The curve is the join between chrome and page -- it cannot
+   be part of the thing that moves.
+
+   So the scroll moves inward. The shell is exactly one viewport tall and does
+   not scroll; the canvas is a column holding the header at its natural height
+   and the page filling the rest; the page scrolls inside itself. The rail, the
+   header, the hairline and the curve are then all part of the frame, and only
+   the content travels.
+
+   Scoped to the width where the rail is a fixed column. Below that the rail is
+   a drawer, the document scrolls as before, and none of this applies.
+   ========================================================================== */
+@media (min-width: 900px) {
+  .dashboard-workspace-shell {
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    overflow: hidden !important;
+  }
+
+  .dashboard-workspace-shell .dashboard-main-canvas {
+    display: flex !important;
+    flex-direction: column !important;
+    height: 100dvh !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+  }
+
+  /* The header keeps its natural height and stops being sticky -- it no longer
+     needs to be, since nothing scrolls past it. */
+  .dashboard-workspace-shell .dashboard-desktop-toolbar {
+    position: relative !important;
+    top: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* The one thing that scrolls. `min-height: 0` is required or the flex item
+     refuses to shrink below its content and the overflow never engages. */
+  .dashboard-workspace-shell .dashboard-shell-content {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: auto !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    /* The curve belongs to the frame now, so it must not scroll with the
+       content inside it. */
+    background-attachment: local, scroll !important;
+  }
+
+  /* A scrollbar hard against the rounded corner looks like a mistake. */
+  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-thumb {
+    background: rgba(18, 38, 74, 0.18);
+    border: 3px solid transparent;
+    background-clip: content-box;
+    border-radius: 999px;
+  }
+
+  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(18, 38, 74, 0.3);
+    background-clip: content-box;
+  }
+
+  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-track {
+    background: transparent;
+  }
 }

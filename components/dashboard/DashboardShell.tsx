@@ -477,6 +477,12 @@ export default function DashboardShell({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  // The page area is its own scroll container from 900px up, so the chrome and
+  // the curved seam stay put while content moves. Next scrolls `window` on
+  // navigation, which is a no-op once the document itself no longer scrolls --
+  // without this, opening a new page would land halfway down the previous
+  // one's scroll position.
+  const shellContentRef = useRef<HTMLDivElement>(null);
   const accountMenuRef = useRef<HTMLDivElement>(null);
   const accountTriggerRef = useRef<HTMLButtonElement>(null);
   const addMenuRef = useRef<HTMLDivElement>(null);
@@ -484,6 +490,12 @@ export default function DashboardShell({
   const searchWrapRef = useRef<HTMLDivElement>(null);
   const notificationsMenuRef = useRef<HTMLDivElement>(null);
   const notificationsTriggerRef = useRef<HTMLButtonElement>(null);
+
+  // Reset the page area to the top whenever the route changes, standing in for
+  // the window scroll Next performs and the document can no longer do.
+  useEffect(() => {
+    shellContentRef.current?.scrollTo({ top: 0, left: 0 });
+  }, [pathname]);
 
   const lastSearchTriggerRef = useRef<HTMLButtonElement | null>(null);
   const desktopSearchTriggerRef = useRef<HTMLButtonElement>(null);
@@ -1343,7 +1355,9 @@ export default function DashboardShell({
           </div>
         </div>
 
-        <div className="dashboard-shell-content">{children}</div>
+        <div ref={shellContentRef} className="dashboard-shell-content">
+          {children}
+        </div>
       </div>
 
       <nav
