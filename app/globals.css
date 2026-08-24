@@ -20393,3 +20393,99 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     padding-block: var(--space-2);
   }
 }
+
+/* ==========================================================================
+   INVENTORY LAYOUT — header, stats and filters hold; only the items scroll
+   (2026-08-24)
+   --------------------------------------------------------------------------
+   REGRESSION THIS FIXES, AND ITS CAUSE
+
+   Making the page panel a fixed-height scroll container broke this page. The
+   inventory workspace is a flex column, so once it inherited a constrained
+   height every child became shrinkable (`flex: 0 1 auto`). `.inventory-hero-card`
+   also carries `overflow: hidden`, which removes a flex item's automatic
+   minimum size -- so it was free to shrink to nothing, and did: the page header
+   rendered 29px tall with the title, description and buttons clipped inside it.
+   Measured, not guessed.
+
+   THE FIX, WHICH IS ALSO WHAT WAS ASKED FOR
+
+   The four regions were already in the right order -- header, stats, filters,
+   items. They only needed to be told which of them is allowed to give up space.
+   Header, stats and filters keep their natural height and never move. The item
+   grid takes whatever is left and scrolls inside itself, so the scrollbar sits
+   beside the products rather than beside the whole page.
+   ========================================================================== */
+@media (min-width: 900px) {
+  .dashboard-shell .inventory-workspace {
+    height: 100% !important;
+    min-height: 0 !important;
+    overflow: hidden !important;
+    gap: var(--space-4) !important;
+  }
+
+  /* Nothing above the items may shrink. */
+  .dashboard-shell .inventory-workspace > * {
+    flex: 0 0 auto !important;
+  }
+
+  /* The one thing that scrolls. `min-height: 0` is load-bearing: without it a
+     flex item will not shrink below its content and the overflow never
+     engages. */
+  .dashboard-shell .inventory-workspace > .inventory-content-grid {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    padding-right: 2px;
+  }
+
+  /* The header can size to its own content again. */
+  .dashboard-shell .inventory-workspace > .inventory-hero-card {
+    overflow: visible !important;
+    height: auto !important;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   The stats row, matching Overview exactly.
+   Three figures that mean the same thing as Overview's four should not be
+   drawn a second way. Overview shows label, number, note -- no icon, no frame.
+   The icon tiles here were the busiest thing on the page and carried no
+   information the label did not already give.
+   -------------------------------------------------------------------------- */
+.dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-icon {
+  display: none !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  align-items: flex-start !important;
+}
+
+/* --------------------------------------------------------------------------
+   One column, one left edge.
+   Measured at 1152px: the four regions started at x = 93, 93, 73, 93. The
+   filter bar carried `margin: 0 -20px` to full-bleed against a page that used
+   to have a different background, so it hung 20px outside the column every
+   other row lines up on -- and because it was the one row still painting itself
+   white, the misalignment was the most visible thing on the page.
+
+   The panel is the surface now. None of these rows needs a fill of its own, and
+   none of them should escape the column.
+   -------------------------------------------------------------------------- */
+.dashboard-shell .inventory-workspace > .inventory-toolbar-panel {
+  margin-left: 0 !important;
+  margin-right: 0 !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+  background: transparent !important;
+}
+
+.dashboard-shell .inventory-workspace > .inventory-hero-card {
+  background: transparent !important;
+  padding-left: 0 !important;
+  padding-right: 0 !important;
+}
