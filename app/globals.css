@@ -20504,3 +20504,76 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   padding-left: 0 !important;
   padding-right: 0 !important;
 }
+
+/* ==========================================================================
+   ITEM CARD — a template with fixed slots (2026-08-24)
+   --------------------------------------------------------------------------
+   Measured across ten real items: cards came out 343px and 348px. The photo
+   area was already a consistent 169px, so the drift was in the body -- the meta
+   row measured 30px on some cards and 35px on others depending on whether the
+   item had a value to show. Five pixels is enough to break the bottom line of a
+   grid, and the brief is explicit that cards must align.
+
+   Chasing each content difference would only hold until the next optional field
+   is added. A card is a template: every slot keeps its height whether or not it
+   has something in it, and the actions sit on the bottom edge. Then alignment
+   is structural rather than a coincidence of this week's data.
+   ========================================================================== */
+.dashboard-shell .inventory-workspace .inventory-item-card {
+  height: 100%;
+}
+
+.dashboard-shell .inventory-workspace .inventory-card-body {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+/* Name plus code: two lines whether or not the item has a code. */
+.dashboard-shell .inventory-workspace .inventory-card-heading {
+  min-height: 38px;
+}
+
+/* Status pill, and the value when there is one. */
+.dashboard-shell .inventory-workspace .inventory-card-meta {
+  min-height: 26px;
+}
+
+/* Category / depot / supplier. Reserved even when empty, so a card with no
+   category is not shorter than its neighbour. */
+.dashboard-shell .inventory-workspace .inventory-card-facts {
+  min-height: 17px;
+}
+
+/* Actions always sit on the bottom edge, whatever is above them. */
+.dashboard-shell .inventory-workspace .inventory-card-footer {
+  margin-top: auto;
+}
+
+/* The overflow menu was drawn at full strength on every card at once -- ten
+   identical "..." marks competing with ten product photos. It stays in the DOM
+   and stays reachable; it just waits to be looked at.
+
+   Only on devices with a real pointer. On touch there is no hover, so hiding it
+   there would make it unreachable. */
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-shell .inventory-workspace .inventory-card-menu-button {
+    opacity: 0;
+    transition: opacity 140ms ease, background 140ms ease;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-item-card:hover
+    .inventory-card-menu-button,
+  .dashboard-shell .inventory-workspace .inventory-card-menu-button:focus-visible,
+  .dashboard-shell .inventory-workspace .inventory-card-menu-button[aria-expanded="true"] {
+    opacity: 1;
+  }
+}
+
+/* Every row the same height, not just every card within a row. Grid rows size
+   themselves independently, so row one came out 343px and row two 348px -- each
+   row internally perfect, the grid as a whole still slightly ragged. */
+.dashboard-shell .inventory-workspace .inventory-items-grid {
+  grid-auto-rows: 1fr;
+}
