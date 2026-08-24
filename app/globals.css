@@ -20810,3 +20810,85 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     background-image: none !important;
   }
 }
+
+/* ==========================================================================
+   INVENTORY HEADER — three rows become two (2026-08-24)
+   --------------------------------------------------------------------------
+   Founder note: merge them, make space, remove what is not needed, tidy it up.
+
+   Measured at 1440px: 208px of chrome sat above the first product -- title row,
+   search row, filter row. And the title block was 895px wide to hold the word
+   "Inventory", while the search sat on its own line underneath it. Most of that
+   space was empty, not used.
+
+   `display: contents` lets the hero and the toolbar hand their children
+   straight to the workspace grid, so the three rows can be laid out as two
+   without touching the markup or the mobile layout:
+
+     row 1   Inventory | search + filters, sort, view | Add Item  Scan  ...
+     row 2   filter chips ............................. showing 10 of 10
+
+   Widths measured before committing to it: 140 + ~700 + 416 = 1256 inside
+   1327px, so it fits at 1440.
+
+     It does NOT fit at 1024: checked, and the filter controls ran straight over
+     the title. An overflow test misses that -- nothing leaves the viewport, the
+     elements simply sit on top of each other -- so the threshold comes from the
+     measured content width, not from the shell breakpoint. Below 1280px the
+     header stacks as it did before.
+   ========================================================================== */
+@media (min-width: 1280px) {
+  .dashboard-shell .inventory-workspace {
+    display: grid !important;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--space-4);
+    row-gap: var(--space-3);
+  }
+
+  /* Hand the children up to the grid above. These wrappers carry no fill or
+     border of their own any more, so nothing is lost with their boxes. */
+  .dashboard-shell .inventory-workspace > .inventory-hero-card,
+  .dashboard-shell .inventory-workspace > .inventory-hero-card > .inventory-hero-top,
+  .dashboard-shell .inventory-workspace > .inventory-toolbar-panel,
+  .dashboard-shell .inventory-workspace > .inventory-toolbar-panel > .inventory-toolbar-stack {
+    display: contents !important;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-hero-title-block {
+    grid-column: 1;
+    grid-row: 1;
+    width: auto;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-main {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-page-actions {
+    grid-column: 3;
+    grid-row: 1;
+    justify-content: flex-end;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-secondary {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-content-grid {
+    grid-column: 1 / -1;
+    grid-row: 3;
+    align-self: stretch;
+  }
+
+  /* The description and the badges go. "Manage 10 items, stock levels and
+     locations from one clean workspace" never changes and tells you nothing you
+     cannot see; "10 visible" is already printed as "Showing 10 of 10 items" one
+     row below; and the plan is in the account menu top right. */
+  .dashboard-shell .inventory-workspace .inventory-hero-description,
+  .dashboard-shell .inventory-workspace .inventory-hero-badges {
+    display: none !important;
+  }
+}
