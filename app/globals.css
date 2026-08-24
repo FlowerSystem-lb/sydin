@@ -21030,3 +21030,94 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   STATUS COLOUR RESTORED (2026-08-25)
+   --------------------------------------------------------------------------
+   Regression I caused. The tone colours are keyed on
+   `.inventory-card-tag.inventory-card-status--*`, needing BOTH classes -- and
+   rebuilding the card removed `.inventory-card-tag`, since the four other pills
+   it styled had become plain text. The tone rules stopped matching, so every
+   pill fell back to neutral ink on a neutral fill and "Low Stock" and "In
+   Stock" rendered identically. Measured: colour rgb(11,18,32) on rgb(244,247,251)
+   for both.
+
+   Stock status is the one thing on the card that is genuinely a state, and its
+   colour is the information -- losing it is worse than any of the tidying that
+   removed it. Keyed on the tone class alone now, so it does not depend on a
+   second class that may be removed again.
+
+   `--success` also gets a real green. It was previously cyan text on a neutral
+   fill, which read as another shade of the interface rather than as "this is
+   fine" beside amber and red.
+   ========================================================================== */
+.dashboard-shell .inventory-workspace .inventory-card-status--danger,
+.dashboard-shell .inventory-workspace .inventory-list-row .inventory-card-status--danger {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-card-status--warning {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-card-status--success {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+}
+
+/* Selected cards keep their status readable against the blue wash. */
+.dashboard-shell .inventory-workspace .inventory-item-card-selected .inventory-card-status {
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.9);
+}
+
+/* ==========================================================================
+   INVENTORY: THE FIGURES FILL THE ROW, AND THE SIDE RAIL GOES (2026-08-25)
+   --------------------------------------------------------------------------
+   1. THE FIGURES
+
+   Measured: the row was 1327px wide with columns of 232px 232px 232px -- 696px
+   used and 631px of nothing to the right of it. Three fixed columns in a
+   full-width row. They share the row now, which also lines them up with the
+   Overview figures they are meant to match.
+
+   2. THE SIDE RAIL
+
+   It carried four panels: Low Stock Alerts, Stock by Location, Stock by
+   Category, Stock Health -- 288px, 22% of the working width, permanently.
+
+   Low Stock Alerts and Stock Health are Overview's job and Overview already
+   does both: "Needs attention" lists exactly the same low-stock items, and the
+   in/low/out bar above it is the same stock health. Printing them again here is
+   the duplication this redesign has been removing everywhere else.
+
+   Stock by Location and Stock by Category are NOT on Overview, so they are real
+   information -- but they belong on the screen you go to for a summary, not on
+   the one you go to to find a product. Inventory is for finding and changing
+   things; it should spend its width on the products. They move to Overview
+   rather than simply disappearing.
+   ========================================================================== */
+@media (min-width: 1280px) {
+  .dashboard-shell .inventory-workspace .inventory-stat-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+.dashboard-shell .inventory-workspace .inventory-insights-rail {
+  display: none !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-content-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+}
+
+/* The products scroll inside their own region, so at rest the first row sat
+   flush against the region's top edge -- and a selected card's blue ring, which
+   is drawn 1px outside the card, read as touching the filter row above it. More
+   noticeable at browser zoom, where that 1px becomes several. A little room at
+   the top and the boundary belongs to neither. */
+.dashboard-shell .inventory-workspace .inventory-content-grid {
+  padding-top: 3px;
+  scroll-padding-top: 3px;
+}
