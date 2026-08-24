@@ -153,12 +153,12 @@ export default function PublicItemPage() {
     Boolean(publicWebsite);
 
   return (
-    <main className="min-h-screen overflow-x-hidden bg-slate-50 px-4 py-5 text-slate-900 sm:px-6 sm:py-8">
+    <main className="min-h-screen overflow-x-hidden bg-[var(--surface-page,#f4f7fb)] px-4 py-5 text-slate-900 sm:px-6 sm:py-8">
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-5">
-        <header className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
+        <header className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-3">
-              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white text-lg font-black">
+              <div className="relative flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white text-lg font-semibold">
                 {businessLogoUrl ? (
                   <Image
                     src={businessLogoUrl}
@@ -173,17 +173,17 @@ export default function PublicItemPage() {
               </div>
 
               <div>
-                <p className="break-words text-2xl font-bold tracking-tight">
+                <p className="break-words text-[20px] font-semibold tracking-tight">
                   {businessName}
                 </p>
 
-                <p className="text-sm text-slate-600">
+                <p className="text-[13px] text-slate-500">
                   Public inventory item
                 </p>
               </div>
             </div>
 
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-slate-600">
+            <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-slate-500">
               Powered by SydIN
             </p>
           </div>
@@ -191,29 +191,29 @@ export default function PublicItemPage() {
 
         {loading && (
           <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-            <div className="min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
+            <div className="min-h-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div className="h-full animate-pulse bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100" />
             </div>
 
-            <div className="min-h-[360px] overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_4px_16px_rgba(15,23,42,0.06)]">
+            <div className="min-h-[280px] overflow-hidden rounded-2xl border border-slate-200 bg-white">
               <div className="h-full animate-pulse bg-gradient-to-r from-slate-100 via-slate-200 to-slate-100" />
             </div>
           </section>
         )}
 
         {!loading && (error || !item) && (
-          <section className="rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-xl">
-            <h1 className="text-3xl font-bold">
+          <section className="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+            <h1 className="text-[28px] font-semibold">
               Item not found
             </h1>
 
-            <p className="mx-auto mt-3 max-w-md text-slate-600">
+            <p className="mx-auto mt-2 max-w-md text-[14px] text-slate-600">
               {error || "This public item is unavailable."}
             </p>
 
             <Link
               href="/"
-              className="mt-6 inline-flex rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.35)] transition hover:brightness-110"
+              className="mt-6 inline-flex rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-[14px] font-medium text-white shadow-[0_12px_28px_rgba(37,99,235,0.35)] transition hover:brightness-110"
             >
               Go to SydIN
             </Link>
@@ -222,94 +222,98 @@ export default function PublicItemPage() {
 
         {!loading && item && (
           <>
-            <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
-              <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-5">
-                <div className="flex min-h-[320px] items-center justify-center rounded-2xl border border-slate-200 bg-white p-5 sm:min-h-[440px]">
-                  {item.image ? (
-                    <div className="relative h-[280px] w-full sm:h-[400px]">
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        priority
-                        sizes="(min-width: 1024px) 50vw, 100vw"
-                        className="object-contain"
-                      />
-                    </div>
-                  ) : (
-                    <div className="flex min-h-[280px] w-full flex-col items-center justify-center rounded-3xl border border-slate-300/35 bg-white/35 text-center text-slate-600">
-                      <span className="text-sm font-black uppercase tracking-[0.18em]">
-                        Image
-                      </span>
+            {/* This is the page a customer sees after scanning a QR code in a
+                shop, so it gets the same rules as the workspace: labels are
+                12px uppercase, facts are 14px, only the product name is large,
+                and nothing is bold past 600.
 
-                      <span className="mt-2 text-base font-semibold">
-                        Not added yet
-                      </span>
-                    </div>
-                  )}
-                </div>
+                What changed and why:
+                - The photo area was a card holding a bordered box holding a
+                  dashed box: three nested frames, and with no photo it reserved
+                  ~440px to say "not added yet". A missing photo is a small
+                  fact, so it now takes one line.
+                - SKU, category, quantity and created were four filled boxes.
+                  They are plain facts, not states, so they are separated by
+                  hairlines instead of boxed individually.
+                - Every section carried a shadow AND a backdrop-blur behind an
+                  opaque white fill, which blurs nothing and costs paint time on
+                  the phone this page is opened on. */}
+            <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
+              <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+                {item.image ? (
+                  <div className="relative h-[320px] w-full sm:h-[440px]">
+                    <Image
+                      src={item.image}
+                      alt={item.name}
+                      fill
+                      priority
+                      sizes="(min-width: 1024px) 50vw, 100vw"
+                      className="object-contain p-4"
+                    />
+                  </div>
+                ) : (
+                  /* Sized to its content, not to a fixed height. On a phone -- 
+                     which is how this page is reached, by scanning a code in a 
+                     shop -- a fixed 180px block of nothing pushed the product 
+                     name below the fold. */
+                  <div className="flex w-full flex-col items-center justify-center gap-2 py-10 text-slate-400">
+                    <svg
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.5"
+                      aria-hidden="true"
+                      className="h-7 w-7"
+                    >
+                      <rect x="3" y="4" width="18" height="16" rx="2" />
+                      <circle cx="8.5" cy="9.5" r="1.5" />
+                      <path d="m4 17 4.5-4.5 3 3L15 12l5 5" />
+                    </svg>
+                    <span className="text-[13px]">No photo for this item</span>
+                  </div>
+                )}
               </div>
 
-              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
-                <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
-                    Product
-                  </p>
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-7">
+                <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-slate-500">
+                  Product
+                </p>
 
-                  <h1 className="mt-2 break-words text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
-                    {item.name}
-                  </h1>
-                </div>
+                <h1 className="mt-1 break-words text-[28px] font-semibold leading-tight tracking-tight text-slate-900">
+                  {item.name}
+                </h1>
 
-                <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-600">
-                      SKU
-                    </p>
-
-                    <p className="mt-2 break-words text-lg font-bold">
-                      {item.sku || "N/A"}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-600">
-                      Category
-                    </p>
-
-                    <p className="mt-2 break-words text-lg font-bold">
-                      {item.category}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-600">
-                      Quantity
-                    </p>
-
-                    <p className="mt-2 text-3xl font-black text-slate-900">
-                      {item.quantity}
-                    </p>
-                  </div>
-
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-600">
-                      Created
-                    </p>
-
-                    <p className="mt-2 text-lg font-bold">
-                      {formatCreatedDate(item.created_at)}
-                    </p>
-                  </div>
-                </div>
+                <dl className="mt-6 divide-y divide-slate-200 border-y border-slate-200">
+                  {[
+                    { label: "Quantity", value: String(item.quantity) },
+                    { label: "SKU", value: item.sku || "Not set" },
+                    { label: "Category", value: item.category },
+                    {
+                      label: "Added",
+                      value: formatCreatedDate(item.created_at),
+                    },
+                  ].map((row) => (
+                    <div
+                      key={row.label}
+                      className="flex items-baseline justify-between gap-4 py-3"
+                    >
+                      <dt className="text-[12px] font-medium uppercase tracking-[0.08em] text-slate-500">
+                        {row.label}
+                      </dt>
+                      <dd className="min-w-0 break-words text-right text-[14px] font-medium text-slate-900">
+                        {row.value}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
 
                 {hasContact && (
-                  <div className="mt-5 rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-500">
+                  <div className="mt-6">
+                    <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-slate-500">
                       Business contact
                     </p>
 
-                    <div className="mt-3 flex flex-col gap-2 text-sm font-semibold text-slate-700">
+                    <div className="mt-2 flex flex-col gap-1.5 text-[14px] text-slate-700">
                       {item.contact_email && (
                         <a
                           href={`mailto:${item.contact_email}`}
@@ -344,13 +348,13 @@ export default function PublicItemPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 text-center shadow-[0_4px_16px_rgba(15,23,42,0.06)] backdrop-blur-2xl sm:p-7">
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-slate-500">
+            <section className="rounded-2xl border border-slate-200 bg-white p-5 text-center sm:p-7">
+              <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-slate-500">
                 Item QR Code
               </p>
 
               <div className="mt-5 flex flex-col items-center">
-                <div className="rounded-3xl bg-white p-4 shadow-[0_2px_10px_rgba(15,23,42,0.08)]">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4">
                   {publicUrl ? (
                     <QRCode
                       value={publicUrl}
@@ -366,7 +370,7 @@ export default function PublicItemPage() {
                   )}
                 </div>
 
-                <p className="mt-5 text-slate-600">
+                <p className="mt-4 text-[14px] text-slate-600">
                   Scan to open this public item page.
                 </p>
 
