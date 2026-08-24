@@ -314,12 +314,18 @@ function NavigationLink({
   const active = isDashboardRouteActive(pathname, item.href);
 
   // Only the icon-only rail needs the chip; the drawer renders real labels.
+  //
+  // And not for the page you are already on. The chip is positioned beside the
+  // icon it belongs to, which puts it directly over the page heading -- so
+  // hovering the Inventory icon while on Inventory covered the word "Inventory"
+  // with a tooltip reading "Inventory". Every other icon keeps its chip,
+  // because the rail is icon-only and you do need to know what they are.
   const reveal = (
     event:
       | React.MouseEvent<HTMLAnchorElement>
       | React.FocusEvent<HTMLAnchorElement>
   ) => {
-    if (!compact) return;
+    if (!compact || active) return;
     showRailChip(event.currentTarget, item.label);
   };
 
