@@ -20892,3 +20892,49 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     display: none !important;
   }
 }
+
+/* --------------------------------------------------------------------------
+   The Stats row has to have a place in the grid.
+   Bug from the merge above: `.inventory-stat-grid` only exists when Stats is
+   switched on, and it had no placement -- so with Stats open it auto-flowed
+   into the first free cell, which was the row AFTER the products. Measured: it
+   landed at y=794, below the whole grid, 696px wide instead of full width, and
+   the header controls were crushed into what space was left.
+
+   Both arrangements are now stated explicitly rather than left to auto-flow,
+   keyed off the class the page already sets when the summary is hidden.
+   -------------------------------------------------------------------------- */
+@media (min-width: 1280px) {
+  .dashboard-shell .inventory-workspace > .inventory-stat-grid {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  /* Stats visible: figures, then chips, then products. */
+  .dashboard-shell .inventory-workspace .inventory-toolbar-secondary {
+    grid-row: 3;
+  }
+
+  .dashboard-shell .inventory-workspace > .inventory-content-grid {
+    grid-row: 4;
+  }
+
+  /* Stats hidden: nothing occupies row 2, so everything moves up one. */
+  .dashboard-shell .inventory-workspace-summary-hidden .inventory-toolbar-secondary {
+    grid-row: 2;
+  }
+
+  .dashboard-shell .inventory-workspace-summary-hidden > .inventory-content-grid {
+    grid-row: 3;
+  }
+
+  /* The search was taking the whole middle column, which both left it far wider
+     than any search anyone types into and squeezed the controls beside it. */
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search {
+    max-width: 320px;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-main {
+    justify-content: flex-start;
+  }
+}
