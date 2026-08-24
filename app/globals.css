@@ -20783,3 +20783,30 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     height: 100% !important;
   }
 }
+
+/* ==========================================================================
+   THE PAGE IS WHITE (2026-08-24)
+   --------------------------------------------------------------------------
+   Founder note: "remove the grey color".
+
+   The page had lost its white fill entirely -- measured, `.dashboard-shell-content`
+   computed to `background: transparent` with no image, so the chrome colour
+   behind it (#e6ecf5) showed through the whole content area. That is the grey.
+
+   The rule that was meant to paint it white is declared at (0,2,0) with
+   !important and still lost. Rather than keep guessing at the cascade, this
+   uses the selector shape already proven to win on this element -- the same
+   (0,3,0) form as the scroll rule above, whose `background-attachment: local`
+   does show up in the computed style.
+
+   The faint blue bloom inside the page is gone with it. It was there to tie the
+   page to the shell, but at 5% over white it reads as a grey cast rather than
+   as light, which is exactly what was being reported. The light belongs on the
+   chrome, where there is something for it to sit on; the page is paper.
+   ========================================================================== */
+@media (min-width: 900px) {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content {
+    background-color: #ffffff !important;
+    background-image: none !important;
+  }
+}
