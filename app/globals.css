@@ -21215,3 +21215,51 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transition: none;
   }
 }
+
+/* Collapsed search: a circle, and on the right of its row.
+   A 42px control with a soft-square corner reads as a squashed input; a circle
+   reads as a button, which is what it is while collapsed. It also moves to the
+   end of the row so the controls you can see and read -- Filters, Stats, sort,
+   view -- lead, and the one that has to be opened sits last, next to the
+   actions. It returns to the panel radius as it expands, because at 320px it is
+   an input again. */
+@media (min-width: 1280px) {
+  .dashboard-shell .inventory-workspace .inventory-toolbar-main {
+    display: flex !important;
+    align-items: center;
+    gap: var(--space-2);
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-actions {
+    order: 1;
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search {
+    order: 2;
+    transition:
+      width 180ms ease,
+      min-width 180ms ease,
+      border-radius 180ms ease;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search,
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search > .relative,
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search .inventory-search-input {
+    border-radius: var(--radius-pill) !important;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search .inventory-search-input {
+    height: 42px;
+  }
+
+  /* Centre the magnifier while it is a circle; move it back to the leading edge
+     once there is a field to lead. */
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:not(:focus-within):not(:has(input:not(:placeholder-shown)))
+    svg {
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+  }
+}

@@ -1,8 +1,15 @@
 import type { UiIconName } from "@/components/UiIcon";
 
+/* Sections follow the working day, not the database.
+   "Operations" previously held six unrelated screens -- ordering from a
+   supplier sat beside printing QR labels -- while Suppliers lived three
+   sections away from Purchase Orders, which is the screen you are on when you
+   need it. Split into the two things that actually happen: buying stock, and
+   moving it. */
 export type DashboardNavigationSection =
   | "workspace"
-  | "operations"
+  | "buying"
+  | "stock"
   | "organize"
   | "insights"
   | "system";
@@ -21,15 +28,20 @@ export const DASHBOARD_SECTION_LABELS: Record<
   string
 > = {
   workspace: "Workspace",
-  operations: "Operations",
-  organize: "Organize",
+  buying: "Buying",
+  stock: "Stock",
+  organize: "Set up",
   insights: "Insights",
   system: "System",
 };
 
+/* Ordered by how often a working day touches them. Set up sits below the daily
+   work, not above it: you create your categories and depots once and edit them
+   rarely, so they do not earn a place near the top. */
 export const DASHBOARD_SECTION_ORDER: DashboardNavigationSection[] = [
   "workspace",
-  "operations",
+  "buying",
+  "stock",
   "organize",
   "insights",
   "system",
@@ -64,14 +76,21 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     shortLabel: "Orders",
     href: "/dashboard/purchase-orders",
     icon: "file",
-    section: "operations",
+    section: "buying",
     mobilePlacement: "primary",
   },
   {
     label: "Receiving",
     href: "/dashboard/receiving",
     icon: "download",
-    section: "operations",
+    section: "buying",
+    mobilePlacement: "more",
+  },
+  {
+    label: "Suppliers",
+    href: "/dashboard/suppliers",
+    icon: "suppliers",
+    section: "buying",
     mobilePlacement: "more",
   },
   {
@@ -79,7 +98,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     shortLabel: "Movements",
     href: "/dashboard/stock-movements",
     icon: "movement",
-    section: "operations",
+    section: "stock",
     mobilePlacement: "more",
   },
   {
@@ -87,7 +106,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     shortLabel: "Counts",
     href: "/dashboard/stock-counts",
     icon: "layers",
-    section: "operations",
+    section: "stock",
     mobilePlacement: "more",
   },
   {
@@ -95,21 +114,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     shortLabel: "Picking",
     href: "/dashboard/pick-lists",
     icon: "picklists",
-    section: "operations",
-    mobilePlacement: "more",
-  },
-  {
-    label: "QR Center",
-    href: "/dashboard/qr-center",
-    icon: "qr",
-    section: "operations",
-    mobilePlacement: "more",
-  },
-  {
-    label: "Depots",
-    href: "/dashboard/depots",
-    icon: "depots",
-    section: "organize",
+    section: "stock",
     mobilePlacement: "more",
   },
   {
@@ -120,10 +125,24 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
-    label: "Suppliers",
-    href: "/dashboard/suppliers",
-    icon: "suppliers",
+    label: "Depots",
+    href: "/dashboard/depots",
+    icon: "depots",
     section: "organize",
+    mobilePlacement: "more",
+  },
+  {
+    label: "QR Center",
+    href: "/dashboard/qr-center",
+    icon: "qr",
+    section: "organize",
+    mobilePlacement: "more",
+  },
+  {
+    label: "Alerts",
+    href: "/dashboard/alerts",
+    icon: "alert",
+    section: "insights",
     mobilePlacement: "more",
   },
   {
@@ -132,13 +151,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     icon: "clock",
     section: "insights",
     mobilePlacement: "primary",
-  },
-  {
-    label: "Alerts",
-    href: "/dashboard/alerts",
-    icon: "alert",
-    section: "insights",
-    mobilePlacement: "more",
   },
   {
     label: "Reports",
@@ -169,6 +181,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     section: "system",
     mobilePlacement: "more",
   },
+
 ];
 
 export function isDashboardRouteActive(pathname: string, href: string) {
