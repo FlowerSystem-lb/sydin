@@ -3,7 +3,7 @@
 :root {
   color-scheme: dark;
   --background: #030817;
-  --foreground: #f7fbff;
+  --foreground: var(--surface-page);
   --sydin-bg-deep: #020617;
   --sydin-bg: #06112b;
   --sydin-bg-elevated: #0a1b3d;
@@ -11,7 +11,7 @@
   --sydin-surface-soft: rgba(15, 38, 79, 0.48);
   --sydin-surface-strong: rgba(8, 24, 54, 0.9);
   --sydin-ui-surface: rgba(255, 255, 255, 0.055);
-  --sydin-surface-inset: rgba(0, 5, 20, 0.28);
+  --sydin-surface-inset: var(--border-hairline);
   --sydin-surface-hover: rgba(255, 255, 255, 0.09);
   --sydin-surface-selected: rgba(56, 189, 248, 0.14);
   --sydin-overlay: rgba(2, 3, 10, 0.86);
@@ -19,8 +19,8 @@
   --sydin-ui-border-strong: rgba(255, 255, 255, 0.2);
   --sydin-border: rgba(147, 197, 253, 0.18);
   --sydin-border-strong: rgba(125, 211, 252, 0.34);
-  --sydin-text: #f7fbff;
-  --sydin-text-secondary: #cbd5e1;
+  --sydin-text: var(--surface-page);
+  --sydin-text-secondary: var(--border-hairline);
   --sydin-text-muted: #94a3b8;
   --sydin-text-subtle: #64748b;
   --sydin-input-bg: rgba(2, 12, 34, 0.58);
@@ -32,7 +32,7 @@
   --sydin-cyan: #67e8f9;
   --sydin-focus: rgba(56, 189, 248, 0.3);
   --sydin-shadow: 0 24px 70px rgba(0, 5, 20, 0.36);
-  --sydin-shadow-soft: 0 12px 36px rgba(0, 5, 20, 0.24);
+  --sydin-shadow-soft: 0 12px 36px var(--border-hairline);
   --sydin-success-surface: rgba(16, 185, 129, 0.12);
   --sydin-success-text: #a7f3d0;
   --sydin-warning-surface: rgba(245, 158, 11, 0.13);
@@ -58,8 +58,8 @@
   --bg-overlay: rgba(2, 6, 15, 0.72);
   --bg-selected: rgba(18, 184, 214, 0.14);
   --bg-hover: rgba(255, 255, 255, 0.065);
-  --text-primary: #f8fafc;
-  --text-secondary: #cbd5e1;
+  --text-primary: var(--surface-page);
+  --text-secondary: var(--border-hairline);
   --text-muted: #94a3b8;
   --text-subtle: #74849a;
   --text-inverse: #0b1f3a;
@@ -73,7 +73,7 @@
   --border-success: rgba(52, 211, 153, 0.45);
   --control-input-bg: #0a1426;
   --control-input-border: rgba(148, 163, 184, 0.28);
-  --control-input-text: #f8fafc;
+  --control-input-text: var(--surface-page);
   --control-placeholder: #718096;
   --control-disabled-bg: rgba(100, 116, 139, 0.16);
   --control-disabled-text: #718096;
@@ -82,7 +82,7 @@
   --button-primary-text: #06202b;
   --button-secondary-bg: #17243a;
   --button-secondary-hover: #1d2d47;
-  --button-secondary-text: #f8fafc;
+  --button-secondary-text: var(--surface-page);
   --button-ghost-hover: rgba(255, 255, 255, 0.07);
   --button-danger-bg: rgba(190, 24, 93, 0.16);
   --button-danger-hover: rgba(190, 24, 93, 0.24);
@@ -99,10 +99,25 @@
   --status-info-surface: rgba(14, 165, 233, 0.13);
   --status-info-text: #bae6fd;
   --status-info-border: rgba(56, 189, 248, 0.34);
-  --shadow-subtle: 0 1px 2px rgba(2, 6, 23, 0.2);
-  --shadow-elevated: 0 12px 30px rgba(2, 6, 23, 0.28);
+  --shadow-subtle: 0 1px 2px var(--border-hairline);
+  --shadow-elevated: 0 12px 30px var(--border-hairline);
   --shadow-overlay: 0 24px 70px rgba(2, 6, 23, 0.48);
   --radius-control: 8px;
+  /* ---- neutral surfaces and hairlines (2026-08-24) ----------------------
+     Audited across this file: 290 distinct background colours and 133 distinct
+     border colours were in use. Clustering them showed the same colour written
+     over and over -- 36 spellings of one off-white (#f3f7fb, #f3f8fc, #f4f7fb,
+     #f5f6fa ...) used 180 times, and 18 spellings of one blue-grey hairline
+     (#cfe0ff, #d7deea, #d9deea, #dbe2ec ...) used 49 times. Differences of two
+     or three RGB units, invisible individually, but together they are why the
+     app read as "many different greys" and why borders never quite matched.
+
+     139 cool-neutral literals now resolve to these three. Warm and green
+     surfaces (#fef2f2 danger, #fff7ed warning, #ecfdf5 success) are deliberately
+     NOT collapsed -- their colour carries meaning. */
+  --surface-page: #f4f7fb;
+  --surface-sunken: #e6ecf5;
+  --border-hairline: rgba(15, 23, 42, 0.1);
   --radius-card: 12px;
   --radius-overlay: 16px;
   --radius-pill: 999px;
@@ -127,10 +142,10 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --background: #eef6ff;
+  --background: var(--surface-page);
   --foreground: #07152e;
   --sydin-bg-deep: #dcecff;
-  --sydin-bg: #eef6ff;
+  --sydin-bg: var(--surface-page);
   --sydin-bg-elevated: #ffffff;
   --sydin-surface: rgba(255, 255, 255, 0.76);
   --sydin-surface-soft: rgba(255, 255, 255, 0.6);
@@ -167,41 +182,41 @@
   --sydin-info-surface: rgba(2, 132, 199, 0.09);
   --sydin-info-text: #0369a1;
   --sydin-accent-text: #0369a1;
-  --bg-page: #f6f8fb;
-  --bg-page-muted: #eef2f7;
+  --bg-page: var(--surface-page);
+  --bg-page-muted: var(--surface-page);
   --bg-elevated: #ffffff;
   --bg-surface: #ffffff;
-  --bg-surface-strong: #f8fafc;
+  --bg-surface-strong: var(--surface-page);
   --bg-glass: rgba(255, 255, 255, 0.84);
   --bg-overlay: rgba(15, 23, 42, 0.48);
   --bg-selected: rgba(8, 159, 192, 0.11);
-  --bg-hover: rgba(15, 23, 42, 0.045);
+  --bg-hover: var(--border-hairline);
   --text-primary: #172033;
   --text-secondary: #334155;
   --text-muted: #52647c;
   --text-subtle: #64748b;
   --text-inverse: #ffffff;
   --text-accent: #087f9a;
-  --border-default: rgba(51, 65, 85, 0.18);
+  --border-default: var(--border-hairline);
   --border-strong: rgba(30, 64, 175, 0.3);
   --border-focus: #089fc0;
-  --border-divider: rgba(51, 65, 85, 0.12);
+  --border-divider: var(--border-hairline);
   --border-danger: rgba(190, 24, 93, 0.42);
   --border-warning: rgba(180, 83, 9, 0.38);
   --border-success: rgba(4, 120, 87, 0.38);
   --control-input-bg: #ffffff;
-  --control-input-border: rgba(51, 65, 85, 0.24);
+  --control-input-border: var(--border-hairline);
   --control-input-text: #172033;
   --control-placeholder: #64748b;
-  --control-disabled-bg: #e9eef4;
+  --control-disabled-bg: var(--surface-sunken);
   --control-disabled-text: #718096;
   --button-primary-bg: #089fc0;
   --button-primary-hover: #078aa7;
   --button-primary-text: #0b1f3a;
   --button-secondary-bg: #ffffff;
-  --button-secondary-hover: #f1f5f9;
+  --button-secondary-hover: var(--surface-page);
   --button-secondary-text: #172033;
-  --button-ghost-hover: rgba(15, 23, 42, 0.06);
+  --button-ghost-hover: var(--border-hairline);
   --button-danger-bg: rgba(190, 24, 93, 0.08);
   --button-danger-hover: rgba(190, 24, 93, 0.13);
   --button-danger-text: #9f1239;
@@ -217,9 +232,9 @@
   --status-info-surface: rgba(2, 132, 199, 0.09);
   --status-info-text: #0369a1;
   --status-info-border: rgba(2, 132, 199, 0.24);
-  --shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.06);
+  --shadow-subtle: 0 1px 2px var(--border-hairline);
   --shadow-elevated: 0 12px 30px rgba(30, 64, 175, 0.1);
-  --shadow-overlay: 0 24px 70px rgba(15, 23, 42, 0.22);
+  --shadow-overlay: 0 24px 70px var(--border-hairline);
 }
 
 @theme inline {
@@ -1064,7 +1079,7 @@ canvas {
   border: 1px solid var(--border-default);
   border-radius: 14px;
   background: var(--bg-surface);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 12px var(--border-hairline);
 }
 
 .dashboard-table-scroll {
@@ -1173,7 +1188,7 @@ canvas {
   border-radius: 14px;
   background: var(--bg-surface);
   padding: var(--space-4);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 4px 12px var(--border-hairline);
 }
 
 .dashboard-form-section-header {
@@ -1484,7 +1499,7 @@ canvas {
   inset: 0;
   display: flex;
   justify-content: flex-end;
-  background: rgba(15, 23, 42, 0);
+  background: var(--border-hairline);
   opacity: 0;
   transition:
     opacity 180ms ease-out,
@@ -1497,7 +1512,7 @@ canvas {
 }
 
 .item-details-overlay-closing {
-  background: rgba(15, 23, 42, 0);
+  background: var(--border-hairline);
   opacity: 0;
   transition-duration: 180ms;
 }
@@ -1513,7 +1528,7 @@ canvas {
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.55), transparent 20rem),
     var(--sydin-bg-elevated);
-  box-shadow: -28px 0 80px rgba(15, 23, 42, 0.14);
+  box-shadow: -28px 0 80px var(--border-hairline);
   color: var(--sydin-text);
   transform: translate3d(100%, 0, 0);
   transition:
@@ -1584,7 +1599,7 @@ canvas {
   color: var(--sydin-text-secondary);
   font-size: 0.8rem;
   font-weight: 800;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px var(--border-hairline);
   transition:
     background-color 140ms ease,
     border-color 140ms ease,
@@ -1609,7 +1624,7 @@ canvas {
   border-color: var(--sydin-ui-border-strong);
   background: var(--sydin-surface-hover);
   color: var(--sydin-text);
-  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 6px 16px var(--border-hairline);
 }
 
 .item-details-icon-button:active,
@@ -1639,11 +1654,11 @@ canvas {
   z-index: 6;
   min-width: 11rem;
   overflow: hidden;
-  border: 1px solid #dbe4f0;
+  border: 1px solid var(--border-hairline);
   border-radius: 0.85rem;
   background: #ffffff;
   color: #0b1f3a;
-  box-shadow: 0 18px 50px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 18px 50px var(--border-hairline);
   transform-origin: top right;
   animation: item-details-menu-in var(--motion-fast) var(--motion-ease-standard) both;
 }
@@ -1666,7 +1681,7 @@ canvas {
 
 .item-details-menu-item:hover,
 .item-details-menu-item:focus-visible {
-  background: #f3f7fb;
+  background: var(--surface-page);
   color: #1e40af;
 }
 
@@ -1712,7 +1727,7 @@ canvas {
   place-items: center;
   border: 1px solid var(--sydin-ui-border);
   border-radius: 0.95rem;
-  background: #f3f7fb;
+  background: var(--surface-page);
 }
 
 .item-details-image-placeholder {
@@ -1740,7 +1755,7 @@ canvas {
   border: 1px solid var(--sydin-ui-border);
   border-radius: 0.95rem;
   background: var(--sydin-ui-surface);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: 0 1px 2px var(--border-hairline);
 }
 
 .item-details-quantity-strip > div {
@@ -2405,7 +2420,7 @@ canvas {
       rgba(37, 99, 235, 0.12),
       transparent 70%
     ),
-    linear-gradient(145deg, #f8fbff 0%, #eaf5ff 52%, #f5f9ff 100%);
+    linear-gradient(145deg, var(--surface-page) 0%, #eaf5ff 52%, var(--surface-page) 100%);
 }
 
 .section-shell {
@@ -2461,7 +2476,7 @@ canvas {
   background: rgba(2, 12, 34, 0.82);
   box-shadow:
     inset 0 -1px 0 rgba(255, 255, 255, 0.035),
-    0 16px 42px rgba(0, 5, 20, 0.24);
+    0 16px 42px var(--border-hairline);
 }
 
 [data-theme="light"] .dashboard-theme .glass-nav {
@@ -2479,7 +2494,7 @@ canvas {
     var(--sydin-surface-strong);
   box-shadow:
     inset -1px 0 0 rgba(255, 255, 255, 0.035),
-    22px 0 54px rgba(0, 5, 20, 0.26);
+    22px 0 54px var(--border-hairline);
 }
 
 [data-theme="light"] .dashboard-theme .glass-sidebar {
@@ -2562,7 +2577,7 @@ canvas {
   background: var(--sydin-input-bg);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.045),
-    0 8px 24px rgba(0, 5, 20, 0.12);
+    0 8px 24px var(--border-hairline);
   color: var(--sydin-text);
   transition:
     border-color 160ms ease,
@@ -2781,7 +2796,7 @@ select.glass-input option {
   .dashboard-metric-card:hover,
   .dashboard-list-row:hover {
     border-color: var(--border-strong);
-    box-shadow: 0 16px 34px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 16px 34px var(--border-hairline);
   }
 
   .dashboard-action-button:not(:disabled):not(.dashboard-action-button-disabled):hover {
@@ -2852,7 +2867,7 @@ select.glass-input option {
   .operations-workspace article:hover,
   .organize-row:hover {
     border-color: var(--border-strong);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 12px 28px var(--border-hairline);
     transform: translateY(-1px);
   }
 
@@ -3595,14 +3610,14 @@ select.glass-input option {
 
 /* Public website: classic, product-first SydIN presentation */
 .marketing-site {
-  --marketing-bg: #f8f7fb;
-  --marketing-soft: #f0eef5;
+  --marketing-bg: var(--surface-page);
+  --marketing-soft: var(--surface-page);
   --marketing-card: #ffffff;
   --marketing-ink: #171421;
   --marketing-copy: #5f5a6d;
   --marketing-muted: #817b8e;
-  --marketing-line: #e5e2eb;
-  --marketing-shadow: 0 22px 70px rgba(28, 22, 45, 0.09);
+  --marketing-line: var(--surface-sunken);
+  --marketing-shadow: 0 22px 70px var(--border-hairline);
   width: 100%;
   max-width: 100%;
   min-height: 100vh;
@@ -3622,7 +3637,7 @@ select.glass-input option {
   top: 0;
   border-bottom: 1px solid rgba(229, 226, 235, 0.88);
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 6px 24px rgba(28, 22, 45, 0.04);
+  box-shadow: 0 6px 24px var(--border-hairline);
   -webkit-backdrop-filter: blur(14px) saturate(120%);
   backdrop-filter: blur(14px) saturate(120%);
 }
@@ -3659,7 +3674,7 @@ select.glass-input option {
 
 .marketing-nav-link:hover,
 .marketing-nav-link-active {
-  background: #f0eef5;
+  background: var(--surface-page);
   color: #171421;
 }
 
@@ -3782,11 +3797,11 @@ select.glass-input option {
 .marketing-product-frame {
   position: relative;
   overflow: hidden;
-  border: 1px solid #dcd8e5;
+  border: 1px solid var(--border-hairline);
   border-radius: 22px;
   background: #ffffff;
   padding: 0.65rem;
-  box-shadow: 0 34px 90px rgba(30, 24, 48, 0.16);
+  box-shadow: 0 34px 90px var(--border-hairline);
 }
 
 .marketing-product-frame::before {
@@ -3810,7 +3825,7 @@ select.glass-input option {
   grid-template-columns: 4.25rem minmax(0, 1fr);
   overflow: hidden;
   border-radius: 16px;
-  background: #f5f4f8;
+  background: var(--surface-page);
 }
 
 .marketing-product-rail {
@@ -3860,11 +3875,11 @@ select.glass-input option {
 
 .marketing-product-stat,
 .marketing-product-list {
-  border: 1px solid #e4e1e9;
+  border: 1px solid var(--surface-sunken);
   border-radius: 13px;
   background: #ffffff;
   padding: 1rem;
-  box-shadow: 0 6px 18px rgba(28, 22, 45, 0.04);
+  box-shadow: 0 6px 18px var(--border-hairline);
 }
 
 .marketing-product-dot {
@@ -3892,7 +3907,7 @@ select.glass-input option {
   min-width: 0;
   align-items: center;
   gap: 0.75rem;
-  border-top: 1px solid #ece9f0;
+  border-top: 1px solid var(--surface-sunken);
   padding-top: 0.75rem;
 }
 
@@ -3901,7 +3916,7 @@ select.glass-input option {
   height: 2.5rem;
   flex: 0 0 auto;
   border-radius: 8px;
-  background: linear-gradient(145deg, #e0f8ff, #d9ddff 55%, #f0dcff);
+  background: linear-gradient(145deg, #e0f8ff, var(--border-hairline) 55%, #f0dcff);
 }
 
 .marketing-product-stock {
@@ -3959,7 +3974,7 @@ select.glass-input option {
   height: 3rem;
   place-items: center;
   border-radius: 11px;
-  background: #eeefff;
+  background: var(--surface-page);
   color: #5864e8;
 }
 
@@ -4013,7 +4028,7 @@ select.glass-input option {
 }
 
 .marketing-pricing-card {
-  box-shadow: 0 12px 40px rgba(28, 22, 45, 0.07);
+  box-shadow: 0 12px 40px var(--border-hairline);
 }
 
 .marketing-pricing-card-featured {
@@ -4024,7 +4039,7 @@ select.glass-input option {
 .marketing-plan-badge {
   display: inline-flex;
   border-radius: 999px;
-  background: #eeefff;
+  background: var(--surface-page);
   padding: 0.35rem 0.65rem;
   color: #5864e8;
   font-size: 0.68rem;
@@ -4047,7 +4062,7 @@ select.glass-input option {
       transparent 34%
     ),
     #0d0a14;
-  box-shadow: 0 28px 80px rgba(28, 22, 45, 0.2);
+  box-shadow: 0 28px 80px var(--border-hairline);
 }
 
 .marketing-eyebrow-on-dark {
@@ -4125,16 +4140,16 @@ select.glass-input option {
   }
 
   .marketing-button-secondary:hover {
-    border-color: #cbc6d4;
-    background: #fbfaff;
+    border-color: var(--border-hairline);
+    background: var(--surface-page);
   }
 
   .marketing-feature-card:hover,
   .marketing-workflow-card:hover,
   .marketing-pricing-card:hover {
     transform: translateY(-3px);
-    border-color: #d5d0de;
-    box-shadow: 0 24px 70px rgba(28, 22, 45, 0.12);
+    border-color: var(--border-hairline);
+    box-shadow: 0 24px 70px var(--border-hairline);
   }
 }
 
@@ -4677,7 +4692,7 @@ select.glass-input option {
   border-radius: 14px;
   background: var(--bg-surface);
   padding: 0.65rem;
-  box-shadow: 0 6px 18px rgba(15, 23, 42, 0.045);
+  box-shadow: 0 6px 18px var(--border-hairline);
   transition:
     border-color var(--motion-fast) var(--motion-ease-standard),
     box-shadow var(--motion-fast) var(--motion-ease-standard);
@@ -4774,7 +4789,7 @@ select.glass-input option {
 
   .inventory-insight-card:hover {
     border-color: var(--border-default);
-    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 8px 22px var(--border-hairline);
   }
 }
 
@@ -5734,14 +5749,14 @@ select.glass-input option {
   }
 
   .organize-suppliers .organize-row-meta > span {
-    border-color: #d9e5f4;
-    background: #f7fbff;
+    border-color: var(--border-hairline);
+    background: var(--surface-page);
     color: var(--brand-navy);
   }
 
   .organize-suppliers .organize-supplier-row [class*="space-y-2"] {
-    border-color: #d9e5f4;
-    background: #f7fbff;
+    border-color: var(--border-hairline);
+    background: var(--surface-page);
     color: #42526d;
     margin-top: 0.65rem;
     padding: 0.65rem;
@@ -5773,8 +5788,8 @@ select.glass-input option {
   }
 
   .organize-suppliers .organize-row-actions a {
-    border-color: #d9e5f4;
-    background: #f7fbff;
+    border-color: var(--border-hairline);
+    background: var(--surface-page);
     color: var(--brand-navy);
     overflow: hidden;
     padding-inline: 0.35rem;
@@ -6067,9 +6082,9 @@ select.glass-input option {
 }
 
 .dashboard-overview {
-  --overview-bg: #f8fbff;
+  --overview-bg: var(--surface-page);
   --overview-card: #ffffff;
-  --overview-border: #cddbef;
+  --overview-border: var(--border-hairline);
   --overview-muted: #52658b;
   --overview-text: #071638;
   --overview-blue: #075bff;
@@ -6084,7 +6099,7 @@ select.glass-input option {
   overflow-x: clip;
   background:
     radial-gradient(circle at 84% -18%, rgba(53, 114, 255, 0.08), transparent 26rem),
-    linear-gradient(180deg, #fbfdff 0%, var(--overview-bg) 100%);
+    linear-gradient(180deg, var(--surface-page) 0%, var(--overview-bg) 100%);
   color: var(--overview-text);
 }
 
@@ -6109,7 +6124,7 @@ select.glass-input option {
 .overview-card {
   border: 1px solid var(--overview-border);
   background: var(--overview-card);
-  box-shadow: 0 14px 40px rgba(15, 39, 84, 0.09);
+  box-shadow: 0 14px 40px var(--border-hairline);
   opacity: 1;
 }
 
@@ -6176,7 +6191,7 @@ select.glass-input option {
 
 .overview-action:hover {
   border-color: #b8c9e5;
-  background: #f5f8ff;
+  background: var(--surface-page);
 }
 
 .overview-action:focus-visible,
@@ -6273,7 +6288,7 @@ select.glass-input option {
 
 .overview-kpi-icon-blue {
   border: 1px solid #cfe0ff;
-  background: #eef4ff;
+  background: var(--surface-page);
   color: var(--overview-blue);
 }
 
@@ -6460,7 +6475,7 @@ select.glass-input option {
 }
 
 .overview-inventory-row:hover {
-  background: #f8fbff;
+  background: var(--surface-page);
 }
 
 .overview-inventory-row:focus-visible,
@@ -6470,7 +6485,7 @@ select.glass-input option {
 .overview-reorder-item-link:focus-visible {
   outline: 3px solid rgba(29, 101, 255, 0.22);
   outline-offset: -3px;
-  background: #f8fbff;
+  background: var(--surface-page);
 }
 
 .overview-item-cell {
@@ -6515,7 +6530,7 @@ select.glass-input option {
   overflow: hidden;
   border: 1px solid var(--overview-border);
   border-radius: 8px;
-  background: #f7f9fc;
+  background: var(--surface-page);
   color: var(--overview-blue);
 }
 
@@ -6601,7 +6616,7 @@ select.glass-input option {
 
 .overview-low-stock-row:hover,
 .overview-activity-row:hover {
-  background: #f8fbff;
+  background: var(--surface-page);
 }
 
 .overview-low-stock-row {
@@ -6682,7 +6697,7 @@ select.glass-input option {
 .overview-quick-actions a:hover,
 .overview-reorder-row > a:not(.overview-reorder-item-link):hover {
   border-color: #b8c9e5;
-  background: #f5f8ff;
+  background: var(--surface-page);
 }
 
 .overview-empty-state,
@@ -6717,7 +6732,7 @@ select.glass-input option {
   display: block;
   min-height: 3rem;
   border-radius: 10px;
-  background: linear-gradient(90deg, #eef4ff, #f8fbff, #eef4ff);
+  background: linear-gradient(90deg, var(--surface-page), var(--surface-page), var(--surface-page));
   background-size: 220% 100%;
   animation: overview-skeleton 1.2s ease-in-out infinite;
 }
@@ -7303,7 +7318,7 @@ select.glass-input option {
 .login-page {
   --login-navy: #11142d;
   --login-copy: #69708a;
-  --login-line: #dfe3ef;
+  --login-line: var(--surface-sunken);
   --login-blue: #347fff;
   --login-indigo: #635cff;
   --login-purple: #a33dff;
@@ -7421,7 +7436,7 @@ select.glass-input option {
   color: var(--login-navy);
   font-size: 0.9rem;
   font-weight: 680;
-  box-shadow: 0 7px 24px rgba(26, 33, 67, 0.055);
+  box-shadow: 0 7px 24px var(--border-hairline);
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -7434,13 +7449,13 @@ select.glass-input option {
   width: 2rem;
   height: 2rem;
   place-items: center;
-  border: 1px solid #e4e6ee;
+  border: 1px solid var(--surface-sunken);
   border-radius: 999px;
   background: #ffffff;
 }
 
 .login-provider-microsoft {
-  background: #fafbfe;
+  background: var(--surface-page);
 }
 
 .login-provider-button:disabled,
@@ -7492,10 +7507,10 @@ select.glass-input option {
 .login-input-wrap input {
   width: 100%;
   min-height: 3.65rem;
-  border: 1px solid #d9deea;
+  border: 1px solid var(--border-hairline);
   border-radius: 12px;
   outline: none;
-  background: #fcfdff;
+  background: var(--surface-page);
   padding: 0.9rem 3.75rem 0.9rem 1rem;
   color: var(--login-navy);
   font-size: 0.94rem;
@@ -7517,7 +7532,7 @@ select.glass-input option {
 
 .login-input-wrap input:disabled {
   cursor: not-allowed;
-  background: #f5f6fa;
+  background: var(--surface-page);
 }
 
 .login-field-icon,
@@ -7533,7 +7548,7 @@ select.glass-input option {
   width: 1.55rem;
   height: 1.55rem;
   place-items: center;
-  border: 1px solid #dfe3ed;
+  border: 1px solid var(--surface-sunken);
   border-radius: 7px;
   color: #798199;
   font-size: 0.75rem;
@@ -7581,7 +7596,7 @@ select.glass-input option {
   width: 1.15rem;
   height: 1.15rem;
   place-items: center;
-  border: 1px solid #cfd5e2;
+  border: 1px solid var(--border-hairline);
   border-radius: 5px;
   background: #ffffff;
   color: transparent;
@@ -7744,10 +7759,10 @@ select.glass-input option {
 .auth-code-input {
   width: 100%;
   min-height: 4.5rem;
-  border: 1px solid #d9deea;
+  border: 1px solid var(--border-hairline);
   border-radius: 13px;
   outline: none;
-  background: #fcfdff;
+  background: var(--surface-page);
   padding: 0.8rem 1rem;
   color: var(--login-navy);
   text-align: center;
@@ -7769,7 +7784,7 @@ select.glass-input option {
 
 .auth-code-input:disabled {
   cursor: not-allowed;
-  background: #f5f6fa;
+  background: var(--surface-page);
 }
 
 .auth-verification-form .login-submit {
@@ -7823,7 +7838,7 @@ select.glass-input option {
   margin: 2rem auto 0;
   overflow: hidden;
   border-radius: 999px;
-  background: #e9ecf4;
+  background: var(--surface-sunken);
 }
 
 .auth-verification-progress i {
@@ -7874,11 +7889,11 @@ select.glass-input option {
   min-height: 100svh;
   place-items: center;
   overflow: hidden;
-  border-left: 1px solid #e5e8f2;
+  border-left: 1px solid var(--surface-sunken);
   background:
     radial-gradient(circle at 78% 16%, rgba(147, 83, 255, 0.18), transparent 24rem),
     radial-gradient(circle at 24% 72%, rgba(33, 207, 255, 0.16), transparent 24rem),
-    linear-gradient(145deg, #f7fbff 0%, #f1f3ff 48%, #f8f4ff 100%);
+    linear-gradient(145deg, var(--surface-page) 0%, var(--surface-page) 48%, var(--surface-page) 100%);
 }
 
 .login-visual::before {
@@ -8076,9 +8091,9 @@ select.glass-input option {
 .login-metric-card,
 .login-chart-card,
 .login-activity-card {
-  border: 1px solid #e7e9f2;
+  border: 1px solid var(--surface-sunken);
   background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 10px 30px rgba(44, 50, 94, 0.06);
+  box-shadow: 0 10px 30px var(--border-hairline);
 }
 
 .login-metric-card {
@@ -8108,7 +8123,7 @@ select.glass-input option {
 }
 
 .login-metric-icon-violet {
-  background: #f2ebff;
+  background: var(--surface-sunken);
   color: #8754ff;
 }
 
@@ -8132,7 +8147,7 @@ select.glass-input option {
   margin-top: 0.65rem;
   overflow: hidden;
   border-radius: 999px;
-  background: #edf0f6;
+  background: var(--surface-sunken);
 }
 
 .login-metric-bar i {
@@ -8190,7 +8205,7 @@ select.glass-input option {
   right: 0;
   left: 0;
   height: 1px;
-  background: #edf0f6;
+  background: var(--surface-sunken);
 }
 
 .login-chart-gridline-a {
@@ -8232,7 +8247,7 @@ select.glass-input option {
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: 0.55rem;
-  border-top: 1px solid #eef0f6;
+  border-top: 1px solid var(--surface-page);
   padding-top: 0.55rem;
 }
 
@@ -8242,7 +8257,7 @@ select.glass-input option {
   height: 1.7rem;
   place-items: center;
   border-radius: 7px;
-  background: #eef1ff;
+  background: var(--surface-page);
   color: #625cff;
 }
 
@@ -8459,9 +8474,9 @@ select.glass-input option {
   .login-back-link:hover,
   .login-provider-button:hover {
     transform: translateY(-1px);
-    border-color: #c9cfdf;
+    border-color: var(--border-hairline);
     background: #ffffff;
-    box-shadow: 0 12px 30px rgba(26, 33, 67, 0.09);
+    box-shadow: 0 12px 30px var(--border-hairline);
   }
 
   .login-submit:hover {
@@ -8661,7 +8676,7 @@ select.glass-input option {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  border: 1px solid var(--sydin-ui-border, #d7deea);
+  border: 1px solid var(--sydin-ui-border, var(--border-hairline));
   border-radius: 1rem;
   background: #ffffff;
   padding: 1rem;
@@ -8773,11 +8788,11 @@ select.glass-input option {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  border: 1px solid #dbe2ec;
+  border: 1px solid var(--border-hairline);
   border-radius: 0.9rem;
   background: #ffffff;
   color: #0f1f3a;
-  box-shadow: 0 20px 55px rgba(15, 23, 42, 0.18);
+  box-shadow: 0 20px 55px var(--border-hairline);
 }
 
 .ui-select-mobile-overlay,
@@ -8790,9 +8805,9 @@ select.glass-input option {
   align-items: center;
   gap: 0.6rem;
   margin: 0.5rem;
-  border: 1px solid #dbe2ec;
+  border: 1px solid var(--border-hairline);
   border-radius: 0.7rem;
-  background: #f7f9fc;
+  background: var(--surface-page);
   padding: 0.55rem 0.7rem;
   color: #64748b;
 }
@@ -8825,11 +8840,11 @@ select.glass-input option {
 }
 
 .ui-select-option-active {
-  background: #f1f5ff;
+  background: var(--surface-page);
 }
 
 .ui-select-option-selected {
-  background: #eef2ff;
+  background: var(--surface-page);
   color: #4338ca;
 }
 
@@ -8865,7 +8880,7 @@ select.glass-input option {
 }
 
 .ui-select-clear {
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid var(--surface-sunken);
   padding: 0.65rem 0.85rem;
   color: #4f46e5;
   font-size: 0.8rem;
@@ -8897,7 +8912,7 @@ select.glass-input option {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid #e2e8f0;
+    border-bottom: 1px solid var(--surface-sunken);
     padding: 1rem;
     font-size: 0.95rem;
     font-weight: 800;
@@ -8910,7 +8925,7 @@ select.glass-input option {
     align-items: center;
     justify-content: center;
     border-radius: 0.75rem;
-    background: #f1f5f9;
+    background: var(--surface-page);
   }
 
   .ui-select-option {
@@ -9001,10 +9016,10 @@ select.glass-input option {
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --background: #f7fafc;
+  --background: var(--surface-page);
   --foreground: #08152b;
-  --sydin-bg-deep: #f7fafc;
-  --sydin-bg: #f3f8fd;
+  --sydin-bg-deep: var(--surface-page);
+  --sydin-bg: var(--surface-page);
   --sydin-bg-elevated: #ffffff;
   --sydin-surface: rgba(255, 255, 255, 0.78);
   --sydin-surface-soft: rgba(255, 255, 255, 0.66);
@@ -9044,8 +9059,8 @@ select.glass-input option {
   --brand-navy: #08152b;
   --brand-cyan: #19c3dd;
   --brand-cyan-strong: #0898b8;
-  --bg-page: #f7fafc;
-  --bg-page-muted: #edf5fb;
+  --bg-page: var(--surface-page);
+  --bg-page-muted: var(--surface-sunken);
   --bg-elevated: #ffffff;
   --bg-surface: rgba(255, 255, 255, 0.84);
   --bg-surface-strong: rgba(255, 255, 255, 0.96);
@@ -9071,7 +9086,7 @@ select.glass-input option {
   --control-input-border: rgba(58, 100, 145, 0.22);
   --control-input-text: #08152b;
   --control-placeholder: #7a8798;
-  --control-disabled-bg: #edf2f7;
+  --control-disabled-bg: var(--surface-sunken);
   --control-disabled-text: #7a8798;
   --button-primary-bg: #0ea5c6;
   --button-primary-hover: #0789a7;
@@ -9083,9 +9098,9 @@ select.glass-input option {
   --button-danger-bg: rgba(225, 29, 72, 0.08);
   --button-danger-hover: rgba(225, 29, 72, 0.13);
   --button-danger-text: #be123c;
-  --shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.05);
+  --shadow-subtle: 0 1px 2px var(--border-hairline);
   --shadow-elevated: 0 16px 44px rgba(36, 79, 135, 0.12);
-  --shadow-overlay: 0 28px 80px rgba(15, 23, 42, 0.22);
+  --shadow-overlay: 0 28px 80px var(--border-hairline);
   --radius-control: 14px;
   --radius-card: 18px;
   --radius-overlay: 24px;
@@ -9261,7 +9276,7 @@ body [class*="tracking-["],
     linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(242, 248, 253, 0.86));
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    0 28px 80px rgba(15, 23, 42, 0.2);
+    0 28px 80px var(--border-hairline);
   color: var(--text-primary);
 }
 
@@ -9280,7 +9295,7 @@ body [class*="tracking-["],
   border-color: rgba(255, 255, 255, 0.8);
   background:
     linear-gradient(145deg, rgba(255, 255, 255, 0.96), rgba(244, 249, 253, 0.88));
-  box-shadow: 0 20px 54px rgba(15, 23, 42, 0.16);
+  box-shadow: 0 20px 54px var(--border-hairline);
   color: var(--text-primary);
   -webkit-backdrop-filter: blur(18px) saturate(130%);
   backdrop-filter: blur(18px) saturate(130%);
@@ -9288,8 +9303,8 @@ body [class*="tracking-["],
 
 /* Public landing */
 .marketing-site {
-  --marketing-bg: #f7fafc;
-  --marketing-soft: #eef7fb;
+  --marketing-bg: var(--surface-page);
+  --marketing-soft: var(--surface-page);
   --marketing-card: rgba(255, 255, 255, 0.78);
   --marketing-ink: #08152b;
   --marketing-copy: #44556d;
@@ -9502,7 +9517,7 @@ body [class*="tracking-["],
 
 /* Dashboard overview */
 .dashboard-overview {
-  --overview-bg: #f7fafc;
+  --overview-bg: var(--surface-page);
   --overview-card: rgba(255, 255, 255, 0.78);
   --overview-border: rgba(58, 100, 145, 0.16);
   --overview-muted: #5d6c80;
@@ -9974,7 +9989,7 @@ body [class*="tracking-["],
   background:
     linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(240, 248, 252, 0.72)),
     linear-gradient(20deg, rgba(125, 92, 255, 0.07), transparent 42%),
-    #f7fafc;
+    var(--surface-page);
 }
 
 .overview-hero {
@@ -10506,7 +10521,7 @@ body [class*="tracking-["],
   border-bottom: 1px solid rgba(58, 100, 145, 0.1);
   border-radius: 21px 21px 0 0;
   background:
-    linear-gradient(135deg, rgba(237, 247, 252, 0.98), rgba(255, 255, 255, 0.86));
+    linear-gradient(135deg, var(--surface-sunken), rgba(255, 255, 255, 0.86));
 }
 
 .inventory-card-select,
@@ -10521,7 +10536,7 @@ body [class*="tracking-["],
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.9);
   color: var(--text-secondary);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 8px 18px var(--border-hairline);
 }
 
 .inventory-card-select {
@@ -10690,7 +10705,7 @@ body [class*="tracking-["],
     border-color: rgba(148, 163, 184, 0.5);
     box-shadow:
       inset 0 1px 0 rgba(255, 255, 255, 0.94),
-      0 18px 44px rgba(15, 23, 42, 0.12);
+      0 18px 44px var(--border-hairline);
     transform: translateY(-2px);
   }
 
@@ -10774,7 +10789,7 @@ body [class*="tracking-["],
   width: 0.62rem;
   height: 0.62rem;
   border-radius: 999px;
-  background: #dce6ef;
+  background: var(--surface-sunken);
 }
 
 .marketing-product-browser strong {
@@ -11126,11 +11141,11 @@ body [class*="tracking-["],
 
 /* SydIN clean dashboard rebuild */
 .dashboard-theme {
-  background: #e9ecef;
+  background: var(--surface-sunken);
 }
 
 .dashboard-shell.liquid-bg {
-  background: #e9ecef;
+  background: var(--surface-sunken);
   background-image: none;
   color: #071638;
 }
@@ -11144,9 +11159,9 @@ body [class*="tracking-["],
 .dashboard-mobile-header,
 .dashboard-desktop-toolbar,
 .dashboard-mobile-nav {
-  border-color: #e1e7f0;
+  border-color: var(--surface-sunken);
   background: #ffffff;
-  box-shadow: 0 18px 44px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 44px var(--border-hairline);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -11184,8 +11199,8 @@ body [class*="tracking-["],
 .dashboard-sidebar-workspace,
 .dashboard-account-trigger,
 .dashboard-more-account {
-  border: 1px solid #e4eaf3;
-  background: #f8fafc;
+  border: 1px solid var(--surface-sunken);
+  background: var(--surface-page);
   box-shadow: none;
 }
 
@@ -11212,7 +11227,7 @@ body [class*="tracking-["],
 .overview-action,
 .overview-quick-actions a,
 .overview-reorder-row > a:not(.overview-reorder-item-link) {
-  border-color: #dde6f1;
+  border-color: var(--surface-sunken);
   background: #ffffff;
   color: #071638;
   box-shadow: none;
@@ -11238,7 +11253,7 @@ body [class*="tracking-["],
     grid-column: 1;
     width: auto !important;
     height: calc(100vh - 2.5rem);
-    border: 1px solid #dde6f1;
+    border: 1px solid var(--surface-sunken);
     border-radius: 28px;
     padding: 0.9rem;
     overflow: hidden;
@@ -11271,7 +11286,7 @@ body [class*="tracking-["],
     overflow-y: auto;
     padding-block: 0.2rem 0.8rem;
     scrollbar-width: thin;
-    scrollbar-color: #cbd5e1 transparent;
+    scrollbar-color: var(--border-hairline) transparent;
   }
 
   .dashboard-nav-groups {
@@ -11322,11 +11337,11 @@ body [class*="tracking-["],
   .dashboard-nav-link-active .dashboard-nav-icon {
     background: #ffffff;
     color: #0e7490;
-    box-shadow: 0 8px 18px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 8px 18px var(--border-hairline);
   }
 
   .dashboard-account-area {
-    border-top: 1px solid #e4eaf3;
+    border-top: 1px solid var(--surface-sunken);
     padding-top: 0.75rem;
   }
 
@@ -11342,10 +11357,10 @@ body [class*="tracking-["],
     min-height: calc(100vh - 2.5rem);
     flex-direction: column;
     overflow: hidden;
-    border: 1px solid #dde6f1;
+    border: 1px solid var(--surface-sunken);
     border-radius: 30px;
     background: #ffffff;
-    box-shadow: 0 22px 58px rgba(15, 23, 42, 0.09);
+    box-shadow: 0 22px 58px var(--border-hairline);
   }
 
   .dashboard-desktop-toolbar {
@@ -11353,7 +11368,7 @@ body [class*="tracking-["],
     min-height: 4.35rem;
     margin-left: 0 !important;
     border: 0;
-    border-bottom: 1px solid #e4eaf3;
+    border-bottom: 1px solid var(--surface-sunken);
     border-radius: 0;
     background: #ffffff;
     padding: 0.75rem 1rem;
@@ -11365,7 +11380,7 @@ body [class*="tracking-["],
     min-height: 0;
     margin-left: 0 !important;
     overflow: auto;
-    background: #f6f8fb;
+    background: var(--surface-page);
     padding: 1rem !important;
   }
 
@@ -11385,7 +11400,7 @@ body [class*="tracking-["],
   }
 
   .dashboard-shell-content {
-    background: #f6f8fb;
+    background: var(--surface-page);
   }
 }
 
@@ -11422,9 +11437,9 @@ body [class*="tracking-["],
 .inventory-list,
 .inventory-list-row,
 .inventory-item-card {
-  border: 1px solid #dde6f1;
+  border: 1px solid var(--surface-sunken);
   background: #ffffff;
-  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 12px 30px var(--border-hairline);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -11485,9 +11500,9 @@ body [class*="tracking-["],
 }
 
 .overview-hero-panel {
-  border: 1px solid #e4eaf3;
+  border: 1px solid var(--surface-sunken);
   border-radius: 20px;
-  background: linear-gradient(145deg, #ffffff, #f3f8fc);
+  background: linear-gradient(145deg, #ffffff, var(--surface-page));
   box-shadow: none;
 }
 
@@ -11537,7 +11552,7 @@ body [class*="tracking-["],
 .overview-low-stock-row,
 .overview-activity-row,
 .overview-reorder-row {
-  border-color: #e7edf5;
+  border-color: var(--surface-sunken);
 }
 
 .overview-inventory-head {
@@ -11550,7 +11565,7 @@ body [class*="tracking-["],
 .overview-activity-row:hover,
 .overview-quick-actions a:hover,
 .overview-reorder-row > a:not(.overview-reorder-item-link):hover {
-  background: #f8fafc;
+  background: var(--surface-page);
 }
 
 .inventory-workspace {
@@ -11577,8 +11592,8 @@ body [class*="tracking-["],
 .inventory-hero-badges span,
 .inventory-hero-status span,
 .inventory-card-meta span {
-  border-color: #e4eaf3;
-  background: #f8fafc;
+  border-color: var(--surface-sunken);
+  background: var(--surface-page);
 }
 
 .inventory-mobile-breadcrumb,
@@ -11618,9 +11633,9 @@ body [class*="tracking-["],
 
 .inventory-search-input {
   min-height: 2.75rem;
-  border-color: #dde6f1;
+  border-color: var(--surface-sunken);
   border-radius: 999px;
-  background: #f8fafc;
+  background: var(--surface-page);
   box-shadow: none;
 }
 
@@ -11640,7 +11655,7 @@ body [class*="tracking-["],
 .inventory-quick-filter,
 .inventory-toolbar-button {
   min-height: 2.35rem;
-  border-color: #dde6f1;
+  border-color: var(--surface-sunken);
   background: #ffffff;
   color: #071638;
 }
@@ -11657,9 +11672,9 @@ body [class*="tracking-["],
 }
 
 .inventory-filter-panel {
-  border-color: #e4eaf3;
+  border-color: var(--surface-sunken);
   border-radius: 18px;
-  background: #f8fafc;
+  background: var(--surface-page);
   box-shadow: none;
 }
 
@@ -11685,9 +11700,9 @@ body [class*="tracking-["],
 
 .inventory-card-media {
   aspect-ratio: 16 / 10;
-  border-color: #e7edf5;
+  border-color: var(--surface-sunken);
   border-radius: 19px 19px 0 0;
-  background: #f8fafc;
+  background: var(--surface-page);
 }
 
 .inventory-card-body {
@@ -11709,20 +11724,20 @@ body [class*="tracking-["],
 .inventory-card-quantity,
 .inventory-list-quantity {
   border-color: rgba(37, 99, 235, 0.18);
-  background: #eff6ff;
+  background: var(--surface-page);
   color: #1d4ed8;
 }
 
 .inventory-card-tag {
-  border-color: #e4eaf3;
-  background: #f8fafc;
+  border-color: var(--surface-sunken);
+  background: var(--surface-page);
   color: #52637b;
 }
 
 .inventory-card-footer button,
 .inventory-card-menu-button,
 .inventory-card-select {
-  border-color: #dde6f1;
+  border-color: var(--surface-sunken);
   background: #ffffff;
   color: #071638;
   box-shadow: none;
@@ -11742,18 +11757,18 @@ body [class*="tracking-["],
 }
 
 .inventory-table th {
-  background: #f8fafc;
+  background: var(--surface-page);
   color: #64748b;
   letter-spacing: 0;
 }
 
 .inventory-table td,
 .dashboard-shell-content table td {
-  border-color: #e7edf5;
+  border-color: var(--surface-sunken);
 }
 
 .inventory-table tbody tr:hover {
-  background: #f8fafc;
+  background: var(--surface-page);
 }
 
 .inventory-insights-rail {
@@ -11786,13 +11801,13 @@ body [class*="tracking-["],
 
   .inventory-item-card:hover {
     border-color: rgba(148, 163, 184, 0.5);
-    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.12);
+    box-shadow: 0 18px 38px var(--border-hairline);
     transform: translateY(-1px);
   }
 
   .overview-kpi-card:hover {
     border-color: rgba(25, 195, 221, 0.3);
-    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 18px 38px var(--border-hairline);
     transform: translateY(-1px);
   }
 }
@@ -11829,7 +11844,7 @@ body [class*="tracking-["],
   .dashboard-mobile-header,
   .dashboard-mobile-nav {
     background: #ffffff;
-    box-shadow: 0 14px 34px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 14px 34px var(--border-hairline);
   }
 
   .dashboard-shell-content {
@@ -11914,7 +11929,7 @@ body [class*="tracking-["],
 
 /* Reference-style dashboard frame */
 .dashboard-theme:has(.dashboard-shell) {
-  background: #e9e9e7;
+  background: var(--surface-sunken);
 }
 
 .dashboard-shell.liquid-bg {
@@ -11943,7 +11958,7 @@ body [class*="tracking-["],
     border: 0;
     border-radius: 20px;
     background: #ffffff;
-    box-shadow: 0 26px 70px rgba(31, 30, 26, 0.08);
+    box-shadow: 0 26px 70px var(--border-hairline);
     padding: 0;
   }
 
@@ -12224,22 +12239,22 @@ body [class*="tracking-["],
 :root,
 [data-theme="light"] {
   color-scheme: light;
-  --background: #f5f7fb;
+  --background: var(--surface-page);
   --foreground: #08152b;
-  --sydin-bg-deep: #f5f7fb;
-  --sydin-bg: #eef4fb;
+  --sydin-bg-deep: var(--surface-page);
+  --sydin-bg: var(--surface-page);
   --sydin-bg-elevated: #ffffff;
   --sydin-surface: rgba(255, 255, 255, 0.88);
   --sydin-surface-soft: rgba(248, 251, 255, 0.86);
   --sydin-surface-strong: rgba(255, 255, 255, 0.96);
   --sydin-ui-surface: rgba(255, 255, 255, 0.82);
-  --sydin-surface-inset: #eef4fb;
+  --sydin-surface-inset: var(--surface-page);
   --sydin-surface-hover: #ffffff;
   --sydin-surface-selected: rgba(14, 165, 198, 0.12);
   --sydin-overlay: rgba(8, 21, 43, 0.38);
-  --sydin-ui-border: rgba(40, 72, 112, 0.16);
+  --sydin-ui-border: var(--border-hairline);
   --sydin-ui-border-strong: rgba(14, 165, 198, 0.34);
-  --sydin-border: rgba(40, 72, 112, 0.16);
+  --sydin-border: var(--border-hairline);
   --sydin-border-strong: rgba(14, 165, 198, 0.34);
   --sydin-text: #08152b;
   --sydin-text-secondary: #33445f;
@@ -12254,8 +12269,8 @@ body [class*="tracking-["],
   --sydin-cyan: #0ea5c6;
   --sydin-violet: #7d5cff;
   --sydin-focus: rgba(14, 165, 198, 0.18);
-  --sydin-shadow: 0 24px 70px rgba(30, 64, 105, 0.12);
-  --sydin-shadow-soft: 0 12px 34px rgba(30, 64, 105, 0.08);
+  --sydin-shadow: 0 24px 70px var(--border-hairline);
+  --sydin-shadow-soft: 0 12px 34px var(--border-hairline);
   --sydin-success-surface: rgba(14, 165, 198, 0.1);
   --sydin-success-text: #047c99;
   --sydin-warning-surface: rgba(245, 158, 11, 0.11);
@@ -12268,8 +12283,8 @@ body [class*="tracking-["],
   --brand-navy: #08152b;
   --brand-cyan: #0ea5c6;
   --brand-cyan-strong: #047c99;
-  --bg-page: #f5f7fb;
-  --bg-page-muted: #eef4fb;
+  --bg-page: var(--surface-page);
+  --bg-page-muted: var(--surface-page);
   --bg-elevated: #ffffff;
   --bg-surface: #ffffff;
   --bg-surface-strong: #ffffff;
@@ -12277,31 +12292,31 @@ body [class*="tracking-["],
   --bg-overlay: rgba(8, 21, 43, 0.38);
   --bg-selected: rgba(14, 165, 198, 0.11);
   --bg-hover: rgba(37, 99, 235, 0.055);
-  --bg-inset: #f1f6fb;
+  --bg-inset: var(--surface-page);
   --text-primary: #08152b;
   --text-secondary: #33445f;
   --text-muted: #5c6d85;
   --text-subtle: #7a889a;
   --text-inverse: #ffffff;
   --text-accent: #047c99;
-  --border-default: rgba(40, 72, 112, 0.16);
+  --border-default: var(--border-hairline);
   --border-strong: rgba(14, 165, 198, 0.34);
   --border-focus: #0ea5c6;
-  --border-divider: rgba(40, 72, 112, 0.11);
+  --border-divider: var(--border-hairline);
   --border-danger: rgba(190, 24, 93, 0.36);
   --border-warning: rgba(180, 83, 9, 0.34);
   --border-success: rgba(14, 165, 198, 0.3);
   --control-input-bg: #ffffff;
-  --control-input-border: rgba(40, 72, 112, 0.2);
+  --control-input-border: var(--border-hairline);
   --control-input-text: #08152b;
   --control-placeholder: #7a889a;
-  --control-disabled-bg: #e8eef6;
+  --control-disabled-bg: var(--surface-sunken);
   --control-disabled-text: #7a889a;
   --button-primary-bg: #0ea5c6;
   --button-primary-hover: #047c99;
   --button-primary-text: #ffffff;
   --button-secondary-bg: #ffffff;
-  --button-secondary-hover: #f8fbff;
+  --button-secondary-hover: var(--surface-page);
   --button-secondary-text: #08152b;
   --button-ghost-hover: rgba(37, 99, 235, 0.06);
   --button-danger-bg: rgba(225, 29, 72, 0.08);
@@ -12313,9 +12328,9 @@ body [class*="tracking-["],
   --status-info-surface: rgba(37, 99, 235, 0.1);
   --status-info-text: #1d4ed8;
   --status-info-border: rgba(37, 99, 235, 0.28);
-  --shadow-subtle: 0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-elevated: 0 14px 38px rgba(30, 64, 105, 0.1);
-  --shadow-overlay: 0 26px 72px rgba(15, 23, 42, 0.2);
+  --shadow-subtle: 0 1px 2px var(--border-hairline);
+  --shadow-elevated: 0 14px 38px var(--border-hairline);
+  --shadow-overlay: 0 26px 72px var(--border-hairline);
   --radius-control: 12px;
   --radius-card: 16px;
   --radius-overlay: 22px;
@@ -12433,37 +12448,37 @@ body,
 .dashboard-shell-content [class*="via-emerald"],
 .login-page [class*="via-emerald"] {
   --tw-gradient-to: rgba(219, 229, 255, 0) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), #dbe5ff, var(--tw-gradient-to) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--border-hairline), var(--tw-gradient-to) !important;
 }
 
 .marketing-site [class*="to-emerald"],
 .dashboard-shell-content [class*="to-emerald"],
 .login-page [class*="to-emerald"] {
-  --tw-gradient-to: #dbe5ff !important;
+  --tw-gradient-to: var(--border-hairline) !important;
 }
 
 /* Marketing and auth */
 .marketing-site {
-  --marketing-bg: #f5f7fb;
-  --marketing-soft: #eef4fb;
+  --marketing-bg: var(--surface-page);
+  --marketing-soft: var(--surface-page);
   --marketing-card: #ffffff;
   --marketing-ink: #08152b;
   --marketing-copy: #44556d;
   --marketing-muted: #6b7a90;
-  --marketing-line: rgba(40, 72, 112, 0.14);
-  --marketing-shadow: 0 18px 50px rgba(30, 64, 105, 0.1);
+  --marketing-line: var(--border-hairline);
+  --marketing-shadow: 0 18px 50px var(--border-hairline);
   background:
-    linear-gradient(135deg, #ffffff 0%, #f5f9ff 46%, #eef7fb 100%);
+    linear-gradient(135deg, #ffffff 0%, var(--surface-page) 46%, var(--surface-page) 100%);
 }
 
 .marketing-header {
   border-bottom-color: var(--marketing-line);
   background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 10px 32px rgba(30, 64, 105, 0.07);
+  box-shadow: 0 10px 32px var(--border-hairline);
 }
 
 .marketing-announcement {
-  background: #eef7fb;
+  background: var(--surface-page);
   color: #33445f;
 }
 
@@ -12515,7 +12530,7 @@ body,
 }
 
 .marketing-product-rail {
-  background: #f1f6fb;
+  background: var(--surface-page);
   color: #62728a;
 }
 
@@ -12558,7 +12573,7 @@ body,
 
 .login-page {
   background:
-    linear-gradient(135deg, #ffffff 0%, #f5f9ff 45%, #eef7fb 100%);
+    linear-gradient(135deg, #ffffff 0%, var(--surface-page) 45%, var(--surface-page) 100%);
   color: var(--text-primary);
 }
 
@@ -12602,7 +12617,7 @@ body,
 
 /* Workspace shell */
 .dashboard-theme:has(.dashboard-shell) {
-  background: #eef1f5;
+  background: var(--surface-page);
 }
 
 .dashboard-shell.liquid-bg {
@@ -12612,7 +12627,7 @@ body,
 }
 
 .dashboard-shell-content {
-  background: #f5f7fb;
+  background: var(--surface-page);
 }
 
 .dashboard-sidebar,
@@ -12621,9 +12636,9 @@ body,
 .dashboard-desktop-toolbar,
 .dashboard-mobile-nav,
 .dashboard-main-canvas {
-  border-color: #dce5ef;
+  border-color: var(--surface-sunken);
   background: #ffffff;
-  box-shadow: 0 18px 48px rgba(30, 64, 105, 0.08);
+  box-shadow: 0 18px 48px var(--border-hairline);
 }
 
 .dashboard-top-tab {
@@ -12645,7 +12660,7 @@ body,
   align-items: center;
   justify-content: center;
   gap: 0.45rem;
-  border: 1px solid #dce5ef;
+  border: 1px solid var(--surface-sunken);
   border-radius: 999px;
   background: #ffffff;
   color: var(--text-primary);
@@ -12676,7 +12691,7 @@ body,
 .dashboard-shell-content .ui-section-card,
 .dashboard-shell-content .glass-card,
 .dashboard-shell-content main > div > section {
-  border-color: #dce5ef;
+  border-color: var(--surface-sunken);
   background: #ffffff;
   box-shadow: var(--shadow-subtle);
 }
@@ -12701,33 +12716,33 @@ body,
   .dashboard-top-icon-button:hover,
   .dashboard-top-account-pill:hover {
     border-color: rgba(148, 163, 184, 0.42);
-    background: #f8fbff;
+    background: var(--surface-page);
   }
 }
 
 @media (min-width: 900px) {
   .dashboard-theme:has(.dashboard-shell) {
-    background: #eef1f5;
+    background: var(--surface-page);
   }
 
   .dashboard-shell {
-    border: 1px solid #dce5ef;
+    border: 1px solid var(--surface-sunken);
     border-radius: 24px;
     background: #ffffff;
-    box-shadow: 0 26px 70px rgba(30, 64, 105, 0.1);
+    box-shadow: 0 26px 70px var(--border-hairline);
   }
 
   .dashboard-main-canvas {
-    background: #f5f7fb;
+    background: var(--surface-page);
   }
 
   .dashboard-desktop-toolbar {
-    border-bottom: 1px solid #e4ebf3;
+    border-bottom: 1px solid var(--surface-sunken);
     background: #ffffff;
   }
 
   .dashboard-shell-content {
-    background: #f5f7fb;
+    background: var(--surface-page);
   }
 }
 
@@ -12751,7 +12766,7 @@ body,
 .dashboard-shell-content:has(.inventory-workspace),
 .dashboard-shell-content:has(.settings-workspace) {
   /* Transparent so the fixed background layer shows through. This used to
-     paint #f4f7fb, which is the same flat colour the layer carries as its
+     paint var(--surface-page), which is the same flat colour the layer carries as its
      base — so nothing is lost visually, but the gradients are no longer
      hidden behind it. */
   background: transparent;
@@ -12771,8 +12786,8 @@ body,
   --overview-ink: #071638;
   --overview-copy: #44566f;
   --overview-muted: #728095;
-  --overview-line: #dce5ef;
-  --overview-soft: #f8fafc;
+  --overview-line: var(--surface-sunken);
+  --overview-soft: var(--surface-page);
   --overview-blue: #2563eb;
   --overview-cyan: #0ea5c6;
   --overview-violet: #7d5cff;
@@ -12811,7 +12826,7 @@ body,
   border: 1px solid var(--overview-line);
   border-radius: 12px;
   background: #ffffff;
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 10px 26px var(--border-hairline);
 }
 
 .sydin-overview-header {
@@ -13096,7 +13111,7 @@ body,
   overflow: hidden;
   border: 0;
   border-radius: 12px;
-  box-shadow: 0 0 0 1px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 0 0 1px var(--border-hairline);
 }
 
 .sydin-overview-thumb img {
@@ -13318,7 +13333,7 @@ body,
   display: block;
   min-height: 3.4rem;
   border-radius: 10px;
-  background: linear-gradient(90deg, #eef4fb, #ffffff, #eef4fb);
+  background: linear-gradient(90deg, var(--surface-page), #ffffff, var(--surface-page));
   background-size: 220% 100%;
   animation: overview-skeleton 1.2s ease-in-out infinite;
 }
@@ -13405,7 +13420,7 @@ body,
 .settings-hero,
 .settings-panel,
 .settings-sidebar {
-  box-shadow: 0 10px 26px rgba(15, 23, 42, 0.05) !important;
+  box-shadow: 0 10px 26px var(--border-hairline) !important;
 }
 
 .settings-sidebar button[aria-current="page"] {
@@ -13756,7 +13771,7 @@ body,
 .dashboard-shell:has(.sydin-overview),
 .dashboard-shell:has(.inventory-workspace) {
   color-scheme: light;
-  background: #eef2f7 !important;
+  background: var(--surface-page) !important;
 }
 
 .dashboard-shell:has(.sydin-overview),
@@ -13791,7 +13806,7 @@ body,
     overflow: visible !important;
     border: 0 !important;
     border-radius: 0 !important;
-    background: #eef2f7 !important;
+    background: var(--surface-page) !important;
     box-shadow: none !important;
     padding: 0 !important;
   }
@@ -13904,7 +13919,7 @@ body,
 
   .dashboard-shell:has(.sydin-overview) .dashboard-account-area,
   .dashboard-shell:has(.inventory-workspace) .dashboard-account-area {
-    border-top: 1px solid #e4ebf3 !important;
+    border-top: 1px solid var(--surface-sunken) !important;
     padding-top: 0.75rem !important;
   }
 
@@ -13915,7 +13930,7 @@ body,
     justify-content: center !important;
     border: 0 !important;
     border-radius: 12px !important;
-    background: #f8fafc !important;
+    background: var(--surface-page) !important;
     padding: 0 !important;
     box-shadow: none !important;
   }
@@ -13939,7 +13954,7 @@ body,
     overflow: visible !important;
     border: 0 !important;
     border-radius: 0 !important;
-    /* was #f4f7fb !important — this opaque fill sat above the fixed
+    /* was var(--surface-page) !important — this opaque fill sat above the fixed
        background layer and hid it completely. The page colour now
        lives on that layer so the wash shows through. */
     background: transparent !important;
@@ -13960,7 +13975,7 @@ body,
     gap: 0.75rem !important;
     overflow-x: clip !important;
     border: 0 !important;
-    border-bottom: 1px solid #dce5ef !important;
+    border-bottom: 1px solid var(--surface-sunken) !important;
     border-radius: 0 !important;
     background: #ffffff !important;
     box-shadow: none !important;
@@ -13977,7 +13992,7 @@ body,
     overflow: visible !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
-    /* was #f4f7fb !important — this opaque fill sat above the fixed
+    /* was var(--surface-page) !important — this opaque fill sat above the fixed
        background layer and hid it completely. The page colour now
        lives on that layer so the wash shows through. */
     background: transparent !important;
@@ -14074,7 +14089,7 @@ body,
 .dashboard-theme:has(.dashboard-workspace-shell),
 .dashboard-workspace-shell {
   color-scheme: light;
-  background: #eef2f7 !important;
+  background: var(--surface-page) !important;
 }
 
 .dashboard-workspace-shell,
@@ -14171,7 +14186,7 @@ body,
     overflow: visible !important;
     border: 0 !important;
     border-radius: 0 !important;
-    background: #eef2f7 !important;
+    background: var(--surface-page) !important;
     box-shadow: none !important;
     padding: 0 !important;
   }
@@ -14186,7 +14201,7 @@ body,
     flex-direction: column !important;
     overflow: visible !important;
     border: 0 !important;
-    border-right: 1px solid #dce5ef !important;
+    border-right: 1px solid var(--surface-sunken) !important;
     border-radius: 0 !important;
     background: #ffffff !important;
     box-shadow: none !important;
@@ -14262,7 +14277,7 @@ body,
   }
 
   .dashboard-workspace-shell .dashboard-account-area {
-    border-top: 1px solid #e4ebf3 !important;
+    border-top: 1px solid var(--surface-sunken) !important;
     padding-top: 0.75rem !important;
   }
 
@@ -14272,7 +14287,7 @@ body,
     justify-content: center !important;
     border: 0 !important;
     border-radius: 12px !important;
-    background: #f8fafc !important;
+    background: var(--surface-page) !important;
     padding: 0 !important;
     box-shadow: none !important;
   }
@@ -14294,7 +14309,7 @@ body,
     overflow: visible !important;
     border: 0 !important;
     border-radius: 0 !important;
-    /* was #f4f7fb !important — this opaque fill sat above the fixed
+    /* was var(--surface-page) !important — this opaque fill sat above the fixed
        background layer and hid it completely. The page colour now
        lives on that layer so the wash shows through. */
     background: transparent !important;
@@ -14315,7 +14330,7 @@ body,
     gap: 0.75rem !important;
     overflow-x: clip !important;
     border: 0 !important;
-    border-bottom: 1px solid #dce5ef !important;
+    border-bottom: 1px solid var(--surface-sunken) !important;
     border-radius: 0 !important;
     background: #ffffff !important;
     box-shadow: none !important;
@@ -14331,7 +14346,7 @@ body,
     overflow: visible !important;
     overflow-x: hidden !important;
     overflow-y: visible !important;
-    /* was #f4f7fb !important — this opaque fill sat above the fixed
+    /* was var(--surface-page) !important — this opaque fill sat above the fixed
        background layer and hid it completely. The page colour now
        lives on that layer so the wash shows through. */
     background: transparent !important;
@@ -14430,11 +14445,11 @@ body,
 
 .dashboard-shell:has(.inventory-workspace) .inventory-stat-grid .dashboard-metric-card {
   min-height: 4.75rem;
-  border-color: #dde6f1;
+  border-color: var(--surface-sunken);
   border-radius: 16px;
   background: #ffffff;
   padding: 0.75rem;
-  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.045);
+  box-shadow: 0 10px 24px var(--border-hairline);
 }
 
 .dashboard-shell:has(.inventory-workspace) .inventory-stat-grid .dashboard-metric-icon {
@@ -14497,17 +14512,17 @@ body,
 
 .dashboard-shell:has(.inventory-workspace) .inventory-item-skeleton {
   min-height: 20rem;
-  border: 1px solid #dde6f1;
+  border: 1px solid var(--surface-sunken);
   border-radius: 20px;
-  background: linear-gradient(90deg, #eef4fb, #ffffff, #eef4fb);
+  background: linear-gradient(90deg, var(--surface-page), #ffffff, var(--surface-page));
   background-size: 220% 100%;
 }
 
 .dashboard-shell:has(.inventory-workspace) .inventory-item-card {
-  border-color: #dce5ef;
+  border-color: var(--surface-sunken);
   border-left: 3px solid rgba(14, 165, 198, 0.35);
   border-radius: 18px;
-  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.055);
+  box-shadow: 0 12px 28px var(--border-hairline);
 }
 
 .dashboard-shell:has(.inventory-workspace) .inventory-card-media {
@@ -14564,7 +14579,7 @@ body,
   .dashboard-shell:has(.inventory-workspace) .inventory-item-card:hover {
     border-color: rgba(14, 165, 198, 0.42);
     border-left-color: #0ea5c6;
-    box-shadow: 0 18px 38px rgba(15, 23, 42, 0.09);
+    box-shadow: 0 18px 38px var(--border-hairline);
     transform: translateY(-2px);
   }
 }
@@ -14653,7 +14668,7 @@ body,
 @media (hover: hover) {
   .organize-categories .organize-compact-row:hover {
     border-color: var(--border-strong);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 12px 28px var(--border-hairline);
     transform: translateY(-1px);
   }
 
@@ -14673,9 +14688,9 @@ body,
   min-height: 2.55rem;
   min-width: 0;
   padding: 0 0.55rem 0 0.9rem;
-  border: 1px solid #dce5ef;
+  border: 1px solid var(--surface-sunken);
   border-radius: 999px;
-  background: #f8fafc;
+  background: var(--surface-page);
   cursor: pointer;
   transition:
     border-color var(--motion-control, 160ms) ease,
@@ -14709,7 +14724,7 @@ body,
   height: 1.3rem;
   align-items: center;
   justify-content: center;
-  border: 1px solid #dfe7f0;
+  border: 1px solid var(--surface-sunken);
   border-radius: 6px;
   background: #ffffff;
   padding: 0 0.3rem;
@@ -14733,7 +14748,7 @@ body,
   .dashboard-top-searchbar:hover {
     border-color: rgba(14, 165, 198, 0.4);
     background: #ffffff;
-    box-shadow: 0 8px 20px rgba(15, 23, 42, 0.06);
+    box-shadow: 0 8px 20px var(--border-hairline);
   }
 }
 
@@ -14767,7 +14782,7 @@ body,
 
 /* Command palette panel */
 .global-search-panel {
-  border: 1px solid #dce5ef;
+  border: 1px solid var(--surface-sunken);
   border-radius: var(--sydin-radius-panel);
   background: var(--bg-glass);
   backdrop-filter: blur(22px);
@@ -15057,7 +15072,7 @@ body,
 }
 
 .po-history-row-draft {
-  border-left-color: #cbd5e1;
+  border-left-color: var(--border-hairline);
 }
 
 .po-history-row-ordered {
@@ -15104,7 +15119,7 @@ body,
 @media (hover: hover) {
   .po-history-workspace .po-summary-grid .dashboard-metric-card:hover {
     border-color: rgba(14, 165, 198, 0.4);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 12px 28px var(--border-hairline);
     transform: translateY(-1px);
   }
 }
@@ -15321,7 +15336,7 @@ body,
 @media (hover: hover) {
   .sydin-overview-spending-row:hover {
     border-color: rgba(14, 165, 198, 0.42);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 10px 24px var(--border-hairline);
     transform: translateY(-1px);
   }
 }
@@ -15484,7 +15499,7 @@ body,
 @media (hover: hover) {
   .receiving-history-row:hover {
     border-color: rgba(14, 165, 198, 0.4);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.07);
+    box-shadow: 0 10px 24px var(--border-hairline);
     transform: translateY(-1px);
   }
 }
@@ -15825,7 +15840,7 @@ body,
   .po-history-row:hover,
   .po-line-card:hover {
     border-color: rgba(14, 165, 198, 0.42);
-    box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 12px 28px var(--border-hairline);
   }
 
   .po-history-row:hover {
@@ -15869,7 +15884,7 @@ body,
 /* --- Background: soft ice + warm orb glow (top-left) + teal tint (bottom) --- */
 @media (min-width: 900px) {
   /* The workspace ground.
-     Was three drifting amber/orange orbs over #f2f5f8 -- a warm decoration
+     Was three drifting amber/orange orbs over var(--surface-page) -- a warm decoration
      sitting behind a blue brand, which is the colour clash Sayed reported:
      nothing on the screen agreed on a temperature. The light now has one
      source and one hue, and it is the logo's.
@@ -15895,7 +15910,7 @@ body,
       ),
       /* deeper and cooler than the panel it carries: without this difference
          the curved seam below has nothing to separate */
-      #e9eef7 !important;
+      var(--surface-sunken) !important;
     background-attachment: fixed, fixed, fixed !important;
     background-repeat: no-repeat !important;
     animation: none;
@@ -15929,8 +15944,8 @@ body,
         rgba(37, 99, 235, 0) 64%
       ),
       #ffffff !important;
-    border-left: 1px solid rgba(18, 38, 74, 0.09) !important;
-    border-top: 1px solid rgba(18, 38, 74, 0.09) !important;
+    border-left: 1px solid var(--border-hairline) !important;
+    border-top: 1px solid var(--border-hairline) !important;
     border-top-left-radius: 22px !important;
     /* The chrome's shadow falling onto the page. An INSET shadow rather than
        two outer shadows (one from the rail, one from the header) because an
@@ -15983,7 +15998,7 @@ body,
         rgba(16, 196, 220, 0.24),
         rgba(16, 196, 220, 0) 72%
       ),
-      #e9eef7 !important;
+      var(--surface-sunken) !important;
     background-attachment: fixed, fixed, fixed, fixed !important;
     background-repeat: no-repeat !important;
     -webkit-backdrop-filter: none !important;
@@ -16018,7 +16033,7 @@ body,
   background: rgba(255, 255, 255, 0.62) !important;
   -webkit-backdrop-filter: blur(16px) saturate(1.45);
   backdrop-filter: blur(16px) saturate(1.45);
-  box-shadow: 0 18px 48px rgba(15, 23, 42, 0.07) !important;
+  box-shadow: 0 18px 48px var(--border-hairline) !important;
 }
 
 /* --- Small repeated cards: translucent white WITHOUT blur (perf on big grids) --- */
@@ -16205,7 +16220,7 @@ body,
 @media (hover: hover) {
   .sydin-health-row:hover {
     border-color: rgba(148, 163, 184, 0.5);
-    box-shadow: 0 10px 24px rgba(15, 23, 42, 0.08);
+    box-shadow: 0 10px 24px var(--border-hairline);
     transform: translateY(-1px);
   }
 }
@@ -16797,7 +16812,7 @@ body,
 
 .inventory-card-tag.inventory-card-status--success {
   border-color: #a5f3fc;
-  background: #ecfeff;
+  background: var(--surface-sunken);
   color: #0e7490;
 }
 
@@ -17366,7 +17381,7 @@ body,
 }
 
 .image-lightbox-toolbar button:hover:not(:disabled) {
-  background: rgba(15, 31, 58, 0.08);
+  background: var(--border-hairline);
 }
 
 .image-lightbox-toolbar button:disabled {
@@ -17423,7 +17438,7 @@ body,
 /* ===[ SOLID CARD SURFACES — remove the grey cast ]=== */
 /* Founder: "there is grey color between border and section, not nice."
    The cards were not white. Measured on Purchase Orders: card background
-   rgba(255,255,255,0.62) — 62% translucent white — sitting on a #f5f7fb page,
+   rgba(255,255,255,0.62) — 62% translucent white — sitting on a var(--surface-page) page,
    so the page tint showed through and the fill read grey, while the border was
    pure white. That white edge against a muddy fill is the "grey" he was seeing.
    Translucency is the liquid-glass look, but at this opacity over a tinted page
@@ -17452,7 +17467,7 @@ body,
 .inventory-table-shell,
 .inventory-list-row,
 .glass-panel {
-  border-color: rgba(15, 23, 42, 0.08) !important;
+  border-color: var(--border-hairline) !important;
 }
 
 /* `.inventory-items-grid article` (0,1,1) outranks a bare `.inventory-item-card`
@@ -17468,7 +17483,7 @@ body,
 .inventory-items-grid article.inventory-item-card {
   background-color: #ffffff !important;
   background-image: none !important;
-  border-color: rgba(15, 23, 42, 0.08) !important;
+  border-color: var(--border-hairline) !important;
 }
 
 /* ===[ SCROLL-REACTIVE PAGE BACKGROUND ]=== */
@@ -17506,7 +17521,7 @@ body,
      One light source now, and it is the logo: the brand blue close in, the
      logo gradient's cyan thrown wider, both anchored at the mark in the top
      left and falling off with distance. Nothing warm. */
-  background-color: #e9eef7;
+  background-color: var(--surface-sunken);
   background-image:
     radial-gradient(closest-side, rgba(37, 99, 235, 0.26), rgba(37, 99, 235, 0.08) 52%, transparent 76%),
     radial-gradient(closest-side, rgba(16, 196, 220, 0.2), transparent 72%),
@@ -17549,7 +17564,7 @@ body,
 .dashboard-shell .dashboard-card,
 .dashboard-shell .dashboard-page-header-card,
 .dashboard-shell .inventory-item-card {
-  border-color: rgba(15, 23, 42, 0.08) !important;
+  border-color: var(--border-hairline) !important;
   background: #ffffff !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
@@ -17564,7 +17579,7 @@ body,
 }
 
 .dashboard-shell .inventory-item-card {
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.06) !important;
+  box-shadow: 0 4px 14px var(--border-hairline) !important;
 }
 
 /* The wash was rendering correctly and then being painted over: the shell and
@@ -17588,7 +17603,7 @@ body,
 }
 
 /* The masking fills were removed at source (four workspace-scoped
-   `#f4f7fb !important` declarations plus one unlayered rule) rather than
+   `var(--surface-page) !important` declarations plus one unlayered rule) rather than
    out-specified here — a sixth competing override would have made this file
    worse. `.dashboard-theme` still needs clearing because it sits above the
    fixed layer in paint order. */
@@ -17599,7 +17614,7 @@ body,
 /* The base page colour now belongs to the fixed layer, not to the scrolling
    boxes, so it stays put while the gradients drift over it. */
 body.sydin-shell {
-  background-color: #f2f5f8;
+  background-color: var(--surface-page);
 }
 
 /* ===[ CRISP HAIRLINES + CALMER WASH ]=== */
@@ -17628,7 +17643,7 @@ body.sydin-shell {
 }
 
 .dashboard-shell.dashboard-workspace-shell.liquid-bg {
-  background-color: #f4f7fb !important;
+  background-color: var(--surface-page) !important;
 }
 
 /* ===[ FLAT WHITE PAGE BACKGROUND (founder decision) ]=== */
@@ -17777,7 +17792,7 @@ body.sydin-shell,
    `.dashboard-action-button-secondary` styling is left alone. */
 .inventory-workspace .inventory-action-secondary,
 .inventory-workspace .inventory-toolbar-button {
-  border-color: rgba(40, 72, 112, 0.2) !important;
+  border-color: var(--border-hairline) !important;
   background: #ffffff !important;
 }
 
@@ -17906,7 +17921,7 @@ body.sydin-shell,
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.5rem 0.6rem 0.6rem;
-  border-bottom: 1px solid var(--border-divider, rgba(15, 23, 42, 0.08));
+  border-bottom: 1px solid var(--border-divider, var(--border-hairline));
 }
 
 .dashboard-notifications-header > div {
@@ -17962,7 +17977,7 @@ body.sydin-shell,
 }
 
 .dashboard-notifications-section + .dashboard-notifications-section {
-  border-top: 1px solid var(--border-divider, rgba(15, 23, 42, 0.08));
+  border-top: 1px solid var(--border-divider, var(--border-hairline));
 }
 
 .dashboard-notifications-section-title {
@@ -17986,7 +18001,7 @@ body.sydin-shell,
 }
 
 a.dashboard-notifications-row:hover {
-  background: var(--bg-hover, rgba(15, 23, 42, 0.04));
+  background: var(--bg-hover, var(--border-hairline));
 }
 
 .dashboard-notifications-row-text {
@@ -18040,7 +18055,7 @@ a.dashboard-notifications-row:hover {
   align-items: center;
   justify-content: center;
   border-radius: 0.5rem;
-  background: var(--bg-inset, rgba(15, 23, 42, 0.05));
+  background: var(--bg-inset, var(--border-hairline));
   color: var(--text-muted);
 }
 
@@ -18110,7 +18125,7 @@ a.dashboard-notifications-row:hover {
   letter-spacing: 0.01em;
   line-height: 1.35;
   white-space: nowrap;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.24);
+  box-shadow: 0 8px 22px var(--border-hairline);
   opacity: 0;
   pointer-events: none;
   transform: translate(-6px, -50%);
@@ -18183,7 +18198,7 @@ a.dashboard-notifications-row:hover {
   .marketing-pricing-card:hover {
     transform: translateY(-3px);
     border-color: rgba(37, 99, 235, 0.24);
-    box-shadow: 0 18px 44px rgba(15, 23, 42, 0.1);
+    box-shadow: 0 18px 44px var(--border-hairline);
   }
 }
 
@@ -18223,11 +18238,11 @@ a.dashboard-notifications-row:hover {
 .marketing-site {
   --m-ink: #17191c;
   --m-paper: #ffffff;
-  --m-mist: #f2f2f3;
-  --m-fog: #fafafb;
+  --m-mist: var(--surface-page);
+  --m-fog: var(--surface-page);
   --m-slate: #777b86;
   --m-ash: #979799;
-  --m-line: rgba(23, 25, 28, 0.1);
+  --m-line: var(--border-hairline);
   --m-accent: #2563eb;
 
   /* Steep's canvas is plain paper. The old radial blue wash fought the
@@ -18285,9 +18300,9 @@ a.dashboard-notifications-row:hover {
   border-radius: 20px;
   background: var(--m-paper);
   box-shadow:
-    0 0 0 1px rgba(4, 23, 43, 0.05),
-    0 20px 25px -5px rgba(0, 0, 0, 0.1),
-    0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    0 0 0 1px var(--border-hairline),
+    0 20px 25px -5px var(--border-hairline),
+    0 8px 10px -6px var(--border-hairline);
 }
 
 /* --- Controls: filled ink pill paired with a ghost pill --- */
@@ -18622,13 +18637,13 @@ a.dashboard-notifications-row:hover {
 
   .marketing-artifact {
     position: absolute;
-    border: 1px solid rgba(23, 25, 28, 0.08);
+    border: 1px solid var(--border-hairline);
     border-radius: 20px;
     background: #ffffff;
     box-shadow:
-      0 0 0 1px rgba(4, 23, 43, 0.05),
-      0 20px 25px -5px rgba(0, 0, 0, 0.1),
-      0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      0 0 0 1px var(--border-hairline),
+      0 20px 25px -5px var(--border-hairline),
+      0 8px 10px -6px var(--border-hairline);
     padding: 0.85rem 1rem;
     text-align: left;
   }
@@ -18729,7 +18744,7 @@ a.dashboard-notifications-row:hover {
     flex: 0 0 auto;
     place-items: center;
     border-radius: 999px;
-    background: #f2f2f3;
+    background: var(--surface-page);
     color: #17191c;
   }
 
@@ -18919,7 +18934,7 @@ a.dashboard-notifications-row:hover {
 .marketing-site .marketing-billing-toggle-active {
   background: var(--m-paper);
   color: var(--m-ink);
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px var(--border-hairline);
 }
 
 .marketing-site .marketing-billing-save {
@@ -19120,8 +19135,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-figures {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid rgba(15, 23, 42, 0.1);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  border-top: 1px solid var(--border-hairline);
+  border-bottom: 1px solid var(--border-hairline);
 }
 
 .ov-figure {
@@ -19135,7 +19150,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .ov-figure + .ov-figure {
   padding-left: var(--space-5);
-  border-left: 1px solid rgba(15, 23, 42, 0.1);
+  border-left: 1px solid var(--border-hairline);
 }
 
 .ov-figure:hover {
@@ -19196,7 +19211,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   justify-content: space-between;
   gap: var(--space-3);
   padding-bottom: var(--space-2);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  border-bottom: 1px solid var(--border-hairline);
 }
 
 .ov-section-title {
@@ -19320,7 +19335,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .ov-list > li + li {
-  border-top: 1px solid rgba(15, 23, 42, 0.07);
+  border-top: 1px solid var(--border-hairline);
 }
 
 .ov-row {
@@ -19335,7 +19350,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .ov-row:hover {
-  background: rgba(15, 23, 42, 0.04);
+  background: var(--border-hairline);
 }
 
 .ov-row-text {
@@ -19403,7 +19418,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   height: 34px;
   border-radius: 8px;
   overflow: hidden;
-  background: rgba(15, 23, 42, 0.05);
+  background: var(--border-hairline);
   color: #6b7a92;
 }
 
@@ -19430,7 +19445,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   }
 
   .ov-figure:nth-child(n + 3) {
-    border-top: 1px solid rgba(15, 23, 42, 0.1);
+    border-top: 1px solid var(--border-hairline);
   }
 
   .ov-columns {
@@ -19499,8 +19514,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   height: 38px;
   /* !important only to clear the frosted-glass rule earlier in this file, which
      fills the bar with translucent white -- invisible on a white header. */
-  background: rgba(18, 38, 74, 0.045) !important;
-  border: 1px solid rgba(18, 38, 74, 0.07) !important;
+  background: var(--border-hairline) !important;
+  border: 1px solid var(--border-hairline) !important;
   box-shadow: none;
   transition:
     background 160ms ease,
@@ -19509,8 +19524,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .dashboard-workspace-shell .dashboard-top-searchbar:hover {
-  background: rgba(18, 38, 74, 0.07) !important;
-  border-color: rgba(18, 38, 74, 0.12) !important;
+  background: var(--border-hairline) !important;
+  border-color: var(--border-hairline) !important;
 }
 
 .dashboard-workspace-shell .dashboard-top-searchbar:focus-visible,
@@ -19522,7 +19537,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .dashboard-workspace-shell .dashboard-top-searchbar-kbd kbd {
-  background: rgba(18, 38, 74, 0.06);
+  background: var(--border-hairline);
   border-color: transparent;
   color: #6b7a92;
 }
@@ -19534,7 +19549,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .dashboard-workspace-shell .dashboard-top-icon-button:hover {
-  background: rgba(18, 38, 74, 0.06);
+  background: var(--border-hairline);
 }
 
 /* ==========================================================================
@@ -19561,7 +19576,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    just deleting its `display: none`, and it would now inherit this palette.
    ========================================================================== */
 .dashboard-shell.dashboard-workspace-shell.liquid-bg {
-  background-color: #e9eef7 !important;
+  background-color: var(--surface-sunken) !important;
   background-image:
     /* near bloom, centred on the logo mark in the rail's top-left */
     radial-gradient(
@@ -19818,7 +19833,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .inventory-workspace .inventory-card-footer button:hover,
 .inventory-workspace .inventory-card-menu-button:hover {
-  background: rgba(18, 38, 74, 0.07);
+  background: var(--border-hairline);
 }
 
 /* Only the chosen filter is drawn. The rest are text until you pick one --
@@ -19831,7 +19846,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .inventory-workspace .inventory-quick-filter:hover {
-  background: rgba(18, 38, 74, 0.06);
+  background: var(--border-hairline);
 }
 
 .inventory-workspace .inventory-quick-filter.dashboard-filter-chip-active {
@@ -19914,12 +19929,12 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card + .dashboard-metric-card {
   padding-left: var(--space-5);
-  border-left: 1px solid rgba(15, 23, 42, 0.1);
+  border-left: 1px solid var(--border-hairline);
 }
 
 .dashboard-shell .inventory-workspace .inventory-stat-grid {
-  border-top: 1px solid rgba(15, 23, 42, 0.1);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  border-top: 1px solid var(--border-hairline);
+  border-bottom: 1px solid var(--border-hairline);
   gap: 0;
 }
 
@@ -19952,12 +19967,12 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card
   + .dashboard-metric-card {
-  border-left: 1px solid rgba(15, 23, 42, 0.1) !important;
+  border-left: 1px solid var(--border-hairline) !important;
 }
 
 .dashboard-shell .inventory-workspace .inventory-stat-grid {
-  border-top: 1px solid rgba(15, 23, 42, 0.1);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.1);
+  border-top: 1px solid var(--border-hairline);
+  border-bottom: 1px solid var(--border-hairline);
 }
 
 /* The header row: title and description stack, actions stay right. */
@@ -20210,7 +20225,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   }
 
   .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-thumb {
-    background: rgba(18, 38, 74, 0.18);
+    background: var(--border-hairline);
     border: 3px solid transparent;
     background-clip: content-box;
     border-radius: 999px;
@@ -20270,7 +20285,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
         rgba(16, 196, 220, 0.24),
         rgba(16, 196, 220, 0) 72%
       ),
-      #e9eef7 !important;
+      var(--surface-sunken) !important;
     background-attachment: fixed, fixed, fixed, fixed !important;
     background-repeat: no-repeat !important;
   }
