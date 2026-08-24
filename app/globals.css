@@ -20841,9 +20841,25 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .dashboard-shell .inventory-workspace {
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto;
+    /* Every row takes its own height except the last, which absorbs whatever is
+       left so the products fill the panel and own the scroll.
+
+       A grid with a definite height stretches its auto rows to fill it -- that
+       is the default and it is why row 1 measured 161px while the tallest thing
+       in it was 52px, leaving a band of nothing under the header. Naming the
+       rows fixes the height where it belongs.
+
+       Six min-content rows is more than this page can use (header, figures,
+       chips, filter panel, selection bar); spare ones collapse to zero. The
+       products are pinned to the last line so they always absorb the slack, no
+       matter how many of the optional rows are present. */
+    grid-template-rows:
+      min-content min-content min-content min-content min-content minmax(0, 1fr);
     align-items: center;
     column-gap: var(--space-4);
-    row-gap: var(--space-3);
+    /* Zero, because an empty row would still take a gap. Spacing is carried by
+       the rows themselves below. */
+    row-gap: 0;
   }
 
   /* Hand the children up to the grid above. These wrappers carry no fill or
@@ -20853,6 +20869,25 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .dashboard-shell .inventory-workspace > .inventory-toolbar-panel,
   .dashboard-shell .inventory-workspace > .inventory-toolbar-panel > .inventory-toolbar-stack {
     display: contents !important;
+  }
+
+  /* Everything spans the full width by default and finds its own row in DOM
+     order. Only the three items that share row 1 are placed explicitly.
+
+     This is the part the first version got wrong. Naming a row for each child
+     works only while the set of children never changes -- and on this page it
+     changes constantly: the Stats row appears and disappears, a "Quick: no
+     image" chip arrives with a filter, the Filters panel opens, the selection
+     bar appears in select mode. Each of those was landing in whatever cell was
+     free, which put the figures below the products, the filter panel adrift at
+     the bottom of the page, and the selection bar on top of the header.
+
+     A full-width default means a child nobody anticipated becomes its own row
+     in the right place instead of colliding with something. */
+  .dashboard-shell .inventory-workspace > *,
+  .dashboard-shell .inventory-workspace .inventory-toolbar-stack > *,
+  .dashboard-shell .inventory-workspace > .inventory-hero-card > * {
+    grid-column: 1 / -1;
   }
 
   .dashboard-shell .inventory-workspace .inventory-hero-title-block {
@@ -20872,15 +20907,31 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     justify-content: flex-end;
   }
 
-  .dashboard-shell .inventory-workspace .inventory-toolbar-secondary {
-    grid-column: 1 / -1;
-    grid-row: 2;
+  .dashboard-shell .inventory-workspace .inventory-content-grid {
+    grid-row: 6;
+    align-self: stretch;
   }
 
-  .dashboard-shell .inventory-workspace .inventory-content-grid {
-    grid-column: 1 / -1;
-    grid-row: 3;
-    align-self: stretch;
+  /* Spacing lives on the rows, not on the grid, so a collapsed empty row costs
+     nothing. Row 1 is flush with the top. */
+  .dashboard-shell .inventory-workspace > *:not(.inventory-hero-card):not(.inventory-toolbar-panel),
+  .dashboard-shell .inventory-workspace .inventory-toolbar-stack > *:not(.inventory-toolbar-main) {
+    margin-top: var(--space-3);
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-hero-title-block,
+  .dashboard-shell .inventory-workspace .inventory-toolbar-main,
+  .dashboard-shell .inventory-workspace .inventory-page-actions {
+    margin-top: 0;
+  }
+
+  /* The selection bar was sticky to the top of the scroll area, which used to
+     be below a header that scrolled away. The header is fixed now, so sticking
+     it to the top landed it straight on the controls -- measured as overlapping
+     text in select mode. It becomes an ordinary row of the page instead. */
+  .dashboard-shell .inventory-workspace .inventory-selection-bar {
+    position: static !important;
+    inset: auto !important;
   }
 
   /* The description and the badges go. "Manage 10 items, stock levels and
@@ -20905,28 +20956,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    keyed off the class the page already sets when the summary is hidden.
    -------------------------------------------------------------------------- */
 @media (min-width: 1280px) {
-  .dashboard-shell .inventory-workspace > .inventory-stat-grid {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-
-  /* Stats visible: figures, then chips, then products. */
-  .dashboard-shell .inventory-workspace .inventory-toolbar-secondary {
-    grid-row: 3;
-  }
-
-  .dashboard-shell .inventory-workspace > .inventory-content-grid {
-    grid-row: 4;
-  }
-
-  /* Stats hidden: nothing occupies row 2, so everything moves up one. */
-  .dashboard-shell .inventory-workspace-summary-hidden .inventory-toolbar-secondary {
-    grid-row: 2;
-  }
-
-  .dashboard-shell .inventory-workspace-summary-hidden > .inventory-content-grid {
-    grid-row: 3;
-  }
+  /* No row numbers here any more -- DOM order and the full-width default place
+     the figures, the chips and the products correctly whether Stats is open or
+     closed, and leave no empty row behind when it is closed. */
 
   /* The search was taking the whole middle column, which both left it far wider
      than any search anyone types into and squeezed the controls beside it. */
@@ -20936,5 +20968,65 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
   .dashboard-shell .inventory-workspace .inventory-toolbar-main {
     justify-content: flex-start;
+  }
+}
+
+/* ==========================================================================
+   SELECTED ITEM CARD (2026-08-24)
+   --------------------------------------------------------------------------
+   Founder note: a clear blue light for the selected card.
+
+   Selection was previously carried by a checkbox in the corner and very little
+   else -- in a grid of ten near-identical cards you had to hunt for which ones
+   were ticked. Selection is a state, and a state should be readable from across
+   the screen, not by inspecting each card.
+
+   Three signals together, because any one alone is not enough: a blue ring that
+   replaces the hairline, a soft blue glow so it reads as lit rather than merely
+   outlined, and a faint blue wash over the card. The card also lifts by 1px --
+   the only translate in the grid, so the eye lands on it immediately.
+   ========================================================================== */
+.dashboard-shell .inventory-workspace .inventory-item-card {
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.dashboard-shell .inventory-workspace .inventory-item-card-selected {
+  border-color: rgba(37, 99, 235, 0.55) !important;
+  background:
+    linear-gradient(
+      rgba(37, 99, 235, 0.06),
+      rgba(37, 99, 235, 0.06)
+    ),
+    #ffffff !important;
+  box-shadow:
+    0 0 0 1px rgba(37, 99, 235, 0.45),
+    0 8px 24px -6px rgba(37, 99, 235, 0.35) !important;
+  transform: translateY(-1px);
+}
+
+/* The tick itself goes solid blue, so the control agrees with the card. */
+.dashboard-shell .inventory-workspace .inventory-item-card-selected .inventory-card-select {
+  border-color: rgba(37, 99, 235, 0.75) !important;
+  background: #2563eb !important;
+  color: #ffffff !important;
+}
+
+/* In select mode every card shows its checkbox, so the hover-reveal that hides
+   the overflow menu must not hide the thing you are there to click. */
+.dashboard-shell .inventory-workspace .inventory-item-card .inventory-card-select {
+  opacity: 1 !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell .inventory-workspace .inventory-item-card {
+    transition: none;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-item-card-selected {
+    transform: none;
   }
 }
