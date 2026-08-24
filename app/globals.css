@@ -21121,3 +21121,97 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   padding-top: 3px;
   scroll-padding-top: 3px;
 }
+
+/* Two breakdowns side by side inside one section, so Overview gains a single
+   region instead of two. Below the column breakpoint they stack. */
+.ov-split {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4) var(--space-5);
+}
+
+.ov-split-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+}
+
+/* A read-only row: same rhythm as the clickable ones, without pretending to be
+   a link. */
+.ov-row-static {
+  cursor: default;
+}
+
+.ov-row-static:hover {
+  background: transparent;
+}
+
+@container (max-width: 560px) {
+  .ov-split {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ==========================================================================
+   INVENTORY SEARCH — collapses to its icon (2026-08-25)
+   --------------------------------------------------------------------------
+   Founder note: make the search just the icon, to win space -- if that is
+   professional.
+
+   Measured before answering, because it depends entirely on whether the space
+   is actually needed. At 1440 the merged header row is 1327px and its contents
+   use 1302: twenty-five pixels of slack. So the row is genuinely tight, and at
+   1280 -- the width where the merge starts -- it is tighter still. This is not
+   saving space that nothing wants.
+
+   The cost is a click, and filtering the list is the most common thing anyone
+   does on this screen, so the collapse only holds while the field is empty and
+   unfocused:
+
+     - click or tab into it       expands
+     - it contains a search term  stays expanded, so you can always see what
+                                  you are filtering by
+
+   `:has(input:not(:placeholder-shown))` is what keeps a live search visible --
+   a collapsed field hiding an active filter would be genuinely misleading, not
+   merely inconvenient.
+
+   No hover expansion on purpose: a control that grows as the pointer crosses it
+   makes the row twitch while you are trying to reach the button beyond it.
+   ========================================================================== */
+@media (min-width: 1280px) {
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search {
+    width: 42px;
+    min-width: 42px;
+    flex: 0 0 auto;
+    overflow: hidden;
+    transition: width 180ms ease, min-width 180ms ease;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search:focus-within,
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:has(input:not(:placeholder-shown)) {
+    width: 320px;
+    min-width: 320px;
+  }
+
+  /* The input still fills the control while collapsed, so the whole 42px circle
+     is the click target rather than only the icon inside it. */
+  .dashboard-shell .inventory-workspace .inventory-search-input {
+    width: 100%;
+  }
+
+  /* The placeholder would otherwise show as a sliver of clipped text. */
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:not(:focus-within):not(:has(input:not(:placeholder-shown)))
+    .inventory-search-input::placeholder {
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search {
+    transition: none;
+  }
+}

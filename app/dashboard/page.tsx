@@ -432,8 +432,27 @@ export default function DashboardPage() {
       (item) => !item.depot_id
     ).length;
 
+    // Where the stock actually sits. Moved here from Inventory's side rail:
+    // Inventory is the screen you open to find and change a product, and it
+    // should spend its width on products. A breakdown belongs on the screen you
+    // open for a summary. Quantity, not item count -- "34,623 units in
+    // Unassigned" is the fact worth knowing; "6 products" is not.
+    const sumBy = (key: "depot" | "category") => {
+      const totals = new Map<string, number>();
+      for (const entry of enrichedItems) {
+        const label = (entry[key] || "").trim() || "Unassigned";
+        totals.set(label, (totals.get(label) || 0) + entry.quantity);
+      }
+      return [...totals.entries()]
+        .map(([label, quantity]) => ({ label, quantity }))
+        .sort((left, right) => right.quantity - left.quantity)
+        .slice(0, 5);
+    };
+
     return {
       enrichedItems,
+      stockByLocation: sumBy("depot"),
+      stockByCategory: sumBy("category"),
       recentItems: enrichedItems.slice(0, 6),
       totalItems: items.length,
       totalQuantity,
@@ -864,6 +883,64 @@ export default function DashboardPage() {
                   </li>
                 </ul>
               </>
+            )}
+          </section>
+
+          {/* Where the stock sits. Moved off Inventory's side rail, which was
+              spending 22% of that screen's width on a summary. Two breakdowns
+              in one section rather than two sections, so Overview gains one
+              region, not two -- the whole point of the rebuild was fewer. */}
+          <section className="ov-section" aria-labelledby="ov-stock-title">
+            <div className="ov-section-head">
+              <h2 id="ov-stock-title" className="ov-section-title">
+                Where your stock sits
+              </h2>
+              <Link href="/dashboard/depots" className="ov-link">
+                All depots
+                <UiIcon name="chevron-right" className="h-4 w-4" />
+              </Link>
+            </div>
+
+            {loading ? (
+              <LoadingSkeletonGroup count={3} />
+            ) : dashboardData.totalQuantity === 0 ? (
+              <p className="ov-quiet">
+                No stock recorded yet. Quantities appear here once items have
+                stock against them.
+              </p>
+            ) : (
+              <div className="ov-split">
+                {[
+                  {
+                    key: "location",
+                    label: "By location",
+                    rows: dashboardData.stockByLocation,
+                  },
+                  {
+                    key: "category",
+                    label: "By category",
+                    rows: dashboardData.stockByCategory,
+                  },
+                ].map((group) => (
+                  <div key={group.key} className="ov-split-col">
+                    <p className="ov-figure-label">{group.label}</p>
+                    <ul className="ov-list">
+                      {group.rows.map((row) => (
+                        <li key={row.label}>
+                          <span className="ov-row ov-row-static">
+                            <span className="ov-row-text">
+                              <strong>{row.label}</strong>
+                            </span>
+                            <span className="ov-row-value">
+                              {formatNumber(row.quantity)}
+                            </span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
             )}
           </section>
 
