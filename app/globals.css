@@ -20577,3 +20577,202 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .dashboard-shell .inventory-workspace .inventory-items-grid {
   grid-auto-rows: 1fr;
 }
+
+/* ==========================================================================
+   INVENTORY LIST VIEW — a list, not ten floating cards (2026-08-24)
+   --------------------------------------------------------------------------
+   Measured with ten real items: every row was its own card -- 20px radius, a
+   border, a drop shadow, and an 8px gap to the next one. 43 bordered or
+   shadowed regions for ten products.
+
+   That is the grid view again, only narrower. List view exists for density:
+   you switch to it to compare many products quickly, which needs rows on one
+   continuous surface with a hairline between them, not ten detached objects
+   each demanding to be read on its own. Row height comes down from 74px to 56px
+   for the same reason -- more products visible without scrolling is the entire
+   point of the view.
+   ========================================================================== */
+.dashboard-shell .inventory-workspace .inventory-list {
+  gap: 0 !important;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-card);
+  background: #ffffff;
+  overflow: hidden;
+}
+
+.dashboard-shell .inventory-workspace .inventory-list-row {
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  min-height: 56px;
+  padding-top: var(--space-2) !important;
+  padding-bottom: var(--space-2) !important;
+  transition: background 140ms ease;
+}
+
+.dashboard-shell .inventory-workspace .inventory-list-row + .inventory-list-row {
+  border-top: 1px solid rgba(15, 23, 42, 0.07) !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-list-row:hover {
+  background: rgba(18, 38, 74, 0.03) !important;
+}
+
+/* A quantity is a number you read, not a state. It was boxed and set at weight
+   900 -- heavier than the product name beside it. */
+.dashboard-shell .inventory-workspace .inventory-list-quantity {
+  border: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Same treatment as the grid card: the row action waits to be looked at rather
+   than repeating itself down the whole page. Pointer devices only -- on touch
+   there is no hover, so hiding it there would make it unreachable. */
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-shell .inventory-workspace .inventory-list-actions button,
+  .dashboard-shell .inventory-workspace .inventory-list-actions a {
+    opacity: 0;
+    transition: opacity 140ms ease;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-list-row:hover
+    .inventory-list-actions :is(button, a),
+  .dashboard-shell .inventory-workspace .inventory-list-actions
+    :is(button, a):focus-visible,
+  .dashboard-shell .inventory-workspace .inventory-list-actions
+    button[aria-expanded="true"] {
+    opacity: 1;
+  }
+}
+
+/* ==========================================================================
+   INVENTORY TABLE VIEW — a sticky header, and table density (2026-08-24)
+   --------------------------------------------------------------------------
+   Two faults, both measured with ten real items:
+
+   1. The header was `position: static`. Nine columns -- Item, Code, Category,
+      Depot, Stock, Status, Value -- and the moment you scrolled past the first
+      screen you were reading unlabelled numbers. With 500 products that is the
+      difference between a table and a wall. The brief asks for a sticky header
+      and now that the data region owns its own scroll, it is straightforward.
+
+   2. Rows were 62px. That is card height. The table is the densest of the three
+      views -- it exists to compare many products at once -- and 62px per row
+      shows barely more than the grid does.
+   ========================================================================== */
+.dashboard-shell .inventory-workspace .inventory-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  /* Opaque: rows scroll underneath it. */
+  background: var(--surface-page);
+  box-shadow: inset 0 -1px 0 var(--border-hairline);
+}
+
+.dashboard-shell .inventory-workspace .inventory-table tbody td {
+  padding-top: var(--space-2);
+  padding-bottom: var(--space-2);
+}
+
+.dashboard-shell .inventory-workspace .inventory-table tbody tr {
+  transition: background 140ms ease;
+}
+
+.dashboard-shell .inventory-workspace .inventory-table tbody tr:hover {
+  background: rgba(18, 38, 74, 0.03);
+}
+
+/* The table shell is a level-2 surface: a hairline is the edge, not a shadow. */
+.dashboard-shell .inventory-workspace .inventory-table-shell {
+  box-shadow: none !important;
+}
+
+/* Same as the grid card and the list row: the row action stops repeating itself
+   down the page. Pointer devices only -- touch has no hover. */
+@media (hover: hover) and (pointer: fine) {
+  .dashboard-shell .inventory-workspace .inventory-table tbody td :is(button, a).inventory-table-action {
+    opacity: 0;
+    transition: opacity 140ms ease;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-table tbody tr:hover
+    .inventory-table-action,
+  .dashboard-shell .inventory-workspace .inventory-table-action:focus-visible {
+    opacity: 1;
+  }
+}
+
+/* Row height was still 72px: the thumbnail rendered at 56px and set the floor.
+   40px is enough to recognise a product photo at this size, and it buys back a
+   row roughly every six -- which is the whole reason this view exists. */
+.dashboard-shell .inventory-workspace .inventory-list-row > .relative {
+  height: 40px !important;
+  width: 40px !important;
+  border-radius: 8px !important;
+}
+
+/* The action is revealed on hover now, so it does not also need an outline to
+   announce itself. Keeps its 44px touch target. */
+.dashboard-shell .inventory-workspace .inventory-list-actions :is(button, a) {
+  border-color: transparent !important;
+  background: transparent !important;
+}
+
+.dashboard-shell .inventory-workspace .inventory-list-actions :is(button, a):hover {
+  background: rgba(18, 38, 74, 0.06) !important;
+}
+
+/* The sticky header was sticking to the wrong thing. `position: sticky` binds
+   to the nearest ancestor that clips or scrolls, and `.inventory-table-shell`
+   carries `overflow: hidden` -- so the header stuck inside the shell while the
+   whole shell scrolled away in the outer region. Measured: scrolling 200px
+   moved the header 62px. Sticky, but useless.
+
+   In table view the table's own wrapper becomes the scroller, so the header has
+   something to stick to and the column names stay put for all 500 rows. */
+@media (min-width: 900px) {
+  .dashboard-shell .inventory-workspace
+    > .inventory-content-grid:has(.inventory-table-shell) {
+    overflow: hidden !important;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-table-shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-table-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
+  }
+}
+
+/* The height has to reach the table, or the sticky header has nothing to stick
+   inside. `.inventory-content-grid` was constrained, but the <section> between
+   it and the table shell was not, so that section simply grew to its content
+   and the shell was clipped rather than scrolled -- measured: scrollHeight and
+   clientHeight both 643 even after adding 25 rows, i.e. nothing could scroll.
+   In table view the chain is a flex column all the way down. */
+@media (min-width: 900px) {
+  .dashboard-shell .inventory-workspace
+    > .inventory-content-grid:has(.inventory-table-shell) {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+
+  .dashboard-shell .inventory-workspace
+    > .inventory-content-grid:has(.inventory-table-shell) > * {
+    flex: 1 1 auto !important;
+    min-height: 0 !important;
+    height: 100% !important;
+  }
+}
