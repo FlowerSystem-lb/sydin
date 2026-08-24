@@ -13806,10 +13806,12 @@ body,
     height: 100vh !important;
     flex-direction: column !important;
     overflow: visible !important;
+    /* Paint removed 2026-08-24: the rail's colour and edge now come from the
+       shared chrome rule, so the rail and the header stay one surface here as
+       well. A white fill and a right border on this page only is what made
+       Inventory's chrome differ from every other page's. */
     border: 0 !important;
-    border-right: 1px solid #dce5ef !important;
     border-radius: 0 !important;
-    background: #ffffff !important;
     box-shadow: none !important;
     padding: 0.75rem 0.5rem !important;
   }
@@ -15961,8 +15963,8 @@ body,
      what makes it look like one lit surface rather than two tinted panels.
 
      Opaque, because the page now scrolls underneath the header. */
-  .dashboard-workspace-shell .dashboard-sidebar,
-  .dashboard-workspace-shell .dashboard-desktop-toolbar {
+  .dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-sidebar,
+  .dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-desktop-toolbar {
     border: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
@@ -20167,13 +20169,13 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    a drawer, the document scrolls as before, and none of this applies.
    ========================================================================== */
 @media (min-width: 900px) {
-  .dashboard-workspace-shell {
+  .dashboard-shell.dashboard-workspace-shell {
     height: 100dvh !important;
     min-height: 100dvh !important;
     overflow: hidden !important;
   }
 
-  .dashboard-workspace-shell .dashboard-main-canvas {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-main-canvas {
     display: flex !important;
     flex-direction: column !important;
     height: 100dvh !important;
@@ -20183,7 +20185,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
   /* The header keeps its natural height and stops being sticky -- it no longer
      needs to be, since nothing scrolls past it. */
-  .dashboard-workspace-shell .dashboard-desktop-toolbar {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-desktop-toolbar {
     position: relative !important;
     top: auto !important;
     flex: 0 0 auto !important;
@@ -20191,7 +20193,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
   /* The one thing that scrolls. `min-height: 0` is required or the flex item
      refuses to shrink below its content and the overflow never engages. */
-  .dashboard-workspace-shell .dashboard-shell-content {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content {
     flex: 1 1 auto !important;
     min-height: 0 !important;
     height: auto !important;
@@ -20203,23 +20205,191 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   }
 
   /* A scrollbar hard against the rounded corner looks like a mistake. */
-  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar {
     width: 10px;
   }
 
-  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-thumb {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-thumb {
     background: rgba(18, 38, 74, 0.18);
     border: 3px solid transparent;
     background-clip: content-box;
     border-radius: 999px;
   }
 
-  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-thumb:hover {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-thumb:hover {
     background: rgba(18, 38, 74, 0.3);
     background-clip: content-box;
   }
 
-  .dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-track {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content::-webkit-scrollbar-track {
     background: transparent;
+  }
+}
+
+/* ==========================================================================
+   THE CORNER, AND WHAT SCROLLS INSIDE THE PAGE (2026-08-24)
+   --------------------------------------------------------------------------
+   1. THE 90-DEGREE CORNER
+
+   The page panel has a 22px rounded top-left corner. Outside that arc sits a
+   small wedge, and the canvas behind it was transparent -- so the wedge showed
+   the SHELL GROUND, which is darker than the chrome. The result was a visible
+   square corner in a different colour, right where the eye is drawn.
+
+   The canvas now paints the same background as the rail and the header, with
+   the same viewport-anchored layers. The wedge becomes chrome, and the curve
+   reads as the page being cut out of the frame instead of a gap between two
+   different surfaces.
+
+   2. WHAT SCROLLS
+
+   Founder note: the page's own header and filters should hold still, and only
+   the data should scroll.
+
+   The shared page shell is header -> toolbar -> data region, so this is done
+   once here rather than per page. The shell fills the panel, the header and
+   toolbar keep their natural height, and the last child takes what is left and
+   scrolls inside itself.
+
+   Scoped with :has() to page shells whose last child is actually a data
+   surface. On a page built from several stacked sections -- settings, help --
+   making only the final section scrollable would strand everything above it,
+   so those keep the whole panel scrolling as before.
+   ========================================================================== */
+@media (min-width: 900px) {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-main-canvas {
+    background:
+      linear-gradient(rgba(255, 255, 255, 0.64), rgba(255, 255, 255, 0.64)),
+      radial-gradient(
+        460px 360px at 36px 40px,
+        rgba(37, 99, 235, 0.4),
+        rgba(37, 99, 235, 0) 76%
+      ),
+      radial-gradient(
+        920px 540px at 6px 0px,
+        rgba(16, 196, 220, 0.24),
+        rgba(16, 196, 220, 0) 72%
+      ),
+      #e9eef7 !important;
+    background-attachment: fixed, fixed, fixed, fixed !important;
+    background-repeat: no-repeat !important;
+  }
+
+  /* --- the height chain ---
+     For the data region to scroll inside itself, every box between it and the
+     panel must agree to be a fixed-height column: the panel stops scrolling,
+     each wrapper passes the height down, and only the last child overflows.
+
+     The wrappers are not a fixed list -- each page adds its own <main>
+     (`operations-workspace`, `inventory-workspace`, ...) between the route
+     transition and the page shell, which is what made the first version of
+     this rule match nothing at all. So the chain is expressed as "whatever
+     element directly contains the page shell" rather than by class name.
+
+     `min-height: 0` appears at every level on purpose: a flex item defaults to
+     `min-height: auto` and refuses to shrink below its content, so omitting it
+     anywhere in the chain makes the overflow silently never engage.
+
+     Guarded by :has() so it applies only to pages that really are
+     header -> toolbar -> one data surface. Pages built from several stacked
+     sections (settings, help) keep the whole panel scrolling; making only
+     their final section scrollable would strand everything above it. */
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+  }
+
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) > .dashboard-route-transition,
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) :is(main, div):has(> .dashboard-page-shell) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) .dashboard-page-shell {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* Page header and filters keep their natural height, and therefore hold
+     still: they are part of the frame now, not part of the scroll. */
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) .dashboard-page-shell > * {
+    flex: 0 0 auto;
+  }
+
+  /* The data region takes what is left and owns the scrollbar, so the bar sits
+     beside the rows rather than beside the whole page. */
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child)
+    .dashboard-page-shell
+    > :is(.dashboard-card, .dashboard-table-card):last-child {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+}
+
+/* Inventory builds its own layout instead of using the shared page shell, so
+   the rule above does not reach it -- and it needs a different answer anyway.
+
+   Measured: its intro (151px), figures row (86px) and toolbar (112px) come to
+   349px. Pinning all of that on a 670px panel leaves 242px for the items --
+   about one and a half rows of cards. Correct by the letter, useless in
+   practice.
+
+   So on Inventory only the TOOLBAR is pinned. That is the part you actually
+   need while scanning stock -- search, filters, sort, view mode -- and the
+   intro paragraph is something you read once. The items get roughly 460px
+   instead of 242px, and the controls never leave.
+
+   Elsewhere the shared page header is 63px and its toolbar 70px, so pinning
+   both costs 133px and stays worth it. */
+@media (min-width: 900px) {
+  .dashboard-shell.dashboard-workspace-shell
+    .dashboard-shell-content:has(.inventory-workspace > .inventory-content-grid:last-child) {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
+  }
+
+  .dashboard-shell.dashboard-workspace-shell
+    .dashboard-shell-content:has(.inventory-workspace > .inventory-content-grid:last-child)
+    > .dashboard-route-transition,
+  .dashboard-shell.dashboard-workspace-shell
+    .dashboard-shell-content:has(.inventory-workspace > .inventory-content-grid:last-child)
+    :is(main, div):has(> .inventory-workspace) {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+
+  /* The workspace itself is the scroll region, so the intro travels with the
+     items rather than holding a third of the screen. */
+  .dashboard-shell.dashboard-workspace-shell
+    .dashboard-shell-content:has(.inventory-workspace > .inventory-content-grid:last-child)
+    .inventory-workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: clip;
+  }
+
+  /* The controls stay. Opaque and raised, because rows now pass underneath. */
+  .dashboard-shell.dashboard-workspace-shell
+    .inventory-workspace
+    > .inventory-toolbar-panel {
+    position: sticky;
+    top: 0;
+    z-index: 4;
+    background: #ffffff !important;
+    /* The panel's own padding would show the page through on either side of a
+       sticky child, so the fill is widened to the panel edges and the padding
+       given back inside it. */
+    margin-inline: calc(-1 * var(--space-5));
+    padding-inline: var(--space-5);
+    padding-block: var(--space-2);
   }
 }
