@@ -490,7 +490,7 @@ canvas {
   border-radius: var(--radius-control);
   padding-inline: var(--space-4);
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25rem;
   text-decoration: none;
   transition:
@@ -672,7 +672,7 @@ canvas {
 .ui-form-label {
   color: var(--text-secondary);
   font-size: 0.8125rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25rem;
 }
 
@@ -701,7 +701,7 @@ canvas {
   color: var(--text-secondary);
   padding: 0.2rem 0.55rem;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1rem;
 }
 
@@ -815,7 +815,7 @@ canvas {
 .dashboard-eyebrow {
   color: var(--text-accent);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.16em;
   line-height: 0.9rem;
   text-transform: uppercase;
@@ -827,7 +827,7 @@ canvas {
   margin-bottom: 0;
   color: var(--text-primary);
   font-size: clamp(1.25rem, 1rem + 1vw, 1.75rem);
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.1;
 }
@@ -885,7 +885,7 @@ canvas {
   color: var(--text-secondary);
   padding-inline: 0.65rem;
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
   white-space: nowrap;
 }
@@ -893,7 +893,7 @@ canvas {
 .dashboard-filter-chip > span:last-child {
   color: var(--text-muted);
   font-size: 0.68rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .dashboard-filter-chip-active {
@@ -908,7 +908,7 @@ canvas {
   border-radius: var(--radius-card);
   padding: var(--space-3) var(--space-4);
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.375rem;
 }
 
@@ -950,7 +950,7 @@ canvas {
   border-radius: var(--radius-pill);
   padding: 0.75rem var(--space-4);
   font-size: 0.875rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.25rem;
   text-align: center;
   text-decoration: none;
@@ -1006,7 +1006,7 @@ canvas {
   color: var(--text-muted);
   font-size: 0.75rem;
   font-style: normal;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1rem;
 }
 
@@ -1015,7 +1015,7 @@ canvas {
   margin-top: var(--space-1);
   color: var(--text-primary);
   font-size: 1.35rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.75rem;
 }
 
@@ -1072,7 +1072,7 @@ canvas {
   margin-top: var(--space-4);
   color: var(--text-primary);
   font-size: 1.125rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.5rem;
 }
 
@@ -1112,7 +1112,7 @@ canvas {
   background: var(--bg-page-muted);
   color: var(--text-subtle);
   font-size: 0.6875rem;
-  font-weight: 900;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1178,7 +1178,7 @@ canvas {
 .dashboard-list-row-copy strong {
   color: var(--text-primary);
   font-size: 0.875rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.25rem;
 }
 
@@ -1216,7 +1216,7 @@ canvas {
 .dashboard-form-section-header h2 {
   color: var(--text-primary);
   font-size: 1.125rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.5rem;
 }
 
@@ -1314,7 +1314,7 @@ canvas {
 .ui-eyebrow-danger {
   color: var(--text-accent);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   line-height: 1rem;
   text-transform: uppercase;
@@ -1328,7 +1328,7 @@ canvas {
   margin-top: var(--space-2);
   color: var(--text-primary);
   font-size: clamp(1.5rem, 3vw, 2rem);
-  font-weight: 750;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.15;
 }
@@ -1352,7 +1352,7 @@ canvas {
   margin-top: var(--space-1);
   color: var(--text-primary);
   font-size: 1.25rem;
-  font-weight: 750;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.5rem;
 }
@@ -1422,7 +1422,7 @@ canvas {
   overflow-wrap: anywhere;
   color: var(--text-primary);
   font-size: 1.25rem;
-  font-weight: 750;
+  font-weight: 600;
   letter-spacing: 0;
   line-height: 1.5rem;
 }
@@ -1579,7 +1579,7 @@ canvas {
 .item-details-eyebrow {
   color: var(--sydin-accent-text);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   line-height: 1rem;
   text-transform: uppercase;
@@ -1591,7 +1591,7 @@ canvas {
   overflow: hidden;
   color: var(--sydin-text);
   font-size: 1rem;
-  font-weight: 850;
+  font-weight: 600;
   line-height: 1.25;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1612,7 +1612,7 @@ canvas {
   background: var(--sydin-ui-surface);
   color: var(--sydin-text-secondary);
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 600;
   box-shadow: 0 1px 2px var(--border-hairline);
   transition:
     background-color 140ms ease,
@@ -1686,7 +1686,7 @@ canvas {
   padding: 0.55rem 0.7rem;
   color: #334155;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
   text-align: left;
   transition:
     background-color 120ms ease,
@@ -1710,7 +1710,7 @@ canvas {
   padding-inline: 0.6rem;
   color: var(--status-success-text);
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -1751,7 +1751,7 @@ canvas {
   gap: 0.65rem;
   color: var(--sydin-text-subtle);
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .item-details-quantity-strip {
@@ -1782,7 +1782,7 @@ canvas {
 .item-details-group-title {
   color: var(--sydin-text-subtle);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.1em;
   line-height: 1rem;
   text-transform: uppercase;
@@ -1802,7 +1802,7 @@ canvas {
   margin-top: 0.25rem;
   color: var(--sydin-text);
   font-size: 1.22rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.2;
   transition:
     background-color 240ms ease,
@@ -1847,7 +1847,7 @@ canvas {
   margin-top: 0.1rem;
   color: var(--sydin-text);
   font-size: 1rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .item-details-input {
@@ -1882,7 +1882,7 @@ canvas {
   background: linear-gradient(90deg, #10c4dc, #2563eb 58%, #7d5cff);
   color: #ffffff;
   font-size: 0.85rem;
-  font-weight: 850;
+  font-weight: 600;
   box-shadow: 0 12px 28px rgba(37, 99, 235, 0.18);
   transition:
     filter 140ms ease,
@@ -1912,7 +1912,7 @@ canvas {
   border-radius: 0.75rem;
   padding: 0.65rem 0.75rem;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .item-details-tabs {
@@ -1936,7 +1936,7 @@ canvas {
   border-radius: 0.7rem;
   color: var(--sydin-text-muted);
   font-size: 0.8rem;
-  font-weight: 850;
+  font-weight: 600;
   transition:
     background-color 140ms ease,
     color 140ms ease,
@@ -1973,7 +1973,7 @@ canvas {
   overflow-wrap: anywhere;
   color: var(--sydin-text);
   font-size: 0.86rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.35;
 }
 
@@ -2062,7 +2062,7 @@ canvas {
 .item-details-activity-list span {
   color: var(--sydin-text-muted);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .item-details-activity-list p {
@@ -2082,7 +2082,7 @@ canvas {
 
 .item-details-activity-values span:first-child {
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .item-details-activity-values span:last-child {
@@ -2317,7 +2317,7 @@ canvas {
   margin-top: var(--space-4);
   color: var(--text-primary);
   font-size: 1.125rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .ui-state-description {
@@ -2553,7 +2553,7 @@ canvas {
     0 12px 28px rgba(14, 116, 229, 0.2);
   color: #ffffff;
   cursor: pointer;
-  font-weight: 700;
+  font-weight: 600;
   text-decoration: none;
   transition:
     border-color 160ms ease,
@@ -2652,7 +2652,7 @@ select.glass-input option {
   background: var(--sydin-surface-inset);
   color: var(--sydin-text-muted);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
   text-transform: uppercase;
 }
@@ -2736,7 +2736,7 @@ select.glass-input option {
   background: rgba(255, 255, 255, 0.055);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
   color: var(--sydin-text);
-  font-weight: 700;
+  font-weight: 600;
   transition:
     border-color 160ms ease,
     background-color 160ms ease,
@@ -3124,7 +3124,7 @@ select.glass-input option {
   border-radius: var(--radius-card);
   color: var(--text-subtle);
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1;
   transition:
     background-color var(--motion-control) ease,
@@ -3168,7 +3168,7 @@ select.glass-input option {
   background: none;
   color: var(--text-subtle);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   line-height: 1.2;
   text-align: left;
@@ -3213,7 +3213,7 @@ select.glass-input option {
   padding: 0 var(--space-3);
   color: var(--text-secondary);
   font-size: 0.875rem;
-  font-weight: 650;
+  font-weight: 600;
   transition:
     background-color var(--motion-control) ease,
     color var(--motion-control) ease;
@@ -3272,7 +3272,7 @@ select.glass-input option {
 
 .dashboard-account-copy span:first-child {
   font-size: 0.8rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .dashboard-account-copy span:last-child {
@@ -3298,7 +3298,7 @@ select.glass-input option {
   padding: 0 var(--space-3);
   color: var(--text-secondary);
   font-size: 0.8rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .dashboard-account-menu-links a:hover,
@@ -3699,7 +3699,7 @@ select.glass-input option {
   gap: 0.5rem;
   border: 1px solid transparent;
   border-radius: 11px;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.25rem;
   transition:
     transform 180ms cubic-bezier(0.2, 0.8, 0.2, 1),
@@ -3763,7 +3763,7 @@ select.glass-input option {
 .marketing-eyebrow {
   color: #3977ff;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.15em;
   line-height: 1rem;
   text-transform: uppercase;
@@ -3884,7 +3884,7 @@ select.glass-input option {
   padding: 0 0.8rem;
   color: #ffffff;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .marketing-product-stat,
@@ -3939,7 +3939,7 @@ select.glass-input option {
   padding: 0.3rem 0.55rem;
   color: #a35310;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .marketing-trust-strip {
@@ -3957,7 +3957,7 @@ select.glass-input option {
   gap: 0.45rem;
   color: var(--marketing-copy);
   font-size: 0.8125rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .marketing-trust-strip svg {
@@ -3996,7 +3996,7 @@ select.glass-input option {
   margin-top: 1.5rem;
   color: var(--marketing-ink);
   font-size: 1.35rem;
-  font-weight: 720;
+  font-weight: 600;
   letter-spacing: -0.025em;
 }
 
@@ -4022,14 +4022,14 @@ select.glass-input option {
 .marketing-workflow-card > span {
   color: #3977ff;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .marketing-workflow-card h3 {
   margin-top: 0.65rem;
   color: var(--marketing-ink);
   font-size: 1.05rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .marketing-inline-link {
@@ -4038,7 +4038,7 @@ select.glass-input option {
   gap: 0.35rem;
   color: #3977ff;
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .marketing-pricing-card {
@@ -4057,7 +4057,7 @@ select.glass-input option {
   padding: 0.35rem 0.65rem;
   color: #5864e8;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -4302,7 +4302,7 @@ select.glass-input option {
 }
 
 .dashboard-shell-content .ui-page-title {
-  font-weight: 720;
+  font-weight: 600;
 }
 
 .dashboard-shell-content [class~="tracking-tight"],
@@ -4560,7 +4560,7 @@ select.glass-input option {
   padding: 0.45rem 0.72rem;
   color: var(--text-secondary);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
   transition:
     background-color var(--motion-fast) var(--motion-ease-standard),
@@ -4719,7 +4719,7 @@ select.glass-input option {
   gap: 0.75rem;
   color: var(--text-primary);
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .inventory-insight-card-header span {
@@ -4860,7 +4860,7 @@ select.glass-input option {
     text-overflow: ellipsis;
     color: var(--text-muted);
     font-size: 0.78rem;
-    font-weight: 800;
+    font-weight: 600;
     white-space: nowrap;
   }
 
@@ -4927,7 +4927,7 @@ select.glass-input option {
 
   .inventory-mobile-folder-name {
     font-size: 0.78rem;
-    font-weight: 900;
+    font-weight: 600;
     line-height: 1.1;
   }
 
@@ -4935,7 +4935,7 @@ select.glass-input option {
     margin-top: 0.15rem;
     color: var(--text-subtle);
     font-size: 0.68rem;
-    font-weight: 800;
+    font-weight: 600;
   }
 
   .inventory-workspace .action-button {
@@ -5472,7 +5472,7 @@ select.glass-input option {
   background: var(--bg-surface);
   color: var(--text-secondary);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
   white-space: nowrap;
 }
@@ -5480,7 +5480,7 @@ select.glass-input option {
 .organize-chip > span:last-child {
   color: var(--text-muted);
   font-size: 0.68rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .organize-chip-active {
@@ -5697,7 +5697,7 @@ select.glass-input option {
     padding: 0.45rem 0.65rem;
     color: var(--brand-navy);
     font-size: 0.78rem;
-    font-weight: 800;
+    font-weight: 600;
     text-align: left;
   }
 
@@ -6154,7 +6154,7 @@ select.glass-input option {
 .overview-kicker {
   color: var(--overview-blue);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0.08em;
   line-height: 1rem;
   text-transform: uppercase;
@@ -6164,7 +6164,7 @@ select.glass-input option {
   margin-top: 0.1rem;
   color: var(--overview-text);
   font-size: 1.55rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.15;
 }
 
@@ -6172,7 +6172,7 @@ select.glass-input option {
   margin-top: 0.1rem;
   color: var(--overview-muted);
   font-size: 0.9rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .overview-actions {
@@ -6194,7 +6194,7 @@ select.glass-input option {
   padding-inline: 0.95rem;
   color: var(--overview-text);
   font-size: 0.84rem;
-  font-weight: 850;
+  font-weight: 600;
   text-decoration: none;
   transition:
     border-color 150ms ease,
@@ -6228,7 +6228,7 @@ select.glass-input option {
   border-radius: 12px;
   padding: 0.85rem 1rem;
   font-size: 0.9rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .overview-alert-danger {
@@ -6274,7 +6274,7 @@ select.glass-input option {
 .overview-kpi-card span {
   color: var(--overview-muted);
   font-size: 0.84rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .overview-kpi-card strong {
@@ -6282,7 +6282,7 @@ select.glass-input option {
   margin-top: 0.35rem;
   color: var(--overview-text);
   font-size: 1.65rem;
-  font-weight: 950;
+  font-weight: 600;
   line-height: 1.1;
 }
 
@@ -6356,14 +6356,14 @@ select.glass-input option {
 .overview-plan-strip strong {
   color: var(--overview-text);
   font-size: 0.92rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .overview-plan-strip p,
 .overview-plan-strip span {
   color: var(--overview-muted);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .overview-plan-progress {
@@ -6403,7 +6403,7 @@ select.glass-input option {
   gap: 0.35rem;
   color: var(--overview-blue);
   font-size: 0.8rem;
-  font-weight: 900;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -6442,7 +6442,7 @@ select.glass-input option {
 .overview-card-title h2 {
   color: var(--overview-text);
   font-size: 0.98rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .overview-view-link {
@@ -6452,7 +6452,7 @@ select.glass-input option {
   gap: 0.35rem;
   color: var(--overview-blue);
   font-size: 0.78rem;
-  font-weight: 900;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -6473,7 +6473,7 @@ select.glass-input option {
   min-height: 2.2rem;
   color: var(--overview-muted);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .overview-inventory-row {
@@ -6481,7 +6481,7 @@ select.glass-input option {
   border-top: 1px solid var(--overview-border);
   color: var(--overview-text);
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 600;
   text-decoration: none;
   transition:
     background-color 150ms ease,
@@ -6517,7 +6517,7 @@ select.glass-input option {
   display: block;
   overflow: hidden;
   color: var(--overview-text);
-  font-weight: 900;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -6529,7 +6529,7 @@ select.glass-input option {
   overflow: hidden;
   color: var(--overview-muted);
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -6567,7 +6567,7 @@ select.glass-input option {
   border-radius: 8px;
   padding-inline: 0.75rem;
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -6619,7 +6619,7 @@ select.glass-input option {
   border-top: 1px solid var(--overview-border);
   color: var(--overview-muted);
   font-size: 0.76rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .overview-low-stock-row,
@@ -6657,12 +6657,12 @@ select.glass-input option {
 
 .overview-delta-positive {
   color: #05a660;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .overview-delta-negative {
   color: #ef1d1d;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .overview-quick-actions {
@@ -6699,7 +6699,7 @@ select.glass-input option {
   padding-inline: 0.65rem;
   color: var(--overview-text);
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 600;
   text-align: center;
   text-decoration: none;
 }
@@ -6732,7 +6732,7 @@ select.glass-input option {
 .overview-empty-state a,
 .overview-compact-empty a {
   color: var(--overview-blue);
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .overview-skeleton-list {
@@ -7038,7 +7038,7 @@ select.glass-input option {
 .quick-add-eyebrow {
   color: var(--text-accent);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -7046,7 +7046,7 @@ select.glass-input option {
 .quick-add-title {
   margin-top: 0.15rem;
   font-size: 1.15rem;
-  font-weight: 850;
+  font-weight: 600;
   line-height: 1.15;
 }
 
@@ -7112,7 +7112,7 @@ select.glass-input option {
   margin-top: 0.4rem;
   color: var(--status-danger-text);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .quick-add-more {
@@ -7173,7 +7173,7 @@ select.glass-input option {
 .quick-add-subsection > p {
   color: var(--text-accent);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -7198,7 +7198,7 @@ select.glass-input option {
   border-radius: 12px;
   padding-inline: 0.9rem;
   font-size: 0.85rem;
-  font-weight: 800;
+  font-weight: 600;
   transition:
     background-color var(--motion-fast) var(--motion-ease-standard),
     border-color var(--motion-fast) var(--motion-ease-standard),
@@ -7396,7 +7396,7 @@ select.glass-input option {
   padding-inline: 0.9rem;
   color: var(--ink-muted);
   font-size: 0.82rem;
-  font-weight: 650;
+  font-weight: 600;
   transition:
     transform 180ms ease,
     border-color 180ms ease,
@@ -7412,7 +7412,7 @@ select.glass-input option {
 .login-heading h1 {
   letter-spacing: -0.055em;
   font-size: clamp(2.6rem, 4.2vw, 4rem);
-  font-weight: 760;
+  font-weight: 600;
   line-height: 0.98;
 }
 
@@ -7449,7 +7449,7 @@ select.glass-input option {
   background: #ffffff;
   color: var(--login-navy);
   font-size: 0.9rem;
-  font-weight: 680;
+  font-weight: 600;
   box-shadow: 0 7px 24px var(--border-hairline);
   transition:
     transform 180ms ease,
@@ -7494,7 +7494,7 @@ select.glass-input option {
 .login-divider p {
   color: var(--ink-muted);
   font-size: 0.68rem;
-  font-weight: 750;
+  font-weight: 600;
   letter-spacing: 0.1em;
 }
 
@@ -7511,7 +7511,7 @@ select.glass-input option {
 .login-field label {
   color: #242941;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .login-input-wrap {
@@ -7566,7 +7566,7 @@ select.glass-input option {
   border-radius: 7px;
   color: var(--ink-muted);
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .login-password-toggle {
@@ -7574,7 +7574,7 @@ select.glass-input option {
   padding: 0.35rem 0.45rem;
   color: var(--ink-muted);
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .login-form-options {
@@ -7588,7 +7588,7 @@ select.glass-input option {
 
 .login-form-options > a {
   color: #426dff;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .login-checkbox {
@@ -7643,7 +7643,7 @@ select.glass-input option {
   background: linear-gradient(115deg, #24c9f4 0%, #3977ff 40%, #675cff 69%, #a52cff 100%);
   color: #ffffff;
   font-size: 0.95rem;
-  font-weight: 760;
+  font-weight: 600;
   box-shadow: 0 14px 30px rgba(74, 91, 255, 0.22);
   transition:
     transform 180ms ease,
@@ -7687,7 +7687,7 @@ select.glass-input option {
 
 .login-signup-copy a {
   color: #426dff;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .signup-form-wrap {
@@ -7730,7 +7730,7 @@ select.glass-input option {
   margin-top: 1.25rem;
   color: #4c6fff;
   font-size: 0.7rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
 }
@@ -7740,7 +7740,7 @@ select.glass-input option {
   color: var(--login-navy);
   letter-spacing: -0.05em;
   font-size: clamp(2.3rem, 4vw, 3.5rem);
-  font-weight: 760;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -7767,7 +7767,7 @@ select.glass-input option {
 .auth-verification-form > label {
   color: #242941;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .auth-code-input {
@@ -7781,7 +7781,7 @@ select.glass-input option {
   color: var(--login-navy);
   text-align: center;
   font-size: 1.65rem;
-  font-weight: 760;
+  font-weight: 600;
   letter-spacing: 0.45em;
   text-indent: 0.45em;
   transition:
@@ -7818,7 +7818,7 @@ select.glass-input option {
   padding: 0.35rem;
   color: #426dff;
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .auth-verification-actions button:last-child {
@@ -8071,7 +8071,7 @@ select.glass-input option {
   margin-top: 0.25rem;
   color: var(--ink);
   font-size: 1.02rem;
-  font-weight: 760;
+  font-weight: 600;
 }
 
 .login-dashboard-status {
@@ -8084,7 +8084,7 @@ select.glass-input option {
   padding: 0.35rem 0.55rem;
   color: #2c816d;
   font-size: 0.63rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .login-dashboard-status i {
@@ -8191,7 +8191,7 @@ select.glass-input option {
 .login-card-heading p {
   color: #232744;
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .login-card-heading div > span {
@@ -8729,7 +8729,7 @@ select.glass-input option {
   margin-top: 0.75rem;
   overflow-wrap: anywhere;
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.25;
 }
 
@@ -8875,7 +8875,7 @@ select.glass-input option {
 
 .ui-select-option-label {
   font-size: 0.875rem;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -8898,7 +8898,7 @@ select.glass-input option {
   padding: 0.65rem 0.85rem;
   color: #4f46e5;
   font-size: 0.8rem;
-  font-weight: 700;
+  font-weight: 600;
   text-align: left;
 }
 
@@ -8929,7 +8929,7 @@ select.glass-input option {
     border-bottom: 1px solid var(--surface-sunken);
     padding: 1rem;
     font-size: 0.95rem;
-    font-weight: 800;
+    font-weight: 600;
   }
 
   .ui-select-mobile-heading button {
@@ -9882,7 +9882,7 @@ body [class*="tracking-["],
 .dashboard-sidebar-workspace-copy span {
   color: var(--text-accent);
   font-size: 0.66rem;
-  font-weight: 900;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -9896,13 +9896,13 @@ body [class*="tracking-["],
 .dashboard-sidebar-workspace-copy strong {
   color: var(--text-primary);
   font-size: 0.86rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .dashboard-sidebar-workspace-copy small {
   color: var(--text-muted);
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .dashboard-nav-groups {
@@ -10025,7 +10025,7 @@ body [class*="tracking-["],
 .overview-hero h1 {
   max-width: 15ch;
   font-size: clamp(2rem, 4vw, 3.55rem);
-  font-weight: 900;
+  font-weight: 600;
   line-height: 0.98;
 }
 
@@ -10033,7 +10033,7 @@ body [class*="tracking-["],
   max-width: 44rem;
   margin-top: 0.75rem;
   font-size: 1rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.55;
 }
 
@@ -10084,14 +10084,14 @@ body [class*="tracking-["],
   align-self: end;
   color: var(--overview-text);
   font-size: 1.55rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .overview-health-ring small {
   align-self: start;
   color: var(--overview-muted);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10104,13 +10104,13 @@ body [class*="tracking-["],
 .overview-hero-panel-copy > strong {
   color: var(--overview-text);
   font-size: 1rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .overview-hero-panel-copy > p {
   color: var(--overview-muted);
   font-size: 0.86rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -10140,7 +10140,7 @@ body [class*="tracking-["],
 .overview-hero-mini-grid small {
   color: var(--overview-muted);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10148,7 +10148,7 @@ body [class*="tracking-["],
   margin-top: 0.25rem;
   color: var(--overview-text);
   font-size: 0.88rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .overview-kpi-card {
@@ -10217,7 +10217,7 @@ body [class*="tracking-["],
 .inventory-hero-kicker {
   color: var(--text-accent);
   font-size: 0.68rem;
-  font-weight: 950;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10225,7 +10225,7 @@ body [class*="tracking-["],
   margin-top: 0.15rem;
   color: var(--text-primary);
   font-size: clamp(1.8rem, 3vw, 3rem);
-  font-weight: 950;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -10234,7 +10234,7 @@ body [class*="tracking-["],
   margin-top: 0.5rem;
   color: var(--text-muted);
   font-size: 0.95rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.45;
 }
 
@@ -10255,7 +10255,7 @@ body [class*="tracking-["],
   padding-inline: 0.7rem;
   color: var(--text-secondary);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .inventory-hero-actions {
@@ -10295,7 +10295,7 @@ body [class*="tracking-["],
 .inventory-hero-status small {
   color: var(--text-muted);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10303,7 +10303,7 @@ body [class*="tracking-["],
   margin-top: 0.2rem;
   color: var(--text-primary);
   font-size: 1.25rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .inventory-stat-grid {
@@ -10348,7 +10348,7 @@ body [class*="tracking-["],
 .inventory-stat-copy span {
   color: var(--text-subtle);
   font-size: 0.68rem;
-  font-weight: 900;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10356,7 +10356,7 @@ body [class*="tracking-["],
   overflow: hidden;
   color: var(--text-primary);
   font-size: 1.45rem;
-  font-weight: 950;
+  font-weight: 600;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -10399,7 +10399,7 @@ body [class*="tracking-["],
   padding: 0.7rem 0.85rem 0.7rem 2.65rem;
   color: var(--text-primary);
   font-size: 0.9rem;
-  font-weight: 700;
+  font-weight: 600;
   outline: none;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
@@ -10435,7 +10435,7 @@ body [class*="tracking-["],
   padding-inline: 0.75rem;
   color: var(--text-primary);
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -10470,7 +10470,7 @@ body [class*="tracking-["],
   border-radius: 999px;
   padding-inline: 0.65rem;
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .inventory-active-chip {
@@ -10573,7 +10573,7 @@ body [class*="tracking-["],
   padding: 0.18rem 0.5rem;
   color: #dc2626;
   font-size: 0.62rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .inventory-card-body {
@@ -10601,7 +10601,7 @@ body [class*="tracking-["],
 .inventory-card-code {
   color: var(--text-accent);
   font-size: 0.68rem;
-  font-weight: 950;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10609,7 +10609,7 @@ body [class*="tracking-["],
   margin-top: 0.2rem;
   color: var(--text-primary);
   font-size: 1rem;
-  font-weight: 950;
+  font-weight: 600;
   line-height: 1.15;
 }
 
@@ -10622,7 +10622,7 @@ body [class*="tracking-["],
   padding: 0.28rem 0.55rem;
   color: #1d4ed8;
   font-size: 0.72rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .inventory-card-tags {
@@ -10641,7 +10641,7 @@ body [class*="tracking-["],
   padding: 0.24rem 0.55rem;
   color: var(--text-secondary);
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -10683,7 +10683,7 @@ body [class*="tracking-["],
 .inventory-card-meta small {
   color: var(--text-subtle);
   font-size: 0.64rem;
-  font-weight: 850;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10691,7 +10691,7 @@ body [class*="tracking-["],
   margin-top: 0.15rem;
   color: var(--text-primary);
   font-size: 0.76rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .inventory-card-footer {
@@ -10711,7 +10711,7 @@ body [class*="tracking-["],
   background: rgba(255, 255, 255, 0.7);
   color: var(--text-primary);
   font-size: 0.72rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 @media (hover: hover) {
@@ -10771,13 +10771,13 @@ body [class*="tracking-["],
 .marketing-hero-proof strong {
   color: var(--marketing-ink);
   font-size: 1rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .marketing-hero-proof small {
   color: var(--marketing-copy);
   font-size: 0.78rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .marketing-hero-preview {
@@ -10809,7 +10809,7 @@ body [class*="tracking-["],
 .marketing-product-browser strong {
   margin-left: 0.45rem;
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .marketing-product-app {
@@ -10832,7 +10832,7 @@ body [class*="tracking-["],
 .marketing-product-command p {
   color: var(--ink-muted);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10841,7 +10841,7 @@ body [class*="tracking-["],
   margin-top: 0.15rem;
   color: var(--ink);
   font-size: 1.25rem;
-  font-weight: 950;
+  font-weight: 600;
 }
 
 .marketing-product-search {
@@ -10856,7 +10856,7 @@ body [class*="tracking-["],
   padding-inline: 0.8rem;
   color: var(--ink-muted);
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .marketing-product-workspace {
@@ -10901,14 +10901,14 @@ body [class*="tracking-["],
   margin-top: 0.65rem;
   color: var(--ink);
   font-size: 0.84rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .marketing-product-card small {
   margin-top: 0.15rem;
   color: var(--ink-muted);
   font-size: 0.72rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .marketing-product-card .marketing-product-stock {
@@ -10932,7 +10932,7 @@ body [class*="tracking-["],
 .marketing-product-side-panel p {
   color: var(--ink-muted);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
   text-transform: uppercase;
 }
 
@@ -10941,7 +10941,7 @@ body [class*="tracking-["],
   margin-top: 0.2rem;
   color: var(--ink);
   font-size: 2.25rem;
-  font-weight: 950;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -10950,7 +10950,7 @@ body [class*="tracking-["],
   margin-top: 0.35rem;
   color: var(--ink-muted);
   font-size: 0.8rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .marketing-product-priority-list {
@@ -10968,7 +10968,7 @@ body [class*="tracking-["],
   padding: 0.55rem;
   color: #34445b;
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .marketing-feature-grid .marketing-feature-card,
@@ -11491,7 +11491,7 @@ body [class*="tracking-["],
 .overview-hero-copy > p:not(.overview-kicker),
 .inventory-hero-description {
   color: var(--ink-muted);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .overview-kicker,
@@ -11510,7 +11510,7 @@ body [class*="tracking-["],
   min-height: 2.45rem;
   padding-inline: 0.9rem;
   font-size: 0.82rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .overview-hero-panel {
@@ -12144,7 +12144,7 @@ body [class*="tracking-["],
     padding-inline: 0.9rem;
     color: var(--ink-muted);
     font-size: 0.78rem;
-    font-weight: 720;
+    font-weight: 600;
     line-height: 1;
     text-decoration: none;
   }
@@ -12207,14 +12207,14 @@ body [class*="tracking-["],
 
   .dashboard-top-account-pill strong {
     font-size: 0.72rem;
-    font-weight: 850;
+    font-weight: 600;
   }
 
   .dashboard-top-account-pill small {
     max-width: 9rem;
     color: #77736b;
     font-size: 0.62rem;
-    font-weight: 650;
+    font-weight: 600;
   }
 
   .dashboard-shell-content {
@@ -12679,7 +12679,7 @@ body,
   background: #ffffff;
   color: var(--text-primary);
   font-size: 0.8rem;
-  font-weight: 850;
+  font-weight: 600;
   text-decoration: none;
   box-shadow: none;
   transition:
@@ -12859,7 +12859,7 @@ body,
 .sydin-overview-kicker {
   color: var(--overview-blue);
   font-size: 0.72rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
 }
@@ -12868,7 +12868,7 @@ body,
   margin-top: 0.2rem;
   color: var(--overview-ink);
   font-size: clamp(1.8rem, 2.7vw, 2.35rem);
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.05;
   letter-spacing: 0;
 }
@@ -12913,7 +12913,7 @@ body,
   padding-inline: 0.85rem;
   color: var(--overview-ink);
   font-size: 0.8rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1.15;
   overflow-wrap: anywhere;
   text-align: center;
@@ -12940,7 +12940,7 @@ body,
   padding: 0.85rem 1rem;
   color: #92400e;
   font-size: 0.88rem;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .sydin-overview-summary {
@@ -12992,7 +12992,7 @@ body,
   color: var(--overview-muted);
   font-size: 0.72rem;
   font-style: normal;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .sydin-overview-summary-card strong {
@@ -13001,7 +13001,7 @@ body,
   overflow: hidden;
   color: var(--overview-ink);
   font-size: 1.45rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.1;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -13054,7 +13054,7 @@ body,
   overflow: hidden;
   color: var(--overview-ink);
   font-size: 0.96rem;
-  font-weight: 900;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -13063,7 +13063,7 @@ body,
   flex: none;
   color: var(--overview-blue);
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .sydin-overview-restock-list,
@@ -13104,7 +13104,7 @@ body,
   overflow: hidden;
   color: var(--overview-ink);
   font-size: 0.86rem;
-  font-weight: 850;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -13115,7 +13115,7 @@ body,
   color: var(--overview-ink);
   font-size: 0.78rem;
   font-style: normal;
-  font-weight: 850;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -13145,7 +13145,7 @@ body,
   border-radius: 999px;
   padding-inline: 0.55rem;
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -13190,7 +13190,7 @@ body,
   padding: 0.65rem;
   color: var(--overview-ink);
   font-size: 0.78rem;
-  font-weight: 850;
+  font-weight: 600;
   text-decoration: none;
 }
 
@@ -13204,7 +13204,7 @@ body,
   margin: 0 0.85rem 0.7rem;
   color: var(--overview-muted);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   line-height: 1.4;
 }
 
@@ -13233,13 +13233,13 @@ body,
 
 .sydin-overview-completeness-chip strong {
   font-size: 1.15rem;
-  font-weight: 900;
+  font-weight: 600;
   color: #92400e;
 }
 
 .sydin-overview-completeness-chip span {
   font-size: 0.74rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--overview-muted);
 }
 
@@ -13310,7 +13310,7 @@ body,
 .sydin-overview-empty strong {
   color: var(--overview-ink);
   font-size: 0.95rem;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .sydin-overview-empty p {
@@ -13322,7 +13322,7 @@ body,
 .sydin-overview-empty a {
   color: var(--overview-blue);
   font-size: 0.82rem;
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .sydin-overview-delta-positive {
@@ -14744,7 +14744,7 @@ body,
   padding: 0 0.3rem;
   font-family: inherit;
   font-size: 0.65rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink-muted);
 }
 
@@ -14863,7 +14863,7 @@ body,
   border: 1px solid transparent;
   padding: 0.35rem 0.75rem;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
   transition: background var(--motion-control, 160ms) ease, color var(--motion-control, 160ms) ease;
@@ -14961,7 +14961,7 @@ body,
   background: var(--sydin-surface-inset);
   padding: 0.7rem 1rem;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-accent);
   transition: background var(--motion-control, 160ms) ease;
 }
@@ -14978,7 +14978,7 @@ body,
   border-top: 1px solid var(--border-default);
   padding: 0.55rem 1rem;
   font-size: 0.7rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-subtle);
 }
 
@@ -15012,7 +15012,7 @@ body,
   gap: 0.5rem;
   margin-bottom: 0.6rem;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-subtle);
@@ -15111,7 +15111,7 @@ body,
   background: rgba(18, 184, 214, 0.09);
   padding: 0.22rem 0.6rem;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--text-accent);
 }
@@ -15211,7 +15211,7 @@ body,
 
 .po-totals-bar strong {
   color: var(--text-primary);
-  font-weight: 850;
+  font-weight: 600;
 }
 
 .po-totals-grand {
@@ -15263,7 +15263,7 @@ body,
 .sydin-overview-spending-total small {
   display: block;
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-subtle);
@@ -15273,7 +15273,7 @@ body,
   display: block;
   margin-top: 0.15rem;
   font-size: 1.45rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 1.8rem;
   color: var(--text-primary);
 }
@@ -15324,7 +15324,7 @@ body,
 .sydin-overview-spending-row strong {
   display: block;
   font-size: 0.82rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -15343,7 +15343,7 @@ body,
   flex-shrink: 0;
   font-size: 0.88rem;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -15377,7 +15377,7 @@ body,
 }
 
 .receiving-po-hint a {
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-accent);
   text-decoration: underline;
   text-underline-offset: 2px;
@@ -15400,7 +15400,7 @@ body,
 
 .receiving-history-header h2 {
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -15409,7 +15409,7 @@ body,
   align-items: center;
   gap: 0.2rem;
   font-size: 0.78rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--text-accent);
   transition: transform 140ms ease;
 }
@@ -15435,7 +15435,7 @@ body,
 .receiving-history-stat small {
   display: block;
   font-size: 0.66rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-subtle);
@@ -15445,7 +15445,7 @@ body,
   display: block;
   margin-top: 0.1rem;
   font-size: 1.3rem;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -15506,7 +15506,7 @@ body,
   background: rgba(16, 185, 129, 0.1);
   padding: 0.22rem 0.6rem;
   font-size: 0.75rem;
-  font-weight: 900;
+  font-weight: 600;
   color: #047857;
 }
 
@@ -15624,7 +15624,7 @@ body,
 .po-balance-strip small {
   display: block;
   font-size: 0.62rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-subtle);
@@ -15634,7 +15634,7 @@ body,
   display: block;
   margin-top: 0.1rem;
   font-size: 1.02rem;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -15696,14 +15696,14 @@ body,
 
 .po-month-label {
   font-size: 0.9rem;
-  font-weight: 850;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
 .po-month-meta {
   margin-left: auto;
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
@@ -15754,7 +15754,7 @@ body,
   background: rgba(245, 158, 11, 0.1);
   padding: 0.22rem 0.6rem;
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: #b45309;
 }
@@ -15774,7 +15774,7 @@ body,
   background: rgba(245, 158, 11, 0.1);
   padding: 0.5rem 0.65rem;
   font-size: 0.75rem;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.1rem;
   color: var(--text-warning, #92400e);
 }
@@ -15787,7 +15787,7 @@ body,
 
 .po-detail-label {
   font-size: 0.68rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-subtle);
@@ -15796,7 +15796,7 @@ body,
 .po-detail-value {
   margin-top: 0.15rem;
   font-size: 0.88rem;
-  font-weight: 750;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -15823,7 +15823,7 @@ body,
   background: rgba(18, 184, 214, 0.12);
   padding: 0.1rem 0.45rem;
   font-size: 0.62rem;
-  font-weight: 850;
+  font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--text-accent);
@@ -15835,13 +15835,13 @@ body,
   justify-content: space-between;
   padding: 0.4rem 0.75rem 0;
   font-size: 0.85rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
 .po-detail-total strong {
   font-size: 1rem;
-  font-weight: 900;
+  font-weight: 600;
   color: var(--text-primary);
 }
 
@@ -16184,7 +16184,7 @@ body,
 .sydin-health-center strong {
   display: block;
   font-size: 1.9rem;
-  font-weight: 900;
+  font-weight: 600;
   line-height: 2.1rem;
   color: var(--text-primary, var(--ink));
 }
@@ -16192,7 +16192,7 @@ body,
 .sydin-health-center small {
   display: block;
   font-size: 0.72rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-muted, var(--ink-muted));
 }
 
@@ -16210,7 +16210,7 @@ body,
   background: rgba(255, 255, 255, 0.7);
   padding: 0.5rem 0.75rem;
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--text-primary, var(--ink));
   transition:
     border-color var(--motion-control, 160ms) ease,
@@ -16221,7 +16221,7 @@ body,
 .sydin-health-row em {
   margin-left: auto;
   font-style: normal;
-  font-weight: 900;
+  font-weight: 600;
 }
 
 .sydin-health-dot {
@@ -16679,7 +16679,7 @@ body,
 
   .mobile-dashboard-title {
     font-size: 28px;
-    font-weight: 900;
+    font-weight: 600;
     color: var(--sydin-text);
     margin: 0;
   }
@@ -16750,7 +16750,7 @@ body,
 
   .mobile-alert-card-value {
     font-size: 24px;
-    font-weight: 900;
+    font-weight: 600;
     margin-top: 2px;
   }
 
@@ -16760,7 +16760,7 @@ body,
 
   .mobile-dashboard-section-title {
     font-size: 14px;
-    font-weight: 800;
+    font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.08em;
     color: var(--sydin-text-subtle);
@@ -16846,7 +16846,7 @@ body,
   overflow: hidden;
   color: var(--text-primary);
   font-size: 1rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: -0.01em;
   line-height: 1.2;
   text-overflow: ellipsis;
@@ -16899,7 +16899,7 @@ body,
 
 .dashboard-top-add-menu a strong {
   font-size: 0.82rem;
-  font-weight: 750;
+  font-weight: 600;
   line-height: 1.15;
 }
 
@@ -17142,7 +17142,7 @@ body,
 .global-search-panel-anchored .global-search-input {
   min-height: 2rem;
   font-size: 0.9rem;
-  font-weight: 650;
+  font-weight: 600;
 }
 
 /* Dropdown chrome should stay light: the close button and the keyboard legend
@@ -17407,7 +17407,7 @@ body,
   min-width: 3.1rem;
   text-align: center;
   font-size: 0.75rem;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
@@ -17436,7 +17436,7 @@ body,
   bottom: max(1rem, env(safe-area-inset-bottom));
   color: rgba(255, 255, 255, 0.82);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -17777,7 +17777,7 @@ body.sydin-shell,
   padding: 0;
   color: var(--text-secondary);
   font-size: 0.75rem;
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -17911,7 +17911,7 @@ body.sydin-shell,
   padding-inline: 0.2rem;
   color: #fff;
   font-size: 0.62rem;
-  font-weight: 800;
+  font-weight: 600;
   line-height: 1;
 }
 
@@ -17963,7 +17963,7 @@ body.sydin-shell,
   padding: 0.2rem 0;
   color: var(--text-accent);
   font-size: 0.72rem;
-  font-weight: 800;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -17998,7 +17998,7 @@ body.sydin-shell,
   padding: 0.2rem 0.4rem 0.35rem;
   color: var(--text-subtle);
   font-size: 0.68rem;
-  font-weight: 800;
+  font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -18029,7 +18029,7 @@ a.dashboard-notifications-row:hover {
   overflow: hidden;
   color: var(--text-primary);
   font-size: 0.82rem;
-  font-weight: 700;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -18098,7 +18098,7 @@ a.dashboard-notifications-row:hover {
   padding: 0.45rem 0.6rem;
   color: var(--text-accent, #2563eb);
   font-size: 0.78rem;
-  font-weight: 700;
+  font-weight: 600;
   text-align: center;
   text-decoration: none;
 }
@@ -18135,7 +18135,7 @@ a.dashboard-notifications-row:hover {
   padding: 0.32rem 0.62rem;
   color: #ffffff;
   font-size: 0.72rem;
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.35;
   white-space: nowrap;
@@ -18284,7 +18284,7 @@ a.dashboard-notifications-row:hover {
 .marketing-site .marketing-eyebrow,
 .marketing-site .marketing-hero-kicker {
   color: var(--m-ash);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 /* --- Surfaces: flat, soft-edged, no elevation --- */
@@ -18322,7 +18322,7 @@ a.dashboard-notifications-row:hover {
 /* --- Controls: filled ink pill paired with a ghost pill --- */
 .marketing-site .marketing-button {
   border-radius: var(--radius-pill);
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .marketing-site .marketing-button-primary {
@@ -18604,7 +18604,7 @@ a.dashboard-notifications-row:hover {
   border-radius: var(--radius-pill);
   background: var(--ink);
   box-shadow: none;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .login-submit:not(:disabled):hover {
@@ -18699,7 +18699,7 @@ a.dashboard-notifications-row:hover {
   .marketing-artifact-stock strong {
     color: #b4530f;
     font-size: 0.72rem;
-    font-weight: 700;
+    font-weight: 600;
     white-space: nowrap;
   }
 
@@ -21320,4 +21320,101 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .dashboard-shell .inventory-workspace .inventory-items-grid {
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
   }
+}
+
+/* ==========================================================================
+   MARKETING PAGES — one type scale (2026-08-25)
+   --------------------------------------------------------------------------
+   The public pages never had the pass the workspace has had. Measured on the
+   landing page at 1152px: 39 distinct size/weight pairs, 44% of text heavier
+   than weight 600, weights reaching 800, and sizes running 10.88 / 11.2 /
+   11.52 / 12 / 12.48 / 12.8 / 14 / 14.4 / 16 / 17 / 25.6 / 56 / 85.
+
+   Same discipline as the app, not the same numbers: a landing page is read from
+   further away and does want display type, so the top of this scale is much
+   larger than the workspace's. What it does not want is thirty-nine steps and a
+   weight of 800.
+
+   Eight pairs, and nothing above 600:
+
+     56/600   hero title            (was 85/400)
+     34/600   section title         (was 56/400)
+     18/600   card and sub headings
+     16/400   hero and section copy (was 17)
+     14/400   body
+     14/500   buttons and links     (was 14/700 and 16/700)
+     12/500   eyebrow, label, note  uppercase where it was already
+     24/500   a headline figure
+
+   The hero drops from 85px to 56px because that was the request -- make it
+   smaller -- and because 85px was set at weight 400, which is a display size
+   carrying no display weight.
+   ========================================================================== */
+.marketing-hero-title {
+  font-size: clamp(34px, 4.4vw, 56px) !important;
+  font-weight: 600 !important;
+  line-height: 1.08 !important;
+  letter-spacing: -0.02em !important;
+}
+
+.marketing-section-title {
+  font-size: clamp(26px, 3vw, 34px) !important;
+  font-weight: 600 !important;
+  line-height: 1.15 !important;
+  letter-spacing: -0.015em !important;
+}
+
+.marketing-hero-copy,
+.marketing-section-copy {
+  font-size: 16px !important;
+  font-weight: 400 !important;
+  line-height: 1.55 !important;
+}
+
+.marketing-eyebrow,
+.marketing-hero-kicker,
+.marketing-artifact-label,
+.marketing-billing-save,
+.marketing-plan-badge,
+.marketing-price-note,
+.marketing-artifact-delta,
+.marketing-product-stock {
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0.02em !important;
+}
+
+.marketing-eyebrow,
+.marketing-hero-kicker {
+  letter-spacing: 0.08em !important;
+}
+
+.marketing-button,
+.marketing-nav-link,
+.marketing-inline-link,
+.marketing-billing-toggle,
+.marketing-billing-toggle-active,
+.marketing-product-add,
+.marketing-product-search {
+  font-size: 14px !important;
+  font-weight: 500 !important;
+  letter-spacing: 0 !important;
+}
+
+.marketing-artifact-metric {
+  font-size: 24px !important;
+  font-weight: 500 !important;
+  line-height: 1.15 !important;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Anything inside a marketing surface that still reaches past semi-bold,
+   whether from a Tailwind utility or an element default. */
+[class*="marketing-"] :is(b, strong),
+[class*="marketing-"].font-bold,
+[class*="marketing-"] .font-bold,
+[class*="marketing-"] .font-extrabold,
+[class*="marketing-"] .font-black,
+[class*="marketing-"] .font-semibold {
+  font-weight: 600 !important;
 }
