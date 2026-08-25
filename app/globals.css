@@ -21297,3 +21297,27 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     row-gap: 0 !important;
   }
 }
+
+/* ==========================================================================
+   CARD SIZE ON WIDE SCREENS (2026-08-25)
+   --------------------------------------------------------------------------
+   Sayed works at 90% browser zoom and showed that view as the target: six
+   calm cards to a row.
+
+   Measured what he actually gets at each setting on a 1920 screen:
+     100% zoom -> 1920 CSS px -> 7 columns of 242px
+      90% zoom -> 2133 CSS px -> 6 columns of ~290px
+
+   So zooming out was not buying him more on screen -- at 100% he already sees
+   more items. It was buying him BIGGER cards, because zoom scales the card up
+   along with everything else. The card minimum is 15rem, which is right at 1152
+   but packs a 1920 screen tighter than it needs to be.
+
+   Raised to 17rem above 1600px only. Below that nothing changes -- at 1152 the
+   row stays at four columns, which a larger minimum would have cut to three.
+   ========================================================================== */
+@media (min-width: 1600px) {
+  .dashboard-shell .inventory-workspace .inventory-items-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
+  }
+}
