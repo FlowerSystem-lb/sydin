@@ -128,12 +128,19 @@
   --radius-card: 12px;
   --radius-overlay: 16px;
   --radius-pill: 999px;
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
+  /* Density: the spacing scale runs at 80% (2026-08-25).
+     Sayed works at 80% browser zoom because more fits, and asked for that to be
+     the default. Taken literally it would put body text at 11.2px and secondary
+     text at 9.6px -- too small for a screen someone reads all day, and the
+     letters were never the problem. The wasted room is in padding and gaps, so
+     the SPACING scales and the type does not.
+     Was 4 / 8 / 12 / 16 / 20 / 24. */
+  --space-1: 3px;
+  --space-2: 6px;
+  --space-3: 10px;
+  --space-4: 13px;
+  --space-5: 16px;
+  --space-6: 19px;
   --space-8: 32px;
   --space-10: 40px;
   --space-12: 48px;
@@ -20834,10 +20841,16 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
      It does NOT fit at 1024: checked, and the filter controls ran straight over
      the title. An overflow test misses that -- nothing leaves the viewport, the
      elements simply sit on top of each other -- so the threshold comes from the
-     measured content width, not from the shell breakpoint. Below 1280px the
-     header stacks as it did before.
+     measured content width, not from the shell breakpoint.
+
+     Lowered 1280 -> 1120 once the search collapsed to a 42px circle, which took
+     roughly 280px out of the row. Re-measured rather than assumed: title 108 +
+     controls 575 + actions 264 + gaps needs about 980px of content, so 1120 of
+     viewport clears it. This matters because the window in daily use is 1152 --
+     under the old threshold, which left the header stacked and 346px of chrome
+     above the first product.
    ========================================================================== */
-@media (min-width: 1280px) {
+@media (min-width: 1120px) {
   .dashboard-shell .inventory-workspace {
     display: grid !important;
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -20856,10 +20869,18 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     grid-template-rows:
       min-content min-content min-content min-content min-content minmax(0, 1fr);
     align-items: center;
-    column-gap: var(--space-4);
+    /* Not a --space step. The title is a 28px heading sitting against a dense
+       cluster of controls, and at 13px they measured as clearing each other by
+       13px while plainly reading as touching. A heading needs more air beside a
+       control than two controls need beside each other. */
+    /* !important clears the `gap: var(--space-4) !important` set for the
+       flex-column layout that applies below this breakpoint -- a shorthand, so
+       it was setting column-gap too and pinning the title 13px from the
+       controls however wide this was declared. */
+    column-gap: 26px !important;
     /* Zero, because an empty row would still take a gap. Spacing is carried by
        the rows themselves below. */
-    row-gap: 0;
+    row-gap: 0 !important;
   }
 
   /* Hand the children up to the grid above. These wrappers carry no fill or
@@ -20955,7 +20976,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    Both arrangements are now stated explicitly rather than left to auto-flow,
    keyed off the class the page already sets when the summary is hidden.
    -------------------------------------------------------------------------- */
-@media (min-width: 1280px) {
+@media (min-width: 1120px) {
   /* No row numbers here any more -- DOM order and the full-width default place
      the figures, the chips and the products correctly whether Stats is open or
      closed, and leave no empty row behind when it is closed. */
@@ -21098,7 +21119,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    things; it should spend its width on the products. They move to Overview
    rather than simply disappearing.
    ========================================================================== */
-@media (min-width: 1280px) {
+@media (min-width: 1120px) {
   .dashboard-shell .inventory-workspace .inventory-stat-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   }
@@ -21180,7 +21201,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    No hover expansion on purpose: a control that grows as the pointer crosses it
    makes the row twitch while you are trying to reach the button beyond it.
    ========================================================================== */
-@media (min-width: 1280px) {
+@media (min-width: 1120px) {
   .dashboard-shell .inventory-workspace .inventory-toolbar-search {
     width: 42px;
     min-width: 42px;
@@ -21223,7 +21244,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    view -- lead, and the one that has to be opened sits last, next to the
    actions. It returns to the panel radius as it expands, because at 320px it is
    an input again. */
-@media (min-width: 1280px) {
+@media (min-width: 1120px) {
   .dashboard-shell .inventory-workspace .inventory-toolbar-main {
     display: flex !important;
     align-items: center;
@@ -21261,5 +21282,18 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     svg {
     left: 50% !important;
     transform: translate(-50%, -50%) !important;
+  }
+}
+
+/* The header row's gaps, at the specificity that actually wins.
+   `.dashboard-shell:has(.inventory-workspace) .inventory-workspace` sets
+   `gap: 0.8rem !important` at (0,3,0), so the same declaration at (0,2,0) in the
+   merge block lost however many !importants it carried. Measured: 12.8px
+   between a 28px heading and the Filters control, which read as touching.
+   Column gap only -- rows stay at zero, since spacing there sits on the rows. */
+@media (min-width: 1120px) {
+  .dashboard-shell.dashboard-workspace-shell .inventory-workspace {
+    column-gap: 26px !important;
+    row-gap: 0 !important;
   }
 }
