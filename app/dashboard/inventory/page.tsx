@@ -1,5 +1,7 @@
 "use client";
 
+import Image from "next/image";
+
 import {
   useCallback,
   useEffect,
@@ -382,15 +384,17 @@ function InventoryThumbnail({
 
   if (showImage) {
     return (
-      // eslint-disable-next-line @next/next/no-img-element
-      <img
+      <Image
         src={src || ""}
         alt={alt}
+        fill
+        /* Row thumbnails are 44-56px. Serving the uploaded file here meant a
+           1.7 MB photo drawn at 44px; this asks Next for a 64px version. */
+        sizes="64px"
         loading="lazy"
-        decoding="async"
         draggable={false}
         onError={() => setFailedSrc(src || null)}
-        className={`h-full w-full ${imgClassName}`}
+        className={imgClassName}
       />
     );
   }

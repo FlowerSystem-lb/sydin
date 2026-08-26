@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
@@ -232,18 +233,22 @@ export default function InventoryItemCard({
           </label>
         )}
         {showImage ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
+          <Image
             src={item.image}
             alt={item.name}
+            fill
+            /* The card image is never wider than its column, and the grid tops
+               out at six columns. Without this, Next would serve a
+               viewport-wide file for a thumbnail. Photos average 396 kB as
+               uploaded — a 500-item grid was 193 MB of downloads. */
+            sizes="(min-width: 1600px) 17rem, (min-width: 1120px) 20rem, (min-width: 640px) 33vw, 50vw"
             loading="lazy"
-            decoding="async"
             draggable={false}
             onError={() => setFailedImageSrc(item.image)}
             /* `contain`, not `cover`: product images here are labels and logos,
                and cropping to the centre turns a wide logo into a meaningless
                slice. Matches the list view, so an item looks the same in both. */
-            className="h-full w-full object-contain p-2 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
+            className="object-contain p-2 transition-transform duration-300 group-hover:scale-[1.025] motion-reduce:transition-none motion-reduce:group-hover:scale-100"
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { formatDepotLabel, getDepotsForUser, type Depot } from "@/app/lib/depots";
@@ -177,8 +178,8 @@ function ItemThumb({ item }: { item: Item }) {
   if (item.image) {
     return (
       <span className="ov-thumb">
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={item.image} alt="" loading="lazy" decoding="async" />
+        {/* Fixed 34px box, so ask for a 34px file rather than the original. */}
+        <Image src={item.image} alt="" width={34} height={34} loading="lazy" />
       </span>
     );
   }
