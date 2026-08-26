@@ -21488,3 +21488,30 @@ body:has(.dashboard-workspace-shell) {
 html:has(.dashboard-workspace-shell) {
   overflow: hidden;
 }
+
+/* ==========================================================================
+   THE HEIGHT HAS TO REACH THE SHELL (2026-08-25)
+   --------------------------------------------------------------------------
+   Founder: the white band is still there on some pages, and not on others.
+   That "some pages" is the clue, and it was content doing the work.
+
+   Between `body` and the app shell sit `.dashboard-theme` and
+   `.mobile-shell-content`. `.dashboard-theme` carries `min-height: 100dvh`,
+   which under a zoomed body is the RAW viewport -- and min-height is not a
+   definite height, so the shell's `height: 100%` had nothing to resolve
+   against and fell back to auto, i.e. the height of its own content.
+
+   That is why it looked fixed here and broken there: Inventory with ten
+   products is tall enough to fill the window by accident, so it measured 1px
+   short and passed. The empty state has almost nothing in it, so the shell
+   collapsed to its content and left the band.
+
+   Every link in the chain now carries a definite height, so the shell fills the
+   window whether the page holds five hundred products or none.
+   ========================================================================== */
+body:has(.dashboard-workspace-shell) .dashboard-theme,
+body:has(.dashboard-workspace-shell) .mobile-shell-content {
+  height: 100% !important;
+  min-height: 100% !important;
+}
+
