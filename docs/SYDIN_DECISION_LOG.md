@@ -401,3 +401,20 @@ A layout you cannot measure is a layout you cannot maintain — and this one has
 future page, not just today's. **How to apply:** do not reintroduce `zoom` on a root element. If a
 "make it smaller" request comes back, change `--space-*` and the type scale, and say plainly that
 browser zoom is the right tool for the rest. **Status:** Active.
+
+### 2026-08-26 · The 85% scale comes back — from the root font size, not `zoom`
+**Decision:** The site renders at 85% via `html { font-size: 85% }` (13.6px root). This supersedes
+the revert earlier the same day: the *look* Sayed asked for is delivered, the *technique* that broke
+is not reinstated. **Why:** the UI is overwhelmingly `rem`-based — 2,195 `rem` values in
+`globals.css` plus ~4,200 Tailwind v4 utilities in components, and every structural size is already
+`rem` (`--dashboard-sidebar-width`, `--dashboard-rail-width`, every `minmax(Nrem, …)` grid column).
+So one root value rescales type, spacing, chrome *and* layout, which is what puts six product cards
+in a row instead of four. Critically it rescales the `rem` unit and nothing else: viewport units,
+`getBoundingClientRect()`, `scrollTop` and `innerHeight` all stay in real pixels and agree with each
+other. `100dvh` still means the real window, which is precisely what `zoom` broke — so none of the
+four zoom bugs (white band, unscrollable landing page, band on sparse pages, unreachable last row)
+can recur by the same mechanism. **How to apply:** change the scale by changing that one number.
+Do **not** scale media-query breakpoints (they are real device widths) or 1px hairlines and shadows
+(a border should stay one physical pixel at any scale). If a future element does not shrink with the
+rest of the site, it is hardcoded in `px` — convert that value to `rem` rather than reaching for
+`zoom` again. **Status:** Active.

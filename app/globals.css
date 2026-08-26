@@ -285,6 +285,47 @@
     "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
 }
 
+/* ===========================================================================
+   SITE-WIDE SCALE — 85%, done from the root font size
+   ---------------------------------------------------------------------------
+   Sayed wants the whole site to look the way it does at 85% browser zoom:
+   smaller type, tighter chrome, six product cards to a row instead of four.
+
+   This is the SECOND attempt. The first used `zoom: 0.85` on <body> and was
+   reverted (see the decision log, 2026-08-26) after four layout bugs that
+   could not be measured, because `zoom` makes fixed and in-flow elements
+   report coordinates in different systems.
+
+   `font-size` on <html> has none of that problem. It rescales the `rem` unit
+   and nothing else:
+
+     - 2,195 rem values in this file scale.
+     - ~4,200 Tailwind utilities in the components scale (v4 spacing and type
+       are rem-based).
+     - The layout scales too, because every structural size is already rem:
+       --dashboard-sidebar-width, --dashboard-rail-width, and every
+       minmax(Nrem, …) grid column. Narrower cards mean more per row, which
+       is the thing Sayed actually asked for.
+
+   What deliberately does NOT scale, and should not:
+
+     - Viewport units. 100dvh still means the real window, so the shell
+       still fits the screen exactly. This is the entire reason the zoom
+       version broke and this one cannot.
+     - Coordinates. getBoundingClientRect(), scrollTop and innerHeight all
+       stay in real pixels and agree with each other, so this layout can be
+       measured and therefore maintained.
+     - Media-query breakpoints. Those are real device widths and must stay
+       real device widths.
+     - 1px hairlines and shadows. A border should stay one physical pixel at
+       any scale; scaling it to 0.85px is how hairlines go blurry.
+
+   To change the scale, change this one number. To undo it, delete this block.
+   =========================================================================== */
+html {
+  font-size: 85%;
+}
+
 html {
   min-width: 0;
   background: var(--sydin-bg-deep);

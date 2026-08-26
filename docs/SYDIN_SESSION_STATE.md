@@ -115,7 +115,9 @@ and Vercel.
   with rules declared six and eight times over.
 - **Restart the dev server after editing `globals.css`.** Turbopack serves stale
   CSS, which has faked at least six "the fix didn't work" moments.
-- **Do not scale the site with CSS `zoom`.** Tried and reverted 2026-08-26 —
+- **The 85% scale lives in one line:** `html { font-size: 85% }` near the top of `globals.css`.
+  If something does not shrink with the rest of the site, it is hardcoded in `px` — convert it to
+  `rem`. Do **not** use CSS `zoom`: tried and reverted 2026-08-26 —
   four layout bugs, none of them measurable, because zoom makes fixed and
   in-flow elements report coordinates in different systems. Density comes from
   the spacing and type tokens; browser zoom covers the rest. See the decision
