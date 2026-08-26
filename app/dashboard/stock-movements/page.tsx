@@ -342,7 +342,7 @@ export default function StockMovementsPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                         Change
                       </p>
                       <p
@@ -359,7 +359,7 @@ export default function StockMovementsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                         Before → After
                       </p>
                       <p className="mt-1 font-black text-theme-primary">
@@ -367,7 +367,7 @@ export default function StockMovementsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                         Date
                       </p>
                       <p className="mt-1 text-xs font-semibold text-theme-secondary">

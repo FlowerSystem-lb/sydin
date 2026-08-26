@@ -945,7 +945,7 @@ export default function ReceivingPage() {
                     step === item.id ? "bg-cyan-500/10 text-theme-accent" : ""
                   }`}
                 >
-                  <span className="block text-[10px] uppercase tracking-[0.12em]">
+                  <span className="block text-xs uppercase tracking-[0.12em]">
                     Step {index + 1}
                   </span>
                   <span>{item.label}</span>
@@ -1120,7 +1120,7 @@ export default function ReceivingPage() {
               </p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                     Inventory
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1128,7 +1128,7 @@ export default function ReceivingPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                     Selected
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1596,7 +1596,7 @@ export default function ReceivingPage() {
                   key={label}
                   className="rounded-xl border border-theme bg-theme-inset px-3 py-2"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                     {label}
                   </p>
                   <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1645,7 +1645,7 @@ export default function ReceivingPage() {
                 <>
                 <div className="hidden overflow-x-auto md:block">
                   <table className="min-w-[840px] w-full table-fixed text-left text-sm">
-                    <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="border-b border-theme bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
                       <tr>
                         <th className="px-4 py-3">Item</th>
                         <th className="px-4 py-3 text-right">Current</th>
@@ -1835,7 +1835,7 @@ export default function ReceivingPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                   Stock-in movements
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1843,7 +1843,7 @@ export default function ReceivingPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                   Skipped rows
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1851,7 +1851,7 @@ export default function ReceivingPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                   Failed
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">

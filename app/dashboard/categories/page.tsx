@@ -956,7 +956,7 @@ export default function CategoriesPage() {
             <div className="organize-sidebar-header border-b border-theme p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.16em] text-theme-accent">
+                  <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
                     Organize
                   </p>
                   <h1 className="text-xl font-black text-theme-primary">
@@ -992,7 +992,7 @@ export default function CategoriesPage() {
             </div>
 
             <div className="organize-filter-panel border-b border-theme p-3">
-              <p className="px-2 pb-2 text-[10px] font-black uppercase tracking-[0.16em] text-theme-subtle">
+              <p className="px-2 pb-2 text-xs font-black uppercase tracking-[0.16em] text-theme-subtle">
                 Smart filters
               </p>
               <div className="organize-category-filter-strip grid gap-1">
@@ -1031,10 +1031,10 @@ export default function CategoriesPage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
               <div className="flex items-center justify-between px-2 pb-2">
-                <p className="text-[10px] font-black uppercase tracking-[0.16em] text-theme-subtle">
+                <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-subtle">
                   Workspace categories
                 </p>
-                <span className="text-[10px] font-bold text-theme-subtle">
+                <span className="text-xs font-bold text-theme-subtle">
                   {categories.length}/{categoryLimit}
                 </span>
               </div>
@@ -1083,7 +1083,7 @@ export default function CategoriesPage() {
                             <span className="block truncate text-sm font-bold text-theme-primary">
                               {category.name}
                             </span>
-                            <span className="block text-[11px] text-theme-subtle">
+                            <span className="block text-xs text-theme-subtle">
                               {category.item_count || 0} item
                               {category.item_count === 1 ? "" : "s"}
                             </span>
@@ -1253,7 +1253,7 @@ export default function CategoriesPage() {
                   key={label}
                   className="border-b border-r border-theme px-4 py-3 last:border-r-0 sm:border-b-0"
                 >
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-theme-subtle">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-subtle">
                     {label}
                   </p>
                   <p className="mt-1 truncate text-sm font-black text-theme-primary">
@@ -1419,7 +1419,7 @@ export default function CategoriesPage() {
               ) : itemView === "table" ? (
                 <div className="mt-3 overflow-x-auto rounded-2xl border border-theme">
                   <table className="min-w-[760px] w-full border-collapse text-left text-sm">
-                    <thead className="bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
                       <tr>
                         <th className="px-4 py-3">Item</th>
                         <th className="px-4 py-3">Category</th>

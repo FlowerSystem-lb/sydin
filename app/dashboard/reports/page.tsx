@@ -279,7 +279,7 @@ function downloadCsv(filename: string, rows: Array<Array<string | number | null 
 
 function FormatChip({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] text-theme-secondary">
+    <span className="rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-xs font-black uppercase tracking-[0.08em] text-theme-secondary">
       {label}
     </span>
   );
@@ -895,7 +895,7 @@ export default function ReportsPage() {
                       {isWorkflowShortcut ? report.source : `Source: ${report.source}`}
                     </span>
                     {report.note && (
-                      <span className="inline-flex min-h-6 items-center rounded-full border border-theme bg-theme-inset px-2.5 text-[11px] font-bold text-theme-subtle">
+                      <span className="inline-flex min-h-6 items-center rounded-full border border-theme bg-theme-inset px-2.5 text-xs font-bold text-theme-subtle">
                         v1 workflow
                       </span>
                     )}
@@ -955,7 +955,7 @@ export default function ReportsPage() {
         <section className="rounded-[18px] border border-theme bg-theme-surface p-3">
           <div className="grid gap-2 md:grid-cols-2">
             <div className="flex items-start gap-3 rounded-xl border border-theme bg-theme-inset px-3 py-2.5">
-              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-theme-accent">
+              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-xs font-black uppercase tracking-[0.12em] text-theme-accent">
                 Future
               </span>
               <div className="min-w-0">
@@ -969,7 +969,7 @@ export default function ReportsPage() {
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-xl border border-theme bg-theme-inset px-3 py-2.5">
-              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-[10px] font-black uppercase tracking-[0.12em] text-theme-accent">
+              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-xs font-black uppercase tracking-[0.12em] text-theme-accent">
                 Future
               </span>
               <div className="min-w-0">

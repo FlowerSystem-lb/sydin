@@ -222,7 +222,7 @@ function DisclosureSection({
       className="group overflow-hidden rounded-[18px] border border-theme bg-theme-surface">
       <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 outline-none transition hover:bg-theme-hover focus-visible:ring-4 focus-visible:ring-indigo-400/20 [&::-webkit-details-marker]:hidden">
         <span className="min-w-0">
-          <span className="block text-[10px] font-bold uppercase tracking-[0.16em] text-theme-accent">
+          <span className="block text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
             {eyebrow}
           </span>
           <span className="mt-0.5 block text-base font-black text-theme-primary">
@@ -1412,7 +1412,7 @@ export default function AddItemPage() {
                   <p className="mt-1 break-words text-base font-black text-theme-primary">
                     {formattedCostValue || "Not calculated"}
                   </p>
-                  <p className="mt-1 text-[11px] leading-4 text-theme-subtle">
+                  <p className="mt-1 text-xs leading-4 text-theme-subtle">
                     Quantity multiplied by cost price.
                   </p>
                 </div>
@@ -1424,7 +1424,7 @@ export default function AddItemPage() {
                   <p className="mt-1 break-words text-base font-black text-theme-primary">
                     {formattedRetailValue || "Not calculated"}
                   </p>
-                  <p className="mt-1 text-[11px] leading-4 text-theme-subtle">
+                  <p className="mt-1 text-xs leading-4 text-theme-subtle">
                     Quantity multiplied by selling price.
                   </p>
                 </div>

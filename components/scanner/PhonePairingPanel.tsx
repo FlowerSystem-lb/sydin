@@ -60,7 +60,7 @@ export default function PhonePairingPanel({
           </h3>
         </div>
         <span
-          className={`shrink-0 rounded-full border px-2.5 py-1 text-[10px] font-black uppercase tracking-[0.08em] ${
+          className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-black uppercase tracking-[0.08em] ${
             pairing?.status === "paired"
               ? "border-emerald-400/30 bg-emerald-500/10 text-theme-success"
               : "border-theme bg-theme-inset text-theme-secondary"
@@ -108,7 +108,7 @@ export default function PhonePairingPanel({
               <p className="mt-2 font-mono text-2xl font-black tracking-[0.3em] text-theme-primary">
                 {pairing.pairing_code}
               </p>
-              <p className="mt-2 text-[11px] text-theme-subtle">
+              <p className="mt-2 text-xs text-theme-subtle">
                 Code expires 10 minutes after it was created.
               </p>
             </div>

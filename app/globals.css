@@ -251,6 +251,37 @@
   --shadow-overlay: 0 24px 70px var(--border-hairline);
 }
 
+
+/* ===========================================================================
+   TYPE SCALE AT 85% — text does NOT shrink as hard as the layout
+   ---------------------------------------------------------------------------
+   `html { font-size: 85% }` shrinks everything by 15%, which is right for
+   spacing, chrome and card widths — that is what fits six products to a row.
+   It is NOT right for reading text. At a plain 15% cut the app's main body
+   size (`text-sm`, 651 uses) landed at 11.9px and `text-xs` (382 uses) at
+   10.2px, with 123 values in this file rendering below 10px. That is the
+   "needs zooming in" Sayed reported, and it is why the honest fix is to treat
+   density and legibility as two separate dials.
+
+   So: layout shrinks the full 15%, type shrinks about 8%. The values below are
+   expressed in rem against the 13.6px root, with the rendered size in the
+   comment and the old 100% size for comparison.
+
+   Raw `font-size` declarations in this file are floored at 0.85rem (11.6px) by
+   the same reasoning — nothing in the product renders smaller than that.
+   =========================================================================== */
+@theme {
+  --text-xs: 0.85rem;    /* 11.6px  (was 12px at 100%) */
+  --text-sm: 0.95rem;    /* 12.9px  (was 14px) — the app's main body size */
+  --text-base: 1.07rem;  /* 14.6px  (was 16px) */
+  --text-lg: 1.2rem;     /* 16.3px  (was 18px) */
+  --text-xl: 1.35rem;    /* 18.4px  (was 20px) */
+  --text-2xl: 1.62rem;   /* 22.0px  (was 24px) */
+  --text-3xl: 2rem;      /* 27.2px  (was 30px) */
+  --text-4xl: 2.4rem;    /* 32.6px  (was 36px) */
+  --text-5xl: 3.2rem;    /* 43.5px  (was 48px) */
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -485,12 +516,12 @@ canvas {
 }
 
 .supporting-body {
-  font-size: 0.8125rem;
+  font-size: 0.85rem;
   line-height: 1.25rem;
 }
 
 .metadata-text {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   line-height: 1rem;
 }
 
@@ -545,7 +576,7 @@ canvas {
 .ui-button-sm {
   min-height: 2.25rem;
   padding-inline: var(--space-3);
-  font-size: 0.8125rem;
+  font-size: 0.85rem;
 }
 
 .ui-button-lg {
@@ -712,7 +743,7 @@ canvas {
 
 .ui-form-label {
   color: var(--text-secondary);
-  font-size: 0.8125rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.25rem;
 }
@@ -720,13 +751,13 @@ canvas {
 .ui-form-optional,
 .ui-form-description {
   color: var(--text-subtle);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   line-height: 1.125rem;
 }
 
 .ui-form-error {
   color: var(--status-danger-text);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.125rem;
 }
@@ -741,7 +772,7 @@ canvas {
   background: var(--bg-page-muted);
   color: var(--text-secondary);
   padding: 0.2rem 0.55rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1rem;
 }
@@ -855,7 +886,7 @@ canvas {
 
 .dashboard-eyebrow {
   color: var(--text-accent);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.16em;
   line-height: 0.9rem;
@@ -878,7 +909,7 @@ canvas {
   margin-bottom: 0;
   max-width: 42rem;
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   line-height: 1.35rem;
 }
 
@@ -925,7 +956,7 @@ canvas {
   background: var(--bg-surface);
   color: var(--text-secondary);
   padding-inline: 0.65rem;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -933,7 +964,7 @@ canvas {
 
 .dashboard-filter-chip > span:last-child {
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -1045,7 +1076,7 @@ canvas {
 .dashboard-metric-card em {
   display: block;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-style: normal;
   font-weight: 600;
   line-height: 1rem;
@@ -1152,7 +1183,7 @@ canvas {
 .dashboard-table thead {
   background: var(--bg-page-muted);
   color: var(--text-subtle);
-  font-size: 0.6875rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1226,7 +1257,7 @@ canvas {
 .dashboard-list-row-copy small {
   margin-top: 0.15rem;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   line-height: 1rem;
 }
 
@@ -1354,7 +1385,7 @@ canvas {
 .ui-eyebrow,
 .ui-eyebrow-danger {
   color: var(--text-accent);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   line-height: 1rem;
@@ -1402,7 +1433,7 @@ canvas {
   max-width: 44rem;
   margin-top: var(--space-2);
   color: var(--text-muted);
-  font-size: 0.8125rem;
+  font-size: 0.85rem;
   line-height: 1.25rem;
 }
 
@@ -1619,7 +1650,7 @@ canvas {
 
 .item-details-eyebrow {
   color: var(--sydin-accent-text);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   line-height: 1rem;
@@ -1652,7 +1683,7 @@ canvas {
   border-radius: 0.85rem;
   background: var(--sydin-ui-surface);
   color: var(--sydin-text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   box-shadow: 0 1px 2px var(--border-hairline);
   transition:
@@ -1726,7 +1757,7 @@ canvas {
   gap: 0.55rem;
   padding: 0.55rem 0.7rem;
   color: #334155;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-align: left;
   transition:
@@ -1750,7 +1781,7 @@ canvas {
   background: var(--status-success-surface);
   padding-inline: 0.6rem;
   color: var(--status-success-text);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -1791,7 +1822,7 @@ canvas {
   align-items: center;
   gap: 0.65rem;
   color: var(--sydin-text-subtle);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -1822,7 +1853,7 @@ canvas {
 .item-details-notes p,
 .item-details-group-title {
   color: var(--sydin-text-subtle);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   line-height: 1rem;
@@ -1952,7 +1983,7 @@ canvas {
   border: 1px solid var(--status-danger-border);
   border-radius: 0.75rem;
   padding: 0.65rem 0.75rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -1976,7 +2007,7 @@ canvas {
   min-height: 2.3rem;
   border-radius: 0.7rem;
   color: var(--sydin-text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   transition:
     background-color 140ms ease,
@@ -2102,7 +2133,7 @@ canvas {
 
 .item-details-activity-list span {
   color: var(--sydin-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -2110,7 +2141,7 @@ canvas {
   margin-top: 0.35rem;
   overflow-wrap: anywhere;
   color: var(--sydin-text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   line-height: 1.45;
 }
 
@@ -2165,7 +2196,7 @@ canvas {
 .item-details-alert-card p {
   margin-top: 0.25rem;
   color: var(--sydin-text-secondary);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   line-height: 1.45;
 }
 
@@ -2409,7 +2440,7 @@ canvas {
   color: var(--text-primary);
   opacity: 0;
   padding: var(--space-2) var(--space-3);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   line-height: 1rem;
   pointer-events: none;
   transition:
@@ -2692,7 +2723,7 @@ select.glass-input option {
   border-bottom: 1px solid var(--sydin-border);
   background: var(--sydin-surface-inset);
   color: var(--sydin-text-muted);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-align: left;
   text-transform: uppercase;
@@ -3164,7 +3195,7 @@ select.glass-input option {
   gap: 0.2rem;
   border-radius: var(--radius-card);
   color: var(--text-subtle);
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1;
   transition:
@@ -3208,7 +3239,7 @@ select.glass-input option {
   border: 0;
   background: none;
   color: var(--text-subtle);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   line-height: 1.2;
@@ -3312,13 +3343,13 @@ select.glass-input option {
 }
 
 .dashboard-account-copy span:first-child {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
 .dashboard-account-copy span:last-child {
   color: var(--text-subtle);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
 }
 
 .dashboard-account-menu-links {
@@ -3338,7 +3369,7 @@ select.glass-input option {
   border-radius: var(--radius-control);
   padding: 0 var(--space-3);
   color: var(--text-secondary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -3803,7 +3834,7 @@ select.glass-input option {
 .marketing-hero-kicker,
 .marketing-eyebrow {
   color: #3977ff;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.15em;
   line-height: 1rem;
@@ -3924,7 +3955,7 @@ select.glass-input option {
   background: var(--ink);
   padding: 0 0.8rem;
   color: #ffffff;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -3979,7 +4010,7 @@ select.glass-input option {
   background: #fff3e5;
   padding: 0.3rem 0.55rem;
   color: #a35310;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -3997,7 +4028,7 @@ select.glass-input option {
   align-items: center;
   gap: 0.45rem;
   color: var(--marketing-copy);
-  font-size: 0.8125rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -4062,7 +4093,7 @@ select.glass-input option {
 
 .marketing-workflow-card > span {
   color: #3977ff;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -4097,7 +4128,7 @@ select.glass-input option {
   background: var(--surface-page);
   padding: 0.35rem 0.65rem;
   color: #5864e8;
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -4220,7 +4251,7 @@ select.glass-input option {
   }
 
   .marketing-hero-kicker {
-    font-size: 0.68rem;
+    font-size: 0.85rem;
     letter-spacing: 0.12em;
   }
 
@@ -4469,7 +4500,7 @@ select.glass-input option {
     border-radius: 10px;
     gap: 0.4rem;
     padding: 0.55rem 0.75rem;
-    font-size: 0.8125rem;
+    font-size: 0.85rem;
     line-height: 1rem;
   }
 
@@ -4498,7 +4529,7 @@ select.glass-input option {
   .dashboard-shell-content .glass-panel:first-child p[class*="leading-7"],
   .dashboard-shell-content .glass-panel:first-child p[class*="leading-6"] {
     margin-top: 0.35rem;
-    font-size: 0.8125rem;
+    font-size: 0.85rem;
     line-height: 1.2rem;
   }
 
@@ -4600,7 +4631,7 @@ select.glass-input option {
   background: var(--bg-surface);
   padding: 0.45rem 0.72rem;
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1;
   transition:
@@ -4759,7 +4790,7 @@ select.glass-input option {
   justify-content: space-between;
   gap: 0.75rem;
   color: var(--text-primary);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -4900,7 +4931,7 @@ select.glass-input option {
     overflow: hidden;
     text-overflow: ellipsis;
     color: var(--text-muted);
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -4967,7 +4998,7 @@ select.glass-input option {
   }
 
   .inventory-mobile-folder-name {
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 600;
     line-height: 1.1;
   }
@@ -4975,7 +5006,7 @@ select.glass-input option {
   .inventory-mobile-folder-count {
     margin-top: 0.15rem;
     color: var(--text-subtle);
-    font-size: 0.68rem;
+    font-size: 0.85rem;
     font-weight: 600;
   }
 
@@ -5219,7 +5250,7 @@ select.glass-input option {
 
   .ui-dialog-description {
     margin-top: 0.35rem;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
     line-height: 1.2rem;
   }
 
@@ -5512,7 +5543,7 @@ select.glass-input option {
   border-radius: 999px;
   background: var(--bg-surface);
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1;
   white-space: nowrap;
@@ -5520,7 +5551,7 @@ select.glass-input option {
 
 .organize-chip > span:last-child {
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -5648,14 +5679,14 @@ select.glass-input option {
 
   .organize-search-card label {
     margin-bottom: 0.35rem;
-    font-size: 0.75rem;
+    font-size: 0.85rem;
   }
 
   .organize-search-card p[class*="rounded-2xl"] {
     align-self: flex-start;
     border-radius: 999px;
     padding: 0.45rem 0.65rem;
-    font-size: 0.72rem;
+    font-size: 0.85rem;
   }
 
   .organize-chip-strip {
@@ -5737,7 +5768,7 @@ select.glass-input option {
     border-radius: 9px;
     padding: 0.45rem 0.65rem;
     color: var(--brand-navy);
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 600;
     text-align: left;
   }
@@ -5775,12 +5806,12 @@ select.glass-input option {
 
   .organize-suppliers .organize-supplier-row > div:first-child p {
     margin-top: 0.2rem;
-    font-size: 0.76rem;
+    font-size: 0.85rem;
   }
 
   .organize-suppliers .organize-supplier-row > div:first-child span {
     padding: 0.28rem 0.5rem;
-    font-size: 0.68rem;
+    font-size: 0.85rem;
   }
 
   .organize-suppliers .organize-row-meta {
@@ -5815,7 +5846,7 @@ select.glass-input option {
     color: var(--ink-muted);
     margin-top: 0.65rem;
     padding: 0.65rem;
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     line-height: 1.2rem;
   }
 
@@ -5858,7 +5889,7 @@ select.glass-input option {
 
   .organize-suppliers .glass-card.border-dashed p {
     margin-top: 0.45rem;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     line-height: 1.25rem;
   }
 
@@ -5867,7 +5898,7 @@ select.glass-input option {
     min-height: 2.4rem;
     border-radius: 10px;
     padding: 0.55rem 0.85rem;
-    font-size: 0.8rem;
+    font-size: 0.85rem;
   }
 
   .organize-depots > div > .grid {
@@ -6097,7 +6128,7 @@ select.glass-input option {
     width: 100%;
     justify-content: center;
     padding-inline: 0.45rem;
-    font-size: 0.76rem;
+    font-size: 0.85rem;
     white-space: normal;
   }
 
@@ -6194,7 +6225,7 @@ select.glass-input option {
 
 .overview-kicker {
   color: var(--overview-blue);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   line-height: 1rem;
@@ -6234,7 +6265,7 @@ select.glass-input option {
   background: #ffffff;
   padding-inline: 0.95rem;
   color: var(--overview-text);
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
   transition:
@@ -6314,7 +6345,7 @@ select.glass-input option {
 .overview-kpi-card p,
 .overview-kpi-card span {
   color: var(--overview-muted);
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -6403,7 +6434,7 @@ select.glass-input option {
 .overview-plan-strip p,
 .overview-plan-strip span {
   color: var(--overview-muted);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -6443,7 +6474,7 @@ select.glass-input option {
   align-items: center;
   gap: 0.35rem;
   color: var(--overview-blue);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -6492,7 +6523,7 @@ select.glass-input option {
   align-items: center;
   gap: 0.35rem;
   color: var(--overview-blue);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -6513,7 +6544,7 @@ select.glass-input option {
 .overview-inventory-head {
   min-height: 2.2rem;
   color: var(--overview-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -6521,7 +6552,7 @@ select.glass-input option {
   min-height: 4.15rem;
   border-top: 1px solid var(--overview-border);
   color: var(--overview-text);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
   transition:
@@ -6569,7 +6600,7 @@ select.glass-input option {
   margin-top: 0.2rem;
   overflow: hidden;
   color: var(--overview-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -6607,7 +6638,7 @@ select.glass-input option {
   border: 1px solid transparent;
   border-radius: 8px;
   padding-inline: 0.75rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -6659,7 +6690,7 @@ select.glass-input option {
   gap: 0.65rem;
   border-top: 1px solid var(--overview-border);
   color: var(--overview-muted);
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -6739,7 +6770,7 @@ select.glass-input option {
   background: #ffffff;
   padding-inline: 0.65rem;
   color: var(--overview-text);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
@@ -7078,7 +7109,7 @@ select.glass-input option {
 
 .quick-add-eyebrow {
   color: var(--text-accent);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -7152,7 +7183,7 @@ select.glass-input option {
 .quick-add-error {
   margin-top: 0.4rem;
   color: var(--status-danger-text);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -7187,7 +7218,7 @@ select.glass-input option {
   display: block;
   margin-top: 0.1rem;
   color: var(--text-subtle);
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   line-height: 1.35;
 }
 
@@ -7213,7 +7244,7 @@ select.glass-input option {
 
 .quick-add-subsection > p {
   color: var(--text-accent);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -7436,7 +7467,7 @@ select.glass-input option {
   border-radius: 11px;
   padding-inline: 0.9rem;
   color: var(--ink-muted);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   transition:
     transform 180ms ease,
@@ -7534,7 +7565,7 @@ select.glass-input option {
 
 .login-divider p {
   color: var(--ink-muted);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.1em;
 }
@@ -7551,7 +7582,7 @@ select.glass-input option {
 
 .login-field label {
   color: #242941;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -7606,7 +7637,7 @@ select.glass-input option {
   border: 1px solid var(--surface-sunken);
   border-radius: 7px;
   color: var(--ink-muted);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -7614,7 +7645,7 @@ select.glass-input option {
   border-radius: 7px;
   padding: 0.35rem 0.45rem;
   color: var(--ink-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -7624,7 +7655,7 @@ select.glass-input option {
   justify-content: space-between;
   gap: 1rem;
   color: var(--ink-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
 }
 
 .login-form-options > a {
@@ -7710,7 +7741,7 @@ select.glass-input option {
   background: #fff5f6;
   padding: 0.75rem 0.85rem;
   color: #a6263b;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.45;
 }
@@ -7723,7 +7754,7 @@ select.glass-input option {
   margin-top: 1.6rem;
   color: var(--ink-muted);
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
 }
 
 .login-signup-copy a {
@@ -7742,7 +7773,7 @@ select.glass-input option {
 .signup-password-help,
 .auth-verification-help {
   color: var(--ink-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   line-height: 1.45;
 }
 
@@ -7770,7 +7801,7 @@ select.glass-input option {
 .auth-verification-eyebrow {
   margin-top: 1.25rem;
   color: #4c6fff;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -7807,7 +7838,7 @@ select.glass-input option {
 
 .auth-verification-form > label {
   color: #242941;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -7858,7 +7889,7 @@ select.glass-input option {
   border-radius: 8px;
   padding: 0.35rem;
   color: #426dff;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -7923,7 +7954,7 @@ select.glass-input option {
   margin-top: auto;
   padding-top: 1.25rem;
   color: var(--ink-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
 }
 
 .login-back-link:focus-visible,
@@ -8105,7 +8136,7 @@ select.glass-input option {
 .login-card-heading span,
 .login-card-heading div > span {
   color: #8990a8;
-  font-size: 0.65rem;
+  font-size: 0.85rem;
 }
 
 .login-dashboard-heading h2 {
@@ -8124,7 +8155,7 @@ select.glass-input option {
   background: #f6fffc;
   padding: 0.35rem 0.55rem;
   color: #2c816d;
-  font-size: 0.63rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -8185,14 +8216,14 @@ select.glass-input option {
 .login-metric-card p {
   margin-top: 0.65rem;
   color: var(--ink-muted);
-  font-size: 0.62rem;
+  font-size: 0.85rem;
 }
 
 .login-metric-card strong {
   display: block;
   margin-top: 0.15rem;
   color: #1d213e;
-  font-size: 0.83rem;
+  font-size: 0.85rem;
 }
 
 .login-metric-bar {
@@ -8231,7 +8262,7 @@ select.glass-input option {
 
 .login-card-heading p {
   color: #232744;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -8330,13 +8361,13 @@ select.glass-input option {
 
 .login-activity-row strong {
   color: #30344f;
-  font-size: 0.6rem;
+  font-size: 0.85rem;
 }
 
 .login-activity-row small {
   margin-top: 0.12rem;
   color: #9399ac;
-  font-size: 0.52rem;
+  font-size: 0.85rem;
 }
 
 .login-activity-row > i {
@@ -8437,13 +8468,13 @@ select.glass-input option {
 
 .login-visual-promise strong {
   color: #212541;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
 }
 
 .login-visual-promise small {
   margin-top: 0.15rem;
   color: var(--ink-muted);
-  font-size: 0.6rem;
+  font-size: 0.85rem;
 }
 
 @keyframes login-dashboard-float {
@@ -8602,7 +8633,7 @@ select.glass-input option {
   .login-back-link {
     min-height: 2.5rem;
     padding-inline: 0.7rem;
-    font-size: 0.74rem;
+    font-size: 0.85rem;
   }
 
   .login-form-wrap {
@@ -8779,7 +8810,7 @@ select.glass-input option {
   margin-top: 0.25rem;
   overflow-wrap: anywhere;
   color: var(--ink-muted);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
 }
 
 .qr-label-card small {
@@ -8787,7 +8818,7 @@ select.glass-input option {
   margin-top: 0.35rem;
   overflow-wrap: anywhere;
   color: var(--ink-muted);
-  font-size: 0.65rem;
+  font-size: 0.85rem;
 }
 
 .qr-print-root {
@@ -8923,7 +8954,7 @@ select.glass-input option {
 .ui-select-option-description {
   margin-top: 0.15rem;
   color: var(--ink-muted);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   line-height: 1.25;
 }
 
@@ -8938,7 +8969,7 @@ select.glass-input option {
   border-top: 1px solid var(--surface-sunken);
   padding: 0.65rem 0.85rem;
   color: #4f46e5;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-align: left;
 }
@@ -9922,7 +9953,7 @@ body [class*="tracking-["],
 
 .dashboard-sidebar-workspace-copy span {
   color: var(--text-accent);
-  font-size: 0.66rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -9942,7 +9973,7 @@ body [class*="tracking-["],
 
 .dashboard-sidebar-workspace-copy small {
   color: var(--text-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10131,7 +10162,7 @@ body [class*="tracking-["],
 .overview-health-ring small {
   align-self: start;
   color: var(--overview-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10180,7 +10211,7 @@ body [class*="tracking-["],
 
 .overview-hero-mini-grid small {
   color: var(--overview-muted);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10257,7 +10288,7 @@ body [class*="tracking-["],
 
 .inventory-hero-kicker {
   color: var(--text-accent);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10295,7 +10326,7 @@ body [class*="tracking-["],
   background: rgba(255, 255, 255, 0.7);
   padding-inline: 0.7rem;
   color: var(--text-secondary);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10311,7 +10342,7 @@ body [class*="tracking-["],
   min-height: 2.6rem;
   border-radius: 14px;
   padding: 0 0.9rem;
-  font-size: 0.84rem;
+  font-size: 0.85rem;
 }
 
 .inventory-hero-status {
@@ -10335,7 +10366,7 @@ body [class*="tracking-["],
 
 .inventory-hero-status small {
   color: var(--text-muted);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10388,7 +10419,7 @@ body [class*="tracking-["],
 
 .inventory-stat-copy span {
   color: var(--text-subtle);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10475,7 +10506,7 @@ body [class*="tracking-["],
   background: rgba(255, 255, 255, 0.7);
   padding-inline: 0.75rem;
   color: var(--text-primary);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -10510,7 +10541,7 @@ body [class*="tracking-["],
   gap: 0.25rem;
   border-radius: 999px;
   padding-inline: 0.65rem;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10613,7 +10644,7 @@ body [class*="tracking-["],
   background: #fff1f2;
   padding: 0.18rem 0.5rem;
   color: #dc2626;
-  font-size: 0.62rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10641,7 +10672,7 @@ body [class*="tracking-["],
 
 .inventory-card-code {
   color: var(--text-accent);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10662,7 +10693,7 @@ body [class*="tracking-["],
   background: rgba(239, 246, 255, 0.86);
   padding: 0.28rem 0.55rem;
   color: #1d4ed8;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10681,7 +10712,7 @@ body [class*="tracking-["],
   background: rgba(237, 247, 252, 0.72);
   padding: 0.24rem 0.55rem;
   color: var(--text-secondary);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -10723,7 +10754,7 @@ body [class*="tracking-["],
 
 .inventory-card-meta small {
   color: var(--text-subtle);
-  font-size: 0.64rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10731,7 +10762,7 @@ body [class*="tracking-["],
 .inventory-card-meta strong {
   margin-top: 0.15rem;
   color: var(--text-primary);
-  font-size: 0.76rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10751,7 +10782,7 @@ body [class*="tracking-["],
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.7);
   color: var(--text-primary);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10817,7 +10848,7 @@ body [class*="tracking-["],
 
 .marketing-hero-proof small {
   color: var(--marketing-copy);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10849,7 +10880,7 @@ body [class*="tracking-["],
 
 .marketing-product-browser strong {
   margin-left: 0.45rem;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10872,7 +10903,7 @@ body [class*="tracking-["],
 
 .marketing-product-command p {
   color: var(--ink-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10896,7 +10927,7 @@ body [class*="tracking-["],
   background: rgba(255, 255, 255, 0.82);
   padding-inline: 0.8rem;
   color: var(--ink-muted);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10941,14 +10972,14 @@ body [class*="tracking-["],
 .marketing-product-card strong {
   margin-top: 0.65rem;
   color: var(--ink);
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
 .marketing-product-card small {
   margin-top: 0.15rem;
   color: var(--ink-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -10972,7 +11003,7 @@ body [class*="tracking-["],
 
 .marketing-product-side-panel p {
   color: var(--ink-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
 }
@@ -10990,7 +11021,7 @@ body [class*="tracking-["],
   display: block;
   margin-top: 0.35rem;
   color: var(--ink-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -11008,7 +11039,7 @@ body [class*="tracking-["],
   background: rgba(255, 255, 255, 0.7);
   padding: 0.55rem;
   color: #34445b;
-  font-size: 0.74rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -11550,7 +11581,7 @@ body [class*="tracking-["],
 .inventory-workspace .action-button {
   min-height: 2.45rem;
   padding-inline: 0.9rem;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -12184,7 +12215,7 @@ body [class*="tracking-["],
     border-radius: 999px;
     padding-inline: 0.9rem;
     color: var(--ink-muted);
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 600;
     line-height: 1;
     text-decoration: none;
@@ -12247,14 +12278,14 @@ body [class*="tracking-["],
   }
 
   .dashboard-top-account-pill strong {
-    font-size: 0.72rem;
+    font-size: 0.85rem;
     font-weight: 600;
   }
 
   .dashboard-top-account-pill small {
     max-width: 9rem;
     color: #77736b;
-    font-size: 0.62rem;
+    font-size: 0.85rem;
     font-weight: 600;
   }
 
@@ -12719,7 +12750,7 @@ body,
   border-radius: 999px;
   background: #ffffff;
   color: var(--text-primary);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
   box-shadow: none;
@@ -12899,7 +12930,7 @@ body,
 
 .sydin-overview-kicker {
   color: var(--overview-blue);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0;
   text-transform: uppercase;
@@ -12953,7 +12984,7 @@ body,
   background: #ffffff;
   padding-inline: 0.85rem;
   color: var(--overview-ink);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.15;
   overflow-wrap: anywhere;
@@ -13031,7 +13062,7 @@ body,
 .sydin-overview-activity-row small,
 .sydin-overview-item-card small {
   color: var(--overview-muted);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-style: normal;
   font-weight: 600;
 }
@@ -13103,7 +13134,7 @@ body,
 .sydin-overview-text-link {
   flex: none;
   color: var(--overview-blue);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -13154,7 +13185,7 @@ body,
 .sydin-overview-item-card em,
 .sydin-overview-activity-row em {
   color: var(--overview-ink);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-style: normal;
   font-weight: 600;
   white-space: nowrap;
@@ -13185,7 +13216,7 @@ body,
   border: 1px solid transparent;
   border-radius: 999px;
   padding-inline: 0.55rem;
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -13230,7 +13261,7 @@ body,
   background: var(--overview-soft);
   padding: 0.65rem;
   color: var(--overview-ink);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -13244,7 +13275,7 @@ body,
 .sydin-overview-completeness-note {
   margin: 0 0.85rem 0.7rem;
   color: var(--overview-muted);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.4;
 }
@@ -13279,7 +13310,7 @@ body,
 }
 
 .sydin-overview-completeness-chip span {
-  font-size: 0.74rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--overview-muted);
 }
@@ -13356,13 +13387,13 @@ body,
 
 .sydin-overview-empty p {
   max-width: 24rem;
-  font-size: 0.84rem;
+  font-size: 0.85rem;
   line-height: 1.45;
 }
 
 .sydin-overview-empty a {
   color: var(--overview-blue);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -14519,7 +14550,7 @@ body,
 .dashboard-shell:has(.inventory-workspace) .inventory-stat-grid .dashboard-metric-card small,
 .dashboard-shell:has(.inventory-workspace) .inventory-stat-grid .dashboard-metric-card em {
   color: var(--ink-muted);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   line-height: 1rem;
 }
 
@@ -14761,7 +14792,7 @@ body,
   white-space: nowrap;
   text-overflow: ellipsis;
   text-align: left;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--ink-muted);
 }
@@ -14784,7 +14815,7 @@ body,
   background: #ffffff;
   padding: 0 0.3rem;
   font-family: inherit;
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--ink-muted);
 }
@@ -14903,7 +14934,7 @@ body,
   border-radius: 999px;
   border: 1px solid transparent;
   padding: 0.35rem 0.75rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
@@ -14954,7 +14985,7 @@ body,
   border: 1px solid var(--border-default);
   background: var(--sydin-surface-inset);
   padding: 0.3rem 0.65rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-secondary);
   transition: background var(--motion-control, 160ms) ease, border-color var(--motion-control, 160ms) ease;
@@ -15001,7 +15032,7 @@ body,
   border-top: 1px solid var(--border-default);
   background: var(--sydin-surface-inset);
   padding: 0.7rem 1rem;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-accent);
   transition: background var(--motion-control, 160ms) ease;
@@ -15018,7 +15049,7 @@ body,
   gap: 0.9rem;
   border-top: 1px solid var(--border-default);
   padding: 0.55rem 1rem;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-subtle);
 }
@@ -15034,7 +15065,7 @@ body,
   background: var(--sydin-surface-inset);
   padding: 0 0.25rem;
   font-family: inherit;
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   margin-right: 0.15rem;
 }
 
@@ -15052,7 +15083,7 @@ body,
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.6rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -15151,7 +15182,7 @@ body,
   border-radius: 999px;
   background: rgba(18, 184, 214, 0.09);
   padding: 0.22rem 0.6rem;
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.03em;
   color: var(--text-accent);
@@ -15223,14 +15254,14 @@ body,
 
 .po-affects-stock-toggle strong {
   display: block;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   color: var(--text-primary);
 }
 
 .po-affects-stock-toggle small {
   display: block;
   margin-top: 0.1rem;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -15245,7 +15276,7 @@ body,
   border-radius: 12px;
   background: var(--sydin-surface-inset);
   padding: 0.7rem 0.9rem;
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -15303,7 +15334,7 @@ body,
 
 .sydin-overview-spending-total small {
   display: block;
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -15322,7 +15353,7 @@ body,
 .sydin-overview-spending-total em {
   display: block;
   margin-top: 0.1rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-style: normal;
   font-weight: 600;
   color: var(--text-muted);
@@ -15364,14 +15395,14 @@ body,
 
 .sydin-overview-spending-row strong {
   display: block;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
 .sydin-overview-spending-row small {
   display: block;
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -15406,7 +15437,7 @@ body,
   border-radius: 12px;
   background: rgba(18, 184, 214, 0.08);
   padding: 0.55rem 0.7rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.15rem;
   color: var(--text-secondary);
@@ -15449,7 +15480,7 @@ body,
   display: inline-flex;
   align-items: center;
   gap: 0.2rem;
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-accent);
   transition: transform 140ms ease;
@@ -15475,7 +15506,7 @@ body,
 
 .receiving-history-stat small {
   display: block;
-  font-size: 0.66rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -15492,7 +15523,7 @@ body,
 
 .receiving-history-stat em {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-style: normal;
   font-weight: 600;
   color: var(--text-muted);
@@ -15504,7 +15535,7 @@ body,
   background: var(--sydin-surface-inset);
   padding: 1.1rem;
   text-align: center;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -15546,7 +15577,7 @@ body,
   border-radius: 999px;
   background: rgba(16, 185, 129, 0.1);
   padding: 0.22rem 0.6rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: #047857;
 }
@@ -15600,7 +15631,7 @@ body,
 .po-receive-now-toggle small {
   display: block;
   margin-top: 0.15rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.15rem;
   color: var(--text-muted);
@@ -15664,7 +15695,7 @@ body,
 
 .po-balance-strip small {
   display: block;
-  font-size: 0.62rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -15743,7 +15774,7 @@ body,
 
 .po-month-meta {
   margin-left: auto;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -15794,7 +15825,7 @@ body,
   border: 1px solid rgba(245, 158, 11, 0.3);
   background: rgba(245, 158, 11, 0.1);
   padding: 0.22rem 0.6rem;
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.02em;
   color: #b45309;
@@ -15814,7 +15845,7 @@ body,
   border: 1px solid rgba(245, 158, 11, 0.28);
   background: rgba(245, 158, 11, 0.1);
   padding: 0.5rem 0.65rem;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.1rem;
   color: var(--text-warning, #92400e);
@@ -15827,7 +15858,7 @@ body,
 }
 
 .po-detail-label {
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.09em;
   text-transform: uppercase;
@@ -15842,7 +15873,7 @@ body,
 }
 
 .po-detail-sub {
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted);
 }
@@ -15863,7 +15894,7 @@ body,
   border: 1px solid rgba(14, 165, 198, 0.3);
   background: rgba(18, 184, 214, 0.12);
   padding: 0.1rem 0.45rem;
-  font-size: 0.62rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -16232,7 +16263,7 @@ body,
 
 .sydin-health-center small {
   display: block;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-muted, var(--ink-muted));
 }
@@ -16250,7 +16281,7 @@ body,
   border-radius: 12px;
   background: rgba(255, 255, 255, 0.7);
   padding: 0.5rem 0.75rem;
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--text-primary, var(--ink));
   transition:
@@ -16939,14 +16970,14 @@ body,
 }
 
 .dashboard-top-add-menu a strong {
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.15;
 }
 
 .dashboard-top-add-menu a small {
   color: var(--text-muted);
-  font-size: 0.7rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.25;
 }
@@ -17447,7 +17478,7 @@ body,
 .image-lightbox-toolbar span {
   min-width: 3.1rem;
   text-align: center;
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
@@ -17476,7 +17507,7 @@ body,
   position: absolute;
   bottom: max(1rem, env(safe-area-inset-bottom));
   color: rgba(255, 255, 255, 0.82);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
 }
 
@@ -17817,7 +17848,7 @@ body.sydin-shell,
   background: none;
   padding: 0;
   color: var(--text-secondary);
-  font-size: 0.75rem;
+  font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -17951,7 +17982,7 @@ body.sydin-shell,
   background: var(--status-danger-text, #dc2626);
   padding-inline: 0.2rem;
   color: #fff;
-  font-size: 0.62rem;
+  font-size: 0.85rem;
   font-weight: 600;
   line-height: 1;
 }
@@ -17992,7 +18023,7 @@ body.sydin-shell,
 }
 
 .dashboard-notifications-header span {
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   color: var(--text-subtle);
 }
 
@@ -18003,7 +18034,7 @@ body.sydin-shell,
   background: none;
   padding: 0.2rem 0;
   color: var(--text-accent);
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -18038,7 +18069,7 @@ body.sydin-shell,
 .dashboard-notifications-section-title {
   padding: 0.2rem 0.4rem 0.35rem;
   color: var(--text-subtle);
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -18069,7 +18100,7 @@ a.dashboard-notifications-row:hover {
 .dashboard-notifications-row-text strong {
   overflow: hidden;
   color: var(--text-primary);
-  font-size: 0.82rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -18078,7 +18109,7 @@ a.dashboard-notifications-row:hover {
 .dashboard-notifications-row-text small {
   overflow: hidden;
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -18138,7 +18169,7 @@ a.dashboard-notifications-row:hover {
   margin-top: 0.15rem;
   padding: 0.45rem 0.6rem;
   color: var(--text-accent, #2563eb);
-  font-size: 0.78rem;
+  font-size: 0.85rem;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
@@ -18175,7 +18206,7 @@ a.dashboard-notifications-row:hover {
   background: var(--ink);
   padding: 0.32rem 0.62rem;
   color: #ffffff;
-  font-size: 0.72rem;
+  font-size: 0.85rem;
   font-weight: 600;
   letter-spacing: 0.01em;
   line-height: 1.35;
@@ -18706,7 +18737,7 @@ a.dashboard-notifications-row:hover {
   .marketing-artifact-label {
     margin: 0 0 0.5rem;
     color: var(--ink-muted);
-    font-size: 0.68rem;
+    font-size: 0.85rem;
     font-weight: 600;
     letter-spacing: 0.08em;
     text-transform: uppercase;
@@ -18733,13 +18764,13 @@ a.dashboard-notifications-row:hover {
     justify-content: space-between;
     gap: 0.75rem;
     color: var(--ink);
-    font-size: 0.78rem;
+    font-size: 0.85rem;
     font-weight: 450;
   }
 
   .marketing-artifact-stock strong {
     color: #b4530f;
-    font-size: 0.72rem;
+    font-size: 0.85rem;
     font-weight: 600;
     white-space: nowrap;
   }
@@ -18767,7 +18798,7 @@ a.dashboard-notifications-row:hover {
     gap: 0.25rem;
     margin-top: 0.35rem;
     color: #15803d;
-    font-size: 0.72rem;
+    font-size: 0.85rem;
     font-weight: 500;
   }
 
@@ -18788,7 +18819,7 @@ a.dashboard-notifications-row:hover {
   .marketing-artifact-scan strong {
     color: var(--ink);
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-    font-size: 0.82rem;
+    font-size: 0.85rem;
     font-weight: 500;
   }
 
@@ -18997,7 +19028,7 @@ a.dashboard-notifications-row:hover {
   background: rgba(37, 99, 235, 0.12);
   padding: 0.1rem 0.45rem;
   color: #1d4ed8;
-  font-size: 0.68rem;
+  font-size: 0.85rem;
   font-weight: 600;
   white-space: nowrap;
 }
@@ -19005,7 +19036,7 @@ a.dashboard-notifications-row:hover {
 .marketing-site .marketing-price-note {
   margin: 0.5rem 0 0;
   color: var(--m-slate);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 400;
 }
 

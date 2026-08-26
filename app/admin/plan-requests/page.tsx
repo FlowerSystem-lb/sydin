@@ -107,7 +107,7 @@ function DetailRow({
 }) {
   return (
     <div className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-4">
-      <dt className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+      <dt className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
         {label}
       </dt>
       <dd
@@ -859,7 +859,7 @@ export default function AdminPlanRequestsPage() {
                 </dl>
 
                 <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-[11px] font-black uppercase tracking-[0.14em] text-slate-500">
+                  <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
                     Message
                   </p>
                   <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-slate-300">

@@ -686,7 +686,7 @@ export default function StockCountsPage() {
                         : ""
                     }`}
                   >
-                    <span className="block text-[10px] uppercase tracking-[0.12em]">
+                    <span className="block text-xs uppercase tracking-[0.12em]">
                       Step {index + 1}
                     </span>
                     <span className="capitalize">{itemStep}</span>
@@ -825,7 +825,7 @@ export default function StockCountsPage() {
               </p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                     Items
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -833,7 +833,7 @@ export default function StockCountsPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                     Low stock
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1204,7 +1204,7 @@ export default function StockCountsPage() {
                   key={label}
                   className="rounded-xl border border-theme bg-theme-inset px-3 py-2"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                     {label}
                   </p>
                   <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1232,7 +1232,7 @@ export default function StockCountsPage() {
                 <>
                 <div className="hidden overflow-x-auto md:block">
                   <table className="min-w-[760px] w-full table-fixed text-left text-sm">
-                    <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="border-b border-theme bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
                       <tr>
                         <th className="px-4 py-3">Item</th>
                         <th className="px-4 py-3 text-right">Expected</th>
@@ -1418,7 +1418,7 @@ export default function StockCountsPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                   Adjusted
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1426,7 +1426,7 @@ export default function StockCountsPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                   Skipped matched
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1434,7 +1434,7 @@ export default function StockCountsPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                   Failed
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">

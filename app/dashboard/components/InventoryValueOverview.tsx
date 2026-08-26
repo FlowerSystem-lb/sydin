@@ -273,7 +273,7 @@ export default function InventoryValueOverview({
                           />
                         </div>
                         {category.retailValue > 0 && (
-                          <p className="mt-1.5 text-right text-[11px] font-semibold text-theme-subtle">
+                          <p className="mt-1.5 text-right text-xs font-semibold text-theme-subtle">
                             Retail{" "}
                             {formatCompactCurrency(
                               category.retailValue,

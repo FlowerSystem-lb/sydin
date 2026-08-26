@@ -1029,7 +1029,7 @@ export default function ItemDetailsPage() {
                         sizes="(min-width: 1280px) 26rem, 100vw"
                         className="object-contain"
                       />
-                      <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-slate-900/72 px-2.5 py-1 text-[11px] font-bold text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+                      <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-slate-900/72 px-2.5 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
                         Click to zoom
                       </span>
                     </button>

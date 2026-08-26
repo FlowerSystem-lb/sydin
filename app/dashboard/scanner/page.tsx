@@ -644,7 +644,7 @@ function ScannerWorkspace() {
             <UiIcon name={entry.icon} className="h-4 w-4" />
             {entry.label}
             {!available && (
-              <span className="rounded-full border border-theme bg-theme-surface px-1.5 py-0.5 text-[10px] font-black uppercase tracking-[0.08em]">
+              <span className="rounded-full border border-theme bg-theme-surface px-1.5 py-0.5 text-xs font-black uppercase tracking-[0.08em]">
                 Soon
               </span>
             )}

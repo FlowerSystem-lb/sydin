@@ -311,7 +311,7 @@ export default function GlobalSearchPage() {
                     </span>
                     <span
                       className={cx(
-                        "shrink-0 rounded-full border px-2 py-1 text-[10px] font-black uppercase tracking-[0.08em]",
+                        "shrink-0 rounded-full border px-2 py-1 text-xs font-black uppercase tracking-[0.08em]",
                         result.tone === "success" &&
                           "border-emerald-400/30 bg-emerald-500/10 text-theme-success",
                         result.tone === "warning" &&

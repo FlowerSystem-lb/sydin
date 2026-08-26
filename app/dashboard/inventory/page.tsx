@@ -3152,7 +3152,7 @@ export default function InventoryPage() {
                         </p>
                         {status.tone !== "success" && (
                           <span
-                            className={`rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                            className={`rounded-full border px-2 py-0.5 text-xs font-bold ${
                               status.tone === "danger"
                                 ? "border-red-200 bg-red-50 text-red-600"
                                 : "border-amber-200 bg-amber-50 text-amber-700"
@@ -3242,7 +3242,7 @@ export default function InventoryPage() {
               <div className="inventory-table-shell hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface md:block">
                 <div className="inventory-table-scroll">
                   <table className="inventory-table table-fixed text-left text-sm">
-                    <thead className="border-b border-theme bg-theme-inset text-[11px] font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="border-b border-theme bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
                       <tr>
                         <th className="w-10 px-3 py-2.5">
                           <span className="sr-only">Select</span>
@@ -3364,7 +3364,7 @@ export default function InventoryPage() {
                             </td>
                             <td className="px-3 py-2.5">
                               <span
-                                className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold ${
+                                className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-bold ${
                                   status.tone === "danger"
                                     ? "border-red-200 bg-red-50 text-red-600"
                                     : status.tone === "warning"
@@ -3472,7 +3472,7 @@ export default function InventoryPage() {
                           <span className="block truncate text-xs font-black text-theme-primary">
                             {item.name}
                           </span>
-                          <span className="block text-[11px] font-semibold text-theme-muted">
+                          <span className="block text-xs font-semibold text-theme-muted">
                             Reorder at {getLowStockThresholdForItem(item)}
                           </span>
                         </span>
@@ -3552,7 +3552,7 @@ export default function InventoryPage() {
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    <span className="block text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                       Out
                     </span>
                     <strong className="text-base text-theme-danger">
@@ -3560,7 +3560,7 @@ export default function InventoryPage() {
                     </strong>
                   </div>
                   <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
-                    <span className="block text-[10px] font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    <span className="block text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
                       Healthy
                     </span>
                     <strong className="text-base text-theme-primary">

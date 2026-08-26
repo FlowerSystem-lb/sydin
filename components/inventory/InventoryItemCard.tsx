@@ -250,7 +250,7 @@ export default function InventoryItemCard({
             <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-indigo-200/60 bg-white text-theme-accent shadow-sm">
               <UiIcon name="box" className="h-5 w-5" />
             </span>
-            <span className="mt-1 text-[10px] font-semibold">No image</span>
+            <span className="mt-1 text-xs font-semibold">No image</span>
           </div>
         )}
 
