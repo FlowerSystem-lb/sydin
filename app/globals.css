@@ -15969,7 +15969,7 @@ body,
     /* A short page (an empty state, a "not found") would otherwise end early
        and let the tinted ground show below the panel, which reads as the layout
        breaking rather than as a page with little on it. */
-    min-height: calc(100dvh - 4rem) !important;
+    min-height: calc(100% - 4rem) !important;
   }
 
   /* ONE PIECE OF COLOUR.
@@ -20199,15 +20199,21 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    ========================================================================== */
 @media (min-width: 900px) {
   .dashboard-shell.dashboard-workspace-shell {
-    height: 100dvh !important;
-    min-height: 100dvh !important;
+    /* 100% of a body that is already sized to fill the window once scaled.
+       Viewport units cannot work here: inside a zoomed element they still
+       measure the unzoomed viewport, so 100dvh renders at 85% of the window. */
+    height: 100% !important;
+    min-height: 0 !important;
     overflow: hidden !important;
   }
 
   .dashboard-shell.dashboard-workspace-shell .dashboard-main-canvas {
     display: flex !important;
     flex-direction: column !important;
-    height: 100dvh !important;
+    /* 100% of a body that is already sized to fill the window once scaled.
+       Viewport units cannot work here: inside a zoomed element they still
+       measure the unzoomed viewport, so 100dvh renders at 85% of the window. */
+    height: 100% !important;
     min-height: 0 !important;
     overflow: hidden !important;
   }
@@ -21424,24 +21430,61 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    --------------------------------------------------------------------------
    Founder note: everything 15% smaller, across the whole website.
 
-   Done with `zoom` on the root rather than by rewriting the type scale, and the
-   difference matters:
+   Done with `zoom` rather than by shrinking the type scale, because those are
+   not the same thing. Taking 15% off the type alone would put body text at
+   11.9px while every border, icon, radius and control height stayed put -- not
+   a smaller design, the same design with unreadable text in it. `zoom` scales
+   everything together, exactly as the browser's own zoom does, and renders
+   glyphs at the scaled size instead of resampling them.
 
-   - Shrinking the type scale by 15% would put body text at 11.9px and secondary
-     text at 10.2px while leaving every border, icon, radius and control height
-     where it was. The result is not a smaller design, it is the same design
-     with unreadable text in it.
+   WHY IT IS ON `body` AND NOT `:root`
 
-   - `zoom` scales EVERYTHING uniformly -- type, spacing, icons, borders,
-     radii -- which is exactly what the browser's own zoom does, and what he has
-     been approximating by setting the browser to 90%. Text stays crisp because
-     the browser renders glyphs at the scaled size rather than resampling a
-     bitmap, which is the flaw in doing this with `transform: scale()`.
+   The document element does not grow to compensate. Measured: with zoom on
+   :root, `document.documentElement.clientHeight` stayed at 742 while everything
+   inside was scaled to 85%, so a `100dvh` shell rendered 630px tall and left a
+   white band under the app. Dividing by the zoom then made the shell 873 CSS px
+   inside a 742 CSS px document -- it filled the window, and put a scrollbar on
+   the page.
 
-   It also means the layout gets MORE room, not less: at 85% a 1152px window
-   reports ~1355 CSS px, so the merged header and the wider card grid engage on
-   screens that previously fell below their thresholds.
+   Zooming `body` instead resolves it: `html` stays unzoomed at the true
+   viewport height, `body` is sized 1/0.85 of that so it renders back to exactly
+   the window, and everything inside sizes against `body` with percentages
+   rather than viewport units. No band, no scrollbar.
    ========================================================================== */
-:root {
+html {
+  height: 100%;
+}
+
+body {
   zoom: 0.85;
+  /* 117.647% is 1/0.85 -- taller than the window in CSS px so that, once
+     scaled, it lands exactly on it. Written as a literal because
+     `calc(100% / var(--x))` was silently dropping the whole declaration, which
+     left the shell at plain 100dvh and put the white band back.
+
+     min-height, so a long page can still grow past it. */
+  min-height: 117.647%;
+}
+
+/* Only the workspace gets a DEFINITE height, because the shell inside it sizes
+   to 100% and a percentage height needs a definite parent to resolve against.
+
+   It has to be scoped: setting `height` on every body clamped the marketing
+   pages to one viewport and made the landing page unscrollable -- the whole
+   page below the hero was simply unreachable. */
+body:has(.dashboard-workspace-shell) {
+  height: 117.647%;
+}
+
+/* The document must not scroll on workspace screens.
+   `body` is sized to 117.647% so that, scaled to 85%, it lands exactly on the
+   window -- but `html` still measures it unscaled and therefore believes the
+   page is 131px taller than the viewport, which shows as a scrollbar that
+   scrolls nothing. The app owns its own scrolling: the product region scrolls,
+   the frame does not.
+
+   Scoped with :has() so it applies only where a fixed-height shell exists.
+   Marketing pages have no such shell and must keep scrolling normally. */
+html:has(.dashboard-workspace-shell) {
+  overflow: hidden;
 }
