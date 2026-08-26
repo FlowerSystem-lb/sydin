@@ -381,3 +381,23 @@ ground was four drifting **amber and orange** orbs sitting under a blue brand. *
 ground is defined in exactly one place (the "THE WORKSPACE GROUND" block at the end of
 `globals.css`). It had previously been declared eight times, four of them repainting a layer a later
 rule set to `display: none` — do not add a ninth; edit that block. **Status:** Active.
+
+### 2026-08-26 · The site does not shrink itself with CSS `zoom` — reverted
+**Decision:** SydIN renders at 100%. The "make the whole site 15% smaller" request is **not**
+implemented with CSS `zoom` on `<body>` (or `<html>`). If a screen needs to be denser, the density
+comes from the spacing and type tokens, which have no coordinate ambiguity. If Sayed wants the
+whole thing smaller than that, browser zoom (Ctrl+−) is the correct tool and it works perfectly.
+**Why:** the zoom experiment shipped four distinct layout bugs over one session and never converged:
+(1) a white band under the app, because viewport units inside a zoomed element still measure the
+*unzoomed* window, so `100dvh` rendered at 85% of the screen; (2) the landing page became
+unscrollable when the compensating fixed height was applied to every `<body>`; (3) the white band
+returned on sparse pages, because `height: 100%` cannot resolve against a parent that only has
+`min-height` and silently fell back to content height; (4) the last row of every scrolling list was
+unreachable. The deciding factor is not the bug count but that the bugs were **undiagnosable**:
+under `zoom`, `getBoundingClientRect()` returns zoomed coordinates for in-flow elements and physical
+coordinates for `position: fixed` ones, while `window.innerHeight` is always physical. Every
+measurement said "the card fits and is fully scrolled" while the screen showed three rows cut off.
+A layout you cannot measure is a layout you cannot maintain — and this one has to survive every
+future page, not just today's. **How to apply:** do not reintroduce `zoom` on a root element. If a
+"make it smaller" request comes back, change `--space-*` and the type scale, and say plainly that
+browser zoom is the right tool for the rest. **Status:** Active.
