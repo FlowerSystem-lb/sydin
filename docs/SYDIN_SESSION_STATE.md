@@ -4,7 +4,7 @@
 this file is the answer to "what were we doing?" after a break. Update it at the
 end of any working session.
 
-Last updated: **2026-08-26**
+Last updated: **2026-08-27**
 Branch: `main` (everything pushed; GitHub and local in sync)
 Governing brief: `SydIN_Final_Production_Master_Prompt.pdf` — audit first, stop
 between phases, report in business language. See [[sydin-master-mission-protocol]].
@@ -68,36 +68,64 @@ Also in this phase:
 
 ---
 
-## Next — Phase 3: survive 500 products
-
-The one that actually blocks launch. No visual change.
+## Phase 3 — survive 500 products  (photos done · database written, not run)
 
 **Correction to the audit.** I said "every page load downloads your entire
-inventory" and called it a mobile-data problem. I measured it: a row averages
-210 bytes and photos are stored as links, not embedded. 500 products is about
-**103 kB** — one ordinary web page. It is not a crisis and it is not why the
-app would feel slow.
+inventory" and called it a mobile-data problem. Measured: a row averages 210
+bytes, photos are links not embedded, so 500 products is about **103 kB**.
+That was overstated. Photos are the real cost.
 
-The real cost at 500 products is **photos**. The grid loads every picture at
-full size, at whatever resolution it was uploaded — a 3 MB phone photo is
-served as 3 MB and then drawn 2 cm wide. That is the number that hurts on
-Lebanese mobile data, and it is fixable without touching how the data loads.
+### Done — photos  ✅
 
-So Phase 3 is, in priority order:
+40 stored files average **396 kB**; the biggest is **1.71 MB**; 12 are over
+500 kB. The grid was serving every one at full size and drawing it 2 cm wide,
+so a 500-item screen projected to about **193 MB**.
 
-1. Serve small versions of photos in the grid, not the originals.
-2. Load products in pages instead of all at once (still worth doing — it is
-   about the browser drawing 500 cards, not about download size).
-3. 11 missing database indexes; 60 rules that re-check the user per row
-   instead of per query.
+Three screens still used a raw `<img>` — and they were exactly the ones that
+draw once per product: the grid card, the list and table rows, and the
+overview thumbs. All three now use `next/image` with a size matched to the box
+they actually fill.
 
-Phase 4 is the real 500-product test, which is meaningless until this lands.
+Measured on the real 1.71 MB photo:
 
-Then: Phase 5 storage/upload/import limits · Phase 6 mobile (its own
-app-shaped design, deliberately last) · Phase 7 print, PDF, export, domain
-and Vercel.
+| drawn at | before | after | saving |
+|---|---|---|---|
+| card (256px) | 1.71 MB | 11.6 kB | 99.3% |
+| 384px | 1.71 MB | 21.7 kB | 98.7% |
+| 640px | 1.71 MB | 46.3 kB | 97.3% |
 
-**Launch target: early November.**
+A 500-item grid: **193 MB → about 6 MB.**
+
+### Written, waiting to be run — the database
+
+`sql/phase-17-rls-per-query-uid.sql`. **Sayed runs this in Supabase; I do not.**
+
+- **60 of 61 security rules** re-ask "who is signed in?" on every row. Wrapping
+  the call so it runs once per query is Supabase's own documented fix. Written
+  as a loop that rewrites the policies as deployed, rather than 60 hand-typed
+  policies — transcribing security rules by hand is where a typo becomes a
+  data leak. Safe to run twice.
+- **11 foreign keys with no index.** These matter more than the row counts
+  suggest: the tables are shared by every customer, so `inventory` is 500 rows
+  *per business*, not 500 rows.
+- Ships with three verification queries. Expected: `per_row_uid = 0`,
+  `wrapped = 60`, `total = 61`, all 61 policy names unchanged, no unindexed
+  foreign keys left in `public`.
+
+### Still to do
+
+- **Load products in pages** instead of all at once. This is about the browser
+  drawing 500 cards, not download size. Not started — it changes how inventory
+  loads, so it wants care.
+- Then Phase 4, the real 500-product test.
+
+### Noticed in passing, not fixed
+
+- `plan_requests` has one policy, "Anyone can create plan requests", open to
+  the public with no check. That is correct for a public pricing form, but it
+  means anyone can post rows into that table. Worth a rate limit or a captcha
+  before launch.
+- Vercel meters image optimization. This is a cost item at scale, not now.
 
 ---
 
