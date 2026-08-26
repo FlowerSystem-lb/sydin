@@ -21418,3 +21418,30 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 [class*="marketing-"] .font-semibold {
   font-weight: 600 !important;
 }
+
+/* ==========================================================================
+   SITE-WIDE SCALE: 85% (2026-08-25)
+   --------------------------------------------------------------------------
+   Founder note: everything 15% smaller, across the whole website.
+
+   Done with `zoom` on the root rather than by rewriting the type scale, and the
+   difference matters:
+
+   - Shrinking the type scale by 15% would put body text at 11.9px and secondary
+     text at 10.2px while leaving every border, icon, radius and control height
+     where it was. The result is not a smaller design, it is the same design
+     with unreadable text in it.
+
+   - `zoom` scales EVERYTHING uniformly -- type, spacing, icons, borders,
+     radii -- which is exactly what the browser's own zoom does, and what he has
+     been approximating by setting the browser to 90%. Text stays crisp because
+     the browser renders glyphs at the scaled size rather than resampling a
+     bitmap, which is the flaw in doing this with `transform: scale()`.
+
+   It also means the layout gets MORE room, not less: at 85% a 1152px window
+   reports ~1355 CSS px, so the merged header and the wider card grid engage on
+   screens that previously fell below their thresholds.
+   ========================================================================== */
+:root {
+  zoom: 0.85;
+}
