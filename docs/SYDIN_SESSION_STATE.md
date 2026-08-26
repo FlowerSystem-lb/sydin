@@ -4,7 +4,7 @@
 this file is the answer to "what were we doing?" after a break. Update it at the
 end of any working session.
 
-Last updated: **2026-08-25**
+Last updated: **2026-08-26**
 Branch: `main` (everything pushed; GitHub and local in sync)
 Governing brief: `SydIN_Final_Production_Master_Prompt.pdf` — audit first, stop
 between phases, report in business language. See [[sydin-master-mission-protocol]].
@@ -72,17 +72,30 @@ Also in this phase:
 
 The one that actually blocks launch. No visual change.
 
-- Every page load downloads the **entire inventory, all columns**. Fine at 10
-  items; bad at 500 on Lebanese mobile data.
-- 60 database rules re-check the user **per row** instead of per query.
-- 11 missing indexes, 20 unused ones.
-- Serve thumbnails, not full-size photos, in the grid.
+**Correction to the audit.** I said "every page load downloads your entire
+inventory" and called it a mobile-data problem. I measured it: a row averages
+210 bytes and photos are stored as links, not embedded. 500 products is about
+**103 kB** — one ordinary web page. It is not a crisis and it is not why the
+app would feel slow.
 
-Estimated 4–5 days. Phase 4 is the real 500-product test, which is meaningless
-until Phase 3 lands.
+The real cost at 500 products is **photos**. The grid loads every picture at
+full size, at whatever resolution it was uploaded — a 3 MB phone photo is
+served as 3 MB and then drawn 2 cm wide. That is the number that hurts on
+Lebanese mobile data, and it is fixable without touching how the data loads.
 
-Then: Phase 5 storage/upload/import limits · Phase 6 mobile (its own app-shaped
-design, deliberately last) · Phase 7 print, PDF, export, domain and Vercel.
+So Phase 3 is, in priority order:
+
+1. Serve small versions of photos in the grid, not the originals.
+2. Load products in pages instead of all at once (still worth doing — it is
+   about the browser drawing 500 cards, not about download size).
+3. 11 missing database indexes; 60 rules that re-check the user per row
+   instead of per query.
+
+Phase 4 is the real 500-product test, which is meaningless until this lands.
+
+Then: Phase 5 storage/upload/import limits · Phase 6 mobile (its own
+app-shaped design, deliberately last) · Phase 7 print, PDF, export, domain
+and Vercel.
 
 **Launch target: early November.**
 
@@ -102,6 +115,14 @@ design, deliberately last) · Phase 7 print, PDF, export, domain and Vercel.
   with rules declared six and eight times over.
 - **Restart the dev server after editing `globals.css`.** Turbopack serves stale
   CSS, which has faked at least six "the fix didn't work" moments.
+- **Do not scale the site with CSS `zoom`.** Tried and reverted 2026-08-26 —
+  four layout bugs, none of them measurable, because zoom makes fixed and
+  in-flow elements report coordinates in different systems. Density comes from
+  the spacing and type tokens; browser zoom covers the rest. See the decision
+  log.
+- **Under any transform, trust the screenshot over the measurement.** Every
+  number said the list was fully scrolled while the screen showed three rows
+  cut off.
 - **An overflow test is not an overlap test.** Elements can sit on top of each
   other without anything leaving the viewport — that shipped a broken header
   once already.
