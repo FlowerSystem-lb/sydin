@@ -125,12 +125,15 @@ grant; phase-17 compared deparsed SQL case-sensitively). The rule earned
 three times over: **read back what the database says afterwards — do not
 trust that a migration ran without error.**
 
-### Still to do
+### Deliberately deferred — pagination
 
-- **Load products in pages** instead of all at once. This is about the browser
-  drawing 500 cards, not download size. Not started — it changes how inventory
-  loads, so it wants care.
-- Then Phase 4, the real 500-product test.
+**Load products in pages** instead of all at once. Sayed's call, 2026-08-27:
+leave it until last. Reasonable — it is the only part of Phase 3 that changes
+how inventory loads, and the two parts that were pure wins (photos, database)
+are already in. The browser drawing 500 cards is a real cost, but it is a
+smoothness problem, not a cost-of-data or a security one.
+
+Phase 4 (the real 500-product test) is blocked on this, so it moves back too.
 
 ### Noticed in passing, not fixed
 
