@@ -43,6 +43,10 @@
 -- --------------
 -- Run the same loop with the replace() arguments swapped. Nothing is dropped,
 -- so there is nothing to restore.
+-- APPLIED 2026-08-27 via the Supabase migration API, together with
+-- phase-17b, which flattens the nesting this file's original guard caused.
+-- Running it through the SQL editor with begin;/commit; reported success but
+-- did not persist; the migration API is the path that works.
 -- ===========================================================================
 
 begin;
@@ -57,8 +61,13 @@ begin
     select policyname, tablename, qual, with_check
     from pg_policies
     where schemaname = 'public'
-      and (coalesce(qual, '') || coalesce(with_check, '')) like '%auth.uid()%'
-      and (coalesce(qual, '') || coalesce(with_check, '')) not like '%select auth.uid()%'
+      and (coalesce(qual, '') || coalesce(with_check, '')) ilike '%auth.uid()%'
+      -- ILIKE, not LIKE. PostgreSQL deparses a scalar sub-select as
+      -- '( SELECT auth.uid() AS uid)' in UPPER case. The first version of this
+      -- file used a case-sensitive LIKE here, so the guard never recognised an
+      -- already-rewritten policy and every re-run wrapped it again — four runs
+      -- produced four nested sub-selects. See phase-17b.
+      and (coalesce(qual, '') || coalesce(with_check, '')) not ilike '%select auth.uid()%'
   loop
     stmt := 'alter policy ' || quote_ident(r.policyname)
          || ' on public.' || quote_ident(r.tablename)
@@ -115,11 +124,12 @@ commit;
 -- Verification — run these three after the migration.
 -- ===========================================================================
 
--- 1. Expected: per_row_uid = 0, wrapped = 60, total = 61.
+-- 1. Expected: per_row_uid = 0, wrapped = 60, still_nested = 0, total = 61.
 --    If per_row_uid is not 0, some policy was not rewritten.
-select count(*) filter (where q like '%auth.uid()%'
-                          and q not like '%select auth.uid()%') as per_row_uid,
-       count(*) filter (where q like '%select auth.uid()%')     as wrapped,
+select count(*) filter (where q ilike '%auth.uid()%'
+                          and q not ilike '%select auth.uid()%') as per_row_uid,
+       count(*) filter (where q ilike '%select auth.uid()%')     as wrapped,
+       count(*) filter (where q ~* 'SELECT \( SELECT')           as still_nested,
        count(*)                                                 as total
 from (
   select coalesce(qual, '') || ' ' || coalesce(with_check, '') as q

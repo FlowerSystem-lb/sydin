@@ -96,9 +96,9 @@ Measured on the real 1.71 MB photo:
 
 A 500-item grid: **193 MB → about 6 MB.**
 
-### Written, waiting to be run — the database
+### Done — the database  ✅ (applied 2026-08-27)
 
-`sql/phase-17-rls-per-query-uid.sql`. **Sayed runs this in Supabase; I do not.**
+`sql/phase-17-rls-per-query-uid.sql` + `sql/phase-17b-flatten-nested-uid.sql`.
 
 - **60 of 61 security rules** re-ask "who is signed in?" on every row. Wrapping
   the call so it runs once per query is Supabase's own documented fix. Written
@@ -108,9 +108,22 @@ A 500-item grid: **193 MB → about 6 MB.**
 - **11 foreign keys with no index.** These matter more than the row counts
   suggest: the tables are shared by every customer, so `inventory` is 500 rows
   *per business*, not 500 rows.
-- Ships with three verification queries. Expected: `per_row_uid = 0`,
-  `wrapped = 60`, `total = 61`, all 61 policy names unchanged, no unindexed
-  foreign keys left in `public`.
+Verified after applying: 61 policies, 60 wrapped exactly once, 0 nested,
+0 unwrapped, all 61 names unchanged, all 11 indexes present.
+
+**It took three attempts, and the reason is worth keeping.** Running the file
+through the Supabase SQL editor reported "Success. No rows returned" and
+changed nothing; the migration API is the path that works. Then phase-17's
+own "safe to run twice" guard turned out to be case-sensitive — PostgreSQL
+stores the rewrite as `( SELECT auth.uid() AS uid)` in upper case, so the
+guard never recognised its own work and each re-run wrapped the expression
+again, four deep. phase-17b flattens it. Permissions were never affected.
+
+This is the third migration in a row where the statement succeeded and the
+intent did not (phase-15 revoked from named roles while PUBLIC held the
+grant; phase-17 compared deparsed SQL case-sensitively). The rule earned
+three times over: **read back what the database says afterwards — do not
+trust that a migration ran without error.**
 
 ### Still to do
 
