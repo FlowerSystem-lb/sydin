@@ -135,6 +135,35 @@ smoothness problem, not a cost-of-data or a security one.
 
 Phase 4 (the real 500-product test) is blocked on this, so it moves back too.
 
+---
+
+## The rest of the production plan
+
+From `SydIN_Final_Production_Master_Prompt.pdf`. **Careful: these numbers are
+not the ones in `SYDIN_ROADMAP.md`.** That file numbers *product* phases and
+its Phase 5 is "Enterprise" (RBAC, audit logs, SSO, white label) — a much
+later, much bigger thing. The numbers below are the production plan we are
+actually working through.
+
+| # | What | State |
+|---|---|---|
+| 1 | Security — headers, dependencies, database grants | ✅ done |
+| 2 | The design language — one type scale, one surface rule | ✅ done |
+| 3 | Survive 500 products — photos, database, pagination | photos + database done; pagination deferred |
+| 4 | The real 500-product test | blocked on pagination |
+| 5 | **Limits — storage, upload size, import size** | not started |
+| 6 | Mobile — its own app-shaped design | deliberately last |
+| 7 | Print, PDF, export, domain and Vercel | not started |
+
+**Phase 5 in plain terms:** stop one customer filling the account. Today there
+is no cap on how large a photo can be uploaded (the biggest already stored is
+1.71 MB), no cap on how many rows a CSV import can carry, and no ceiling on
+total storage per plan. The free plan promises 50 items but nothing enforces
+the space those items occupy. It is a cost and abuse problem, not a
+performance one — it decides the bill before it decides the speed.
+
+**Launch target: early November.**
+
 ### Noticed in passing, not fixed
 
 - `plan_requests` has one policy, "Anyone can create plan requests", open to
