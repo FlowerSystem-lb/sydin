@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 27 August 2026 (storage hole closed)
+**Last touched:** 27 August 2026 (storage hole closed · H1/H2 fixed)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -75,8 +75,8 @@ N3 and N4 are really one feature. Of the four, N4 is the most valuable to a real
 
 | id | What |
 |---|---|
-| H1 | **BUG — the Adjust / Quick-view panel opens half off-screen.** You must scroll before you can reach "Record Movement". It should fit the screen as it opens and open/close smoothly. **Every page, not just Inventory.** |
-| H2 | **BUG — blurring down the left and right edges** of the page when that panel opens. |
+| ~~H1~~ | ✅ **FIXED 27 Aug.** ~~BUG — the Adjust / Quick-view panel opens half off-screen.~~ You must scroll before you can reach "Record Movement". It should fit the screen as it opens and open/close smoothly. **Every page, not just Inventory.** |
+| ~~H2~~ | ✅ **FIXED 27 Aug.** ~~BUG — blurring down the left and right edges~~ of the page when that panel opens. |
 | A | A header inside the Inventory page for the buttons and the three-dots menu. |
 | B | Reorder the buttons by what matters; drop what does not. |
 | C | Item cards — new design. Tell Sayed when we reach this so he can pull references. |
@@ -99,9 +99,19 @@ N3 and N4 are really one feature. Of the four, N4 is the most valuable to a real
 
 ## C. My call on his notes, since he asked me to be strict
 
-**First, because it is a bug and it is everywhere:** H1 and H2. A panel that opens
-half off-screen is not polish, it is the app not working. His note says every page,
-which makes it one fix rather than ten.
+**H1 and H2 — done 27 Aug, and they turned out to be one bug.** `.ui-overlay` is
+`position: fixed; inset: 0`, which should mean the viewport. But an element with a
+`backdrop-filter` becomes the containing block for fixed-position descendants, and
+`.dashboard-shell`, `.dashboard-main-canvas` and `.inventory-workspace` all set one —
+while the dialog rendered inline, inside them. So the overlay was sized to the
+content panel: it never reached the sidebar or the right gutter (H2, the edge blur),
+and its height maths were measured against a different box than it scrolled in, so a
+tall dialog overflowed a centred container and the part above the top could not be
+scrolled to (H1, "half hidden"). Fixed with a portal to `document.body`, plus
+`margin: auto` / `max-height: 100%` on the dialog. **This is the second time this
+containing-block rule has bitten SydIN** — the sidebar name chip vanished for the
+same reason. Verified on two pages and at a 560px-tall viewport, where the dialog now
+shrinks and scrolls inside itself.
 
 **Next, because it is cheap and he asked:** F, B, G, A as one focused Inventory
 sprint. They unblock C, D and E.
@@ -207,7 +217,8 @@ than speed. Revisit at the same time.
 
 1. **Storage security** — the cross-tenant upload hole, a delete rule, bucket size
    and type limits. Small, contained, and it is a real hole.
-2. **H1 + H2** — the half-open panel and the edge blur.
+2. ~~**H1 + H2**~~ — done 27 Aug. One containing-block trap caused both; fixed
+   at the shared overlay, so all 12 dialog screens got it at once.
 3. **Inventory sprint** — F, B, G, A; then C/D/E designed together; plus the
    density control from PDF item 14.
 4. **Dashboard summary (S).**

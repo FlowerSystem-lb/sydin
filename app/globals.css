@@ -21492,3 +21492,43 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 
+
+/* ===========================================================================
+   DIALOGS MUST FIT THE SCREEN THEY OPEN ON
+   ---------------------------------------------------------------------------
+   Sayed, 27 Aug 2026: the Adjust panel "is open like half hide and I need to
+   scroll Down or up to make it fit to screen".
+
+   The main cause was a containing-block trap and is fixed in
+   components/ui/Overlay.tsx — the overlay now renders through a portal, so
+   `position: fixed` means the viewport again rather than the blurred content
+   panel it happened to sit inside.
+
+   This is the arithmetic half, and it is a mistake of mine from the day before.
+   `.ui-dialog` was sized `max-height: calc(100vh - 6rem)` with
+   `margin-block: var(--space-8)`, inside an overlay with `padding: var(--space-4)`.
+   Those units do not scale together: `6rem` follows the root font size, which
+   became 85%, while `--space-8` is a raw 32px and did not move. So the reserved
+   space shrank from 96px to 81.6px while the margins stayed, and the dialog's
+   outer box grew ~14px taller than the space available.
+
+   That matters more than 14px sounds. The overlay centres its child, and when a
+   centred flex item is taller than its scroll container the overflow splits
+   both ways — the part above the top is not reachable by scrolling at all. A
+   dialog "half hidden" with no way to scroll to it is exactly that.
+
+   `margin: auto` is the fix rather than a fixed margin: auto margins centre a
+   flex item and, when it no longer fits, fall back to the start edge instead of
+   overflowing in both directions. `max-height: 100%` then resolves against the
+   overlay's own content box — the viewport minus its padding — so the dialog
+   can never be taller than the space it is scrolling inside, whatever the root
+   font size does later. The body already scrolls internally, so long forms stay
+   reachable.
+
+   Scoped to `.ui-dialog` on purpose: `.ui-sheet` is a full-height side panel
+   that relies on the overlay's own alignment, and must not be centred.
+   =========================================================================== */
+.ui-dialog {
+  margin: auto;
+  max-height: 100%;
+}
