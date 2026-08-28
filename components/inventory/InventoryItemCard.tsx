@@ -43,6 +43,7 @@ export default function InventoryItemCard({
   onHistory,
   onCreateQrLabel,
   detailsHref,
+  variant = "detail",
 }: {
   item: CompactInventoryItem;
   itemCode?: string | null;
@@ -66,6 +67,18 @@ export default function InventoryItemCard({
   onHistory?: () => void;
   onCreateQrLabel?: () => void;
   detailsHref?: string;
+  /**
+   * "detail" is the standard card: photo on top, facts underneath.
+   * "photo" is the Sortly-style one Sayed asked for — the picture fills the
+   * card and the facts sit over it, collapsed to the name and quantity until
+   * you point at it.
+   *
+   * Both share this component and this DOM on purpose. The variants differ
+   * only in CSS, so a change to what a card *says* lands in both and they
+   * cannot drift apart — which is exactly how this project ended up with 23
+   * type sizes the last time two similar things were built twice.
+   */
+  variant?: "detail" | "photo";
 }) {
   const router = useRouter();
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -210,6 +223,8 @@ export default function InventoryItemCard({
         }
       }}
       className={`inventory-item-card group ${
+        variant === "photo" ? "inventory-item-card--photo" : ""
+      } ${
         selectable && selected
           ? "inventory-item-card-selected"
           : ""

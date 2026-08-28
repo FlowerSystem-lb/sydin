@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 27 August 2026 (storage · H1/H2 · Inventory F/B/G)
+**Last touched:** 27 August 2026 (storage · H1/H2 · Inventory F/B/G · two card designs)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -79,7 +79,7 @@ N3 and N4 are really one feature. Of the four, N4 is the most valuable to a real
 | ~~H2~~ | ✅ **FIXED 27 Aug.** ~~BUG — blurring down the left and right edges~~ of the page when that panel opens. |
 | A | ⚠️ **Already exists, and a separate row would undo the merge you asked for on 26 Aug.** The buttons and ⋯ already sit in the page header. Left as-is — say the word if you still want them on their own row. |
 | ~~B~~ | ✅ **DONE 27 Aug.** Row now reads Filters → sort → view → Select items. "Compact" was a display preference wearing a full label next to the real controls; moved into ⋯ as "Hide stats". |
-| C | Item cards — new design. Tell Sayed when we reach this so he can pull references. |
+| ~~C~~ | ✅ **DONE 27 Aug — two designs, user-switchable.** "Grid view" is the standard card, tightened. "Photo grid" is the Sortly-style one: the picture fills a square card, name and quantity sit on a scrim, and status, category and actions stay hidden until you point at it. Same component, same DOM — only CSS differs, so they cannot drift apart. Switch lives in the existing View dropdown, not a second header. |
 | D | Quick preview — new prototype, more classic; the Activity header needs redesign. |
 | E | Full-page item view — new layout. Oversized words, empty space down the left. |
 | ~~F~~ | ✅ **DONE 27 Aug.** Ground is white. Item cards gained a hairline border — they had none, and white-on-white with only a shadow dissolves the grid. Scoped to Inventory so you can judge it before the other pages follow. |

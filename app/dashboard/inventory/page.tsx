@@ -147,7 +147,7 @@ type QuickFilter =
   | "no-activity"
   | "unassigned";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
-type ViewMode = "grid" | "list" | "table";
+type ViewMode = "grid" | "photo" | "list" | "table";
 type ItemDetailsTarget = {
   id: number;
   tab: "details" | "activity" | "alerts";
@@ -2717,6 +2717,7 @@ export default function InventoryPage() {
                     buttonClassName={COMPACT_SELECT_BUTTON_CLASS}
                     options={[
                       { value: "grid", label: "Grid view" },
+                      { value: "photo", label: "Photo grid" },
                       { value: "list", label: "List view" },
                       { value: "table", label: "Table view" },
                     ]}
@@ -3043,8 +3044,12 @@ export default function InventoryPage() {
               className="inventory-items-grid"
               itemClassName="inventory-item-skeleton"
             />
-          ) : viewMode === "grid" ? (
-            <div className="inventory-items-grid">
+          ) : viewMode === "grid" || viewMode === "photo" ? (
+            <div
+              className={`inventory-items-grid ${
+                viewMode === "photo" ? "inventory-items-grid--photo" : ""
+              }`}
+            >
               {visibleItems.map((item) => {
                 const status = getStockStatus(item);
                 const itemValue =
@@ -3054,6 +3059,7 @@ export default function InventoryPage() {
                 return (
                   <InventoryItemCard
                     key={item.id}
+                    variant={viewMode === "photo" ? "photo" : "detail"}
                     item={item}
                     itemCode={item.item_code || item.barcode}
                     quantityLabel={getInventoryQuantityLabel(

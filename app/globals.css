@@ -21585,3 +21585,202 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border-color: rgba(15, 23, 42, 0.18);
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
 }
+
+/* ===========================================================================
+   TWO CARD DESIGNS  (founder note C, 27 Aug 2026)
+   ---------------------------------------------------------------------------
+   "two options for customer: one like us and better, and one like Sortly —
+    compact, inside photo, hidden then appear when mouse on it, motion crazy."
+
+   Both are the same component and the same DOM. Only these rules differ, so a
+   change to what a card *says* lands in both and they cannot drift apart. The
+   switch lives in the existing View dropdown next to Grid / List / Table
+   rather than in a new second header, because a second header would undo the
+   header merge Sayed asked for on 26 Aug.
+   =========================================================================== */
+
+/* --- Option 1: the standard card, tightened ------------------------------ */
+.inventory-workspace .inventory-item-card {
+  transition:
+    transform 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 220ms ease;
+}
+
+.inventory-workspace .inventory-item-card:hover {
+  transform: translateY(-2px);
+}
+
+/* The footer actions were always at full strength, so every card shouted
+   "Adjust / QR" whether or not you were looking at it. They now sit back and
+   step forward on hover — the photo and the name get the attention instead. */
+.inventory-workspace .inventory-item-card .inventory-card-footer {
+  opacity: 0.62;
+  transition: opacity 200ms ease;
+}
+
+.inventory-workspace .inventory-item-card:hover .inventory-card-footer,
+.inventory-workspace .inventory-item-card:focus-within .inventory-card-footer {
+  opacity: 1;
+}
+
+/* --- Option 2: photo-first, Sortly-style --------------------------------- */
+.inventory-workspace .inventory-items-grid--photo {
+  grid-template-columns: repeat(auto-fill, minmax(13.5rem, 1fr));
+}
+
+.inventory-workspace .inventory-item-card--photo {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+/* The picture becomes the card, not a panel stuck to the top of it. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-media {
+  position: absolute;
+  inset: 0;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-media img {
+  object-fit: cover !important;
+  padding: 0 !important;
+  transition: transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-media img {
+  transform: scale(1.06);
+}
+
+/* A scrim, not a flat wash: it only darkens where the text actually sits, so
+   the product stays readable. Kept off the card until hover except for the
+   band under the name. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-body {
+  position: absolute;
+  inset: auto 0 0 0;
+  z-index: 2;
+  flex: none !important;
+  gap: 0.25rem !important;
+  padding: 0.8rem 0.75rem 0.7rem !important;
+  background: linear-gradient(
+    to top,
+    rgba(6, 14, 30, 0.92) 0%,
+    rgba(6, 14, 30, 0.78) 42%,
+    rgba(6, 14, 30, 0.42) 72%,
+    rgba(6, 14, 30, 0) 100%
+  );
+  transition: padding-bottom 380ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* Collapsed, the scrim only needs to carry the name. Expanded, it carries four
+   rows — so it deepens on hover rather than leaving the status pill and the
+   buttons floating over whatever the photo happens to be doing underneath.
+   Legibility over a photo you do not control is the whole problem with this
+   card style, and a fixed-opacity wash does not solve it. */
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-body,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-body {
+  background: linear-gradient(
+    to top,
+    rgba(6, 14, 30, 0.97) 0%,
+    rgba(6, 14, 30, 0.94) 58%,
+    rgba(6, 14, 30, 0.78) 84%,
+    rgba(6, 14, 30, 0) 100%
+  );
+}
+
+/* `.inventory-card-title`, not `.inventory-card-name` — the first version of
+   this block guessed the class and the product name stayed dark on a dark
+   scrim, i.e. invisible. Caught by measuring the card, not by reading it. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-title,
+.inventory-workspace .inventory-item-card--photo .inventory-card-quantity,
+.inventory-workspace .inventory-item-card--photo .inventory-card-value {
+  color: #fff !important;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-code,
+.inventory-workspace .inventory-item-card--photo .inventory-card-facts {
+  color: rgba(255, 255, 255, 0.74) !important;
+}
+
+/* Everything below the name collapses away and comes back on hover. Staggered
+   so it reads as one movement rather than three things twitching at once:
+   status first, then the facts, then the buttons. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-meta,
+.inventory-workspace .inventory-item-card--photo .inventory-card-facts,
+.inventory-workspace .inventory-item-card--photo .inventory-card-footer {
+  max-height: 0 !important;
+  min-height: 0 !important;
+  padding-top: 0 !important;
+  padding-bottom: 0 !important;
+  margin: 0 !important;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(6px);
+  transition:
+    max-height 340ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 220ms ease,
+    transform 340ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-meta,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-meta {
+  max-height: 2.4rem !important;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 40ms;
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-facts,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-facts {
+  max-height: 2.2rem !important;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 90ms;
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-footer,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-footer {
+  max-height: 3rem !important;
+  opacity: 1;
+  transform: translateY(0);
+  transition-delay: 140ms;
+  border-top-color: rgba(255, 255, 255, 0.16);
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-footer button {
+  color: #fff;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-footer button:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+/* No photo: keep the same square and put the placeholder in the middle,
+   rather than letting the card collapse to a different shape than its
+   neighbours. A ragged grid was the exact complaint that started this. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-media > div {
+  height: 100%;
+}
+
+/* The row action menu has to stay above the scrim. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-menu-button {
+  z-index: 3;
+  background: rgba(6, 14, 30, 0.55);
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.22);
+}
+
+/* Motion is a nicety, never the only signal: with reduced motion the hover
+   still reveals, it simply does not slide or zoom. */
+@media (prefers-reduced-motion: reduce) {
+  .inventory-workspace .inventory-item-card,
+  .inventory-workspace .inventory-item-card--photo .inventory-card-media img,
+  .inventory-workspace .inventory-item-card--photo .inventory-card-meta,
+  .inventory-workspace .inventory-item-card--photo .inventory-card-facts,
+  .inventory-workspace .inventory-item-card--photo .inventory-card-footer {
+    transition-duration: 1ms !important;
+    transform: none !important;
+  }
+}
