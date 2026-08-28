@@ -10,11 +10,24 @@
 > context reset. He is right: it did. Each reset I re-derived it and the numbering
 > drifted. The rule now: read this file, edit this file, do not start a new one.
 >
-> - `SYDIN_SESSION_STATE.md` — short note on what happened last session.
+> **There is no second plan.** `SYDIN_SESSION_STATE.md` was a rival plan written
+> the day before this one and was deleted on 27 Aug — Sayed spotted the duplication
+> immediately, which is the whole point. Do not recreate it under any name.
+>
 > - `SYDIN_ROADMAP.md` — the OLD product roadmap. **Different phase numbers.**
 >   Its Phase 5 is Enterprise/RBAC/SSO, not this plan's Phase 5.
+> - `SYDIN_SPRINT_LOG.md` — history of what each sprint changed. Append-only.
 > - Scope comes from `SydIN_Final_Production_Master_Prompt.pdf` (77 items) plus
 >   Sayed's handwritten notes, photographed 27 Aug 2026.
+
+**Live URLs**
+
+- Working site: `sydin-git-main-syd-in-test-s-projects.vercel.app` — always this
+  one. The random-hash Vercel URLs are frozen snapshots of old builds, which is
+  why the site once looked "still old".
+- This plan, shared: https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
+- The original production audit, 20 Aug, kept as history:
+  https://claude.ai/code/artifact/223456e6-d8a4-46ec-a005-5cd4b4463cde
 
 Buyer: wholesale accessories depots in Lebanon whose daily problem is not knowing
 what is still in stock. Every status below reflects what was **verified in the

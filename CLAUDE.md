@@ -10,6 +10,15 @@ Shopify (operational workflows).
 
 Every session, before doing work, read the **core** project brain in `docs/`:
 
+- **[docs/SYDIN_PLAN_OF_RECORD.md](docs/SYDIN_PLAN_OF_RECORD.md) — READ THIS FIRST. It is the
+  single plan: current phase, Sayed's backlog, what is left, and the order of work.**
+  It is **updated, never rebuilt**. Do not re-derive the plan from memory at the start of a
+  session, do not renumber its phases, and **do not create a second plan document** — a rival
+  plan (`SYDIN_SESSION_STATE.md`) was written on 26 Aug 2026 and deleted on the 27th after
+  Sayed pointed out the duplication. That is the failure mode this line exists to prevent.
+  It is mirrored for Sayed at
+  https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4 — update that artifact
+  when the plan changes materially, rather than publishing a new one.
 - [docs/SYDIN_PRODUCT_BRAIN.md](docs/SYDIN_PRODUCT_BRAIN.md) — what SydIN is, architecture, current state.
 - [docs/SYDIN_ROADMAP.md](docs/SYDIN_ROADMAP.md) — the 5-phase master roadmap + immediate sprint sequence.
 - [docs/SYDIN_SPRINT_LOG.md](docs/SYDIN_SPRINT_LOG.md) — what each sprint changed (append-only history).
