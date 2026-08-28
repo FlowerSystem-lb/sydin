@@ -2513,6 +2513,27 @@ export default function InventoryPage() {
                   labelHidden
                   buttonClassName="dashboard-action-button dashboard-action-button-secondary inventory-action-secondary inventory-action-more"
                 >
+                    {/* Founder note B, 27 Aug 2026: "reorder the buttons and see
+                        what is important and it's not". This one is a display
+                        preference, not an inventory action — it was sitting in
+                        the control row with a full label, next to Filters, sort
+                        and view, which are the controls you actually reach for
+                        while working. Moved here so the row reads
+                        filter -> sort -> view -> select and nothing else. */}
+                    <button
+                      type="button"
+                      role="menuitemcheckbox"
+                      onClick={toggleShowStats}
+                      aria-checked={showStats}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50"
+                    >
+                      <UiIcon
+                        name={showStats ? "chevron-up" : "chevron-down"}
+                        className="h-4 w-4"
+                      />
+                      {showStats ? "Hide stats" : "Show stats"}
+                    </button>
+                    <div className="my-1 border-t border-slate-200" />
                     <Link
                       href="/dashboard/inventory/import"
                       role="menuitem"
@@ -2670,23 +2691,6 @@ export default function InventoryPage() {
                   >
                     <UiIcon name="settings" className="h-4 w-4" />
                     Filters{activeFilterCount ? ` (${activeFilterCount})` : ""}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={toggleShowStats}
-                    aria-pressed={!showStats}
-                    className="inventory-toolbar-button"
-                    title={
-                      showStats
-                        ? "Hide the stats and insights for a bigger item view"
-                        : "Show the stats and insights"
-                    }
-                  >
-                    <UiIcon
-                      name={showStats ? "chevron-up" : "chevron-down"}
-                      className="h-4 w-4"
-                    />
-                    {showStats ? "Compact" : "Stats"}
                   </button>
                   <Select
                     ariaLabel="Sort"

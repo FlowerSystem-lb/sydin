@@ -21532,3 +21532,56 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   margin: auto;
   max-height: 100%;
 }
+
+/* ===========================================================================
+   INVENTORY ON WHITE  (founder note F, 27 Aug 2026)
+   ---------------------------------------------------------------------------
+   "Make the full Background of inventory's page white // Same Colors u use for
+   others pages."
+   
+   Measured first, because the note reads two ways. Every dashboard page shares
+   the same ground — rgb(230, 236, 245). Inventory is not a different colour; it
+   just *shows* more of it. Other pages put their content inside one large white
+   `.dashboard-card`, so the grey survives only as a margin. Inventory has no
+   such surface: the item cards are small, white and widely spaced, so the grey
+   is most of what you see.
+
+   So the ground goes white here. The catch is that the item cards were also
+   white with no border at all — they read as cards purely by contrast against
+   the grey, helped by a soft shadow. Put white on white and the grid dissolves.
+   They therefore gain a hairline and lose most of the shadow, which is the
+   trade this design already makes elsewhere: structure from a 1px line rather
+   than from a drop shadow. That is closer to the reference the brief points at,
+   and it survives at density where shadows turn to mud.
+
+   Scoped to Inventory deliberately. Sayed asked for the same colours as the
+   other pages, and the other pages are currently grey — so this is the change
+   shown on one screen first. If he likes it, the same two rules go everywhere
+   and the grey ground retires; if not, deleting this block restores it.
+   =========================================================================== */
+/* Two elements paint here, and one of them uses !important, so both are named.
+   `.dashboard-workspace-shell .dashboard-main-canvas` is set
+   `background: transparent !important` further up, which means the colour you
+   actually see on Inventory comes from `.dashboard-shell` behind it — while a
+   separate rule paints a white-veiled blue/cyan glow onto the canvas at
+   >=900px. Overriding either one alone leaves the other showing, which is why
+   the first attempt at this changed nothing on screen. */
+.dashboard-shell:has(.inventory-workspace),
+.dashboard-theme:has(.inventory-workspace) .dashboard-shell {
+  background: #ffffff !important;
+}
+
+.dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas {
+  background: #ffffff !important;
+}
+
+.inventory-workspace .inventory-item-card {
+  border: 1px solid var(--border-hairline);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+/* Hover still lifts, just from the line rather than a heavier shadow. */
+.inventory-workspace .inventory-item-card:hover {
+  border-color: rgba(15, 23, 42, 0.18);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
