@@ -1,6 +1,10 @@
 "use client";
 
 import Image from "next/image";
+import {
+  createProductImagePath,
+  getImageValidationError,
+} from "@/app/lib/productImage";
 
 import {
   useCallback,
@@ -1071,7 +1075,15 @@ export default function InventoryPage() {
       let imageUrl = selectedItem.image || "";
 
       if (editImage) {
-        const fileName = `${Date.now()}-${editImage.name}`;
+        const imageError = getImageValidationError(editImage);
+
+        if (imageError) {
+          setEditError(imageError);
+          setIsEditing(false);
+          return;
+        }
+
+        const fileName = createProductImagePath(user.id, editImage);
         const { error: uploadError } = await supabase.storage
           .from("products")
           .upload(fileName, editImage);

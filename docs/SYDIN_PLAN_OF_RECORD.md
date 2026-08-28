@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 27 August 2026
+**Last touched:** 27 August 2026 (storage hole closed)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -125,21 +125,41 @@ bulk entry for a shop that cannot buy it yet.
 
 Checked against the live database and repo on 27 Aug 2026, not assumed.
 
-### Storage security — the real finding (PDF items 28, 29)
+### Storage security — FIXED 27 Aug 2026 (PDF items 28, 29)
 
-1. **Any signed-in user can write into any other customer's product photos.**
-   The `products` bucket upload rule checks only `bucket_id = 'products'`. It never
-   checks the folder belongs to the uploader. `business-logos` and `po-attachments`
-   both check ownership correctly — `products` was missed.
-2. **No delete rule on `products`.** Photos can never be removed, so deleted items
-   leave their files behind and the storage bill only grows.
-3. **The 5 MB limit and the jpeg/png/webp check are browser-side only.** The buckets
-   have no size limit and no type restriction, and the key the browser uses is
-   public — so both can be walked around.
-4. **Purchase-order attachments are readable by anyone with the link.** Those are
-   supplier invoices.
-5. All product photos are public by URL. That is needed for the QR page, but it
-   should be a recorded decision rather than an accident.
+`sql/phase-18-product-storage-ownership.sql`, applied and verified.
+
+1. ~~Any signed-in user can write into any other customer's product photos.~~
+   **Fixed.** Upload, update and delete on `products` now all check
+   `(storage.foldername(name))[1] = auth.uid()`, the same check
+   `business-logos` and `po-attachments` already had.
+2. ~~No delete rule on `products`.~~ **Fixed** — photos in your own folder can
+   now be removed, so deleted items stop accumulating.
+3. ~~Size and type limits were browser-side only.~~ **Fixed** — all three buckets
+   now carry `file_size_limit` and `allowed_mime_types`, where the browser
+   cannot talk its way around them.
+
+**The app had to be fixed first, and this is the part worth remembering.** Four
+screens upload product photos and only two used the `<user-id>/` folder. The
+Inventory list and the item detail page both wrote
+`` `${Date.now()}-${editImage.name}` `` — no folder, and the browser's original
+filename kept as-is. Applying the ownership rule while those existed would have
+broken editing an item's photo. All four now share
+`app/lib/productImage.ts`, which is the one definition of how a product photo is
+validated and named. The edit screens had no size or type validation at all
+before this.
+
+**Reads stay public, deliberately:** the customer QR page shows a photo to
+someone with no account, and older files sit at the bucket root from before the
+path helper existed — an ownership check on reads would blank those items.
+
+### Still open in storage
+
+- **Supplier invoices are readable by anyone with the link.** `po-attachments` is
+  a public bucket and the app stores `getPublicUrl(...)` straight into the
+  database, so closing it means moving to signed URLs — an application change,
+  not a policy change. Not bundled into phase 18 rather than left half-done.
+  Its size and type limits are in place.
 
 ### Not started, and genuinely needed before launch
 

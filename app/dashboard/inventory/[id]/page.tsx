@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
+import {
+  createProductImagePath,
+  getImageValidationError,
+} from "@/app/lib/productImage";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
@@ -637,7 +641,14 @@ export default function ItemDetailsPage() {
       let imageUrl = item.image || "";
 
       if (editImage) {
-        const fileName = `${Date.now()}-${editImage.name}`;
+        const imageError = getImageValidationError(editImage);
+
+        if (imageError) {
+          setEditError(imageError);
+          return;
+        }
+
+        const fileName = createProductImagePath(user.id, editImage);
         const { error: uploadError } = await supabase.storage
           .from("products")
           .upload(fileName, editImage);

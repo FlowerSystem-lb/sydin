@@ -1,5 +1,7 @@
 "use client";
 
+import { createProductImagePath } from "@/app/lib/productImage";
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import UiIcon from "@/components/UiIcon";
@@ -84,28 +86,6 @@ function formatFileSize(size: number) {
   }
 
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-// Mirrors app/dashboard/add-item/page.tsx's image upload helpers exactly
-// (same bucket, same path shape) so a photo added here or on Add Item lands
-// in storage the same way.
-function getImportImageExtension(file: File) {
-  const extensionByType: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-  };
-
-  return extensionByType[file.type] || "jpg";
-}
-
-function createImportImagePath(userId: string, file: File) {
-  const random =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : Math.random().toString(36).slice(2, 12);
-
-  return `${userId}/${Date.now()}-${random}.${getImportImageExtension(file)}`;
 }
 
 function getFieldErrorClass(
@@ -628,7 +608,7 @@ export default function InventoryImportPage() {
       if (photoFileByRowNumber.size > 0) {
         const uploadOutcomes = await Promise.allSettled(
           [...photoFileByRowNumber.entries()].map(async ([rowNumber, file]) => {
-            const fileName = createImportImagePath(user.id, file);
+            const fileName = createProductImagePath(user.id, file);
             const { error: uploadError } = await supabase.storage
               .from("products")
               .upload(fileName, file);

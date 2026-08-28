@@ -2,6 +2,10 @@
 
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Image from "next/image";
+import {
+  createProductImagePath,
+  getImageValidationError,
+} from "@/app/lib/productImage";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
@@ -51,8 +55,6 @@ import {
   type UpgradePlan,
 } from "@/app/lib/subscription";
 
-const ALLOWED_IMAGE_TYPES = ["image/jpeg", "image/png", "image/webp"];
-const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 
 const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
@@ -88,37 +90,6 @@ function formatFileSize(size: number) {
   }
 
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
-}
-
-function getImageValidationError(file: File) {
-  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) {
-    return "Choose a JPG, PNG, or WebP image.";
-  }
-
-  if (file.size > MAX_IMAGE_SIZE) {
-    return "Image must be 5MB or smaller.";
-  }
-
-  return "";
-}
-
-function getImageExtension(file: File) {
-  const extensionByType: Record<string, string> = {
-    "image/jpeg": "jpg",
-    "image/png": "png",
-    "image/webp": "webp",
-  };
-
-  return extensionByType[file.type] || "jpg";
-}
-
-function createImagePath(userId: string, file: File) {
-  const random =
-    typeof crypto !== "undefined" && "randomUUID" in crypto
-      ? crypto.randomUUID()
-      : Math.random().toString(36).slice(2, 12);
-
-  return `${userId}/${Date.now()}-${random}.${getImageExtension(file)}`;
 }
 
 async function getBusinessCurrency(userId: string) {
@@ -582,7 +553,7 @@ export default function AddItemPage() {
           return;
         }
 
-        const fileName = createImagePath(user.id, image);
+        const fileName = createProductImagePath(user.id, image);
         const { error: uploadError } = await supabase.storage
           .from("products")
           .upload(fileName, image);
