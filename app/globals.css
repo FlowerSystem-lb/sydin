@@ -21852,3 +21852,75 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   color: #fca5a5 !important;
   box-shadow: inset 0 0 0 1px rgba(252, 165, 165, 0.3);
 }
+
+/* ---------------------------------------------------------------------------
+   Photo card: frosted glass, not a black gradient
+   ---------------------------------------------------------------------------
+   Sayed asked whether the black shade was actually any good. It was not — it
+   was the blunt fix. A hard black gradient over a 208px card swallows a third
+   of the picture, and it contradicts the glass language the rest of SydIN
+   already uses (`glass-overlay`, `glass-control`).
+
+   So: a much lighter tint at rest, and a real frosted panel while you are
+   pointing at the card.
+
+   The blur is deliberately ONLY on hover and focus. `backdrop-filter` is
+   expensive, and Phase 3 exists because this grid has to survive 500 products;
+   500 permanently-blurred panels is exactly the kind of thing that makes a
+   grid crawl. One at a time costs nothing.
+
+   Legibility is still not left to the blur. The tint underneath does that work,
+   and the title and quantity keep their text-shadow, because a blurred white
+   logo is still white.
+   --------------------------------------------------------------------------- */
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-body {
+  background: linear-gradient(
+    to top,
+    rgba(9, 16, 32, 0.78) 0%,
+    rgba(9, 16, 32, 0.62) 58%,
+    rgba(9, 16, 32, 0.3) 84%,
+    rgba(9, 16, 32, 0) 100%
+  ) !important;
+  transition:
+    background 300ms ease,
+    -webkit-backdrop-filter 300ms ease,
+    backdrop-filter 300ms ease;
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-body,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-body {
+  background: linear-gradient(
+    to top,
+    rgba(9, 16, 32, 0.86) 0%,
+    rgba(9, 16, 32, 0.8) 62%,
+    rgba(9, 16, 32, 0.52) 88%,
+    rgba(9, 16, 32, 0.12) 100%
+  ) !important;
+  -webkit-backdrop-filter: blur(16px) saturate(130%);
+  backdrop-filter: blur(16px) saturate(130%);
+}
+
+/* A hairline where the panel meets the photo: it gives the glass an edge
+   instead of letting it dissolve, which is what made the black version read as
+   a smudge rather than a surface. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-body::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.22) 22%,
+    rgba(255, 255, 255, 0.22) 78%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  opacity: 0;
+  transition: opacity 260ms ease;
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-body::before,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-body::before {
+  opacity: 1;
+}
