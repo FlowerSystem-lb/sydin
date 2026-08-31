@@ -56,6 +56,14 @@ export default function ScannerModal({
   // answers yes and should lead with its camera; a laptop answers no however
   // wide its screen is.
   const [handheld, setHandheld] = useState(true);
+  // On a computer the camera is the second option, so it does not render until
+  // it is asked for. Showing it up front put a 200px black rectangle in the
+  // modal before anyone wanted it — and that alone made the modal tall enough
+  // to need a scrollbar. Sayed asked for both to go; they were one thing.
+  const [cameraRequested, setCameraRequested] = useState(false);
+  // Derived, not synced. An earlier version kept these in step with two
+  // effects, which is a cascading render for something that is just an `or`.
+  const showCamera = handheld || cameraRequested;
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.matchMedia) return;
@@ -67,6 +75,7 @@ export default function ScannerModal({
     query.addEventListener("change", sync);
     return () => query.removeEventListener("change", sync);
   }, []);
+
   // Bumping this remounts the scanner view, which restarts the camera from a
   // clean state after a failure (replaces the previous close/reopen dance).
   const [retryNonce, setRetryNonce] = useState(0);
@@ -93,6 +102,7 @@ export default function ScannerModal({
 
   const handleClose = useCallback(() => {
     setStatus(INITIAL_STATUS);
+    setCameraRequested(false);
     onClose();
   }, [onClose]);
 
@@ -161,35 +171,55 @@ export default function ScannerModal({
             </div>
           )}
 
-          {!handheld && (
-            <p className="mt-5 mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-theme-subtle">
+          {!showCamera && (
+            <button
+              type="button"
+              onClick={() => setCameraRequested(true)}
+              className="mt-4 w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-semibold text-theme-secondary transition hover:bg-theme-hover"
+            >
               Or use this device&rsquo;s camera
-            </p>
+            </button>
           )}
 
-          <BarcodeScannerView
-            key={retryNonce}
-            active={open}
-            onDecode={onDecode}
-            onStatusChange={handleStatusChange}
-            className="overflow-hidden rounded-[28px] border border-[#2563eb]/20 bg-black"
-          />
+          {showCamera && (
+            <>
+              {!handheld && (
+                <p className="mt-5 mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-theme-subtle">
+                  This device&rsquo;s camera
+                </p>
+              )}
 
-          <div
-            className="mt-4 rounded-2xl border border-theme bg-theme-surface px-4 py-3"
-            role="status"
-            aria-live="polite"
-          >
-            {error ? (
-              <p className="text-sm font-semibold text-theme-danger">{error}</p>
-            ) : (
-              <p className="text-sm font-semibold text-theme-secondary">
-                {starting
-                  ? "Starting camera..."
-                  : status || "Point the camera at a code."}
-              </p>
-            )}
-          </div>
+              {/* The black plate goes with the picture. When the camera cannot
+                  start there is nothing to show, so showing a black rectangle
+                  and an error underneath says the same thing twice — once
+                  uselessly. */}
+              {!error && (
+                <BarcodeScannerView
+                  key={retryNonce}
+                  active={open}
+                  onDecode={onDecode}
+                  onStatusChange={handleStatusChange}
+                  className="overflow-hidden rounded-[20px] border border-[#2563eb]/20 bg-black"
+                />
+              )}
+
+              <div
+                className={`${error ? "mt-4" : "mt-3"} rounded-2xl border border-theme bg-theme-surface px-4 py-3`}
+                role="status"
+                aria-live="polite"
+              >
+                {error ? (
+                  <p className="text-sm font-semibold text-theme-danger">{error}</p>
+                ) : (
+                  <p className="text-sm font-semibold text-theme-secondary">
+                    {starting
+                      ? "Starting camera..."
+                      : status || "Point the camera at a code."}
+                  </p>
+                )}
+              </div>
+            </>
+          )}
 
           {/* Handheld: the camera led, so pairing sits below as the genuine
               fallback it is there. */}
