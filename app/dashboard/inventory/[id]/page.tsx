@@ -181,41 +181,35 @@ function DetailCard({
   label,
   value,
   detail,
-  accent = "slate",
   monospace = false,
 }: {
   label: string;
   value: string;
   detail?: string;
+  /** Kept in the signature so the 12 call sites need no edit; see below. */
   accent?: "slate" | "indigo" | "cyan" | "violet" | "amber";
   monospace?: boolean;
 }) {
-  const toneClass =
-    accent === "indigo"
-      ? "border-indigo-300/20 bg-indigo-500/10 text-theme-accent"
-      : accent === "cyan"
-        ? "border-cyan-300/20 bg-cyan-500/10 text-theme-accent"
-        : accent === "violet"
-          ? "border-violet-300/20 bg-violet-500/10 text-theme-accent"
-          : accent === "amber"
-            ? "border-amber-300/20 bg-amber-500/10 text-theme-warning"
-            : "border-theme bg-theme-inset text-theme-primary";
-
+  // Was a bordered, tinted card per fact: 12 of them on this page, inside
+  // sections that were themselves bordered cards, so a box sat inside a box.
+  // Measured before the change: 42 bordered boxes on one item page.
+  //
+  // A label beside a value is a row, not a container — the same conclusion the
+  // item card reached in Phase 2 and the quick preview reached in note D. This
+  // page now matches both.
+  //
+  // `accent` is accepted and ignored on purpose. It painted indigo, cyan,
+  // violet and amber tints that carried no meaning — item code was purple and
+  // barcode was teal for no reason a reader could name. Removing the prop would
+  // mean touching all 12 call sites to say the same thing; ignoring it says it
+  // once, here.
   return (
-    <div className={`rounded-xl border p-3 ${toneClass}`}>
-      <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-subtle">
-        {label}
-      </p>
-      <p
-        className={`mt-2 break-normal text-base font-black leading-snug ${
-          monospace ? "font-mono tracking-wide" : ""
-        }`}
-      >
+    <div className="item-detail-row">
+      <dt>{label}</dt>
+      <dd className={monospace ? "font-mono tracking-wide" : undefined}>
         {value}
-      </p>
-      {detail && (
-        <p className="mt-2 text-xs leading-5 text-theme-subtle">{detail}</p>
-      )}
+        {detail && <span className="item-detail-row-note">{detail}</span>}
+      </dd>
     </div>
   );
 }
@@ -887,7 +881,7 @@ export default function ItemDetailsPage() {
                 </h1>
 
                 <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
-                  Review item metadata, stock levels, image, notes, history, and public QR access.
+
                 </p>
               </div>
 
@@ -1013,7 +1007,7 @@ export default function ItemDetailsPage() {
 
           {!loading && item && !routeEditMode && (
             <>
-              <div className="grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
+              <div className="item-detail-split grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
               <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-4">
                 {/* backlog §16E: was a fixed h-240/300px box stretched across
                     the whole ~0.95fr column (~550-580px wide) — a ~1.82:1
@@ -1094,7 +1088,7 @@ export default function ItemDetailsPage() {
                     />
                   </div>
 
-                  <section className="mt-4 rounded-[18px] border border-indigo-300/15 bg-indigo-500/[0.07] p-4">
+                  <section className="item-detail-group">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
                         <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -1122,7 +1116,6 @@ export default function ItemDetailsPage() {
                             ? String(item.min_stock_level)
                             : "Business default"
                         }
-                        detail={`Low-stock threshold used here: ${itemLowStockThreshold}`}
                         accent={
                           item.min_stock_level !== null &&
                           item.min_stock_level !== undefined
@@ -1133,12 +1126,9 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-4 rounded-[18px] border border-theme bg-theme-inset p-4">
+                  <section className="item-detail-group">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Private Supplier
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-theme-muted">
-                      This supplier information is visible only inside your authenticated workspace.
                     </p>
                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <DetailCard
@@ -1159,12 +1149,9 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-4 rounded-[18px] border border-theme bg-theme-inset p-4">
+                  <section className="item-detail-group">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Pricing & Value
-                    </p>
-                    <p className="mt-2 text-sm leading-6 text-theme-muted">
-                      Private values are visible only inside the authenticated dashboard.
                     </p>
 
                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1191,7 +1178,7 @@ export default function ItemDetailsPage() {
                     </div>
                   </section>
 
-                  <section className="mt-4 rounded-[18px] border border-theme bg-theme-inset p-4">
+                  <section className="item-detail-group">
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
                       Tracking Codes
                     </p>
@@ -1202,7 +1189,7 @@ export default function ItemDetailsPage() {
                         value={item.item_code?.trim() || "Not generated yet"}
                         detail={
                           item.item_code
-                            ? "SydIN-generated read-only code."
+                            ? ""
                             : "Older items may not have a generated code."
                         }
                         accent={item.item_code ? "indigo" : "slate"}
@@ -1211,13 +1198,11 @@ export default function ItemDetailsPage() {
                       <DetailCard
                         label="SKU"
                         value={item.sku || "Not set"}
-                        detail="Internal or supplier stock code."
                         monospace={Boolean(item.sku)}
                       />
                       <DetailCard
                         label="Barcode"
                         value={item.barcode || "Not set"}
-                        detail="Product or scanned code."
                         accent={item.barcode ? "cyan" : "slate"}
                         monospace={Boolean(item.barcode)}
                       />
@@ -1385,44 +1370,23 @@ export default function ItemDetailsPage() {
                             </div>
                           </div>
 
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[460px]">
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
-                                Before
-                              </p>
-
-                              <p className="mt-1.5 text-xl font-black text-theme-primary">
-                                {movement.quantity_before}
-                              </p>
-                            </div>
-
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
-                                Change
-                              </p>
-
-                              <p
-                                className={`mt-1.5 text-xl font-black ${
-                                  movement.quantity_delta < 0
-                                    ? "text-theme-danger"
-                                    : movement.quantity_delta > 0
-                                      ? "text-theme-success"
-                                      : "text-theme-primary"
-                                }`}
-                              >
-                                {formatQuantityDelta(movement.quantity_delta)}
-                              </p>
-                            </div>
-
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
-                                After
-                              </p>
-
-                              <p className="mt-1.5 text-xl font-black text-theme-accent">
-                                {movement.quantity_after}
-                              </p>
-                            </div>
+                          {/* Three bordered boxes for three numbers, per movement — the same
+                              box-per-fact habit as the rest of the page. A stock
+                              movement reads as one sentence: 1 → 2, and the change
+                              is the part worth colouring. */}
+                          <div className="item-detail-movement">
+                            <span>{movement.quantity_before}</span>
+                            <span aria-hidden="true">&rarr;</span>
+                            <span>{movement.quantity_after}</span>
+                            <strong
+                              className={
+                                movement.quantity_delta < 0
+                                  ? "text-theme-danger"
+                                  : "text-theme-success"
+                              }
+                            >
+                              {formatQuantityDelta(movement.quantity_delta)}
+                            </strong>
                           </div>
                         </div>
                       </div>

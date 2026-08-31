@@ -22217,3 +22217,124 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   box-shadow: none !important;
   padding: 0 !important;
 }
+
+/* ===========================================================================
+   FULL ITEM PAGE (E) — rows instead of boxes, and two columns instead of one
+   ---------------------------------------------------------------------------
+   Founder note E: "need new design and organize, y3ni kthir Large words and
+   view and Empty Space for the left Side (Need new layout)."
+
+   Two separate problems, and the second is the one he drew.
+
+   1. Boxes. Measured before the change: 42 bordered boxes on one item page,
+      with fact-boxes sitting inside section-boxes — a box in a box. Every
+      field also carried a sentence explaining itself ("SydIN-generated
+      read-only code.", "Internal or supplier stock code.") on every item,
+      forever. Those are gone, and DetailCard is a row.
+
+   2. The empty left side. Every section was full width and stacked, so the
+      photo — the one genuinely small thing on the page — sat in a 1133px band
+      with nothing beside it. The page is now two columns above 1100px: the
+      photo and the QR code hold a narrow left rail, the facts take the rest.
+      Nothing is hidden; the same content simply stops being a single tall
+      ribbon.
+   =========================================================================== */
+
+.item-detail-row {
+  display: grid;
+  grid-template-columns: minmax(7rem, 34%) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 1rem;
+  padding: 0.44rem 0;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.item-detail-row dt {
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink-muted);
+}
+
+.item-detail-row dd {
+  margin: 0;
+  text-align: right;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+.item-detail-row-note {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--ink-muted);
+}
+
+/* The grids that held the boxes were 2 and 3 columns wide, which is what left
+   Barcode stranded on a row by itself. Rows stack. */
+.item-detail .grid:has(> .item-detail-row) {
+  display: block !important;
+}
+
+/* The name was 28px over a 12px eyebrow and a sentence of description — the
+   "kthir large words" he means. */
+.item-detail h1 {
+  font-size: 1.5rem !important;
+  letter-spacing: -0.015em;
+}
+
+/* The two-column layout was already here — `xl:grid-cols-[0.95fr_1.05fr]` on
+   the wrapper — so the fix is a breakpoint, not a new grid. Two things had
+   pushed it out of reach at the width Sayed actually works at:
+   Tailwind's `xl` is 80rem, and 80rem against the 85% root is 1088px, while
+   the columns were near-equal so the photo rail was half the page.
+
+   Dropping to 64rem lets it engage on a laptop, and the ratio gives the photo a
+   genuine rail rather than half the width. This is why his screenshot showed
+   one tall ribbon with nothing beside the photo. */
+@media (min-width: 64rem) {
+  .item-detail-split {
+    grid-template-columns: minmax(0, 0.72fr) minmax(0, 1.28fr) !important;
+  }
+}
+
+/* The four groups on the item page (Stock & Unit, Private supplier, Pricing &
+   Value, Tracking codes) were bordered, padded, tinted cards sitting inside a
+   bordered card — one of them lavender for no reason a reader could name. A
+   heading and a hairline do the same job without the nesting. */
+.item-detail-group {
+  margin-top: 1.15rem;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+
+.item-detail-group > :first-child {
+  margin-bottom: 0.25rem;
+}
+
+/* A stock movement is one sentence — 1 → 2, and by how much. It was three
+   bordered boxes (Before / Change / After) per entry. */
+.item-detail-movement {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+}
+
+.item-detail-movement > span[aria-hidden] {
+  color: var(--ink-muted);
+}
+
+/* The delta needs air, or "1 → 2 +1" reads as "1→2+1" — three numbers with no
+   gap between the result and the change. It also gets a divider, because the
+   before/after pair and the delta are two different statements. */
+.item-detail-movement strong {
+  margin-left: 0.7rem;
+  padding-left: 0.7rem;
+  border-left: 1px solid var(--border-hairline);
+  font-weight: 600;
+}
