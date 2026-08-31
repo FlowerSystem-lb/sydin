@@ -21784,3 +21784,71 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Photo card: pills and text built for a LIGHT card, used on a DARK scrim
+   ---------------------------------------------------------------------------
+   Sayed, 27 Aug, on the photo grid: "bugs the color of fonts and the color of
+   shade." Two separate faults, both from reusing light-card styling over a
+   photo:
+
+   1. The value pill is `color: #fff` (forced white for the dark scrim) on
+      `background: #f4f7fb` (its light-card pill) — white on near-white, so the
+      price was invisible. Measured, not guessed: rgb(255,255,255) on
+      rgb(244,247,251).
+   2. The status pill is dark ink on a pale tint. Correct on a white card; on a
+      dark panel it reads as a bright blob stuck to the photo.
+
+   And the scrim itself was too weak at its top edge. That is fine over a dark
+   product shot and fails completely over a white one — the "Flower Plus" logo
+   is white, so the name sat white-on-white. A gradient tuned for one photo is
+   not a solution when the customer supplies the photo.
+   --------------------------------------------------------------------------- */
+
+/* Solid enough at the text, still fading out so the picture is not boxed in. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-body {
+  background: linear-gradient(
+    to top,
+    rgba(6, 14, 30, 0.95) 0%,
+    rgba(6, 14, 30, 0.9) 62%,
+    rgba(6, 14, 30, 0.62) 86%,
+    rgba(6, 14, 30, 0) 100%
+  ) !important;
+}
+
+/* Belt and braces for a bright photo: the text carries its own shadow, so it
+   stays legible even where the scrim is thinnest. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-title,
+.inventory-workspace .inventory-item-card--photo .inventory-card-quantity {
+  text-shadow: 0 1px 3px rgba(3, 8, 18, 0.66);
+}
+
+/* The price becomes a glass chip on the panel rather than a white tablet. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-value {
+  background: rgba(255, 255, 255, 0.14) !important;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff !important;
+  padding: 2px 8px !important;
+  border-radius: var(--radius-pill) !important;
+}
+
+/* Status keeps its meaning — green good, amber low, red out — but as a tint on
+   the dark panel instead of a pale tablet. Text stays the light end of each
+   hue so the pill reads at a glance without shouting. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-status--success {
+  background: rgba(16, 185, 129, 0.22) !important;
+  color: #6ee7b7 !important;
+  box-shadow: inset 0 0 0 1px rgba(110, 231, 183, 0.28);
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-status--warning {
+  background: rgba(245, 158, 11, 0.22) !important;
+  color: #fcd34d !important;
+  box-shadow: inset 0 0 0 1px rgba(252, 211, 77, 0.28);
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-status--danger {
+  background: rgba(239, 68, 68, 0.24) !important;
+  color: #fca5a5 !important;
+  box-shadow: inset 0 0 0 1px rgba(252, 165, 165, 0.3);
+}
