@@ -22338,3 +22338,198 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border-left: 1px solid var(--border-hairline);
   font-weight: 600;
 }
+
+/* ===========================================================================
+   PRINT — the document, not the application  (production brief item 57)
+   ---------------------------------------------------------------------------
+   Before this, the only `@media print` rules in the file were for QR labels.
+   Every other page printed the running application: sidebar, top search bar,
+   Add Item button, filter chips, dropdowns, scrollbars and all. Pick Lists has
+   a "Print Pick Sheet" button wired straight to `window.print()`, so the one
+   screen most likely to be printed — the sheet a person carries into the depot
+   to pick stock — printed the whole dashboard around it.
+
+   The brief is explicit: "Remove sidebar, navigation, buttons, search, filters,
+   and interactive UI."
+
+   Approach: hide the chrome, unwrap the shell, and let the page's own content
+   flow onto white. Deliberately not a separate print-only layout per page —
+   that is a second thing to keep in step with the first, and it always drifts.
+
+   Every selector below was taken from the live DOM, not guessed. Three times
+   today a rule did nothing because the class did not exist.
+
+   Class names are repeated four times (`.x.x.x.x`) on purpose.
+   The workspace rules that size and show the shell are written as
+   `.dashboard-workspace-shell .dashboard-sidebar { ... !important }`, which is
+   more specific than a single class. Worse, the rule that actually won is
+   `:is(.dashboard-shell:has(.inventory-workspace) .dashboard-sidebar, …)`,
+   which scores (0,3,0) because `:has()` contributes its argument's specificity.
+   A plain selector lost, and doubling only tied at (0,2,0) — the sidebar
+   printed both times. Four repetitions score (0,4,0) and win outright, without
+   inventing an ancestor that may not exist on every page.
+   =========================================================================== */
+
+@media print {
+  /* The application frame. */
+  .dashboard-sidebar.dashboard-sidebar.dashboard-sidebar.dashboard-sidebar,
+  .dashboard-sidebar-collapsed.dashboard-sidebar-collapsed.dashboard-sidebar-collapsed.dashboard-sidebar-collapsed,
+  .dashboard-sidebar-header.dashboard-sidebar-header.dashboard-sidebar-header.dashboard-sidebar-header,
+  .dashboard-sidebar-scroll.dashboard-sidebar-scroll.dashboard-sidebar-scroll.dashboard-sidebar-scroll,
+  .dashboard-sidebar-workspace.dashboard-sidebar-workspace.dashboard-sidebar-workspace.dashboard-sidebar-workspace,
+  .dashboard-rail-chip.dashboard-rail-chip.dashboard-rail-chip.dashboard-rail-chip,
+  .dashboard-desktop-toolbar.dashboard-desktop-toolbar.dashboard-desktop-toolbar.dashboard-desktop-toolbar,
+  .dashboard-tablet-header.dashboard-tablet-header.dashboard-tablet-header.dashboard-tablet-header,
+  .dashboard-mobile-header.dashboard-mobile-header.dashboard-mobile-header.dashboard-mobile-header,
+  .dashboard-mobile-nav.dashboard-mobile-nav.dashboard-mobile-nav.dashboard-mobile-nav,
+  .dashboard-top-search.dashboard-top-search.dashboard-top-search.dashboard-top-search,
+  .dashboard-top-searchbar.dashboard-top-searchbar.dashboard-top-searchbar.dashboard-top-searchbar,
+  .mobile-shell-nav.mobile-shell-nav.mobile-shell-nav.mobile-shell-nav,
+  .ui-overlay.ui-overlay.ui-overlay.ui-overlay,
+  .ui-menu-surface {
+    display: none !important;
+  }
+
+  /* Controls. A printed sheet has nothing to click, and a row of dead buttons
+     across the top is the clearest sign a page was never designed to print.
+     
+     `[role="button"]` is deliberately NOT in this list, though it was at first.
+     The inventory card is an `<article role="button">`, so hiding that role
+     erased every product from the printed page while leaving the heading and
+     "Showing 10 of 10 items" behind. Caught by lifting these rules into screen
+     media and looking at the result — a selector-existence check would have
+     passed it happily.
+     
+     "Add Item" and "Scan" survive `button` too: they are links. They are hidden
+     by their container instead. */
+  button,
+  input,
+  select,
+  textarea,
+  .inventory-page-actions.inventory-page-actions.inventory-page-actions.inventory-page-actions,
+  .inventory-hero-actions.inventory-hero-actions.inventory-hero-actions.inventory-hero-actions,
+  .inventory-toolbar-main.inventory-toolbar-main.inventory-toolbar-main.inventory-toolbar-main,
+  .inventory-toolbar-chips.inventory-toolbar-chips.inventory-toolbar-chips.inventory-toolbar-chips,
+  .dashboard-filter-bar.dashboard-filter-bar.dashboard-filter-bar.dashboard-filter-bar,
+  .inventory-card-footer.inventory-card-footer.inventory-card-footer.inventory-card-footer,
+  .inventory-card-menu-button.inventory-card-menu-button.inventory-card-menu-button.inventory-card-menu-button,
+  .inventory-card-select {
+    display: none !important;
+  }
+
+  /* Unwrap the shell: it is a fixed, scrolling, rounded, glassy container, and
+     all four of those fight paper. */
+  html,
+  body,
+  html body .dashboard-theme,
+  .dashboard-shell.dashboard-shell.dashboard-shell.dashboard-shell,
+  .dashboard-workspace-shell.dashboard-workspace-shell.dashboard-workspace-shell.dashboard-workspace-shell,
+  .dashboard-shell-content.dashboard-shell-content.dashboard-shell-content.dashboard-shell-content,
+  .dashboard-main-canvas.dashboard-main-canvas.dashboard-main-canvas.dashboard-main-canvas,
+  .dashboard-page-shell.dashboard-page-shell.dashboard-page-shell.dashboard-page-shell,
+  .mobile-shell.mobile-shell.mobile-shell.mobile-shell,
+  .mobile-shell-content {
+    position: static !important;
+    display: block !important;
+    width: auto !important;
+    max-width: none !important;
+    height: auto !important;
+    max-height: none !important;
+    min-height: 0 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    color: #000 !important;
+  }
+
+  /* Cards stop being cards. A hairline is enough to separate a section on
+     paper, and a drop shadow prints as a grey smear. */
+  .dashboard-card.dashboard-card.dashboard-card.dashboard-card,
+  .dashboard-toolbar-card.dashboard-toolbar-card.dashboard-toolbar-card.dashboard-toolbar-card,
+  .dashboard-page-header-card.dashboard-page-header-card.dashboard-page-header-card.dashboard-page-header-card,
+  .inventory-hero-card.inventory-hero-card.inventory-hero-card.inventory-hero-card,
+  .item-detail section,
+  section {
+    box-shadow: none !important;
+    background: #fff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    break-inside: avoid;
+  }
+
+  /* Tables are the point of most of these documents. A header that does not
+     repeat makes page two unreadable. */
+  thead {
+    display: table-header-group;
+  }
+
+  tr,
+  .dashboard-list-row.dashboard-list-row.dashboard-list-row.dashboard-list-row,
+  .inventory-list-row {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Ink. Printers render mid-greys as mush, and a pale hairline vanishes. */
+  * {
+    color: #000 !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  a {
+    text-decoration: none !important;
+  }
+
+  h1 {
+    font-size: 18pt !important;
+  }
+
+  h2 {
+    font-size: 13pt !important;
+  }
+
+  body {
+    font-size: 10.5pt !important;
+    line-height: 1.35 !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 14mm 12mm;
+  }
+}
+
+/* The print-only document header lives in the shell and is invisible on screen.
+   Kept out of the @media print block above only because it must be hidden by
+   default — everything else in that block is a print-time override. */
+.print-document-header {
+  display: none;
+}
+
+@media print {
+  .print-document-header {
+    display: flex !important;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 1rem;
+    margin: 0 0 6mm !important;
+    padding: 0 0 2mm !important;
+    border-bottom: 1pt solid #000 !important;
+  }
+
+  .print-document-business {
+    font-size: 13pt;
+    font-weight: 600;
+  }
+
+  .print-document-meta {
+    font-size: 9pt;
+  }
+}

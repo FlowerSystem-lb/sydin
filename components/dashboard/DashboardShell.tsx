@@ -884,6 +884,25 @@ export default function DashboardShell({
         effectiveCollapsed && "dashboard-shell-collapsed"
       )}
     >
+      {/* Production brief item 57: a printed page must carry SydIN branding, the
+          business information and the date. On screen this is `display: none`;
+          it exists only in the print stylesheet, so nothing here changes what
+          anyone sees in the app. One header in the shell covers every page
+          rather than each page growing its own and drifting apart. */}
+      <div className="print-document-header" aria-hidden="true">
+        <span className="print-document-business">
+          {businessSettings.business_name || "SydIN"}
+        </span>
+        <span className="print-document-meta">
+          Printed {new Date().toLocaleDateString("en", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          {" · SydIN"}
+        </span>
+      </div>
+
       <aside
         className={cx(
           "dashboard-sidebar glass-navigation",
