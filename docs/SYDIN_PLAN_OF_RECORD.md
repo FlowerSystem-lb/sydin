@@ -45,7 +45,7 @@ running application or the live database**, not what the code appears to do.
 | 4 | The real 500-product test | blocked on pagination |
 | 5 | **Limits and abuse protection** | mostly done — exports hardened, caps already existed; rate limiting needs Supabase settings + Vercel Pro |
 | 6 | Mobile — its own app-shaped design | last, by founder instruction |
-| 7 | Print, PDF, export, domain, Vercel | not started |
+| 7 | Print, PDF, export, domain, Vercel | **print done 27 Aug**; PDF exporters already substantial (1,441 lines for inventory); domain + Vercel Pro are launch steps |
 
 **Phase 3 numbers, measured:** photos averaged 396 kB with the largest at 1.71 MB,
 and the grid served every one at full size. A 500-item screen projected to ~193 MB;
@@ -203,7 +203,14 @@ path helper existed — an ownership check on reads would blank those items.
 - **Backups and recovery (46).** Not reviewed. The PDF is blunt about not launching
   a SaaS without one.
 - **Load testing (50)** and the **500-product test (30)**.
-- **Print, PDF and export redesign (57, 58, 59)** — untouched.
+- ~~**Print, PDF and export redesign (57, 58, 59)** — untouched.~~ **Print done
+  27 Aug.** The only `@media print` rules in the file had been for QR labels, so
+  every other page printed the running application — and Pick Lists has a "Print
+  Pick Sheet" button wired straight to `window.print()`. There is now a real
+  print stylesheet plus a print-only document header (business name, date,
+  branding) in the shell. The PDF exporters were already substantial and are not
+  the weak point; **exports respecting the current filters (59) is still
+  unchecked.**
 - **Domain (53)** and **central business contact (54)**.
 - **Accessibility audit (23)**.
 
@@ -248,7 +255,7 @@ than speed. Revisit at the same time.
 4. ~~Dashboard summary (S)~~ — dropped at Sayed's call.
 5. **Limits and abuse** — rate limiting, import caps, server-side upload caps.
 6. **Pagination**, then the real 500-product test.
-7. **Print / PDF / export.**
+7. ~~**Print / PDF / export**~~ — print done 27 Aug. Still open: whether exports respect the filters you have on screen (brief item 59).
 8. **Domain, Vercel Pro, backups, final QA.**
 9. **Mobile.**
 10. **N1**, then N2–N4 after launch.
