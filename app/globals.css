@@ -22054,3 +22054,73 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   color: var(--ink) !important;
   border-color: rgba(148, 168, 199, 0.5) !important;
 }
+
+/* ---------------------------------------------------------------------------
+   1. The rounded corner had nothing to show through it
+   ---------------------------------------------------------------------------
+   Sayed pointed at the top-left corner where the content panel meets the rail:
+   "it is white should be blue."
+
+   `.dashboard-shell-content` already carries `border-radius: 22px 0 0` — the
+   curve was there the whole time. What was missing is a colour behind it. The
+   element the corner actually reveals is `.dashboard-main-canvas`, found by
+   sampling `elementFromPoint` three pixels inside the corner rather than by
+   guessing at the tree, and it was white — so the panel was white on white and
+   the rounding may as well not have existed.
+
+   Painting that canvas the shell blue lets the curve read. Nothing moves and
+   nothing resizes: the only pixels that change are the ones the radius was
+   already cutting away, because the white panel covers the rest of it.
+
+   Scoped to Inventory with `:has()`, since this is where the corner was
+   raised; the other pages already show blue there.
+   --------------------------------------------------------------------------- */
+.dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas {
+  background: #e6ecf5 !important;
+}
+
+/* ---------------------------------------------------------------------------
+   2. The photo panel was white, not light blue
+   ---------------------------------------------------------------------------
+   "white i mean light blue." The white veil over the blue was doing almost all
+   the work, so the panel read as plain white with a blue hint. The veil is now
+   much lighter and stays concentrated in the top-left corner, which is where
+   the brand light comes from — so the panel is properly blue, and the corner
+   is the bright part rather than the whole surface.
+   --------------------------------------------------------------------------- */
+.inventory-workspace .inventory-item-card--photo .inventory-card-body {
+  background:
+    radial-gradient(
+      95% 120% at 0% 0%,
+      rgba(255, 255, 255, 0.82) 0%,
+      rgba(255, 255, 255, 0.42) 38%,
+      rgba(255, 255, 255, 0.12) 70%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgba(223, 231, 244, 0.99) 0%,
+      rgba(223, 231, 244, 0.96) 62%,
+      rgba(223, 231, 244, 0.86) 88%,
+      rgba(223, 231, 244, 0.6) 100%
+    ) !important;
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-body,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-body {
+  background:
+    radial-gradient(
+      95% 120% at 0% 0%,
+      rgba(255, 255, 255, 0.88) 0%,
+      rgba(255, 255, 255, 0.46) 40%,
+      rgba(255, 255, 255, 0.14) 72%,
+      rgba(255, 255, 255, 0) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgba(223, 231, 244, 1) 0%,
+      rgba(223, 231, 244, 0.98) 66%,
+      rgba(223, 231, 244, 0.9) 90%,
+      rgba(223, 231, 244, 0.66) 100%
+    ) !important;
+}
