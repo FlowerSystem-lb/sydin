@@ -28,6 +28,13 @@
 - This plan, shared: https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 - The original production audit, 20 Aug, kept as history:
   https://claude.ai/code/artifact/223456e6-d8a4-46ec-a005-5cd4b4463cde
+- Mobile design, 5 screens, mocked but NOT built:
+  https://claude.ai/code/artifact/8f42f751-b185-48e1-9397-2c428afbbb93
+  Second pass took the landing page's type (Source Serif 4 at 400) and blue
+  (#3977ff → #8357ff), dropped the header bar entirely, and made items square
+  photos two to a row. Open question recorded for later: photos that size show
+  four items per screen instead of seven — browsing rather than scanning, which
+  may be the wrong trade for someone standing in a depot.
 
 Buyer: wholesale accessories depots in Lebanon whose daily problem is not knowing
 what is still in stock. Every status below reflects what was **verified in the
@@ -44,7 +51,7 @@ running application or the live database**, not what the code appears to do.
 | 3 | Survive 500 products | photos done · database done · pagination deferred by Sayed |
 | 4 | The real 500-product test | blocked on pagination |
 | 5 | **Limits and abuse protection** | mostly done — exports hardened, caps already existed; rate limiting needs Supabase settings + Vercel Pro |
-| 6 | Mobile — its own app-shaped design | last, by founder instruction |
+| 6 | Mobile — its own app-shaped design | still last to BUILD, but the design exists: 5 screens mocked 28 Aug, https://claude.ai/code/artifact/8f42f751-b185-48e1-9397-2c428afbbb93 |
 | 7 | Print, PDF, export, domain, Vercel | **print done 27 Aug**; PDF exporters already substantial (1,441 lines for inventory); domain + Vercel Pro are launch steps |
 
 **Phase 3 numbers, measured:** photos averaged 396 kB with the largest at 1.71 MB,
