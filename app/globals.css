@@ -22533,3 +22533,69 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     font-size: 9pt;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Collapsed search: an actual circle, matching the row it sits in
+   ---------------------------------------------------------------------------
+   Sayed sent a crop of it. Measured against its neighbours, four things were
+   off and every one of them made it read as a ghost rather than a control:
+
+     control        size     fill       border
+     Filters        79x36    #fff       rgba(15,23,42,.1)
+     Newest         116x38   #fff       rgba(15,23,42,.1)
+     Grid view      116x38   #fff       rgba(15,23,42,.1)
+     Select items   117x36   #fff       rgba(15,23,42,.1)
+     search         49x42    #f4f7fb    #e6ecf5      <- not square, so not a
+                                                        circle; taller than
+                                                        everything; grey where
+                                                        the row is white; and a
+                                                        fainter line than the
+                                                        row's own hairline.
+
+   The block above intended a 42px circle, but `width: 100%` on the input
+   resolved wider than the 42px wrapper, so the "circle" rendered 49x42 — an
+   oval. Pinning both axes is what actually makes it round; a border-radius of
+   999px on a non-square box never is.
+   --------------------------------------------------------------------------- */
+@media (min-width: 1120px) {
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search,
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search > .relative {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    flex: none !important;
+  }
+
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search .inventory-search-input {
+    width: 38px !important;
+    min-width: 38px !important;
+    height: 38px !important;
+    padding: 0 !important;
+    background: #fff !important;
+    border: 1px solid rgba(15, 23, 42, 0.1) !important;
+  }
+
+  /* Expanding still works: focus or a typed value restores a real field, and
+     the pill radius is right again at that width. */
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:focus-within,
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:has(input:not(:placeholder-shown)),
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:focus-within > .relative,
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:has(input:not(:placeholder-shown)) > .relative {
+    width: 320px !important;
+    min-width: 320px !important;
+  }
+
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:focus-within .inventory-search-input,
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:has(input:not(:placeholder-shown)) .inventory-search-input {
+    width: 100% !important;
+    min-width: 0 !important;
+    padding: 0 14px 0 36px !important;
+  }
+}
