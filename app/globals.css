@@ -22640,3 +22640,25 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: none !important;
   }
 }
+
+/* The brand mark was smaller than the menu icons beneath it.
+
+   Measured in the collapsed rail: mark 32px, nav icons 37px — so the logo,
+   which should lead the rail, was the smallest thing in it. That is what Sayed
+   drew an arrow at, and he was reading a real proportion problem rather than a
+   preference.
+
+   40px clears the nav icons and still leaves ~10px either side of the 61px
+   rail, so it fills the space without touching the edges.
+
+   Written at (0,4,0) inside the 900px query because the value that was winning
+   is `.dashboard-workspace-shell .dashboard-brand-mark { width: 2.35rem
+   !important }` — a plain `.dashboard-brand-mark` rule, even later in the file,
+   loses to it. Same specificity trap as the print stylesheet and the photo
+   card. */
+@media (min-width: 900px) {
+  .dashboard-brand-mark.dashboard-brand-mark.dashboard-brand-mark.dashboard-brand-mark {
+    width: 2.95rem !important;
+    height: 2.95rem !important;
+  }
+}
