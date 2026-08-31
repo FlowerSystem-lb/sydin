@@ -105,18 +105,18 @@ export default function ScannerModal({
 
   return (
     <div className="inventory-modal-overlay fixed inset-0 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-      <div className="my-8 w-full max-w-2xl overflow-hidden rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(15,23,42,0.28)] backdrop-blur-2xl">
-        <div className="flex items-start justify-between gap-4 border-b border-theme p-5 sm:p-6">
+      <div className="scanner-modal-card m-auto flex w-full max-w-xl flex-col overflow-hidden rounded-[20px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(15,23,42,0.28)] backdrop-blur-2xl">
+        <div className="flex flex-none items-start justify-between gap-4 border-b border-theme p-4 sm:p-5">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
               {eyebrow}
             </p>
 
-            <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary">
+            <h2 className="mt-1 text-xl font-semibold tracking-tight text-theme-primary">
               {title}
             </h2>
 
-            <p className="mt-2 max-w-md text-sm leading-6 text-theme-muted">
+            <p className="mt-1.5 max-w-md text-sm leading-6 text-theme-muted">
               {description}
             </p>
           </div>
@@ -143,7 +143,7 @@ export default function ScannerModal({
           </button>
         </div>
 
-        <div className="p-5 sm:p-6">
+        <div className="scanner-modal-body min-h-0 flex-1 overflow-y-auto p-4 sm:p-5">
           {/* On a laptop the phone IS the scanner, so it leads. Offering it
               underneath a failed camera, phrased as "no camera on this
               device?", made the right answer look like the consolation prize.
@@ -162,7 +162,7 @@ export default function ScannerModal({
           )}
 
           {!handheld && (
-            <p className="mt-5 mb-2 text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
+            <p className="mt-5 mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-theme-subtle">
               Or use this device&rsquo;s camera
             </p>
           )}
@@ -203,7 +203,7 @@ export default function ScannerModal({
             <button
               type="button"
               onClick={handleClose}
-              className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-base font-bold text-theme-primary transition hover:bg-theme-hover"
+              className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-base font-semibold text-theme-primary transition hover:bg-theme-hover"
             >
               Close
             </button>
@@ -212,7 +212,7 @@ export default function ScannerModal({
               <button
                 type="button"
                 onClick={handleRetry}
-                className="rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-base font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                className="rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-base font-semibold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
               >
                 Try Again
               </button>

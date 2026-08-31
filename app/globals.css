@@ -22662,3 +22662,32 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     height: 2.95rem !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Scan modal: fit the screen, and stop shouting
+   ---------------------------------------------------------------------------
+   Measured before this: the card was 905px tall in a 746px window, with its top
+   at -80px — so "Scan item" sat above the screen and could not be scrolled to.
+   That is the same failure the shared dialog had (a centred flex child taller
+   than an `overflow-y: auto` parent overflows in both directions, and the top
+   half is unreachable), but this modal is hand-rolled rather than built on
+   DialogShell, so it never got that fix.
+
+   `align-items: flex-start` with `margin: auto` on the card centres it while
+   there is room and pins it to the top when there is not, which is the whole
+   difference. The card then caps at the viewport and scrolls inside itself.
+
+   The camera was 303px of black. It is the secondary option on a computer now,
+   so it does not need a third of the screen.
+   --------------------------------------------------------------------------- */
+.inventory-modal-overlay {
+  align-items: flex-start !important;
+}
+
+.scanner-modal-card {
+  max-height: calc(100dvh - 2rem);
+}
+
+.scanner-modal-body .bg-black {
+  max-height: 200px;
+}
