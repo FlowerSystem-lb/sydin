@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 27 August 2026 (storage · H1/H2 · Inventory F/B/G · two card designs)
+**Last touched:** 27 August 2026 (storage · H1/H2 · cards, quick preview, item page)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -77,14 +77,14 @@ N3 and N4 are really one feature. Of the four, N4 is the most valuable to a real
 |---|---|
 | ~~H1~~ | ✅ **FIXED 27 Aug.** ~~BUG — the Adjust / Quick-view panel opens half off-screen.~~ You must scroll before you can reach "Record Movement". It should fit the screen as it opens and open/close smoothly. **Every page, not just Inventory.** |
 | ~~H2~~ | ✅ **FIXED 27 Aug.** ~~BUG — blurring down the left and right edges~~ of the page when that panel opens. |
-| A | ⚠️ **Already exists, and a separate row would undo the merge you asked for on 26 Aug.** The buttons and ⋯ already sit in the page header. Left as-is — say the word if you still want them on their own row. |
+| ~~A~~ | **Dropped 27 Aug at Sayed's call** ("forget them"). It was already largely moot: the buttons merged into one row on 26 Aug, so a separate in-page header had little left to carry. |
 | ~~B~~ | ✅ **DONE 27 Aug.** Row now reads Filters → sort → view → Select items. "Compact" was a display preference wearing a full label next to the real controls; moved into ⋯ as "Hide stats". |
 | ~~C~~ | ✅ **DONE 27 Aug — two designs, user-switchable.** "Grid view" is the standard card, tightened. "Photo grid" is the Sortly-style one: the picture fills a square card, name and quantity sit on a scrim, and status, category and actions stay hidden until you point at it. Same component, same DOM — only CSS differs, so they cannot drift apart. Switch lives in the existing View dropdown, not a second header. |
-| D | Quick preview — new prototype, more classic; the Activity header needs redesign. |
-| E | Full-page item view — new layout. Oversized words, empty space down the left. |
+| ~~D~~ | ✅ **DONE 27 Aug.** 11 boxes → rows. Quantity was printed twice (top strip and "Stock & Unit") and is now printed once. "Stock & Unit" and "Supplier" were headings over a single row repeating their own label — both gone. Activity is a list, not three cards, and "N/A to N/A" no longer prints on edits that did not touch quantity. Fits one screen including the Adjust form, which used to sit below the fold. |
+| ~~E~~ | ✅ **DONE 27 Aug.** 42 bordered boxes → 24. The two-column layout already existed but was gated above his screen width, and its columns were near-equal so the photo took half the page — now it engages at laptop width with the photo in a rail. `DetailCard` is a row, so one edit fixed 12 call sites. Stock movements are one line (`1 → 2`, then the change) instead of three boxes. Removed: the page describing itself, three sentences explaining what an item code/SKU/barcode is on every item, and the same privacy promise written twice. |
 | ~~F~~ | ✅ **DONE 27 Aug.** Ground is white. Item cards gained a hairline border — they had none, and white-on-white with only a shadow dissolves the grid. Scoped to Inventory so you can judge it before the other pages follow. |
 | ~~G~~ | ✅ **Already done.** The menu already held Import, Export CSV, Export PDF, Export Excel and import/export history. Verified on screen; nothing to build. |
-| S | Dashboard/Overview finished properly, connected to every page, one smart summary. |
+| ~~S~~ | **Dropped 27 Aug at Sayed's call.** Recorded once, not argued: he had earlier wanted this *first*, and the Dashboard is the first screen a new customer sees. Nothing built since blocks it, so it can come back whenever he wants it. |
 
 ### Standing instructions
 
@@ -219,9 +219,10 @@ than speed. Revisit at the same time.
    and type limits. Small, contained, and it is a real hole.
 2. ~~**H1 + H2**~~ — done 27 Aug. One containing-block trap caused both; fixed
    at the shared overlay, so all 12 dialog screens got it at once.
-3. **Inventory sprint** — F, B, G, A; then C/D/E designed together; plus the
-   density control from PDF item 14.
-4. **Dashboard summary (S).**
+3. ~~**Inventory sprint**~~ — B, C, D, E, F and G done 27 Aug. A and S dropped
+   at Sayed's call. The density control from PDF item 14 is the one piece of
+   this group still worth doing, and it is not urgent.
+4. ~~Dashboard summary (S)~~ — dropped at Sayed's call.
 5. **Limits and abuse** — rate limiting, import caps, server-side upload caps.
 6. **Pagination**, then the real 500-product test.
 7. **Print / PDF / export.**
