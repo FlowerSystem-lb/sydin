@@ -22691,3 +22691,80 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .scanner-modal-body .bg-black {
   max-height: 200px;
 }
+
+/* ===========================================================================
+   INVENTORY: one control row, one set of sizes  (audit, 1 Sep 2026)
+   ---------------------------------------------------------------------------
+   Sayed asked for the whole page gone over click by click. Measured across the
+   56 interactive elements, two things were inconsistent and one was missing.
+
+   Sizes. A single row held four heights and three corner radii:
+
+     Add Item · Scan · ⋯      34px   pill
+     Search                   38px   pill
+     Filters · Select items   36px   12px
+     Sort · View              38px   10.2px
+
+   Nothing lined up with anything, which is the same fault as the search circle
+   he photographed — that one was just visible because it was round.
+
+   The rule applied here: everything in the control row is 38px. Shape carries
+   meaning rather than decoration — an ACTION is a pill (Add Item, Scan, ⋯,
+   Search: things that DO something), a CONTROL is a 12px rectangle (Filters,
+   Sort, View, Select items: things that change what you are looking at). That
+   distinction was already 80% present; this makes it exact.
+
+   Chips stay 32px pills: they are a different tier and were already consistent.
+   Card controls unify at 28px/11px — the card menu button was 29px/12px against
+   Adjust and QR at 28px/11px, close enough to look like a mistake rather than a
+   choice.
+   =========================================================================== */
+@media (min-width: 900px) {
+  /* Actions: pills. */
+  .inventory-workspace .inventory-page-actions > a,
+  .inventory-workspace .inventory-page-actions > button {
+    min-height: 38px !important;
+    border-radius: var(--radius-pill) !important;
+  }
+
+  /* Controls: 12px rectangles, matching each other and the search's height.
+     Selectors taken from the live DOM rather than guessed — the first pass
+     used `.inventory-toolbar-main > button`, and none of these are direct
+     children: Filters and Select items are `.inventory-toolbar-button` inside
+     `.inventory-toolbar-actions`, while Sort and View are `.ui-select-trigger`
+     inside a `.ui-select` wrapper. */
+  .inventory-workspace .inventory-toolbar-button,
+  .inventory-workspace .inventory-toolbar-actions .ui-select-trigger {
+    min-height: 38px !important;
+    border-radius: 12px !important;
+  }
+
+  /* The ⋯ button sits in the actions row but is a
+     `.dashboard-action-button-secondary`, so the pill rule above missed it. */
+  .inventory-workspace .inventory-action-more {
+    min-height: 38px !important;
+    border-radius: var(--radius-pill) !important;
+  }
+}
+
+/* Card controls: one height, one radius. */
+.inventory-workspace .inventory-card-menu-button {
+  height: 28px !important;
+  width: 28px !important;
+  border-radius: 11px !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Focus. 44 of 46 controls had no visible focus ring, so tabbing through the
+   page left you with no idea where you were. That is production brief item 23,
+   and it was near-total rather than partial.
+
+   `:focus-visible` rather than `:focus`, so a mouse click does not draw a ring
+   but the keyboard always does.
+   --------------------------------------------------------------------------- */
+.inventory-workspace :is(button, a[href], input, select, [role="button"]):focus-visible,
+.inventory-item-card:focus-visible {
+  outline: 2px solid #2563eb !important;
+  outline-offset: 2px !important;
+  border-radius: inherit;
+}
