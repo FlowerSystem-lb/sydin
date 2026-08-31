@@ -21924,3 +21924,133 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-body::before {
   opacity: 1;
 }
+
+/* ---------------------------------------------------------------------------
+   Photo card panel: light blue glass, lit from the top-left
+   ---------------------------------------------------------------------------
+   Sayed: "can we make them light blue like the header and the corner still
+   white up left."
+
+   So the panel stops being a dark scrim and becomes the same surface as the
+   shell: #e6ecf5 under a white veil, brightest at the top-left. That is not a
+   new idea — it is the decision already recorded for the workspace ground
+   ("one light, from the logo"), applied to the card.
+
+   The consequence is that the text inverts back to dark ink, which means every
+   dark-panel override added earlier today has to come off: white titles, the
+   glass price chip, the tinted status pills, the text shadows. They are undone
+   here rather than deleted above so the reasoning stays readable in one place.
+
+   The trade-off, stated plainly: a light panel has to be more opaque than a
+   dark one. Dark text over a dark photo is unreadable if the photo shows
+   through, so this panel carries more of its own colour and you see less of the
+   picture behind it than the frosted-dark version allowed. That is the cost of
+   the look, not a bug in it.
+   --------------------------------------------------------------------------- */
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-body {
+  background:
+    radial-gradient(
+      120% 140% at 0% 0%,
+      rgba(255, 255, 255, 0.97) 0%,
+      rgba(255, 255, 255, 0.86) 34%,
+      rgba(255, 255, 255, 0.7) 62%,
+      rgba(255, 255, 255, 0.6) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgba(230, 236, 245, 0.99) 0%,
+      rgba(230, 236, 245, 0.96) 62%,
+      rgba(230, 236, 245, 0.86) 88%,
+      rgba(230, 236, 245, 0.6) 100%
+    ) !important;
+}
+
+.inventory-workspace .inventory-item-card--photo:hover .inventory-card-body,
+.inventory-workspace .inventory-item-card--photo:focus-within .inventory-card-body {
+  background:
+    radial-gradient(
+      120% 140% at 0% 0%,
+      rgba(255, 255, 255, 0.99) 0%,
+      rgba(255, 255, 255, 0.9) 36%,
+      rgba(255, 255, 255, 0.74) 64%,
+      rgba(255, 255, 255, 0.64) 100%
+    ),
+    linear-gradient(
+      to top,
+      rgba(230, 236, 245, 1) 0%,
+      rgba(230, 236, 245, 0.98) 66%,
+      rgba(230, 236, 245, 0.9) 90%,
+      rgba(230, 236, 245, 0.66) 100%
+    ) !important;
+  -webkit-backdrop-filter: blur(18px) saturate(125%);
+  backdrop-filter: blur(18px) saturate(125%);
+}
+
+/* The hairline flips: a white edge is invisible against a white panel, so the
+   seam between photo and panel is drawn in the panel's own blue instead. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-body::before {
+  background: linear-gradient(
+    to right,
+    rgba(148, 168, 199, 0) 0%,
+    rgba(148, 168, 199, 0.55) 22%,
+    rgba(148, 168, 199, 0.55) 78%,
+    rgba(148, 168, 199, 0) 100%
+  ) !important;
+}
+
+/* Text returns to the app's ink. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-title,
+.inventory-workspace .inventory-item-card--photo .inventory-card-quantity {
+  color: var(--ink) !important;
+  text-shadow: none !important;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-code,
+.inventory-workspace .inventory-item-card--photo .inventory-card-facts {
+  color: var(--ink-muted) !important;
+}
+
+/* The price is a normal price again, not a glass chip on a dark panel. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-value {
+  background: transparent !important;
+  border: 0 !important;
+  color: var(--ink) !important;
+  padding: 0 !important;
+}
+
+/* And the status pills go back to the light-card tones they were designed for,
+   which is the whole reason they looked wrong on the dark panel. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-status--success {
+  background: #ecfdf5 !important;
+  color: #047857 !important;
+  box-shadow: none;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-status--warning {
+  background: #fffbeb !important;
+  color: #b45309 !important;
+  box-shadow: none;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-status--danger {
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  box-shadow: none;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-footer button {
+  color: var(--ink) !important;
+}
+
+.inventory-workspace .inventory-item-card--photo .inventory-card-footer button:hover {
+  background: rgba(11, 18, 32, 0.06) !important;
+}
+
+/* The action menu button sat on a dark scrim; on a light panel it needs the
+   opposite treatment or it disappears into the photo. */
+.inventory-workspace .inventory-item-card--photo .inventory-card-menu-button {
+  background: rgba(255, 255, 255, 0.88) !important;
+  color: var(--ink) !important;
+  border-color: rgba(148, 168, 199, 0.5) !important;
+}
