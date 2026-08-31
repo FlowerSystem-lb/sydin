@@ -458,21 +458,28 @@ export default function ItemDetailsSlideOver({
     const empty = { identity: [], stock: [], supplier: [], pricing: [], tracking: [] };
     if (!item) return empty;
 
+    // Unit and Supplier moved up here. Each was previously a group of exactly
+    // one row, under a heading that repeated the row's own label — "Supplier"
+    // above "Supplier: No supplier". A heading that says the same word as the
+    // single row beneath it is not organisation, it is an extra line to read.
     const identity = [
       { label: "Category", value: resolveCategoryDisplay(item, assignedCategory) },
       { label: "Depot", value: formatDepotLabel(assignedDepot) },
+      { label: "Unit", value: unitLabel },
+      { label: "Supplier", value: assignedSupplier?.name || "No supplier" },
       { label: "Created", value: formatDateTime(item.created_at) },
     ].filter((field) => field.value);
 
-    const stock = [
-      { label: "Quantity", value: quantityLabel },
-      { label: "Unit", value: unitLabel },
-      { label: "Minimum stock", value: String(itemLowStockThreshold) },
-    ].filter((field) => field.value);
+    // Emptied deliberately. Quantity and Minimum stock are already the two big
+    // numbers in the strip at the top of the panel ("Current quantity" and
+    // "Threshold"), so listing them again printed the same facts twice on every
+    // item. Unit is the only thing left, and one row does not deserve a heading
+    // of its own — it joins the identity list below.
+    const stock: { label: string; value: string }[] = [];
 
-    const supplier = [
-      { label: "Supplier", value: assignedSupplier?.name || "No supplier" },
-    ].filter((field) => field.value);
+    // Emptied for the same reason as `stock`: it was one row under a heading
+    // repeating that row's own label. The supplier now sits in `identity`.
+    const supplier: { label: string; value: string }[] = [];
 
     const pricing = [
       { label: "Cost price", value: costPrice || "" },
@@ -507,8 +514,6 @@ export default function ItemDetailsSlideOver({
     costPrice,
     currencyCode,
     item,
-    itemLowStockThreshold,
-    quantityLabel,
     sellingPrice,
     stockCostValue,
     stockRetailValue,
@@ -1074,12 +1079,20 @@ export default function ItemDetailsSlideOver({
                                 <span>{event.quantityAfter}</span>
                               </div>
                             ) : (
-                              <div className="item-details-activity-values">
-                                <span className="text-theme-secondary">
-                                  {event.quantityBefore ?? "N/A"} to{" "}
-                                  {event.quantityAfter ?? "N/A"}
-                                </span>
-                              </div>
+                              // "N/A to N/A" was printed against every edit that
+                              // did not touch quantity — which is most of them.
+                              // It reads as a fault in the record rather than
+                              // what it is: an edit that changed something else.
+                              // Nothing is the honest answer, so nothing is shown.
+                              event.quantityBefore != null ||
+                              event.quantityAfter != null ? (
+                                <div className="item-details-activity-values">
+                                  <span className="text-theme-secondary">
+                                    {event.quantityBefore ?? "—"} to{" "}
+                                    {event.quantityAfter ?? "—"}
+                                  </span>
+                                </div>
+                              ) : null
                             )}
                           </article>
                         ))}

@@ -22124,3 +22124,96 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
       rgba(223, 231, 244, 0.66) 100%
     ) !important;
 }
+
+/* ===========================================================================
+   QUICK PREVIEW (D) — facts as rows, not boxes
+   ---------------------------------------------------------------------------
+   Founder note D: the quick preview "need new prototypes UI/UX and Organize on
+   more classic."
+
+   Measured on the panel before this change: 11 bordered boxes for 11 facts,
+   laid out two per row, so any group with an odd number left a hole — Created
+   sat alone, Minimum stock sat alone, Supplier sat alone. Each box also carried
+   its own tiny uppercase label, directly under a section heading in the same
+   tiny uppercase style, so the eye met the same treatment twice before reaching
+   a value.
+
+   This is the same fault the item card had before Phase 2 (65 boxes, five pills
+   per card) and the same fix: a bordered box is a container, and a label with a
+   value next to it is not a container — it is a row. The public QR page was
+   rebuilt this way already; this brings the panel into line with it, which also
+   means a customer and its owner now read the same item in the same shape.
+   =========================================================================== */
+
+.item-details-field {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  display: grid !important;
+  grid-template-columns: minmax(6.5rem, 40%) minmax(0, 1fr);
+  align-items: baseline;
+  gap: 0 0.9rem !important;
+  padding: 0.42rem 0 !important;
+  border-bottom: 1px solid var(--border-hairline) !important;
+}
+
+/* One column, so a group with an odd number of facts no longer leaves a hole
+   halfway down the panel. Rows are cheap; holes are not. */
+.item-details-field-grid {
+  grid-template-columns: minmax(0, 1fr) !important;
+  gap: 0 !important;
+}
+
+.item-details-field dt {
+  letter-spacing: 0 !important;
+  text-transform: none !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
+  color: var(--ink-muted) !important;
+}
+
+.item-details-field dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 500;
+  color: var(--ink);
+}
+
+/* The section heading is the only place that needs to shout, and it does not
+   need to shout either — it just needs to be clearly a heading and not a value. */
+.item-details-group-title {
+  letter-spacing: 0.06em !important;
+  font-size: 0.8rem !important;
+  color: var(--ink-muted) !important;
+  margin-bottom: 0.15rem !important;
+}
+
+.item-details-group + .item-details-group {
+  margin-top: 1.15rem;
+}
+
+/* Activity was three bordered cards for three events. A history is a list. */
+/* The real selector is `.item-details-activity-list article` — the first
+   version of this rule guessed three class names that do not exist, so the
+   Activity tab kept its boxes while the Details tab lost them. Found by
+   reading the markup, which is what should have happened first. */
+.item-details-activity-list article {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  border-bottom: 1px solid var(--border-hairline) !important;
+  padding: 0.62rem 0 !important;
+}
+
+.item-details-activity-list {
+  gap: 0 !important;
+}
+
+.item-details-notes {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
