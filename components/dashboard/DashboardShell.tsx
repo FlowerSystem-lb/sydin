@@ -189,6 +189,15 @@ function AccountAvatar({
 }) {
   const sizeClass = size === "sm" ? "h-9 w-9" : "h-10 w-10";
 
+  // The fallback covered "no logo set" but not "logo set and failed to load",
+  // so a logo the browser could not fetch left a broken image in the header —
+  // which is what Sayed photographed. A URL existing is not the same as an
+  // image arriving: the file can be deleted from storage, the network can drop
+  // it, or (as on his machine) the optimiser can fail to fetch it over TLS.
+  // Treat a failure as "no logo" and show the SydIN mark instead.
+  const [logoFailed, setLogoFailed] = useState(false);
+  const showLogo = Boolean(logoUrl) && !logoFailed;
+
   return (
     <span
       className={cx(
@@ -196,12 +205,13 @@ function AccountAvatar({
         sizeClass
       )}
     >
-      {logoUrl ? (
+      {showLogo ? (
         <Image
           src={logoUrl}
           alt={businessName}
           fill
           sizes={size === "sm" ? "36px" : "40px"}
+          onError={() => setLogoFailed(true)}
           className="bg-white object-contain p-1"
         />
       ) : (
