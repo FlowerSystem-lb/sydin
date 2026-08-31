@@ -22599,3 +22599,44 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     padding: 0 14px 0 36px !important;
   }
 }
+
+/* The magnifier inside the collapsed search circle sat about 6px high.
+
+   Four placements failed the same way, which is the useful part: percentages,
+   then explicit pixels, then pixels with every other offset reset, then flex
+   centring — all left the icon roughly five pixels from the top of a 38px box
+   that measures top 86, height 38, while the icon computed `top: 12px` with no
+   transform. `left` obeyed every time; `top` never did. Whatever box the
+   vertical offset resolves against for this SVG child, it is not the one being
+   painted, and hunting for which is worth less than removing the offset.
+
+   `inset: 0` with `margin: auto` did not fix it either, and that attempt is
+   what finally pinned the behaviour down. The browser resolved those auto
+   margins to 11.5px a side — correct for a 15px icon in a 38px box — and then
+   painted the icon 4px from the top anyway. With explicit offsets the same
+   split shows even more plainly: `left: 11.5px` lands at exactly 11.5, while
+   `top: 11.5px` lands at 4. Identical values, one axis obeys and the other is
+   7.5px out, reproducibly, with the containing block measuring top 86.3,
+   height 38, no padding and no border.
+
+   I could not explain that, so this compensates for it instead: `top: 19px`
+   renders at 11.5px, which is centre. That is an empirical number, not a
+   derived one, and it is only safe because it is checked — if this control's
+   size changes, re-measure rather than recomputing (38 - 15) / 2 and trusting
+   it. Verified in both states: collapsed the icon sits 11.5px on both axes;
+   expanded to 320px it returns to the leading edge and search still filters. */
+@media (min-width: 1120px) {
+  .dashboard-shell .inventory-workspace
+    .inventory-toolbar-search:not(:focus-within):not(:has(input:not(:placeholder-shown)))
+    svg {
+    position: absolute !important;
+    top: 19px !important;
+    left: 11.5px !important;
+    right: auto !important;
+    bottom: auto !important;
+    margin: 0 !important;
+    width: 15px !important;
+    height: 15px !important;
+    transform: none !important;
+  }
+}
