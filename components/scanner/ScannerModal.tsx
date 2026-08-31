@@ -1,9 +1,11 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import BarcodeScannerView, {
   type ScannerViewStatus,
 } from "@/components/scanner/BarcodeScannerView";
+import PhonePairingPanel from "@/components/scanner/PhonePairingPanel";
+import { supabase } from "@/app/lib/supabase";
 
 const INITIAL_STATUS: ScannerViewStatus = {
   starting: false,
@@ -12,8 +14,23 @@ const INITIAL_STATUS: ScannerViewStatus = {
 };
 
 /**
- * The quick-scan modal used by the Inventory workspace. Chrome + status only —
- * the camera lifecycle lives in BarcodeScannerView.
+ * The quick-scan modal used by the Inventory workspace and the top bar.
+ * Chrome + status only — the camera lifecycle lives in BarcodeScannerView.
+ *
+ * Sayed, 31 Aug: "why is there a scan button if we are on laptop, it is
+ * useless." He was right about this modal, and the answer was already in the
+ * codebase. The Scanner PAGE pairs a phone — it shows a QR code, the phone
+ * opens /dashboard/scanner/phone, and every code it scans arrives back here
+ * through the same decode path as a local scan. Its own comment says why:
+ * "Laptops rarely have a usable barcode camera."
+ *
+ * This modal never offered that, so the Scan button on Inventory opened a
+ * laptop webcam and nothing else — which is the useless experience he means.
+ * The fix is not to hide the button or apologise in a dialog; it is to offer
+ * the phone here too, the way the page already does.
+ *
+ * The user id is read here rather than passed in, so both callers get it
+ * without touching their code.
  */
 export default function ScannerModal({
   open,
@@ -32,9 +49,26 @@ export default function ScannerModal({
 }) {
   const [{ starting, status, error }, setStatus] =
     useState<ScannerViewStatus>(INITIAL_STATUS);
+  const [userId, setUserId] = useState<string | null>(null);
   // Bumping this remounts the scanner view, which restarts the camera from a
   // clean state after a failure (replaces the previous close/reopen dance).
   const [retryNonce, setRetryNonce] = useState(0);
+
+  // Only while the modal is open: no reason to ask who is signed in for a
+  // dialog nobody has opened.
+  useEffect(() => {
+    if (!open || userId) return;
+
+    let cancelled = false;
+
+    void supabase.auth.getUser().then(({ data }) => {
+      if (!cancelled) setUserId(data.user?.id ?? null);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, userId]);
 
   const handleStatusChange = useCallback((next: ScannerViewStatus) => {
     setStatus(next);
@@ -116,6 +150,15 @@ export default function ScannerModal({
               </p>
             )}
           </div>
+
+          {/* The same panel the Scanner page uses, feeding the same onDecode,
+              so a code scanned on the phone behaves exactly like one scanned
+              here. */}
+          {userId && (
+            <div className="mt-4 rounded-2xl border border-theme bg-theme-surface p-4">
+              <PhonePairingPanel userId={userId} onBarcodeReceived={onDecode} />
+            </div>
+          )}
 
           <div className="mt-4 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
             <button
