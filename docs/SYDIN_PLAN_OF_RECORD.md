@@ -209,8 +209,11 @@ path helper existed — an ownership check on reads would blank those items.
   Pick Sheet" button wired straight to `window.print()`. There is now a real
   print stylesheet plus a print-only document header (business name, date,
   branding) in the shell. The PDF exporters were already substantial and are not
-  the weak point; **exports respecting the current filters (59) is still
-  unchecked.**
+  the weak point. **Item 59 checked and fixed 27 Aug:** the PDF export already
+  asked (selected / filtered / all), but CSV and Excel defaulted to every row in
+  the account while the grid showed the filtered set — filter to 4 low-stock
+  items, click Export CSV, get all 10. Both now default to what is on screen and
+  the menu says so: "Export CSV (4 filtered)".
 - **Domain (53)** and **central business contact (54)**.
 - **Accessibility audit (23)**.
 
@@ -255,7 +258,7 @@ than speed. Revisit at the same time.
 4. ~~Dashboard summary (S)~~ — dropped at Sayed's call.
 5. **Limits and abuse** — rate limiting, import caps, server-side upload caps.
 6. **Pagination**, then the real 500-product test.
-7. ~~**Print / PDF / export**~~ — print done 27 Aug. Still open: whether exports respect the filters you have on screen (brief item 59).
+7. ~~**Print / PDF / export**~~ — done 27 Aug. Print stylesheet, and CSV/Excel now follow the on-screen filters.
 8. **Domain, Vercel Pro, backups, final QA.**
 9. **Mobile.**
 10. **N1**, then N2–N4 after launch.

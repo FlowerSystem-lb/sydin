@@ -1225,7 +1225,15 @@ export default function InventoryPage() {
     }
   };
 
-  const exportInventoryCsv = (itemsToExport = items) => {
+  // Production brief item 59: "Exports should respect current filters,
+  // categories, and selections unless the UX explicitly indicates otherwise."
+  // These two defaulted to `items` — every row in the account — while the grid
+  // showed `visibleItems`. So filtering to 4 low-stock items and clicking
+  // Export CSV silently produced all 10. The PDF export already got this right:
+  // it asks for selected / filtered / all. These now default to what is on
+  // screen, and the menu says so, because a changed default that stays silent
+  // is its own kind of bug.
+  const exportInventoryCsv = (itemsToExport = visibleItems) => {
     if (loadingItems || itemsToExport.length === 0) return;
 
     try {
@@ -1470,7 +1478,7 @@ export default function InventoryPage() {
     }
   };
 
-  const exportInventoryReportExcel = async (itemsToExport = items) => {
+  const exportInventoryReportExcel = async (itemsToExport = visibleItems) => {
     if (!canExportExcel) {
       setLockedFeature({
         feature: "Excel inventory export",
@@ -2559,7 +2567,9 @@ export default function InventoryPage() {
                       className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
                     >
                       <UiIcon name="file" className="h-4 w-4" />
-                      Export CSV
+                      {visibleItems.length === items.length
+                        ? "Export CSV"
+                        : `Export CSV (${visibleItems.length} filtered)`}
                     </button>
                     <button
                       type="button"
@@ -2589,7 +2599,9 @@ export default function InventoryPage() {
                         ? "Export Excel (locked)"
                         : isExportingExcel
                           ? "Exporting Excel..."
-                          : "Export Excel"}
+                          : visibleItems.length === items.length
+                            ? "Export Excel"
+                            : `Export Excel (${visibleItems.length} filtered)`}
                     </button>
                     <div className="my-1 border-t border-slate-200" />
                     <Link
