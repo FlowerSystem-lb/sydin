@@ -50,6 +50,23 @@ export default function ScannerModal({
   const [{ starting, status, error }, setStatus] =
     useState<ScannerViewStatus>(INITIAL_STATUS);
   const [userId, setUserId] = useState<string | null>(null);
+  // Which input this device is actually good at. `pointer: coarse` is true for
+  // a finger and false for a mouse, which is a better question than screen
+  // width: it asks "is this a thing you hold and point at a carton?" A tablet
+  // answers yes and should lead with its camera; a laptop answers no however
+  // wide its screen is.
+  const [handheld, setHandheld] = useState(true);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+
+    const query = window.matchMedia("(pointer: coarse)");
+    const sync = () => setHandheld(query.matches);
+
+    sync();
+    query.addEventListener("change", sync);
+    return () => query.removeEventListener("change", sync);
+  }, []);
   // Bumping this remounts the scanner view, which restarts the camera from a
   // clean state after a failure (replaces the previous close/reopen dance).
   const [retryNonce, setRetryNonce] = useState(0);
@@ -127,6 +144,29 @@ export default function ScannerModal({
         </div>
 
         <div className="p-5 sm:p-6">
+          {/* On a laptop the phone IS the scanner, so it leads. Offering it
+              underneath a failed camera, phrased as "no camera on this
+              device?", made the right answer look like the consolation prize.
+              On a handheld the camera leads, because there the device in your
+              hand is already the right tool and pairing it to itself is
+              nonsense. */}
+          {!handheld && userId && (
+            <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+              <PhonePairingPanel
+                userId={userId}
+                onBarcodeReceived={onDecode}
+                eyebrow="Recommended on a computer"
+                heading="Scan with your phone"
+              />
+            </div>
+          )}
+
+          {!handheld && (
+            <p className="mt-5 mb-2 text-xs font-bold uppercase tracking-[0.16em] text-theme-subtle">
+              Or use this device&rsquo;s camera
+            </p>
+          )}
+
           <BarcodeScannerView
             key={retryNonce}
             active={open}
@@ -151,10 +191,9 @@ export default function ScannerModal({
             )}
           </div>
 
-          {/* The same panel the Scanner page uses, feeding the same onDecode,
-              so a code scanned on the phone behaves exactly like one scanned
-              here. */}
-          {userId && (
+          {/* Handheld: the camera led, so pairing sits below as the genuine
+              fallback it is there. */}
+          {handheld && userId && (
             <div className="mt-4 rounded-2xl border border-theme bg-theme-surface p-4">
               <PhonePairingPanel userId={userId} onBarcodeReceived={onDecode} />
             </div>

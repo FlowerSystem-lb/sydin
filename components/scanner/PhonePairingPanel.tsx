@@ -9,6 +9,10 @@ interface PhonePairingPanelProps {
   userId: string;
   /** Called with each barcode the paired phone sends. */
   onBarcodeReceived: (barcode: string) => void;
+  /** On a laptop this is the main way to scan, not a fallback — so the caller
+      sets the wording rather than the panel assuming it is a consolation. */
+  eyebrow?: string;
+  heading?: string;
 }
 
 /**
@@ -22,6 +26,8 @@ interface PhonePairingPanelProps {
 export default function PhonePairingPanel({
   userId,
   onBarcodeReceived,
+  eyebrow = "No camera on this device?",
+  heading = "Use your phone as the scanner",
 }: PhonePairingPanelProps) {
   // Lazy init rather than an effect: the QR block only renders once the async
   // pairing has resolved, which is after hydration, so there is no SSR/client
@@ -53,10 +59,10 @@ export default function PhonePairingPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-            No camera on this device?
+            {eyebrow}
           </p>
           <h3 className="mt-1 text-base font-black text-theme-primary">
-            Use your phone as the scanner
+            {heading}
           </h3>
         </div>
         <span
