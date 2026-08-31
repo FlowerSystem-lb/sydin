@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import {
   calculateInventoryValue,
   getEffectiveItemLowStockThreshold,
@@ -511,6 +512,10 @@ export async function exportInventoryExcel({
         ? "Image available"
         : "No image";
 
+    // Every customer-typed value in this array goes through the formula guard
+    // below. Excel is the whole point of this file, so a name like
+    // `=WEBSERVICE(...)` would run on the machine of whoever opens it — often
+    // an accountant or a supplier, not the person who typed it.
     row.values = [
       imageLabel,
       item.id,
@@ -532,7 +537,7 @@ export async function exportInventoryExcel({
       calculateInventoryValue(item.quantity, item.sellingPrice) ?? "",
       item.minStockLevel ?? "",
       item.barcode || "",
-    ];
+    ].map(neutralizeSpreadsheetFormula);
     row.height = thumbnail ? 42 : 28;
 
     row.eachCell({ includeEmpty: true }, (cell, columnNumber) => {

@@ -43,7 +43,7 @@ running application or the live database**, not what the code appears to do.
 | 2 | Design language — one type scale, one surface rule | done |
 | 3 | Survive 500 products | photos done · database done · pagination deferred by Sayed |
 | 4 | The real 500-product test | blocked on pagination |
-| 5 | **Limits and abuse protection** | not started — **bigger than thought, see D** |
+| 5 | **Limits and abuse protection** | mostly done — exports hardened, caps already existed; rate limiting needs Supabase settings + Vercel Pro |
 | 6 | Mobile — its own app-shaped design | last, by founder instruction |
 | 7 | Print, PDF, export, domain, Vercel | not started |
 
@@ -173,10 +173,33 @@ path helper existed — an ownership check on reads would blank those items.
 
 ### Not started, and genuinely needed before launch
 
-- **Rate limiting (33) and bot protection (34).** Nothing exists. Login, signup,
-  password reset, import, export and PDF generation are all unthrottled.
-- **CSV/Excel import limits (36, 37, 38).** No row cap. A large file can create
-  unlimited records.
+- ~~**CSV/Excel import limits (36, 37, 38).** No row cap. A large file can create
+  unlimited records.~~ **This was wrong.** Checked the code on 27 Aug: the
+  import already caps the file at 5 MB, the sheet at 1,000 rows, and each photo
+  at 5 MB, and it refuses an import that would push the account past its plan.
+  Better still, two database triggers enforce caps where the browser cannot be
+  trusted at all — `trg_enforce_plan_item_limit` on `inventory` and
+  `pick_lists_enforce_active_limit` — both verified enabled.
+
+- **Spreadsheet formula injection (35, 36) — FIXED 27 Aug.** This was the real
+  hole in the exports, and it was in all four of them. A product name beginning
+  `=`, `+`, `-` or `@` is executed as a formula by Excel and Google Sheets. It
+  is stored harmlessly, exported correctly, and then runs on the machine of
+  whoever opens the file — an accountant or a supplier, not the person who typed
+  it. `app/lib/exportSafety.ts` now neutralises it for the inventory CSV, the
+  pick-list CSV, the reports CSV and the Excel export.
+
+- **Rate limiting (33) and bot protection (34) — cannot honestly be fixed in
+  this codebase, and should not be faked.** The browser talks to Supabase
+  directly; there is no server of ours in between except three admin routes. A
+  limit written in the app would run in the browser, on the attacker's own
+  machine, and could be removed with the developer console. The three places
+  that can actually enforce it:
+  1. **Supabase Auth rate limits** — built in, set in the dashboard. Covers
+     sign-in, sign-up, password reset and email sends. **Sayed's to set.**
+  2. **Vercel WAF and bot protection** — needs Pro, so this lands with the
+     launch upgrade rather than now.
+  3. **Database triggers** — already doing the heavy lifting, above.
 - **Backups and recovery (46).** Not reviewed. The PDF is blunt about not launching
   a SaaS without one.
 - **Load testing (50)** and the **500-product test (30)**.

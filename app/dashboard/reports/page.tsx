@@ -1,4 +1,5 @@
 "use client";
+import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -258,7 +259,7 @@ function formatCurrency(value: number, currencyCode: string) {
 }
 
 function csvEscape(value: string | number | null | undefined) {
-  const text = String(value ?? "");
+  const text = String(neutralizeSpreadsheetFormula(value) ?? "");
   return /[",\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
 }
 

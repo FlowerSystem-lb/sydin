@@ -1,4 +1,5 @@
 "use client";
+import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -597,7 +598,7 @@ export default function PickListDetailPage() {
       .map((row) =>
         row
           .map((value) => {
-            const text = String(value ?? "");
+            const text = String(neutralizeSpreadsheetFormula(value) ?? "");
             return /[",\r\n]/.test(text)
               ? `"${text.replace(/"/g, '""')}"`
               : text;

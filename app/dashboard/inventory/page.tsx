@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import {
   createProductImagePath,
   getImageValidationError,
@@ -411,7 +412,10 @@ function InventoryThumbnail({
 }
 
 function escapeCsvValue(value: string | number | null | undefined) {
-  const stringValue = String(value ?? "");
+  // Two jobs, both required. neutralizeSpreadsheetFormula stops Excel executing
+  // a cell that begins with = + - @; the quoting below keeps the file
+  // parseable. This function previously did only the second.
+  const stringValue = String(neutralizeSpreadsheetFormula(value) ?? "");
 
   if (/[",\r\n]/.test(stringValue)) {
     return `"${stringValue.replace(/"/g, '""')}"`;
