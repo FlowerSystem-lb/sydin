@@ -46,6 +46,7 @@ import {
   normalizeCurrencyCode,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
+import { rememberRecentItem } from "@/app/lib/globalSearch";
 import { supabase } from "@/app/lib/supabase";
 import {
   getSuppliersForUser,
@@ -423,6 +424,10 @@ export default function ItemDetailsPage() {
         const loadedItem = (data?.[0] as Item | undefined) || null;
 
         setItem(loadedItem);
+        // Opening an item is what makes it recent — not searching for one.
+        // Recording it here means the search's empty state can offer the thing
+        // you were just looking at, however you got to it.
+        if (loadedItem) rememberRecentItem(loadedItem);
         setBusinessSettings(settings);
         setDepots(loadedDepots);
         setSubscription(loadedSubscription);

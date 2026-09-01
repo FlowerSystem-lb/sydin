@@ -76,7 +76,27 @@ export interface RecentRoute {
   savedAt: string;
 }
 
+/**
+ * Recently opened ITEMS, kept separately from recent routes.
+ *
+ * `getSafeRecentRoutes` filters to STATIC_ROUTES, so an item page could never
+ * appear there however often you opened it — which is why the empty search
+ * offered pages you rarely need and never the product you were just looking at.
+ * For an inventory app that is the wrong way round: the fastest path is usually
+ * the thing you had open ten minutes ago.
+ *
+ * Stored per browser, like the other two lists. No server involved.
+ */
+export interface RecentItem {
+  id: number;
+  name: string;
+  code: string;
+  href: string;
+  savedAt: string;
+}
+
 export const RECENT_ROUTES_STORAGE_KEY = "sydin:global-search-recent-routes";
+export const RECENT_ITEMS_STORAGE_KEY = "sydin:global-search-recent-items";
 export const RECENT_QUERIES_STORAGE_KEY = "sydin:global-search-recent-queries";
 export const SEARCH_MIN_LENGTH = 2;
 export const SEARCH_DEBOUNCE_MS = 180;
@@ -299,6 +319,44 @@ export function rememberRecentRoute(result: SearchResult) {
     window.localStorage.setItem(RECENT_ROUTES_STORAGE_KEY, JSON.stringify(next));
   } catch {
     // Recent route memory is optional.
+  }
+}
+
+export function getSafeRecentItems(): RecentItem[] {
+  try {
+    const raw = window.localStorage.getItem(RECENT_ITEMS_STORAGE_KEY);
+    const parsed = raw ? (JSON.parse(raw) as RecentItem[]) : [];
+
+    return parsed
+      .filter((item) => item && typeof item.id === "number" && item.name)
+      .slice(0, 5);
+  } catch {
+    return [];
+  }
+}
+
+export function rememberRecentItem(item: {
+  id: number;
+  name: string;
+  item_code?: string | null;
+  sku?: string | null;
+}) {
+  try {
+    const current = getSafeRecentItems().filter((entry) => entry.id !== item.id);
+    const next: RecentItem[] = [
+      {
+        id: item.id,
+        name: item.name,
+        code: item.item_code || item.sku || "",
+        href: `/dashboard/inventory/${item.id}`,
+        savedAt: new Date().toISOString(),
+      },
+      ...current,
+    ].slice(0, 5);
+
+    window.localStorage.setItem(RECENT_ITEMS_STORAGE_KEY, JSON.stringify(next));
+  } catch {
+    // Recent item memory is optional, exactly like the other two lists.
   }
 }
 

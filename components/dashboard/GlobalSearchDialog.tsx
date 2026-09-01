@@ -11,11 +11,13 @@ import {
   SEARCH_MIN_LENGTH,
   clearRecentQueries,
   getSafeRecentQueries,
+  getSafeRecentItems,
   getSafeRecentRoutes,
   groupResults,
   matchesQuickAction,
   rememberRecentQuery,
   rememberRecentRoute,
+  type RecentItem,
   type RecentRoute,
   type SearchGroup,
   type SearchResult,
@@ -57,6 +59,7 @@ export default function GlobalSearchDialog({
   const [activeIndex, setActiveIndex] = useState(0);
   const [activeGroup, setActiveGroup] = useState<"All" | SearchGroup>("All");
   const [recentRoutes, setRecentRoutes] = useState<RecentRoute[]>([]);
+  const [recentItems, setRecentItems] = useState<RecentItem[]>([]);
   const [recentQueries, setRecentQueries] = useState<string[]>([]);
   const trimmedQuery = query.trim();
   const isSearching = trimmedQuery.length >= SEARCH_MIN_LENGTH;
@@ -79,6 +82,18 @@ export default function GlobalSearchDialog({
   );
 
   const emptyStateResults = useMemo(() => {
+    // Items first: on an inventory tool the thing you had open ten minutes ago
+    // beats a page you can reach from the sidebar anyway.
+    const recentItemResults: SearchResult[] = recentItems.map((item) => ({
+      id: `recent-item-${item.id}`,
+      group: "Items",
+      title: item.name,
+      subtitle: item.code || "Recently opened",
+      chip: "Recent",
+      href: item.href,
+      keywords: `${item.name} ${item.code}`,
+    }));
+
     const recentResults: SearchResult[] = recentRoutes.map((route) => ({
       id: `recent-${route.href}`,
       group: "Pages",
@@ -89,8 +104,8 @@ export default function GlobalSearchDialog({
       keywords: route.label,
     }));
 
-    return [...recentResults, ...QUICK_ACTIONS];
-  }, [recentRoutes]);
+    return [...recentItemResults, ...recentResults, ...QUICK_ACTIONS];
+  }, [recentItems, recentRoutes]);
 
   const visibleResults = isSearching
     ? [...results, ...staticQuickResults]
@@ -137,6 +152,7 @@ export default function GlobalSearchDialog({
 
     const frame = window.requestAnimationFrame(() => {
       setRecentRoutes(getSafeRecentRoutes());
+      setRecentItems(getSafeRecentItems());
       setRecentQueries(getSafeRecentQueries());
       inputRef.current?.scrollIntoView({ behavior: "auto", block: "center" });
       inputRef.current?.focus();
