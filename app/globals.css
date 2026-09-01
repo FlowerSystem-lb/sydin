@@ -22783,22 +22783,97 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 /* The unit picker sits in the card's detail slot — it says WHICH stock the
-   number above it counts, so it belongs with the number. Styled as text with a
-   caret rather than a form control: it is a label you can change, not a field
-   to fill in. */
-.inventory-stat-unit-select {
-  appearance: none;
-  border: 0;
-  background: transparent;
-  padding: 0 1.1rem 0 0;
-  font: inherit;
-  color: var(--ink-muted);
-  cursor: pointer;
-  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2364748b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right center;
+   number above it counts, so it belongs with the number rather than in the
+   toolbar. It is the app's own Select, so it inherits the menu styling and the
+   open animation; only the trigger is scaled down, because a toolbar-sized
+   control would out-weigh the figure it describes. */
+.inventory-stat-unit-select .ui-select-trigger {
+  min-height: 0 !important;
+  height: auto !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  font-size: 0.85rem !important;
+  font-weight: 400 !important;
+  color: var(--ink-muted) !important;
+  gap: 0.3rem !important;
 }
 
-.inventory-stat-unit-select:hover {
-  color: var(--ink);
+.inventory-stat-unit-select .ui-select-trigger:hover {
+  color: var(--ink) !important;
+  background: transparent !important;
+}
+
+
+/* ---------------------------------------------------------------------------
+   Select menus: give them the motion the rest of the app already has
+   ---------------------------------------------------------------------------
+   Sayed asked for "more motion frames" on the unit picker. Measured first:
+   `.ui-select-options` had `animation-name: none` — the menu simply appeared.
+   Dialogs and sheets in SydIN animate (`glass-pop-in`), select menus never did.
+
+   So this is not a flourish for one control: it is the shared select finally
+   behaving like every other surface, which means Sort and View get it too.
+
+   The rows stagger 18ms apart. Small enough that it reads as one menu arriving
+   rather than a list being dealt out, and capped at eight rows so a long list
+   does not end with a row that visibly lags.
+   --------------------------------------------------------------------------- */
+@keyframes ui-select-open {
+  from {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes ui-select-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.ui-select-options {
+  animation: ui-select-open 170ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  transform-origin: top center;
+}
+
+.ui-select-options [role="option"] {
+  animation: ui-select-row-in 190ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.ui-select-options [role="option"]:nth-child(1) { animation-delay: 30ms; }
+.ui-select-options [role="option"]:nth-child(2) { animation-delay: 48ms; }
+.ui-select-options [role="option"]:nth-child(3) { animation-delay: 66ms; }
+.ui-select-options [role="option"]:nth-child(4) { animation-delay: 84ms; }
+.ui-select-options [role="option"]:nth-child(5) { animation-delay: 102ms; }
+.ui-select-options [role="option"]:nth-child(6) { animation-delay: 120ms; }
+.ui-select-options [role="option"]:nth-child(7) { animation-delay: 138ms; }
+.ui-select-options [role="option"]:nth-child(n + 8) { animation-delay: 156ms; }
+
+/* The caret turns over when the menu is open — the one bit of state the
+   trigger can show without any extra chrome. */
+.ui-select-trigger svg {
+  transition: transform 180ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.ui-select-trigger[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-select-options,
+  .ui-select-options [role="option"],
+  .ui-select-trigger svg {
+    animation: none !important;
+    transition: none !important;
+  }
 }

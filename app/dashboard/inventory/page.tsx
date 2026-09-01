@@ -2355,19 +2355,24 @@ export default function InventoryPage() {
       // heading: it is the thing that says WHICH stock the number counts, so it
       // belongs with the number, not in the toolbar.
       detail: (
-        <select
+        // SydIN's own Select, not a raw <select>. A native select's list is
+        // drawn by the operating system — it cannot be styled, so it arrived as
+        // a grey system menu with a blue highlight in the middle of the app.
+        // This is the same component Sort and View already use, so the unit
+        // picker now opens like every other menu here, animation included.
+        <Select
           value={activeUnit}
-          onChange={(event) => setStatUnit(event.target.value)}
-          aria-label="Show stock in unit"
+          onChange={setStatUnit}
+          ariaLabel="Show stock in unit"
           className="inventory-stat-unit-select"
-        >
-          {unitOptions.map(([unit, totals]) => (
-            <option key={unit} value={unit}>
-              {getInventoryUnitLabel(unit)} ·{" "}
-              {totals.items} item{totals.items === 1 ? "" : "s"}
-            </option>
-          ))}
-        </select>
+          options={unitOptions.map(([unit, totals]) => ({
+            value: unit,
+            label: getInventoryUnitLabel(unit),
+            description: `${totals.items} item${
+              totals.items === 1 ? "" : "s"
+            } · ${totals.quantity.toLocaleString()}`,
+          }))}
+        />
       ),
     },
     {
