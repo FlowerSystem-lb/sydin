@@ -3524,4 +3524,57 @@ recommended: **Phase 3 — pagination, indexes, image sizes**, which blocks the 
 
 ---
 
+## 1 September 2026 — Bulk photos for items that already exist (founder note N3)
+
+**Asked for:** "the batch images import".
+
+**Audit first, and it changed the job.** Two of the three photo features in the notes were
+already built and on `main`: photos alongside the Excel/CSV import (`1bcc693`) and POS-style
+batch barcode add (`f8efe46`). The Plan of Record still said "none of this is built yet" — a
+line written from the notes rather than from the code. Corrected there, with the commits named.
+
+The genuinely missing piece was the one for items **already in SydIN**: bulk edit could change
+category, depot, supplier, unit, min stock, cost, price and notes for many items at once, but
+not the photo. That is the common case after the first month — the items are entered, the
+photos arrive later from a phone or a supplier.
+
+**Built:** Inventory ⋯ → **Add photos in bulk**. Drop a folder of photos; each one finds its
+item by filename.
+
+- Matching lives in `app/lib/bulkItemPhotos.ts`, pure and separate from the screen, so the
+  founder's rule can be read on its own: **never by upload order**. It matches SKU, then
+  barcode, then item code, then the exact product name. The import matcher only had SKU,
+  because an import row has little else that is unique yet; a saved item has all four.
+- **Manual assignment is the part that decides whether this gets used.** Photos off a phone
+  are called `IMG_5383.jpg`, and nobody renames forty of those. Anything that matches nothing
+  gets a searchable item picker, chosen while looking at the photo — which is the opposite of
+  a silent positional scramble, not an exception to the rule.
+- A HEIC file (the iPhone default, and Sayed's own photos are HEIC) is refused with the setting
+  to change — *Camera > Formats > Most Compatible* — instead of a generic "wrong type".
+- Four at a time, not forty. A failed photo is counted and reported, never hidden; the other
+  thirty-nine still land.
+- Photos that would replace an existing one say so before you press the button.
+
+**Verified in the running app,** not just built: three files dropped at once produced
+matched 1 / needs assigning 1 / cannot use 1; the picker assigned the stray file and it moved
+to "Ready to attach"; one photo was uploaded end-to-end and **confirmed written to the database
+row**, then removed again so no test data was left behind.
+
+### A finding that was not the feature
+
+Product photos do not render on Sayed's laptop in dev, and have not been. Not a code bug and
+not the storage change: the browser fetches the file fine (200, `image/png`), but Next's image
+optimiser runs in Node, and Node on that machine rejects the Supabase certificate —
+`UNABLE_TO_VERIFY_LEAF_SIGNATURE`. That is a VPN or antivirus re-signing HTTPS locally. It
+would not happen on Vercel, which was not testable from here. Recorded so it is not
+re-diagnosed as a photo bug later.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ · dialog driven
+in the running app including a real upload ✅.
+
+**Untouchables:** no auth, schema, routing or business-logic changes. The one database write was
+the feature doing its job on one test row, and it was reverted.
+
+---
+
 <!-- Append the next sprint entry below this line. -->

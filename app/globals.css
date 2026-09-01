@@ -23068,3 +23068,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .inventory-edit-body {
   padding-bottom: 0.25rem !important;
 }
+
+/* Bulk photos (founder note N3). Wider than the default 32rem dialog because
+   every row carries a thumbnail, the item it matched, and — for photos off a
+   phone — a searchable item picker. At 32rem the picker and the filename
+   fight for the same 12rem. */
+.ui-dialog.inventory-bulk-photo-dialog {
+  width: min(100%, 40rem);
+}

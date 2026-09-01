@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 27 August 2026 (storage · H1/H2 · cards, quick preview, item page)
+**Last touched:** 1 September 2026 (bulk photos for existing items — founder note N3)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -65,18 +65,36 @@ data. That was overstated. Photos were the real cost.
 
 ---
 
-## B. Sayed's handwritten notes — none of this is built yet
+## B. Sayed's handwritten notes
 
-### New features
+### New features — all four now built
 
-| id | What | Size |
+| id | What | State |
 |---|---|---|
-| N1 | **Add an item by scanning its barcode.** Scan the printed code on the carton, the app creates the item, then you fill in photo, cost and details. Typing the number by hand must also work. | Medium |
-| N2 | **Batch add, POS-style** — several items in one go by barcode. | Large |
-| N3 | **Batch photos** — several photos for several different items at once. | Large |
-| N4 | **Photos joined to the Excel import** — rows 1,2,3,4 matched to photos 1,2,3,4. | Large |
+| ~~N1~~ | **Add an item by scanning its barcode.** Scan the printed code on the carton, the app creates the item, then you fill in photo, cost and details. Typing the number by hand must also work. | ✅ built — the scanner is on Add Item |
+| ~~N2~~ | **Batch add, POS-style** — several items in one go by barcode. | ✅ built — commit `f8efe46`, on the Import screen |
+| ~~N3~~ | **Batch photos** — several photos for several different items at once. | ✅ **built 1 Sep 2026** — Inventory ⋯ → "Add photos in bulk" |
+| ~~N4~~ | **Photos joined to the Excel import** — rows 1,2,3,4 matched to photos 1,2,3,4. | ✅ built — commit `1bcc693` |
 
-N3 and N4 are really one feature. Of the four, N4 is the most valuable to a real shop.
+**Correction, 1 Sep 2026.** This section said "none of this is built yet" while
+three of the four were already in the repository and on `main`. That line was
+written from memory of the notes, not from the code — exactly the drift this
+file exists to stop. Checked against `git log` and the running app before being
+rewritten.
+
+N3 and N4 were called one feature, and they are, but they are not one screen:
+N4 matches photos to spreadsheet *rows* that do not exist yet, N3 matches them
+to *items* that already do. They share the founder's rule — never match by
+upload order — and now share nothing else, on purpose:
+`matchImportPhotosToRows` and `matchPhotosToItems` are both small and both
+readable on their own.
+
+**What N3 does that N4 could not.** N4 matches on SKU alone. N3 matches on SKU,
+barcode, item code, or the exact product name, and — the part that decides
+whether it gets used — a photo that matches nothing can be assigned to an item
+by hand, while looking at it. Photos off a phone are called `IMG_5383.jpg`, and
+nobody renames forty of those. A HEIC file (the iPhone default) is refused with
+the setting to change rather than a generic "wrong type".
 
 ### Inventory and app work
 

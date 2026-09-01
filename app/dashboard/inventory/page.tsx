@@ -26,6 +26,7 @@ import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
+import BulkPhotoDialog from "@/components/inventory/BulkPhotoDialog";
 import SetAlertLevelDialog from "@/components/inventory/SetAlertLevelDialog";
 import StockMovementDialog from "@/components/inventory/StockMovementDialog";
 import { Button, DialogShell, Select } from "@/components/ui";
@@ -493,6 +494,7 @@ export default function InventoryPage() {
   );
   const [bulkDialogMode, setBulkDialogMode] =
     useState<BulkDialogMode>(null);
+  const [bulkPhotoOpen, setBulkPhotoOpen] = useState(false);
   const [bulkSubmitting, setBulkSubmitting] = useState(false);
   const [bulkError, setBulkError] = useState("");
   const [bulkNotice, setBulkNotice] = useState("");
@@ -2625,6 +2627,21 @@ export default function InventoryPage() {
                         "Import inventory"
                       )}
                     </Link>
+                    {/* Founder note N3: "batch photos - several photos for
+                        several different items at once". The import screen
+                        already carries photos alongside a spreadsheet; this is
+                        the same job for items that are already saved, which is
+                        the normal case once the first import is behind you. */}
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => setBulkPhotoOpen(true)}
+                      disabled={items.length === 0}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-left text-sm font-semibold hover:bg-slate-50 disabled:opacity-50"
+                    >
+                      <UiIcon name="layers" className="h-4 w-4" />
+                      Add photos in bulk
+                    </button>
                     <div className="my-1 border-t border-slate-200" />
                     <button
                       type="button"
@@ -3883,6 +3900,15 @@ export default function InventoryPage() {
           </div>
         </DialogShell>
       )}
+
+      <BulkPhotoDialog
+        open={bulkPhotoOpen}
+        items={items}
+        onClose={() => setBulkPhotoOpen(false)}
+        onUploaded={() => {
+          void fetchItems();
+        }}
+      />
 
       {bulkDialogMode === "edit" && (
         <DialogShell
