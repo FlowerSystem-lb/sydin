@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import { formatDepotLabel, getDepotsForUser, type Depot } from "@/app/lib/depots";
@@ -175,18 +175,20 @@ function getStockLabel(state: StockState) {
 }
 
 function ItemThumb({ item }: { item: Item }) {
-  if (item.image) {
-    return (
-      <span className="ov-thumb">
-        {/* Fixed 34px box, so ask for a 34px file rather than the original. */}
-        <Image src={item.image} alt="" width={34} height={34} loading="lazy" />
-      </span>
-    );
-  }
-
   return (
     <span className="ov-thumb">
-      <UiIcon name="box" className="h-4 w-4" />
+      {/* Fixed 34px box, so ask for a 34px file rather than the original.
+          ProductThumbnail also covers the photo that exists but fails to
+          load, which this list used to render as a broken-image glyph. */}
+      <ProductThumbnail
+        src={item.image}
+        alt=""
+        width={34}
+        height={34}
+        imgClassName=""
+        iconClassName="h-4 w-4"
+        fallbackClassName="flex h-full w-full items-center justify-center"
+      />
     </span>
   );
 }

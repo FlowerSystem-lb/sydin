@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import UiIcon from "@/components/UiIcon";
@@ -551,22 +552,14 @@ export default function QrCenterPage() {
                         className="h-4 w-4 accent-[#2563eb]"
                       />
                       <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
-                        {item.image ? (
-                          <Image
-                            src={item.image}
-                            alt=""
-                            fill
-                            sizes="44px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <span className="flex h-full items-center justify-center">
-                            <UiIcon
-                              name="box"
-                              className="h-4 w-4 text-theme-subtle"
-                            />
-                          </span>
-                        )}
+                        <ProductThumbnail
+                          src={item.image}
+                          alt=""
+                          sizes="44px"
+                          imgClassName="object-cover"
+                          iconClassName="h-4 w-4 text-theme-subtle"
+                          fallbackClassName="flex h-full w-full items-center justify-center"
+                        />
                       </span>
                       <span className="min-w-0 flex-1">
                         <button

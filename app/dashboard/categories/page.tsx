@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Image from "next/image";
+import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import ItemDetailsSlideOver, {
@@ -1658,19 +1658,14 @@ export default function CategoriesPage() {
                       className="h-4 w-4 accent-indigo-600"
                     />
                     <span className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
-                      {item.image ? (
-                        <Image
-                          src={item.image}
-                          alt=""
-                          fill
-                          sizes="48px"
-                          className="object-cover"
-                        />
-                      ) : (
-                        <span className="flex h-full items-center justify-center text-theme-subtle">
-                          <UiIcon name="box" className="h-5 w-5" />
-                        </span>
-                      )}
+                      <ProductThumbnail
+                        src={item.image}
+                        alt=""
+                        sizes="48px"
+                        imgClassName="object-cover"
+                        iconClassName="h-5 w-5"
+                        fallbackClassName="flex h-full w-full items-center justify-center text-theme-subtle"
+                      />
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-bold text-theme-primary">

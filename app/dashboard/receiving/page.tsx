@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import UiIcon from "@/components/UiIcon";
@@ -1258,19 +1258,14 @@ export default function ReceivingPage() {
                           <td className="px-4 py-3">
                             <div className="flex min-w-0 items-center gap-3">
                               <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
-                                {item.image ? (
-                                  <Image
-                                    src={item.image}
-                                    alt=""
-                                    fill
-                                    sizes="44px"
-                                    className="object-cover"
-                                  />
-                                ) : (
-                                  <span className="flex h-full items-center justify-center text-theme-subtle">
-                                    <UiIcon name="box" className="h-4 w-4" />
-                                  </span>
-                                )}
+                                <ProductThumbnail
+                                  src={item.image}
+                                  alt=""
+                                  sizes="44px"
+                                  imgClassName="object-cover"
+                                  iconClassName="h-4 w-4"
+                                  fallbackClassName="flex h-full w-full items-center justify-center text-theme-subtle"
+                                />
                               </div>
                               <div className="min-w-0">
                                 <p className="truncate font-black text-theme-primary">
@@ -1397,19 +1392,14 @@ export default function ReceivingPage() {
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-surface ring-1 ring-black/5">
-                          {item.image ? (
-                            <Image
-                              src={item.image}
-                              alt=""
-                              fill
-                              sizes="48px"
-                              className="object-cover"
-                            />
-                          ) : (
-                            <span className="flex h-full items-center justify-center text-theme-subtle">
-                              <UiIcon name="box" className="h-5 w-5" />
-                            </span>
-                          )}
+                          <ProductThumbnail
+                            src={item.image}
+                            alt=""
+                            sizes="48px"
+                            imgClassName="object-cover"
+                            iconClassName="h-5 w-5"
+                            fallbackClassName="flex h-full w-full items-center justify-center text-theme-subtle"
+                          />
                         </div>
                         <div className="min-w-0 flex-1">
                           <p className="truncate font-black text-theme-primary">
