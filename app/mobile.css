@@ -231,7 +231,28 @@
   .dashboard-shell-content {
     flex: 1;
     margin: 0 !important;
-    padding: 0 !important;
+    /*
+     * Was `padding: 0 !important`, and that is why every dashboard page sat
+     * flush against the left edge of a phone -- the "Inventory" heading, the
+     * breadcrumb and "Showing 10 of 10 items" all started at x = 0, measured
+     * 2 Sep 2026 at 375px.
+     *
+     * The zero was written for mobile-specific page components (.mobile-dashboard
+     * and friends further down this file) which bring their own 16px padding.
+     * But most screens still render the desktop workspace inside the mobile
+     * shell, so for them the zero was simply the gutter being deleted.
+     *
+     * It looked lopsided rather than merely tight because globals.css forces
+     * `padding-inline-end: max(1rem, ...)` on the Overview and Inventory shells
+     * with a more specific selector, so the right gutter survived and the left
+     * did not. Both sides are set here now, so the two agree.
+     *
+     * Bottom stays 0: the bottom-nav clearance is owned by globals.css, which
+     * sets it per workspace (6.5rem on Overview/Inventory), and re-declaring it
+     * here would fight those rules for no gain.
+     */
+    padding: 0 max(1rem, env(safe-area-inset-right)) 0
+      max(1rem, env(safe-area-inset-left)) !important;
   }
 
   main {
