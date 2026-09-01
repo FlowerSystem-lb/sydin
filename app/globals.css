@@ -23041,3 +23041,30 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .inventory-edit-card {
   max-height: calc(100dvh - 1rem);
 }
+
+/* Save and Cancel were being cut off, which Sayed's screenshot shows and the
+   measurement confirms: the footer sits inside the scrolling body, its `sticky`
+   computed to `static`, and its bottom edge landed 12px below the card. On a
+   shorter window you simply could not see the button you came to press.
+
+   Pinned to the bottom of the scroller instead, with the body reserving room
+   for it. This is the anatomy the shared DialogShell already uses — header,
+   scrolling body, footer that never moves — and the reason a hand-rolled dialog
+   keeps rediscovering these bugs one at a time. */
+.inventory-edit-body form > div:last-child {
+  position: sticky !important;
+  bottom: 0 !important;
+  z-index: 2;
+  margin: 0 -0.25rem -0.25rem !important;
+  padding: 0.55rem 0.25rem 0.25rem !important;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0) 0%,
+    var(--surface-page) 38%,
+    var(--surface-page) 100%
+  );
+}
+
+.inventory-edit-body {
+  padding-bottom: 0.25rem !important;
+}
