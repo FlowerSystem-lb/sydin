@@ -7,6 +7,7 @@ import {
   parseInventoryUnitType,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
+import { getPhotoFileKey } from "@/app/lib/productImage";
 
 export const INVENTORY_IMPORT_HEADERS = [
   "Name",
@@ -663,7 +664,15 @@ function stripExtension(fileName: string) {
 
 export function matchImportPhotosToRows(
   files: File[],
-  rows: ValidatedInventoryRow[]
+  rows: ValidatedInventoryRow[],
+  /**
+   * file key -> row number, chosen by hand for photos whose filename matches
+   * nothing. Added 1 Sep 2026: a phone names its files `IMG_5383.jpg`, so
+   * without this every photo off a phone lands in "no SKU match" and the
+   * feature goes unused. Picking a row while looking at the photo is not the
+   * positional matching the founder's rule bans — it is the opposite of it.
+   */
+  manualAssignments: Map<string, number> = new Map()
 ): ImportPhotoMatchResult {
   const rowBySku = new Map<string, ValidatedInventoryRow>();
   let rowsWithoutSku = 0;
@@ -683,8 +692,13 @@ export function matchImportPhotosToRows(
   const invalid: ImportPhotoInvalidFile[] = [];
   const claimedRowNumbers = new Set<number>();
 
+  const rowByNumber = new Map(rows.map((row) => [row.rowNumber, row]));
+
   for (const file of files) {
-    const row = rowBySku.get(stripExtension(file.name));
+    const manualRowNumber = manualAssignments.get(getPhotoFileKey(file));
+    const row =
+      (manualRowNumber ? rowByNumber.get(manualRowNumber) : undefined) ||
+      rowBySku.get(stripExtension(file.name));
 
     if (!row) {
       unmatched.push(file);

@@ -5,9 +5,12 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, DialogShell, Select } from "@/components/ui";
 import UiIcon from "@/components/UiIcon";
 import { supabase } from "@/app/lib/supabase";
-import { ALLOWED_IMAGE_TYPES, createProductImagePath } from "@/app/lib/productImage";
 import {
+  ALLOWED_IMAGE_TYPES,
+  createProductImagePath,
   getPhotoFileKey,
+} from "@/app/lib/productImage";
+import {
   matchPhotosToItems,
   type PhotoMatchField,
   type PhotoTargetItem,

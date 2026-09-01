@@ -1,6 +1,10 @@
 "use client";
 
-import { createProductImagePath } from "@/app/lib/productImage";
+import {
+  createProductImagePath,
+  getPhotoFileKey,
+} from "@/app/lib/productImage";
+import { Select } from "@/components/ui";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -139,6 +143,10 @@ export default function InventoryImportPage() {
   // backlog item 2: batch photo upload, matched to rows by filename -> SKU
   // (never by list order — see matchImportPhotosToRows for why).
   const [photoFiles, setPhotoFiles] = useState<File[]>([]);
+  // Photos a phone named IMG_5383.jpg, pointed at a row by hand.
+  const [photoRowAssignments, setPhotoRowAssignments] = useState<
+    Map<string, number>
+  >(new Map());
   const [isPhotoDragging, setIsPhotoDragging] = useState(false);
   const photoInputRef = useRef<HTMLInputElement | null>(null);
   const [success, setSuccess] = useState<{
@@ -241,9 +249,13 @@ export default function InventoryImportPage() {
   const photoMatch = useMemo(
     () =>
       validation
-        ? matchImportPhotosToRows(photoFiles, validation.validRows)
+        ? matchImportPhotosToRows(
+            photoFiles,
+            validation.validRows,
+            photoRowAssignments
+          )
         : null,
-    [photoFiles, validation]
+    [photoFiles, photoRowAssignments, validation]
   );
   const projectedItemCount =
     usage.usedItems + (validation?.validRows.length || 0);
@@ -257,9 +269,16 @@ export default function InventoryImportPage() {
   const previewRows = validation
     ? [...validation.invalidRows, ...validation.validRows].slice(0, 100)
     : [];
+  const photoRowOptions = (validation?.validRows || []).map((row) => ({
+    value: String(row.rowNumber),
+    label: row.values.name || `Row ${row.rowNumber}`,
+    description: row.values.sku || `Row ${row.rowNumber}`,
+    keywords: row.values.sku,
+  }));
 
   const clearPhotos = () => {
     setPhotoFiles([]);
+    setPhotoRowAssignments(new Map());
 
     if (photoInputRef.current) {
       photoInputRef.current.value = "";
@@ -286,6 +305,25 @@ export default function InventoryImportPage() {
     setPhotoFiles((current) =>
       current.filter((file) => file !== target)
     );
+    setPhotoRowAssignments((current) => {
+      const key = getPhotoFileKey(target);
+      if (!current.has(key)) return current;
+      const next = new Map(current);
+      next.delete(key);
+      return next;
+    });
+  };
+
+  const assignPhotoToRow = (file: File, rowNumber: string) => {
+    setPhotoRowAssignments((current) => {
+      const next = new Map(current);
+      if (rowNumber) {
+        next.set(getPhotoFileKey(file), Number(rowNumber));
+      } else {
+        next.delete(getPhotoFileKey(file));
+      }
+      return next;
+    });
   };
 
   // backlog item 2, part 2: POS-style batch barcode add. Opens the scan
@@ -898,7 +936,9 @@ export default function InventoryImportPage() {
                   </div>
 
                   <p className="mt-4 text-sm leading-6 text-theme-muted">
-                    Accepted formats: CSV and Excel (.xlsx). Images and private IDs are never imported.
+                    Accepted formats: CSV and Excel (.xlsx). Product photos are added on the
+                    next step, in this same import — name each one after its row. Private IDs
+                    are never imported.
                   </p>
                 </div>
               </section>
@@ -1351,12 +1391,14 @@ export default function InventoryImportPage() {
                       Add product photos
                     </h2>
                     <p className="mt-2 max-w-xl text-sm leading-6 text-theme-muted">
-                      Name each photo after the row&apos;s SKU exactly — e.g.{" "}
+                      Name each photo after the row&apos;s SKU — e.g.{" "}
                       <code className="rounded bg-theme-inset px-1.5 py-0.5 font-mono text-xs">
                         FP007.jpg
                       </code>{" "}
                       matches the row with SKU <code className="font-mono">FP007</code>. Matching
                       is by filename, never by upload order, so a mismatch never happens silently.
+                      Photos straight off a phone match nothing — pick their row below instead of
+                      renaming them.
                     </p>
                   </div>
 
@@ -1506,18 +1548,38 @@ export default function InventoryImportPage() {
                 {photoMatch && photoMatch.unmatched.length > 0 && (
                   <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-500/10 p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-warning">
-                      No row has this SKU — not uploaded
+                      No row has this name — choose the row yourself
                     </p>
-                    <p className="mt-2 flex flex-wrap gap-2">
+                    <ul className="mt-2 flex flex-col gap-2">
                       {photoMatch.unmatched.map((file) => (
-                        <span
-                          key={file.name}
-                          className="rounded-lg border border-amber-300/25 bg-theme-surface px-2.5 py-1 font-mono text-xs text-theme-secondary"
+                        <li
+                          key={getPhotoFileKey(file)}
+                          className="flex flex-col gap-2 rounded-xl border border-amber-300/25 bg-theme-surface p-2 sm:flex-row sm:items-center"
                         >
-                          {file.name}
-                        </span>
+                          <span className="min-w-0 flex-1 truncate font-mono text-xs text-theme-secondary">
+                            {file.name}
+                          </span>
+                          <div className="sm:w-64">
+                            <Select
+                              value=""
+                              options={photoRowOptions}
+                              onChange={(value) => assignPhotoToRow(file, value)}
+                              ariaLabel={`Row for ${file.name}`}
+                              placeholder="Pick a row"
+                              searchable
+                              searchPlaceholder="Search by name or SKU"
+                            />
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removePhotoFile(file)}
+                            className="shrink-0 text-xs font-bold text-theme-muted hover:text-theme-danger"
+                          >
+                            Remove
+                          </button>
+                        </li>
                       ))}
-                    </p>
+                    </ul>
                   </div>
                 )}
 

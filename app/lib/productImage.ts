@@ -50,6 +50,15 @@ export function getImageValidationError(file: File) {
 }
 
 /**
+ * Identifies one chosen file across re-renders, so a photo can be remembered
+ * after it has been assigned to a row or an item by hand. Name alone is not
+ * enough — two folders can each hold an `IMG_5383.jpg`.
+ */
+export function getPhotoFileKey(file: File) {
+  return `${file.name}:${file.size}:${file.lastModified}`;
+}
+
+/**
  * The extension is derived from the MIME type we already allowed, never taken
  * from the filename — that is what keeps `evil.php.jpg` from surviving the trip.
  */

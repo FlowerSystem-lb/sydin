@@ -1,4 +1,7 @@
-import { getImageValidationError } from "@/app/lib/productImage";
+import {
+  getImageValidationError,
+  getPhotoFileKey,
+} from "@/app/lib/productImage";
 
 /**
  * Attaching photos to items that ALREADY exist, many at a time.
@@ -67,11 +70,6 @@ export interface BulkPhotoMatchResult {
   duplicates: BulkPhotoDuplicate[];
   /** Wrong type or too large. Never silently dropped. */
   invalid: BulkPhotoRejectedFile[];
-}
-
-/** Stable enough to key a React list and a manual-assignment map. */
-export function getPhotoFileKey(file: File) {
-  return `${file.name}:${file.size}:${file.lastModified}`;
 }
 
 function normalise(value: string | null | undefined) {
