@@ -328,7 +328,7 @@ export default function GlobalSearchDialog({
           {!loading && !error && isSearching && flatResults.length === 0 && (
             <div className="px-4 py-10 text-center">
               <UiIcon name="search" className="mx-auto h-8 w-8 text-theme-accent" />
-              <p className="mt-3 text-sm font-black text-theme-primary">
+              <p className="mt-3 text-sm font-semibold text-theme-primary">
                 No results found
               </p>
               <p className="mt-1 text-sm text-theme-muted">
@@ -344,7 +344,7 @@ export default function GlobalSearchDialog({
               {recentQueries.length > 0 && (
                 <section className="px-1 py-2">
                   <div className="flex items-center justify-between px-2 pb-1">
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-subtle">
+                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                       Recent searches
                     </p>
                     <button
@@ -377,11 +377,36 @@ export default function GlobalSearchDialog({
           )}
           {filteredGroupedResults.map(([group, groupItems]) => (
             <section key={group} className="py-2" aria-label={group}>
-              <p className="px-3 pb-1 text-xs font-black uppercase tracking-[0.14em] text-theme-subtle">
+              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                 {group}
               </p>
               <div className="grid gap-1">
-                {groupItems.map((result) => {
+                {(() => {
+                  // Label the exception, not the rule.
+                  //
+                  // Under "Operations" the rows read ACTION, PAGE, PAGE, PAGE,
+                  // PAGE. Four of those five chips tell you what the group
+                  // already implies; only the odd one out carries information.
+                  // So within each group the majority kind goes unlabelled and
+                  // the minority keeps its chip — one glance finds the row that
+                  // behaves differently, instead of five badges cancelling each
+                  // other out.
+                  //
+                  // A chip that is a state rather than a kind ("Recent") is
+                  // never suppressed: it says something no grouping does.
+                  const tally = new Map<string, number>();
+                  groupItems.forEach((item) => {
+                    if (item.chip)
+                      tally.set(item.chip, (tally.get(item.chip) || 0) + 1);
+                  });
+                  const dominantChip =
+                    groupItems.length > 2
+                      ? [...tally.entries()]
+                          .filter(([, count]) => count > groupItems.length / 2)
+                          .map(([chip]) => chip)[0]
+                      : undefined;
+
+                  return groupItems.map((result) => {
                   const resultIndex = flatResults.findIndex(
                     (item) => item.id === result.id
                   );
@@ -405,16 +430,23 @@ export default function GlobalSearchDialog({
                         <UiIcon name={GROUP_ICON[result.group]} className="h-4 w-4" />
                       </span>
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-black text-theme-primary" title={result.title}>
+                        <span className="block truncate text-sm font-semibold text-theme-primary" title={result.title}>
                           <HighlightedText text={result.title} query={trimmedQuery} />
                         </span>
                         <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted" title={result.subtitle}>
                           {result.subtitle}
                         </span>
                       </span>
+                      {/* A chip that repeats the section it sits under is not a
+                          label, it is the same word twice: every row under
+                          "Pages" said PAGE, beside a page icon. Type is carried
+                          by the icon and the grouping; the chip earns its place
+                          only when it says something they do not — "Recent",
+                          "Low stock", "Action" under a mixed group. */}
+                      {result.chip && result.chip !== dominantChip && (
                       <span
                         className={cx(
-                          "shrink-0 rounded-full border px-2 py-1 text-xs font-black uppercase tracking-[0.08em]",
+                          "shrink-0 rounded-full border px-2 py-1 text-xs font-semibold uppercase tracking-[0.08em]",
                           result.tone === "success" &&
                             "border-emerald-400/30 bg-emerald-500/10 text-theme-success",
                           result.tone === "warning" &&
@@ -429,9 +461,11 @@ export default function GlobalSearchDialog({
                       >
                         {result.chip}
                       </span>
+                      )}
                     </button>
                   );
-                })}
+                  });
+                })()}
               </div>
             </section>
           ))}
