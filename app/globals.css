@@ -22877,3 +22877,167 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transition: none !important;
   }
 }
+
+/* ---------------------------------------------------------------------------
+   Quick edit: one view, no scrollbar
+   ---------------------------------------------------------------------------
+   Sayed: make it "like sortly simple and one view version, not scroll bar".
+
+   Measured before: the dialog filled 718px of a 746px window and still
+   scrolled, with a 32.6px title, weights up to 900, and a 32px close icon —
+   about a fifth of it spent saying "Edit Item" to someone who had just pressed
+   Edit. Nine fields do not need that.
+
+   The chrome is gone (see the JSX), and the form's own rhythm is tightened
+   here: sections stop being bordered, padded cards inside a padded dialog, and
+   the vertical gaps come down. Same conclusion as the item card and the quick
+   preview — a group of fields is not a container.
+   --------------------------------------------------------------------------- */
+.inventory-edit-card {
+  max-height: calc(100dvh - 1.25rem);
+}
+
+/* The last 46px comes out of spacing, not content — every field, label and
+   control is still here. */
+.inventory-edit-body form {
+  gap: 0.4rem !important;
+}
+
+/* Section wrappers: hairline separation instead of a box each. */
+.inventory-edit-body form > section,
+.inventory-edit-body form > div > section {
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  padding: 0 !important;
+}
+
+.inventory-edit-body form > section + section {
+  padding-top: 0.4rem !important;
+  border-top: 1px solid var(--border-hairline) !important;
+}
+
+/* The grids inside were spaced for a full page. */
+.inventory-edit-body form .grid {
+  gap: 0.5rem !important;
+}
+
+.inventory-edit-body form label {
+  margin-bottom: 0.25rem !important;
+  font-weight: 500 !important;
+}
+
+.inventory-edit-body form :is(input, select, textarea) {
+  min-height: 36px !important;
+}
+
+.inventory-edit-body form textarea {
+  min-height: 56px !important;
+}
+
+/* Nothing in this dialog shouts. */
+.inventory-edit-body :is(h2, h3, strong, b, label, p, span) {
+  font-weight: inherit;
+}
+
+.inventory-edit-body [class*="font-black"],
+.inventory-edit-body [class*="font-bold"] {
+  font-weight: 600 !important;
+}
+
+/* Cutting the 362px of overflow, measured rather than trimmed by eye.
+   Form 1021px inside a 659px body; "Basic Information" alone was 527px, of
+   which 162px was a photo plate and 61px a three-line heading block.
+
+   Selectors below come from reading the rendered tree, not from guessing at it:
+   the heading block is `section > div:first-child` holding an uppercase <p>, an
+   <h3> and a description <p> — an earlier attempt targeted `section > p` and
+   changed nothing, which is the third time today that guessing a selector cost
+   a round trip.
+
+   What goes, and why none of it is information:
+     - The eyebrow. "BASIC" sits directly above "Basic Information": the same
+       word twice, in two styles.
+     - The section description. "Update the product identity, image, category
+       and location" describes labelled fields immediately below it.
+     - Field helper lines. "Optional. Categories are managed separately."
+       appears while editing an item, not a category.
+     - The photo plate. 140px of bordered box to say "Not added" and offer a
+       button, where a row does the same job.
+   Every label, value, control and error message stays. */
+.inventory-edit-body form section > div:first-child > p,
+.inventory-edit-body form details > summary + p {
+  display: none !important;
+}
+
+.inventory-edit-body form section > div:first-child {
+  margin-bottom: 0.3rem !important;
+}
+
+.inventory-edit-body form section h3,
+.inventory-edit-body form details summary {
+  font-size: 0.95rem !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+/* Helper text under a field. Errors are not muted, so they survive this. */
+.inventory-edit-body form p[class*="text-theme-muted"],
+.inventory-edit-body form p[class*="text-theme-subtle"] {
+  display: none !important;
+}
+
+/* The photo plate becomes a row. */
+.inventory-edit-body form [class*="h-[140px]"] {
+  height: 52px !important;
+  min-height: 52px !important;
+}
+
+.inventory-edit-body form section:first-of-type > div:nth-child(2) {
+  padding: 0.55rem !important;
+  border-radius: 12px !important;
+  align-items: center !important;
+}
+
+@media (min-width: 768px) {
+  .inventory-edit-body form section:first-of-type > div:nth-child(2) {
+    grid-template-columns: 72px minmax(0, 1fr) !important;
+    gap: 0.75rem !important;
+  }
+}
+
+/* The last 145px, located rather than trimmed by eye.
+
+   Two sources, both read from the rendered tree:
+     - Each collapsed section's summary is `span > (span title + span
+       description)`. "Private values in USD" under "Pricing & Value" costs 21px
+       three times over. An earlier rule targeted a <p> after the summary; the
+       description is a span inside it, so it did nothing.
+     - Under Category and Depot sits a helper line plus a "Manage Categories"
+       shortcut — 44px each, on a dialog for editing an ITEM. The shortcut still
+       lives on the Categories page, where it belongs. */
+.inventory-edit-body form details summary > span > span:last-child {
+  display: none !important;
+}
+
+.inventory-edit-body form details summary {
+  padding: 0.5rem 0.7rem !important;
+}
+
+/* The helper under Category and Depot is a <span> inside a
+   `mt-2 flex flex-wrap justify-between` row that also holds the "Manage
+   Categories" shortcut — not a <p>, which is why two earlier selectors missed
+   it. 38px plus margin, twice, which was the entire remaining overflow. */
+.inventory-edit-body form label + div > div[class*="justify-between"] {
+  display: none !important;
+}
+
+/* The final 16px: the overlay's own 16px padding was the ceiling, not the
+   card's max-height. Halved for this dialog only. */
+.inventory-modal-overlay:has(.inventory-edit-card) {
+  padding: 0.5rem !important;
+}
+
+.inventory-edit-card {
+  max-height: calc(100dvh - 1rem);
+}

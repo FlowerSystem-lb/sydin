@@ -4571,32 +4571,36 @@ export default function InventoryPage() {
 
       {/* Edit Item Modal */}
       {isEditModalOpen && selectedItem && (
-        <div className="inventory-modal-overlay fixed inset-0 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[24px] border border-[var(--border-default)] bg-[var(--sydin-surface-strong)] p-5 shadow-[0_30px_90px_rgba(0,5,20,0.4)] backdrop-blur-2xl sm:p-7 md:p-8">
-            <div className="mb-8 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
-                  Product details
+        <div className="inventory-modal-overlay fixed inset-0 flex justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
+          <div className="inventory-edit-card m-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-[20px] border border-[var(--border-default)] bg-[var(--sydin-surface-strong)] shadow-[0_30px_90px_rgba(0,5,20,0.4)] backdrop-blur-2xl">
+            {/* Was a 32px title over a 900-weight heading, a sentence of
+                description and a 32px close icon — roughly a fifth of the
+                dialog spent saying "Edit Item". The item's own name is the
+                useful heading here; you already know you pressed Edit. */}
+            <div className="flex flex-none items-center justify-between gap-4 border-b border-theme px-4 py-3 sm:px-5">
+              <div className="min-w-0">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+                  Edit item
                 </p>
-
-                <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">Edit Item</h2>
-
-                <p className="mt-2 text-theme-muted">
-                  Update stock, pricing, tracking codes, and product details.
-                </p>
+                <h2 className="mt-0.5 truncate text-xl font-semibold tracking-tight">
+                  {selectedItem.name}
+                </h2>
               </div>
 
               <button
                 type="button"
                 onClick={() => closeEditModal()}
                 disabled={isEditing}
-                className="rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
+                aria-label="Close editor"
+                className="flex-none rounded-xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
               >
-                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 18L18 6M6 6l12 12" />
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               </button>
             </div>
+
+            <div className="inventory-edit-body min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
 
             <EditItemForm
               item={selectedItem}
@@ -4615,6 +4619,7 @@ export default function InventoryPage() {
               onCancel={() => closeEditModal()}
               onSubmit={handleUpdateItem}
             />
+            </div>
           </div>
         </div>
       )}
