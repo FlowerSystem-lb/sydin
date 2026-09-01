@@ -72,6 +72,8 @@ import {
   getEffectiveItemLowStockThreshold,
   getInventoryQuantityLabel,
   normalizeCurrencyCode,
+  formatInventoryPrice,
+  getInventoryUnitLabel,
   normalizeInventoryUnitType,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
@@ -561,6 +563,8 @@ export default function InventoryPage() {
     useState<EditItemFieldErrors>({});
   const [editImage, setEditImage] = useState<File | null>(null);
   const [editCurrencyCode, setEditCurrencyCode] = useState("USD");
+  // "" means every unit. Anything else is one of INVENTORY_UNIT_TYPES.
+  const [statUnit, setStatUnit] = useState("");
   const [editError, setEditError] = useState("");
   const [isEditing, setIsEditing] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -2288,22 +2292,54 @@ export default function InventoryPage() {
     usageLoading || (canExportPdf && (loadingItems || isExportingPdf));
   const excelExportDisabled =
     usageLoading || (canExportExcel && (exportDisabled || isExportingExcel));
-  const totalQuantity = items.reduce(
-    (total, item) => total + Number(item.quantity || 0),
+  // Totals per unit, because a single "stock units" figure across mixed units
+  // is not a quantity of anything. Measured on the live data before changing
+  // this: 34,318 box + 5,839 piece + 6 kg were being added into one number and
+  // shown as though it meant something. Boxes and kilograms do not add.
+  const unitTotals = items.reduce((map, item) => {
+    const unit = normalizeInventoryUnitType(item.unit_type);
+    const current = map.get(unit) || { quantity: 0, value: 0, items: 0 };
+    const itemValue =
+      calculateInventoryValue(item.quantity, item.selling_price) ??
+      calculateInventoryValue(item.quantity, item.cost_price) ??
+      0;
+
+    map.set(unit, {
+      quantity: current.quantity + Number(item.quantity || 0),
+      value: current.value + Number(itemValue || 0),
+      items: current.items + 1,
+    });
+
+    return map;
+  }, new Map<string, { quantity: number; value: number; items: number }>());
+
+  const unitOptions = Array.from(unitTotals.entries()).sort(
+    (first, second) => second[1].quantity - first[1].quantity
+  );
+
+  // Default to the unit holding the most stock, so the headline number is the
+  // one that matters without anyone touching the control.
+  const activeUnit =
+    statUnit && unitTotals.has(statUnit) ? statUnit : unitOptions[0]?.[0] || "";
+  const activeTotals = unitTotals.get(activeUnit) || {
+    quantity: 0,
+    value: 0,
+    items: 0,
+  };
+
+  // Money IS comparable across units — 4 boxes at $10 plus 6 kg at $5 is a real
+  // number — so the value total stays honest whether one unit or all are shown.
+  const totalStockValue = Array.from(unitTotals.values()).reduce(
+    (total, entry) => total + entry.value,
     0
   );
   const lowStockCount = items.filter(isItemLowStock).length;
-  const assignedDepotCount = new Set(
-    items
-      .map((item) => item.depot_id)
-      .filter((depotId): depotId is number => typeof depotId === "number")
-  ).size;
   const outOfStockCount = items.filter((item) => item.quantity <= 0).length;
   const inventoryStats: Array<{
     icon: UiIconName;
     label: string;
     value: string;
-    detail: string;
+    detail: ReactNode;
   }> = [
     {
       icon: "box",
@@ -2313,11 +2349,37 @@ export default function InventoryPage() {
     },
     {
       icon: "layers",
-      label: "Stock units",
-      value: totalQuantity.toLocaleString(),
-      detail: `${assignedDepotCount.toLocaleString()} location${
-        assignedDepotCount === 1 ? "" : "s"
-      }`,
+      label: "Stock",
+      value: `${activeTotals.quantity.toLocaleString()} ${getInventoryUnitLabel(activeUnit).toLowerCase()}`,
+      // The unit picker lives in the card's detail slot rather than beside the
+      // heading: it is the thing that says WHICH stock the number counts, so it
+      // belongs with the number, not in the toolbar.
+      detail: (
+        <select
+          value={activeUnit}
+          onChange={(event) => setStatUnit(event.target.value)}
+          aria-label="Show stock in unit"
+          className="inventory-stat-unit-select"
+        >
+          {unitOptions.map(([unit, totals]) => (
+            <option key={unit} value={unit}>
+              {getInventoryUnitLabel(unit)} ·{" "}
+              {totals.items} item{totals.items === 1 ? "" : "s"}
+            </option>
+          ))}
+        </select>
+      ),
+    },
+    {
+      icon: "reports",
+      label: "Stock value",
+      value: formatInventoryPrice(totalStockValue, editCurrencyCode) || "--",
+      detail:
+        activeTotals.value > 0
+          ? `${
+              formatInventoryPrice(activeTotals.value, editCurrencyCode) || "--"
+            } in ${getInventoryUnitLabel(activeUnit).toLowerCase()}`
+          : "Add prices to see value",
     },
     {
       icon: "alert",

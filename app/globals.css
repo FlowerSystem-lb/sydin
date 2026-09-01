@@ -22768,3 +22768,37 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   outline-offset: 2px !important;
   border-radius: inherit;
 }
+
+/* The stats row: three cards stretched across the full width, so the eye had to
+   travel the whole page to read three short facts. They sit together now, and
+   the row gained a fourth card (stock value) without getting wider. */
+/* Four cards now, not three. The rule that was winning is
+   `.dashboard-shell .inventory-workspace .inventory-stat-grid { repeat(3,...)
+   !important }` at (0,3,0), set when the row held three, so adding Stock value
+   wrapped "Needs attention" onto a line of its own. */
+.dashboard-shell .inventory-workspace .inventory-stat-grid,
+.inventory-workspace .inventory-stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+  justify-content: start;
+}
+
+/* The unit picker sits in the card's detail slot — it says WHICH stock the
+   number above it counts, so it belongs with the number. Styled as text with a
+   caret rather than a form control: it is a label you can change, not a field
+   to fill in. */
+.inventory-stat-unit-select {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  padding: 0 1.1rem 0 0;
+  font: inherit;
+  color: var(--ink-muted);
+  cursor: pointer;
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='none' stroke='%2364748b' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m3 4.5 3 3 3-3'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right center;
+}
+
+.inventory-stat-unit-select:hover {
+  color: var(--ink);
+}
