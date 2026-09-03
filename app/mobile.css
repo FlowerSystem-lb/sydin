@@ -389,6 +389,39 @@
     letter-spacing: -0.03em;
   }
 
+  /*
+   * The heading most dashboard pages actually use, through
+   * DashboardPageHeader. Missed on the first pass, which left Overview at 34px
+   * serif and every other page at 19.7px Inter -- a half-applied type change
+   * reads as a bug, so it is either everywhere or nowhere.
+   *
+   * 28px, not the canvas's 34px, and the reason is structural rather than
+   * aesthetic: `.dashboard-page-header-content` stays `flex-direction: row` at
+   * every width, so this title shares its line with the page's action buttons.
+   * The canvas's 34px is for a title alone in white space, which is true of
+   * Overview and not of these. Dropping the header to a column on phones is
+   * the change that would earn the full 34px, and that belongs with the screen
+   * rebuilds in section J, not with a type pass.
+   *
+   * The repeated class is not decoration. A plain `.dashboard-page-heading`
+   * (0,1,0) applied the face and the weight but lost the SIZE to
+   * `.dashboard-shell-content main > div > section:first-child h1` (0,2,4),
+   * which pins 1.45rem under 639px -- so the heading came out serif at the old
+   * size, which looked like nothing had happened. Repeating the class to (0,3,0)
+   * outranks it on class count. That is this stylesheet's own convention for
+   * winning without !important; `.dashboard-brand-mark` is written the same way.
+   * Found by enumerating the live cascade, not by reading: the losing attempt
+   * was invisible in the source and obvious in the browser.
+   */
+  .dashboard-shell-content
+    .dashboard-page-heading.dashboard-page-heading.dashboard-page-heading {
+    font-family: var(--font-serif-display), ui-serif, Georgia, serif;
+    font-size: 28px;
+    font-weight: 400;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+  }
+
   /* 11px / .1em / uppercase / #94a3b8, straight off the artboards. The current
      eyebrow is heavier and darker, which competes with the title instead of
      labelling it. */
