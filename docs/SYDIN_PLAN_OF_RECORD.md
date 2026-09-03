@@ -488,6 +488,17 @@ design, not a different width.
 6. **Scan** — last on purpose. Sayed likes the Scanner page and it is not to be
    redesigned; the canvas screen mostly matches what is there.
 
+### The build document
+
+**[docs/SYDIN_MOBILE_DESIGN_SPEC.md](SYDIN_MOBILE_DESIGN_SPEC.md), written 2 Sep 2026.**
+Every colour, type size, row height, radius, animation and screen, written out
+precisely enough to rebuild the design on SydIN's own pages without opening the
+prototype again. It also records the prototype's four faults, so they are not
+copied, and the decisions already settled.
+
+Read that before building any phone screen. This section is the order of work;
+that file is what the work has to match.
+
 ### Rules for this work
 
 - The canvas is the specification. Where this document and the artboards
