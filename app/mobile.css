@@ -359,3 +359,50 @@
 .mobile-more-menu-item:last-child {
   border-bottom: none;
 }
+
+/* =========================================================================
+   Phone type scale — from the design canvas
+   https://claude.ai/code/artifact/8f42f751-b185-48e1-9397-2c428afbbb93
+   Recorded in docs/SYDIN_PLAN_OF_RECORD.md section J.
+
+   The canvas brief: "Landing page type: Source Serif 4 at weight 400 for every
+   heading, Inter for the rest." That serif is already loaded and already used
+   by the marketing pages; app/layout.tsx exposes it as --font-serif-display
+   and deliberately does not apply it to <body>. Phones opt in here.
+
+   Weight 400 at 34px is the point of it. The current 24px semibold is a
+   smaller version of the desktop heading; the canvas asks for a larger, lighter
+   one, which is what makes a phone screen read as a product rather than a
+   shrunken dashboard.
+
+   Scoped to the existing max-width:767px block below by being inside it, so
+   the desktop type scale cannot move.
+   ========================================================================= */
+
+@media (max-width: 767px) {
+  .ov-title,
+  .dashboard-shell-content .ui-page-title {
+    font-family: var(--font-serif-display), ui-serif, Georgia, serif;
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  /* 11px / .1em / uppercase / #94a3b8, straight off the artboards. The current
+     eyebrow is heavier and darker, which competes with the title instead of
+     labelling it. */
+  .ov-eyebrow {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: #94a3b8;
+  }
+
+  /* The canvas gives the title block room: 34px above, 20px below, and no
+     header bar or divider around it. */
+  .ov-head-text {
+    padding-top: 12px;
+  }
+}
