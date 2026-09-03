@@ -444,12 +444,21 @@ figure that makes the business feel measured.
 
 Not decided. It is a content decision, so it is Sayed's.
 
-### The open question the canvas records
+### ~~The open question the canvas records~~ — SETTLED 2 Sep 2026
 
-Square photos two to a row show four items per screen where the current list
-shows seven. That is browsing, not scanning. For someone standing in a depot
-looking for one product, seven may beat four. **Not settled** — worth trying both
-on a real phone before committing.
+Square photos two to a row show four items per screen where the list shows
+seven. Browsing versus scanning.
+
+**Sayed's call, after holding the Replit build on a real phone: "two great cause
+it is phone."** Photos win. The reasoning that decided it: a phone is the thing
+you hold up next to the carton, so matching a picture to what is in your hand
+beats reading a name. Seven-per-screen is a laptop argument.
+
+Built the same day. A phone now opens Inventory in the photo grid, two to a row;
+the list is still one tap away in the View menu. Two rules in `globals.css` had
+already argued about this column count and both lost to a third that forces a
+single column — the override is scoped to the photo grid only, since the normal
+grid card carries detail text and wants the width.
 
 ### What already exists in the app, measured 2 Sep 2026
 

@@ -525,3 +525,32 @@
     display: none;
   }
 }
+
+/*
+ * Photo grid, two to a row on a phone.
+ *
+ * Settled by Sayed, 2 Sep 2026 -- "two great cause it is phone" -- after
+ * holding the design on an actual phone. The open question had been whether
+ * four products per screen as photos beat seven as a list. Photos won because
+ * a phone is what you hold up next to the carton, and matching a picture to
+ * what is in your hand is faster than reading a name.
+ *
+ * Two rules already fought over this and BOTH lost to a third:
+ *
+ *   (max-width: 640px)  .inventory-items-grid                    repeat(2, ...)   (0,1,0)
+ *   unconditional       .inventory-workspace .--photo            auto-fill 13.5rem (0,2,0)
+ *   (max-width: 639px)  .dashboard-shell:has(...) .items-grid    minmax(0, 1fr)   (0,3,0)  <- won
+ *
+ * The winner forces a single column, which is why the photo grid was drawing
+ * one 348px card per row. It stays for the normal grid view, whose cards carry
+ * detail text and genuinely want the width. Only the photo grid overrides it,
+ * at (0,4,0) so the fight is settled by weight rather than by source order.
+ */
+@media (max-width: 767px) {
+  .dashboard-shell
+    .inventory-workspace
+    .inventory-items-grid.inventory-items-grid--photo {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}

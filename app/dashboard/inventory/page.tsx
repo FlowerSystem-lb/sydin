@@ -866,12 +866,24 @@ export default function InventoryPage() {
       const requestedView = params.get("view");
       if (
         requestedView === "grid" ||
+        requestedView === "photo" ||
         requestedView === "list" ||
         requestedView === "table"
       ) {
+        /* "photo" was missing from this list, so ?view=photo was dropped on the
+           floor and the phone default below took over instead -- the photo grid
+           could not be linked to or restored, only reached by hand. */
         setViewMode(requestedView);
       } else if (window.matchMedia("(max-width: 640px)").matches) {
-        setViewMode("list");
+        /* Settled by Sayed, 2 Sep 2026: "two great cause it is phone".
+           The open question was whether square photos two to a row (four
+           products per screen) beat the one-line list (seven per screen) for
+           someone standing in a depot. His call is photos, and the reason is
+           that a phone is the thing you hold up next to the carton -- matching
+           a picture to what is in your hand is faster than reading a name.
+           The list is still one tap away in the View menu; this only sets what
+           a phone opens with. */
+        setViewMode("photo");
       }
 
       setInventoryContextReady(true);
