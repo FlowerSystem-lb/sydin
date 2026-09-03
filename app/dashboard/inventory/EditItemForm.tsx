@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import type { FormEvent, ReactNode } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import CategorySelector from "@/components/CategorySelector";
 import Select from "@/components/ui/Select";
 import type { Category } from "@/app/lib/categories";
@@ -395,6 +395,10 @@ export default function EditItemForm({
       ? null
       : formatInventoryPrice(stockRetailValue, currencyCode);
   const itemCode = item.item_code?.trim();
+  /* Last of the product-photo sites to get this: a photo that fails to load
+     falls back to the same "Image / Not added" plate an item without one
+     shows, instead of the browser's broken-image glyph. */
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
@@ -406,7 +410,7 @@ export default function EditItemForm({
         />
 
         <div className="grid grid-cols-1 gap-4 rounded-[18px] border border-theme bg-theme-inset p-3 md:grid-cols-[160px_1fr] md:items-center">
-          {item.image ? (
+          {item.image && failedImageSrc !== item.image ? (
             <div className="relative h-[140px] overflow-hidden rounded-xl bg-[#f4f0e8]">
               <Image
                 src={item.image}
@@ -414,6 +418,7 @@ export default function EditItemForm({
                 fill
                 loading="lazy"
                 sizes="150px"
+                onError={() => setFailedImageSrc(item.image)}
                 className="object-contain p-3"
               />
             </div>

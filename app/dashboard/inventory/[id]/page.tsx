@@ -264,6 +264,13 @@ export default function ItemDetailsPage() {
   const [isMovementModalOpen, setIsMovementModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [lightboxOpen, setLightboxOpen] = useState(false);
+  /* A photo that 404s, or that the network drops, used to draw the browser's
+     torn-page glyph on the item page -- see ProductThumbnail for why that is
+     the one image a customer must never see. This page cannot use that
+     component because its empty state is a "No photo yet" line rather than a
+     box icon, so it keeps the same rule locally: hold the src that failed, so
+     editing the item to a different photo clears the failure by itself. */
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const [movementType, setMovementType] =
     useState<StockMovementType>("stock_in");
   const [movementQuantity, setMovementQuantity] = useState("");
@@ -961,7 +968,7 @@ export default function ItemDetailsPage() {
                     common case) capped to a sane width instead of a fixed
                     pixel height stretched to the column's full width. */}
                 <div className="mx-auto flex w-full max-w-[26rem] items-center justify-center rounded-[18px] border border-theme bg-white p-4">
-                  {item.image ? (
+                  {item.image && failedImageSrc !== item.image ? (
                     <button
                       type="button"
                       onClick={() => setLightboxOpen(true)}
@@ -974,6 +981,7 @@ export default function ItemDetailsPage() {
                         fill
                         priority
                         sizes="(min-width: 1280px) 26rem, 100vw"
+                        onError={() => setFailedImageSrc(item.image)}
                         className="object-contain"
                       />
                       <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-slate-900/72 px-2.5 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
@@ -1724,7 +1732,7 @@ export default function ItemDetailsPage() {
 
       {/* Mounted only while open, so zoom and pan reset on close by unmounting
           rather than by an effect syncing state back to its defaults. */}
-      {item?.image && lightboxOpen && (
+      {item?.image && failedImageSrc !== item.image && lightboxOpen && (
         <ImageLightbox
           src={item.image}
           alt={item.name}

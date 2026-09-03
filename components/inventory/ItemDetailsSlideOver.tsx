@@ -235,6 +235,9 @@ export default function ItemDetailsSlideOver({
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
+  /* Same rule as the item page and ProductThumbnail: a photo that fails to
+     load shows the "No image" placeholder, not a broken-image glyph. */
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const [closing, setClosing] = useState(false);
   const [tab, setTab] = useState<ItemDetailsTab>(initialTab);
   const [item, setItem] = useState<SlideOverInventoryItem | null>(null);
@@ -844,12 +847,13 @@ export default function ItemDetailsSlideOver({
                 {tab === "details" && (
                   <div className="item-details-tab-content">
                     <section className="item-details-image-area">
-                      {item.image ? (
+                      {item.image && failedImageSrc !== item.image ? (
                         <Image
                           src={item.image}
                           alt={item.name}
                           fill
                           sizes="(max-width: 640px) 100vw, 560px"
+                          onError={() => setFailedImageSrc(item.image)}
                           className="object-contain p-3"
                         />
                       ) : (

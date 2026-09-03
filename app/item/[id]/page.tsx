@@ -84,6 +84,11 @@ export default function PublicItemPage() {
 
   const [item, setItem] = useState<PublicItem | null>(null);
   const [publicUrl, setPublicUrl] = useState("");
+  /* Of every screen in SydIN this is the worst place for a torn-page glyph:
+     it is what a customer sees after scanning a code in the shop. A photo that
+     fails now falls back to the same "no photo" block an item without one
+     gets. Holding the failed src, not a boolean, so a new photo recovers. */
+  const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -240,7 +245,7 @@ export default function PublicItemPage() {
                   the phone this page is opened on. */}
             <section className="grid grid-cols-1 gap-5 lg:grid-cols-[1.05fr_0.95fr]">
               <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-                {item.image ? (
+                {item.image && failedImageSrc !== item.image ? (
                   <div className="relative h-[320px] w-full sm:h-[440px]">
                     <Image
                       src={item.image}
@@ -248,6 +253,7 @@ export default function PublicItemPage() {
                       fill
                       priority
                       sizes="(min-width: 1024px) 50vw, 100vw"
+                      onError={() => setFailedImageSrc(item.image)}
                       className="object-contain p-4"
                     />
                   </div>
