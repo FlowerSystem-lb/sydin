@@ -234,7 +234,7 @@ export const STATIC_ROUTES: Record<string, string> = {
   "/dashboard/scanner": "Scanner",
   "/dashboard/pick-lists": "Pick Lists",
   "/dashboard/purchase-orders": "Purchase Orders",
-  "/dashboard/receiving": "Receiving",
+  "/dashboard/receiving": "Stock In",
   "/dashboard/alerts": "Stock Alerts",
   "/dashboard/activity": "Activity",
   "/dashboard/stock-movements": "Stock Movements",

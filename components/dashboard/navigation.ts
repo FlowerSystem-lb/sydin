@@ -80,7 +80,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "primary",
   },
   {
-    label: "Receiving",
+    label: "Stock In",
     href: "/dashboard/receiving",
     icon: "download",
     section: "buying",

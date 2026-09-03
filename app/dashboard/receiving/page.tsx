@@ -832,6 +832,13 @@ export default function ReceivingPage() {
             movementType: "stock_in",
             quantity: detail.received,
             notes: [
+              /* Stays "Receiving" although the screen is now called Stock In.
+                 This string is written into stock movement history, and every
+                 record already in the database says "Receiving". Changing it
+                 would split the audit trail into two vocabularies for one
+                 action without rewriting the past, which is worse than one
+                 slightly old-fashioned word. The label people read has moved;
+                 the record they can search has not. */
               "Receiving",
               details.title.trim(),
               sourceLabels[details.source],
@@ -909,11 +916,11 @@ export default function ReceivingPage() {
         <DashboardPageShell width="wide">
           <DashboardPageHeader
             eyebrow="Operations"
-            title="Receiving"
+            title="Stock In"
             description="Book arriving stock into the depot."
           />
           <LockedFeaturePanel
-            feature="Receiving"
+            feature="Stock In"
             benefit="Book arriving stock into a depot in one pass, with supplier, cost and quantity recorded against every item."
             currentPlan={formatPlanName(subscription.plan)}
             requiredPlan="Standard"
@@ -934,7 +941,7 @@ export default function ReceivingPage() {
       >
         <DashboardPageHeader
           eyebrow="Operations"
-          title="Receiving"
+          title="Stock In"
           description="Record stock that arrives without a purchase — customer returns, corrections, and quick restocks. Bought something? Use Purchase Orders instead."
           actions={
             <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
@@ -987,7 +994,7 @@ export default function ReceivingPage() {
               )}
               <div className="grid gap-3 sm:grid-cols-2">
                 <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Receiving title/reference
+                  Stock in title/reference
                   <input
                     type="text"
                     value={details.title}
@@ -1560,7 +1567,7 @@ export default function ReceivingPage() {
                   <Button variant="secondary" onClick={() => setConfirmClearDraft(true)}>
                     Restart
                   </Button>
-                  <Button onClick={goToReview}>Review Receiving</Button>
+                  <Button onClick={goToReview}>Review stock in</Button>
                 </div>
               </div>
             </section>
@@ -1864,7 +1871,7 @@ export default function ReceivingPage() {
               </div>
             )}
             <div className="flex flex-col gap-2 sm:flex-row">
-              <Button onClick={clearDraft}>Start New Receiving</Button>
+              <Button onClick={clearDraft}>Start a new stock in</Button>
               <Button variant="secondary" onClick={() => setStep("receive")}>
                 View Receiving Rows
               </Button>
