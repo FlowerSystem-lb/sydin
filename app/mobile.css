@@ -861,3 +861,36 @@
     background: currentColor;
   }
 }
+
+/* =========================================================================
+   Items: fewer rows of chrome above the products
+   Spec section 7 has this screen as title, search, chips, then products.
+   Ours had the title, an action row, a breadcrumb, a folder strip, search, a
+   control row, a select row and a count line -- eight things before the first
+   product on a 375px screen.
+
+   The breadcrumb goes first because it is the one that says nothing new: it
+   reads "Items / All Items" beneath a heading that already says Inventory,
+   above a folder strip that already shows which folder is active in a
+   highlighted chip. Three statements of the same fact.
+
+   But it is NOT deleted, and that distinction matters. It carries
+   aria-live="polite", so it is what announces the folder change to someone
+   using a screen reader -- the highlight in the strip is silent. `display:
+   none` would remove it from the accessibility tree and take the announcement
+   with it. Clipping it keeps the announcement and removes only the row.
+   ========================================================================= */
+
+@media (max-width: 767px) {
+  .inventory-workspace .inventory-mobile-breadcrumb {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+}
