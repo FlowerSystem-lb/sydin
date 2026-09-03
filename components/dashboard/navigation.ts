@@ -9,6 +9,7 @@ import type { UiIconName } from "@/components/UiIcon";
 export type DashboardNavigationSection =
   | "workspace"
   | "buying"
+  | "selling"
   | "stock"
   | "organize"
   | "insights"
@@ -29,6 +30,7 @@ export const DASHBOARD_SECTION_LABELS: Record<
 > = {
   workspace: "Workspace",
   buying: "Buying",
+  selling: "Selling",
   stock: "Stock",
   organize: "Set up",
   insights: "Insights",
@@ -41,6 +43,7 @@ export const DASHBOARD_SECTION_LABELS: Record<
 export const DASHBOARD_SECTION_ORDER: DashboardNavigationSection[] = [
   "workspace",
   "buying",
+  "selling",
   "stock",
   "organize",
   "insights",
@@ -91,6 +94,16 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     href: "/dashboard/suppliers",
     icon: "suppliers",
     section: "buying",
+    mobilePlacement: "more",
+  },
+  {
+    /* Selling, mirroring Buying. Customers arrives before Sales because a
+       customer is what an invoice names -- the contact has to exist before the
+       document that points at it. */
+    label: "Customers",
+    href: "/dashboard/customers",
+    icon: "suppliers",
+    section: "selling",
     mobilePlacement: "more",
   },
   {

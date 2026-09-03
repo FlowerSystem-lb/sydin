@@ -31,6 +31,7 @@ export interface PlanCapabilities {
   stockMovements: "basic";
   depotLimit: number | null;
   supplierLimit: number | null;
+  customerLimit: number | null;
   categoryLimit: number | null;
   activePickListLimit: number | null;
   searchAndFilters: boolean;
@@ -107,6 +108,17 @@ export const PLAN_SUPPLIER_LIMITS: Record<SubscriptionPlan, number> = {
   pro: 100,
 };
 
+/**
+ * Who the depot sells to. Matched to the supplier numbers deliberately: a
+ * wholesaler with three suppliers has roughly three regular buyers, and a
+ * different shape here would be a pricing decision dressed up as a default.
+ */
+export const PLAN_CUSTOMER_LIMITS: Record<SubscriptionPlan, number> = {
+  free: 3,
+  standard: 25,
+  pro: 100,
+};
+
 export const PLAN_CATEGORY_LIMITS: Record<SubscriptionPlan, number> = {
   free: 5,
   standard: 50,
@@ -149,6 +161,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       stockMovements: "basic",
       depotLimit: 1,
       supplierLimit: PLAN_SUPPLIER_LIMITS.free,
+      customerLimit: PLAN_CUSTOMER_LIMITS.free,
       categoryLimit: PLAN_CATEGORY_LIMITS.free,
       activePickListLimit: PLAN_ACTIVE_PICK_LIST_LIMITS.free,
       searchAndFilters: true,
@@ -194,6 +207,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       stockMovements: "basic",
       depotLimit: 3,
       supplierLimit: PLAN_SUPPLIER_LIMITS.standard,
+      customerLimit: PLAN_CUSTOMER_LIMITS.standard,
       categoryLimit: PLAN_CATEGORY_LIMITS.standard,
       activePickListLimit: PLAN_ACTIVE_PICK_LIST_LIMITS.standard,
       searchAndFilters: true,
@@ -238,6 +252,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       stockMovements: "basic",
       depotLimit: 10,
       supplierLimit: PLAN_SUPPLIER_LIMITS.pro,
+      customerLimit: PLAN_CUSTOMER_LIMITS.pro,
       categoryLimit: PLAN_CATEGORY_LIMITS.pro,
       activePickListLimit: PLAN_ACTIVE_PICK_LIST_LIMITS.pro,
       searchAndFilters: true,
@@ -281,6 +296,12 @@ export const PLAN_COMPARISON_ROWS = [
     feature: "Suppliers",
     values: PUBLIC_PLAN_ORDER.map((plan) =>
       String(PLAN_DEFINITIONS[plan].capabilities.supplierLimit)
+    ),
+  },
+  {
+    feature: "Customers",
+    values: PUBLIC_PLAN_ORDER.map((plan) =>
+      String(PLAN_DEFINITIONS[plan].capabilities.customerLimit)
     ),
   },
   {
@@ -425,6 +446,15 @@ export function getSubscriptionDepotLimit(
   subscription: Pick<UserSubscription, "plan" | "status">
 ) {
   return getSubscriptionCapabilities(subscription).depotLimit ?? 1;
+}
+
+export function getSubscriptionCustomerLimit(
+  subscription: Pick<UserSubscription, "plan" | "status">
+) {
+  return (
+    getSubscriptionCapabilities(subscription).customerLimit ??
+    PLAN_CUSTOMER_LIMITS.free
+  );
 }
 
 export function getSubscriptionSupplierLimit(
