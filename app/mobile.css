@@ -406,3 +406,20 @@
     padding-top: 12px;
   }
 }
+
+/* The low-stock status dot on Overview rows (mobile canvas: "Status is a
+   coloured dot, not a pill"). Hidden by default and shown only on phones:
+   on desktop `.ov-row-value` is already tinted by state, so the dot there
+   would repeat a signal rather than add one.
+
+   This file is imported after globals.css, and no rule in globals.css targets
+   .ov-row-dot, so plain specificity settles it -- no !important needed. */
+.ov-row-dot {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .ov-row-dot {
+    display: inline-block;
+  }
+}

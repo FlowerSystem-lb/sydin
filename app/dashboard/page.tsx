@@ -734,6 +734,33 @@ export default function DashboardPage() {
                           entry.item.custom_unit_label
                         )}
                       </span>
+                      {/* Mobile canvas: "Status is a coloured dot, not a pill:
+                          less furniture, same meaning." Safe to add here and
+                          not on the Inventory row, because this line already
+                          spells the state out ("Low stock · min 10") -- the
+                          dot is a second, faster reading of a fact that is
+                          still written down, so nothing is lost to a reader
+                          who cannot separate red from amber. aria-hidden for
+                          exactly that reason: the text already said it.
+                          Phone-only (see .ov-row-dot in app/mobile.css): on
+                          desktop the quantity itself is already coloured by
+                          state, so a dot beside it would be the second copy
+                          of a signal that is already there -- the furniture
+                          the canvas note is against.
+                          The modifier names are older than they look --
+                          ov-dot-neutral is the amber one and ov-dot-warning
+                          the red -- so the mapping is spelled out rather than
+                          guessed from the name. */}
+                      <span
+                        aria-hidden="true"
+                        className={`ov-row-dot ov-dot ${
+                          entry.state === "out"
+                            ? "ov-dot-warning"
+                            : entry.state === "low"
+                              ? "ov-dot-neutral"
+                              : "ov-dot-success"
+                        }`}
+                      />
                     </Link>
                   </li>
                 ))}
