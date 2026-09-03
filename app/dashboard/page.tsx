@@ -628,10 +628,26 @@ export default function DashboardPage() {
           section on a dashboard page into a white card, and this row is
           deliberately not a card. Avoiding the selector beats overriding it. */}
       <div className="ov-figures" role="group" aria-label="Inventory summary">
-        {summaryCards.map((card) => (
+        {summaryCards.map((card) => {
+          /* The phone gives each figure about 160px. At the canvas's 40px that
+             holds roughly seven characters, so "35,186" fits and "$1,712,130"
+             was being cut off mid-number -- measured, 181px of text in a 160px
+             cell. CSS cannot ask how long a string is, so the length is
+             measured here, where the formatted value already exists, and the
+             long ones get a smaller size on phones only. Length rather than
+             "is it the money card", so it keeps working when the amount grows
+             or the currency changes. */
+          const rendered =
+            card.rawValue === null ? "" : card.format(card.rawValue);
+
+          return (
           <Link key={card.label} href={card.href} className="ov-figure">
             <span className="ov-figure-label">{card.label}</span>
-            <span className="ov-figure-value">
+            <span
+              className={`ov-figure-value${
+                rendered.length >= 8 ? " ov-figure-value--long" : ""
+              }`}
+            >
               {loading || card.rawValue === null ? (
                 "--"
               ) : (
@@ -640,7 +656,8 @@ export default function DashboardPage() {
             </span>
             <span className="ov-figure-note">{card.detail}</span>
           </Link>
-        ))}
+          );
+        })}
       </div>
 
       {hasNoItems ? (

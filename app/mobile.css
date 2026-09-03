@@ -456,3 +456,48 @@
     display: inline-block;
   }
 }
+
+@media (max-width: 767px) {
+  /*
+   * Overview's two headline numbers, from the canvas: 40px, weight 400, in the
+   * heading serif, tabular figures so they do not jitter while they count up.
+   * They were 26px sans — the same size as a lot of other text on the screen,
+   * which is why the screen had no focal point.
+   *
+   * The Overview scales by @container, not @media, so this rule and
+   * `@container (max-width: 560px)` both apply on a phone. mobile.css is
+   * imported after globals.css and the specificity is equal, so this one wins
+   * on order. Deliberate, and the reason it is written here rather than there.
+   */
+  .ov-figure-value,
+  .ov-spend-total {
+    font-family: var(--font-serif-display), ui-serif, Georgia, serif;
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* 11px / .1em / #94a3b8 to match the canvas eyebrow, so the label sits under
+     the number instead of competing with it. */
+  .ov-figure-label {
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    color: #94a3b8;
+  }
+}
+
+@media (max-width: 767px) {
+  /* A long figure -- a currency total, mostly -- at the canvas's 40px runs past
+     its half-width cell and is cut off mid-number. Measured: "$1,712,130"
+     wanted 181px in a 160px cell. The class is set in app/dashboard/page.tsx
+     from the length of the formatted value, because CSS cannot measure text.
+     `anywhere` is the last-resort guard: at some amount even 28px will not fit,
+     and wrapping an ugly number beats silently hiding digits from someone
+     reading their own stock value. */
+  .ov-figure-value--long {
+    font-size: 28px;
+    overflow-wrap: anywhere;
+  }
+}
