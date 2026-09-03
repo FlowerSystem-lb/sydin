@@ -426,6 +426,24 @@ the bar with a `0 10px 24px rgba(57,119,255,.34)` shadow. Tabs, in order:
   *Stock* (Stock counts, Pick lists — 1 active, Depots), *Workspace* (Reports,
   Settings).
 
+### A second open question, found while building
+
+The canvas's Home leads with **two** figures — the count needing attention, and
+units in stock. Overview shows **four**, two across: total items, depots, total
+quantity, inventory value.
+
+That is why the canvas can use 40px and we cannot quite: at 375px each of our
+figures gets a 160px cell, and `$1,712,130` needs 181px at that size. Long values
+now drop to 28px so nothing is clipped, which works but is a patch over the real
+question: **should phone Overview drop to the canvas's two figures?**
+
+Arguments for two: the phone screen gets a real focal point, 40px throughout, and
+the two numbers a depot owner actually opens the app for. Against: depots and
+inventory value disappear from the phone entirely, and inventory value is the one
+figure that makes the business feel measured.
+
+Not decided. It is a content decision, so it is Sayed's.
+
 ### The open question the canvas records
 
 Square photos two to a row show four items per screen where the current list
