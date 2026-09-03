@@ -580,3 +580,43 @@
     padding-block: 0.75rem;
   }
 }
+
+/* =========================================================================
+   Phone chrome: liquid glass on the bottom bar
+   Sayed, 2 Sep 2026: "all web app now have a liquid glasss and animations".
+
+   SydIN already owns this language -- globals.css carries twenty-odd glass
+   classes and the branch is named for it -- but the mobile bar had the glass
+   taken OFF it again and again. Six rules restyle that bar, and the last three
+   set `background: #ffffff` with `backdrop-filter: none`, so the phone ended up
+   with a flat white slab under a workspace that is frosted everywhere else.
+
+   Restored here, phone-only, keeping SydIN's floating-pill shape rather than
+   adopting the Replit reference's full-width bar. The shape is SydIN's; only
+   the surface is borrowed.
+
+   Contrast first: the fill is 0.72 rather than the reference's 0.7, and
+   saturate() lifts the colour behind it, because this is read at arm's length
+   in a bright storeroom. If the labels ever get hard to read, raise the
+   opacity -- never the blur.
+   ========================================================================= */
+
+@media (max-width: 767px) {
+  .dashboard-shell .dashboard-mobile-nav,
+  .dashboard-shell:has(.inventory-workspace) .dashboard-mobile-nav,
+  .dashboard-shell:has(.dashboard-overview) .dashboard-mobile-nav,
+  .dashboard-shell:has(.operations-workspace) .dashboard-mobile-nav,
+  .dashboard-shell:has(.organize-workspace) .dashboard-mobile-nav {
+    background: rgba(255, 255, 255, 0.72);
+    -webkit-backdrop-filter: blur(18px) saturate(150%);
+    backdrop-filter: blur(18px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    box-shadow: 0 8px 32px rgba(11, 18, 32, 0.08);
+  }
+
+  /* The blur has nothing to work on unless content actually travels beneath
+     the bar, so the page keeps its clearance and the bar stops being a wall. */
+  .dashboard-mobile-nav-item {
+    transition: color 180ms ease, background-color 180ms ease;
+  }
+}
