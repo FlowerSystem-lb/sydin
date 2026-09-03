@@ -132,6 +132,66 @@ export default function StockCountsPage() {
   const [loadError, setLoadError] = useState("");
   const [notice, setNotice] = useState("");
   const [step, setStep] = useState<WorkflowStep>("setup");
+  /**
+   * Counting a shelf is two hands and a phone: read the carton, type, move on.
+   * Everything else on this screen already existed -- the four stages, the
+   * draft recovery, "Fill matched", the difference maths. What was missing was
+   * the part that decides whether counting 120 items is bearable: never having
+   * to aim at the next box.
+   *
+   * So Enter walks to the next quantity field in the order they appear, and the
+   * first one is focused when the count opens. `data-count-input` marks them,
+   * which keeps this working across both layouts -- the desktop table and the
+   * stacked mobile rows are different markup listing the same items.
+   */
+  const focusCountInput = useCallback((offsetFrom?: HTMLElement) => {
+    if (typeof document === "undefined") return;
+
+    /*
+     * Both layouts are in the DOM at once -- the desktop table and the stacked
+     * mobile rows list the same ten items, so a plain query returns twenty
+     * fields, half of them hidden by CSS. Walking into a hidden one would make
+     * focus appear to vanish mid-count. `offsetParent` is null for anything
+     * `display: none`, which is exactly the layout that is not on screen.
+     */
+    const inputs = Array.from(
+      document.querySelectorAll<HTMLInputElement>("[data-count-input]")
+    ).filter((input) => input.offsetParent !== null);
+
+    if (inputs.length === 0) return;
+
+    if (!offsetFrom) {
+      // Land on the first field still waiting for a number, not blindly on the
+      // first row -- re-opening a half-finished draft should carry on, not
+      // start again.
+      const firstEmpty = inputs.find((input) => input.value.trim() === "");
+      (firstEmpty || inputs[0]).focus();
+      return;
+    }
+
+    const index = inputs.indexOf(offsetFrom as HTMLInputElement);
+    const next = index >= 0 ? inputs[index + 1] : undefined;
+
+    // The last row keeps focus rather than wrapping to the top: wrapping would
+    // silently send someone back to row 1 and invite a double count.
+    if (next) {
+      next.focus();
+      next.select();
+    } else {
+      (offsetFrom as HTMLInputElement).blur();
+    }
+  }, []);
+
+  const handleCountKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLInputElement>) => {
+      if (event.key !== "Enter") return;
+      // This input sits inside a form on some layouts; Enter must move on, not
+      // submit the count.
+      event.preventDefault();
+      focusCountInput(event.currentTarget);
+    },
+    [focusCountInput]
+  );
   const [countName, setCountName] = useState("");
   const [countNotes, setCountNotes] = useState("");
   const [scope, setScope] = useState<CountScope>("all");
@@ -459,6 +519,19 @@ export default function StockCountsPage() {
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [hasDraft, step]);
+
+  /**
+   * Focus the first field waiting for a number when the count opens, so the
+   * keyboard is already up and the first carton can be typed straight in.
+   * Deliberately not on every render -- only when the stage changes to
+   * "count", otherwise it would steal focus back mid-count on every keystroke.
+   */
+  useEffect(() => {
+    if (step !== "count") return;
+
+    const frame = window.requestAnimationFrame(() => focusCountInput());
+    return () => window.cancelAnimationFrame(frame);
+  }, [focusCountInput, step]);
 
   const refreshItems = async () => {
     const {
@@ -990,6 +1063,8 @@ export default function StockCountsPage() {
                               min="0"
                               step="1"
                               value={row.countedQuantity}
+                              data-count-input
+                              onKeyDown={handleCountKeyDown}
                               onChange={(event) =>
                                 updateRow(item.id, {
                                   countedQuantity: event.target.value,
@@ -1104,6 +1179,8 @@ export default function StockCountsPage() {
                             min="0"
                             step="1"
                             value={row.countedQuantity}
+                            data-count-input
+                            onKeyDown={handleCountKeyDown}
                             onChange={(event) =>
                               updateRow(item.id, {
                                 countedQuantity: event.target.value,
