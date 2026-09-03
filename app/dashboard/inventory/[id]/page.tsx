@@ -995,7 +995,7 @@ export default function ItemDetailsPage() {
                        any actual item data. An absent photo is worth one line,
                        and the frame it would have filled is not worth drawing
                        twice. */
-                    <div className="flex w-full flex-col items-center justify-center gap-1 py-8 text-center text-theme-subtle">
+                    <div className="item-photo-empty flex w-full flex-col items-center justify-center gap-1 py-8 text-center text-theme-subtle">
                       <UiIcon name="box" className="h-6 w-6" />
                       <span className="text-sm">No photo yet</span>
                     </div>

@@ -554,3 +554,29 @@
     gap: 0.75rem;
   }
 }
+
+/*
+ * Item page on a phone: an item with NO photo should not reserve a photo-sized
+ * hole.
+ *
+ * Measured at 375px: the empty "No photo yet" card was 149px tall and sat
+ * above the details, so "2 pcs" -- the one thing you open an item to find --
+ * started at 603px, below the fold.
+ *
+ * The first attempt reordered the grid so the facts came before the picture.
+ * It fixed the number but pushed a REAL photo down to 1657px, which is worse
+ * on a product whose whole point is being recognised by sight. Reverted.
+ *
+ * This is the narrower truth: the waste is not the photo card, it is the empty
+ * one. So the placeholder becomes a single line on phones instead of a block,
+ * and an item that actually has a photo is untouched. The line stays rather
+ * than disappearing, because "no photo yet" is a thing worth knowing and
+ * acting on -- Inventory has a filter for exactly it.
+ */
+@media (max-width: 767px) {
+  .item-photo-empty {
+    flex-direction: row;
+    gap: 0.5rem;
+    padding-block: 0.75rem;
+  }
+}
