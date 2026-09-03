@@ -620,3 +620,115 @@
     transition: color 180ms ease, background-color 180ms ease;
   }
 }
+
+/* =========================================================================
+   PHONE DESIGN SYSTEM — the whole workspace, not one screen
+   Sayed, 2 Sep 2026: "mo bas hyde, kel app" — not just this, the whole app.
+
+   Why this is a token pass rather than a copy of the Replit stylesheet: their
+   look lives in their own class names (.page, .screen-title, .data-row,
+   .metric-block) over their own markup. Ours is .dashboard-page-heading,
+   .dashboard-card, .dashboard-list-row over ours. Their CSS cannot be dropped
+   onto our HTML — nothing would match. What crosses over is the SYSTEM: the
+   type scale, the surface, the row height, the separators.
+
+   It targets the primitives every dashboard page is built from
+   (components/dashboard/Workspace.tsx), so Depots, Suppliers, Categories,
+   Alerts, Stock Movements, Reports and the rest move together.
+
+   TWO THINGS LEARNED THE HARD WAY, both from measuring the live cascade:
+
+   1. A plain `.dashboard-card` rule here loses. globals.css already carries a
+      phone heading at 28px behind a (0,3,0) selector, and an unconditional
+      `background: #fff !important` on a long panel list. So these rules repeat
+      the class to earn the weight instead of reaching for !important, which
+      would win the fight and lose the war.
+
+   2. SydIN ALREADY honours `prefers-reduced-transparency`, forcing every
+      surface opaque for people who ask for it. Frosting with !important would
+      have quietly broken that. So all the glass here sits behind
+      `no-preference`: someone who asks for less transparency keeps their solid
+      white cards, and the design does not overrule an accessibility setting.
+
+   Phone only. The desktop workspace is untouched.
+   ========================================================================= */
+
+@media (max-width: 767px) {
+  /* Titles: the landing page's serif, large and light. 34px from the canvas,
+     replacing the 28px phone size globals.css sets at (0,3,0). */
+  .dashboard-shell-content
+    .dashboard-page-heading.dashboard-page-heading.dashboard-page-heading {
+    font-family: var(--font-serif-display), ui-serif, Georgia, serif;
+    font-size: 34px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+  }
+
+  .dashboard-shell-content .dashboard-page-copy.dashboard-page-copy {
+    font-size: 13px;
+    line-height: 1.4;
+  }
+
+  /* The title sat inside a card. The canvas is explicit — "no header bar, the
+     title just sits in white space" — so on a phone it keeps a hairline and
+     loses the box. */
+  .dashboard-shell-content
+    .dashboard-page-header-card.dashboard-page-header-card {
+    border: 0;
+    border-bottom: 1px solid var(--border-hairline);
+    border-radius: 0;
+    /* !important only because globals.css sets `background: #fff !important`
+       unconditionally on a long list of panels that includes this one. Matched,
+       not escalated. */
+    background: transparent !important;
+    box-shadow: none;
+    padding: 0 0 1rem;
+  }
+
+  /* Rows: one hairline-separated list rather than a stack of boxes. Ten boxes
+     read as ten objects; a list reads as one thing you scan down. 68px is what
+     a 52px thumbnail plus two lines of text needs without crowding. */
+  .dashboard-shell-content .dashboard-list-row.dashboard-list-row {
+    min-height: 68px;
+    border: 0;
+    border-bottom: 1px solid var(--border-hairline);
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding-inline: 0;
+  }
+
+  .dashboard-shell-content .dashboard-list-row.dashboard-list-row:last-child {
+    border-bottom: 0;
+  }
+}
+
+/* The frosted surfaces, kept out of the way of the reduced-transparency
+   setting that globals.css already respects. */
+@media (max-width: 767px) and (prefers-reduced-transparency: no-preference) {
+  .dashboard-shell-content .dashboard-card.dashboard-card,
+  .dashboard-shell-content .dashboard-metric-card.dashboard-metric-card,
+  .dashboard-shell-content .dashboard-toolbar-card.dashboard-toolbar-card,
+  .dashboard-shell-content .dashboard-table-card.dashboard-table-card {
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 16px;
+    /* Same reason as the header card. Safe here because this whole block sits
+       behind `prefers-reduced-transparency: no-preference` -- for anyone who
+       asks for less transparency the block never applies and the opaque
+       !important rule in globals.css still wins, which is the correct outcome. */
+    background: rgba(255, 255, 255, 0.72) !important;
+    -webkit-backdrop-filter: blur(18px) saturate(150%) !important;
+    backdrop-filter: blur(18px) saturate(150%) !important;
+    box-shadow: 0 8px 32px rgba(11, 18, 32, 0.05);
+  }
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .dashboard-card,
+  .dashboard-list-row,
+  .dashboard-metric-card,
+  .dashboard-mobile-nav-item {
+    transition: none;
+  }
+}
