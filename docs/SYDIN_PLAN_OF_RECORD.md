@@ -361,3 +361,112 @@ and button in the app.
 - **Do not scale the site with CSS `zoom`.** Tried and reverted 26 Aug — four
   layout bugs, none measurable, because zoom makes fixed and in-flow elements report
   coordinates in different systems. The scale now comes from the root font size.
+
+---
+
+## J. Mobile — the plan, read off the canvas
+
+**Added 2 Sep 2026**, on Sayed's instruction to start mobile and to take the plan
+from the design canvas rather than from memory. Every number below was extracted
+from the artboard sources inside
+https://claude.ai/code/artifact/8f42f751-b185-48e1-9397-2c428afbbb93 — five
+`.dc.html` files plus `canvas.json` — not re-derived.
+
+### What the canvas actually specifies
+
+Five artboards, each 390 x 844 (iPhone 14/15 logical size), laid out left to
+right: **Home · Items · Scan · Item detail · More**.
+
+The brief written on the canvas, in full:
+
+> Landing page type: Source Serif 4 at weight 400 for every heading, Inter for
+> the rest. Landing blue: the #3977ff -> #8357ff gradient, used for the one
+> action per screen. No header bar — the title just sits in white space. Items
+> are square photos first, facts underneath. Status is a coloured dot, not a
+> pill: less furniture, same meaning.
+
+Design tokens, taken from the artboard CSS:
+
+| Token | Value |
+|---|---|
+| Heading face | `Source Serif 4`, weight 400, `letter-spacing: -0.03em`, `line-height: 1.05` |
+| Body face | Inter, 400/500/600 |
+| Ink | `#0b1220` primary, `#64748b` muted, `#94a3b8` eyebrow |
+| Accent | `#3977ff` link/active · gradient `#3977ff → #8357ff 65% → #d64bff` |
+| Status dots | 7px circle — red `#ef4444` out, amber `#f0a133` low, green in stock |
+| Row | min-height 60px, 13px vertical padding, 1px `rgba(15,23,42,0.08)` divider, last row none |
+| Thumb | 52px, `border-radius: 11px`, gradient plate `#eef3fb → #dfe8f6` behind a box glyph |
+| Screen padding | 22px horizontal; the title block is 34px top, 20px bottom |
+| Eyebrow | 11px, weight 500, `letter-spacing: .1em`, uppercase, `#94a3b8` |
+
+**Tab bar** — five columns, 10px top padding, 26px bottom (home indicator), 1px
+top divider. Four flat 22px icons at `#94a3b8`, the active one `#3977ff`, labels
+11px weight 500. The middle tab is a 56px gradient circle pulled up 26px out of
+the bar with a `0 10px 24px rgba(57,119,255,.34)` shadow. Tabs, in order:
+**Home · Items · Scan · Activity · More**.
+
+### Screen by screen, from the artboards
+
+- **Home** — serif "Today" at 34px over the date. Two figures side by side: the
+  count needing attention at 40px with the gradient clipped to the text, and
+  units in stock at 40px in plain ink with tabular numerals. Then "Running low"
+  (serif, 21px) with a "See all" link, and the low rows: thumb, name, reason
+  ("Out of stock · 3 days", "Below 2"), quantity, status dot.
+- **Items** — serif title, one search field reading "Search or scan", filter
+  chips All / Low / Out / No photo, then items as **square photos two per row**
+  with the name and quantity underneath.
+- **Scan** — the camera fills the screen under "Point at the barcode on the
+  carton". Three actions: Find, Stock in, Stock out. A result card shows the
+  item, its barcode and its quantity.
+- **Item detail** — name, then `FP013 · 5283001502369` as one line, the quantity
+  as the largest thing on the screen ("1 piece in stock"), "Alerts below 2", then
+  Category / Depot / Unit as plain rows, and one gradient action: **Adjust stock**.
+- **More** — avatar, name, plan line ("Free plan · 10 of 50 items") and Upgrade.
+  Then grouped links: *Buying* (Purchase orders — 3 open, Receiving, Suppliers),
+  *Stock* (Stock counts, Pick lists — 1 active, Depots), *Workspace* (Reports,
+  Settings).
+
+### The open question the canvas records
+
+Square photos two to a row show four items per screen where the current list
+shows seven. That is browsing, not scanning. For someone standing in a depot
+looking for one product, seven may beat four. **Not settled** — worth trying both
+on a real phone before committing.
+
+### What already exists in the app, measured 2 Sep 2026
+
+Mobile is further along than "not started":
+
+- `app/mobile.css` — 340 lines, imported globally in `app/layout.tsx`, scoped to
+  `max-width: 767px`.
+- A working five-tab bottom bar is already rendered on every dashboard page, in
+  the right order, with the raised gradient Scan button. It is close to the
+  canvas already.
+- `.mobile-shell`, `.mobile-shell-content`, `.mobile-shell-nav`,
+  `.mobile-dashboard*` classes exist and are wired.
+
+So the work is **not** "build a mobile app". It is: the screens inside that shell
+are still the desktop workspace, shrunk. The canvas is a different information
+design, not a different width.
+
+### Order of work
+
+1. ~~**The phone gutter**~~ — done 2 Sep, commit `64dabd4`. Every page sat flush
+   against the left edge.
+2. **Home** — the one screen where the canvas and the current page differ most,
+   and the first thing anyone opens. Serif title, two figures, low-stock rows.
+3. **Items** — the square-photo grid, behind the open question above.
+4. **Item detail** — quantity as the largest element, one action.
+5. **More** — the grouped menu.
+6. **Scan** — last on purpose. Sayed likes the Scanner page and it is not to be
+   redesigned; the canvas screen mostly matches what is there.
+
+### Rules for this work
+
+- The canvas is the specification. Where this document and the artboards
+  disagree, the artboards win, and this document gets corrected.
+- **Do not touch the Scanner's behaviour.** Standing instruction.
+- Phone styling belongs in `app/mobile.css` behind its existing media query, not
+  in `globals.css`, which already carries several stacked redesigns.
+- The desktop layout must not move. Every mobile change is verified at 375px
+  *and* checked at 1280px before it is called done.
