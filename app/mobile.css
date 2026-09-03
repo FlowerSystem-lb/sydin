@@ -732,3 +732,132 @@
     transition: none;
   }
 }
+
+/* =========================================================================
+   Phone photo tile — facts under the picture, not painted on top of it
+   Spec: docs/SYDIN_MOBILE_DESIGN_SPEC.md section 7, "Items".
+
+   The desktop photo card is a square photo with the name and quantity on a
+   scrim across its bottom, and the rest revealed on hover. That is a good
+   desktop card and a bad phone one, for one reason: a phone has no hover, so
+   everything behind the reveal is unreachable, and the text that IS shown is
+   competing with whatever colours happen to be in the photo underneath it.
+
+   The design puts the photo in its own square and the facts beneath it on the
+   page. That is a structural change, not a colour one, so this undoes the
+   absolute positioning rather than tinting it.
+
+   Worth naming: this card has been restyled SEVEN times in globals.css -- dark
+   scrim, lighter scrim, white radial, fainter white radial -- each layer
+   overriding the last with !important. This block deliberately does not add an
+   eighth coat of paint. It changes the structure and lets the paint stop
+   mattering.
+   ========================================================================= */
+
+@media (max-width: 767px) {
+  .inventory-workspace .inventory-item-card--photo {
+    aspect-ratio: auto;
+    overflow: visible;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+
+  /* The photo becomes its own square block instead of filling the card. */
+  .inventory-workspace .inventory-item-card--photo .inventory-card-media {
+    position: static;
+    aspect-ratio: 1 / 1;
+    border-radius: 12px;
+    overflow: hidden;
+    background: var(--bg-inset, #eef4f8);
+  }
+
+  /* The body leaves the photo and sits under it, on the page, in ink. */
+  .inventory-workspace .inventory-item-card--photo .inventory-card-body,
+  .inventory-workspace
+    .inventory-item-card--photo:hover
+    .inventory-card-body,
+  .inventory-workspace
+    .inventory-item-card--photo:focus-within
+    .inventory-card-body {
+    position: static;
+    padding: 0.5rem 0.125rem 0 !important;
+    background: none !important;
+    box-shadow: none;
+  }
+
+  /* The hairline that separated the scrim from the photo has nothing left to
+     separate. */
+  .inventory-workspace .inventory-item-card--photo .inventory-card-body::before {
+    display: none;
+  }
+
+  .inventory-workspace .inventory-item-card--photo .inventory-card-title,
+  .inventory-workspace .inventory-item-card--photo .inventory-card-quantity {
+    color: var(--ink) !important;
+    text-shadow: none !important;
+  }
+
+  .inventory-workspace .inventory-item-card--photo .inventory-card-code {
+    color: var(--ink-muted) !important;
+  }
+
+  /* Name over two lines, as the spec has it, rather than one truncated line. */
+  .inventory-workspace .inventory-item-card--photo .inventory-card-title {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    white-space: normal;
+    overflow: hidden;
+    font-size: 14px;
+    line-height: 1.3;
+  }
+
+  /* The status was revealed on hover. There is no hover here, so it shows --
+     and it has to, because the dot is meaningless without it. */
+  .inventory-workspace .inventory-item-card--photo .inventory-card-meta {
+    max-height: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    padding: 0 !important;
+    margin-top: 0.35rem !important;
+  }
+
+  /* The action row stays hidden: a phone opens the item to act on it. */
+  .inventory-workspace .inventory-item-card--photo .inventory-card-footer {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Spec section 7: on the tile the status is "a small status dot with word",
+     not a filled badge. The badge was designed to sit on a photo, where it
+     needed a background to survive whatever colour was behind it. Off the photo
+     it is just weight -- it out-shouts the product name it sits under.
+
+     The dot is drawn on the label rather than replacing it. A dot alone would
+     be the state written in colour only, which this project has ruled out
+     twice; the word is what makes the dot safe. */
+  .inventory-workspace .inventory-item-card--photo .inventory-card-status {
+    display: inline-flex !important;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    font-size: 11px;
+    font-weight: 500;
+  }
+
+  .inventory-workspace
+    .inventory-item-card--photo
+    .inventory-card-status::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    flex: 0 0 6px;
+    border-radius: 999px;
+    background: currentColor;
+  }
+}
