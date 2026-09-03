@@ -501,3 +501,27 @@
     overflow-wrap: anywhere;
   }
 }
+
+/* Inventory row status, from the mobile canvas by way of the Replit reference.
+   The dot and the written state are one unit: the dot replaces the pill only
+   because the words moved into the line beneath it. Never ship one without the
+   other -- a bare dot is the state written in colour alone. */
+.inventory-row-dot,
+.inventory-row-state {
+  display: none;
+}
+
+@media (max-width: 767px) {
+  .inventory-row-dot {
+    display: inline-block;
+  }
+
+  .inventory-row-state {
+    display: inline;
+  }
+
+  /* The pill's job is done by the dot plus the words below it. */
+  .inventory-row-pill {
+    display: none;
+  }
+}

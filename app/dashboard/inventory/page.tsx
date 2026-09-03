@@ -3276,19 +3276,43 @@ export default function InventoryPage() {
                         <p className="truncate text-sm font-black text-theme-primary" title={item.name}>
                           {item.name}
                         </p>
+                        {/* Mobile canvas: "status is a coloured dot, not a
+                            pill". The dot alone could not replace this pill,
+                            because the pill was the ONLY place the state was
+                            written -- swapping it would have deleted the fact
+                            rather than restated it. The Replit reference
+                            solved that by always pairing the dot with the
+                            words, so the state moves into the line below and
+                            the dot becomes the fast second reading. Both are
+                            phone-only; desktop keeps the pill it has. */}
                         {status.tone !== "success" && (
-                          <span
-                            className={`rounded-full border px-2 py-0.5 text-xs font-bold ${
-                              status.tone === "danger"
-                                ? "border-red-200 bg-red-50 text-red-600"
-                                : "border-amber-200 bg-amber-50 text-amber-700"
-                            }`}
-                          >
-                            {status.label}
-                          </span>
+                          <>
+                            <span
+                              aria-hidden="true"
+                              className={`inventory-row-dot ov-dot ${
+                                status.tone === "danger"
+                                  ? "ov-dot-warning"
+                                  : "ov-dot-neutral"
+                              }`}
+                            />
+                            <span
+                              className={`inventory-row-pill rounded-full border px-2 py-0.5 text-xs font-bold ${
+                                status.tone === "danger"
+                                  ? "border-red-200 bg-red-50 text-red-600"
+                                  : "border-amber-200 bg-amber-50 text-amber-700"
+                              }`}
+                            >
+                              {status.label}
+                            </span>
+                          </>
                         )}
                       </div>
                       <p className="mt-0.5 truncate text-xs font-semibold text-theme-muted">
+                        {status.tone !== "success" && (
+                          <span className="inventory-row-state">
+                            {status.label}{" | "}
+                          </span>
+                        )}
                         {[item.item_code || item.sku, getCategoryLabel(item), depot ? formatDepotLabel(depot) : "", supplier?.name]
                           .filter(Boolean)
                           .join(" | ")}
