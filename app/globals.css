@@ -23076,3 +23076,23 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ui-dialog.inventory-bulk-photo-dialog {
   width: min(100%, 40rem);
 }
+
+/* Invoice builder inputs. One class rather than repeating the same eight
+   utilities on every field, because the line row already carries enough. */
+.sale-input {
+  min-height: 2.75rem;
+  width: 100%;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  padding-inline: 0.75rem;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+  font-weight: 400;
+  outline: none;
+}
+
+.sale-input:focus {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}

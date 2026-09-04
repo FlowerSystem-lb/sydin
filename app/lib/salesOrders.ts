@@ -1,0 +1,327 @@
+import { supabase } from "@/app/lib/supabase";
+
+/**
+ * Invoices: what the depot sold, to whom, for how much.
+ *
+ * A deliberate mirror of `app/lib/purchaseOrders.ts`. Same status vocabulary,
+ * same money helpers, same schema-missing guard, same shape of insert. The buy
+ * side has been in production for months; the sell side copies it rather than
+ * inventing a second way to hold a document.
+ *
+ * The one word that changes is `unit_cost` becoming `unit_price`. It is not
+ * cosmetic: cost is what the depot paid, price is what the customer pays, and
+ * an invoice that reads a cost by mistake would undercharge silently. Keeping
+ * the two names apart makes that mistake impossible to make quietly.
+ */
+
+export type SalesOrderStatus = "draft" | "issued" | "paid" | "cancelled";
+export type SalesOrderPaymentStatus = "unpaid" | "partial" | "paid";
+export type SalesOrderLineType = "inventory" | "charge";
+
+export interface SalesOrderLine {
+  id: number;
+  sales_order_id: number;
+  line_type: SalesOrderLineType;
+  inventory_item_id: number | null;
+  affects_stock: boolean;
+  name_snapshot: string;
+  sku_snapshot: string | null;
+  item_code_snapshot: string | null;
+  unit_label_snapshot: string | null;
+  quantity: number;
+  unit_price: number | null;
+  notes: string | null;
+}
+
+export interface SalesOrder {
+  id: number;
+  user_id: string;
+  invoice_number: string;
+  title: string | null;
+  customer_id: number | null;
+  customer_name_snapshot: string | null;
+  customer_contact_snapshot: string | null;
+  depot_id: number | null;
+  depot_name_snapshot: string | null;
+  issue_date: string | null;
+  due_date: string | null;
+  status: SalesOrderStatus;
+  payment_status: SalesOrderPaymentStatus;
+  amount_paid: number | null;
+  currency_code: string | null;
+  notes: string | null;
+  internal_reference: string | null;
+  created_at: string;
+  updated_at: string;
+  issued_at: string | null;
+  cancelled_at: string | null;
+  lines?: SalesOrderLine[];
+}
+
+export interface SalesOrderLineInput {
+  line_type: SalesOrderLineType;
+  inventory_item_id?: number | null;
+  affects_stock?: boolean;
+  name_snapshot: string;
+  sku_snapshot?: string | null;
+  item_code_snapshot?: string | null;
+  unit_label_snapshot?: string | null;
+  quantity: number;
+  unit_price?: number | null;
+  notes?: string | null;
+}
+
+export interface SalesOrderInput {
+  invoice_number: string;
+  title?: string | null;
+  customer_id?: number | null;
+  customer_name_snapshot?: string | null;
+  customer_contact_snapshot?: string | null;
+  depot_id?: number | null;
+  depot_name_snapshot?: string | null;
+  issue_date?: string | null;
+  due_date?: string | null;
+  currency_code?: string | null;
+  notes?: string | null;
+  internal_reference?: string | null;
+  lines: SalesOrderLineInput[];
+}
+
+export const SALES_ORDER_STATUS_LABELS: Record<SalesOrderStatus, string> = {
+  draft: "Draft",
+  issued: "Issued",
+  paid: "Paid",
+  cancelled: "Cancelled",
+};
+
+export const SALES_ORDER_PAYMENT_STATUS_LABELS: Record<
+  SalesOrderPaymentStatus,
+  string
+> = {
+  unpaid: "Unpaid",
+  partial: "Part paid",
+  paid: "Paid",
+};
+
+const ORDER_SELECT =
+  "id, user_id, invoice_number, title, customer_id, customer_name_snapshot, customer_contact_snapshot, depot_id, depot_name_snapshot, issue_date, due_date, status, payment_status, amount_paid, currency_code, notes, internal_reference, created_at, updated_at, issued_at, cancelled_at";
+
+const LINE_SELECT =
+  "id, sales_order_id, line_type, inventory_item_id, affects_stock, name_snapshot, sku_snapshot, item_code_snapshot, unit_label_snapshot, quantity, unit_price, notes";
+
+/**
+ * The tables are added by a migration that is run by hand, so a workspace can
+ * exist without them. Same guard purchase orders carries, for the same reason:
+ * "the table is missing" and "something went wrong" need different words.
+ */
+export function isSalesSchemaMissing(error: unknown) {
+  const salesError = error as { code?: string; message?: string };
+  const text = `${salesError?.message || ""}`.toLowerCase();
+
+  return (
+    salesError?.code === "42P01" ||
+    salesError?.code === "PGRST205" ||
+    text.includes("sales_orders") ||
+    text.includes("sales_order_lines")
+  );
+}
+
+export function getSalesOrderLineTotal(line: SalesOrderLine) {
+  return Number(line.quantity || 0) * Number(line.unit_price || 0);
+}
+
+export function getSalesOrderTotal(order: SalesOrder) {
+  return (order.lines || []).reduce(
+    (sum, line) => sum + getSalesOrderLineTotal(line),
+    0
+  );
+}
+
+export function getSalesOrderBalance(order: SalesOrder) {
+  return Math.max(getSalesOrderTotal(order) - Number(order.amount_paid || 0), 0);
+}
+
+/**
+ * Only inventory lines that are marked as moving stock. A delivery charge on an
+ * invoice is money, not goods, and must never reach the stock ledger.
+ */
+export function getStockAffectingLines(order: SalesOrder) {
+  return (order.lines || []).filter(
+    (line) => line.affects_stock && line.inventory_item_id
+  );
+}
+
+export async function getSalesOrdersForUser(userId: string) {
+  const { data, error } = await supabase
+    .from("sales_orders")
+    .select(`${ORDER_SELECT}, lines:sales_order_lines(${LINE_SELECT})`)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false });
+
+  if (error) throw error;
+
+  return (data as SalesOrder[]) || [];
+}
+
+export async function getSalesOrder(userId: string, orderId: number) {
+  const { data, error } = await supabase
+    .from("sales_orders")
+    .select(`${ORDER_SELECT}, lines:sales_order_lines(${LINE_SELECT})`)
+    .eq("id", orderId)
+    .eq("user_id", userId)
+    .single();
+
+  if (error) throw error;
+
+  return data as SalesOrder;
+}
+
+/**
+ * Suggests the next number in whatever pattern the account is already using, so
+ * INV-0007 follows INV-0006 without anyone counting. Falls back to INV-0001 on
+ * an empty account or a numbering scheme this cannot read -- a suggestion, never
+ * a rule, because the field stays editable.
+ */
+export async function suggestNextInvoiceNumber(userId: string) {
+  const { data } = await supabase
+    .from("sales_orders")
+    .select("invoice_number")
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .limit(1);
+
+  const latest = data?.[0]?.invoice_number as string | undefined;
+  if (!latest) return "INV-0001";
+
+  const match = latest.match(/^(.*?)(\d+)(\D*)$/);
+  if (!match) return `${latest}-2`;
+
+  const [, prefix, digits, suffix] = match;
+  const next = String(Number(digits) + 1).padStart(digits.length, "0");
+
+  return `${prefix}${next}${suffix}`;
+}
+
+export async function createSalesOrder(userId: string, input: SalesOrderInput) {
+  const { lines, ...order } = input;
+
+  const { data, error } = await supabase
+    .from("sales_orders")
+    .insert({
+      user_id: userId,
+      ...order,
+      invoice_number: order.invoice_number.trim(),
+      status: "draft",
+    })
+    .select(ORDER_SELECT)
+    .single();
+
+  if (error) throw error;
+
+  const created = data as SalesOrder;
+
+  if (lines.length > 0) {
+    const { error: lineError } = await supabase.from("sales_order_lines").insert(
+      lines.map((line) => ({
+        sales_order_id: created.id,
+        line_type: line.line_type,
+        inventory_item_id: line.inventory_item_id ?? null,
+        affects_stock: line.affects_stock ?? false,
+        name_snapshot: line.name_snapshot.trim(),
+        sku_snapshot: line.sku_snapshot ?? null,
+        item_code_snapshot: line.item_code_snapshot ?? null,
+        unit_label_snapshot: line.unit_label_snapshot ?? null,
+        quantity: line.quantity,
+        unit_price: line.unit_price ?? null,
+        notes: line.notes ?? null,
+      }))
+    );
+
+    if (lineError) {
+      /* An invoice with no lines is worse than no invoice: it looks real, it
+         occupies its number, and its total is silently zero. Roll the header
+         back so the failure is visible and the number stays free. */
+      await supabase.from("sales_orders").delete().eq("id", created.id);
+      throw lineError;
+    }
+  }
+
+  return created;
+}
+
+export async function updateSalesOrder(
+  userId: string,
+  orderId: number,
+  patch: Partial<
+    Pick<
+      SalesOrder,
+      | "title"
+      | "customer_id"
+      | "customer_name_snapshot"
+      | "customer_contact_snapshot"
+      | "depot_id"
+      | "depot_name_snapshot"
+      | "issue_date"
+      | "due_date"
+      | "notes"
+      | "internal_reference"
+      | "currency_code"
+    >
+  >
+) {
+  const { error } = await supabase
+    .from("sales_orders")
+    .update(patch)
+    .eq("id", orderId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+}
+
+export async function cancelSalesOrder(userId: string, orderId: number) {
+  const { error } = await supabase
+    .from("sales_orders")
+    .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+    .eq("id", orderId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+}
+
+export async function deleteSalesOrder(userId: string, orderId: number) {
+  const { error } = await supabase
+    .from("sales_orders")
+    .delete()
+    .eq("id", orderId)
+    .eq("user_id", userId);
+
+  if (error) throw error;
+}
+
+export function getSalesOrderErrorMessage(error: unknown) {
+  const salesError = error as {
+    code?: string;
+    message?: string;
+    details?: string;
+  };
+  const text =
+    `${salesError?.message || ""} ${salesError?.details || ""}`.toLowerCase();
+
+  if (isSalesSchemaMissing(error)) {
+    return "Invoices are not available in this workspace yet. Contact support if this keeps happening.";
+  }
+
+  if (salesError?.code === "23505" || text.includes("unique")) {
+    return "An invoice with this number already exists.";
+  }
+
+  if (text.includes("quantity_positive")) {
+    return "Every line needs a quantity above zero.";
+  }
+
+  if (text.includes("unit_price_valid")) {
+    return "A price cannot be negative.";
+  }
+
+  return "We could not save this invoice. Please try again.";
+}

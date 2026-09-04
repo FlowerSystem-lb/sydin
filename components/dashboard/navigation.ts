@@ -100,6 +100,13 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     /* Selling, mirroring Buying. Customers arrives before Sales because a
        customer is what an invoice names -- the contact has to exist before the
        document that points at it. */
+    label: "Sales",
+    href: "/dashboard/sales",
+    icon: "file",
+    section: "selling",
+    mobilePlacement: "more",
+  },
+  {
     label: "Customers",
     href: "/dashboard/customers",
     icon: "suppliers",
