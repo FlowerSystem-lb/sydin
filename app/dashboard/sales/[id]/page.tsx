@@ -15,6 +15,7 @@ import {
   getOrCreateBusinessSettings,
 } from "@/app/lib/businessSettings";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
+import { exportSalesInvoicePdf } from "@/app/lib/salesInvoicePdf";
 import {
   addSalesOrderPayment,
   deleteSalesOrder,
@@ -72,6 +73,11 @@ export default function SaleDetailPage() {
     useState<SalesOrderPaymentMethod>("cash");
   const [savingPayment, setSavingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
+  const [businessName, setBusinessName] = useState("");
+  const [businessLogoUrl, setBusinessLogoUrl] = useState("");
+  const [contactEmail, setContactEmail] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     let isActive = true;
@@ -99,6 +105,10 @@ export default function SaleDetailPage() {
         setCurrencyCode(
           settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code
         );
+        setBusinessName(settings?.business_name || "");
+        setBusinessLogoUrl(settings?.business_logo_url || "");
+        setContactEmail(settings?.contact_email || "");
+        setContactPhone(settings?.contact_phone || "");
       })
       .catch(() => {
         if (isActive) setError("We could not find that invoice.");
@@ -195,6 +205,53 @@ export default function SaleDetailPage() {
     }
   };
 
+  const downloadPdf = async () => {
+    if (!order || downloading) return;
+
+    try {
+      setDownloading(true);
+      setError("");
+
+      await exportSalesInvoicePdf({
+        details: {
+          invoiceNumber: order.invoice_number,
+          customerName: order.customer_name_snapshot || undefined,
+          customerContact: order.customer_contact_snapshot || undefined,
+          depotName: order.depot_name_snapshot || undefined,
+          issueDate: order.issue_date || undefined,
+          dueDate: order.due_date || undefined,
+          status: SALES_ORDER_STATUS_LABELS[order.status],
+          paymentStatus: SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status],
+          amountPaid: order.amount_paid,
+          notes: order.notes || undefined,
+        },
+        /* Everything printed comes from the SNAPSHOTS on the invoice, never
+           from the live catalogue. A product renamed or repriced next month
+           must not change a document the customer is already holding. */
+        lines: (order.lines || []).map((line) => ({
+          name: line.name_snapshot,
+          code: line.item_code_snapshot || line.sku_snapshot || undefined,
+          unit: line.unit_label_snapshot || undefined,
+          quantity: Number(line.quantity),
+          unitPrice: line.unit_price,
+          lineTotal: getSalesOrderLineTotal(line),
+          isCharge: line.line_type === "charge",
+        })),
+        branding: {
+          businessName: businessName || "SydIN",
+          businessLogoUrl: businessLogoUrl || undefined,
+          contactEmail: contactEmail || undefined,
+          contactPhone: contactPhone || undefined,
+        },
+        currencyCode,
+      });
+    } catch {
+      setError("We could not build the PDF. Please try again.");
+    } finally {
+      setDownloading(false);
+    }
+  };
+
   const removeDraft = async () => {
     if (!order || deleting) return;
 
@@ -258,19 +315,31 @@ export default function SaleDetailPage() {
             SALES_ORDER_STATUS_LABELS[order.status],
           ].join(" · ")}
           actions={
-            order.status === "draft" ? (
-              <div className="flex flex-wrap items-center gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => setConfirmDelete(true)}
-                >
-                  Delete draft
-                </Button>
-                <Button onClick={() => setConfirmIssue(true)}>
-                  Issue invoice
-                </Button>
-              </div>
-            ) : undefined
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Available on a draft too: a customer often wants to see the
+                  figures before anything ships, and printing changes nothing. */}
+              <Button
+                variant="secondary"
+                onClick={() => void downloadPdf()}
+                loading={downloading}
+                loadingLabel="Building..."
+              >
+                Download PDF
+              </Button>
+              {order.status === "draft" && (
+                <>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setConfirmDelete(true)}
+                  >
+                    Delete draft
+                  </Button>
+                  <Button onClick={() => setConfirmIssue(true)}>
+                    Issue invoice
+                  </Button>
+                </>
+              )}
+            </div>
           }
         />
 
