@@ -16,6 +16,7 @@ export type BooleanPlanCapability =
   | "csvExcelImport"
   | "excelExport"
   | "purchaseOrders"
+  | "sales"
   | "receiving"
   | "advancedReports"
   | "dashboardAnalytics"
@@ -50,6 +51,7 @@ export interface PlanCapabilities {
    * first thing a growing wholesaler pays for.
    */
   purchaseOrders: boolean;
+  sales: boolean;
   receiving: boolean;
   advancedReports: boolean;
   dashboardAnalytics: boolean;
@@ -174,6 +176,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       excelExport: false,
       pdfExport: "none",
       purchaseOrders: false,
+      sales: false,
       receiving: false,
       advancedReports: false,
       dashboardAnalytics: false,
@@ -220,6 +223,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       excelExport: true,
       pdfExport: "basic",
       purchaseOrders: true,
+      sales: true,
       receiving: true,
       advancedReports: true,
       dashboardAnalytics: true,
@@ -265,6 +269,7 @@ export const PLAN_DEFINITIONS: Record<PublicPlanId, PlanDefinition> = {
       excelExport: true,
       pdfExport: "basic",
       purchaseOrders: true,
+      sales: true,
       receiving: true,
       advancedReports: true,
       dashboardAnalytics: true,

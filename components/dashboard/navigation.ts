@@ -8,9 +8,7 @@ import type { UiIconName } from "@/components/UiIcon";
    moving it. */
 export type DashboardNavigationSection =
   | "workspace"
-  | "buying"
-  | "selling"
-  | "stock"
+  | "contacts"
   | "organize"
   | "insights"
   | "system";
@@ -29,9 +27,7 @@ export const DASHBOARD_SECTION_LABELS: Record<
   string
 > = {
   workspace: "Workspace",
-  buying: "Buying",
-  selling: "Selling",
-  stock: "Stock",
+  contacts: "Contacts",
   organize: "Set up",
   insights: "Insights",
   system: "System",
@@ -42,9 +38,7 @@ export const DASHBOARD_SECTION_LABELS: Record<
    rarely, so they do not earn a place near the top. */
 export const DASHBOARD_SECTION_ORDER: DashboardNavigationSection[] = [
   "workspace",
-  "buying",
-  "selling",
-  "stock",
+  "contacts",
   "organize",
   "insights",
   "system",
@@ -75,66 +69,38 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "primary",
   },
   {
-    label: "Purchase Orders",
-    shortLabel: "Orders",
-    href: "/dashboard/purchase-orders",
-    icon: "file",
-    section: "buying",
-    mobilePlacement: "primary",
-  },
-  {
-    label: "Stock In",
-    href: "/dashboard/receiving",
-    icon: "download",
-    section: "buying",
+    /* One door for the five things that are the same KIND of thing: a process
+       with steps that ends in a quantity changing. Sales, Purchase Orders,
+       Stock In, Pick Lists and Stock Counts each had their own sidebar row,
+       across three separate groups, competing with places you merely go. */
+    label: "Workflows",
+    href: "/dashboard/workflows",
+    icon: "movement",
+    section: "workspace",
     mobilePlacement: "more",
   },
   {
     label: "Suppliers",
     href: "/dashboard/suppliers",
     icon: "suppliers",
-    section: "buying",
-    mobilePlacement: "more",
-  },
-  {
-    /* Selling, mirroring Buying. Customers arrives before Sales because a
-       customer is what an invoice names -- the contact has to exist before the
-       document that points at it. */
-    label: "Sales",
-    href: "/dashboard/sales",
-    icon: "file",
-    section: "selling",
+    section: "contacts",
     mobilePlacement: "more",
   },
   {
     label: "Customers",
     href: "/dashboard/customers",
     icon: "suppliers",
-    section: "selling",
+    section: "contacts",
     mobilePlacement: "more",
   },
   {
+    /* A record you read, not a job you run, so it belongs with the other
+       things you look at rather than in Workflows. */
     label: "Stock Movements",
     shortLabel: "Movements",
     href: "/dashboard/stock-movements",
     icon: "movement",
-    section: "stock",
-    mobilePlacement: "more",
-  },
-  {
-    label: "Stock Counts",
-    shortLabel: "Counts",
-    href: "/dashboard/stock-counts",
-    icon: "layers",
-    section: "stock",
-    mobilePlacement: "more",
-  },
-  {
-    label: "Pick Lists",
-    shortLabel: "Picking",
-    href: "/dashboard/pick-lists",
-    icon: "picklists",
-    section: "stock",
+    section: "insights",
     mobilePlacement: "more",
   },
   {
