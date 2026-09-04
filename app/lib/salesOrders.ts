@@ -278,6 +278,45 @@ export async function updateSalesOrder(
   if (error) throw error;
 }
 
+/**
+ * Issue an invoice: take the goods out of stock and mark it issued.
+ *
+ * One database function, not a loop here. A five-line invoice is five stock
+ * movements plus a status change; run from the browser that is six round trips
+ * with no transaction around them, and losing the connection halfway leaves
+ * some products gone, some still counted, and the invoice never marked. Inside
+ * the function it is one transaction: all of it happens, or none of it does.
+ *
+ * Every rule lives there too -- draft only, ownership, enough stock, whole
+ * quantities, and never twice for the same line -- so they hold no matter which
+ * screen calls this.
+ */
+export async function issueSalesOrder(orderId: number) {
+  const { data, error } = await supabase.rpc("issue_sales_order", {
+    p_sales_order_id: orderId,
+  });
+
+  if (error) throw error;
+
+  return data as SalesOrder;
+}
+
+/**
+ * The function raises plain sentences, so they are shown as-is rather than
+ * replaced with something vaguer. "Only 2 of Nivea blue in stock, but the
+ * invoice sells 3" is the whole answer; "could not issue" is not.
+ */
+export function getIssueErrorMessage(error: unknown) {
+  const issueError = error as { message?: string };
+  const message = (issueError?.message || "").trim();
+
+  if (!message || /jwt|network|fetch/i.test(message)) {
+    return "We could not issue this invoice. Please try again.";
+  }
+
+  return message;
+}
+
 export async function cancelSalesOrder(userId: string, orderId: number) {
   const { error } = await supabase
     .from("sales_orders")
