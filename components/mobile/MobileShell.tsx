@@ -3,6 +3,12 @@
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useRef } from "react";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import {
+  DASHBOARD_NAVIGATION,
+  DASHBOARD_SECTION_LABELS,
+  DASHBOARD_SECTION_ORDER,
+  isDashboardRouteActive,
+} from "@/components/dashboard/navigation";
 
 interface MobileTab {
   id: string;
@@ -12,28 +18,62 @@ interface MobileTab {
   center?: boolean;
 }
 
+/**
+ * The phone bar and its More sheet are BUILT FROM navigation.ts, not from their
+ * own list.
+ *
+ * They used to be hardcoded here, and the two drifted badly: the sidebar
+ * carried fourteen destinations while this file offered nine, so Customers,
+ * Suppliers, Sales, Purchase Orders, Workflows, Depots, Categories, Import &
+ * Export and Help had no route on a phone at all. Anything added to the app
+ * simply never arrived here, silently, because nothing connected the two.
+ *
+ * Deriving both from the same list is what stops that happening again: a new
+ * page appears on the phone the moment it appears in the sidebar.
+ */
+const PRIMARY_TABS = DASHBOARD_NAVIGATION.filter(
+  (item) => item.mobilePlacement === "primary"
+).map((item) => ({
+  id: item.href,
+  label: item.shortLabel || item.label,
+  icon: item.icon,
+  href: item.href,
+}));
+
+/* Scan sits in the MIDDLE, which is what makes it the raised button rather than
+   a fifth tab, so it is spliced into the centre rather than appended. */
 const MOBILE_TABS: MobileTab[] = [
-  { id: "home", label: "Home", icon: "dashboard", href: "/dashboard" },
-  { id: "inventory", label: "Inventory", icon: "box", href: "/dashboard/inventory" },
-  { id: "scan", label: "Scan", icon: "scan", href: "/dashboard/scanner", center: true },
-  { id: "activity", label: "Activity", icon: "clock", href: "/dashboard/activity" },
+  ...PRIMARY_TABS.slice(0, Math.ceil(PRIMARY_TABS.length / 2)),
+  {
+    id: "scan",
+    label: "Scan",
+    icon: "scan",
+    href: "/dashboard/scanner",
+    center: true,
+  },
+  ...PRIMARY_TABS.slice(Math.ceil(PRIMARY_TABS.length / 2)),
   { id: "more", label: "More", icon: "more", href: "#" },
 ];
 
-const MORE_MENU_ITEMS = [
-  { label: "Settings", icon: "settings" as UiIconName, href: "/dashboard/settings" },
-  { label: "Reports", icon: "reports" as UiIconName, href: "/dashboard/reports" },
-  { label: "Stock Counts", icon: "check" as UiIconName, href: "/dashboard/stock-counts" },
-  { label: "Alerts", icon: "alert" as UiIconName, href: "/dashboard/alerts" },
-  { label: "QR Center", icon: "qr" as UiIconName, href: "/dashboard/qr-center" },
-];
+/* Everything else, grouped exactly as the sidebar groups it, so the phone and
+   the desktop tell the same story about where things live. */
+const MORE_MENU_SECTIONS = DASHBOARD_SECTION_ORDER.map((section) => ({
+  section,
+  label: DASHBOARD_SECTION_LABELS[section],
+  items: DASHBOARD_NAVIGATION.filter(
+    (item) => item.mobilePlacement === "more" && item.section === section
+  ),
+})).filter((group) => group.items.length > 0);
 
 function getActiveTab(pathname: string): string {
-  if (pathname === "/dashboard" || pathname === "/dashboard/") return "home";
-  if (pathname.startsWith("/dashboard/inventory")) return "inventory";
-  if (pathname.startsWith("/dashboard/scanner")) return "scan";
-  if (pathname.startsWith("/dashboard/activity")) return "activity";
-  return "more";
+  const scanner = "/dashboard/scanner";
+  if (isDashboardRouteActive(pathname, scanner)) return "scan";
+
+  const match = PRIMARY_TABS.find((tab) =>
+    isDashboardRouteActive(pathname, tab.href)
+  );
+
+  return match ? match.id : "more";
 }
 
 export default function MobileShell({
@@ -76,15 +116,20 @@ export default function MobileShell({
       {/* More menu sheet */}
       {moreMenuOpen && (
         <div className="mobile-more-menu">
-          {MORE_MENU_ITEMS.map((item) => (
-            <button
-              key={item.href}
-              onClick={() => handleNavigation(item.href)}
-              className="mobile-more-menu-item"
-            >
-              <UiIcon name={item.icon} className="h-5 w-5" />
-              <span>{item.label}</span>
-            </button>
+          {MORE_MENU_SECTIONS.map((group) => (
+            <div key={group.section} className="mobile-more-menu-group">
+              <p className="mobile-more-menu-heading">{group.label}</p>
+              {group.items.map((item) => (
+                <button
+                  key={item.href}
+                  onClick={() => handleNavigation(item.href)}
+                  className="mobile-more-menu-item"
+                >
+                  <UiIcon name={item.icon} className="h-5 w-5" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </div>
           ))}
         </div>
       )}
@@ -144,7 +189,7 @@ export default function MobileShell({
                   name={tab.icon}
                   className="h-5 w-5"
                 />
-                {tab.id === "home" && alertCount > 0 && (
+                {tab.href === "/dashboard" && alertCount > 0 && (
                   <div className="mobile-nav-badge">
                     {alertCount > 9 ? "9+" : alertCount}
                   </div>

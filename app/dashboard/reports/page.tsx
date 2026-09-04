@@ -185,6 +185,22 @@ const VALUATION_REPORTS: ReportCard[] = [
 
 const OPERATION_REPORTS: ReportCard[] = [
   {
+    /* Activity used to be its own sidebar row. It is a history you read, which
+       is what every other entry on this page is, so it belongs here rather than
+       competing for a place in the navigation. */
+    id: "activity-history",
+    name: "Activity History",
+    description:
+      "Everything that has happened in the workspace — items added and edited, stock moved, orders raised — newest first.",
+    category: "activity",
+    source: "Workspace history",
+    formats: ["Workflow"],
+    action: "route",
+    href: "/dashboard/activity",
+    hrefLabel: "Open Activity History",
+    icon: "clock",
+  },
+  {
     id: "stock-movements",
     name: "Stock Movements",
     description: "Audit trail of stock in, stock out, adjustments, receiving, and counts.",

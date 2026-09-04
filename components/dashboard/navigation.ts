@@ -8,9 +8,8 @@ import type { UiIconName } from "@/components/UiIcon";
    moving it. */
 export type DashboardNavigationSection =
   | "workspace"
-  | "contacts"
-  | "organize"
-  | "insights"
+  | "records"
+  | "reports"
   | "system";
 
 export interface DashboardNavigationItem {
@@ -27,9 +26,8 @@ export const DASHBOARD_SECTION_LABELS: Record<
   string
 > = {
   workspace: "Workspace",
-  contacts: "Contacts",
-  organize: "Set up",
-  insights: "Insights",
+  records: "Records",
+  reports: "Reports",
   system: "System",
 };
 
@@ -38,9 +36,8 @@ export const DASHBOARD_SECTION_LABELS: Record<
    rarely, so they do not earn a place near the top. */
 export const DASHBOARD_SECTION_ORDER: DashboardNavigationSection[] = [
   "workspace",
-  "contacts",
-  "organize",
-  "insights",
+  "records",
+  "reports",
   "system",
 ];
 
@@ -61,12 +58,16 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "primary",
   },
   {
+    /* NOT "primary". The mobile bar renders every primary item AND a hardcoded
+       Scan button, so listing Scanner here put "Scan" in the bar twice. The
+       raised button is the scanner on a phone; this link is the desktop route
+       to the same place. */
     label: "Scanner",
     shortLabel: "Scan",
     href: "/dashboard/scanner",
     icon: "scan",
     section: "workspace",
-    mobilePlacement: "primary",
+    mobilePlacement: "more",
   },
   {
     /* One door for the five things that are the same KIND of thing: a process
@@ -77,72 +78,67 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     href: "/dashboard/workflows",
     icon: "movement",
     section: "workspace",
+    /* Takes the bottom-bar slot Activity used to hold. Activity is a history
+       you read and now lives in Reports; Workflows is where selling, buying
+       and counting start, which is what a thumb wants within reach. */
+    mobilePlacement: "primary",
+  },
+  {
+    /* Records: the lists you maintain rather than the jobs you run. Customers,
+       Suppliers, Depots and Categories were spread across three groups while
+       being the same kind of thing -- a directory you add to occasionally and
+       then pick from everywhere else. Stock Movements and Activity left the
+       sidebar entirely; both are histories, and Reports is where histories
+       live now. */
+    label: "Customers",
+    href: "/dashboard/customers",
+    icon: "suppliers",
+    section: "records",
     mobilePlacement: "more",
   },
   {
     label: "Suppliers",
     href: "/dashboard/suppliers",
     icon: "suppliers",
-    section: "contacts",
-    mobilePlacement: "more",
-  },
-  {
-    label: "Customers",
-    href: "/dashboard/customers",
-    icon: "suppliers",
-    section: "contacts",
-    mobilePlacement: "more",
-  },
-  {
-    /* A record you read, not a job you run, so it belongs with the other
-       things you look at rather than in Workflows. */
-    label: "Stock Movements",
-    shortLabel: "Movements",
-    href: "/dashboard/stock-movements",
-    icon: "movement",
-    section: "insights",
-    mobilePlacement: "more",
-  },
-  {
-    label: "Categories",
-    href: "/dashboard/categories",
-    icon: "categories",
-    section: "organize",
+    section: "records",
     mobilePlacement: "more",
   },
   {
     label: "Depots",
     href: "/dashboard/depots",
     icon: "depots",
-    section: "organize",
+    section: "records",
     mobilePlacement: "more",
   },
   {
+    label: "Categories",
+    href: "/dashboard/categories",
+    icon: "categories",
+    section: "records",
+    mobilePlacement: "more",
+  },
+  {
+    /* A tool, not a record and not a report: you come here to print labels. */
     label: "QR Center",
     href: "/dashboard/qr-center",
     icon: "qr",
-    section: "organize",
+    section: "system",
     mobilePlacement: "more",
   },
   {
+    /* A list you ACT on -- something is running out and you reorder it -- so it
+       sits with the daily work rather than with the things you read. */
     label: "Alerts",
     href: "/dashboard/alerts",
     icon: "alert",
-    section: "insights",
+    section: "workspace",
     mobilePlacement: "more",
-  },
-  {
-    label: "Activity",
-    href: "/dashboard/activity",
-    icon: "clock",
-    section: "insights",
-    mobilePlacement: "primary",
   },
   {
     label: "Reports",
     href: "/dashboard/reports",
     icon: "reports",
-    section: "insights",
+    section: "reports",
     mobilePlacement: "more",
   },
   {
