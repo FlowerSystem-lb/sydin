@@ -317,6 +317,109 @@ export function getIssueErrorMessage(error: unknown) {
   return message;
 }
 
+export type SalesOrderPaymentMethod = "cash" | "card" | "transfer" | "other";
+
+export const SALES_ORDER_PAYMENT_METHOD_LABELS: Record<
+  SalesOrderPaymentMethod,
+  string
+> = {
+  cash: "Cash",
+  card: "Card",
+  transfer: "Transfer",
+  other: "Other",
+};
+
+export interface SalesOrderPayment {
+  id: number;
+  sales_order_id: number;
+  amount: number;
+  method: SalesOrderPaymentMethod | null;
+  received_by: string | null;
+  note: string | null;
+  paid_at: string;
+  created_at: string;
+}
+
+export interface SalesOrderPaymentInput {
+  amount: number;
+  method?: SalesOrderPaymentMethod | null;
+  received_by?: string | null;
+  note?: string | null;
+  paid_at?: string | null;
+}
+
+export async function getSalesOrderPayments(orderId: number) {
+  const { data, error } = await supabase
+    .from("sales_order_payments")
+    .select("id, sales_order_id, amount, method, received_by, note, paid_at, created_at")
+    .eq("sales_order_id", orderId)
+    .order("paid_at", { ascending: false })
+    .order("id", { ascending: false });
+
+  if (error) throw error;
+
+  return (data as SalesOrderPayment[]) || [];
+}
+
+/**
+ * The invoice's amount_paid and payment_status are NOT written here. A database
+ * trigger recomputes them from the whole log after every change, so a deleted
+ * payment corrects the balance as reliably as an added one, and two payments
+ * arriving at once cannot race each other into a wrong total.
+ */
+export async function addSalesOrderPayment(
+  orderId: number,
+  input: SalesOrderPaymentInput
+) {
+  const { data, error } = await supabase
+    .from("sales_order_payments")
+    .insert({
+      sales_order_id: orderId,
+      amount: input.amount,
+      method: input.method ?? null,
+      received_by: input.received_by ?? null,
+      note: input.note ?? null,
+      paid_at: input.paid_at || new Date().toISOString().slice(0, 10),
+    })
+    .select("id, sales_order_id, amount, method, received_by, note, paid_at, created_at")
+    .single();
+
+  if (error) throw error;
+
+  return data as SalesOrderPayment;
+}
+
+export async function deleteSalesOrderPayment(paymentId: number) {
+  const { error } = await supabase
+    .from("sales_order_payments")
+    .delete()
+    .eq("id", paymentId);
+
+  if (error) throw error;
+}
+
+export function getPaymentErrorMessage(error: unknown) {
+  const paymentError = error as { code?: string; message?: string };
+  const message = (paymentError?.message || "").trim();
+
+  if (/amount_positive/.test(message)) {
+    return "A payment has to be more than zero.";
+  }
+
+  if (/method_valid/.test(message)) {
+    return "Choose cash, card, transfer or other.";
+  }
+
+  if (!message || /jwt|network|fetch/i.test(message)) {
+    return "We could not record this payment. Please try again.";
+  }
+
+  /* The database raises plain sentences for the two rules that matter here --
+     paying a draft, and paying a cancelled invoice -- so they are shown as
+     written rather than flattened into something vaguer. */
+  return message;
+}
+
 export async function cancelSalesOrder(userId: string, orderId: number) {
   const { error } = await supabase
     .from("sales_orders")

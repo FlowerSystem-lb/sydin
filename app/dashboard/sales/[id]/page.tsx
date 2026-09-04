@@ -8,7 +8,7 @@ import {
   DashboardPageHeader,
   DashboardPageShell,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell } from "@/components/ui";
+import { Button, DialogShell, Select } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -16,15 +16,23 @@ import {
 } from "@/app/lib/businessSettings";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
 import {
+  addSalesOrderPayment,
   deleteSalesOrder,
+  deleteSalesOrderPayment,
   getIssueErrorMessage,
+  getPaymentErrorMessage,
+  getSalesOrderBalance,
+  getSalesOrderPayments,
   getSalesOrder,
   getSalesOrderLineTotal,
   getSalesOrderTotal,
   issueSalesOrder,
+  SALES_ORDER_PAYMENT_METHOD_LABELS,
   SALES_ORDER_PAYMENT_STATUS_LABELS,
   SALES_ORDER_STATUS_LABELS,
   type SalesOrder,
+  type SalesOrderPayment,
+  type SalesOrderPaymentMethod,
 } from "@/app/lib/salesOrders";
 
 /**
@@ -58,6 +66,12 @@ export default function SaleDetailPage() {
   const [confirmIssue, setConfirmIssue] = useState(false);
   const [issuing, setIssuing] = useState(false);
   const [notice, setNotice] = useState("");
+  const [payments, setPayments] = useState<SalesOrderPayment[]>([]);
+  const [paymentAmount, setPaymentAmount] = useState("");
+  const [paymentMethod, setPaymentMethod] =
+    useState<SalesOrderPaymentMethod>("cash");
+  const [savingPayment, setSavingPayment] = useState(false);
+  const [paymentError, setPaymentError] = useState("");
 
   useEffect(() => {
     let isActive = true;
@@ -72,14 +86,16 @@ export default function SaleDetailPage() {
           return;
         }
 
-        const [found, settings] = await Promise.all([
+        const [found, settings, paid] = await Promise.all([
           getSalesOrder(user.id, orderId),
           getOrCreateBusinessSettings(user.id),
+          getSalesOrderPayments(orderId),
         ]);
 
         if (!isActive) return;
 
         setOrder(found);
+        setPayments(paid);
         setCurrencyCode(
           settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code
         );
@@ -116,6 +132,66 @@ export default function SaleDetailPage() {
       setError(getIssueErrorMessage(issueError));
     } finally {
       setIssuing(false);
+    }
+  };
+
+  /**
+   * After any payment change the invoice row is re-read rather than patched
+   * here. amount_paid, payment_status and the lifecycle status are all derived
+   * by a database trigger from the whole log, so the database is the only thing
+   * that knows the answer -- recomputing it in the browser would be a second
+   * implementation of the same rule, free to disagree.
+   */
+  const refreshAfterPayment = async (userId: string) => {
+    const [fresh, paid] = await Promise.all([
+      getSalesOrder(userId, orderId),
+      getSalesOrderPayments(orderId),
+    ]);
+    setOrder(fresh);
+    setPayments(paid);
+  };
+
+  const recordPayment = async () => {
+    if (!order || savingPayment) return;
+
+    const amount = Number(paymentAmount);
+
+    if (!(amount > 0)) {
+      setPaymentError("Enter an amount above zero.");
+      return;
+    }
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    try {
+      setSavingPayment(true);
+      setPaymentError("");
+      await addSalesOrderPayment(order.id, { amount, method: paymentMethod });
+      await refreshAfterPayment(user.id);
+      setPaymentAmount("");
+    } catch (error) {
+      setPaymentError(getPaymentErrorMessage(error));
+    } finally {
+      setSavingPayment(false);
+    }
+  };
+
+  const removePayment = async (paymentId: number) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    try {
+      await deleteSalesOrderPayment(paymentId);
+      await refreshAfterPayment(user.id);
+    } catch (error) {
+      setPaymentError(getPaymentErrorMessage(error));
     }
   };
 
@@ -167,6 +243,7 @@ export default function SaleDetailPage() {
   }
 
   const total = getSalesOrderTotal(order);
+  const balance = getSalesOrderBalance(order);
   const lines = order.lines || [];
 
   return (
@@ -260,6 +337,105 @@ export default function SaleDetailPage() {
                 : ""}
             </p>
           </section>
+
+          {order.status !== "draft" && order.status !== "cancelled" && (
+            <section className="dashboard-card p-4">
+              <div className="flex flex-wrap items-baseline justify-between gap-2">
+                <h2 className="text-sm font-semibold text-theme-primary">
+                  Payments
+                </h2>
+                <p className="text-sm font-semibold text-theme-primary tabular-nums">
+                  {formatInventoryPrice(balance, currencyCode) || "--"}
+                  <span className="ml-1.5 text-xs font-normal text-theme-muted">
+                    still owed
+                  </span>
+                </p>
+              </div>
+
+              {paymentError && (
+                <p
+                  role="alert"
+                  className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-3 py-2 text-xs font-semibold text-theme-danger"
+                >
+                  {paymentError}
+                </p>
+              )}
+
+              {payments.length > 0 && (
+                <ul className="mt-3 grid gap-1.5">
+                  {payments.map((payment) => (
+                    <li
+                      key={payment.id}
+                      className="flex items-center justify-between gap-3 border-b border-theme py-2 text-sm last:border-b-0"
+                    >
+                      <span className="min-w-0 truncate text-theme-secondary">
+                        {payment.paid_at}
+                        {payment.method
+                          ? ` · ${SALES_ORDER_PAYMENT_METHOD_LABELS[payment.method]}`
+                          : ""}
+                      </span>
+                      <span className="flex shrink-0 items-center gap-3">
+                        <span className="font-semibold text-theme-primary tabular-nums">
+                          {formatInventoryPrice(payment.amount, currencyCode)}
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => void removePayment(payment.id)}
+                          className="text-xs font-semibold text-theme-muted transition hover:text-theme-danger"
+                        >
+                          Remove
+                        </button>
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {balance > 0 ? (
+                <div className="mt-3 flex flex-wrap items-end gap-2">
+                  <label className="grid gap-1 text-xs font-semibold text-theme-secondary">
+                    Amount received
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      inputMode="decimal"
+                      value={paymentAmount}
+                      onChange={(event) => setPaymentAmount(event.target.value)}
+                      placeholder={String(balance)}
+                      className="sale-input w-40"
+                    />
+                  </label>
+                  <div className="w-40">
+                    <Select
+                      label="How"
+                      value={paymentMethod}
+                      onChange={(value) =>
+                        setPaymentMethod(value as SalesOrderPaymentMethod)
+                      }
+                      options={(
+                        ["cash", "card", "transfer", "other"] as const
+                      ).map((method) => ({
+                        value: method,
+                        label: SALES_ORDER_PAYMENT_METHOD_LABELS[method],
+                      }))}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => void recordPayment()}
+                    loading={savingPayment}
+                    loadingLabel="Saving..."
+                  >
+                    Record payment
+                  </Button>
+                </div>
+              ) : (
+                <p className="mt-3 text-xs font-semibold text-theme-success">
+                  Settled in full.
+                </p>
+              )}
+            </section>
+          )}
 
           {order.notes && (
             <section className="dashboard-card p-4">
