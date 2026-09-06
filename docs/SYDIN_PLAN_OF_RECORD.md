@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 2 September 2026 (mobile plan read off the canvas · phone gutter · photo fallbacks)
+**Last touched:** 4 September 2026 (Sales & Invoices module · Workflows hub · navigation regrouped · phone navigation unified)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -508,3 +508,86 @@ that file is what the work has to match.
   in `globals.css`, which already carries several stacked redesigns.
 - The desktop layout must not move. Every mobile change is verified at 375px
   *and* checked at 1280px before it is called done.
+
+---
+
+## K. Sales & Invoices — BUILT 4 September 2026
+
+Sayed asked for "a full system sales and invoices like POS, manage sales and
+money". He chose **invoices first** over a till, **repeat customers** (so a
+Customers list), and **keep Receiving but rename it**.
+
+The finding that shaped it: **SydIN already had the sell side and no idea about
+money.** Pick Lists carried a `customer_name` and deducted stock on completion.
+What was missing was price, total, payment and a document. Meanwhile the BUY
+side was fully built. So this was not a POS from scratch — it was mirroring a
+proven pattern onto the other side of the business.
+
+| Step | What | Migration |
+|---|---|---|
+| 1 | `customers`, mirroring `suppliers`. Limits 3/25/100. | `phase-19` |
+| 2 | `sales_orders` + `sales_order_lines`. Draft, prices, totals, snapshots. | `phase-20` |
+| 3 | **Issuing** takes stock out, atomically, in one database function. | `phase-21` |
+| 4 | `sales_order_payments`. Paid/part-paid derived by trigger. | `phase-22` |
+| 5 | Invoice PDF. | — |
+
+**Rules that live in the database, not the screens:** cannot sell more than is
+in stock · cannot issue twice · whole quantities only for stock · a charge line
+never moves stock · no payment against a draft or a cancelled invoice · the
+lifecycle follows the money (issued → paid → back to issued if a payment is
+removed).
+
+**Verified by trying to break it**, not by reading: every constraint was tested
+by attempting to violate it, and each migration was read back from the database
+rather than trusted from its own success report (the phase-15/17 lesson). All
+test rows were removed and stock restored from the movements' own before-values.
+
+**Not built, on purpose:** a POS till screen. It becomes worthwhile once
+invoices are proven in real use, and it should then CREATE an invoice rather
+than live beside one.
+
+---
+
+## L. Navigation — regrouped 4 September 2026
+
+Sortly's Workflows page as reference (structure, not visual copy).
+
+  Workspace   Overview · Inventory · Scanner · Workflows · Alerts
+  Records     Customers · Suppliers · Depots · Categories
+  Reports     Reports
+  System      QR Center · Import & Export · Settings · Help
+
+Seven groups became four. `/dashboard/workflows` holds the five things that are
+the same KIND of thing — a process ending in a quantity changing: Sales,
+Purchase Orders, Stock In, Pick Lists, Stock Counts. Locked cards stay visible
+with a padlock, because a feature that vanishes cannot be discovered.
+
+Activity and Stock Movements left the sidebar; both are histories and Reports
+was already a directory of histories. Alerts moved INTO Workspace — a list you
+act on, not one you read.
+
+**The bug this uncovered, and it was the worst of the night.** The phone had its
+own navigation hardcoded in `components/mobile/MobileShell.tsx`, with no
+connection to `navigation.ts`. The sidebar carried fourteen destinations; the
+phone offered nine. **Customers, Suppliers, Sales, Purchase Orders, Workflows,
+Depots, Categories, Import & Export and Help had no route on a phone at all.**
+Nothing was broken — the pages simply could not be reached, and nothing linked
+the two lists so that anyone would notice. Both now derive from `navigation.ts`.
+
+**Rule for anyone adding a page:** add it to `navigation.ts` and it appears in
+both places. Never hardcode a nav list again.
+
+---
+
+## M. What is left
+
+1. **Plan gating for Sales** is written (`sales` capability, Free = false) but
+   has only been seen on a Pro account. Confirm the padlock on a Free account.
+2. **Mobile screens** — section J's order still stands: Home, Items, Item, More.
+   Scan last, and the Scanner is not to be redesigned.
+3. **Pagination**, then the real 500-product test.
+4. **Limits and abuse** — rate limiting needs Supabase settings + Vercel Pro.
+5. **`po-attachments` is public-read** — supplier invoices readable by anyone
+   with the link. Needs signed URLs.
+6. **Still needs Sayed:** leaked-password checkbox in Supabase · test Google and
+   Microsoft sign-in · confirm prices, contact email and WhatsApp are real.
