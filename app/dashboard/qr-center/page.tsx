@@ -442,13 +442,18 @@ export default function QrCenterPage() {
     <main className="operations-workspace operations-qr-center">
       <DashboardPageShell>
         <DashboardPageHeader
-          eyebrow="Operations"
+          eyebrow="Inventory"
           title="QR Center"
           description="Generate QR codes and print labels for your inventory items."
           actions={
-            <ActionButton icon="scan" onClick={openExistingScanner}>
-              Start Scanner
-            </ActionButton>
+            <div className="flex flex-wrap items-center gap-2">
+              <ActionButton href="/dashboard/inventory" variant="secondary">
+                Back to Inventory
+              </ActionButton>
+              <ActionButton icon="scan" onClick={openExistingScanner}>
+                Start Scanner
+              </ActionButton>
+            </div>
           }
         />
 

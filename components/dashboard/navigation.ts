@@ -10,7 +10,7 @@ export type DashboardNavigationSection =
   | "workspace"
   | "records"
   | "reports"
-  | "system";
+  | "account";
 
 export interface DashboardNavigationItem {
   label: string;
@@ -28,7 +28,7 @@ export const DASHBOARD_SECTION_LABELS: Record<
   workspace: "Workspace",
   records: "Records",
   reports: "Reports",
-  system: "System",
+  account: "Account",
 };
 
 /* Ordered by how often a working day touches them. Set up sits below the daily
@@ -38,7 +38,7 @@ export const DASHBOARD_SECTION_ORDER: DashboardNavigationSection[] = [
   "workspace",
   "records",
   "reports",
-  "system",
+  "account",
 ];
 
 export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
@@ -118,14 +118,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
-    /* A tool, not a record and not a report: you come here to print labels. */
-    label: "QR Center",
-    href: "/dashboard/qr-center",
-    icon: "qr",
-    section: "system",
-    mobilePlacement: "more",
-  },
-  {
     /* A list you ACT on -- something is running out and you reorder it -- so it
        sits with the daily work rather than with the things you read. */
     label: "Alerts",
@@ -142,28 +134,26 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
-    label: "Import & Export",
-    shortLabel: "Data",
-    href: "/dashboard/import-export",
-    icon: "sheet",
-    section: "system",
-    mobilePlacement: "more",
-  },
-  {
+    /* QR Center and Import & Export are deliberately not here. Sayed: open
+       import from Inventory, like an internal page of it. Both already had a
+       doorway from Inventory itself -- Import & Export from the ... menu, QR
+       Center from bulk-select -- so a second, parallel entry in the sidebar was
+       what made Inventory feel split across two places instead of one. Removing
+       the sidebar copy leaves exactly one way in, and both pages now carry a
+       "Back to Inventory" action so the round trip reads as one workspace. */
     label: "Settings",
     href: "/dashboard/settings",
     icon: "settings",
-    section: "system",
+    section: "account",
     mobilePlacement: "more",
   },
   {
     label: "Help",
     href: "/dashboard/help",
     icon: "help",
-    section: "system",
+    section: "account",
     mobilePlacement: "more",
   },
-
 ];
 
 export function isDashboardRouteActive(pathname: string, href: string) {

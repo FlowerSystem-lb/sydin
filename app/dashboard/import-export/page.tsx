@@ -121,9 +121,14 @@ export default function ImportExportPage() {
   return (
     <DashboardPageShell as="main">
       <DashboardPageHeader
-        eyebrow="Data"
+        eyebrow="Inventory"
         title="Import & Export"
         description="Manage your inventory imports and exports. View history of all operations."
+        actions={
+          <ActionButton href="/dashboard/inventory" variant="secondary">
+            Back to Inventory
+          </ActionButton>
+        }
       />
 
       <div className="mx-auto w-full max-w-[1180px] space-y-6">
