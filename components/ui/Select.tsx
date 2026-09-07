@@ -40,6 +40,18 @@ interface SelectProps {
   buttonClassName?: string;
   id?: string;
   leadingIcon?: ReactNode;
+  /**
+   * Makes the menu able to add what you were looking for. Given the text
+   * typed in the search box, create the record and return its new value --
+   * the Select selects it and closes. Return null to leave it open (the
+   * caller is expected to have surfaced its own error by then).
+   *
+   * Passing this implies `searchable`: the search box doubles as the field
+   * you type the new name into, so there is nowhere to type without it.
+   */
+  onCreate?: (name: string) => Promise<string | null>;
+  /** Noun for the create row: "category" renders `Create "x" as a new category`. */
+  createNoun?: string;
 }
 
 export default function Select({
@@ -61,6 +73,8 @@ export default function Select({
   buttonClassName,
   id,
   leadingIcon,
+  onCreate,
+  createNoun,
 }: SelectProps) {
   const generatedId = useId();
   const controlId = id || `${generatedId}-select`;
@@ -72,8 +86,12 @@ export default function Select({
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const [menuStyle, setMenuStyle] = useState<CSSProperties>({});
+  const [creating, setCreating] = useState(false);
   const selectedOption = options.find((option) => option.value === value);
   const normalizedSearch = search.trim().toLowerCase();
+  // The search box is the only place to type a new name, so asking for
+  // creation turns searching on whether the caller asked for it or not.
+  const canSearch = searchable || Boolean(onCreate);
   const visibleOptions = useMemo(
     () =>
       normalizedSearch
@@ -113,7 +131,6 @@ export default function Select({
       setActiveIndex(
         selectedIndex >= 0 ? selectedIndex : Math.max(0, firstEnabledIndex)
       );
-      if (searchable) searchRef.current?.focus();
     });
 
     const positionMenu = () => {
@@ -165,7 +182,62 @@ export default function Select({
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("scroll", handleResize, true);
     };
-  }, [open, searchable, value, visibleOptions]);
+  }, [open, canSearch, value, visibleOptions]);
+
+  /* Focusing the search box lived in the effect above, whose dependencies
+     include `visibleOptions` -- a fresh array on every render, because the
+     `options` prop is built inline by every caller. So the effect re-ran
+     constantly and its cleanup cancelled the queued focus frame before it
+     could fire: opening a searchable menu often left the caret nowhere, and
+     typing went to the page instead of the box. Its own effect, keyed only
+     on `open`, runs once per opening and survives the churn. It matters more
+     now that the search box is also where you type a name to create. */
+  useEffect(() => {
+    if (!open || !canSearch) return;
+
+    const frame = window.requestAnimationFrame(() => {
+      searchRef.current?.focus();
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, canSearch]);
+
+  /* Always on show, not only once you have typed something that matches
+     nothing. Hiding it until then meant opening the menu, seeing three
+     categories and no way to add a fourth, and concluding there wasn't one --
+     which is exactly what happened. The only time it goes away is when what
+     you typed IS already in the list, where offering to add it again would
+     be offering to create a duplicate. */
+  const createQuery = search.trim();
+  const queryMatchesExistingOption = options.some(
+    (option) => option.label.trim().toLowerCase() === createQuery.toLowerCase()
+  );
+  const showCreateRow =
+    Boolean(onCreate) && (createQuery.length === 0 || !queryMatchesExistingOption);
+
+  const runCreate = async () => {
+    if (!onCreate || creating) return;
+
+    /* Pressed with nothing typed: the row is an invitation, not an action.
+       Send the caret to the box so the next keystroke goes where it should. */
+    if (!createQuery) {
+      searchRef.current?.focus();
+      return;
+    }
+
+    try {
+      setCreating(true);
+      const createdValue = await onCreate(createQuery);
+
+      if (createdValue) {
+        onChange(createdValue);
+        close();
+        window.requestAnimationFrame(() => buttonRef.current?.focus());
+      }
+    } finally {
+      setCreating(false);
+    }
+  };
 
   const moveActive = (direction: 1 | -1) => {
     if (visibleOptions.length === 0) return;
@@ -203,7 +275,13 @@ export default function Select({
     if (event.key === "Enter" && open) {
       event.preventDefault();
       const option = visibleOptions[activeIndex];
-      if (option) choose(option);
+      if (option) {
+        choose(option);
+      } else if (showCreateRow) {
+        // Typed a name nothing matches, then pressed Enter -- the only thing
+        // that can mean is "yes, add it".
+        void runCreate();
+      }
     }
   };
 
@@ -223,7 +301,7 @@ export default function Select({
                 <UiIcon name="close" className="h-5 w-5" />
               </button>
             </div>
-            {searchable && (
+            {canSearch && (
               <label className="ui-select-search">
                 <UiIcon name="search" className="h-4 w-4" />
                 <input
@@ -234,7 +312,11 @@ export default function Select({
                     setSearch(event.target.value);
                     setActiveIndex(0);
                   }}
-                  placeholder={searchPlaceholder}
+                  placeholder={
+                    onCreate && createNoun
+                      ? `Search or add a ${createNoun}`
+                      : searchPlaceholder
+                  }
                   aria-label={searchPlaceholder}
                 />
               </label>
@@ -287,8 +369,38 @@ export default function Select({
                     </button>
                   );
                 })
-              ) : (
+              ) : showCreateRow ? null : (
                 <p className="ui-select-state">No matching options.</p>
+              )}
+
+              {/* Not having the thing you are looking for used to mean
+                  leaving the form, creating it on its own page, and starting
+                  over. It is one row now. */}
+              {showCreateRow && (
+                <button
+                  type="button"
+                  onClick={() => void runCreate()}
+                  disabled={creating}
+                  className="ui-select-option ui-select-create"
+                >
+                  <UiIcon name="plus" className="h-4 w-4 shrink-0" />
+                  <span className="min-w-0 flex-1">
+                    <span className="ui-select-option-label">
+                      {creating
+                        ? "Adding..."
+                        : createQuery
+                          ? `Add "${createQuery}"`
+                          : `New ${createNoun || "entry"}`}
+                    </span>
+                    {!creating && (
+                      <span className="ui-select-option-description">
+                        {createQuery
+                          ? `Creates a new ${createNoun || "entry"} and selects it`
+                          : "Type a name, then press Enter"}
+                      </span>
+                    )}
+                  </span>
+                </button>
               )}
             </div>
             {clearable && value && (

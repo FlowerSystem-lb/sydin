@@ -12,6 +12,14 @@ interface CategorySelectorProps {
   onChange: (categoryId: string) => void;
   className?: string;
   id?: string;
+  /** Create a category from the dropdown; returns the new id to select. */
+  onCreate?: (name: string) => Promise<string | null>;
+  /**
+   * Drops the "Categories are managed separately / Manage Categories" footer.
+   * Inside the item panel that line is both noise and wrong advice -- with
+   * `onCreate` wired up, categories are no longer managed only elsewhere.
+   */
+  compact?: boolean;
 }
 
 export default function CategorySelector({
@@ -22,6 +30,8 @@ export default function CategorySelector({
   onChange,
   className = "",
   id,
+  onCreate,
+  compact = false,
 }: CategorySelectorProps) {
   const hasLegacyCategory =
     value === "legacy" && Boolean(legacyCategory?.trim());
@@ -54,7 +64,11 @@ export default function CategorySelector({
         searchable={categories.length > 8}
         searchPlaceholder="Search categories"
         disabled={disabled}
-        buttonClassName="min-h-14 rounded-2xl px-5 text-base"
+        onCreate={onCreate}
+        createNoun={onCreate ? "category" : undefined}
+        buttonClassName={
+          compact ? undefined : "min-h-14 rounded-2xl px-5 text-base"
+        }
       />
       {hasLegacyCategory && (
         <p className="mt-2 rounded-xl border border-amber-300/15 bg-amber-500/[0.07] px-3 py-2 text-xs leading-5 text-theme-warning">
@@ -62,15 +76,17 @@ export default function CategorySelector({
           Select a managed category or choose No category to clear it.
         </p>
       )}
-      <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-theme-subtle">
-        <span>Optional. Categories are managed separately.</span>
-        <Link
-          href="/dashboard/categories"
-          className="font-bold text-theme-accent transition hover:text-theme-primary"
-        >
-          Manage Categories
-        </Link>
-      </div>
+      {!compact && (
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-theme-subtle">
+          <span>Optional. Categories are managed separately.</span>
+          <Link
+            href="/dashboard/categories"
+            className="font-bold text-theme-accent transition hover:text-theme-primary"
+          >
+            Manage Categories
+          </Link>
+        </div>
+      )}
     </div>
   );
 }

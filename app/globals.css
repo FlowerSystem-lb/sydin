@@ -8982,6 +8982,26 @@ select.glass-input option {
   background: var(--surface-page);
 }
 
+/* "Add <what you typed>" -- separated from the real options by a hairline so
+   it reads as an action, not another thing to pick. */
+.ui-select-create {
+  margin-top: 0.25rem;
+  border-top: 1px solid var(--border-hairline);
+  padding-top: 0.6rem;
+  border-radius: 0 0 0.65rem 0.65rem;
+  color: var(--text-accent, #2563eb);
+  font-weight: 600;
+}
+
+.ui-select-create:hover:not(:disabled) {
+  background: var(--surface-page);
+}
+
+.ui-select-create:disabled {
+  cursor: progress;
+  opacity: 0.7;
+}
+
 .ui-select-option-selected {
   background: var(--surface-page);
   color: #4338ca;
@@ -23036,9 +23056,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .item-panel-chrome-title {
   margin-top: 2px;
-  font-size: 1.05rem;
-  font-weight: 700;
-  letter-spacing: -0.01em;
+  font-size: 1.15rem;
+  font-weight: 800;
+  letter-spacing: -0.015em;
   color: var(--text-primary, var(--ink));
   white-space: nowrap;
   overflow: hidden;
@@ -23081,9 +23101,12 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .item-photo-tile {
   position: relative;
   flex: none;
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
+  /* Was 52px, which is a favicon. A product photo is the fastest way to
+     recognise an item, so it gets the room to actually be looked at --
+     bigger again on the wide layout, where there is space to spare. */
+  width: 84px;
+  height: 84px;
+  border-radius: 18px;
   border: 1px dashed var(--border-hairline);
   background: var(--sydin-surface-inset, rgba(203, 213, 225, 0.3));
   color: var(--text-subtle);
@@ -23118,8 +23141,60 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   color: var(--text-subtle);
 }
 
+/* ---------------------------------------------------------------------------
+   One form, two shapes (2026-09-07)
+   ---------------------------------------------------------------------------
+   Sayed, looking at the standalone Add Item page: "the bar too long hahaha
+   and no need this space you can put two section [side by side]".
+
+   He was looking at the same component that fills the 30rem slide-over,
+   stretched across an 1180px page: one column of fields, each input a
+   1000px-wide bar for a two-digit quantity, and half the page empty.
+
+   So the groups lay themselves out by the width THEY have, not the width the
+   window has -- a container query, because the same markup renders at both
+   sizes and a viewport query cannot tell those apart. Under 720px (the
+   panel, and any phone) it stays one column; above it, two, and the fields
+   stop being able to sprawl. */
+.item-form {
+  container-type: inline-size;
+}
+
 .item-field-group {
   padding: 0 var(--space-5) var(--space-4);
+}
+
+@container (min-width: 720px) {
+  .item-form-groups {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    column-gap: var(--space-8);
+    align-items: start;
+    padding: var(--space-4) var(--space-5) var(--space-2);
+    border-top: 1px solid var(--border-hairline);
+  }
+
+  /* In a grid the "hairline between stacked siblings" rule draws in the
+     wrong places -- a group at the top of column two would get a divider
+     above it for no reason. Each group carries its own instead. */
+  .item-form-groups > .item-field-group {
+    padding: 0 0 var(--space-5);
+    border-top: 0;
+  }
+
+  .item-form-groups > .item-field-group + .item-field-group {
+    padding-top: 0;
+  }
+
+  .item-photo-tile {
+    width: 112px;
+    height: 112px;
+    border-radius: 22px;
+  }
+
+  .item-title-input {
+    font-size: 1.6rem;
+  }
 }
 
 .item-field-group + .item-field-group {
@@ -23129,11 +23204,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .item-field-group-label {
   margin-bottom: var(--space-2);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.1em;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.09em;
   text-transform: uppercase;
-  color: var(--text-subtle);
+  color: var(--text-secondary, var(--text-subtle));
 }
 
 .item-field-row {
@@ -23157,6 +23232,10 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .item-field-row-control {
   min-width: 0;
+  /* A quantity field does not get more useful at 1000px. Caps the "bar" so a
+     wide layout spends its room on a second column instead of on longer
+     inputs. */
+  max-width: 30rem;
 }
 
 /* Plain text/number/textarea fields go bare -- no box of their own, just the
@@ -23188,6 +23267,114 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .item-field-row-control input[aria-invalid="true"],
 .item-field-row-control textarea[aria-invalid="true"] {
   box-shadow: inset 0 -1.5px 0 0 #ef4444;
+}
+
+/* Notes is the one field that isn't a label/value row -- it spans the group
+   on its own. Without this it fell outside `.item-field-row-control`
+   entirely and rendered as a raw browser textarea: no width, no height, a
+   resize grip floating in the middle of the panel. Sayed's screenshot. */
+.item-panel-textarea {
+  width: 100%;
+  min-height: 5.5rem;
+  border: 1px solid var(--border-hairline);
+  border-radius: 12px;
+  background: var(--sydin-input-bg, transparent);
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--text-primary, var(--ink));
+  outline: none;
+  resize: vertical;
+  transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+.item-panel-textarea::placeholder {
+  color: var(--text-subtle);
+}
+
+.item-panel-textarea:focus {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+/* ---------------------------------------------------------------------------
+   Buttons that answer the mouse (2026-09-07)
+   ---------------------------------------------------------------------------
+   Sayed: "let the buttons of cancel and save item be motions frame high in
+   whole website motion is important when the mouse above the buttons."
+
+   What was there: a 1px lift on `.dashboard-action-button:hover` and a
+   0.985 press -- real, working, and small enough to miss. Alongside it sits
+   a second set of hover rules written for `.action-button`, `.ui-button`,
+   `.glass-button`; `.action-button` is rendered by nothing in the app, so
+   that half has always been dead. Worth knowing before adding a third
+   spelling: this file has more button-hover rules than the app has button
+   classes.
+
+   This deepens the existing lift to 2px, gives the primary button a shadow
+   that grows with it, and makes the press land harder (0.97). The panel's
+   own Cancel/Save are hand-rolled buttons rather than ActionButtons, so
+   they are named here explicitly instead of inheriting.
+
+   `:hover` is scoped to `(hover: hover)` so a phone tap doesn't leave a
+   button stuck in its hovered state; the press works everywhere. */
+.dashboard-action-button,
+.item-panel-footer button,
+.item-panel-close {
+  transition:
+    transform var(--motion-fast) var(--motion-ease-standard),
+    box-shadow var(--motion-fast) ease,
+    filter var(--motion-fast) ease,
+    background-color var(--motion-fast) ease,
+    border-color var(--motion-fast) ease;
+}
+
+@media (hover: hover) {
+  .dashboard-action-button:not(:disabled):not([aria-disabled="true"]):hover,
+  .item-panel-footer button:not(:disabled):hover {
+    transform: translateY(-2px);
+  }
+
+  .dashboard-action-button-primary:not(:disabled):not([aria-disabled="true"]):hover,
+  .item-panel-footer button[type="submit"]:not(:disabled):hover {
+    box-shadow: 0 16px 34px rgba(37, 99, 235, 0.26);
+    filter: brightness(1.06);
+  }
+
+  .dashboard-action-button-secondary:not(:disabled):not([aria-disabled="true"]):hover,
+  .dashboard-action-button-ghost:not(:disabled):not([aria-disabled="true"]):hover,
+  .item-panel-footer button[type="button"]:not(:disabled):hover {
+    border-color: var(--border-strong);
+    background: var(--bg-surface);
+    box-shadow: 0 10px 22px var(--border-hairline);
+  }
+
+  .item-panel-close:hover {
+    transform: rotate(90deg);
+  }
+}
+
+.dashboard-action-button:not(:disabled):not([aria-disabled="true"]):active,
+.item-panel-footer button:not(:disabled):active {
+  transform: translateY(0) scale(0.97);
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-action-button,
+  .item-panel-footer button,
+  .item-panel-close {
+    transition: none;
+  }
+
+  .dashboard-action-button:hover,
+  .item-panel-footer button:hover,
+  .item-panel-close:hover,
+  .dashboard-action-button:active,
+  .item-panel-footer button:active {
+    transform: none;
+  }
 }
 
 .item-panel-footer {

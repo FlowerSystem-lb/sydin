@@ -15,6 +15,10 @@ import {
   getOrCreateBusinessSettings,
 } from "@/app/lib/businessSettings";
 import { getCustomersForUser, type Customer } from "@/app/lib/customers";
+import {
+  createCustomerInline,
+  createDepotInline,
+} from "@/app/lib/inlineCreate";
 import { getDepotsForUser, type Depot } from "@/app/lib/depots";
 import {
   formatInventoryPrice,
@@ -157,6 +161,31 @@ export default function NewSalePage() {
       ),
     [lines]
   );
+
+  /* Add a customer or depot without leaving a half-built invoice. Only the
+     name is captured -- the rest of the customer record is filled in on the
+     Customers page when there is a reason to. See app/lib/inlineCreate.ts. */
+  const handleCreateCustomerInline = async (name: string) => {
+    try {
+      const created = await createCustomerInline(name);
+      setCustomers((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setError(`Could not add the customer "${name}". Please try again.`);
+      return null;
+    }
+  };
+
+  const handleCreateDepotInline = async (name: string) => {
+    try {
+      const created = await createDepotInline(name);
+      setDepots((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setError(`Could not add the depot "${name}". Please try again.`);
+      return null;
+    }
+  };
 
   const addItemLine = (itemId: string) => {
     const item = items.find((candidate) => String(candidate.id) === itemId);
@@ -324,6 +353,9 @@ export default function NewSalePage() {
                 />
               </Field>
 
+              {/* A walk-in customer who isn't on file used to stop the
+                  invoice: leave, create the customer, come back, rebuild the
+                  lines. Type the name here and it is created and selected. */}
               <Select
                 label="Customer"
                 value={customerId}
@@ -333,6 +365,8 @@ export default function NewSalePage() {
                 }
                 searchable
                 clearable
+                onCreate={handleCreateCustomerInline}
+                createNoun="customer"
                 options={customers.map((customer) => ({
                   value: String(customer.id),
                   label: customer.name,
@@ -346,6 +380,8 @@ export default function NewSalePage() {
                 onChange={setDepotId}
                 placeholder="Any depot"
                 clearable
+                onCreate={handleCreateDepotInline}
+                createNoun="depot"
                 options={depots.map((depot) => ({
                   value: String(depot.id),
                   label: depot.name,

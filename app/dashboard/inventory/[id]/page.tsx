@@ -37,6 +37,11 @@ import EditItemForm, {
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
 import ItemPanel from "@/components/inventory/ItemPanel";
+import {
+  createCategoryInline,
+  createDepotInline,
+  createSupplierInline,
+} from "@/app/lib/inlineCreate";
 import { hasTrackedItemChanges, logInventoryHistory } from "@/app/lib/inventoryHistory";
 import {
   calculateInventoryValue,
@@ -506,6 +511,41 @@ export default function ItemDetailsPage() {
     setEditError("");
   };
 
+
+  /* Same three as Inventory's own Edit panel -- this page owns its copies of
+     the lists, so it wires its own. See app/lib/inlineCreate.ts. */
+  const handleCreateCategoryInline = async (name: string) => {
+    try {
+      const created = await createCategoryInline(name);
+      setCategories((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setEditError(`Could not add the category "${name}". Please try again.`);
+      return null;
+    }
+  };
+
+  const handleCreateDepotInline = async (name: string) => {
+    try {
+      const created = await createDepotInline(name);
+      setDepots((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setEditError(`Could not add the depot "${name}". Please try again.`);
+      return null;
+    }
+  };
+
+  const handleCreateSupplierInline = async (name: string) => {
+    try {
+      const created = await createSupplierInline(name);
+      setSuppliers((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setEditError(`Could not add the supplier "${name}". Please try again.`);
+      return null;
+    }
+  };
 
   const updateEditValue = <Field extends keyof EditItemFormValues>(
     field: Field,
@@ -1685,6 +1725,9 @@ export default function ItemDetailsPage() {
             onImageChange={setEditImage}
             onCancel={() => closeEditModal()}
             onSubmit={handleUpdateItem}
+            onCreateCategory={handleCreateCategoryInline}
+            onCreateDepot={handleCreateDepotInline}
+            onCreateSupplier={handleCreateSupplierInline}
           />
         </ItemPanel>
       )}

@@ -25,6 +25,11 @@ import {
   getActiveDepotsForUser,
   type Depot,
 } from "@/app/lib/depots";
+import {
+  createCategoryInline,
+  createDepotInline,
+  createSupplierInline,
+} from "@/app/lib/inlineCreate";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import {
   calculateInventoryValue,
@@ -348,6 +353,44 @@ export default function AddItemForm({
       delete nextErrors[field];
       return nextErrors;
     });
+  };
+
+  /* Add a category/depot/supplier straight from its dropdown. Each one adds
+     the new record to the list it just came from and returns its id, which
+     the Select then selects -- so the answer to "it isn't in here" is one
+     row, not a trip to another page and back. A failure surfaces in the
+     form's own error line rather than silently doing nothing. */
+  const handleCreateCategory = async (name: string) => {
+    try {
+      const created = await createCategoryInline(name);
+      setCategories((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setFormError(`Could not add the category "${name}". Please try again.`);
+      return null;
+    }
+  };
+
+  const handleCreateDepot = async (name: string) => {
+    try {
+      const created = await createDepotInline(name);
+      setDepots((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setFormError(`Could not add the depot "${name}". Please try again.`);
+      return null;
+    }
+  };
+
+  const handleCreateSupplier = async (name: string) => {
+    try {
+      const created = await createSupplierInline(name);
+      setSuppliers((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setFormError(`Could not add the supplier "${name}". Please try again.`);
+      return null;
+    }
   };
 
   const handleImageChange = (file: File | null) => {
@@ -733,7 +776,7 @@ export default function AddItemForm({
         noValidate
         className="flex min-h-full flex-col"
       >
-        <div className="flex-1">
+        <div className="item-form flex-1">
           <div className="flex items-center justify-between gap-3 border-b border-theme px-5 py-2.5 text-xs">
             <span className="font-bold text-theme-secondary">
               {usageLoading ? "Checking plan..." : `${currentPlanName} plan`}
@@ -795,6 +838,11 @@ export default function AddItemForm({
             </div>
           </div>
 
+          {/* Wide enough (the standalone page) and these lay out in two
+              columns; in the slide-over they stay stacked. See
+              `.item-form-groups` -- a container query, not a viewport one,
+              because the same form renders at 30rem and at 1180px. */}
+          <div className="item-form-groups">
           <ItemFieldGroup>
             <ItemFieldRow label="Category">
               <CategorySelector
@@ -803,6 +851,8 @@ export default function AddItemForm({
                 value={selectedCategoryId}
                 onChange={setSelectedCategoryId}
                 disabled={loading}
+                onCreate={handleCreateCategory}
+                compact
               />
             </ItemFieldRow>
 
@@ -814,6 +864,8 @@ export default function AddItemForm({
                 disabled={loading}
                 searchable={depots.length > 8}
                 placeholder="Unassigned"
+                onCreate={handleCreateDepot}
+                createNoun="depot"
                 options={[
                   { value: "", label: "Unassigned" },
                   ...depots.map((depot) => ({
@@ -824,16 +876,6 @@ export default function AddItemForm({
               />
             </ItemFieldRow>
           </ItemFieldGroup>
-
-          {!showAdvanced && (
-            <button
-              type="button"
-              onClick={() => setShowAdvanced(true)}
-              className="flex w-full items-center justify-center gap-1.5 border-t border-theme px-5 py-3 text-sm font-semibold text-theme-accent transition hover:bg-theme-hover"
-            >
-              Add quantity, pricing &amp; more
-            </button>
-          )}
 
           {showAdvanced && (
             <>
@@ -970,6 +1012,8 @@ export default function AddItemForm({
                     disabled={loading}
                     searchable={suppliers.length > 8}
                     placeholder="No supplier"
+                    onCreate={handleCreateSupplier}
+                    createNoun="supplier"
                     options={[
                       { value: "", label: "No supplier" },
                       ...suppliers.map((supplier) => ({
@@ -1159,9 +1203,21 @@ export default function AddItemForm({
                   onChange={(event) => setNotes(event.target.value)}
                   disabled={loading}
                   placeholder="Internal notes..."
+                  className="item-panel-textarea"
                 />
               </ItemFieldGroup>
             </>
+          )}
+          </div>
+
+          {!showAdvanced && (
+            <button
+              type="button"
+              onClick={() => setShowAdvanced(true)}
+              className="flex w-full items-center justify-center gap-1.5 border-t border-theme px-5 py-3 text-sm font-semibold text-theme-accent transition hover:bg-theme-hover"
+            >
+              Add quantity, pricing &amp; more
+            </button>
           )}
 
           {formError && (

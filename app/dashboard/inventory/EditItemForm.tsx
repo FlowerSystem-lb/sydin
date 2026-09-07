@@ -319,6 +319,9 @@ export default function EditItemForm({
   onImageChange,
   onCancel,
   onSubmit,
+  onCreateCategory,
+  onCreateDepot,
+  onCreateSupplier,
 }: {
   item: EditableInventoryItem;
   values: EditItemFormValues;
@@ -338,6 +341,13 @@ export default function EditItemForm({
   onImageChange: (file: File | null) => void;
   onCancel: () => void;
   onSubmit: (event: FormEvent) => void;
+  /* This form doesn't own the category/depot/supplier lists -- the page
+     around it does -- so creating one has to go back out to the page that
+     can add it to the list it passed in. Optional: a caller that doesn't
+     wire these up simply gets the old pick-from-what-exists dropdown. */
+  onCreateCategory?: (name: string) => Promise<string | null>;
+  onCreateDepot?: (name: string) => Promise<string | null>;
+  onCreateSupplier?: (name: string) => Promise<string | null>;
 }) {
   const stockCostValue = calculateInventoryValue(
     values.quantity,
@@ -389,7 +399,7 @@ export default function EditItemForm({
 
   return (
     <form onSubmit={onSubmit} noValidate className="flex min-h-full flex-col">
-      <div className="flex-1">
+      <div className="item-form flex-1">
         <div className="item-panel-title-row">
           <label className="item-photo-tile" aria-label="Replace product photo">
             {selectedImagePreviewUrl ? (
@@ -444,6 +454,9 @@ export default function EditItemForm({
           </div>
         </div>
 
+        {/* Two columns where there is room, stacked in the slide-over.
+            Container query, not viewport -- see `.item-form-groups`. */}
+        <div className="item-form-groups">
         <ItemFieldGroup>
           <ItemFieldRow label="Category">
             <CategorySelector
@@ -452,6 +465,8 @@ export default function EditItemForm({
               legacyCategory={values.category}
               onChange={(categoryId) => onValueChange("categoryId", categoryId)}
               disabled={saving}
+              onCreate={onCreateCategory}
+              compact
             />
           </ItemFieldRow>
 
@@ -462,6 +477,8 @@ export default function EditItemForm({
               disabled={saving}
               searchable={depots.length > 8}
               placeholder="Unassigned"
+              onCreate={onCreateDepot}
+              createNoun="depot"
               options={[
                 { value: "", label: "Unassigned" },
                 ...depots.map((depot) => ({
@@ -479,6 +496,8 @@ export default function EditItemForm({
               disabled={saving}
               searchable={suppliers.length > 8}
               placeholder="No supplier"
+              onCreate={onCreateSupplier}
+              createNoun="supplier"
               options={[
                 { value: "", label: "No supplier" },
                 ...suppliers.map((supplier) => ({
@@ -604,16 +623,6 @@ export default function EditItemForm({
             />
           </ItemFieldRow>
         </ItemFieldGroup>
-
-        {!showMore && (
-          <button
-            type="button"
-            onClick={() => setShowMore(true)}
-            className="flex w-full items-center justify-center gap-1.5 border-t border-theme px-5 py-3 text-sm font-semibold text-theme-accent transition hover:bg-theme-hover"
-          >
-            Show pricing, tracking codes &amp; notes
-          </button>
-        )}
 
         {showMore && (
           <>
@@ -758,9 +767,21 @@ export default function EditItemForm({
                 onChange={(event) => onValueChange("notes", event.target.value)}
                 disabled={saving}
                 placeholder="Internal notes..."
+                className="item-panel-textarea"
               />
             </ItemFieldGroup>
           </>
+        )}
+        </div>
+
+        {!showMore && (
+          <button
+            type="button"
+            onClick={() => setShowMore(true)}
+            className="flex w-full items-center justify-center gap-1.5 border-t border-theme px-5 py-3 text-sm font-semibold text-theme-accent transition hover:bg-theme-hover"
+          >
+            Show pricing, tracking codes &amp; notes
+          </button>
         )}
 
         {error && (

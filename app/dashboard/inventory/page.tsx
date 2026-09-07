@@ -65,6 +65,11 @@ import EditItemForm, {
 } from "@/app/dashboard/inventory/EditItemForm";
 import AddItemForm from "@/app/dashboard/add-item/AddItemForm";
 import ItemPanel from "@/components/inventory/ItemPanel";
+import {
+  createCategoryInline,
+  createDepotInline,
+  createSupplierInline,
+} from "@/app/lib/inlineCreate";
 import { hasTrackedItemChanges, logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { logImportExport } from "@/app/lib/importExportHistory";
 import {
@@ -1870,6 +1875,43 @@ export default function InventoryPage() {
       depot.is_active ||
       (selectedItem?.depot_id && depot.id === selectedItem.depot_id)
   );
+  /* Adding a category/depot/supplier from inside the Edit panel's own
+     dropdown. This page owns those lists, so it has to be the one to add
+     the new record to them; the panel just asks. Errors land on the edit
+     form's error line, where the person is already looking. */
+  const handleCreateCategoryInline = async (name: string) => {
+    try {
+      const created = await createCategoryInline(name);
+      setCategories((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setEditError(`Could not add the category "${name}". Please try again.`);
+      return null;
+    }
+  };
+
+  const handleCreateDepotInline = async (name: string) => {
+    try {
+      const created = await createDepotInline(name);
+      setDepots((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setEditError(`Could not add the depot "${name}". Please try again.`);
+      return null;
+    }
+  };
+
+  const handleCreateSupplierInline = async (name: string) => {
+    try {
+      const created = await createSupplierInline(name);
+      setSuppliers((current) => [...current, created]);
+      return String(created.id);
+    } catch {
+      setEditError(`Could not add the supplier "${name}". Please try again.`);
+      return null;
+    }
+  };
+
   const getDepotForItem = (item: Item) =>
     depots.find((depot) => depot.id === item.depot_id) || null;
   const getSupplierForItem = (item: Item) =>
@@ -4681,6 +4723,9 @@ export default function InventoryPage() {
             onImageChange={setEditImage}
             onCancel={() => closeEditModal()}
             onSubmit={handleUpdateItem}
+            onCreateCategory={handleCreateCategoryInline}
+            onCreateDepot={handleCreateDepotInline}
+            onCreateSupplier={handleCreateSupplierInline}
           />
         </ItemPanel>
       )}
