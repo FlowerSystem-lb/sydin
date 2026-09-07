@@ -109,6 +109,11 @@ import {
   SCANNER_REQUEST_STORAGE_KEY,
 } from "@/app/lib/scannerNavigation";
 import {
+  ADD_ITEM_REQUEST_EVENT,
+  takePendingAddItemRequest,
+  type AddItemRequest,
+} from "@/app/lib/addItemNavigation";
+import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
   getEffectiveLowStockThreshold,
@@ -573,6 +578,9 @@ export default function InventoryPage() {
   const [addModalBarcode, setAddModalBarcode] = useState<string | undefined>(
     undefined
   );
+  const [addModalCategoryId, setAddModalCategoryId] = useState<
+    string | undefined
+  >(undefined);
   const [editValues, setEditValues] = useState<EditItemFormValues>(
     createEmptyEditItemFormValues
   );
@@ -1001,14 +1009,16 @@ export default function InventoryPage() {
     };
   }, [openScanner, usageLoading]);
 
-  const openAddModal = (barcode?: string) => {
-    setAddModalBarcode(barcode);
+  const openAddModal = (options?: { barcode?: string; categoryId?: string }) => {
+    setAddModalBarcode(options?.barcode);
+    setAddModalCategoryId(options?.categoryId);
     setIsAddModalOpen(true);
   };
 
   const closeAddModal = () => {
     setIsAddModalOpen(false);
     setAddModalBarcode(undefined);
+    setAddModalCategoryId(undefined);
   };
 
   const handleItemAdded = async () => {
@@ -1016,6 +1026,32 @@ export default function InventoryPage() {
     setPageNotice("Item added successfully.");
     closeAddModal();
   };
+
+  /* Every other "Add Item" in the app -- the header's + Add menu, the phone's
+     quick add, Overview, Categories -- raises a request rather than linking
+     to the standalone page. Raised while already here it arrives as an event;
+     raised elsewhere it is left in session storage and picked up on arrival.
+     Same shape as the scanner request above. */
+  useEffect(() => {
+    const handleAddItemRequest = (event: Event) => {
+      const detail = (event as CustomEvent<AddItemRequest>).detail;
+      openAddModal({ categoryId: detail?.categoryId });
+    };
+
+    const pending = takePendingAddItemRequest();
+    if (pending) {
+      window.requestAnimationFrame(() =>
+        openAddModal({ categoryId: pending.categoryId })
+      );
+    }
+
+    window.addEventListener(ADD_ITEM_REQUEST_EVENT, handleAddItemRequest);
+    return () => {
+      window.removeEventListener(ADD_ITEM_REQUEST_EVENT, handleAddItemRequest);
+    };
+    // Runs once on mount by design: re-running would re-read (and re-consume)
+    // the pending request.
+  }, []);
 
   const handleScannedText = useCallback((scannedValue: string) => {
     const scannedText = scannedValue.trim();
@@ -1050,7 +1086,7 @@ export default function InventoryPage() {
     // user at an empty results page. Opens in place now rather than
     // navigating to the full page and back.
     closeScanner();
-    openAddModal(resolution.query);
+    openAddModal({ barcode: resolution.query });
   }, [closeScanner, items, router]);
 
   const openEditModal = (item: Item) => {
@@ -4737,6 +4773,7 @@ export default function InventoryPage() {
         <ItemPanel eyebrow="Add item" title="New product" onClose={closeAddModal}>
           <AddItemForm
             initialBarcode={addModalBarcode}
+            initialCategoryId={addModalCategoryId}
             onCancel={closeAddModal}
             onSaved={() => void handleItemAdded()}
           />

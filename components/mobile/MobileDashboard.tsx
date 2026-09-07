@@ -1,7 +1,9 @@
 "use client";
 
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
+import { requestAddItem } from "@/app/lib/addItemNavigation";
 
 interface MobileDashboardProps {
   lowStockCount: number;
@@ -12,6 +14,9 @@ export default function MobileDashboard({
   lowStockCount,
   outOfStockCount,
 }: MobileDashboardProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+
   return (
     <div className="mobile-dashboard">
       <div className="mobile-dashboard-header">
@@ -61,10 +66,21 @@ export default function MobileDashboard({
       <div className="mt-5 space-y-2">
         <h2 className="mobile-dashboard-section-title">Quick actions</h2>
         <div className="grid grid-cols-2 gap-2">
-          <Link href="/dashboard/add-item" className="mobile-action-btn">
+          {/* Opens the Add Item panel on Inventory rather than a page you
+              have to come back from -- same as the header's + Add. */}
+          <button
+            type="button"
+            onClick={() =>
+              requestAddItem(
+                {},
+                { pathname, navigate: (href) => router.push(href) }
+              )
+            }
+            className="mobile-action-btn"
+          >
             <UiIcon name="plus" className="h-5 w-5" />
             <span>Add</span>
-          </Link>
+          </button>
           <Link href="/dashboard/scanner" className="mobile-action-btn">
             <UiIcon name="scan" className="h-5 w-5" />
             <span>Scan</span>

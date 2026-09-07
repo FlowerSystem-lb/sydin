@@ -51,6 +51,8 @@ import {
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
+import ItemPanel from "@/components/inventory/ItemPanel";
+import AddItemForm from "@/app/dashboard/add-item/AddItemForm";
 
 interface CategoryInventoryItem {
   id: number;
@@ -221,6 +223,11 @@ export default function CategoriesPage() {
   const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
   const [lowStockThreshold, setLowStockThreshold] = useState(0);
   const [userId, setUserId] = useState("");
+  /* Add Item opens here rather than sending you to Inventory and back. The
+     category you are standing in is preselected, and saving refreshes this
+     page's own counts -- which is the reason this page hosts its own panel
+     instead of raising a request like the header does. */
+  const [addPanelOpen, setAddPanelOpen] = useState(false);
   const [categorySearch, setCategorySearch] = useState("");
   const [itemSearch, setItemSearch] = useState("");
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
@@ -508,9 +515,6 @@ export default function CategoriesPage() {
       parseDate(second.recent_activity_at || second.created_at) -
       parseDate(first.recent_activity_at || first.created_at)
   )[0];
-  const addItemHref = selectedCategory
-    ? `/dashboard/add-item?category=${selectedCategory.id}`
-    : "/dashboard/add-item";
 
   const setWorkspaceSelection = (next: WorkspaceSelection) => {
     setSelection(next);
@@ -550,9 +554,6 @@ export default function CategoriesPage() {
     sortBy,
     stockFilter,
   ]);
-  const contextualAddItemHref = `${addItemHref}${
-    addItemHref.includes("?") ? "&" : "?"
-  }returnTo=${encodeURIComponent(currentContext)}`;
 
   useEffect(() => {
     if (!contextReady) return;
@@ -1203,7 +1204,7 @@ export default function CategoriesPage() {
                 </div>
                 <div className="organize-detail-actions flex flex-wrap gap-2">
                   <ActionButton
-                    href={contextualAddItemHref}
+                    onClick={() => setAddPanelOpen(true)}
                     icon="plus"
                     variant="primary"
                   >
@@ -1380,7 +1381,7 @@ export default function CategoriesPage() {
                         {selectedCategory ? (
                           <>
                             <ActionButton
-                              href={contextualAddItemHref}
+                              onClick={() => setAddPanelOpen(true)}
                               variant="primary"
                             >
                               Add New Item
@@ -1402,7 +1403,7 @@ export default function CategoriesPage() {
                           </ActionButton>
                         ) : (
                           <ActionButton
-                            href={contextualAddItemHref}
+                            onClick={() => setAddPanelOpen(true)}
                             variant="primary"
                           >
                             Add New Item
@@ -1783,6 +1784,27 @@ export default function CategoriesPage() {
           </>
         )}
       </DialogShell>
+
+      {addPanelOpen && (
+        <ItemPanel
+          eyebrow="Add item"
+          title={
+            selectedCategory ? `New in ${selectedCategory.name}` : "New product"
+          }
+          onClose={() => setAddPanelOpen(false)}
+        >
+          <AddItemForm
+            initialCategoryId={
+              selectedCategory ? String(selectedCategory.id) : undefined
+            }
+            onCancel={() => setAddPanelOpen(false)}
+            onSaved={() => {
+              setAddPanelOpen(false);
+              if (userId) void loadWorkspace(userId);
+            }}
+          />
+        </ItemPanel>
+      )}
     </main>
   );
 }

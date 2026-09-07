@@ -168,6 +168,10 @@ export interface AddItemFormProps {
    *  that matched no existing item. The standalone page still supports the
    *  same thing via a `?barcode=` query param, read below. */
   initialBarcode?: string;
+  /** Preselects a category without a URL round trip -- the Categories page
+   *  opens this panel with its own category already chosen. The standalone
+   *  page still supports the same thing via `?category=`. */
+  initialCategoryId?: string;
   /** Called once the item is created and its history entry is logged.
    *  The page and the panel each decide what "done" means for them --
    *  navigate away, or close and refresh the list -- so this form only
@@ -178,6 +182,7 @@ export interface AddItemFormProps {
 
 export default function AddItemForm({
   initialBarcode,
+  initialCategoryId,
   onSaved,
   onCancel,
 }: AddItemFormProps) {
@@ -272,7 +277,8 @@ export default function AddItemForm({
               const navigationParams = new URLSearchParams(
                 window.location.search
               );
-              const requestedCategoryId = navigationParams.get("category");
+              const requestedCategoryId =
+                initialCategoryId || navigationParams.get("category");
               if (
                 requestedCategoryId &&
                 loadedCategories.some(

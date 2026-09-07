@@ -3,7 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
+import { usePathname, useRouter } from "next/navigation";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import { requestAddItem } from "@/app/lib/addItemNavigation";
 import { formatDepotLabel, getDepotsForUser, type Depot } from "@/app/lib/depots";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -230,6 +232,8 @@ function CountUpNumber({
 }
 
 export default function DashboardPage() {
+  const router = useRouter();
+  const pathname = usePathname();
   const [items, setItems] = useState<Item[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -668,7 +672,15 @@ export default function DashboardPage() {
           title="Your workspace is empty"
           description="Add your first item to start tracking stock, depots and activity. Everything on this screen fills in as you go."
           action={
-            <ActionButton href="/dashboard/add-item" icon="plus">
+            <ActionButton
+              onClick={() =>
+                requestAddItem(
+                  {},
+                  { pathname, navigate: (href) => router.push(href) }
+                )
+              }
+              icon="plus"
+            >
               Add your first item
             </ActionButton>
           }

@@ -43,6 +43,7 @@ import {
   type Notification,
 } from "@/app/lib/notifications";
 import { SCANNER_REQUEST_EVENT } from "@/app/lib/scannerNavigation";
+import { requestAddItem } from "@/app/lib/addItemNavigation";
 import { supabase } from "@/app/lib/supabase";
 import {
   DASHBOARD_NAVIGATION,
@@ -78,13 +79,15 @@ function formatNotificationDate(value: string) {
 const ADD_MENU_ITEMS: {
   label: string;
   description: string;
-  href: string;
+  href?: string;
+  /** Raises a request instead of navigating -- see requestAddItem. */
+  action?: "add-item";
   icon: UiIconName;
 }[] = [
   {
     label: "New item",
     description: "Add a product to your inventory",
-    href: "/dashboard/add-item",
+    action: "add-item",
     icon: "box",
   },
   {
@@ -869,6 +872,10 @@ export default function DashboardShell({
   // toggle to reach one. Page names are read from the hover chip instead.
   const effectiveCollapsed = true;
 
+  const requestAddItemPanel = useCallback(() => {
+    requestAddItem({}, { pathname, navigate: (href) => router.push(href) });
+  }, [pathname, router]);
+
   const requestScanner = useCallback(() => {
     // The Inventory page keeps its own quick-scan modal, so stay in place when
     // the user is already there; everywhere else opens the Scanner Workspace.
@@ -1047,13 +1054,14 @@ export default function DashboardShell({
           <UiIcon name="search" className="h-5 w-5" />
         </button>
         {quickAddVisible && (
-          <Link
-            href="/dashboard/add-item"
+          <button
+            type="button"
+            onClick={requestAddItemPanel}
             className={buttonClassName({ size: "sm" })}
           >
             <UiIcon name="plus" className="h-4 w-4" />
             Add Item
-          </Link>
+          </button>
         )}
       </header>
 
@@ -1082,13 +1090,14 @@ export default function DashboardShell({
           <UiIcon name="search" className="h-5 w-5" />
         </button>
         {quickAddVisible ? (
-          <Link
-            href="/dashboard/add-item"
+          <button
+            type="button"
+            onClick={requestAddItemPanel}
             aria-label="Add item"
             className="ui-icon-button ui-icon-button-md"
           >
             <UiIcon name="plus" className="h-5 w-5" />
-          </Link>
+          </button>
         ) : (
           <span className="h-11 w-11" aria-hidden="true" />
         )}
@@ -1165,20 +1174,47 @@ export default function DashboardShell({
 
               {addMenuOpen && (
                 <MenuSurface className="dashboard-top-add-menu">
-                  {ADD_MENU_ITEMS.map((item) => (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      role="menuitem"
-                      onClick={() => setAddMenuOpen(false)}
-                    >
-                      <UiIcon name={item.icon} className="h-4 w-4" />
-                      <span>
-                        <strong>{item.label}</strong>
-                        <small>{item.description}</small>
-                      </span>
-                    </Link>
-                  ))}
+                  {ADD_MENU_ITEMS.map((item) => {
+                    const body = (
+                      <>
+                        <UiIcon name={item.icon} className="h-4 w-4" />
+                        <span>
+                          <strong>{item.label}</strong>
+                          <small>{item.description}</small>
+                        </span>
+                      </>
+                    );
+
+                    /* "New item" opens the Add Item panel wherever you are
+                       rather than sending you to a page you have to come
+                       back from. The other two are still pages. */
+                    if (item.action === "add-item") {
+                      return (
+                        <button
+                          key={item.label}
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setAddMenuOpen(false);
+                            requestAddItemPanel();
+                          }}
+                        >
+                          {body}
+                        </button>
+                      );
+                    }
+
+                    return (
+                      <Link
+                        key={item.href}
+                        href={item.href || "/dashboard"}
+                        role="menuitem"
+                        onClick={() => setAddMenuOpen(false)}
+                      >
+                        {body}
+                      </Link>
+                    );
+                  })}
                 </MenuSurface>
               )}
             </div>
