@@ -186,9 +186,41 @@ function getDashboardPageContext(pathname: string, action?: string | null) {
   }
 
   const navigationItem = getDashboardNavigationItem(pathname);
+
+  if (navigationItem) {
+    return {
+      label: navigationItem.label,
+      shortLabel: navigationItem.shortLabel || navigationItem.label,
+    };
+  }
+
+  return getRouteDerivedPageContext(pathname);
+}
+
+/* Names a page the sidebar has never heard of, from its own URL:
+   /dashboard/sales/new -> "Sales / New", /dashboard/stock-counts ->
+   "Stock Counts", /dashboard/sales/42 -> "Sales / Details". Covers every
+   page that moved behind Workflows or Reports in one rule, instead of a
+   growing list of hand-written cases above. */
+function getRouteDerivedPageContext(pathname: string) {
+  const segments = pathname.split("/").filter(Boolean).slice(1);
+
+  if (segments.length === 0) {
+    return { label: "Overview", shortLabel: "Home" };
+  }
+
+  const parts = segments.slice(0, 2).map((segment) =>
+    /^\d+$/.test(segment) || segment.length > 20
+      ? "Details"
+      : segment
+          .split("-")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+  );
+
   return {
-    label: navigationItem.label,
-    shortLabel: navigationItem.shortLabel || navigationItem.label,
+    label: parts.join(" / "),
+    shortLabel: parts[parts.length - 1],
   };
 }
 

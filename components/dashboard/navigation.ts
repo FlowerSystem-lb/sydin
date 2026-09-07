@@ -161,10 +161,18 @@ export function isDashboardRouteActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+/**
+ * Undefined when the route isn't in the sidebar -- which is most of them
+ * now. This used to fall back to `DASHBOARD_NAVIGATION[0]`, so every page
+ * that isn't a sidebar entry (Sales, Purchase Orders, Stock Counts, Pick
+ * Lists, Receiving, Activity -- everything that moved into Workflows or
+ * Reports) told you it was "Overview" in the top bar while you were
+ * standing on it. Two of those were patched one at a time in
+ * DashboardShell; the honest answer is to say "no match" and let the caller
+ * name the page from its own route.
+ */
 export function getDashboardNavigationItem(pathname: string) {
-  return (
-    DASHBOARD_NAVIGATION.find((item) =>
-      isDashboardRouteActive(pathname, item.href)
-    ) || DASHBOARD_NAVIGATION[0]
+  return DASHBOARD_NAVIGATION.find((item) =>
+    isDashboardRouteActive(pathname, item.href)
   );
 }

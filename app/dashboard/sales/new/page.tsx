@@ -9,6 +9,10 @@ import {
   DashboardPageShell,
 } from "@/components/dashboard/Workspace";
 import { Button, Select } from "@/components/ui";
+import {
+  ItemFieldGroup,
+  ItemFieldRow,
+} from "@/components/inventory/ItemFieldRow";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -335,58 +339,76 @@ export default function NewSalePage() {
           <p className="mt-6 text-sm text-theme-muted">Loading...</p>
         ) : (
           <div className="mt-4 grid gap-4">
-            <section className="dashboard-card grid gap-3 p-4 sm:grid-cols-2">
-              <Field label="Invoice number">
-                <input
-                  value={invoiceNumber}
-                  onChange={(event) => setInvoiceNumber(event.target.value)}
-                  className="sale-input"
-                />
-              </Field>
+            {/* The same label/value rows Add Item uses, in the same
+                container so they go two-column here and stay stacked on a
+                phone. Was four boxed fields in a card with the label stacked
+                above each one -- a different shape for the same job. */}
+            <section className="dashboard-card item-form p-0">
+              <div className="item-form-groups">
+                <ItemFieldGroup label="Invoice">
+                  <ItemFieldRow label="Number" htmlFor="invoice-number">
+                    <input
+                      id="invoice-number"
+                      value={invoiceNumber}
+                      onChange={(event) => setInvoiceNumber(event.target.value)}
+                    />
+                  </ItemFieldRow>
 
-              <Field label="Date">
-                <input
-                  type="date"
-                  value={issueDate}
-                  onChange={(event) => setIssueDate(event.target.value)}
-                  className="sale-input"
-                />
-              </Field>
+                  <ItemFieldRow label="Date" htmlFor="invoice-date">
+                    <input
+                      id="invoice-date"
+                      type="date"
+                      value={issueDate}
+                      onChange={(event) => setIssueDate(event.target.value)}
+                    />
+                  </ItemFieldRow>
+                </ItemFieldGroup>
 
-              {/* A walk-in customer who isn't on file used to stop the
-                  invoice: leave, create the customer, come back, rebuild the
-                  lines. Type the name here and it is created and selected. */}
-              <Select
-                label="Customer"
-                value={customerId}
-                onChange={setCustomerId}
-                placeholder={
-                  customers.length === 0 ? "No customers yet" : "Choose a customer"
-                }
-                searchable
-                clearable
-                onCreate={handleCreateCustomerInline}
-                createNoun="customer"
-                options={customers.map((customer) => ({
-                  value: String(customer.id),
-                  label: customer.name,
-                  description: customer.phone || customer.email || undefined,
-                }))}
-              />
+                <ItemFieldGroup label="Sold to">
+                  {/* A walk-in customer who isn't on file used to stop the
+                      invoice: leave, create the customer, come back, rebuild
+                      the lines. Type the name here and it is created and
+                      selected. */}
+                  <ItemFieldRow label="Customer">
+                    <Select
+                      value={customerId}
+                      onChange={setCustomerId}
+                      ariaLabel="Customer"
+                      placeholder={
+                        customers.length === 0
+                          ? "No customers yet"
+                          : "Choose a customer"
+                      }
+                      searchable
+                      clearable
+                      onCreate={handleCreateCustomerInline}
+                      createNoun="customer"
+                      options={customers.map((customer) => ({
+                        value: String(customer.id),
+                        label: customer.name,
+                        description:
+                          customer.phone || customer.email || undefined,
+                      }))}
+                    />
+                  </ItemFieldRow>
 
-              <Select
-                label="Depot"
-                value={depotId}
-                onChange={setDepotId}
-                placeholder="Any depot"
-                clearable
-                onCreate={handleCreateDepotInline}
-                createNoun="depot"
-                options={depots.map((depot) => ({
-                  value: String(depot.id),
-                  label: depot.name,
-                }))}
-              />
+                  <ItemFieldRow label="Depot">
+                    <Select
+                      value={depotId}
+                      onChange={setDepotId}
+                      ariaLabel="Depot"
+                      placeholder="Any depot"
+                      clearable
+                      onCreate={handleCreateDepotInline}
+                      createNoun="depot"
+                      options={depots.map((depot) => ({
+                        value: String(depot.id),
+                        label: depot.name,
+                      }))}
+                    />
+                  </ItemFieldRow>
+                </ItemFieldGroup>
+              </div>
             </section>
 
             <section className="dashboard-card p-4">
@@ -423,7 +445,7 @@ export default function NewSalePage() {
                   delivery.
                 </p>
               ) : (
-                <ul className="mt-4 grid gap-2">
+                <ul className="mt-3 border-t border-theme">
                   {lines.map((line) => {
                     const lineTotal =
                       (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0);
@@ -432,9 +454,13 @@ export default function NewSalePage() {
                       Number(line.quantity) > line.available;
 
                     return (
+                      /* A line is a row in a table, not a card: hairline
+                         between rows instead of a bordered, filled box each,
+                         which is the same conclusion the item panel reached
+                         about a group of fields. */
                       <li
                         key={line.key}
-                        className="grid gap-2 rounded-xl border border-theme bg-theme-inset p-3 sm:grid-cols-[minmax(0,1fr)_5rem_7rem_6rem_auto] sm:items-center"
+                        className="grid gap-2 border-b border-theme px-1 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_5rem_7rem_6rem_auto] sm:items-center"
                       >
                         <div className="min-w-0">
                           {line.itemId === null ? (
@@ -530,16 +556,15 @@ export default function NewSalePage() {
               </div>
             </section>
 
-            <section className="dashboard-card p-4">
-              <Field label="Notes">
+            <section className="dashboard-card p-0">
+              <ItemFieldGroup label="Notes">
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
-                  rows={2}
                   placeholder="Anything the customer should see on the invoice"
-                  className="sale-input py-2"
+                  className="item-panel-textarea"
                 />
-              </Field>
+              </ItemFieldGroup>
             </section>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
@@ -571,17 +596,3 @@ export default function NewSalePage() {
   );
 }
 
-function Field({
-  label,
-  children,
-}: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <label className="grid gap-1.5 text-xs font-semibold text-theme-secondary">
-      {label}
-      {children}
-    </label>
-  );
-}
