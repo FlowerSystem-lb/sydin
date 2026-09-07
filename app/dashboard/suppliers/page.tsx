@@ -14,7 +14,7 @@ import {
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell } from "@/components/ui";
+import { Button, DialogShell, FieldGroup, FieldRow } from "@/components/ui";
 import {
   createSupplier,
   deleteSupplier,
@@ -116,118 +116,104 @@ function SupplierForm({
         </button>
       </div>
 
-      <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label htmlFor="supplier-name-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Supplier name <span className="text-theme-accent">*</span>
-          </label>
-          <input
-            id="supplier-name-input"
-            autoFocus
-            value={values.name}
-            onBlur={() => setNameTouched(true)}
-            onChange={(event) => onChange("name", event.target.value)}
-            disabled={saving}
-            aria-invalid={nameError}
-            aria-describedby={nameError ? "supplier-name-error" : undefined}
-            placeholder="e.g. Cedar Wholesale"
-            className={`${inputClassName} ${
-              nameError ? "border-red-400/50 bg-red-500/[0.08]" : ""
-            }`}
-          />
-          {nameError && (
-            <p id="supplier-name-error" className="mt-2 text-sm font-semibold text-theme-danger">
-              Supplier name is required.
-            </p>
-          )}
-        </div>
+      {/* The same label/value rows Add Item, the invoice and Customers use.
+          Was two columns of boxed inputs with the label stacked above each --
+          Customers, its own mirror image, did it a third way again. */}
+      <div className="item-form -mx-1 mt-4">
+        <FieldGroup>
+          <FieldRow
+            label="Name"
+            htmlFor="supplier-name-input"
+            required
+            error={nameError ? "Supplier name is required." : undefined}
+            errorId="supplier-name-error"
+          >
+            <input
+              id="supplier-name-input"
+              autoFocus
+              value={values.name}
+              onBlur={() => setNameTouched(true)}
+              onChange={(event) => onChange("name", event.target.value)}
+              disabled={saving}
+              aria-invalid={nameError}
+              aria-describedby={nameError ? "supplier-name-error" : undefined}
+              placeholder="e.g. Cedar Wholesale"
+            />
+          </FieldRow>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Contact name
-          </label>
-          <input
-            value={values.contact_name || ""}
-            onChange={(event) => onChange("contact_name", event.target.value)}
-            disabled={saving}
-            placeholder="Primary contact"
-            className={inputClassName}
-          />
-        </div>
-        <div>
-          <label htmlFor="supplier-email-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Email
-          </label>
-          <input
-            id="supplier-email-input"
-            type="email"
-            value={values.email || ""}
-            onBlur={() => setEmailTouched(true)}
-            onChange={(event) => onChange("email", event.target.value)}
-            disabled={saving}
-            aria-invalid={emailError}
-            aria-describedby={emailError ? "supplier-email-error" : undefined}
-            placeholder="orders@example.com"
-            className={`${inputClassName} ${
-              emailError ? "border-red-400/50 bg-red-500/[0.08]" : ""
-            }`}
-          />
-          {emailError && (
-            <p id="supplier-email-error" className="mt-2 text-sm font-semibold text-theme-danger">
-              Enter a valid email address.
-            </p>
-          )}
-        </div>
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Phone
-          </label>
-          <input
-            type="tel"
-            value={values.phone || ""}
-            onChange={(event) => onChange("phone", event.target.value)}
-            disabled={saving}
-            placeholder="+961 ..."
-            className={inputClassName}
-          />
-        </div>
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            WhatsApp
-          </label>
-          <input
-            type="tel"
-            value={values.whatsapp || ""}
-            onChange={(event) => onChange("whatsapp", event.target.value)}
-            disabled={saving}
-            placeholder="Include country code"
-            className={inputClassName}
-          />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Address
-          </label>
-          <textarea
-            value={values.address || ""}
-            onChange={(event) => onChange("address", event.target.value)}
-            disabled={saving}
-            placeholder="Street, city, delivery details"
-            className={`${inputClassName} min-h-24 resize-y`}
-          />
-        </div>
-        <div className="sm:col-span-2">
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Notes
-          </label>
+          <FieldRow label="Contact" htmlFor="supplier-contact-input">
+            <input
+              id="supplier-contact-input"
+              value={values.contact_name || ""}
+              onChange={(event) => onChange("contact_name", event.target.value)}
+              disabled={saving}
+              placeholder="Who you deal with"
+            />
+          </FieldRow>
+        </FieldGroup>
+
+        <FieldGroup label="Reach them">
+          <FieldRow
+            label="Email"
+            htmlFor="supplier-email-input"
+            error={emailError ? "Enter a valid email address." : undefined}
+            errorId="supplier-email-error"
+          >
+            <input
+              id="supplier-email-input"
+              type="email"
+              value={values.email || ""}
+              onBlur={() => setEmailTouched(true)}
+              onChange={(event) => onChange("email", event.target.value)}
+              disabled={saving}
+              aria-invalid={emailError}
+              aria-describedby={emailError ? "supplier-email-error" : undefined}
+              placeholder="orders@example.com"
+            />
+          </FieldRow>
+
+          <FieldRow label="Phone" htmlFor="supplier-phone-input">
+            <input
+              id="supplier-phone-input"
+              type="tel"
+              value={values.phone || ""}
+              onChange={(event) => onChange("phone", event.target.value)}
+              disabled={saving}
+              placeholder="Phone number"
+            />
+          </FieldRow>
+
+          <FieldRow label="WhatsApp" htmlFor="supplier-whatsapp-input">
+            <input
+              id="supplier-whatsapp-input"
+              type="tel"
+              value={values.whatsapp || ""}
+              onChange={(event) => onChange("whatsapp", event.target.value)}
+              disabled={saving}
+              placeholder="Include country code"
+            />
+          </FieldRow>
+
+          <FieldRow label="Address" htmlFor="supplier-address-input">
+            <input
+              id="supplier-address-input"
+              value={values.address || ""}
+              onChange={(event) => onChange("address", event.target.value)}
+              disabled={saving}
+              placeholder="Street, city"
+            />
+          </FieldRow>
+        </FieldGroup>
+
+        <FieldGroup label="Notes">
           <textarea
             value={values.notes || ""}
             onChange={(event) => onChange("notes", event.target.value)}
             disabled={saving}
             placeholder="Private purchasing or relationship notes"
-            className={`${inputClassName} min-h-28 resize-y`}
+            className="item-panel-textarea"
           />
-        </div>
+        </FieldGroup>
       </div>
 
       {error && (

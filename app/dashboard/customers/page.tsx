@@ -11,7 +11,7 @@ import {
   FilterBar,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell } from "@/components/ui";
+import { Button, DialogShell, FieldGroup, FieldRow } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   createCustomer,
@@ -400,54 +400,100 @@ export default function CustomersPage() {
             </>
           }
         >
-          <div className="grid gap-3">
+          <div className="item-form -mx-1">
             {formError && (
               <p
                 role="alert"
-                className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger"
+                className="mx-5 mb-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger"
               >
                 {formError}
               </p>
             )}
 
-            <CustomerField
-              label="Customer name"
-              value={form.name}
-              onChange={(value) => setForm({ ...form, name: value })}
-              required
-            />
-            <div className="grid gap-3 sm:grid-cols-2">
-              <CustomerField
-                label="Contact person"
-                value={form.contact_name || ""}
-                onChange={(value) => setForm({ ...form, contact_name: value })}
+            {/* Same label/value rows as Add Item and the invoice. Was a stack
+                of boxed inputs with the label above each -- a third shape for
+                the same job. */}
+            <FieldGroup>
+              <FieldRow label="Name" htmlFor="customer-name" required>
+                <input
+                  id="customer-name"
+                  placeholder="Business or person"
+                  value={form.name}
+                  onChange={(event) =>
+                    setForm({ ...form, name: event.target.value })
+                  }
+                />
+              </FieldRow>
+
+              <FieldRow label="Contact" htmlFor="customer-contact">
+                <input
+                  id="customer-contact"
+                  placeholder="Who you deal with"
+                  value={form.contact_name || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, contact_name: event.target.value })
+                  }
+                />
+              </FieldRow>
+            </FieldGroup>
+
+            <FieldGroup label="Reach them">
+              <FieldRow label="Phone" htmlFor="customer-phone">
+                <input
+                  id="customer-phone"
+                  placeholder="Phone number"
+                  value={form.phone || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, phone: event.target.value })
+                  }
+                />
+              </FieldRow>
+
+              <FieldRow label="WhatsApp" htmlFor="customer-whatsapp">
+                <input
+                  id="customer-whatsapp"
+                  placeholder="WhatsApp number"
+                  value={form.whatsapp || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, whatsapp: event.target.value })
+                  }
+                />
+              </FieldRow>
+
+              <FieldRow label="Email" htmlFor="customer-email">
+                <input
+                  id="customer-email"
+                  type="email"
+                  placeholder="name@example.com"
+                  value={form.email || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, email: event.target.value })
+                  }
+                />
+              </FieldRow>
+
+              <FieldRow label="Address" htmlFor="customer-address">
+                <input
+                  id="customer-address"
+                  placeholder="Street, city"
+                  value={form.address || ""}
+                  onChange={(event) =>
+                    setForm({ ...form, address: event.target.value })
+                  }
+                />
+              </FieldRow>
+            </FieldGroup>
+
+            <FieldGroup label="Notes">
+              <textarea
+                value={form.notes || ""}
+                onChange={(event) =>
+                  setForm({ ...form, notes: event.target.value })
+                }
+                placeholder="Anything worth remembering about this customer"
+                className="item-panel-textarea"
               />
-              <CustomerField
-                label="Phone"
-                value={form.phone || ""}
-                onChange={(value) => setForm({ ...form, phone: value })}
-              />
-              <CustomerField
-                label="WhatsApp"
-                value={form.whatsapp || ""}
-                onChange={(value) => setForm({ ...form, whatsapp: value })}
-              />
-              <CustomerField
-                label="Email"
-                value={form.email || ""}
-                onChange={(value) => setForm({ ...form, email: value })}
-              />
-            </div>
-            <CustomerField
-              label="Address"
-              value={form.address || ""}
-              onChange={(value) => setForm({ ...form, address: value })}
-            />
-            <CustomerField
-              label="Notes"
-              value={form.notes || ""}
-              onChange={(value) => setForm({ ...form, notes: value })}
-            />
+            </FieldGroup>
           </div>
         </DialogShell>
       )}
@@ -484,26 +530,3 @@ export default function CustomersPage() {
   );
 }
 
-function CustomerField({
-  label,
-  value,
-  onChange,
-  required = false,
-}: {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  required?: boolean;
-}) {
-  return (
-    <label className="grid gap-1.5 text-xs font-semibold text-theme-secondary">
-      {label}
-      {required && <span className="sr-only">(required)</span>}
-      <input
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm font-normal text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
-      />
-    </label>
-  );
-}

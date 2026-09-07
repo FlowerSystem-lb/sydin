@@ -8,11 +8,7 @@ import {
   DashboardPageHeader,
   DashboardPageShell,
 } from "@/components/dashboard/Workspace";
-import { Button, Select } from "@/components/ui";
-import {
-  ItemFieldGroup,
-  ItemFieldRow,
-} from "@/components/inventory/ItemFieldRow";
+import { Button, FieldGroup, FieldRow, Select } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -345,31 +341,31 @@ export default function NewSalePage() {
                 above each one -- a different shape for the same job. */}
             <section className="dashboard-card item-form p-0">
               <div className="item-form-groups">
-                <ItemFieldGroup label="Invoice">
-                  <ItemFieldRow label="Number" htmlFor="invoice-number">
+                <FieldGroup label="Invoice">
+                  <FieldRow label="Number" htmlFor="invoice-number">
                     <input
                       id="invoice-number"
                       value={invoiceNumber}
                       onChange={(event) => setInvoiceNumber(event.target.value)}
                     />
-                  </ItemFieldRow>
+                  </FieldRow>
 
-                  <ItemFieldRow label="Date" htmlFor="invoice-date">
+                  <FieldRow label="Date" htmlFor="invoice-date">
                     <input
                       id="invoice-date"
                       type="date"
                       value={issueDate}
                       onChange={(event) => setIssueDate(event.target.value)}
                     />
-                  </ItemFieldRow>
-                </ItemFieldGroup>
+                  </FieldRow>
+                </FieldGroup>
 
-                <ItemFieldGroup label="Sold to">
+                <FieldGroup label="Sold to">
                   {/* A walk-in customer who isn't on file used to stop the
                       invoice: leave, create the customer, come back, rebuild
                       the lines. Type the name here and it is created and
                       selected. */}
-                  <ItemFieldRow label="Customer">
+                  <FieldRow label="Customer">
                     <Select
                       value={customerId}
                       onChange={setCustomerId}
@@ -390,9 +386,9 @@ export default function NewSalePage() {
                           customer.phone || customer.email || undefined,
                       }))}
                     />
-                  </ItemFieldRow>
+                  </FieldRow>
 
-                  <ItemFieldRow label="Depot">
+                  <FieldRow label="Depot">
                     <Select
                       value={depotId}
                       onChange={setDepotId}
@@ -406,8 +402,8 @@ export default function NewSalePage() {
                         label: depot.name,
                       }))}
                     />
-                  </ItemFieldRow>
-                </ItemFieldGroup>
+                  </FieldRow>
+                </FieldGroup>
               </div>
             </section>
 
@@ -557,14 +553,14 @@ export default function NewSalePage() {
             </section>
 
             <section className="dashboard-card p-0">
-              <ItemFieldGroup label="Notes">
+              <FieldGroup label="Notes">
                 <textarea
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                   placeholder="Anything the customer should see on the invoice"
                   className="item-panel-textarea"
                 />
-              </ItemFieldGroup>
+              </FieldGroup>
             </section>
 
             <div className="flex flex-wrap items-center justify-end gap-2">

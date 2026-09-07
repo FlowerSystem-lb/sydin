@@ -8,12 +8,12 @@ import {
 } from "@/app/lib/productImage";
 import Link from "next/link";
 import CategorySelector from "@/components/CategorySelector";
-import { ItemFieldGroup, ItemFieldRow } from "@/components/inventory/ItemFieldRow";
 import {
   ActionButton,
   DashboardNotice,
 } from "@/components/dashboard/Workspace";
 import Select from "@/components/ui/Select";
+import { FieldGroup, FieldRow } from "@/components/ui";
 import ScannerModal from "@/components/scanner/ScannerModal";
 import { LockedActionLabel, UpgradeDialog } from "@/components/UpgradePrompt";
 import {
@@ -843,8 +843,8 @@ export default function AddItemForm({
               `.item-form-groups` -- a container query, not a viewport one,
               because the same form renders at 30rem and at 1180px. */}
           <div className="item-form-groups">
-          <ItemFieldGroup>
-            <ItemFieldRow label="Category">
+          <FieldGroup>
+            <FieldRow label="Category">
               <CategorySelector
                 id="category"
                 categories={categories}
@@ -854,9 +854,9 @@ export default function AddItemForm({
                 onCreate={handleCreateCategory}
                 compact
               />
-            </ItemFieldRow>
+            </FieldRow>
 
-            <ItemFieldRow label="Depot">
+            <FieldRow label="Depot">
               <Select
                 id="depot"
                 value={selectedDepotId}
@@ -874,13 +874,13 @@ export default function AddItemForm({
                   })),
                 ]}
               />
-            </ItemFieldRow>
-          </ItemFieldGroup>
+            </FieldRow>
+          </FieldGroup>
 
           {showAdvanced && (
             <>
-              <ItemFieldGroup label="Stock">
-                <ItemFieldRow
+              <FieldGroup label="Stock">
+                <FieldRow
                   label="Quantity"
                   htmlFor="quantity"
                   error={fieldErrors.quantity}
@@ -913,9 +913,9 @@ export default function AddItemForm({
                     }
                     placeholder="0"
                   />
-                </ItemFieldRow>
+                </FieldRow>
 
-                <ItemFieldRow label="Unit" required error={fieldErrors.unitType}>
+                <FieldRow label="Unit" required error={fieldErrors.unitType}>
                   <Select
                     id="unit-type"
                     value={unitType}
@@ -935,10 +935,10 @@ export default function AddItemForm({
                       label: INVENTORY_UNIT_LABELS[unit],
                     }))}
                   />
-                </ItemFieldRow>
+                </FieldRow>
 
                 {unitType === "custom" && (
-                  <ItemFieldRow
+                  <FieldRow
                     label="Custom unit"
                     htmlFor="custom-unit"
                     required
@@ -962,10 +962,10 @@ export default function AddItemForm({
                       }
                       placeholder="e.g. Roll, Bottle, Tray"
                     />
-                  </ItemFieldRow>
+                  </FieldRow>
                 )}
 
-                <ItemFieldRow
+                <FieldRow
                   label="Min stock"
                   htmlFor="min-stock-level"
                   error={fieldErrors.minStockLevel}
@@ -1000,11 +1000,11 @@ export default function AddItemForm({
                     }
                     placeholder="Business default"
                   />
-                </ItemFieldRow>
-              </ItemFieldGroup>
+                </FieldRow>
+              </FieldGroup>
 
-              <ItemFieldGroup label="Supplier &amp; pricing">
-                <ItemFieldRow label="Supplier">
+              <FieldGroup label="Supplier &amp; pricing">
+                <FieldRow label="Supplier">
                   <Select
                     id="supplier"
                     value={selectedSupplierId}
@@ -1022,9 +1022,9 @@ export default function AddItemForm({
                       })),
                     ]}
                   />
-                </ItemFieldRow>
+                </FieldRow>
 
-                <ItemFieldRow
+                <FieldRow
                   label="Cost price"
                   htmlFor="cost-price"
                   error={fieldErrors.costPrice}
@@ -1057,9 +1057,9 @@ export default function AddItemForm({
                       placeholder="0.00"
                     />
                   </div>
-                </ItemFieldRow>
+                </FieldRow>
 
-                <ItemFieldRow
+                <FieldRow
                   label="Selling price"
                   htmlFor="selling-price"
                   error={fieldErrors.sellingPrice}
@@ -1094,7 +1094,7 @@ export default function AddItemForm({
                       placeholder="0.00"
                     />
                   </div>
-                </ItemFieldRow>
+                </FieldRow>
 
                 <div className="mt-1 grid grid-cols-2 gap-3">
                   <div className="rounded-[14px] border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
@@ -1114,16 +1114,16 @@ export default function AddItemForm({
                     </p>
                   </div>
                 </div>
-              </ItemFieldGroup>
+              </FieldGroup>
 
-              <ItemFieldGroup label="Tracking codes">
-                <ItemFieldRow label="Item code">
+              <FieldGroup label="Tracking codes">
+                <FieldRow label="Item code">
                   <span className="text-sm font-black text-theme-accent">
                     Generated after saving
                   </span>
-                </ItemFieldRow>
+                </FieldRow>
 
-                <ItemFieldRow label="SKU">
+                <FieldRow label="SKU">
                   <input
                     id="sku"
                     type="text"
@@ -1133,9 +1133,9 @@ export default function AddItemForm({
                     autoCapitalize="characters"
                     placeholder="e.g. FLOWER-RED-01"
                   />
-                </ItemFieldRow>
+                </FieldRow>
 
-                <ItemFieldRow label="Barcode">
+                <FieldRow label="Barcode">
                   <div className="flex items-center gap-2">
                     <input
                       id="barcode"
@@ -1193,10 +1193,10 @@ export default function AddItemForm({
                       )}
                     </p>
                   )}
-                </ItemFieldRow>
-              </ItemFieldGroup>
+                </FieldRow>
+              </FieldGroup>
 
-              <ItemFieldGroup label="Notes">
+              <FieldGroup label="Notes">
                 <textarea
                   id="notes"
                   value={notes}
@@ -1205,7 +1205,7 @@ export default function AddItemForm({
                   placeholder="Internal notes..."
                   className="item-panel-textarea"
                 />
-              </ItemFieldGroup>
+              </FieldGroup>
             </>
           )}
           </div>

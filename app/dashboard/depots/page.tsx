@@ -13,7 +13,7 @@ import {
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell } from "@/components/ui";
+import { Button, DialogShell, FieldGroup, FieldRow } from "@/components/ui";
 import {
   createDepot,
   deleteDepot,
@@ -380,64 +380,61 @@ export default function DepotsPage() {
                 </div>
               ) : (
                 <>
-                  <div className="mt-6 grid grid-cols-1 gap-5">
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                        Name
-                      </label>
+                  {/* Same label/value rows as Add Item, the invoice,
+                      Customers and Suppliers. */}
+                  <div className="item-form -mx-1 mt-4">
+                    <FieldGroup>
+                      <FieldRow label="Name" htmlFor="depot-name" required>
+                        <input
+                          id="depot-name"
+                          type="text"
+                          value={name}
+                          onChange={(event) => setName(event.target.value)}
+                          placeholder="e.g. Main warehouse"
+                          required
+                        />
+                      </FieldRow>
 
-                      <input
-                        type="text"
-                        value={name}
-                        onChange={(event) => setName(event.target.value)}
-                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
-                        required
-                      />
-                    </div>
+                      <FieldRow label="Code" htmlFor="depot-code">
+                        <input
+                          id="depot-code"
+                          type="text"
+                          value={code}
+                          onChange={(event) => setCode(event.target.value)}
+                          placeholder="Short label, e.g. WH1"
+                        />
+                      </FieldRow>
+                    </FieldGroup>
 
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                        Code
-                      </label>
-
-                      <input
-                        type="text"
-                        value={code}
-                        onChange={(event) => setCode(event.target.value)}
-                        className="w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                        Notes
-                      </label>
-
+                    <FieldGroup label="Notes">
                       <textarea
                         value={notes}
                         onChange={(event) => setNotes(event.target.value)}
-                        className="min-h-[120px] w-full resize-y rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-5 py-4 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
+                        placeholder="Anything worth remembering about this location"
+                        className="item-panel-textarea"
                       />
-                    </div>
+                    </FieldGroup>
 
-                    <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-5 py-4">
-                      <span>
-                        <span className="block text-sm font-bold text-theme-primary">
-                          Active
+                    <FieldGroup>
+                      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-4 py-3">
+                        <span>
+                          <span className="block text-sm font-bold text-theme-primary">
+                            Active
+                          </span>
+
+                          <span className="mt-1 block text-xs text-theme-muted">
+                            Active depots appear in item forms.
+                          </span>
                         </span>
 
-                        <span className="mt-1 block text-xs text-theme-muted">
-                          Active depots appear in item forms.
-                        </span>
-                      </span>
-
-                      <input
-                        type="checkbox"
-                        checked={isActive}
-                        onChange={(event) => setIsActive(event.target.checked)}
-                        className="h-6 w-6 accent-[#2563eb]"
-                      />
-                    </label>
+                        <input
+                          type="checkbox"
+                          checked={isActive}
+                          onChange={(event) => setIsActive(event.target.checked)}
+                          className="h-6 w-6 accent-[#2563eb]"
+                        />
+                      </label>
+                    </FieldGroup>
                   </div>
 
                   <button

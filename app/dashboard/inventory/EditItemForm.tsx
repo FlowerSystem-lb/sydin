@@ -3,8 +3,8 @@
 import Image from "next/image";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import CategorySelector from "@/components/CategorySelector";
-import { ItemFieldGroup, ItemFieldRow } from "@/components/inventory/ItemFieldRow";
 import Select from "@/components/ui/Select";
+import { FieldGroup, FieldRow } from "@/components/ui";
 import type { Category } from "@/app/lib/categories";
 import { formatDepotLabel, type Depot } from "@/app/lib/depots";
 import {
@@ -457,8 +457,8 @@ export default function EditItemForm({
         {/* Two columns where there is room, stacked in the slide-over.
             Container query, not viewport -- see `.item-form-groups`. */}
         <div className="item-form-groups">
-        <ItemFieldGroup>
-          <ItemFieldRow label="Category">
+        <FieldGroup>
+          <FieldRow label="Category">
             <CategorySelector
               categories={categories}
               value={values.categoryId}
@@ -468,9 +468,9 @@ export default function EditItemForm({
               onCreate={onCreateCategory}
               compact
             />
-          </ItemFieldRow>
+          </FieldRow>
 
-          <ItemFieldRow label="Depot">
+          <FieldRow label="Depot">
             <Select
               value={values.depotId}
               onChange={(value) => onValueChange("depotId", value)}
@@ -487,9 +487,9 @@ export default function EditItemForm({
                 })),
               ]}
             />
-          </ItemFieldRow>
+          </FieldRow>
 
-          <ItemFieldRow label="Supplier">
+          <FieldRow label="Supplier">
             <Select
               value={values.supplierId}
               onChange={(value) => onValueChange("supplierId", value)}
@@ -506,11 +506,11 @@ export default function EditItemForm({
                 })),
               ]}
             />
-          </ItemFieldRow>
-        </ItemFieldGroup>
+          </FieldRow>
+        </FieldGroup>
 
-        <ItemFieldGroup label="Stock">
-          <ItemFieldRow
+        <FieldGroup label="Stock">
+          <FieldRow
             label="Quantity"
             htmlFor="edit-quantity-input"
             required
@@ -540,9 +540,9 @@ export default function EditItemForm({
               aria-invalid={Boolean(fieldErrors.quantity)}
               aria-describedby={fieldErrors.quantity ? "edit-quantity-error" : undefined}
             />
-          </ItemFieldRow>
+          </FieldRow>
 
-          <ItemFieldRow label="Unit" required error={fieldErrors.unitType}>
+          <FieldRow label="Unit" required error={fieldErrors.unitType}>
             <Select
               value={values.unitType}
               onChange={(value) => {
@@ -561,10 +561,10 @@ export default function EditItemForm({
                 label: INVENTORY_UNIT_LABELS[unit],
               }))}
             />
-          </ItemFieldRow>
+          </FieldRow>
 
           {values.unitType === "custom" && (
-            <ItemFieldRow
+            <FieldRow
               label="Custom unit"
               htmlFor="edit-custom-unit-input"
               required
@@ -586,10 +586,10 @@ export default function EditItemForm({
                 }
                 placeholder="e.g. Roll, Bottle, Tray"
               />
-            </ItemFieldRow>
+            </FieldRow>
           )}
 
-          <ItemFieldRow
+          <FieldRow
             label="Min stock"
             htmlFor="edit-min-stock-input"
             error={fieldErrors.minStockLevel}
@@ -621,12 +621,12 @@ export default function EditItemForm({
               }
               placeholder="Business default"
             />
-          </ItemFieldRow>
-        </ItemFieldGroup>
+          </FieldRow>
+        </FieldGroup>
 
         {showMore && (
           <>
-            <ItemFieldGroup
+            <FieldGroup
               label="Pricing"
               action={
                 <button
@@ -638,7 +638,7 @@ export default function EditItemForm({
                 </button>
               }
             >
-              <ItemFieldRow
+              <FieldRow
                 label="Cost price"
                 htmlFor="edit-cost-price-input"
                 error={fieldErrors.costPrice}
@@ -670,9 +670,9 @@ export default function EditItemForm({
                     placeholder="0.00"
                   />
                 </div>
-              </ItemFieldRow>
+              </FieldRow>
 
-              <ItemFieldRow
+              <FieldRow
                 label="Selling price"
                 htmlFor="edit-selling-price-input"
                 error={fieldErrors.sellingPrice}
@@ -704,7 +704,7 @@ export default function EditItemForm({
                     placeholder="0.00"
                   />
                 </div>
-              </ItemFieldRow>
+              </FieldRow>
 
               <div className="mt-1 grid grid-cols-2 gap-3">
                 <div className="rounded-[14px] border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
@@ -724,10 +724,10 @@ export default function EditItemForm({
                   </p>
                 </div>
               </div>
-            </ItemFieldGroup>
+            </FieldGroup>
 
-            <ItemFieldGroup label="Tracking codes">
-              <ItemFieldRow label="Item code">
+            <FieldGroup label="Tracking codes">
+              <FieldRow label="Item code">
                 <div className="flex items-center justify-between gap-3">
                   <span className="text-sm font-black text-theme-accent">
                     {itemCode || "Not generated yet"}
@@ -736,9 +736,9 @@ export default function EditItemForm({
                     Read only
                   </span>
                 </div>
-              </ItemFieldRow>
+              </FieldRow>
 
-              <ItemFieldRow label="SKU">
+              <FieldRow label="SKU">
                 <input
                   type="text"
                   value={values.sku}
@@ -746,9 +746,9 @@ export default function EditItemForm({
                   disabled={saving}
                   autoCapitalize="characters"
                 />
-              </ItemFieldRow>
+              </FieldRow>
 
-              <ItemFieldRow label="Barcode">
+              <FieldRow label="Barcode">
                 <input
                   type="text"
                   value={values.barcode}
@@ -758,10 +758,10 @@ export default function EditItemForm({
                   spellCheck={false}
                   className="font-mono tracking-wide"
                 />
-              </ItemFieldRow>
-            </ItemFieldGroup>
+              </FieldRow>
+            </FieldGroup>
 
-            <ItemFieldGroup label="Notes">
+            <FieldGroup label="Notes">
               <textarea
                 value={values.notes}
                 onChange={(event) => onValueChange("notes", event.target.value)}
@@ -769,7 +769,7 @@ export default function EditItemForm({
                 placeholder="Internal notes..."
                 className="item-panel-textarea"
               />
-            </ItemFieldGroup>
+            </FieldGroup>
           </>
         )}
         </div>
