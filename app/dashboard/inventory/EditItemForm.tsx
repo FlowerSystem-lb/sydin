@@ -1,8 +1,9 @@
 "use client";
 
 import Image from "next/image";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 import CategorySelector from "@/components/CategorySelector";
+import { ItemFieldGroup, ItemFieldRow } from "@/components/inventory/ItemFieldRow";
 import Select from "@/components/ui/Select";
 import type { Category } from "@/app/lib/categories";
 import { formatDepotLabel, type Depot } from "@/app/lib/depots";
@@ -81,11 +82,6 @@ export interface ParsedEditItemValues {
   notes: string;
   supplier_id: number | null;
 }
-
-const inputClassName =
-  "w-full min-h-11 rounded-xl border border-theme bg-theme-surface px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
-const errorInputClassName =
-  "border-red-400/50 bg-red-500/[0.08] focus:border-red-300/70 focus:shadow-[0_0_0_4px_rgba(248,113,113,0.12)]";
 
 function formatNullableNumber(value: unknown) {
   if (value === null || value === undefined || value === "") return "";
@@ -282,63 +278,28 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   );
 }
 
-function SectionTitle({
-  eyebrow,
-  title,
-  description,
-}: {
-  eyebrow: string;
-  title: string;
-  description: string;
-}) {
+function PhotoIcon() {
   return (
-    <div className="mb-4">
-      <p className="text-xs font-bold uppercase tracking-[0.18em] text-theme-accent">
-        {eyebrow}
-      </p>
-      <h3 className="mt-1 text-xl font-black text-theme-primary">{title}</h3>
-      <p className="mt-1.5 text-sm leading-5 text-theme-muted">{description}</p>
-    </div>
-  );
-}
-
-function DisclosureSection({
-  title,
-  summary,
-  children,
-}: {
-  title: string;
-  summary: string;
-  children: ReactNode;
-}) {
-  return (
-    <details className="group overflow-hidden rounded-[18px] border border-theme bg-theme-surface">
-      <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-3 outline-none transition hover:bg-theme-surface focus-visible:bg-theme-surface [&::-webkit-details-marker]:hidden">
-        <span>
-          <span className="block text-base font-black text-theme-primary">{title}</span>
-          <span className="mt-1 block text-sm leading-5 text-theme-subtle">
-            {summary}
-          </span>
-        </span>
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-theme bg-theme-inset text-theme-secondary transition group-open:rotate-180 group-open:text-theme-accent">
-          <svg
-            aria-hidden="true"
-            className="h-5 w-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="m6 9 6 6 6-6"
-            />
-          </svg>
-        </span>
-      </summary>
-      <div className="border-t border-theme px-4 py-4">{children}</div>
-    </details>
+    <svg
+      className="h-5 w-5"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+    >
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.6}
+        d="M4 6h16a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1Z"
+      />
+      <path
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth={1.6}
+        d="m3.5 16 4.5-4.3a2 2 0 0 1 2.8 0L15 15.5m-3-2.8 1.3-1.3a2 2 0 0 1 2.8 0L20.5 15"
+      />
+      <circle cx="8.5" cy="10" r="1.4" fill="currentColor" stroke="none" />
+    </svg>
   );
 }
 
@@ -396,73 +357,75 @@ export default function EditItemForm({
       : formatInventoryPrice(stockRetailValue, currencyCode);
   const itemCode = item.item_code?.trim();
   /* Last of the product-photo sites to get this: a photo that fails to load
-     falls back to the same "Image / Not added" plate an item without one
-     shows, instead of the browser's broken-image glyph. */
+     falls back to the plain placeholder icon an item without one shows,
+     instead of the browser's broken-image glyph. */
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
 
-  return (
-    <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
-      <section className="rounded-[20px] border border-theme bg-theme-surface p-4">
-        <SectionTitle
-          eyebrow="Basic"
-          title="Basic Information"
-          description="Update the product identity, image, category, and location."
-        />
+  /* A newly-picked file gets its own live preview in the photo tile rather
+     than a filename printed underneath it -- the tile IS the preview now,
+     there is nowhere else for "here is your new photo" to go. */
+  const selectedImagePreviewUrl = useMemo(
+    () => (selectedImage ? URL.createObjectURL(selectedImage) : ""),
+    [selectedImage]
+  );
+  useEffect(() => {
+    if (!selectedImagePreviewUrl) return;
+    return () => URL.revokeObjectURL(selectedImagePreviewUrl);
+  }, [selectedImagePreviewUrl]);
 
-        <div className="grid grid-cols-1 gap-4 rounded-[18px] border border-theme bg-theme-inset p-3 md:grid-cols-[160px_1fr] md:items-center">
-          {item.image && failedImageSrc !== item.image ? (
-            <div className="relative h-[140px] overflow-hidden rounded-xl bg-[#f4f0e8]">
+  /* Pricing, tracking codes and notes used to be three separate accordions --
+     three repeats of the same header-and-chevron pattern to open one at a
+     time. One reveal instead of three, and it opens by default whenever the
+     item already carries any of that data: editing a priced, noted item
+     should not hide its own price and notes behind a click. */
+  const hasExtraDetails = Boolean(
+    values.costPrice.trim() ||
+      values.sellingPrice.trim() ||
+      values.sku.trim() ||
+      values.barcode.trim() ||
+      values.notes.trim()
+  );
+  const [showMore, setShowMore] = useState(hasExtraDetails);
+
+  return (
+    <form onSubmit={onSubmit} noValidate className="flex min-h-full flex-col">
+      <div className="flex-1">
+        <div className="item-panel-title-row">
+          <label className="item-photo-tile" aria-label="Replace product photo">
+            {selectedImagePreviewUrl ? (
+              <Image
+                src={selectedImagePreviewUrl}
+                alt="New photo"
+                fill
+                unoptimized
+                sizes="52px"
+                className="object-cover"
+              />
+            ) : item.image && failedImageSrc !== item.image ? (
               <Image
                 src={item.image}
                 alt={item.name}
                 fill
                 loading="lazy"
-                sizes="150px"
+                sizes="52px"
                 onError={() => setFailedImageSrc(item.image)}
-                className="object-contain p-3"
+                className="object-cover"
               />
-            </div>
-          ) : (
-            <div className="flex h-[140px] flex-col items-center justify-center rounded-xl bg-[#f4f0e8] text-theme-subtle">
-              <span className="text-xs font-black uppercase tracking-[0.16em]">
-                Image
-              </span>
-              <span className="mt-1 text-xs font-semibold">Not added</span>
-            </div>
-          )}
-
-          <div>
-            <p className="text-sm font-semibold text-theme-secondary">
-              Product photo
-            </p>
-            <p className="mt-2 text-sm leading-6 text-theme-subtle">
-              Replace the image only if you want a new product photo.
-            </p>
-            <label className="mt-3 inline-flex min-h-10 cursor-pointer items-center rounded-xl border border-indigo-300/25 bg-indigo-500/15 px-3.5 py-2 text-sm font-bold text-theme-accent transition hover:bg-indigo-500/25">
-              Choose replacement
-              <input
-                type="file"
-                accept="image/*"
-                onChange={(event) =>
-                  onImageChange(event.target.files?.[0] || null)
-                }
-                disabled={saving}
-                className="sr-only"
-              />
-            </label>
-            {selectedImage && (
-              <p className="mt-3 break-words text-sm font-semibold text-theme-accent">
-                New image: {selectedImage.name}
-              </p>
+            ) : (
+              <PhotoIcon />
             )}
-          </div>
-        </div>
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(event) =>
+                onImageChange(event.target.files?.[0] || null)
+              }
+              disabled={saving}
+              className="sr-only"
+            />
+          </label>
 
-        <div className="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <label htmlFor="edit-name-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Product name <span className="text-theme-accent">*</span>
-            </label>
+          <div className="min-w-0 flex-1">
             <input
               id="edit-name-input"
               type="text"
@@ -472,91 +435,69 @@ export default function EditItemForm({
                 onFieldErrorClear("name");
               }}
               disabled={saving}
+              placeholder="Item name"
               aria-invalid={Boolean(fieldErrors.name)}
               aria-describedby={fieldErrors.name ? "edit-name-error" : undefined}
-              className={`${inputClassName} ${
-                fieldErrors.name ? errorInputClassName : ""
-              }`}
+              className="item-title-input"
             />
             <FieldError id="edit-name-error" message={fieldErrors.name} />
           </div>
+        </div>
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Category
-            </label>
+        <ItemFieldGroup>
+          <ItemFieldRow label="Category">
             <CategorySelector
               categories={categories}
               value={values.categoryId}
               legacyCategory={values.category}
-              onChange={(categoryId) =>
-                onValueChange("categoryId", categoryId)
-              }
+              onChange={(categoryId) => onValueChange("categoryId", categoryId)}
               disabled={saving}
             />
-          </div>
+          </ItemFieldRow>
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Depot / Location
-            </label>
+          <ItemFieldRow label="Depot">
             <Select
-                value={values.depotId}
-                onChange={(value) =>
-                  onValueChange("depotId", value)
-                }
-                disabled={saving}
-                searchable={depots.length > 8}
-                placeholder="Unassigned"
-                options={[
-                  { value: "", label: "Unassigned" },
-                  ...depots.map((depot) => ({
-                    value: String(depot.id),
-                    label: formatDepotLabel(depot),
-                  })),
-                ]}
-              />
-          </div>
+              value={values.depotId}
+              onChange={(value) => onValueChange("depotId", value)}
+              disabled={saving}
+              searchable={depots.length > 8}
+              placeholder="Unassigned"
+              options={[
+                { value: "", label: "Unassigned" },
+                ...depots.map((depot) => ({
+                  value: String(depot.id),
+                  label: formatDepotLabel(depot),
+                })),
+              ]}
+            />
+          </ItemFieldRow>
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Supplier
-            </label>
+          <ItemFieldRow label="Supplier">
             <Select
-                value={values.supplierId}
-                onChange={(value) =>
-                  onValueChange("supplierId", value)
-                }
-                disabled={saving}
-                searchable={suppliers.length > 8}
-                placeholder="No supplier"
-                options={[
-                  { value: "", label: "No supplier" },
-                  ...suppliers.map((supplier) => ({
-                    value: String(supplier.id),
-                    label: supplier.name,
-                  })),
-                ]}
-              />
-            <p className="mt-2 text-xs leading-5 text-theme-subtle">
-              Optional. Manage supplier records from the Suppliers page.
-            </p>
-          </div>
-        </div>
-      </section>
+              value={values.supplierId}
+              onChange={(value) => onValueChange("supplierId", value)}
+              disabled={saving}
+              searchable={suppliers.length > 8}
+              placeholder="No supplier"
+              options={[
+                { value: "", label: "No supplier" },
+                ...suppliers.map((supplier) => ({
+                  value: String(supplier.id),
+                  label: supplier.name,
+                })),
+              ]}
+            />
+          </ItemFieldRow>
+        </ItemFieldGroup>
 
-      <section className="rounded-[20px] border border-theme bg-theme-surface p-4">
-        <SectionTitle
-          eyebrow="Stock"
-          title="Stock"
-          description="Control the current quantity, unit, and item-level low-stock target."
-        />
-
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="edit-quantity-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Quantity <span className="text-theme-accent">*</span>
-            </label>
+        <ItemFieldGroup label="Stock">
+          <ItemFieldRow
+            label="Quantity"
+            htmlFor="edit-quantity-input"
+            required
+            error={fieldErrors.quantity}
+            errorId="edit-quantity-error"
+          >
             <input
               id="edit-quantity-input"
               type="number"
@@ -579,45 +520,38 @@ export default function EditItemForm({
               disabled={saving}
               aria-invalid={Boolean(fieldErrors.quantity)}
               aria-describedby={fieldErrors.quantity ? "edit-quantity-error" : undefined}
-              className={`${inputClassName} ${
-                fieldErrors.quantity ? errorInputClassName : ""
-              }`}
             />
-            <FieldError
-              id="edit-quantity-error"
-              message={fieldErrors.quantity}
-            />
-          </div>
+          </ItemFieldRow>
 
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Unit <span className="text-theme-accent">*</span>
-            </label>
+          <ItemFieldRow label="Unit" required error={fieldErrors.unitType}>
             <Select
-                value={values.unitType}
-                onChange={(value) => {
-                  const nextUnit = value as InventoryUnitType;
-                  onValueChange("unitType", nextUnit);
-                  onFieldErrorClear("unitType");
+              value={values.unitType}
+              onChange={(value) => {
+                const nextUnit = value as InventoryUnitType;
+                onValueChange("unitType", nextUnit);
+                onFieldErrorClear("unitType");
 
-                  if (nextUnit !== "custom") {
-                    onFieldErrorClear("customUnitLabel");
-                  }
-                }}
-                disabled={saving}
-                error={fieldErrors.unitType}
-                options={INVENTORY_UNIT_TYPES.map((unit) => ({
-                  value: unit,
-                  label: INVENTORY_UNIT_LABELS[unit],
-                }))}
-              />
-          </div>
+                if (nextUnit !== "custom") {
+                  onFieldErrorClear("customUnitLabel");
+                }
+              }}
+              disabled={saving}
+              error={fieldErrors.unitType}
+              options={INVENTORY_UNIT_TYPES.map((unit) => ({
+                value: unit,
+                label: INVENTORY_UNIT_LABELS[unit],
+              }))}
+            />
+          </ItemFieldRow>
 
           {values.unitType === "custom" && (
-            <div className="md:col-span-2">
-              <label htmlFor="edit-custom-unit-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-                Custom unit label <span className="text-theme-accent">*</span>
-              </label>
+            <ItemFieldRow
+              label="Custom unit"
+              htmlFor="edit-custom-unit-input"
+              required
+              error={fieldErrors.customUnitLabel}
+              errorId="edit-custom-unit-error"
+            >
               <input
                 id="edit-custom-unit-input"
                 type="text"
@@ -628,23 +562,20 @@ export default function EditItemForm({
                 }}
                 disabled={saving}
                 aria-invalid={Boolean(fieldErrors.customUnitLabel)}
-                aria-describedby={fieldErrors.customUnitLabel ? "edit-custom-unit-error" : undefined}
+                aria-describedby={
+                  fieldErrors.customUnitLabel ? "edit-custom-unit-error" : undefined
+                }
                 placeholder="e.g. Roll, Bottle, Tray"
-                className={`${inputClassName} ${
-                  fieldErrors.customUnitLabel ? errorInputClassName : ""
-                }`}
               />
-              <FieldError
-                id="edit-custom-unit-error"
-                message={fieldErrors.customUnitLabel}
-              />
-            </div>
+            </ItemFieldRow>
           )}
 
-          <div className="md:col-span-2">
-            <label htmlFor="edit-min-stock-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Minimum stock level
-            </label>
+          <ItemFieldRow
+            label="Min stock"
+            htmlFor="edit-min-stock-input"
+            error={fieldErrors.minStockLevel}
+            errorId="edit-min-stock-error"
+          >
             <input
               id="edit-min-stock-input"
               type="number"
@@ -666,211 +597,185 @@ export default function EditItemForm({
               }}
               disabled={saving}
               aria-invalid={Boolean(fieldErrors.minStockLevel)}
-              aria-describedby={fieldErrors.minStockLevel ? "edit-min-stock-error" : undefined}
-              placeholder="Use business default"
-              className={`${inputClassName} ${
-                fieldErrors.minStockLevel ? errorInputClassName : ""
-              }`}
-            />
-            <FieldError
-              id="edit-min-stock-error"
-              message={fieldErrors.minStockLevel}
-            />
-          </div>
-        </div>
-      </section>
-
-      <DisclosureSection
-        title="Pricing & Value"
-        summary={`Private values in ${currencyCode}`}
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div>
-            <label htmlFor="edit-cost-price-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Cost price
-            </label>
-            <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-5 flex items-center text-sm font-black text-theme-accent">
-                {currencyCode}
-              </span>
-              <input
-                id="edit-cost-price-input"
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={values.costPrice}
-                onChange={(event) => {
-                  onValueChange(
-                    "costPrice",
-                    event.target.value.startsWith("-")
-                      ? ""
-                      : event.target.value
-                  );
-                  onFieldErrorClear("costPrice");
-                }}
-                disabled={saving}
-                aria-invalid={Boolean(fieldErrors.costPrice)}
-                aria-describedby={fieldErrors.costPrice ? "edit-cost-price-error" : undefined}
-                placeholder="0.00"
-                className={`${inputClassName} pl-[5.5rem] ${
-                  fieldErrors.costPrice ? errorInputClassName : ""
-                }`}
-              />
-            </div>
-            <FieldError
-              id="edit-cost-price-error"
-              message={fieldErrors.costPrice}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="edit-selling-price-input" className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Selling price
-            </label>
-            <div className="relative">
-              <span className="pointer-events-none absolute inset-y-0 left-5 flex items-center text-sm font-black text-theme-accent">
-                {currencyCode}
-              </span>
-              <input
-                id="edit-selling-price-input"
-                type="number"
-                min="0"
-                step="0.01"
-                inputMode="decimal"
-                value={values.sellingPrice}
-                onChange={(event) => {
-                  onValueChange(
-                    "sellingPrice",
-                    event.target.value.startsWith("-")
-                      ? ""
-                      : event.target.value
-                  );
-                  onFieldErrorClear("sellingPrice");
-                }}
-                disabled={saving}
-                aria-invalid={Boolean(fieldErrors.sellingPrice)}
-                aria-describedby={fieldErrors.sellingPrice ? "edit-selling-price-error" : undefined}
-                placeholder="0.00"
-                className={`${inputClassName} pl-[5.5rem] ${
-                  fieldErrors.sellingPrice ? errorInputClassName : ""
-                }`}
-              />
-            </div>
-            <FieldError
-              id="edit-selling-price-error"
-              message={fieldErrors.sellingPrice}
-            />
-          </div>
-        </div>
-
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-[18px] border border-cyan-300/15 bg-cyan-500/[0.07] p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-              Stock cost value
-            </p>
-            <p className="mt-1.5 break-normal text-xl font-black text-theme-primary">
-              {formattedCostValue || "Not calculated"}
-            </p>
-          </div>
-          <div className="rounded-[18px] border border-violet-300/15 bg-violet-500/[0.07] p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-              Stock retail value
-            </p>
-            <p className="mt-1.5 break-normal text-xl font-black text-theme-primary">
-              {formattedRetailValue || "Not calculated"}
-            </p>
-          </div>
-        </div>
-      </DisclosureSection>
-
-      <DisclosureSection
-        title="Tracking Codes"
-        summary="Read-only SydIN code, SKU, and barcode"
-      >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <div className="md:col-span-2">
-            <p className="mb-2 text-sm font-semibold text-theme-secondary">
-              SydIN item code
-            </p>
-            <div className="flex min-h-11 items-center justify-between gap-4 rounded-xl border border-indigo-300/20 bg-indigo-500/10 px-3.5 py-2.5">
-              <span className="break-words font-black text-theme-accent">
-                {itemCode || "Not generated yet"}
-              </span>
-              <span className="rounded-xl border border-theme bg-theme-inset px-3 py-1.5 text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
-                Read only
-              </span>
-            </div>
-            {!itemCode && (
-              <p className="mt-2 text-xs leading-5 text-theme-subtle">
-                Older items may not have generated item codes yet.
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-              SKU
-            </label>
-            <input
-              type="text"
-              value={values.sku}
-              onChange={(event) => onValueChange("sku", event.target.value)}
-              disabled={saving}
-              autoCapitalize="characters"
-              className={inputClassName}
-            />
-            <p className="mt-2 text-xs leading-5 text-theme-subtle">
-              Your internal or supplier stock code.
-            </p>
-          </div>
-
-          <div>
-            <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-              Barcode
-            </label>
-            <input
-              type="text"
-              value={values.barcode}
-              onChange={(event) =>
-                onValueChange("barcode", event.target.value)
+              aria-describedby={
+                fieldErrors.minStockLevel ? "edit-min-stock-error" : undefined
               }
-              disabled={saving}
-              autoComplete="off"
-              spellCheck={false}
-              className={`${inputClassName} font-mono tracking-wide`}
+              placeholder="Business default"
             />
-            <p className="mt-2 text-xs leading-5 text-theme-subtle">
-              Product or scanned code. Leading zeroes are preserved.
-            </p>
+          </ItemFieldRow>
+        </ItemFieldGroup>
+
+        {!showMore && (
+          <button
+            type="button"
+            onClick={() => setShowMore(true)}
+            className="flex w-full items-center justify-center gap-1.5 border-t border-theme px-5 py-3 text-sm font-semibold text-theme-accent transition hover:bg-theme-hover"
+          >
+            Show pricing, tracking codes &amp; notes
+          </button>
+        )}
+
+        {showMore && (
+          <>
+            <ItemFieldGroup
+              label="Pricing"
+              action={
+                <button
+                  type="button"
+                  onClick={() => setShowMore(false)}
+                  className="text-xs font-bold text-theme-muted transition hover:text-theme-primary"
+                >
+                  Hide
+                </button>
+              }
+            >
+              <ItemFieldRow
+                label="Cost price"
+                htmlFor="edit-cost-price-input"
+                error={fieldErrors.costPrice}
+                errorId="edit-cost-price-error"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-theme-accent">
+                    {currencyCode}
+                  </span>
+                  <input
+                    id="edit-cost-price-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={values.costPrice}
+                    onChange={(event) => {
+                      onValueChange(
+                        "costPrice",
+                        event.target.value.startsWith("-") ? "" : event.target.value
+                      );
+                      onFieldErrorClear("costPrice");
+                    }}
+                    disabled={saving}
+                    aria-invalid={Boolean(fieldErrors.costPrice)}
+                    aria-describedby={
+                      fieldErrors.costPrice ? "edit-cost-price-error" : undefined
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+              </ItemFieldRow>
+
+              <ItemFieldRow
+                label="Selling price"
+                htmlFor="edit-selling-price-input"
+                error={fieldErrors.sellingPrice}
+                errorId="edit-selling-price-error"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-theme-accent">
+                    {currencyCode}
+                  </span>
+                  <input
+                    id="edit-selling-price-input"
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={values.sellingPrice}
+                    onChange={(event) => {
+                      onValueChange(
+                        "sellingPrice",
+                        event.target.value.startsWith("-") ? "" : event.target.value
+                      );
+                      onFieldErrorClear("sellingPrice");
+                    }}
+                    disabled={saving}
+                    aria-invalid={Boolean(fieldErrors.sellingPrice)}
+                    aria-describedby={
+                      fieldErrors.sellingPrice ? "edit-selling-price-error" : undefined
+                    }
+                    placeholder="0.00"
+                  />
+                </div>
+              </ItemFieldRow>
+
+              <div className="mt-1 grid grid-cols-2 gap-3">
+                <div className="rounded-[14px] border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
+                    Cost value
+                  </p>
+                  <p className="mt-1 break-normal text-base font-black text-theme-primary">
+                    {formattedCostValue || "—"}
+                  </p>
+                </div>
+                <div className="rounded-[14px] border border-violet-300/15 bg-violet-500/[0.07] p-3">
+                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
+                    Retail value
+                  </p>
+                  <p className="mt-1 break-normal text-base font-black text-theme-primary">
+                    {formattedRetailValue || "—"}
+                  </p>
+                </div>
+              </div>
+            </ItemFieldGroup>
+
+            <ItemFieldGroup label="Tracking codes">
+              <ItemFieldRow label="Item code">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm font-black text-theme-accent">
+                    {itemCode || "Not generated yet"}
+                  </span>
+                  <span className="rounded-lg border border-theme bg-theme-inset px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-theme-muted">
+                    Read only
+                  </span>
+                </div>
+              </ItemFieldRow>
+
+              <ItemFieldRow label="SKU">
+                <input
+                  type="text"
+                  value={values.sku}
+                  onChange={(event) => onValueChange("sku", event.target.value)}
+                  disabled={saving}
+                  autoCapitalize="characters"
+                />
+              </ItemFieldRow>
+
+              <ItemFieldRow label="Barcode">
+                <input
+                  type="text"
+                  value={values.barcode}
+                  onChange={(event) => onValueChange("barcode", event.target.value)}
+                  disabled={saving}
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="font-mono tracking-wide"
+                />
+              </ItemFieldRow>
+            </ItemFieldGroup>
+
+            <ItemFieldGroup label="Notes">
+              <textarea
+                value={values.notes}
+                onChange={(event) => onValueChange("notes", event.target.value)}
+                disabled={saving}
+                placeholder="Internal notes..."
+              />
+            </ItemFieldGroup>
+          </>
+        )}
+
+        {error && (
+          <div className="mx-5 mb-4 rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-theme-danger">
+            {error}
           </div>
-        </div>
-      </DisclosureSection>
+        )}
+      </div>
 
-      <DisclosureSection title="Notes" summary="Internal team context">
-        <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-          Internal notes
-        </label>
-        <textarea
-          value={values.notes}
-          onChange={(event) => onValueChange("notes", event.target.value)}
-          disabled={saving}
-          className={`${inputClassName} min-h-[130px] resize-y`}
-        />
-      </DisclosureSection>
-
-      {error && (
-        <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 text-theme-danger">
-          {error}
-        </div>
-      )}
-
-      <div className="sticky bottom-0 z-10 -mx-4 mt-1 flex flex-col-reverse gap-2 border-t border-theme bg-[var(--sydin-surface-strong)] px-4 py-3 backdrop-blur-xl sm:static sm:mx-0 sm:flex-row sm:justify-end sm:border-t-0 sm:bg-transparent sm:px-0 sm:py-0 sm:backdrop-blur-0">
+      <div className="item-panel-footer">
         <button
           type="button"
           onClick={onCancel}
           disabled={saving}
-          className="flex-1 rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50 sm:flex-none"
+          className="rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
         >
           Cancel
         </button>
@@ -878,7 +783,7 @@ export default function EditItemForm({
         <button
           type="submit"
           disabled={saving}
-          className="flex-1 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition duration-[140ms] ease-[ease] hover:brightness-110 hover:shadow-[0_12px_28px_rgba(37,99,235,0.16),0_0_36px_rgba(125,92,255,0.18)] disabled:opacity-50 sm:flex-none"
+          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition duration-[140ms] ease-[ease] hover:brightness-110 disabled:opacity-50"
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>

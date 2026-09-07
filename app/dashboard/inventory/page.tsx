@@ -63,6 +63,8 @@ import EditItemForm, {
   type EditItemFieldName,
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
+import AddItemForm from "@/app/dashboard/add-item/AddItemForm";
+import ItemPanel from "@/components/inventory/ItemPanel";
 import { hasTrackedItemChanges, logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { logImportExport } from "@/app/lib/importExportHistory";
 import {
@@ -558,6 +560,14 @@ export default function InventoryPage() {
   const [usageLoading, setUsageLoading] = useState(true);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<Item | null>(null);
+  // Add Item used to be a full-page navigation away from Inventory -- Edit
+  // already opened in place, so leaving Inventory just to add one product
+  // read as a different, heavier action than editing an existing one for no
+  // real reason. Same modal chrome as Edit, same "stay on this page" feel.
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [addModalBarcode, setAddModalBarcode] = useState<string | undefined>(
+    undefined
+  );
   const [editValues, setEditValues] = useState<EditItemFormValues>(
     createEmptyEditItemFormValues
   );
@@ -577,6 +587,7 @@ export default function InventoryPage() {
   const inventoryModalOpen =
     isScannerOpen ||
     isEditModalOpen ||
+    isAddModalOpen ||
     isPdfSettingsOpen ||
     bulkDialogMode !== null ||
     pendingDeleteItem !== null ||
@@ -985,6 +996,22 @@ export default function InventoryPage() {
     };
   }, [openScanner, usageLoading]);
 
+  const openAddModal = (barcode?: string) => {
+    setAddModalBarcode(barcode);
+    setIsAddModalOpen(true);
+  };
+
+  const closeAddModal = () => {
+    setIsAddModalOpen(false);
+    setAddModalBarcode(undefined);
+  };
+
+  const handleItemAdded = async () => {
+    await fetchItems();
+    setPageNotice("Item added successfully.");
+    closeAddModal();
+  };
+
   const handleScannedText = useCallback((scannedValue: string) => {
     const scannedText = scannedValue.trim();
 
@@ -1014,14 +1041,11 @@ export default function InventoryPage() {
     // backlog item 1 (P1, approved): a code that matches nothing used to
     // fall back to a search that was guaranteed to show zero results — a
     // dead end. Per the approved spec ("scan the barcode... then fill in the
-    // rest"), route straight into Add Item with the code prefilled instead
-    // of leaving the user at an empty results page.
+    // rest"), open Add Item with the code prefilled instead of leaving the
+    // user at an empty results page. Opens in place now rather than
+    // navigating to the full page and back.
     closeScanner();
-    router.push(
-      `/dashboard/add-item?barcode=${encodeURIComponent(
-        resolution.query
-      )}&returnTo=${encodeURIComponent("/dashboard/inventory")}`
-    );
+    openAddModal(resolution.query);
   }, [closeScanner, items, router]);
 
   const openEditModal = (item: Item) => {
@@ -2576,7 +2600,7 @@ export default function InventoryPage() {
 
               <div className="inventory-page-actions inventory-hero-actions">
                 <ActionButton
-                  href="/dashboard/add-item"
+                  onClick={() => openAddModal()}
                   icon="plus"
                   className="inventory-action-primary"
                 >
@@ -3572,7 +3596,7 @@ export default function InventoryPage() {
               action={
                 items.length === 0 ? (
                   <div className="inventory-empty-actions">
-                    <ActionButton href="/dashboard/add-item" icon="plus">
+                    <ActionButton onClick={() => openAddModal()} icon="plus">
                       Add Item
                     </ActionButton>
                     <ActionButton
@@ -4631,59 +4655,47 @@ export default function InventoryPage() {
         />
       )}
 
-      {/* Edit Item Modal */}
+      {/* Edit Item panel -- slides in from the right instead of a centred
+          dialog. The item's own name is the heading; you already know you
+          pressed Edit. */}
       {isEditModalOpen && selectedItem && (
-        <div className="inventory-modal-overlay fixed inset-0 flex justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="inventory-edit-card m-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-[20px] border border-[var(--border-default)] bg-[var(--sydin-surface-strong)] shadow-[0_30px_90px_rgba(0,5,20,0.4)] backdrop-blur-2xl">
-            {/* Was a 32px title over a 900-weight heading, a sentence of
-                description and a 32px close icon — roughly a fifth of the
-                dialog spent saying "Edit Item". The item's own name is the
-                useful heading here; you already know you pressed Edit. */}
-            <div className="flex flex-none items-center justify-between gap-4 border-b border-theme px-4 py-3 sm:px-5">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
-                  Edit item
-                </p>
-                <h2 className="mt-0.5 truncate text-xl font-semibold tracking-tight">
-                  {selectedItem.name}
-                </h2>
-              </div>
+        <ItemPanel
+          eyebrow="Edit item"
+          title={selectedItem.name}
+          onClose={() => closeEditModal()}
+          closeDisabled={isEditing}
+        >
+          <EditItemForm
+            item={selectedItem}
+            values={editValues}
+            fieldErrors={editFieldErrors}
+            depots={editDepotOptions}
+            categories={categories}
+            suppliers={suppliers}
+            currencyCode={editCurrencyCode}
+            selectedImage={editImage}
+            saving={isEditing}
+            error={editError}
+            onValueChange={updateEditValue}
+            onFieldErrorClear={clearEditFieldError}
+            onImageChange={setEditImage}
+            onCancel={() => closeEditModal()}
+            onSubmit={handleUpdateItem}
+          />
+        </ItemPanel>
+      )}
 
-              <button
-                type="button"
-                onClick={() => closeEditModal()}
-                disabled={isEditing}
-                aria-label="Close editor"
-                className="flex-none rounded-xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="inventory-edit-body min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
-
-            <EditItemForm
-              item={selectedItem}
-              values={editValues}
-              fieldErrors={editFieldErrors}
-              depots={editDepotOptions}
-              categories={categories}
-              suppliers={suppliers}
-              currencyCode={editCurrencyCode}
-              selectedImage={editImage}
-              saving={isEditing}
-              error={editError}
-              onValueChange={updateEditValue}
-              onFieldErrorClear={clearEditFieldError}
-              onImageChange={setEditImage}
-              onCancel={() => closeEditModal()}
-              onSubmit={handleUpdateItem}
-            />
-            </div>
-          </div>
-        </div>
+      {/* Add Item panel -- same shell as Edit, above, so adding a product
+          feels like the same weight of action as editing one instead of a
+          trip to a separate page. */}
+      {isAddModalOpen && (
+        <ItemPanel eyebrow="Add item" title="New product" onClose={closeAddModal}>
+          <AddItemForm
+            initialBarcode={addModalBarcode}
+            onCancel={closeAddModal}
+            onSaved={() => void handleItemAdded()}
+          />
+        </ItemPanel>
       )}
     </div>
   );

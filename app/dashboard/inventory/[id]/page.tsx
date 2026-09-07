@@ -36,6 +36,7 @@ import EditItemForm, {
   type EditItemFieldName,
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
+import ItemPanel from "@/components/inventory/ItemPanel";
 import { hasTrackedItemChanges, logInventoryHistory } from "@/app/lib/inventoryHistory";
 import {
   calculateInventoryValue,
@@ -465,6 +466,25 @@ export default function ItemDetailsPage() {
       isActive = false;
     };
   }, [itemId]);
+
+  // Inventory's own list page does this for its Edit panel (search
+  // "inventory-modal-open" in globals.css) so the mobile bottom nav bar
+  // doesn't sit on top of the panel's Cancel/Save row. This page opens the
+  // same panel but never picked up the same class toggle -- invisible on the
+  // old centred dialog, which never reached the bottom of a short screen;
+  // real once the panel became full height.
+  useEffect(() => {
+    const className = "inventory-modal-open";
+    if (!isEditModalOpen) return;
+
+    document.documentElement.classList.add(className);
+    document.body.classList.add(className);
+
+    return () => {
+      document.documentElement.classList.remove(className);
+      document.body.classList.remove(className);
+    };
+  }, [isEditModalOpen]);
 
   const openEditModal = () => {
     if (!item) return;
@@ -1638,57 +1658,35 @@ export default function ItemDetailsPage() {
         </div>
       )}
 
-      {/* Same chrome and the same classes as the Inventory quick edit, so one
-          design covers both. They were two dialogs doing one job, differing only
-          in how loudly they announced themselves. */}
+      {/* Same shell as Inventory's own quick edit (components/inventory/ItemPanel),
+          so one design covers both instead of two dialogs doing the same job
+          with a border color and a shadow value that had already drifted
+          apart from each other. */}
       {isEditModalOpen && item && (
-        <div className="inventory-modal-overlay fixed inset-0 z-50 flex justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="inventory-edit-card m-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-[20px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_14px_42px_rgba(15,23,42,0.12)] backdrop-blur-2xl">
-            <div className="flex flex-none items-center justify-between gap-4 border-b border-theme px-4 py-3 sm:px-5">
-              <div className="min-w-0">
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
-                  Edit item
-                </p>
-                <h2 className="mt-0.5 truncate text-xl font-semibold tracking-tight">
-                  {item.name}
-                </h2>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => closeEditModal()}
-                disabled={isEditing}
-                aria-label="Close editor"
-                className="flex-none rounded-xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.6} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            </div>
-
-            <div className="inventory-edit-body min-h-0 flex-1 overflow-y-auto px-4 py-3 sm:px-5">
-
-            <EditItemForm
-              item={item}
-              values={editValues}
-              fieldErrors={editFieldErrors}
-              depots={editDepotOptions}
-              categories={categories}
-              suppliers={suppliers}
-              currencyCode={editCurrencyCode}
-              selectedImage={editImage}
-              saving={isEditing}
-              error={editError}
-              onValueChange={updateEditValue}
-              onFieldErrorClear={clearEditFieldError}
-              onImageChange={setEditImage}
-              onCancel={() => closeEditModal()}
-              onSubmit={handleUpdateItem}
-            />
-            </div>
-          </div>
-        </div>
+        <ItemPanel
+          eyebrow="Edit item"
+          title={item.name}
+          onClose={() => closeEditModal()}
+          closeDisabled={isEditing}
+        >
+          <EditItemForm
+            item={item}
+            values={editValues}
+            fieldErrors={editFieldErrors}
+            depots={editDepotOptions}
+            categories={categories}
+            suppliers={suppliers}
+            currencyCode={editCurrencyCode}
+            selectedImage={editImage}
+            saving={isEditing}
+            error={editError}
+            onValueChange={updateEditValue}
+            onFieldErrorClear={clearEditFieldError}
+            onImageChange={setEditImage}
+            onCancel={() => closeEditModal()}
+            onSubmit={handleUpdateItem}
+          />
+        </ItemPanel>
       )}
 
       {isDeleteDialogOpen && item && (
