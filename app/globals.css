@@ -17023,51 +17023,65 @@ body,
   gap: 0.15rem;
 }
 
-.dashboard-top-add-menu a {
+/* Every rule here used to be written `.dashboard-top-add-menu a`. That was
+   true when all three entries navigated somewhere; then "New item" became a
+   <button> (it opens the panel in place instead of routing), and a button
+   matches none of these -- so it rendered with the browser's own button
+   defaults: centred text, no padding, label and description running into
+   each other on one line, while the two links below it looked correct.
+   Matching both elements is the fix; the resets below undo what a <button>
+   brings with it that an <a> does not. */
+.dashboard-top-add-menu :is(a, button) {
   display: flex;
+  width: 100%;
   align-items: flex-start;
   gap: 0.6rem;
+  border: 0;
   border-radius: 10px;
   padding: 0.55rem 0.6rem;
+  background: none;
   color: var(--text-primary);
+  font: inherit;
+  text-align: left;
   text-decoration: none;
+  cursor: pointer;
   transition:
     background-color 150ms ease,
     color 150ms ease;
 }
 
-.dashboard-top-add-menu a > span {
+.dashboard-top-add-menu :is(a, button) > span {
   display: grid;
   min-width: 0;
   gap: 0.1rem;
 }
 
-.dashboard-top-add-menu a strong {
+.dashboard-top-add-menu :is(a, button) strong {
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.15;
 }
 
-.dashboard-top-add-menu a small {
+.dashboard-top-add-menu :is(a, button) small {
   color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 600;
   line-height: 1.25;
 }
 
-.dashboard-top-add-menu a svg {
+.dashboard-top-add-menu :is(a, button) svg {
   margin-top: 0.1rem;
   flex: none;
   color: var(--text-accent);
 }
 
 @media (hover: hover) {
-  .dashboard-top-add-menu a:hover {
+  .dashboard-top-add-menu :is(a, button):hover {
     background: rgba(148, 163, 184, 0.14);
   }
 }
 
-.dashboard-top-add-menu a:focus-visible {
+.dashboard-top-add-menu :is(a, button):focus-visible {
   outline: 2px solid #2563eb;
   outline-offset: -2px;
 }
@@ -23008,11 +23022,37 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   box-shadow: -32px 0 64px rgba(2, 6, 23, 0.22);
   animation: item-panel-slide-in var(--motion-panel)
     var(--motion-ease-standard) both;
+  transition: width var(--motion-panel) var(--motion-ease-standard);
+}
+
+/* Sayed: "we can expand the page to left for more preview". 30rem is the
+   right default -- it keeps the list you came from visible behind it -- but
+   it is cramped when you are actually filling a product in. Wide crosses the
+   720px container-query threshold, so the form flips to two columns and the
+   photo grows, with no second layout to maintain. The 3rem it stops short of
+   the edge keeps a strip of backdrop to click away on. */
+.item-panel-wide {
+  width: min(62rem, calc(100vw - 3rem));
 }
 
 @media (max-width: 640px) {
-  .item-panel {
+  .item-panel,
+  .item-panel-wide {
     width: 100vw;
+  }
+}
+
+.item-panel-chrome-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+/* Nothing to expand into: below this the panel is already the whole width. */
+@media (max-width: 780px) {
+  .item-panel-expand {
+    display: none;
   }
 }
 
@@ -23033,6 +23073,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .item-panel-overlay,
   .item-panel {
     animation: none;
+    transition: none;
   }
 }
 
@@ -23104,9 +23145,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   /* Was 52px, which is a favicon. A product photo is the fastest way to
      recognise an item, so it gets the room to actually be looked at --
      bigger again on the wide layout, where there is space to spare. */
-  width: 84px;
-  height: 84px;
-  border-radius: 18px;
+  width: 108px;
+  height: 108px;
+  border-radius: 20px;
   border: 1px dashed var(--border-hairline);
   background: var(--sydin-surface-inset, rgba(203, 213, 225, 0.3));
   color: var(--text-subtle);
@@ -23116,6 +23157,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   overflow: hidden;
   cursor: pointer;
   transition: border-color var(--motion-fast) ease;
+}
+
+.item-photo-tile svg {
+  width: 30%;
+  height: 30%;
 }
 
 .item-photo-tile:hover {
@@ -23187,9 +23233,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   }
 
   .item-photo-tile {
-    width: 112px;
-    height: 112px;
-    border-radius: 22px;
+    width: 160px;
+    height: 160px;
+    border-radius: 24px;
   }
 
   .item-title-input {

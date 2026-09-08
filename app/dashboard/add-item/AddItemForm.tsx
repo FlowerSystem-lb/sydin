@@ -139,8 +139,9 @@ function FieldError({ id, message }: { id: string; message?: string }) {
 
 function PhotoIcon() {
   return (
+    // No fixed size: `.item-photo-tile svg` sizes it as a share of the tile,
+    // which is now three different sizes (panel, wide panel, page).
     <svg
-      className="h-5 w-5"
       fill="none"
       viewBox="0 0 24 24"
       stroke="currentColor"
@@ -800,7 +801,7 @@ export default function AddItemForm({
                   alt="Selected product preview"
                   fill
                   unoptimized
-                  sizes="52px"
+                  sizes="160px"
                   className="object-cover"
                 />
               ) : (
