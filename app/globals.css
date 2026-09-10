@@ -23347,10 +23347,6 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   display: block;
   width: 100%;
   min-height: 5.5rem;
-  /* It can still be dragged taller -- long notes deserve the room -- but not
-     so tall that the field is the whole panel and both its ends are off
-     screen at once. */
-  max-height: 60vh;
   border: 1px solid var(--border-hairline);
   border-radius: 12px;
   background: var(--sydin-input-bg, transparent);
@@ -23360,7 +23356,12 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   line-height: 1.45;
   color: var(--text-primary, var(--ink));
   outline: none;
-  resize: vertical;
+  /* No drag handle. Sayed: "no need to expand". It was never worth
+     what it cost: the grip is the corner that kept ending up under the
+     Save bar, and a field the reader can resize is a field whose height
+     nothing else in the form can rely on. A long note scrolls inside the
+     box. */
+  resize: none;
   transition: border-color var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
 }
 
