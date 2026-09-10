@@ -17238,45 +17238,27 @@ body,
    end of this file, which measures the space the row really has. Padding and
    gap tightening from note #7 are untouched. */
 
-/* ===[ NEW PURCHASE ORDER — two-column layout (founder sketch, note #3b) ]=== */
+/* ===[ NEW PURCHASE ORDER — page layout (founder sketch, note #3b) ]=== */
 /* The form was six full-width sections stacked vertically, so creating a PO
    meant a long scroll. The sketch pairs the short sections two-up and keeps
-   Lines full width. JSX order is Order details · Depot & supplier · Lines ·
-   Payment · Invoice · Notes; `order` re-sequences them visually to
-   Order details | Depot & supplier / Payment | Notes / Lines / Invoice
-   without moving any markup. */
-@media (min-width: 1000px) {
-  .po-create-workspace .po-new-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    align-items: start;
-    gap: 0.85rem;
-  }
+   Lines full width -- and it still does, one level further in.
 
-  .po-create-workspace .po-new-grid > *:nth-child(1) { order: 1; } /* Order details */
-  .po-create-workspace .po-new-grid > *:nth-child(2) { order: 2; } /* Depot & supplier */
-  .po-create-workspace .po-new-grid > *:nth-child(4) { order: 3; } /* Payment */
-  .po-create-workspace .po-new-grid > *:nth-child(6) { order: 4; } /* Notes */
+   2026-09-10: this used to be a two-column grid whose children were placed
+   by `order` and `nth-child(1..6)` -- one index per DashboardFormSection.
+   The four label/value sections have since merged into a single
+   `.item-form` card, so those indices no longer point at what they name,
+   and the pairing they produced is now `.item-form-groups`' job: a
+   container query on the card itself, which gets the same two columns
+   without anything having to count its siblings.
 
-  /* Lines and the invoice dropzone need the full width. */
-  .po-create-workspace .po-new-grid > *:nth-child(3) { /* Lines */
-    order: 5;
-    grid-column: 1 / -1;
-  }
-
-  .po-create-workspace .po-new-grid > *:nth-child(5) { /* Invoice or proof */
-    order: 6;
-    grid-column: 1 / -1;
-  }
-}
-
-/* Below the two-column breakpoint keep the original single-column stack. */
-@media (max-width: 999px) {
-  .po-create-workspace .po-new-grid {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr);
-    gap: 0.85rem;
-  }
+   What is left is a plain stack of three: the field card, Lines, and the
+   invoice dropzone. Kept as a wrapper rather than deleted, because
+   `.dashboard-page-shell > *` staggers its children's entrance animation by
+   nth-child too -- flattening this away would re-time all of them. */
+.po-create-workspace .po-new-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.85rem;
 }
 
 /* ===[ HEADER SEARCH — anchored dropdown (note #3) ]=== */
@@ -23286,6 +23268,18 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   letter-spacing: 0.09em;
   text-transform: uppercase;
   color: var(--text-secondary, var(--text-subtle));
+}
+
+/* One line under a group heading, for behaviour the fields cannot show on
+   their own -- "the number is generated automatically". Sized to sit under
+   the caps heading without competing with the field labels below it. */
+.item-field-group-note {
+  margin-top: calc(var(--space-2) * -1 + 2px);
+  margin-bottom: var(--space-3);
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--text-muted, var(--text-subtle));
 }
 
 .item-field-row {

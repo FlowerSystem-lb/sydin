@@ -5,7 +5,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
-import { Button, DialogShell, Select } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  Select,
+} from "@/components/ui";
 import {
   ActionButton,
   DashboardCard,
@@ -77,9 +83,6 @@ interface LineDraft {
 
 const inputClassName =
   "min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15 disabled:opacity-60";
-// `resize-none`, matching the Notes field on every other record form:
-// Sayed, on the drag handle, "no need to expand".
-const textareaClassName = `${inputClassName} min-h-24 resize-none py-3`;
 const SCHEMA_MISSING_MESSAGE =
   "The purchase orders database update has not been run yet. Open Supabase → SQL Editor and run the file sql/phase-8-purchase-orders.sql, then try again.";
 
@@ -638,129 +641,208 @@ export default function NewPurchaseOrderPage() {
 
       {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
 
-      {/* Two-column layout: the short sections pair up, Lines and the invoice
-          dropzone span the full width. Placement is driven by CSS order/span in
-          `.po-new-grid` so the JSX order stays as-authored. */}
+      {/* Three blocks, stacked: the fields, then Lines, then the invoice
+          dropzone. The two-column pairing Sayed asked for is still here, but
+          it happens INSIDE the field card now -- `.item-form-groups` is a
+          container query, so the same groups reflow at whatever width they
+          are given, and the old `.po-new-grid` order/nth-child juggling is
+          gone with the sections it was counting. */}
       <div className="po-new-grid">
-      <DashboardFormSection
-        title="Order details"
-        description="The PO number is generated automatically from the depot or business name — edit it any time."
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              PO number
-            </span>
-            <input
-              value={poNumber}
-              onChange={(event) => {
-                setPoNumberEdited(true);
-                setPoNumber(event.target.value);
-              }}
-              placeholder="SYDIN-PO-0001"
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Title (optional)
-            </span>
-            <input
-              value={title}
-              onChange={(event) => setTitle(event.target.value)}
-              placeholder="e.g. March restock, New AC for Main depot"
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Purchase date
-            </span>
-            <input
-              type="date"
-              value={purchaseDate}
-              onChange={(event) => setPurchaseDate(event.target.value)}
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Expected delivery (optional)
-            </span>
-            <input
-              type="date"
-              value={expectedDeliveryDate}
-              onChange={(event) => setExpectedDeliveryDate(event.target.value)}
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Internal reference (optional)
-            </span>
-            <input
-              value={internalReference}
-              onChange={(event) => setInternalReference(event.target.value)}
-              placeholder="Budget code, project, request…"
-              className={inputClassName}
-            />
-          </label>
-        </div>
-      </DashboardFormSection>
+      {/* One card, four groups of label-left rows -- the same shape as the
+          new invoice (app/dashboard/sales/new/page.tsx) and Add Item. This
+          was four boxed cards with every caption stacked above its own
+          outlined input: a different shape for the same job, on the last
+          form still doing it that way.
 
-      <DashboardFormSection
-        title="Depot & supplier"
-        description="Which location is this purchase for, and who is it from?"
-        actions={
-          <Button
-            variant="secondary"
-            size="sm"
-            leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
-            onClick={() => setNewDepotOpen(true)}
+          Lines and the invoice dropzone stay exactly as they are below.
+          Neither is a label/value form -- one is a list editor, the other a
+          dropzone -- and the invoice page draws the same distinction. */}
+      <section className="dashboard-card item-form p-0">
+        <div className="item-form-groups">
+          <FieldGroup
+            label="Order details"
+            description="The number is generated from the depot or business name — edit it any time."
           >
-            New depot
-          </Button>
-        }
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <Select
-            label="Depot"
-            value={depotId}
-            onChange={setDepotId}
-            options={depotOptions}
-            searchable={depots.length > 8}
-          />
-          <Select
-            label="Saved supplier"
-            value={supplierId}
-            onChange={handleSelectSupplier}
-            options={supplierOptions}
-            searchable={suppliers.length > 8}
-          />
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Supplier name
-            </span>
-            <input
-              value={supplierName}
-              onChange={(event) => setSupplierName(event.target.value)}
-              placeholder="Supplier or vendor"
-              className={inputClassName}
+            <FieldRow label="Number" htmlFor="po-number">
+              <input
+                id="po-number"
+                value={poNumber}
+                onChange={(event) => {
+                  setPoNumberEdited(true);
+                  setPoNumber(event.target.value);
+                }}
+                placeholder="SYDIN-PO-0001"
+              />
+            </FieldRow>
+
+            <FieldRow label="Title" htmlFor="po-title">
+              <input
+                id="po-title"
+                value={title}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="e.g. March restock"
+              />
+            </FieldRow>
+
+            <FieldRow label="Date" htmlFor="po-date">
+              <input
+                id="po-date"
+                type="date"
+                value={purchaseDate}
+                onChange={(event) => setPurchaseDate(event.target.value)}
+              />
+            </FieldRow>
+
+            <FieldRow label="Expected" htmlFor="po-expected">
+              <input
+                id="po-expected"
+                type="date"
+                value={expectedDeliveryDate}
+                onChange={(event) =>
+                  setExpectedDeliveryDate(event.target.value)
+                }
+              />
+            </FieldRow>
+
+            <FieldRow label="Reference" htmlFor="po-reference">
+              <input
+                id="po-reference"
+                value={internalReference}
+                onChange={(event) => setInternalReference(event.target.value)}
+                placeholder="Budget code, project, request…"
+              />
+            </FieldRow>
+          </FieldGroup>
+
+          <FieldGroup
+            label="Depot &amp; supplier"
+            action={
+              <Button
+                variant="secondary"
+                size="sm"
+                leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
+                onClick={() => setNewDepotOpen(true)}
+              >
+                New depot
+              </Button>
+            }
+          >
+            {/* `ariaLabel`, not `label`: FieldRow already renders the visible
+                caption, and Select's own label would print a second one. */}
+            <FieldRow label="Depot">
+              <Select
+                ariaLabel="Depot"
+                value={depotId}
+                onChange={setDepotId}
+                options={depotOptions}
+                searchable={depots.length > 8}
+              />
+            </FieldRow>
+
+            <FieldRow label="Supplier">
+              <Select
+                ariaLabel="Saved supplier"
+                value={supplierId}
+                onChange={handleSelectSupplier}
+                options={supplierOptions}
+                searchable={suppliers.length > 8}
+              />
+            </FieldRow>
+
+            <FieldRow label="Name" htmlFor="po-supplier-name">
+              <input
+                id="po-supplier-name"
+                value={supplierName}
+                onChange={(event) => setSupplierName(event.target.value)}
+                placeholder="Supplier or vendor"
+              />
+            </FieldRow>
+
+            <FieldRow label="Contact" htmlFor="po-supplier-contact">
+              <input
+                id="po-supplier-contact"
+                value={supplierContact}
+                onChange={(event) => setSupplierContact(event.target.value)}
+                placeholder="Person, email or phone"
+              />
+            </FieldRow>
+          </FieldGroup>
+
+          <FieldGroup
+            label="Payment"
+            description="Shown on the PDF and counted in spending analytics."
+          >
+            <FieldRow label="Method">
+              <Select
+                ariaLabel="Payment method"
+                value={paymentMethod}
+                onChange={setPaymentMethod}
+                options={[
+                  { value: "", label: "Not set" },
+                  ...Object.entries(PURCHASE_ORDER_PAYMENT_METHOD_LABELS).map(
+                    ([value, label]) => ({ value, label })
+                  ),
+                ]}
+              />
+            </FieldRow>
+
+            <FieldRow label="Status">
+              <Select
+                ariaLabel="Payment status"
+                value={paymentStatus}
+                onChange={(value) =>
+                  setPaymentStatus(value as PurchaseOrderPaymentStatus)
+                }
+                options={Object.entries(
+                  PURCHASE_ORDER_PAYMENT_STATUS_LABELS
+                ).map(([value, label]) => ({ value, label }))}
+              />
+            </FieldRow>
+
+            <FieldRow label="Paid by" htmlFor="po-paid-by">
+              <input
+                id="po-paid-by"
+                value={paidBy}
+                onChange={(event) => setPaidBy(event.target.value)}
+                placeholder="Person or account"
+              />
+            </FieldRow>
+
+            {/* The currency moves out of the caption and in front of the
+                field, the way Add Item shows a price -- the label column is
+                6.5rem and "Amount paid (USD)" does not fit in it. */}
+            <FieldRow label="Amount" htmlFor="po-amount-paid">
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-black text-theme-accent">
+                  {currencyCode}
+                </span>
+                <input
+                  id="po-amount-paid"
+                  type="number"
+                  min="0"
+                  step="any"
+                  inputMode="decimal"
+                  value={amountPaid}
+                  onChange={(event) => setAmountPaid(event.target.value)}
+                  placeholder="0.00"
+                />
+              </div>
+            </FieldRow>
+          </FieldGroup>
+
+          <FieldGroup label="Notes">
+            {/* `.item-panel-textarea`, not a bare FieldRow child: a textarea
+                inside `.item-field-row-control` is handed `resize: vertical`
+                back, and Sayed asked for no drag handle. */}
+            <textarea
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Anything worth remembering about this purchase"
+              className="item-panel-textarea"
             />
-          </label>
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Supplier contact (optional)
-            </span>
-            <input
-              value={supplierContact}
-              onChange={(event) => setSupplierContact(event.target.value)}
-              placeholder="Contact person, email or phone"
-              className={inputClassName}
-            />
-          </label>
+          </FieldGroup>
         </div>
-      </DashboardFormSection>
+      </section>
 
       <DashboardFormSection
         title="Lines"
@@ -969,60 +1051,6 @@ export default function NewPurchaseOrderPage() {
       </DashboardFormSection>
 
       <DashboardFormSection
-        title="Payment"
-        description="Who paid, how, and how much — shown on the PDF and in spending analytics."
-      >
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Select
-            label="Payment method"
-            value={paymentMethod}
-            onChange={setPaymentMethod}
-            options={[
-              { value: "", label: "Not set" },
-              ...Object.entries(PURCHASE_ORDER_PAYMENT_METHOD_LABELS).map(
-                ([value, label]) => ({ value, label })
-              ),
-            ]}
-          />
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Paid by (optional)
-            </span>
-            <input
-              value={paidBy}
-              onChange={(event) => setPaidBy(event.target.value)}
-              placeholder="Person or account"
-              className={inputClassName}
-            />
-          </label>
-          <Select
-            label="Payment status"
-            value={paymentStatus}
-            onChange={(value) =>
-              setPaymentStatus(value as PurchaseOrderPaymentStatus)
-            }
-            options={Object.entries(PURCHASE_ORDER_PAYMENT_STATUS_LABELS).map(
-              ([value, label]) => ({ value, label })
-            )}
-          />
-          <label className="grid gap-1.5">
-            <span className="text-xs font-bold text-theme-secondary">
-              Amount paid ({currencyCode})
-            </span>
-            <input
-              type="number"
-              min="0"
-              step="any"
-              value={amountPaid}
-              onChange={(event) => setAmountPaid(event.target.value)}
-              placeholder="Optional"
-              className={inputClassName}
-            />
-          </label>
-        </div>
-      </DashboardFormSection>
-
-      <DashboardFormSection
         title="Invoice or proof (optional)"
         description="Attach a photo of the supplier invoice or the purchase sheet. On a phone, the camera opens directly."
       >
@@ -1076,18 +1104,6 @@ export default function NewPurchaseOrderPage() {
             Add invoice image
           </Button>
         )}
-      </DashboardFormSection>
-
-      <DashboardFormSection
-        title="Notes"
-        description="Anything else worth remembering about this purchase."
-      >
-        <textarea
-          value={notes}
-          onChange={(event) => setNotes(event.target.value)}
-          placeholder="Optional notes for this purchase order"
-          className={textareaClassName}
-        />
       </DashboardFormSection>
       </div>
 

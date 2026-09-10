@@ -3578,3 +3578,48 @@ the feature doing its job on one test row, and it was reverted.
 ---
 
 <!-- Append the next sprint entry below this line. -->
+
+## New Purchase Order joins the shared row layout  *(Complete)*
+
+**Scope:** New PO was the last form still entering data the old way — six boxed
+`DashboardFormSection` cards, every caption stacked above its own outlined input — while Add
+Item, Edit Item, Customers, Suppliers, Depots and New Invoice had all moved to label-left rows.
+Sayed asked for the inconsistency closed.
+
+**Delivered:**
+- **`app/dashboard/purchase-orders/new/page.tsx`** — Order details, Depot & supplier, Payment
+  and Notes are now four `FieldGroup`s inside one `<section className="dashboard-card item-form
+  p-0">`, mirroring `app/dashboard/sales/new/page.tsx`. `Select` takes `ariaLabel` rather than
+  `label`, since `FieldRow` renders the caption. Labels shortened to fit the 6.5rem label column
+  ("Expected delivery (optional)" → "Expected"), and the currency moved out of "Amount paid
+  (USD)" to sit in front of the field the way Add Item shows a price.
+- **Lines and Invoice-or-proof were not touched.** One is a list editor, the other a dropzone;
+  neither is a label/value form, and the invoice page draws the same distinction. They keep
+  `DashboardFormSection` and `inputClassName` (still 16 callers, including both dialogs).
+- **`components/ui/FieldRow.tsx`** — optional `description` on `FieldGroup`, for the two
+  explanations worth keeping: how the PO number is generated, and that payment shows on the PDF.
+  Every existing caller is unaffected.
+- **`app/globals.css`** — retired `.po-new-grid`'s `order` / `nth-child(1..6)` rules. **This
+  supersedes the mechanism from "New Purchase Order — two-column layout (note #3b)" above:**
+  those indices pointed at six sections that no longer exist. The two-column pairing Sayed asked
+  for in that sprint survives — it is now `.item-form-groups`' container query, one level in.
+  The `.po-new-grid` wrapper is kept rather than deleted, because `.dashboard-page-shell > *`
+  staggers its children's entrance animation by `nth-child` too. Added `.item-field-group-note`.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅. Driven in the
+running app: every converted field accepts and holds input; Notes reports `resize: none`; the
+untouched Lines section still totals correctly (3 × 12.50 = $37.50); the New depot dialog opens
+and closes without creating anything; at 375px all 13 labels render on one line; the save bar
+still clears the receive-now card at the end of the scroll.
+
+**Untouchables:** no auth, schema, routing or business-logic changes. Nothing was saved to the
+database — the dev server points at live data, so the line and dialog checks were local-state
+only.
+
+**Worth remembering:** after the `.po-new-grid` edit the browser served **stale Turbopack CSS**
+and showed the old two-column layout while the file on disk was already correct — the failure
+mode `SYDIN_UI_RULES`/the CSS-trap notes warn about. A reload cleared it; the file was never
+wrong.
+
+---
+

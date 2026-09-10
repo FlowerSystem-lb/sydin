@@ -21,10 +21,15 @@ import type { ReactNode } from "react";
 
 export function FieldGroup({
   label,
+  description,
   action,
   children,
 }: {
   label?: string;
+  /** One line under the heading, for behaviour the fields cannot show on
+   *  their own -- "the number is generated automatically", "this appears on
+   *  the PDF". Not for restating the heading in a sentence. */
+  description?: string;
   /** A small trailing control next to the label -- e.g. the "Hide" button
    *  that collapses the optional-details group back down. */
   action?: ReactNode;
@@ -38,6 +43,7 @@ export function FieldGroup({
           {action}
         </div>
       )}
+      {description && <p className="item-field-group-note">{description}</p>}
       {children}
     </div>
   );

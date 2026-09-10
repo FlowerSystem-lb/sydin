@@ -69,6 +69,21 @@ All exported from `components/dashboard/Workspace.tsx`:
 Generic UI kit lives in `components/ui/` (`Button`, `Card`, `Badge`, `Field`, `Select`,
 `Overlay`, `Tooltip`, `State`, `IconButton`).
 
+### Record forms use `FieldGroup` / `FieldRow`, not `DashboardFormSection`
+
+Anything that asks the user to fill in a record — Add/Edit Item, Customers, Suppliers,
+Depots, New Invoice, New Purchase Order — is built from `FieldGroup` and `FieldRow`
+(`components/ui/FieldRow.tsx`): a small caps group heading, then label-left /
+value-right rows with a hairline between them and **no box around each field**. Put the
+groups inside `<section className="dashboard-card item-form p-0">` → `.item-form-groups`,
+which is a container query, so the same form lays itself out in one column in a 30rem
+slide-over and two columns on a full page. Bare `<input>`/`<textarea>` children need no
+`className`; `Select` takes `ariaLabel` (the row already renders the visible label).
+
+`DashboardFormSection` remains right for sections that are **not** label/value forms —
+a list editor, a dropzone. As of 10 Sep 2026 it has two callers left, both on the New PO
+page (its Lines and Invoice-or-proof sections).
+
 **Only create a new component when repeated UI clearly deserves abstraction.**
 
 ---
