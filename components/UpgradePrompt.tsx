@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import { Badge } from "@/components/ui";
 import type { UpgradePlan } from "@/app/lib/subscription";
 
 interface UpgradePromptProps {
@@ -49,21 +50,41 @@ function UpgradeActions({
   source,
 }: Pick<UpgradePromptProps, "requiredPlan" | "source">) {
   return (
-    <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-      <Link
-        href={getRequestHref(requiredPlan, source)}
-        className="glass-button min-h-12 flex-1 rounded-2xl px-5 py-3 text-center text-sm"
-      >
+    <div className="mt-6">
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <Link
+          href={getRequestHref(requiredPlan, source)}
+          className="glass-button min-h-12 flex-1 rounded-2xl px-5 py-3 text-center text-sm"
+        >
+          {requiredPlan === "Contact"
+            ? "Contact SydIN"
+            : `Request ${requiredPlan}`}
+        </Link>
+        {/* Sentence case, like every other button in the app: "Save item",
+            "Save settings", "Add invoice image". This was the only Title Case
+            one. */}
+        <Link
+          href="/pricing"
+          className="glass-button glass-button-secondary min-h-12 flex-1 rounded-2xl px-5 py-3 text-center text-sm"
+        >
+          Compare plans
+        </Link>
+      </div>
+
+      {/* The button used to be the end of it: press "Request Pro" and find out
+          what that meant afterwards. This is the highest-stakes click in the
+          product, and nobody presses a button whose outcome they cannot
+          predict.
+
+          Worded from what /request-plan actually does -- review, then contact
+          by email or WhatsApp, then activation once payment is arranged. No
+          turnaround time is promised here, because none is promised there,
+          and inventing one would be a commitment the business has not made. */}
+      <p className="mt-3 text-xs font-semibold leading-5 text-theme-muted">
         {requiredPlan === "Contact"
-          ? "Contact SydIN"
-          : `Request ${requiredPlan}`}
-      </Link>
-      <Link
-        href="/pricing"
-        className="glass-button glass-button-secondary min-h-12 flex-1 rounded-2xl px-5 py-3 text-center text-sm"
-      >
-        Compare Plans
-      </Link>
+          ? "We reply by email or WhatsApp to work out what you need. Nothing is charged automatically."
+          : "We reply by email or WhatsApp to set it up, and payment is arranged with you directly. Nothing is charged automatically."}
+      </p>
     </div>
   );
 }
@@ -77,13 +98,18 @@ export function LockedFeaturePanel({
   compact = false,
 }: UpgradePromptProps) {
   return (
+    /* Was a one-off: `rounded-[28px]`, a hand-written radial-gradient
+       background, `backdrop-blur-2xl` and `shadow-[0_24px_90px_rgba(0,5,20,0.3)]`
+       -- four arbitrary values in one className, matching no other card in the
+       app. On a page full of `dashboard-card` surfaces it read as a component
+       from a different product, which is the last impression a paywall should
+       give. Same surface as everything else now; the lock and the accent
+       eyebrow are what mark it out. */
     <section
-      className={`overflow-hidden rounded-[28px] border border-sky-300/20 bg-[radial-gradient(circle_at_top_left,_rgba(56,189,248,0.16),_transparent_42%),rgba(255,255,255,0.045)] shadow-[0_24px_90px_rgba(0,5,20,0.3)] backdrop-blur-2xl ${
-        compact ? "p-5" : "p-6 sm:p-8"
-      }`}
+      className={`dashboard-card overflow-hidden ${compact ? "p-5" : "p-6 sm:p-8"}`}
     >
       <div className="flex flex-col items-start gap-4 sm:flex-row">
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/25 bg-sky-400/15 text-theme-accent shadow-[0_14px_36px_rgba(14,165,233,0.16)]">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-inset text-theme-accent">
           <LockIcon />
         </span>
         <div className="min-w-0">
@@ -95,14 +121,12 @@ export function LockedFeaturePanel({
           </h2>
           <p className="mt-2 text-sm leading-6 text-theme-muted">{benefit}</p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <span className="glass-badge text-xs font-bold">
-              Current: {currentPlan}
-            </span>
-            <span className="glass-badge text-xs font-bold">
+            <Badge tone="neutral">Current: {currentPlan}</Badge>
+            <Badge tone="accent">
               {requiredPlan === "Contact"
                 ? "Next step: Contact SydIN"
                 : `Required: ${requiredPlan}`}
-            </span>
+            </Badge>
           </div>
         </div>
       </div>
@@ -143,7 +167,7 @@ export function UpgradeDialog({
       >
         <div className="flex items-start justify-between gap-4">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-cyan-200/25 bg-sky-400/15 text-theme-accent">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-inset text-theme-accent">
               <LockIcon className="h-5 w-5" />
             </span>
             <div>
@@ -188,7 +212,7 @@ export function UpgradeDialog({
             </p>
             <p className="mt-2 font-black text-theme-primary">{prompt.currentPlan}</p>
           </div>
-          <div className="rounded-2xl border border-sky-300/20 bg-sky-400/10 p-4">
+          <div className="rounded-2xl border border-theme bg-theme-inset p-4">
             <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-accent">
               Required plan
             </p>
