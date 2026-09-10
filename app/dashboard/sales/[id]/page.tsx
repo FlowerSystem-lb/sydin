@@ -7,6 +7,7 @@ import {
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
+  LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import { Button, DialogShell, Select } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
@@ -272,10 +273,18 @@ export default function SaleDetailPage() {
   };
 
   if (loading) {
+    /* Was a bare `<p>Loading...</p>`. Every other page in the app draws the
+       shape of what is arriving instead of announcing that something is --
+       the difference between a page that feels like it is working and one
+       that feels like it has stalled. Two blocks, because that is what an
+       invoice resolves into: the invoice itself, then its lines and totals. */
     return (
       <main className="operations-workspace">
         <DashboardPageShell>
-          <p className="text-sm text-theme-muted">Loading...</p>
+          <LoadingSkeletonGroup
+            count={2}
+            itemClassName="min-h-[260px] rounded-[20px]"
+          />
         </DashboardPageShell>
       </main>
     );

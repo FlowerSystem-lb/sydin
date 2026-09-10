@@ -7,6 +7,7 @@ import {
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
+  LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import {
   Button,
@@ -349,7 +350,14 @@ export default function NewSalePage() {
         {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
 
         {loading ? (
-          <p className="mt-6 text-sm text-theme-muted">Loading...</p>
+          /* Was a bare `<p>Loading...</p>`. The rest of the app draws the
+             shape of what is coming rather than announcing that something
+             is: the fields card, then the lines card, then notes. */
+          <LoadingSkeletonGroup
+            count={3}
+            className="mt-4"
+            itemClassName="min-h-[160px] rounded-[20px]"
+          />
         ) : (
           <div className="mt-4 grid gap-4">
             {/* The same label/value rows Add Item uses, in the same
