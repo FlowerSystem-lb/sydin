@@ -1044,11 +1044,19 @@ export default function DashboardShell({
                 artwork that is 0.70:1 and 2.23:1 -- with `object-contain`
                 that letterboxed the mark to 28px of art in a 40px box, which
                 is the other half of why it read small. */}
+            {/* `sizes` is not optional here. width/height are the artwork's
+                true pixel dimensions -- they have to be, or the aspect ratio
+                is wrong and the logo gets letterboxed -- but Next reads them
+                as "this is how big it renders" and picked 1920px for the mark
+                and 3840px for the wordmark. Measured: 98.9KB + 64.4KB served
+                to paint two logos 31px and 53px wide. Telling it the real
+                rendered size brings the pair to 7.1KB + 6.9KB. */}
             <Image
               src="/brand/sydin-mark.png"
               alt=""
               width={716}
               height={1021}
+              sizes="64px"
               priority
               className="dashboard-brand-mark object-contain"
             />
@@ -1057,6 +1065,7 @@ export default function DashboardShell({
               alt=""
               width={1213}
               height={545}
+              sizes="120px"
               priority
               className="dashboard-brand-logo object-contain"
             />
