@@ -20,13 +20,20 @@ export interface DashboardNavigationItem {
   mobilePlacement: "primary" | "more";
 }
 
+/* Headings the user reads, not the ones the database would pick.
+   "Workspace" said nothing -- every SaaS has one, and it does not tell a
+   depot owner when to look there. "Records" is ERP language, which is the one
+   thing SydIN is not allowed to feel like. And "Account" was simply wrong: it
+   holds Settings and HELP, and help is not an account.
+   Both new names also survive translation into Arabic; the old two become
+   awkward loanwords. */
 export const DASHBOARD_SECTION_LABELS: Record<
   DashboardNavigationSection,
   string
 > = {
-  workspace: "Workspace",
-  records: "Records",
-  account: "Account",
+  workspace: "Daily work",
+  records: "Your lists",
+  account: "Settings & help",
 };
 
 /* Ordered by how often a working day touches them. Set up sits below the daily
@@ -55,18 +62,6 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "primary",
   },
   {
-    /* NOT "primary". The mobile bar renders every primary item AND a hardcoded
-       Scan button, so listing Scanner here put "Scan" in the bar twice. The
-       raised button is the scanner on a phone; this link is the desktop route
-       to the same place. */
-    label: "Scanner",
-    shortLabel: "Scan",
-    href: "/dashboard/scanner",
-    icon: "scan",
-    section: "workspace",
-    mobilePlacement: "more",
-  },
-  {
     /* One door for the five things that are the same KIND of thing: a process
        with steps that ends in a quantity changing. Sales, Purchase Orders,
        Stock In, Pick Lists and Stock Counts each had their own sidebar row,
@@ -79,6 +74,18 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
        you read and now lives in Reports; Workflows is where selling, buying
        and counting start, which is what a thumb wants within reach. */
     mobilePlacement: "primary",
+  },
+  {
+    /* NOT "primary". The mobile bar renders every primary item AND a hardcoded
+       Scan button, so listing Scanner here put "Scan" in the bar twice. The
+       raised button is the scanner on a phone; this link is the desktop route
+       to the same place. */
+    label: "Scanner",
+    shortLabel: "Scan",
+    href: "/dashboard/scanner",
+    icon: "scan",
+    section: "workspace",
+    mobilePlacement: "more",
   },
   {
     /* Records: the lists you maintain rather than the jobs you run. Customers,

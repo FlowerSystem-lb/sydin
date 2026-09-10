@@ -23637,6 +23637,85 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   }
 }
 
+/* ---------------------------------------------------------------------------
+   Sidebar motion (2026-09-10)
+   ---------------------------------------------------------------------------
+   Sayed: "more mothions frames easy". The rows only cross-faded a background
+   colour -- nothing moved, so pointing at one gave no sense of touching it.
+   The same lift-on-hover language the Save/Cancel buttons already speak,
+   turned sideways: a row nudges toward the page it opens, its icon leads by a
+   hair, and the press settles back. Small numbers on purpose -- this is
+   navigation you use forty times a day, not a landing page.
+
+   `@media (hover: hover)` so a phone never leaves a row stuck in its hover
+   state after a tap, and every transform is given back under
+   `prefers-reduced-motion`.
+   -------------------------------------------------------------------------- */
+.dashboard-shell-expanded .dashboard-nav-link {
+  transition:
+    background-color var(--motion-control) ease,
+    color var(--motion-control) ease,
+    transform var(--motion-fast) var(--motion-ease-standard);
+}
+
+.dashboard-shell-expanded .dashboard-nav-icon,
+.dashboard-shell-expanded .dashboard-nav-label {
+  transition: transform var(--motion-fast) var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .dashboard-shell-expanded .dashboard-nav-link:not(.dashboard-nav-link-active):hover {
+    transform: translateX(3px);
+  }
+
+  .dashboard-shell-expanded
+    .dashboard-nav-link:not(.dashboard-nav-link-active):hover
+    .dashboard-nav-icon {
+    transform: translateX(1px) scale(1.06);
+  }
+
+  /* The active row is already where it belongs; it should not creep when the
+     pointer crosses it. It answers with its icon only. */
+  .dashboard-shell-expanded .dashboard-nav-link-active:hover .dashboard-nav-icon {
+    transform: scale(1.06);
+  }
+
+  .dashboard-sidebar-toggle:hover {
+    transform: scale(1.08);
+  }
+}
+
+.dashboard-shell-expanded .dashboard-nav-link:active {
+  transform: translateX(1px) scale(0.985);
+}
+
+.dashboard-sidebar-toggle:active {
+  transform: scale(0.92);
+}
+
+/* The group heading's chevron should turn, not jump. */
+.dashboard-nav-group-chevron {
+  transition: transform var(--motion-control) var(--motion-ease-standard);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-shell-expanded .dashboard-nav-link,
+  .dashboard-shell-expanded .dashboard-nav-icon,
+  .dashboard-shell-expanded .dashboard-nav-label,
+  .dashboard-sidebar-toggle,
+  .dashboard-nav-group-chevron {
+    transition: none;
+  }
+
+  .dashboard-shell-expanded .dashboard-nav-link:hover,
+  .dashboard-shell-expanded .dashboard-nav-link:active,
+  .dashboard-shell-expanded .dashboard-nav-link:hover .dashboard-nav-icon,
+  .dashboard-sidebar-toggle:hover,
+  .dashboard-sidebar-toggle:active {
+    transform: none;
+  }
+}
+
 /* The toggle. Present at every width so the rail can be brought back, and
    hidden on phones, where the sidebar is not the navigation at all. */
 .dashboard-sidebar-toggle {

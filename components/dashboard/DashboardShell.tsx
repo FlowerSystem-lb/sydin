@@ -1075,10 +1075,12 @@ export default function DashboardShell({
             type="button"
             onClick={toggleSidebarExpanded}
             className="dashboard-sidebar-toggle"
+            /* One control, one name. The tooltip said "Collapse" while a
+               screen reader heard "Hide sidebar labels". */
             aria-label={
-              effectiveCollapsed ? "Show sidebar labels" : "Hide sidebar labels"
+              effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"
             }
-            title={effectiveCollapsed ? "Expand" : "Collapse"}
+            title={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <UiIcon
               name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
