@@ -3224,12 +3224,15 @@ select.glass-input option {
 }
 
 /* The same reservation `.item-panel-scroll` makes, for the pages that show a
-   record form full-width instead of in the slide-over. `.item-panel-footer`
-   is sticky, and on these pages the box it sticks to is this one -- so
-   without this, clicking into Notes on /dashboard/add-item scrolled it to
-   82px BELOW the Save bar. Matched by `:has()` so the inset applies only
-   where such a bar actually exists, and no other page's scrolling changes. */
-.dashboard-shell-content:has(.item-panel-footer) {
+   record form full-width instead of in the slide-over. Their action bars are
+   sticky, and on these pages the box they stick to is this one -- so without
+   this, clicking into Notes on /dashboard/add-item scrolled it to 82px BELOW
+   the Save bar. Matched by `:has()` so the inset applies only where such a
+   bar actually exists, and no other page's scrolling changes.
+
+   `.item-panel-footer` and `.po-save-bar` are the only two sticky-to-bottom
+   bars in this file; if a third is ever added, add it here too. */
+.dashboard-shell-content:has(.item-panel-footer, .po-save-bar) {
   scroll-padding-bottom: 6.5rem;
 }
 
@@ -15377,6 +15380,14 @@ body,
 .po-save-bar {
   position: sticky;
   bottom: 0.75rem;
+  /* Room for the bar to be pulled into. Sticky measures `bottom` from the
+     scrollport, and at the end of the scroll this bar's resting place is
+     ~27px below where sticky holds it (the scroll container's own bottom
+     padding plus the 0.75rem offset) -- so it was hauled up over the card
+     above it and sat permanently across the last 14px of "We already
+     received these items", with nowhere further to scroll. The flex gap
+     alone (13px) is less than that pull; this covers it. */
+  margin-top: 2.25rem;
   z-index: 30;
   display: flex;
   flex-wrap: wrap;

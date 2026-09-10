@@ -77,7 +77,9 @@ interface LineDraft {
 
 const inputClassName =
   "min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15 disabled:opacity-60";
-const textareaClassName = `${inputClassName} min-h-24 resize-y py-3`;
+// `resize-none`, matching the Notes field on every other record form:
+// Sayed, on the drag handle, "no need to expand".
+const textareaClassName = `${inputClassName} min-h-24 resize-none py-3`;
 const SCHEMA_MISSING_MESSAGE =
   "The purchase orders database update has not been run yet. Open Supabase → SQL Editor and run the file sql/phase-8-purchase-orders.sql, then try again.";
 
