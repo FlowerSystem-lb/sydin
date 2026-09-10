@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-import UiIcon from "@/components/UiIcon";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -17,6 +16,7 @@ import {
   FieldGroup,
   FieldRow,
   ResultsAnnouncer,
+  SearchInput,
 } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
@@ -275,16 +275,17 @@ export default function CustomersPage() {
         </div>
 
         <FilterBar label="Customer search" className="mt-4">
-          <label className="flex min-h-11 w-full max-w-sm items-center gap-2 rounded-xl border border-theme bg-theme-surface px-3">
-            <UiIcon name="search" className="h-4 w-4 text-theme-subtle" />
-            <span className="sr-only">Search customers</span>
-            <input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search name, contact, phone or email"
-              className="min-w-0 flex-1 bg-transparent py-2 text-sm text-theme-primary outline-none"
-            />
-          </label>
+          {/* Was hand-rolled: a bordered <label> wrapping a bare input, with
+              `min-h-11` meaning to be 44px and landing on 37px against this
+              app's 13.6px root. The shared control carries its own height,
+              focus ring and clear button. */}
+          <SearchInput
+            label="Search customers"
+            value={search}
+            onChange={setSearch}
+            placeholder="Search name, contact, phone or email"
+            className="w-full max-w-sm"
+          />
         </FilterBar>
         <ResultsAnnouncer count={visible.length} noun="customer" />
 
