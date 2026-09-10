@@ -9,7 +9,6 @@ import type { UiIconName } from "@/components/UiIcon";
 export type DashboardNavigationSection =
   | "workspace"
   | "records"
-  | "reports"
   | "account";
 
 export interface DashboardNavigationItem {
@@ -27,7 +26,6 @@ export const DASHBOARD_SECTION_LABELS: Record<
 > = {
   workspace: "Workspace",
   records: "Records",
-  reports: "Reports",
   account: "Account",
 };
 
@@ -37,7 +35,6 @@ export const DASHBOARD_SECTION_LABELS: Record<
 export const DASHBOARD_SECTION_ORDER: DashboardNavigationSection[] = [
   "workspace",
   "records",
-  "reports",
   "account",
 ];
 
@@ -92,7 +89,7 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
        live now. */
     label: "Customers",
     href: "/dashboard/customers",
-    icon: "suppliers",
+    icon: "customers",
     section: "records",
     mobilePlacement: "more",
   },
@@ -127,10 +124,14 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     mobilePlacement: "more",
   },
   {
+    /* Was a section of its own, holding one item -- a heading over a single
+       row is a label, not a group, and it made the rail look like it had a
+       category nobody finished filling in. Reports is somewhere you go during
+       the working day, so it goes with the rest of the working day. */
     label: "Reports",
     href: "/dashboard/reports",
     icon: "reports",
-    section: "reports",
+    section: "workspace",
     mobilePlacement: "more",
   },
   {

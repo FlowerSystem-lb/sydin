@@ -3290,9 +3290,21 @@ select.glass-input option {
   box-shadow: var(--shadow-elevated);
 }
 
+/* A column, not a grid, so the last group can be pushed to the floor.
+   Sayed: "there is a space down side bar". He was right -- the links ended
+   153px above the bottom of the rail and nothing lived there, which reads as
+   a sidebar someone stopped building rather than one that is finished.
+   Settings and Help are exactly what belongs at the bottom of a sidebar:
+   every product he compares this to puts them there. */
 .dashboard-nav-groups {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
   gap: var(--space-4);
+}
+
+.dashboard-nav-groups > :last-child {
+  margin-top: auto;
 }
 
 .dashboard-nav-group-label {
@@ -22759,9 +22771,14 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    loses to it. Same specificity trap as the print stylesheet and the photo
    card. */
 @media (min-width: 900px) {
+  /* Sized by HEIGHT, with the width left to follow the artwork. Forcing both
+     to 2.95rem asked a 0.70:1 mark to fill a square, so `object-contain`
+     painted it 28px wide inside a 40px box and left 12px of nothing on either
+     side -- the mark looked small because most of its slot was empty, not
+     because the slot was. */
   .dashboard-brand-mark.dashboard-brand-mark.dashboard-brand-mark.dashboard-brand-mark {
-    width: 2.95rem !important;
-    height: 2.95rem !important;
+    width: auto !important;
+    height: 3.3rem !important;
   }
 }
 

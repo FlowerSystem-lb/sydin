@@ -989,19 +989,32 @@ export default function DashboardShell({
             className="dashboard-brand-link"
             aria-label="SydIN dashboard"
           >
+            {/* `.png`, not the `.svg` that sat here. Those two "SVG" files
+                contain no vector at all -- zero <path> elements, one
+                base64-encoded PNG each, 721KB and 662KB. Next cannot optimise
+                an SVG, so the browser was handed a 716x1021 bitmap and told
+                to squeeze it into 40px itself, which is exactly why the mark
+                looked soft. Pointed at the real PNGs, Next resizes them
+                properly and serves a sharp WebP a few KB in size.
+
+                The width/height here are the true pixel dimensions, so the
+                aspect ratio is right. They were 40x40 and 132x40 against
+                artwork that is 0.70:1 and 2.23:1 -- with `object-contain`
+                that letterboxed the mark to 28px of art in a 40px box, which
+                is the other half of why it read small. */}
             <Image
-              src="/brand/sydin-mark.svg"
+              src="/brand/sydin-mark.png"
               alt=""
-              width={40}
-              height={40}
+              width={716}
+              height={1021}
               priority
               className="dashboard-brand-mark object-contain"
             />
             <Image
-              src="/brand/sydin-logo.svg"
+              src="/brand/sydin-logo.png"
               alt=""
-              width={132}
-              height={40}
+              width={1213}
+              height={545}
               priority
               className="dashboard-brand-logo object-contain"
             />

@@ -23,6 +23,7 @@ export type UiIconName =
   | "depots"
   | "categories"
   | "suppliers"
+  | "customers"
   | "picklists"
   | "reports"
   | "settings"
@@ -168,6 +169,17 @@ export default function UiIcon({
           <path d="M4 21v-8.5L12 8l8 4.5V21" />
           <path d="M8 10V5.5L12 3l4 2.5V10M8 21v-5h8v5" />
           <path d="M11 12h2" />
+        </>
+      )}
+      {/* Customers used to render the "suppliers" glyph -- a warehouse. In a
+          rail with no labels that made two different destinations look
+          identical, and a warehouse is the wrong picture for a person you
+          sell to. */}
+      {name === "customers" && (
+        <>
+          <circle cx="9" cy="8" r="3.25" />
+          <path d="M3.5 20v-1.5A4.5 4.5 0 0 1 8 14h2a4.5 4.5 0 0 1 4.5 4.5V20" />
+          <path d="M16 5.6a3.25 3.25 0 0 1 0 5.9M17.5 14.2a4.5 4.5 0 0 1 3 4.3V20" />
         </>
       )}
       {name === "picklists" && (
