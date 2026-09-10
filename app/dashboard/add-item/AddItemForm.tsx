@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   createProductImagePath,
@@ -216,6 +216,36 @@ export default function AddItemForm({
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [usageLoading, setUsageLoading] = useState(true);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  /* The "Add quantity, pricing & more" disclosure exists so the narrow
+     slide-over asks for four things instead of twenty. It stops earning its
+     keep the moment the form is wide enough for two columns -- the wide panel
+     and the standalone page both were, and both sat there with an empty right
+     half and a button asking you to fill it.
+
+     720px is not a second opinion about the layout: it is the same threshold
+     `.item-form-groups` uses to go two-column, read off the element itself
+     rather than off the window, because the same form renders at 30rem and at
+     1180px. Measured, not assumed -- nothing here can tell which one it is.
+
+     `showAdvanced || roomy` and never `setShowAdvanced` from in here: opening
+     it by hand while narrow must survive the panel being widened and narrowed
+     again. */
+  const formRef = useRef<HTMLDivElement>(null);
+  const [roomy, setRoomy] = useState(false);
+
+  useEffect(() => {
+    const element = formRef.current;
+    if (!element || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      setRoomy(entry.contentRect.width >= 720);
+    });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, []);
+
+  const advancedOpen = showAdvanced || roomy;
 
   // backlog item 1 (P1, approved): scan the barcode on the carton, then fill
   // in the rest. `isScannerOpen` drives the shared ScannerModal (already used
@@ -783,7 +813,7 @@ export default function AddItemForm({
         noValidate
         className="flex min-h-full flex-col"
       >
-        <div className="item-form flex-1">
+        <div ref={formRef} className="item-form flex-1">
           <div className="flex items-center justify-between gap-3 border-b border-theme px-5 py-2.5 text-xs">
             <span className="font-bold text-theme-secondary">
               {usageLoading ? "Checking plan..." : `${currentPlanName} plan`}
@@ -884,7 +914,7 @@ export default function AddItemForm({
             </FieldRow>
           </FieldGroup>
 
-          {showAdvanced && (
+          {advancedOpen && (
             <>
               <FieldGroup label="Stock">
                 <FieldRow
@@ -1217,7 +1247,7 @@ export default function AddItemForm({
           )}
           </div>
 
-          {!showAdvanced && (
+          {!advancedOpen && (
             <button
               type="button"
               onClick={() => setShowAdvanced(true)}

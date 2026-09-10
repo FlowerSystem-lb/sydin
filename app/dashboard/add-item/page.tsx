@@ -79,9 +79,11 @@ export default function AddItemPage() {
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:sr-only sm:mt-0">
                   Add Item
                 </h1>
+                {/* Described the disclosure ("...when you're ready") that this
+                    page no longer has: at full width the form shows every field
+                    at once, so there is nothing left to come back for. */}
                 <p className="mt-1 max-w-xl text-sm leading-6 text-theme-muted sm:mt-0">
-                  Start with the basics. Add quantity, pricing, and more details
-                  when you&rsquo;re ready.
+                  Only the name is required &mdash; fill in the rest as you go.
                 </p>
               </div>
 
