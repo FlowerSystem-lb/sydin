@@ -423,6 +423,9 @@ function NavigationLink({
 }
 
 const SIDEBAR_COLLAPSED_SECTIONS_KEY = "sydin:sidebar-collapsed-sections";
+/* Whether the sidebar shows its labels. Remembered per browser, like the
+   per-section collapse above it. */
+const SIDEBAR_EXPANDED_KEY = "sydin:sidebar-expanded";
 
 function NavigationGroups({
   pathname,
@@ -868,9 +871,46 @@ export default function DashboardShell({
     []
   );
 
-  // The sidebar is a rail, full stop -- there is no expanded mode and no
-  // toggle to reach one. Page names are read from the hover chip instead.
-  const effectiveCollapsed = true;
+  /* The sidebar used to be a rail, full stop: this was `const
+     effectiveCollapsed = true`, with a comment saying there was no expanded
+     mode and no toggle to reach one, and page names read from a hover chip.
+
+     Sayed, comparing it to Sortly: he could not tell which group anything was
+     in, because an icon-only rail shows no groups -- only twelve glyphs and
+     two gaps. Labels are back on by default, with a toggle for anyone who
+     wants the room back. The rail is still the small-screen shape, and still
+     what you get by collapsing.
+
+     `null` until the stored answer is read, so the first paint matches the
+     server and the toggle never flashes the wrong way on hydration. */
+  const [sidebarExpanded, setSidebarExpanded] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const frame = window.requestAnimationFrame(() => {
+      try {
+        const stored = window.localStorage.getItem(SIDEBAR_EXPANDED_KEY);
+        setSidebarExpanded(stored === null ? true : stored === "1");
+      } catch {
+        setSidebarExpanded(true);
+      }
+    });
+
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
+  const toggleSidebarExpanded = useCallback(() => {
+    setSidebarExpanded((current) => {
+      const next = !(current ?? true);
+      try {
+        window.localStorage.setItem(SIDEBAR_EXPANDED_KEY, next ? "1" : "0");
+      } catch {
+        /* Not remembering it is no reason to refuse to do it. */
+      }
+      return next;
+    });
+  }, []);
+
+  const effectiveCollapsed = sidebarExpanded === false;
 
   const requestAddItemPanel = useCallback(() => {
     requestAddItem({}, { pathname, navigate: (href) => router.push(href) });
@@ -950,7 +990,8 @@ export default function DashboardShell({
     <div
       className={cx(
         "dashboard-shell dashboard-workspace-shell liquid-bg min-h-screen text-theme-primary",
-        effectiveCollapsed && "dashboard-shell-collapsed"
+        effectiveCollapsed && "dashboard-shell-collapsed",
+        !effectiveCollapsed && "dashboard-shell-expanded"
       )}
     >
       {/* Production brief item 57: a printed page must carry SydIN branding, the
@@ -975,7 +1016,8 @@ export default function DashboardShell({
       <aside
         className={cx(
           "dashboard-sidebar glass-navigation",
-          effectiveCollapsed && "dashboard-sidebar-collapsed"
+          effectiveCollapsed && "dashboard-sidebar-collapsed",
+          !effectiveCollapsed && "dashboard-sidebar-expanded"
         )}
         // Safety net for the name chip. The per-link handler covers the normal
         // case, but a fast exit, a pointer warped out of the window, or a link
@@ -1019,6 +1061,21 @@ export default function DashboardShell({
               className="dashboard-brand-logo object-contain"
             />
           </Link>
+
+          <button
+            type="button"
+            onClick={toggleSidebarExpanded}
+            className="dashboard-sidebar-toggle"
+            aria-label={
+              effectiveCollapsed ? "Show sidebar labels" : "Hide sidebar labels"
+            }
+            title={effectiveCollapsed ? "Expand" : "Collapse"}
+          >
+            <UiIcon
+              name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
+              className="h-4 w-4"
+            />
+          </button>
         </div>
 
         <div className="dashboard-sidebar-workspace" aria-label="Current workspace">
@@ -1037,7 +1094,7 @@ export default function DashboardShell({
         </div>
 
         <div className="dashboard-sidebar-scroll">
-          <NavigationGroups pathname={pathname} compact />
+          <NavigationGroups pathname={pathname} compact={effectiveCollapsed} />
         </div>
 
       </aside>

@@ -23516,3 +23516,128 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border-color: rgba(37, 99, 235, 0.5);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
+
+
+/* ---------------------------------------------------------------------------
+   Sidebar labels (2026-09-10)
+   ---------------------------------------------------------------------------
+   Sayed: "hint for side bar group wrong some feature not on the right group".
+   The grouping was fine -- he could not SEE it. The sidebar had been reduced
+   to an icon rail, and a rail shows no group headings, so twelve glyphs and
+   two gaps were all there was to read. Sortly, which he compares this to,
+   labels its sidebar.
+
+   Why this is one additive block rather than edits in place: "rail, full
+   stop" is spelled out in SEVEN separate `display: none !important` rules
+   scattered through this file, plus about ten more that force the width to
+   the rail. Rewriting each to be conditional means touching fifteen rules
+   across 23k lines and being right about every one; missing a single one
+   leaves a half-expanded sidebar. Everything here is scoped to
+   `.dashboard-shell-expanded`, a class that did not exist before today, so
+   with the class absent this block cannot change a single pixel -- the rail
+   stays exactly as it was, and so does every page that never expands.
+
+   Specificity is set to clear the rules being overridden, which are
+   themselves `!important` at up to (0,2,0) -- see the audit in the sidebar
+   section above. Doubling the shell class is what wins without another
+   `!important` arms race.
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+  .dashboard-shell-expanded.dashboard-shell-expanded {
+    --dashboard-sidebar-width: 15.5rem;
+    --dashboard-rail-width: 15.5rem;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar {
+    width: var(--dashboard-sidebar-width) !important;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-main-canvas {
+    width: calc(100% - var(--dashboard-sidebar-width)) !important;
+    margin-left: var(--dashboard-sidebar-width) !important;
+  }
+
+  /* The labels themselves, and the chrome that only makes sense beside one. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-label,
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-copy {
+    display: block !important;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-group-label {
+    display: flex !important;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-chevron,
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-active-mark {
+    display: inline-flex !important;
+  }
+
+  /* The toggle and the wordmark are caught by the same blanket
+     `display: none !important` lists as the labels were, so they need naming
+     here too or the sidebar expands with no way back and no brand on it. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle {
+    display: inline-flex !important;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-brand-logo {
+    display: block !important;
+    width: auto !important;
+    height: 1.75rem !important;
+    max-height: none !important;
+  }
+
+  /* Icon and label read as one row, left-aligned, instead of a centred glyph. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-link {
+    justify-content: flex-start !important;
+    gap: 0.7rem;
+    padding-inline: var(--space-3) !important;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-header,
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-trigger {
+    flex-direction: row !important;
+    justify-content: space-between !important;
+  }
+
+  /* The rail hides page names behind a hover chip on <body>. With the name
+     printed on the row there is nothing left for it to tell anyone. */
+  .dashboard-shell-expanded.dashboard-shell-expanded ~ .dashboard-rail-chip,
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-rail-chip {
+    display: none !important;
+  }
+}
+
+/* The toggle. Present at every width so the rail can be brought back, and
+   hidden on phones, where the sidebar is not the navigation at all. */
+.dashboard-sidebar-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.9rem;
+  height: 1.9rem;
+  flex: none;
+  border-radius: 9px;
+  border: 1px solid transparent;
+  color: var(--text-subtle);
+  transition:
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease;
+}
+
+@media (hover: hover) {
+  .dashboard-sidebar-toggle:hover {
+    background: var(--sydin-surface-hover, rgba(15, 23, 42, 0.06));
+    color: var(--text-primary, var(--ink));
+  }
+}
+
+.dashboard-sidebar-toggle:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+
+@media (max-width: 899px) {
+  .dashboard-sidebar-toggle {
+    display: none;
+  }
+}
