@@ -45,8 +45,8 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 
 function ExpandableHelpCard({ item }: { item: HelpExpandableItem }) {
   return (
-    <details className="group rounded-2xl border border-theme bg-theme-inset open:border-[#2563eb]/20 open:bg-[#2563eb]/[0.06]">
-      <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-bold text-theme-primary outline-none focus-visible:ring-2 focus-visible:ring-[#2563eb]/60">
+    <details className="group rounded-2xl border border-theme bg-theme-inset open:border-sydin-blue/20 open:bg-sydin-blue/[0.06]">
+      <summary className="flex min-h-16 cursor-pointer list-none items-center justify-between gap-4 px-5 py-4 font-bold text-theme-primary outline-none focus-visible:ring-2 focus-visible:ring-sydin-blue/60">
         <span>{item.title}</span>
         <span
           aria-hidden="true"
@@ -60,7 +60,7 @@ function ExpandableHelpCard({ item }: { item: HelpExpandableItem }) {
         {item.href && item.action && (
           <Link
             href={item.href}
-            className="mt-4 inline-flex min-h-10 items-center rounded-xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-4 py-2 text-sm font-bold text-theme-accent transition hover:bg-[#2563eb]/20"
+            className="mt-4 inline-flex min-h-10 items-center rounded-xl border border-sydin-blue/20 bg-sydin-blue/10 px-4 py-2 text-sm font-bold text-theme-accent transition hover:bg-sydin-blue/20"
           >
             {item.action}
           </Link>
@@ -169,7 +169,7 @@ export default function HelpCenterPage() {
             title="Help Center"
             description="How can we help? Follow the recommended setup steps, learn each SydIN workflow, or contact the team directly."
             actions={
-              <div className="rounded-xl border border-[#2563eb]/15 bg-[#2563eb]/[0.07] px-4 py-3">
+              <div className="rounded-xl border border-sydin-blue/15 bg-sydin-blue/[0.07] px-4 py-3">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Current workspace
                 </p>
@@ -286,7 +286,7 @@ export default function HelpCenterPage() {
                 </div>
 
                 {onboarding.nextStep ? (
-                  <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-5 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-sydin-blue/20 bg-sydin-blue/[0.08] p-5 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                         Suggested next action
@@ -357,7 +357,7 @@ export default function HelpCenterPage() {
             </div>
 
             <div className="mt-4 grid gap-4 md:grid-cols-2">
-              <article className="rounded-[28px] border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-5 sm:p-6">
+              <article className="rounded-[28px] border border-sydin-blue/20 bg-sydin-blue/[0.08] p-5 sm:p-6">
                 <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                   Optional workflow
                 </p>

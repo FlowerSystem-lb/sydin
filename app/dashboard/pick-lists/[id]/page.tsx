@@ -51,7 +51,7 @@ interface LineDraft {
 }
 
 const inputClassName =
-  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
+  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
 
 const statusLabels: Record<PickListStatus, string> = {
   draft: "Draft",
@@ -62,7 +62,7 @@ const statusLabels: Record<PickListStatus, string> = {
 
 const statusClasses: Record<PickListStatus, string> = {
   draft: "border-slate-300/20 bg-slate-400/10 text-theme-muted",
-  preparing: "border-[#2563eb]/25 bg-[#2563eb]/10 text-theme-accent",
+  preparing: "border-sydin-blue/25 bg-sydin-blue/10 text-theme-accent",
   completed: "border-emerald-300/25 bg-emerald-400/10 text-theme-success",
   cancelled: "border-red-300/20 bg-red-400/10 text-theme-danger",
 };
@@ -740,7 +740,7 @@ export default function PickListDetailPage() {
                         type="button"
                         onClick={() => void handleStartPreparing()}
                         disabled={Boolean(busyAction)}
-                        className="rounded-2xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-5 py-3.5 font-bold text-theme-accent transition hover:bg-[#2563eb]/20 disabled:opacity-50"
+                        className="rounded-2xl border border-sydin-blue/25 bg-sydin-blue/10 px-5 py-3.5 font-bold text-theme-accent transition hover:bg-sydin-blue/20 disabled:opacity-50"
                       >
                         {busyAction === "start"
                           ? "Starting..."
@@ -889,7 +889,7 @@ export default function PickListDetailPage() {
                               SKU {item.sku_snapshot}
                             </span>
                           )}
-                          <span className="rounded-full border border-[#2563eb]/15 bg-[#2563eb]/[0.08] px-3 py-1.5 text-theme-accent">
+                          <span className="rounded-full border border-sydin-blue/15 bg-sydin-blue/[0.08] px-3 py-1.5 text-theme-accent">
                             {item.unit_label_snapshot || "Unit"}
                           </span>
                         </div>
@@ -1264,7 +1264,7 @@ export default function PickListDetailPage() {
                     onClick={() => setSelectedInventoryId(item.id)}
                     className={`w-full rounded-2xl border p-4 text-left transition ${
                       selectedInventoryId === item.id
-                        ? "border-[#2563eb]/35 bg-[#2563eb]/12"
+                        ? "border-sydin-blue/35 bg-sydin-blue/12"
                         : "border-theme bg-theme-inset hover:bg-theme-hover"
                     }`}
                   >
@@ -1308,7 +1308,7 @@ export default function PickListDetailPage() {
             <form onSubmit={handleAddItem} className="mt-6 border-t border-theme pt-6">
               {selectedInventory ? (
                 <>
-                  <div className="rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-4">
+                  <div className="rounded-2xl border border-sydin-blue/20 bg-sydin-blue/[0.08] p-4">
                     <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
                       Selected item
                     </p>
@@ -1510,7 +1510,7 @@ export default function PickListDetailPage() {
               />
             </div>
 
-            <div className="mt-6 rounded-2xl border border-[#2563eb]/35 bg-[#2563eb]/12 p-4">
+            <div className="mt-6 rounded-2xl border border-sydin-blue/35 bg-sydin-blue/12 p-4">
                 <p className="font-black text-theme-primary">
                   Complete without deducting
                 </p>

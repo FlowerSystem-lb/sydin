@@ -199,7 +199,7 @@ export default function ScannerModal({
                   active={open}
                   onDecode={onDecode}
                   onStatusChange={handleStatusChange}
-                  className="overflow-hidden rounded-[20px] border border-[#2563eb]/20 bg-black"
+                  className="overflow-hidden rounded-[20px] border border-sydin-blue/20 bg-black"
                 />
               )}
 

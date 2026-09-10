@@ -47,7 +47,7 @@ const DEFAULT_USAGE: SubscriptionUsage = {
 };
 
 const inputClassName =
-  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
+  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 const statusLabels: Record<PickListStatus, string> = {
   draft: "Draft",
@@ -58,7 +58,7 @@ const statusLabels: Record<PickListStatus, string> = {
 
 const statusClasses: Record<PickListStatus, string> = {
   draft: "border-slate-300/20 bg-slate-400/10 text-theme-muted",
-  preparing: "border-[#2563eb]/25 bg-[#2563eb]/10 text-theme-accent",
+  preparing: "border-sydin-blue/25 bg-sydin-blue/10 text-theme-accent",
   completed: "border-emerald-300/25 bg-emerald-400/10 text-theme-success",
   cancelled: "border-red-300/20 bg-red-400/10 text-theme-danger",
 };
@@ -449,7 +449,7 @@ export default function PickListsPage() {
                     onClick={() => setFilter(item.id)}
                     className={`rounded-xl border px-4 py-3 text-sm font-bold transition ${
                       filter === item.id
-                        ? "border-[#2563eb]/30 bg-[#2563eb]/15 text-theme-accent"
+                        ? "border-sydin-blue/30 bg-sydin-blue/15 text-theme-accent"
                         : "border-theme bg-theme-surface text-theme-muted hover:bg-theme-hover hover:text-theme-primary"
                     }`}
                   >
@@ -465,7 +465,7 @@ export default function PickListsPage() {
           </section>
 
           {selectedHandoffIds.length > 0 && formOpen && (
-            <div className="rounded-2xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-5 py-4 text-sm font-semibold text-theme-accent">
+            <div className="rounded-2xl border border-sydin-blue/25 bg-sydin-blue/10 px-5 py-4 text-sm font-semibold text-theme-accent">
               {selectedHandoffIds.length} selected Inventory item
               {selectedHandoffIds.length === 1 ? "" : "s"} will be added with
               quantity 1. Review quantities before picking; stock will not be
@@ -488,7 +488,7 @@ export default function PickListsPage() {
                   <Link
                     key={list.id}
                     href={`/dashboard/pick-lists/${list.id}`}
-                    className="dashboard-card group flex min-h-72 flex-col transition hover:-translate-y-0.5 hover:border-[#2563eb]/25"
+                    className="dashboard-card group flex min-h-72 flex-col transition hover:-translate-y-0.5 hover:border-sydin-blue/25"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">

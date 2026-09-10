@@ -194,7 +194,7 @@ export default function GlobalSearchPage() {
             onChange={(event) => updateQuery(event.target.value)}
             placeholder="Search items, orders, suppliers, movements..."
             autoFocus
-            className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm font-semibold text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+            className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm font-semibold text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
           />
         </label>
       </DashboardToolbar>

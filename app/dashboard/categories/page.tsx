@@ -95,7 +95,7 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 const inputClassName =
-  "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
+  "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 // Centralized, translation-ready copy for the states polished in this workspace.
 const CATEGORY_COPY = {

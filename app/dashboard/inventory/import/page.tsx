@@ -120,7 +120,7 @@ function getPhaseFieldErrorClass(
 
   return row?.errors.some((error) => phaseFields.has(error.field))
     ? "border-red-400/35 bg-red-500/10 text-theme-danger"
-    : "border-[#2563eb]/15 bg-[#2563eb]/[0.06] text-theme-secondary";
+    : "border-sydin-blue/15 bg-sydin-blue/[0.06] text-theme-secondary";
 }
 
 export default function InventoryImportPage() {
@@ -812,7 +812,7 @@ export default function InventoryImportPage() {
 
           {initialLoading ? (
             <section className="rounded-[20px] border border-theme bg-theme-surface p-6 text-center shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-              <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-[#2563eb]/20" />
+              <div className="mx-auto h-12 w-12 animate-pulse rounded-2xl bg-sydin-blue/20" />
               <h2 className="mt-5 text-xl font-bold text-theme-primary">
                 Preparing import checks
               </h2>
@@ -963,17 +963,17 @@ export default function InventoryImportPage() {
                 }}
                 className={`rounded-[20px] border border-dashed p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)] transition sm:p-6 ${
                   isDragging
-                    ? "border-[#2563eb]/60 bg-[#2563eb]/15"
-                    : "border-[#2563eb]/25 bg-theme-surface"
+                    ? "border-sydin-blue/60 bg-sydin-blue/15"
+                    : "border-sydin-blue/25 bg-theme-surface"
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
                   disabled={isParsing || Boolean(pageError)}
-                  className="flex min-h-[260px] w-full flex-col items-center justify-center rounded-[28px] border border-theme bg-theme-inset px-5 py-10 text-center transition hover:border-[#2563eb]/35 hover:bg-[var(--sydin-input-bg)] disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex min-h-[260px] w-full flex-col items-center justify-center rounded-[28px] border border-theme bg-theme-inset px-5 py-10 text-center transition hover:border-sydin-blue/35 hover:bg-[var(--sydin-input-bg)] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-[#2563eb]/25 bg-[#2563eb]/15 text-xl font-black text-theme-accent">
+                  <span className="flex h-16 w-16 items-center justify-center rounded-3xl border border-sydin-blue/25 bg-sydin-blue/15 text-xl font-black text-theme-accent">
                     CSV
                   </span>
 
@@ -1432,8 +1432,8 @@ export default function InventoryImportPage() {
                   }}
                   className={`mt-4 rounded-2xl border border-dashed p-4 transition ${
                     isPhotoDragging
-                      ? "border-[#2563eb]/60 bg-[#2563eb]/15"
-                      : "border-[#2563eb]/25 bg-theme-inset"
+                      ? "border-sydin-blue/60 bg-sydin-blue/15"
+                      : "border-sydin-blue/25 bg-theme-inset"
                   }`}
                 >
                   <button
@@ -1629,7 +1629,7 @@ export default function InventoryImportPage() {
                 )}
               </section>
 
-              <section className="rounded-[20px] border border-[#2563eb]/20 bg-[#2563eb]/[0.08] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
+              <section className="rounded-[20px] border border-sydin-blue/20 bg-sydin-blue/[0.08] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
@@ -1709,7 +1709,7 @@ export default function InventoryImportPage() {
       {isImporting && validation && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
           <div className="w-full max-w-md rounded-[30px] border border-theme bg-[var(--sydin-surface-strong)] p-7 text-center shadow-[0_14px_42px_rgba(15,23,42,0.12)]">
-            <div className="mx-auto h-14 w-14 animate-pulse rounded-3xl border border-[#2563eb]/25 bg-[#2563eb]/15" />
+            <div className="mx-auto h-14 w-14 animate-pulse rounded-3xl border border-sydin-blue/25 bg-sydin-blue/15" />
             <h2 className="mt-5 text-2xl font-bold text-theme-primary">
               Importing {validation.validRows.length} items...
             </h2>
@@ -1756,7 +1756,7 @@ export default function InventoryImportPage() {
                   onDecode={handleBatchDecode}
                   onStatusChange={setBatchScanStatus}
                   readyStatus="Scan the next item."
-                  className="overflow-hidden rounded-[24px] border border-[#2563eb]/20 bg-black"
+                  className="overflow-hidden rounded-[24px] border border-sydin-blue/20 bg-black"
                 />
                 <div
                   className="mt-3 rounded-2xl border border-theme bg-theme-surface px-4 py-3"
@@ -1850,7 +1850,7 @@ export default function InventoryImportPage() {
                               updateBatchRowName(row.id, event.target.value)
                             }
                             placeholder="Item name *"
-                            className="min-h-10 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50"
+                            className="min-h-10 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50"
                           />
                           <input
                             type="number"
@@ -1860,7 +1860,7 @@ export default function InventoryImportPage() {
                             onChange={(event) =>
                               updateBatchRowQuantity(row.id, Number(event.target.value))
                             }
-                            className="min-h-10 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50"
+                            className="min-h-10 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50"
                           />
                         </div>
                       </div>

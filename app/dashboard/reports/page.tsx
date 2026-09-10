@@ -1030,7 +1030,7 @@ export default function ReportsPage() {
         >
           <div className="grid gap-4">
             {exportStatus && (
-              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+              <p className="rounded-xl border border-sydin-blue/25 bg-sydin-blue/10 px-3 py-2 text-sm font-semibold text-theme-accent">
                 {exportStatus}
               </p>
             )}
@@ -1129,7 +1129,7 @@ export default function ReportsPage() {
                           [key]: event.target.checked,
                         }))
                       }
-                      className="h-4 w-4 rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb]/50"
+                      className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
                     />
                     {label}
                   </label>
@@ -1160,7 +1160,7 @@ export default function ReportsPage() {
         >
           <div className="grid gap-4">
             {exportStatus && (
-              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+              <p className="rounded-xl border border-sydin-blue/25 bg-sydin-blue/10 px-3 py-2 text-sm font-semibold text-theme-accent">
                 {exportStatus}
               </p>
             )}
@@ -1171,7 +1171,7 @@ export default function ReportsPage() {
                   type="date"
                   value={movementStartDate}
                   onChange={(event) => setMovementStartDate(event.target.value)}
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
@@ -1180,7 +1180,7 @@ export default function ReportsPage() {
                   type="date"
                   value={movementEndDate}
                   onChange={(event) => setMovementEndDate(event.target.value)}
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
@@ -1203,7 +1203,7 @@ export default function ReportsPage() {
                   value={movementSearch}
                   onChange={(event) => setMovementSearch(event.target.value)}
                   placeholder="Search item, code, or note"
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                 />
               </label>
             </div>
@@ -1235,7 +1235,7 @@ export default function ReportsPage() {
         >
           <div className="grid gap-4">
             {notice && !supplierReportOpen && (
-              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+              <p className="rounded-xl border border-sydin-blue/25 bg-sydin-blue/10 px-3 py-2 text-sm font-semibold text-theme-accent">
                 {notice}
               </p>
             )}
@@ -1270,7 +1270,7 @@ export default function ReportsPage() {
         >
           <div className="grid gap-4">
             {notice && !depotReportOpen && (
-              <p className="rounded-xl border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-2 text-sm font-semibold text-theme-accent">
+              <p className="rounded-xl border border-sydin-blue/25 bg-sydin-blue/10 px-3 py-2 text-sm font-semibold text-theme-accent">
                 {notice}
               </p>
             )}

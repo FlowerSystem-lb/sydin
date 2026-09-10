@@ -755,7 +755,7 @@ export default function StockCountsPage() {
                     key={itemStep}
                     className={`min-w-20 border-r border-theme px-3 py-2 last:border-r-0 ${
                       step === itemStep
-                        ? "bg-[#2563eb]/10 text-theme-accent"
+                        ? "bg-sydin-blue/10 text-theme-accent"
                         : ""
                     }`}
                   >
@@ -785,7 +785,7 @@ export default function StockCountsPage() {
         ) : loadError ? null : step === "setup" ? (
           <section className="dashboard-card grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
-              <div className="rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-4 py-3 text-sm text-theme-accent">
+              <div className="rounded-2xl border border-sydin-blue/20 bg-sydin-blue/10 px-4 py-3 text-sm text-theme-accent">
                 Draft saved on this device. Review differences before
                 finalizing stock adjustments.
               </div>
@@ -808,7 +808,7 @@ export default function StockCountsPage() {
                     value={countName}
                     onChange={(event) => setCountName(event.target.value)}
                     placeholder="June shelf count"
-                    className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                    className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                   />
                 </label>
                 <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
@@ -866,7 +866,7 @@ export default function StockCountsPage() {
                     value={countNotes}
                     onChange={(event) => setCountNotes(event.target.value)}
                     placeholder="Optional internal notes for this count"
-                    className="min-h-24 resize-y rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                    className="min-h-24 resize-y rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                   />
                 </label>
               </div>
@@ -875,7 +875,7 @@ export default function StockCountsPage() {
                   type="checkbox"
                   checked={showExpected}
                   onChange={(event) => setShowExpected(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb]/50"
+                  className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
                 />
                 Show expected system quantity while counting
               </label>
@@ -956,7 +956,7 @@ export default function StockCountsPage() {
                       value={countSearch}
                       onChange={(event) => setCountSearch(event.target.value)}
                       placeholder="Search count"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                     />
                   </label>
                   <Select
@@ -1070,7 +1070,7 @@ export default function StockCountsPage() {
                                   countedQuantity: event.target.value,
                                 })
                               }
-                              className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                              className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -1103,7 +1103,7 @@ export default function StockCountsPage() {
                               }
                               aria-label={`Count note for ${item.name}`}
                               placeholder="Optional"
-                              className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                              className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                             />
                           </td>
                         </tr>
@@ -1186,7 +1186,7 @@ export default function StockCountsPage() {
                                 countedQuantity: event.target.value,
                               })
                             }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                           />
                         </label>
                         <label className="grid gap-1 text-sm font-bold text-theme-primary">
@@ -1197,7 +1197,7 @@ export default function StockCountsPage() {
                             onChange={(event) =>
                               updateRow(item.id, { note: event.target.value })
                             }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                           />
                         </label>
                         <p className="text-xs font-bold text-theme-secondary">
@@ -1231,10 +1231,10 @@ export default function StockCountsPage() {
               )}
             </section>
 
-            <section className="fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-[#2563eb]/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
+            <section className="fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-sydin-blue/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold text-theme-secondary sm:flex sm:text-left">
-                  <span className="rounded-xl bg-[#2563eb]/10 px-3 py-2 text-theme-accent">
+                  <span className="rounded-xl bg-sydin-blue/10 px-3 py-2 text-theme-accent">
                     {countedDetails.length}/{rows.length} counted
                   </span>
                   <span className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
@@ -1428,7 +1428,7 @@ export default function StockCountsPage() {
                 </div>
               )}
             </section>
-            <section className="fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-[#2563eb]/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
+            <section className="fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-sydin-blue/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <label className="flex items-start gap-2 text-xs font-bold text-theme-primary">
                   <input
@@ -1436,7 +1436,7 @@ export default function StockCountsPage() {
                     checked={confirmFinalize}
                     onChange={(event) => setConfirmFinalize(event.target.checked)}
                     disabled={finalizing}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-[#2563eb] focus:ring-[#2563eb]/50"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
                   />
                   Finalizing will record reviewed differences as stock movement
                   adjustments.

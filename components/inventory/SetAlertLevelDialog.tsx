@@ -183,7 +183,7 @@ function SetAlertLevelDialogContent({
                 );
                 setError("");
               }}
-              className="w-full rounded-xl border border-theme bg-theme-inset px-3 py-2.5 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+              className="w-full rounded-xl border border-theme bg-theme-inset px-3 py-2.5 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
             />
           </label>
           <p className="text-xs leading-5 text-theme-subtle">

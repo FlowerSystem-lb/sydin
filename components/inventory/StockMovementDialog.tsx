@@ -172,7 +172,7 @@ function StockMovementDialogContent({
                 disabled={saving}
                 className={`rounded-xl border px-3 py-3 text-left text-sm font-bold transition ${
                   movementType === type
-                    ? "border-[#2563eb]/60 bg-[#2563eb]/15 text-theme-accent ring-4 ring-[#2563eb]/10"
+                    ? "border-sydin-blue/60 bg-sydin-blue/15 text-theme-accent ring-4 ring-sydin-blue/10"
                     : "border-theme bg-theme-surface text-theme-secondary hover:bg-theme-hover"
                 }`}
               >
@@ -202,7 +202,7 @@ function StockMovementDialogContent({
                 setError("");
               }}
               disabled={saving}
-              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
               required
             />
           </div>
@@ -220,7 +220,7 @@ function StockMovementDialogContent({
               onChange={(event) => setNotes(event.target.value)}
               disabled={saving}
               placeholder="Optional context for this movement"
-              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
+              className="w-full rounded-xl border border-theme bg-theme-surface px-4 py-3 text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
             />
           </div>
         </div>

@@ -542,7 +542,7 @@ export default function QrCenterPage() {
                       key={item.id}
                       className={`flex items-center gap-3 rounded-xl border p-3 transition ${
                         selected
-                          ? "border-[#2563eb]/50 bg-[#2563eb]/10 ring-4 ring-[#2563eb]/15"
+                          ? "border-sydin-blue/50 bg-sydin-blue/10 ring-4 ring-sydin-blue/15"
                           : "border-theme bg-theme-surface hover:bg-theme-hover"
                       } ${!item.public_id ? "opacity-55" : ""}`}
                     >
@@ -551,7 +551,7 @@ export default function QrCenterPage() {
                         checked={selected}
                         onChange={() => toggleItem(item.id)}
                         disabled={!item.public_id}
-                        className="h-4 w-4 accent-[#2563eb]"
+                        className="h-4 w-4 accent-sydin-blue"
                       />
                       <span className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
                         <ProductThumbnail
@@ -737,7 +737,7 @@ export default function QrCenterPage() {
                   onClick={() => updateSettings({ layout: option.value })}
                   className={`rounded-xl border px-3 py-3 text-sm font-bold ${
                     settings.layout === option.value
-                      ? "border-[#2563eb]/50 bg-[#2563eb]/12 text-theme-accent ring-4 ring-[#2563eb]/15"
+                      ? "border-sydin-blue/50 bg-sydin-blue/12 text-theme-accent ring-4 ring-sydin-blue/15"
                       : "border-theme bg-theme-surface text-theme-secondary"
                   }`}
                 >
@@ -770,7 +770,7 @@ export default function QrCenterPage() {
                     onClick={() => updateSettings({ branding: value })}
                     className={`w-full rounded-xl border px-3 py-3 text-left transition ${
                       settings.branding === value
-                        ? "border-[#2563eb]/50 bg-[#2563eb]/12 ring-4 ring-[#2563eb]/15"
+                        ? "border-sydin-blue/50 bg-sydin-blue/12 ring-4 ring-sydin-blue/15"
                         : "border-theme bg-theme-surface hover:bg-theme-hover"
                     } disabled:cursor-not-allowed disabled:opacity-45`}
                   >
@@ -817,7 +817,7 @@ export default function QrCenterPage() {
                         [field]: event.target.checked,
                       } as Partial<QrLabelSettings>)
                     }
-                    className="h-4 w-4 accent-[#2563eb]"
+                    className="h-4 w-4 accent-sydin-blue"
                   />
                   {label}
                 </label>

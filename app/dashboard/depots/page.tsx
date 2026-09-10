@@ -416,7 +416,7 @@ export default function DepotsPage() {
                     </FieldGroup>
 
                     <FieldGroup>
-                      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-4 py-3">
+                      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-sydin-blue/20 bg-sydin-blue/10 px-4 py-3">
                         <span>
                           <span className="block text-sm font-bold text-theme-primary">
                             Active
@@ -431,7 +431,7 @@ export default function DepotsPage() {
                           type="checkbox"
                           checked={isActive}
                           onChange={(event) => setIsActive(event.target.checked)}
-                          className="h-6 w-6 accent-[#2563eb]"
+                          className="h-6 w-6 accent-sydin-blue"
                         />
                       </label>
                     </FieldGroup>
@@ -460,7 +460,7 @@ export default function DepotsPage() {
                   </h2>
                 </div>
 
-                <span className="self-start rounded-full border border-[#2563eb]/25 bg-[#2563eb]/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
+                <span className="self-start rounded-full border border-sydin-blue/25 bg-sydin-blue/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
                   {depots.length} {depots.length === 1 ? "depot" : "depots"}
                 </span>
               </div>
@@ -507,7 +507,7 @@ export default function DepotsPage() {
                                 onChange={(event) =>
                                   setEditName(event.target.value)
                                 }
-                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:bg-theme-surface"
+                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-sydin-blue/50 focus:bg-theme-surface"
                                 required
                               />
                             </div>
@@ -523,7 +523,7 @@ export default function DepotsPage() {
                                 onChange={(event) =>
                                   setEditCode(event.target.value)
                                 }
-                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:bg-theme-surface"
+                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-sydin-blue/50 focus:bg-theme-surface"
                               />
                             </div>
                           </div>
@@ -538,11 +538,11 @@ export default function DepotsPage() {
                               onChange={(event) =>
                                 setEditNotes(event.target.value)
                               }
-                              className="min-h-[100px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:bg-theme-surface"
+                              className="min-h-[100px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-sydin-blue/50 focus:bg-theme-surface"
                             />
                           </div>
 
-                          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-[#2563eb]/20 bg-[#2563eb]/10 px-4 py-3">
+                          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-sydin-blue/20 bg-sydin-blue/10 px-4 py-3">
                             <span className="text-sm font-bold text-theme-primary">
                               Active
                             </span>
@@ -553,7 +553,7 @@ export default function DepotsPage() {
                               onChange={(event) =>
                                 setEditIsActive(event.target.checked)
                               }
-                              className="h-6 w-6 accent-[#2563eb]"
+                              className="h-6 w-6 accent-sydin-blue"
                             />
                           </label>
 

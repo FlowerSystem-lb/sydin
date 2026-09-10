@@ -58,7 +58,7 @@ type SupplierFilter =
   | "no-items";
 
 const inputClassName =
-  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-[#2563eb]/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
+  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 function hasSupplierContact(supplier: Supplier) {
   return Boolean(
@@ -600,7 +600,7 @@ export default function SuppliersPage() {
                           {supplier.contact_name || "No contact name"}
                         </p>
                       </div>
-                      <span className="shrink-0 rounded-full border border-[#2563eb]/20 bg-[#2563eb]/10 px-3 py-1.5 text-xs font-bold text-theme-accent">
+                      <span className="shrink-0 rounded-full border border-sydin-blue/20 bg-sydin-blue/10 px-3 py-1.5 text-xs font-bold text-theme-accent">
                         {supplier.item_count || 0} items
                       </span>
                     </div>
@@ -617,7 +617,7 @@ export default function SuppliersPage() {
                         </span>
                       )}
                       {supplier.email && (
-                        <span className="max-w-full break-all rounded-full border border-[#2563eb]/25 bg-[#2563eb]/10 px-3 py-1.5 text-xs font-semibold text-theme-accent">
+                        <span className="max-w-full break-all rounded-full border border-sydin-blue/25 bg-sydin-blue/10 px-3 py-1.5 text-xs font-semibold text-theme-accent">
                           {supplier.email}
                         </span>
                       )}
@@ -663,7 +663,7 @@ export default function SuppliersPage() {
                           aria-disabled={!supplier.email}
                           className={`rounded-xl border px-3 py-2.5 text-center text-xs font-bold transition ${
                             supplier.email
-                              ? "border-[#2563eb]/25 bg-[#2563eb]/10 text-theme-accent hover:bg-[#2563eb]/20"
+                              ? "border-sydin-blue/25 bg-sydin-blue/10 text-theme-accent hover:bg-sydin-blue/20"
                               : "pointer-events-none border-white/5 bg-white/[0.02] text-theme-subtle"
                           }`}
                         >

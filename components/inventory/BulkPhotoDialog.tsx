@@ -292,8 +292,8 @@ export default function BulkPhotoDialog({
           }}
           className={`rounded-2xl border border-dashed p-3 transition ${
             isDragging
-              ? "border-[#2563eb]/60 bg-[#2563eb]/15"
-              : "border-[#2563eb]/25 bg-theme-inset"
+              ? "border-sydin-blue/60 bg-sydin-blue/15"
+              : "border-sydin-blue/25 bg-theme-inset"
           }`}
         >
           <button
