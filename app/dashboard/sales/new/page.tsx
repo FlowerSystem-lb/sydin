@@ -8,7 +8,13 @@ import {
   DashboardPageHeader,
   DashboardPageShell,
 } from "@/components/dashboard/Workspace";
-import { Button, FieldGroup, FieldRow, Select } from "@/components/ui";
+import {
+  Button,
+  FieldGroup,
+  FieldRow,
+  Select,
+  UnsavedChangesGuard,
+} from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -90,6 +96,17 @@ export default function NewSalePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  /* `invoiceNumber` and `issueDate` are filled in by the form itself, so they
+     do not count as work; a guard that fires on an untouched page is one
+     people learn to click through. Off while saving, so the redirect to the
+     saved invoice is not challenged. */
+  const hasUnsavedWork =
+    !saving &&
+    (lines.length > 0 ||
+      Boolean(customerId) ||
+      Boolean(depotId) ||
+      Boolean(notes.trim()));
 
   useEffect(() => {
     let isActive = true;
@@ -339,6 +356,8 @@ export default function NewSalePage() {
                 container so they go two-column here and stay stacked on a
                 phone. Was four boxed fields in a card with the label stacked
                 above each one -- a different shape for the same job. */}
+            <UnsavedChangesGuard when={hasUnsavedWork} what="this invoice" />
+
             <section className="dashboard-card item-form p-0">
               <div className="item-form-groups">
                 <FieldGroup label="Invoice">

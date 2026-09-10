@@ -11,6 +11,7 @@ import {
   FieldGroup,
   FieldRow,
   Select,
+  UnsavedChangesGuard,
 } from "@/components/ui";
 import {
   ActionButton,
@@ -163,6 +164,27 @@ export default function NewPurchaseOrderPage() {
 
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  /* Deliberately does NOT count `poNumber` or `purchaseDate`: the form fills
+     both in on its own, and a guard that fires on an untouched page is a
+     guard people learn to click through. `saving` turns it off so the
+     redirect after a successful save is not itself challenged. */
+  const hasUnsavedWork =
+    !saving &&
+    (lines.length > 0 ||
+      Boolean(attachmentFile) ||
+      Boolean(title.trim()) ||
+      Boolean(notes.trim()) ||
+      Boolean(internalReference.trim()) ||
+      Boolean(supplierName.trim()) ||
+      Boolean(supplierContact.trim()) ||
+      Boolean(paidBy.trim()) ||
+      Boolean(amountPaid.trim()) ||
+      Boolean(expectedDeliveryDate) ||
+      Boolean(depotId) ||
+      Boolean(supplierId) ||
+      Boolean(paymentMethod) ||
+      poNumberEdited);
 
   const currencyCode = normalizeCurrencyCode(settings.currency_code, "USD");
   const selectedDepot = useMemo(
@@ -1106,6 +1128,11 @@ export default function NewPurchaseOrderPage() {
         )}
       </DashboardFormSection>
       </div>
+
+      <UnsavedChangesGuard
+        when={hasUnsavedWork}
+        what="this purchase order"
+      />
 
       <DashboardCard className="po-receive-now-card">
         <label className="po-receive-now-toggle">

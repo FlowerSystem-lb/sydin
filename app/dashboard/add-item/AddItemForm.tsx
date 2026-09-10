@@ -13,7 +13,7 @@ import {
   DashboardNotice,
 } from "@/components/dashboard/Workspace";
 import Select from "@/components/ui/Select";
-import { FieldGroup, FieldRow } from "@/components/ui";
+import { FieldGroup, FieldRow, UnsavedChangesGuard } from "@/components/ui";
 import ScannerModal from "@/components/scanner/ScannerModal";
 import { LockedActionLabel, UpgradeDialog } from "@/components/UpgradePrompt";
 import {
@@ -209,6 +209,28 @@ export default function AddItemForm({
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+
+  /* Everything here starts empty, so any value at all is work worth keeping.
+     Off while saving, so the redirect after a successful save is not
+     challenged. In the slide-over the sidebar sits behind an overlay and is
+     not clickable, so this is really guarding the full page -- but the
+     tab-close half applies to both. */
+  const hasUnsavedWork =
+    !loading &&
+    Boolean(
+      name.trim() ||
+        sku.trim() ||
+        barcode.trim() ||
+        quantity.trim() ||
+        minStockLevel.trim() ||
+        costPrice.trim() ||
+        sellingPrice.trim() ||
+        notes.trim() ||
+        image ||
+        selectedCategoryId ||
+        selectedDepotId ||
+        selectedSupplierId
+    );
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isLimitError, setIsLimitError] = useState(false);
@@ -813,6 +835,8 @@ export default function AddItemForm({
         noValidate
         className="flex min-h-full flex-col"
       >
+        <UnsavedChangesGuard when={hasUnsavedWork} what="this new item" />
+
         <div ref={formRef} className="item-form flex-1">
           <div className="flex items-center justify-between gap-3 border-b border-theme px-5 py-2.5 text-xs">
             <span className="font-bold text-theme-secondary">

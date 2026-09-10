@@ -14,6 +14,7 @@ import {
   Input,
   SectionCard,
   SectionHeader,
+  UnsavedChangesGuard,
   buttonClassName,
 } from "@/components/ui";
 import {
@@ -294,6 +295,14 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  /* The page already keeps the last-saved copy so Cancel can restore it --
+     which makes it exactly the right thing to compare against. Off while
+     saving so the success path is never challenged. */
+  const hasUnsavedWork =
+    !saving &&
+    (Boolean(logoFile) ||
+      JSON.stringify(settings) !== JSON.stringify(savedSettings));
 
   useEffect(() => {
     const handleHashChange = () => {
@@ -1812,6 +1821,8 @@ export default function SettingsPage() {
 
   return (
     <div className="contents">
+      <UnsavedChangesGuard when={hasUnsavedWork} what="your settings" />
+
       <main className="settings-workspace">
         <DashboardPageShell className="settings-shell" width="compact">
           <DashboardPageHeader
