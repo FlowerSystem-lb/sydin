@@ -23994,3 +23994,80 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     animation: none;
   }
 }
+
+
+/* ---------------------------------------------------------------------------
+   Touch targets (2026-09-10)
+   ---------------------------------------------------------------------------
+   Measured on Inventory at 375px: 18 of 43 tappable things were under the
+   44px minimum. The card menu -- the button a depot owner reaches for most,
+   on every item -- was 28x28, and the action buttons were 34.
+
+   The cause is worth writing down, because it will bite anything else sized
+   this way. Several of these already say `min-height: 2.75rem`, which was
+   written to mean 44px. This app sets its root font to 13.6px (see the
+   `@theme` scale near the top of this file), so 2.75rem renders 37px. The
+   intent was right and the unit quietly took 15% off it.
+
+   So: pixels here, deliberately. A fingertip is a physical size and does not
+   scale with the type ramp. `pointer: coarse` rather than a width breakpoint,
+   because this is about fingers, not screens -- a mouse on a narrow window
+   needs none of it, and a touchscreen laptop needs all of it.
+   -------------------------------------------------------------------------- */
+@media (pointer: coarse) {
+  /* Class repeated to reach (0,3,0). A single class loses to
+     `:is(.dashboard-shell:has(.inventory-workspace) .inventory-workspace ...)`
+     which sets 2.45rem, and to an `!important` 38px in the 900px query --
+     measured, not guessed. Repeating the class is the pattern this file
+     already uses for exactly this (see `.dashboard-brand-mark`), and it beats
+     starting another `!important` argument. */
+  .dashboard-action-button.dashboard-action-button.dashboard-action-button,
+  .inventory-toolbar-button.inventory-toolbar-button.inventory-toolbar-button,
+  .ui-select-trigger.ui-select-trigger.ui-select-trigger,
+  .inventory-search-input.inventory-search-input.inventory-search-input,
+  .ui-search-input.ui-search-input.ui-search-input {
+    min-height: 44px;
+  }
+
+  /* Inventory's page actions are held at 2.45rem by a (0,4,0) rule --
+     `:is(.dashboard-shell:has(.inventory-workspace) .inventory-workspace
+     .dashboard-action-button, ...)`. Rather than stack more repeats until
+     something sticks, this mirrors that selector exactly and sits later in
+     the file, which is the whole of why it wins. */
+  .dashboard-shell:has(.inventory-workspace)
+    .inventory-workspace
+    .dashboard-action-button,
+  .inventory-workspace .inventory-page-actions > a,
+  .inventory-workspace .inventory-page-actions > button {
+    min-height: 44px;
+  }
+
+  /* The "..." overflow button is square-ish and came out 43px wide -- one
+     pixel short, which is still a miss. Icon-only controls need the minimum
+     in both directions. */
+  .inventory-action-more.inventory-action-more.inventory-action-more,
+  .inventory-workspace .inventory-page-actions > button.inventory-action-more {
+    min-width: 44px;
+  }
+
+  /* The card menu is 29px of visible button in the corner of a photo tile.
+     Growing the box would put a heavy chip on every card, so the HIT AREA
+     grows instead and the button looks exactly as it did -- a centred,
+     invisible 44px square. This is the standard fix for a small icon control
+     and it costs nothing visually. */
+  .inventory-card-menu-button::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+  }
+
+  /* Two of these sit near each other on a card; without this their invisible
+     hit areas would overlap and the wrong one would win. */
+  .inventory-card-menu-button {
+    isolation: isolate;
+  }
+}
