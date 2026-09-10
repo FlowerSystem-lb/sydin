@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
-import UiIcon from "@/components/UiIcon";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -12,6 +11,7 @@ import {
   DashboardToolbar,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import { SearchInput } from "@/components/ui";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
@@ -229,20 +229,12 @@ export default function StockMovementsPage() {
         )}
 
         <DashboardToolbar className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="relative">
-            <span className="sr-only">Search movements</span>
-            <UiIcon
-              name="search"
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-            />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search item or note"
-              className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
-            />
-          </label>
+          <SearchInput
+            label="Search movements"
+            value={search}
+            onChange={setSearch}
+            placeholder="Search item or note"
+          />
           <Select
             ariaLabel="Movement type"
             value={movementFilter}

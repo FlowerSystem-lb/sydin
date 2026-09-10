@@ -13,6 +13,7 @@ import {
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import { SearchInput, Select } from "@/components/ui";
 import {
   getActivityFeed,
   getActivityEventLabel,
@@ -136,23 +137,30 @@ export default function ActivityPage() {
       {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
 
       <DashboardToolbar>
+        {/* Both controls here were the odd ones out. The search box had a
+            placeholder and no label at all -- a placeholder is not an
+            accessible name, it disappears the moment you type -- and it was
+            the only `rounded-2xl` search box with no icon and no focus ring.
+            The sort was a bare native <select>, in an app where every other
+            dropdown is the shared one. */}
         <div className="flex flex-wrap gap-3">
-          <input
-            type="search"
-            placeholder="Search activity…"
+          <SearchInput
+            label="Search activity"
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="min-w-64 rounded-2xl border border-theme bg-theme-inset px-4 py-2.5 text-sm placeholder-theme-subtle transition focus:border-theme-accent focus:outline-none"
+            onChange={setSearch}
+            placeholder="Search activity…"
+            className="min-w-64"
           />
 
-          <select
+          <Select
+            ariaLabel="Sort by date"
             value={dateSort}
-            onChange={(e) => setDateSort(e.target.value as DateSort)}
-            className="rounded-2xl border border-theme bg-theme-inset px-4 py-2.5 text-sm transition focus:border-theme-accent focus:outline-none"
-          >
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
+            onChange={(value) => setDateSort(value as DateSort)}
+            options={[
+              { value: "newest", label: "Newest first" },
+              { value: "oldest", label: "Oldest first" },
+            ]}
+          />
         </div>
       </DashboardToolbar>
 

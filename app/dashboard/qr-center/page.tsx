@@ -20,7 +20,11 @@ import ItemDetailsSlideOver, {
 } from "@/components/inventory/ItemDetailsSlideOver";
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
-import { DialogShell, Select } from "@/components/ui";
+import {
+  DialogShell,
+  SearchInput,
+  Select,
+} from "@/components/ui";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -515,20 +519,13 @@ export default function QrCenterPage() {
               )}
             </div>
 
-            <label className="relative mt-4 block">
-              <span className="sr-only">Search inventory</span>
-              <UiIcon
-                name="search"
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-              />
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search item name, SKU, or item code"
-                className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none transition focus:border-[#2563eb]/50 focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)]"
-              />
-            </label>
+            <SearchInput
+              label="Search inventory"
+              value={search}
+              onChange={setSearch}
+              placeholder="Search item name, SKU, or item code"
+              className="mt-4"
+            />
 
             <div className="mt-4 grid max-h-[520px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
               {loading ? (

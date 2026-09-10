@@ -23750,3 +23750,108 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     display: none;
   }
 }
+
+
+/* ---------------------------------------------------------------------------
+   The one search box (2026-09-10)
+   ---------------------------------------------------------------------------
+   Backing `components/ui/SearchInput.tsx`. Seven hand-written variants across
+   the dashboard collapsed into this: one radius, one focus ring, one height.
+   The differences they had were not decisions -- one page focused blue and
+   another cyan, five drew the ring with `focus:ring-4` and one with a
+   `box-shadow`, and Activity had no icon and a different radius entirely.
+
+   Written as CSS rather than a Tailwind string so the focus treatment has one
+   home, and so the next page cannot half-copy it.
+   -------------------------------------------------------------------------- */
+.ui-search {
+  display: block;
+  min-width: 0;
+}
+
+.ui-search-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.ui-search-field {
+  position: relative;
+  display: block;
+}
+
+.ui-search-icon {
+  position: absolute;
+  top: 50%;
+  left: 0.75rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  color: var(--text-subtle);
+}
+
+.ui-search-input {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--sydin-surface-inset, var(--bg-surface));
+  padding: 0.55rem 2.4rem 0.55rem 2.35rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  outline: none;
+  transition:
+    border-color var(--motion-fast) ease,
+    box-shadow var(--motion-fast) ease;
+}
+
+.ui-search-input::placeholder {
+  color: var(--text-subtle);
+}
+
+.ui-search-input:focus {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.ui-search-input:disabled {
+  opacity: 0.6;
+}
+
+/* Chrome and Safari draw their own clear button for `type="search"`, Firefox
+   does not -- so the control drew one on some machines and not others. Ours is
+   always there; theirs is turned off so they never both appear. */
+.ui-search-input::-webkit-search-cancel-button,
+.ui-search-input::-webkit-search-decoration {
+  appearance: none;
+}
+
+.ui-search-clear {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.6rem;
+  height: 1.6rem;
+  border-radius: 8px;
+  color: var(--text-subtle);
+  transition:
+    background-color var(--motion-fast) ease,
+    color var(--motion-fast) ease;
+}
+
+@media (hover: hover) {
+  .ui-search-clear:hover {
+    background: var(--sydin-surface-hover, rgba(15, 23, 42, 0.06));
+    color: var(--text-primary);
+  }
+}
+
+.ui-search-clear:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}

@@ -4,7 +4,12 @@ import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
-import { Button, DialogShell, Select } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  SearchInput,
+  Select,
+} from "@/components/ui";
 import {
   DashboardEmptyState,
   DashboardNotice,
@@ -833,20 +838,13 @@ export default function ReportsPage() {
                 </FilterChip>
               ))}
             </FilterBar>
-            <label className="relative w-full lg:max-w-sm">
-              <span className="sr-only">Search reports</span>
-              <UiIcon
-                name="search"
-                className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-              />
-              <input
-                type="search"
-                value={reportSearch}
-                onChange={(event) => setReportSearch(event.target.value)}
-                placeholder="Search reports"
-                className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-[#2563eb]/50 focus:ring-4 focus:ring-[#2563eb]/10"
-              />
-            </label>
+            <SearchInput
+              label="Search reports"
+              value={reportSearch}
+              onChange={setReportSearch}
+              placeholder="Search reports"
+              className="w-full lg:max-w-sm"
+            />
           </div>
         </DashboardToolbar>
 
