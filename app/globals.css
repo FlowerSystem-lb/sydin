@@ -3223,6 +3223,16 @@ select.glass-input option {
   padding-bottom: calc(7rem + env(safe-area-inset-bottom));
 }
 
+/* The same reservation `.item-panel-scroll` makes, for the pages that show a
+   record form full-width instead of in the slide-over. `.item-panel-footer`
+   is sticky, and on these pages the box it sticks to is this one -- so
+   without this, clicking into Notes on /dashboard/add-item scrolled it to
+   82px BELOW the Save bar. Matched by `:has()` so the inset applies only
+   where such a bar actually exists, and no other page's scrolling changes. */
+.dashboard-shell-content:has(.item-panel-footer) {
+  scroll-padding-bottom: 6.5rem;
+}
+
 .dashboard-mobile-nav {
   position: fixed;
   right: var(--space-3);
@@ -23128,6 +23138,16 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   flex: 1 1 auto;
   min-height: 0;
   overflow-y: auto;
+  /* `.item-panel-footer` is sticky to the bottom of THIS box, so it sits over
+     whatever is scrolled under it. Harmless above a row of short fields;
+     wrong above Notes, which is the last field, the tall one, and the one you
+     sit typing in -- the Save bar's border cut across it mid-box, and the
+     resize grip ended up underneath the bar where it could not be grabbed
+     again. This reserves the footer's height at the bottom of the scrollport,
+     so anything scrolled into view -- a focused field, the caret as it walks
+     down a note -- stops above the bar rather than behind it. Comfortably
+     more than the footer's ~66px. */
+  scroll-padding-bottom: 5.5rem;
 }
 
 /* --- The form's own rhythm: rows, not cards ------------------------------ */
@@ -23320,8 +23340,17 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    entirely and rendered as a raw browser textarea: no width, no height, a
    resize grip floating in the middle of the panel. Sayed's screenshot. */
 .item-panel-textarea {
+  /* `display: block`, not the inline-block a textarea defaults to: as an
+     inline box it sits on the text baseline and leaves a phantom
+     descender-sized gap underneath, so the space below it never matched the
+     padding the group actually sets. */
+  display: block;
   width: 100%;
   min-height: 5.5rem;
+  /* It can still be dragged taller -- long notes deserve the room -- but not
+     so tall that the field is the whole panel and both its ends are off
+     screen at once. */
+  max-height: 60vh;
   border: 1px solid var(--border-hairline);
   border-radius: 12px;
   background: var(--sydin-input-bg, transparent);
