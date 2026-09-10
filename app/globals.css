@@ -23855,3 +23855,142 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   outline: 2px solid #2563eb;
   outline-offset: 1px;
 }
+
+
+/* ---------------------------------------------------------------------------
+   Toasts (2026-09-10)
+   ---------------------------------------------------------------------------
+   Backing `components/ui/Toast.tsx`. There was no transient-feedback surface
+   in the product at all: every confirmation was an inline notice rendered
+   wherever the page put it, which works on a short page and disappears above
+   the fold on a long one.
+
+   Bottom-right on desktop; bottom-centre on phones, clear of the tab bar so a
+   message never covers navigation.
+   -------------------------------------------------------------------------- */
+.ui-toast-stack {
+  position: fixed;
+  right: var(--space-4);
+  bottom: var(--space-4);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: min(24rem, calc(100vw - 2rem));
+  pointer-events: none;
+}
+
+.ui-toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border: 1px solid var(--border-default);
+  border-left-width: 3px;
+  border-radius: 12px;
+  background: var(--sydin-surface-strong, var(--bg-surface));
+  padding: 0.7rem 0.75rem;
+  box-shadow: 0 12px 32px rgba(2, 6, 23, 0.16);
+  pointer-events: auto;
+  animation: ui-toast-in var(--motion-standard) var(--motion-ease-standard) both;
+}
+
+@keyframes ui-toast-in {
+  from {
+    opacity: 0;
+    /* transform only -- nothing here triggers layout. */
+    transform: translateY(8px) scale(0.98);
+  }
+}
+
+.ui-toast-success {
+  border-left-color: #16a34a;
+}
+
+.ui-toast-danger {
+  border-left-color: #dc2626;
+}
+
+.ui-toast-info {
+  border-left-color: var(--brand-cyan, #2563eb);
+}
+
+.ui-toast-icon {
+  margin-top: 0.1rem;
+  flex: none;
+}
+
+.ui-toast-success .ui-toast-icon {
+  color: #16a34a;
+}
+
+.ui-toast-danger .ui-toast-icon {
+  color: #dc2626;
+}
+
+.ui-toast-info .ui-toast-icon {
+  color: var(--text-accent);
+}
+
+.ui-toast-message {
+  flex: 1 1 auto;
+  min-width: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--text-primary);
+}
+
+.ui-toast-action {
+  flex: none;
+  border-radius: 8px;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-accent);
+  text-decoration: underline;
+}
+
+.ui-toast-close {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  border-radius: 7px;
+  color: var(--text-subtle);
+  transition: background-color var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+@media (hover: hover) {
+  .ui-toast-action:hover {
+    background: var(--sydin-surface-hover, rgba(15, 23, 42, 0.06));
+  }
+
+  .ui-toast-close:hover {
+    background: var(--sydin-surface-hover, rgba(15, 23, 42, 0.06));
+    color: var(--text-primary);
+  }
+}
+
+.ui-toast-action:focus-visible,
+.ui-toast-close:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 1px;
+}
+
+/* Phones: centred, and above the bottom tab bar rather than on top of it. */
+@media (max-width: 639px) {
+  .ui-toast-stack {
+    right: var(--space-3);
+    left: var(--space-3);
+    bottom: calc(5.25rem + env(safe-area-inset-bottom));
+    width: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-toast {
+    animation: none;
+  }
+}

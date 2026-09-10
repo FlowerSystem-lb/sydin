@@ -13,7 +13,12 @@ import {
   DashboardNotice,
 } from "@/components/dashboard/Workspace";
 import Select from "@/components/ui/Select";
-import { FieldGroup, FieldRow, UnsavedChangesGuard } from "@/components/ui";
+import {
+  FieldGroup,
+  FieldRow,
+  UnsavedChangesGuard,
+  useToast,
+} from "@/components/ui";
 import ScannerModal from "@/components/scanner/ScannerModal";
 import { LockedActionLabel, UpgradeDialog } from "@/components/UpgradePrompt";
 import {
@@ -209,6 +214,7 @@ export default function AddItemForm({
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
+  const { showToast } = useToast();
 
   /* Everything here starts empty, so any value at all is work worth keeping.
      Off while saving, so the redirect after a successful save is not
@@ -651,6 +657,13 @@ export default function AddItemForm({
           newValues: createdItem,
         });
       }
+
+      showToast({
+        tone: "success",
+        message: createdItem
+          ? `${createdItem.name} added to your inventory.`
+          : "Item added to your inventory.",
+      });
 
       onSaved();
     } catch (error) {

@@ -16,6 +16,7 @@ import {
   SectionHeader,
   UnsavedChangesGuard,
   buttonClassName,
+  useToast,
 } from "@/components/ui";
 import {
   DashboardCard,
@@ -295,6 +296,7 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const { showToast } = useToast();
 
   /* The page already keeps the last-saved copy so Cancel can restore it --
      which makes it exactly the right thing to compare against. Off while
@@ -581,8 +583,13 @@ export default function SettingsPage() {
       setSavedSettings(normalizedSettings);
       setLogoFile(null);
       setSuccess("Business settings saved.");
+      showToast({ tone: "success", message: "Business settings saved." });
     } catch {
       setError("Something went wrong while saving business settings.");
+      showToast({
+        tone: "danger",
+        message: "Could not save your settings. Nothing was changed.",
+      });
     } finally {
       setSaving(false);
     }

@@ -6,6 +6,7 @@ import { supabase } from "@/app/lib/supabase";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import MobileShellWrapper from "@/components/mobile/MobileShellWrapper";
 import ThemeProvider from "@/components/ThemeProvider";
+import { ToastProvider } from "@/components/ui";
 
 export default function DashboardLayout({
   children,
@@ -74,11 +75,15 @@ export default function DashboardLayout({
 
   return (
     <ThemeProvider>
-      <MobileShellWrapper userId={user.id}>
-        <DashboardShell userId={user.id} email={user.email}>
-          {children}
-        </DashboardShell>
-      </MobileShellWrapper>
+      {/* Outside the shell so a toast survives the page under it unmounting
+          -- "Item saved" must not disappear with the form that saved it. */}
+      <ToastProvider>
+        <MobileShellWrapper userId={user.id}>
+          <DashboardShell userId={user.id} email={user.email}>
+            {children}
+          </DashboardShell>
+        </MobileShellWrapper>
+      </ToastProvider>
     </ThemeProvider>
   );
 }
