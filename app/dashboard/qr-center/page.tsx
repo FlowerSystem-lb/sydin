@@ -22,6 +22,7 @@ import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
 import {
   DialogShell,
+  ResultsAnnouncer,
   SearchInput,
   Select,
 } from "@/components/ui";
@@ -526,6 +527,8 @@ export default function QrCenterPage() {
               placeholder="Search item name, SKU, or item code"
               className="mt-4"
             />
+
+            <ResultsAnnouncer count={visibleItems.length} noun="item" />
 
             <div className="mt-4 grid max-h-[520px] grid-cols-1 gap-2 overflow-y-auto pr-1 sm:grid-cols-2">
               {loading ? (

@@ -14,7 +14,13 @@ import {
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell, FieldGroup, FieldRow } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  ResultsAnnouncer,
+} from "@/components/ui";
 import {
   createSupplier,
   deleteSupplier,
@@ -572,6 +578,7 @@ export default function SuppliersPage() {
               ))}
             </FilterBar>
           </DashboardToolbar>
+          <ResultsAnnouncer count={visibleSuppliers.length} noun="supplier" />
 
           {loading ? (
             <LoadingSkeletonGroup

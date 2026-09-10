@@ -4,7 +4,13 @@ import Image from "next/image";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
-import { Badge, Button, DialogShell, Select } from "@/components/ui";
+import {
+  Badge,
+  Button,
+  DialogShell,
+  ResultsAnnouncer,
+  Select,
+} from "@/components/ui";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -648,6 +654,8 @@ export default function PurchaseOrdersPage() {
           />
         </DashboardToolbar>
       )}
+
+      <ResultsAnnouncer count={filteredOrders.length} noun="order" />
 
       {loading ? (
         <LoadingSkeletonGroup count={4} itemClassName="min-h-20" />

@@ -3,6 +3,7 @@ export { default as Button, buttonClassName } from "@/components/ui/Button";
 export { default as Card, SectionCard } from "@/components/ui/Card";
 export { FormField, Input, Textarea } from "@/components/ui/Field";
 export { FieldGroup, FieldRow } from "@/components/ui/FieldRow";
+export { default as ResultsAnnouncer } from "@/components/ui/ResultsAnnouncer";
 export { default as SearchInput } from "@/components/ui/SearchInput";
 export { default as Select, type SelectOption } from "@/components/ui/Select";
 export { PageHeader, SectionHeader } from "@/components/ui/Headers";

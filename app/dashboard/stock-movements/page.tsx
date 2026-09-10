@@ -11,7 +11,10 @@ import {
   DashboardToolbar,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { SearchInput } from "@/components/ui";
+import {
+  ResultsAnnouncer,
+  SearchInput,
+} from "@/components/ui";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
@@ -272,6 +275,7 @@ export default function StockMovementsPage() {
             ]}
           />
         </DashboardToolbar>
+        <ResultsAnnouncer count={visibleMovements.length} noun="movement" />
 
         <section className="dashboard-card overflow-hidden p-0">
           {loading ? (

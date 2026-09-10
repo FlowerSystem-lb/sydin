@@ -11,7 +11,13 @@ import {
   FilterBar,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell, FieldGroup, FieldRow } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  ResultsAnnouncer,
+} from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   createCustomer,
@@ -280,6 +286,7 @@ export default function CustomersPage() {
             />
           </label>
         </FilterBar>
+        <ResultsAnnouncer count={visible.length} noun="customer" />
 
         {loading ? (
           <LoadingSkeletonGroup count={3} />

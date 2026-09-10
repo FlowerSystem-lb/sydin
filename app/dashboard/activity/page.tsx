@@ -13,7 +13,11 @@ import {
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { SearchInput, Select } from "@/components/ui";
+import {
+  ResultsAnnouncer,
+  SearchInput,
+  Select,
+} from "@/components/ui";
 import {
   getActivityFeed,
   getActivityEventLabel,
@@ -229,6 +233,7 @@ export default function ActivityPage() {
           PO Received
         </FilterChip>
       </FilterBar>
+      <ResultsAnnouncer count={visibleEvents.length} noun="event" />
 
       {loading ? (
         <LoadingSkeletonGroup count={5} />
