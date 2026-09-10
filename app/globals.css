@@ -24025,8 +24025,29 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .inventory-toolbar-button.inventory-toolbar-button.inventory-toolbar-button,
   .ui-select-trigger.ui-select-trigger.ui-select-trigger,
   .inventory-search-input.inventory-search-input.inventory-search-input,
-  .ui-search-input.ui-search-input.ui-search-input {
+  .ui-search-input.ui-search-input.ui-search-input,
+  /* Added after sweeping the rest of the app: Reports was 20 of 26 below the
+     minimum and Suppliers 11 of 17, all of it these two. `.ui-button` is the
+     shared button, so this one line covers every page that uses it. */
+  .ui-button.ui-button.ui-button,
+  .dashboard-filter-chip.dashboard-filter-chip.dashboard-filter-chip,
+  /* The card actions on the record pages -- Call / WhatsApp / Email, and the
+     Edit / Delete menu behind the "..." -- were 39px and 32px. Targeted by
+     their containers, which Suppliers, Customers, Depots and Categories all
+     share, so this is four pages for two selectors. */
+  .organize-row-actions.organize-row-actions a,
+  .organize-row-actions.organize-row-actions button,
+  .organize-action-menu.organize-action-menu summary,
+  .organize-action-menu.organize-action-menu button {
     min-height: 44px;
+  }
+
+  /* Height was only half of it: a chip labelled "All" was 43px WIDE, and the
+     "..." on each card was a 32px-wide icon. A short label or a lone glyph
+     does not make a target easier to hit. */
+  .dashboard-filter-chip.dashboard-filter-chip.dashboard-filter-chip,
+  .organize-action-menu.organize-action-menu summary {
+    min-width: 44px;
   }
 
   /* Inventory's page actions are held at 2.45rem by a (0,4,0) rule --
