@@ -11350,9 +11350,11 @@ body [class*="tracking-["],
   backdrop-filter: none;
 }
 
-.dashboard-sidebar-toggle {
-  display: none !important;
-}
+/* Removed 2026-09-11: `.dashboard-sidebar-toggle { display: none !important }`
+   lived here, written when the sidebar had no toggle at all and this hid a
+   control that did not exist. The toggle is real now, styled at the end of
+   this file and hidden below 900px there. Left as a note because a rule this
+   blunt reappearing would be hard to explain twice. */
 
 .dashboard-nav-link {
   border: 1px solid transparent;
@@ -11477,21 +11479,28 @@ body [class*="tracking-["],
     gap: 1rem;
   }
 
-  .dashboard-nav-group-label,
-  .dashboard-nav-label,
-  .dashboard-account-copy,
-  .dashboard-account-chevron,
-  .dashboard-sidebar-workspace-copy {
-    display: initial !important;
+  /* The other half of the pair (2026-09-11). These FORCE the labels visible,
+     and they date from when the sidebar was simply expanded above 900px. Left
+     unscoped they fight the collapsed rail's hide rules -- and because they
+     carried `!important`, dropping it from the hide rules made the rail show
+     its labels. Scoped to the expanded state, which is the only state they
+     ever described, both halves now say what they mean and neither needs to
+     shout. */
+  .dashboard-shell-expanded .dashboard-nav-group-label,
+  .dashboard-shell-expanded .dashboard-nav-label,
+  .dashboard-shell-expanded .dashboard-account-copy,
+  .dashboard-shell-expanded .dashboard-account-chevron,
+  .dashboard-shell-expanded .dashboard-sidebar-workspace-copy {
+    display: initial;
   }
 
-  .dashboard-nav-group-label {
-    display: block !important;
+  .dashboard-shell-expanded .dashboard-nav-group-label {
+    display: block;
   }
 
-  .dashboard-nav-label,
-  .dashboard-account-chevron {
-    display: inline !important;
+  .dashboard-shell-expanded .dashboard-nav-label,
+  .dashboard-shell-expanded .dashboard-account-chevron {
+    display: inline;
   }
 
   .dashboard-sidebar-workspace-copy,
@@ -12173,15 +12182,19 @@ body [class*="tracking-["],
     height: 2.3rem;
   }
 
-  .dashboard-brand-logo,
-  .dashboard-sidebar-toggle,
+  /* Scoped to the collapsed rail (2026-09-11); was unscoped, so it hid these
+     in every state and the expanded sidebar had to win with a matching
+     `!important`. `.dashboard-sidebar-workspace` stays unscoped: it is hidden
+     in both states on purpose. */
   .dashboard-sidebar-workspace,
-  .dashboard-nav-group-label,
-  .dashboard-nav-label,
-  .dashboard-nav-active-mark,
-  .dashboard-account-copy,
-  .dashboard-account-chevron {
-    display: none !important;
+  .dashboard-shell-collapsed .dashboard-brand-logo,
+  .dashboard-shell-collapsed .dashboard-sidebar-toggle,
+  .dashboard-shell-collapsed .dashboard-nav-group-label,
+  .dashboard-shell-collapsed .dashboard-nav-label,
+  .dashboard-shell-collapsed .dashboard-nav-active-mark,
+  .dashboard-shell-collapsed .dashboard-account-copy,
+  .dashboard-shell-collapsed .dashboard-account-chevron {
+    display: none;
   }
 
   .dashboard-brand-logo {
@@ -14029,23 +14042,25 @@ body,
     height: 2.35rem !important;
   }
 
-  .dashboard-shell:has(.sydin-overview) .dashboard-brand-logo,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-brand-logo,
-  .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-toggle,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-toggle,
+  /* Scoped to the collapsed rail (2026-09-11) -- Overview and Inventory each
+     restated the whole hide-list for themselves. */
   .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-workspace,
   .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-workspace,
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-group-label,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-group-label,
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-label,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-label,
-  .dashboard-shell:has(.sydin-overview) .dashboard-nav-active-mark,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-active-mark,
-  .dashboard-shell:has(.sydin-overview) .dashboard-account-copy,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-account-copy,
-  .dashboard-shell:has(.sydin-overview) .dashboard-account-chevron,
-  .dashboard-shell:has(.inventory-workspace) .dashboard-account-chevron {
-    display: none !important;
+  .dashboard-shell-collapsed:has(.sydin-overview) .dashboard-brand-logo,
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-brand-logo,
+  .dashboard-shell-collapsed:has(.sydin-overview) .dashboard-sidebar-toggle,
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-sidebar-toggle,
+  .dashboard-shell-collapsed:has(.sydin-overview) .dashboard-nav-group-label,
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-group-label,
+  .dashboard-shell-collapsed:has(.sydin-overview) .dashboard-nav-label,
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-label,
+  .dashboard-shell-collapsed:has(.sydin-overview) .dashboard-nav-active-mark,
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-active-mark,
+  .dashboard-shell-collapsed:has(.sydin-overview) .dashboard-account-copy,
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-account-copy,
+  .dashboard-shell-collapsed:has(.sydin-overview) .dashboard-account-chevron,
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-account-chevron {
+    display: none;
   }
 
   .dashboard-shell:has(.sydin-overview) .dashboard-sidebar-scroll,
@@ -14404,14 +14419,15 @@ body,
     height: 2.35rem !important;
   }
 
-  .dashboard-workspace-shell .dashboard-brand-logo,
+  /* Scoped to the collapsed rail (2026-09-11) -- see the note above. */
   .dashboard-workspace-shell .dashboard-sidebar-workspace,
-  .dashboard-workspace-shell .dashboard-nav-group-label,
-  .dashboard-workspace-shell .dashboard-nav-label,
-  .dashboard-workspace-shell .dashboard-nav-active-mark,
-  .dashboard-workspace-shell .dashboard-account-copy,
-  .dashboard-workspace-shell .dashboard-account-chevron {
-    display: none !important;
+  .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-brand-logo,
+  .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-nav-group-label,
+  .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-nav-label,
+  .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-nav-active-mark,
+  .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-account-copy,
+  .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-account-chevron {
+    display: none;
   }
 
   .dashboard-workspace-shell .dashboard-sidebar-scroll {
@@ -23560,11 +23576,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   /* The labels themselves, and the chrome that only makes sense beside one. */
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-label,
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-copy {
-    display: block !important;
+    display: block;
   }
 
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-group-label {
-    display: flex !important;
+    display: flex;
   }
 
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-chevron,
