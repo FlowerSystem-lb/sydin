@@ -23586,11 +23586,41 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     max-height: none !important;
   }
 
-  /* Icon and label read as one row, left-aligned, instead of a centred glyph. */
+  /* Icon and label read as one row, left-aligned, instead of a centred glyph.
+
+     `width: 100%` matters more than it looks: the rail pins every link to a
+     2.75rem square (`!important`, three separate rules). With labels showing,
+     the text simply overflowed that square -- so the hover and active
+     highlight were a 37px box around the icon with the word sitting outside
+     it, unhighlighted. The row has to BE the row. */
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-link {
+    width: 100% !important;
     justify-content: flex-start !important;
     gap: 0.7rem;
     padding-inline: var(--space-3) !important;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-trigger {
+    width: 100% !important;
+  }
+
+  /* Measured on the real sidebar ground (rgb(230,236,245)): the labels were
+     rgb(100,116,139) at 11.9px, which is 4.01:1. WCAG AA wants 4.5:1 for text
+     this size, so they failed -- and they read washed out, which is the same
+     fault described in plainer words. rgb(71,85,105) is 6.38:1 on the same
+     ground. The nav label also grows a little: it is the primary navigation
+     of the product, and it was set smaller than the body text beside it. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-link:not(.dashboard-nav-link-active) .dashboard-nav-label {
+    color: rgb(71, 85, 105);
+    font-size: 0.95rem;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-link-active .dashboard-nav-label {
+    font-size: 0.95rem;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-group-label {
+    color: rgb(71, 85, 105);
   }
 
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-header,
