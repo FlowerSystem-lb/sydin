@@ -316,6 +316,7 @@ export default function SaleDetailPage() {
     <main className="operations-workspace">
       <DashboardPageShell>
         <DashboardPageHeader
+          record
           eyebrow="Invoice"
           title={order.invoice_number}
           description={[

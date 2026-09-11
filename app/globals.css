@@ -1460,6 +1460,12 @@ canvas {
   border-color: var(--border-danger);
 }
 
+/* A picker or review list needs more room than a three-field form. Opt in
+   per dialog; the default stays the narrow one. */
+.ui-dialog.ui-dialog-wide {
+  width: min(100%, 44rem);
+}
+
 .ui-dialog-header {
   display: flex;
   flex: 0 0 auto;
@@ -13802,6 +13808,19 @@ body,
   backdrop-filter: blur(10px) saturate(1.4);
 }
 
+/* The frosted white border above was written for buttons sitting on the
+   tinted page background. Inside a white card, toolbar or dialog it is
+   white-on-white: "Print Pick Sheet", "Cancel", "Export CSV" read as bare
+   text. Same repetition trick as elsewhere to outrank the !important. */
+.dashboard-card .ui-button-secondary.ui-button-secondary,
+.dashboard-toolbar-card .ui-button-secondary.ui-button-secondary,
+.ui-dialog .ui-button-secondary.ui-button-secondary,
+.dashboard-card .ui-icon-button.ui-icon-button,
+.dashboard-toolbar-card .ui-icon-button.ui-icon-button,
+.ui-dialog .ui-icon-button.ui-icon-button {
+  border-color: var(--border-default) !important;
+}
+
 /* --- KPI card accents: one color identity per stat (reference style) --- */
 
 /* --- Real stock-distribution mini bar (in / low / out) --- */
@@ -14679,6 +14698,22 @@ body,
     clip: rect(0, 0, 0, 0);
     white-space: nowrap;
     border: 0;
+  }
+
+  /* Record pages are the exception: the chrome says "Pick Lists / Details",
+     so the record's own name has to stay on screen. Same compact row, with
+     the name as a one-line heading above the meta line. */
+  .dashboard-page-header-card.dashboard-page-header-record .dashboard-page-heading {
+    position: static;
+    width: auto;
+    height: auto;
+    margin: 0;
+    overflow: hidden;
+    clip: auto;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    font-size: 1.05rem;
+    line-height: 1.5rem;
   }
 
   /* What's left is one compact row: description on the left, actions right. */

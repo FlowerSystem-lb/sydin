@@ -10,8 +10,17 @@ import {
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
+  DashboardToolbar,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  SearchInput,
+} from "@/components/ui";
+import UiIcon from "@/components/UiIcon";
 import {
   addPickListItem,
   cancelPickList,
@@ -34,10 +43,7 @@ import {
   getCategoriesForUser,
   type Category,
 } from "@/app/lib/categories";
-import {
-  getInventoryQuantityLabel,
-  getInventoryUnitLabel,
-} from "@/app/lib/inventoryItemModel";
+import { getInventoryQuantityLabel } from "@/app/lib/inventoryItemModel";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -91,28 +97,6 @@ function createLineDrafts(items: PickListItem[]) {
       },
     ])
   ) as Record<number, LineDraft>;
-}
-
-function ModalCloseButton({
-  label,
-  disabled,
-  onClick,
-}: {
-  label: string;
-  disabled?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={disabled}
-      aria-label={label}
-      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-surface text-xl text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
-    >
-      X
-    </button>
-  );
 }
 
 export default function PickListDetailPage() {
@@ -665,12 +649,13 @@ export default function PickListDetailPage() {
             />
 
             <DashboardPageHeader
+              record
               eyebrow="Order preparation"
               title={detail.title}
               description={[
                 detail.customer_name || "No customer name",
                 formatDate(detail.due_date),
-                `${detail.items.length} items`,
+                `${detail.items.length} ${detail.items.length === 1 ? "item" : "items"}`,
               ].join("  ·  ")}
               actions={
                 <span
@@ -693,82 +678,67 @@ export default function PickListDetailPage() {
             </section>
           )}
 
-          <section className="dashboard-toolbar-card">
-              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-                <button
-                  type="button"
-                  onClick={() => window.print()}
-                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover"
+          {/* Seven hand-styled buttons in five colours became the shared
+              Button set: one primary (the next step for this status), the
+              rest secondary, Cancel List on the danger surface. */}
+          <DashboardToolbar className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" onClick={() => window.print()}>
+              Print Pick Sheet
+            </Button>
+            <Button variant="secondary" onClick={exportPickListCsv}>
+              Export CSV
+            </Button>
+            <Button
+              variant="secondary"
+              onClick={openQrCenterForPickedItems}
+              disabled={pickedItems.length === 0}
+            >
+              QR Labels
+            </Button>
+            {editable && (
+              <>
+                <Button
+                  variant="secondary"
+                  onClick={openMetadata}
+                  disabled={Boolean(busyAction)}
                 >
-                  Print Pick Sheet
-                </button>
-                <button
-                  type="button"
-                  onClick={exportPickListCsv}
-                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover"
+                  Edit Details
+                </Button>
+                <Button
+                  variant={detail.status === "preparing" ? "secondary" : "primary"}
+                  onClick={openAddItem}
+                  disabled={Boolean(busyAction)}
+                  leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
                 >
-                  Export CSV
-                </button>
-                <button
-                  type="button"
-                  onClick={openQrCenterForPickedItems}
-                  disabled={pickedItems.length === 0}
-                  className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  QR Labels
-                </button>
-                {editable && (
-                  <>
-                    <button
-                      type="button"
-                      onClick={openMetadata}
-                      disabled={Boolean(busyAction)}
-                      className="rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold transition hover:bg-theme-hover disabled:opacity-50"
-                    >
-                      Edit Details
-                    </button>
-                    <button
-                      type="button"
-                      onClick={openAddItem}
-                      disabled={Boolean(busyAction)}
-                      className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
-                    >
-                      Add Item
-                    </button>
-                    {detail.status === "draft" && (
-                      <button
-                        type="button"
-                        onClick={() => void handleStartPreparing()}
-                        disabled={Boolean(busyAction)}
-                        className="rounded-2xl border border-sydin-blue/25 bg-sydin-blue/10 px-5 py-3.5 font-bold text-theme-accent transition hover:bg-sydin-blue/20 disabled:opacity-50"
-                      >
-                        {busyAction === "start"
-                          ? "Starting..."
-                          : "Start Preparing"}
-                      </button>
-                    )}
-                    {detail.status === "preparing" && (
-                      <button
-                        type="button"
-                        onClick={openCompletion}
-                        disabled={Boolean(busyAction)}
-                        className="rounded-2xl border border-emerald-300/30 bg-emerald-400/15 px-5 py-3.5 font-bold text-theme-success transition hover:bg-emerald-400/25 disabled:opacity-50"
-                      >
-                        Complete
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() => setCancelOpen(true)}
-                      disabled={Boolean(busyAction)}
-                      className="rounded-2xl border border-red-300/20 bg-red-400/10 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-400/20 disabled:opacity-50"
-                    >
-                      Cancel List
-                    </button>
-                  </>
+                  Add Item
+                </Button>
+                {detail.status === "draft" && (
+                  <Button
+                    variant="secondary"
+                    onClick={() => void handleStartPreparing()}
+                    disabled={Boolean(busyAction)}
+                    loading={busyAction === "start"}
+                    loadingLabel="Starting..."
+                  >
+                    Start Preparing
+                  </Button>
                 )}
-              </div>
-          </section>
+                {detail.status === "preparing" && (
+                  <Button onClick={openCompletion} disabled={Boolean(busyAction)}>
+                    Complete
+                  </Button>
+                )}
+                <Button
+                  variant="danger"
+                  className="ml-auto"
+                  onClick={() => setCancelOpen(true)}
+                  disabled={Boolean(busyAction)}
+                >
+                  Cancel List
+                </Button>
+              </>
+            )}
+          </DashboardToolbar>
 
           {(pageError || pageNotice) && (
             <DashboardNotice tone={pageError ? "danger" : "success"}>
@@ -777,24 +747,16 @@ export default function PickListDetailPage() {
           )}
 
           {!editable && (
-            <section
-              className={`rounded-[28px] border p-5 sm:p-6 ${
-                detail.status === "completed"
-                  ? "border-emerald-300/20 bg-emerald-400/[0.08]"
-                  : "border-red-300/15 bg-red-400/[0.06]"
-              }`}
+            <DashboardNotice
+              tone={detail.status === "completed" ? "success" : "info"}
             >
-              <h2 className="text-xl font-black">
-                This Pick List is read-only
-              </h2>
-              <p className="mt-2 leading-7 text-theme-muted">
-                {detail.status === "completed"
-                  ? detail.completion_stock_action === "deducted"
-                    ? "It was completed and inventory stock was deducted."
-                    : "It was completed without changing inventory stock."
-                  : "It was cancelled without changing inventory stock."}
-              </p>
-            </section>
+              <strong>This Pick List is read-only.</strong>{" "}
+              {detail.status === "completed"
+                ? detail.completion_stock_action === "deducted"
+                  ? "It was completed and inventory stock was deducted."
+                  : "It was completed without changing inventory stock."
+                : "It was cancelled without changing inventory stock."}
+            </DashboardNotice>
           )}
 
           <section className="dashboard-card">
@@ -1045,29 +1007,25 @@ export default function PickListDetailPage() {
                             }
                             disabled={savingLineId === item.id}
                             placeholder="Optional preparation note"
-                            className={`${inputClassName} min-h-24 resize-y`}
+                            className={`${inputClassName} min-h-24 resize-none`}
                           />
                         </div>
 
                         <div className="flex flex-col-reverse gap-3 sm:flex-row lg:col-span-2 lg:justify-end">
-                          <button
-                            type="button"
+                          <Button
+                            variant="danger"
                             onClick={() => setPendingRemove(item)}
                             disabled={savingLineId === item.id}
-                            className="rounded-xl border border-red-300/20 bg-red-400/10 px-5 py-3 text-sm font-bold text-theme-danger disabled:opacity-50"
                           >
                             Remove
-                          </button>
-                          <button
-                            type="button"
+                          </Button>
+                          <Button
                             onClick={() => void saveLine(item)}
-                            disabled={savingLineId === item.id}
-                            className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
+                            loading={savingLineId === item.id}
+                            loadingLabel="Saving..."
                           >
-                            {savingLineId === item.id
-                              ? "Saving..."
-                              : "Save Line"}
-                          </button>
+                            Save Line
+                          </Button>
                         </div>
                       </div>
                     )}
@@ -1082,187 +1040,172 @@ export default function PickListDetailPage() {
               })}
             </section>
           ) : (
-            <section className="dashboard-card border-dashed px-5 py-16 text-center">
-              <h2 className="text-xl font-black">
-                {editable ? "Add preparation items" : "No line items"}
-              </h2>
-              <p className="mx-auto mt-3 max-w-xl leading-7 text-theme-muted">
-                {editable
-                  ? "Search your private inventory and add everything needed for this order, event, or project."
-                  : "This Pick List was closed without any saved line items."}
-              </p>
-              {editable && (
-                <button
-                  type="button"
-                  onClick={openAddItem}
-                  className="dashboard-action-button dashboard-action-button-primary mt-6"
-                >
-                  Add First Item
-                </button>
-              )}
-            </section>
+            <DashboardEmptyState
+              icon="picklists"
+              title={editable ? "Add preparation items" : "No line items"}
+              description={
+                editable
+                  ? "Search your inventory and add everything needed for this order, event, or project."
+                  : "This Pick List was closed without any saved line items."
+              }
+              action={
+                editable ? (
+                  <ActionButton onClick={openAddItem} icon="plus">
+                    Add First Item
+                  </ActionButton>
+                ) : undefined
+              }
+            />
           )}
         </DashboardPageShell>
       </main>
 
       {metadataOpen && (
-        <div className="operations-modal-overlay fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="glass-modal my-8 w-full max-w-2xl p-5 sm:p-7">
-            <form onSubmit={handleMetadataSave}>
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
-                    Pick List details
-                  </p>
-                  <h2 className="mt-2 text-xl font-black">Edit Details</h2>
-                </div>
-                <ModalCloseButton
-                  label="Close details form"
-                  disabled={busyAction === "metadata"}
-                  onClick={() => setMetadataOpen(false)}
-                />
+        <DialogShell
+          title="Edit Details"
+          eyebrow="Pick List details"
+          onClose={() => setMetadataOpen(false)}
+          closeDisabled={busyAction === "metadata"}
+          footer={
+            <>
+              <Button
+                variant="secondary"
+                onClick={() => setMetadataOpen(false)}
+                disabled={busyAction === "metadata"}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="pick-list-details"
+                disabled={!metadataValues.title.trim()}
+                loading={busyAction === "metadata"}
+                loadingLabel="Saving..."
+              >
+                Save Details
+              </Button>
+            </>
+          }
+        >
+          <form
+            id="pick-list-details"
+            onSubmit={handleMetadataSave}
+            className="item-form -mx-1"
+          >
+            {metadataError && (
+              <div className="mx-5 mb-3">
+                <DashboardNotice tone="danger">{metadataError}</DashboardNotice>
               </div>
-
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-                    Title
-                  </label>
-                  <input
-                    value={metadataValues.title}
-                    onChange={(event) =>
-                      setMetadataValues((current) => ({
-                        ...current,
-                        title: event.target.value,
-                      }))
-                    }
-                    disabled={busyAction === "metadata"}
-                    className={inputClassName}
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-                    Customer name
-                  </label>
-                  <input
-                    value={metadataValues.customer_name || ""}
-                    onChange={(event) =>
-                      setMetadataValues((current) => ({
-                        ...current,
-                        customer_name: event.target.value,
-                      }))
-                    }
-                    disabled={busyAction === "metadata"}
-                    className={inputClassName}
-                  />
-                </div>
-                <div>
-                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-                    Due / event date
-                  </label>
-                  <input
-                    type="date"
-                    value={metadataValues.due_date || ""}
-                    onChange={(event) =>
-                      setMetadataValues((current) => ({
-                        ...current,
-                        due_date: event.target.value,
-                      }))
-                    }
-                    disabled={busyAction === "metadata"}
-                    className={inputClassName}
-                  />
-                </div>
-                <div className="sm:col-span-2">
-                  <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-                    Notes
-                  </label>
-                  <textarea
-                    value={metadataValues.notes || ""}
-                    onChange={(event) =>
-                      setMetadataValues((current) => ({
-                        ...current,
-                        notes: event.target.value,
-                      }))
-                    }
-                    disabled={busyAction === "metadata"}
-                    className={`${inputClassName} min-h-28 resize-y`}
-                  />
-                </div>
-              </div>
-
-              {metadataError && (
-                <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
-                  {metadataError}
-                </div>
-              )}
-
-              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => setMetadataOpen(false)}
-                  disabled={busyAction === "metadata"}
-                  className="rounded-2xl border border-theme bg-theme-surface px-6 py-3.5 font-bold disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    busyAction === "metadata" ||
-                    !metadataValues.title.trim()
+            )}
+            <FieldGroup label="Order">
+              <FieldRow label="Title" htmlFor="pl-title" required>
+                <input
+                  id="pl-title"
+                  value={metadataValues.title}
+                  onChange={(event) =>
+                    setMetadataValues((current) => ({
+                      ...current,
+                      title: event.target.value,
+                    }))
                   }
-                  className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
-                >
-                  {busyAction === "metadata" ? "Saving..." : "Save Details"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+                  disabled={busyAction === "metadata"}
+                />
+              </FieldRow>
+              <FieldRow label="Customer" htmlFor="pl-customer">
+                <input
+                  id="pl-customer"
+                  value={metadataValues.customer_name || ""}
+                  onChange={(event) =>
+                    setMetadataValues((current) => ({
+                      ...current,
+                      customer_name: event.target.value,
+                    }))
+                  }
+                  disabled={busyAction === "metadata"}
+                  placeholder="Optional"
+                />
+              </FieldRow>
+              <FieldRow label="Due date" htmlFor="pl-due">
+                <input
+                  id="pl-due"
+                  type="date"
+                  value={metadataValues.due_date || ""}
+                  onChange={(event) =>
+                    setMetadataValues((current) => ({
+                      ...current,
+                      due_date: event.target.value,
+                    }))
+                  }
+                  disabled={busyAction === "metadata"}
+                />
+              </FieldRow>
+            </FieldGroup>
+            <FieldGroup label="Notes">
+              <textarea
+                value={metadataValues.notes || ""}
+                onChange={(event) =>
+                  setMetadataValues((current) => ({
+                    ...current,
+                    notes: event.target.value,
+                  }))
+                }
+                disabled={busyAction === "metadata"}
+                placeholder="Optional preparation instructions"
+                className="item-panel-textarea"
+              />
+            </FieldGroup>
+          </form>
+        </DialogShell>
       )}
 
       {addOpen && (
-        <div className="operations-modal-overlay fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="glass-modal my-8 max-h-[calc(100vh-2rem)] w-full max-w-4xl overflow-y-auto p-5 sm:p-7">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
-                  Private inventory
-                </p>
-                <h2 className="mt-2 text-xl font-black">Add Item</h2>
-                <p className="mt-2 text-sm leading-6 text-theme-muted">
-                  Search by name, code, SKU, barcode, category, or supplier.
-                </p>
-              </div>
-              <ModalCloseButton
-                label="Close add item form"
-                disabled={busyAction === "add-item"}
+        <DialogShell
+          title="Add Item"
+          eyebrow="From your inventory"
+          description="Search by name, code, SKU, barcode, category, or supplier."
+          onClose={() => setAddOpen(false)}
+          closeDisabled={busyAction === "add-item"}
+          className="ui-dialog-wide"
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setAddOpen(false)}
-              />
-            </div>
+                disabled={busyAction === "add-item"}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="pick-list-add-item"
+                disabled={!selectedInventory}
+                loading={busyAction === "add-item"}
+                loadingLabel="Adding..."
+              >
+                Add to Pick List
+              </Button>
+            </>
+          }
+        >
+          <div className="px-5 pb-4">
+            <SearchInput
+              label="Search inventory"
+              value={itemSearch}
+              onChange={setItemSearch}
+              placeholder="Name, code, SKU, barcode, category, supplier"
+              className="w-full"
+              autoFocus
+            />
 
-            <div className="mt-6">
-              <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-                Search inventory
-              </label>
-              <input
-                type="search"
-                value={itemSearch}
-                onChange={(event) => setItemSearch(event.target.value)}
-                placeholder="Name, code, SKU, barcode, category, supplier"
-                className={inputClassName}
-              />
-            </div>
-
-            <div className="mt-5 max-h-80 space-y-3 overflow-y-auto pr-1">
+            <div className="mt-4 max-h-72 space-y-2 overflow-y-auto pr-1">
               {visibleInventoryItems.length > 0 ? (
                 visibleInventoryItems.map((item) => (
                   <button
                     key={item.id}
                     type="button"
                     onClick={() => setSelectedInventoryId(item.id)}
-                    className={`w-full rounded-2xl border p-4 text-left transition ${
+                    aria-pressed={selectedInventoryId === item.id}
+                    className={`w-full rounded-xl border p-3 text-left transition ${
                       selectedInventoryId === item.id
                         ? "border-sydin-blue/35 bg-sydin-blue/12"
                         : "border-theme bg-theme-inset hover:bg-theme-hover"
@@ -1299,65 +1242,55 @@ export default function PickListDetailPage() {
                   </button>
                 ))
               ) : (
-                <div className="rounded-2xl border border-dashed border-theme px-5 py-10 text-center text-sm text-theme-subtle">
+                <div className="rounded-xl border border-dashed border-theme px-5 py-8 text-center text-sm text-theme-subtle">
                   No available inventory items match this search.
                 </div>
               )}
             </div>
 
-            <form onSubmit={handleAddItem} className="mt-6 border-t border-theme pt-6">
+            <form
+              id="pick-list-add-item"
+              onSubmit={handleAddItem}
+              className="mt-5 border-t border-theme pt-4"
+            >
               {selectedInventory ? (
                 <>
-                  <div className="rounded-2xl border border-sydin-blue/20 bg-sydin-blue/[0.08] p-4">
-                    <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-accent">
-                      Selected item
-                    </p>
-                    <p className="mt-2 text-xl font-black">
+                  <p className="text-sm text-theme-muted">
+                    <span className="font-semibold text-theme-primary">
                       {selectedInventory.name}
-                    </p>
-                    <p className="mt-1 text-sm text-theme-muted">
-                      Current stock:{" "}
-                      {getInventoryQuantityLabel(
-                        selectedInventory.quantity,
-                        selectedInventory.unit_type,
-                        selectedInventory.custom_unit_label
-                      )}
-                      {" / "}
-                      Unit:{" "}
-                      {getInventoryUnitLabel(
-                        selectedInventory.unit_type,
-                        selectedInventory.custom_unit_label
-                      )}
-                    </p>
-                  </div>
+                    </span>
+                    {" · "}
+                    {getInventoryQuantityLabel(
+                      selectedInventory.quantity,
+                      selectedInventory.unit_type,
+                      selectedInventory.custom_unit_label
+                    )}{" "}
+                    in stock
+                  </p>
 
-                  <div className="mt-4 grid gap-4 sm:grid-cols-[180px_1fr]">
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-                        Required quantity
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        step="1"
-                        value={addQuantity}
-                        onChange={(event) => setAddQuantity(event.target.value)}
-                        disabled={busyAction === "add-item"}
-                        className={inputClassName}
-                      />
-                    </div>
-                    <div>
-                      <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-                        Line notes
-                      </label>
-                      <input
-                        value={addNotes}
-                        onChange={(event) => setAddNotes(event.target.value)}
-                        disabled={busyAction === "add-item"}
-                        placeholder="Optional"
-                        className={inputClassName}
-                      />
-                    </div>
+                  <div className="item-form -mx-6 mt-3">
+                    <FieldGroup>
+                      <FieldRow label="Quantity" htmlFor="pl-add-qty">
+                        <input
+                          id="pl-add-qty"
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={addQuantity}
+                          onChange={(event) => setAddQuantity(event.target.value)}
+                          disabled={busyAction === "add-item"}
+                        />
+                      </FieldRow>
+                      <FieldRow label="Line note" htmlFor="pl-add-note">
+                        <input
+                          id="pl-add-note"
+                          value={addNotes}
+                          onChange={(event) => setAddNotes(event.target.value)}
+                          disabled={busyAction === "add-item"}
+                          placeholder="Optional"
+                        />
+                      </FieldRow>
+                    </FieldGroup>
                   </div>
                 </>
               ) : (
@@ -1367,160 +1300,105 @@ export default function PickListDetailPage() {
               )}
 
               {addError && (
-                <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
-                  {addError}
+                <div className="mt-4">
+                  <DashboardNotice tone="danger">{addError}</DashboardNotice>
                 </div>
               )}
-
-              <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-                <button
-                  type="button"
-                  onClick={() => setAddOpen(false)}
-                  disabled={busyAction === "add-item"}
-                  className="rounded-2xl border border-theme bg-theme-surface px-6 py-3.5 font-bold disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={
-                    busyAction === "add-item" || !selectedInventory
-                  }
-                  className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
-                >
-                  {busyAction === "add-item" ? "Adding..." : "Add to Pick List"}
-                </button>
-              </div>
             </form>
           </div>
-        </div>
+        </DialogShell>
       )}
 
       {cancelOpen && (
-        <div className="operations-modal-overlay fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="cancel-pick-list-title"
-            className="glass-modal w-full max-w-md p-6 sm:p-7"
-          >
-            <p className="text-xs font-black uppercase tracking-[0.17em] text-red-300">
-              Cancel Pick List
-            </p>
-            <h2 id="cancel-pick-list-title" className="mt-3 text-2xl font-black">
-              Cancel {detail.title}?
-            </h2>
-            <p className="mt-3 leading-7 text-theme-muted">
-              Stock will not change. The Pick List will become permanently
-              read-only and cannot be reopened.
-            </p>
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
-              <button
-                type="button"
+        <DialogShell
+          title={`Cancel ${detail.title}?`}
+          eyebrow="Cancel Pick List"
+          description="Stock will not change. The Pick List becomes permanently read-only and cannot be reopened."
+          tone="danger"
+          onClose={() => setCancelOpen(false)}
+          closeDisabled={busyAction === "cancel"}
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setCancelOpen(false)}
                 disabled={busyAction === "cancel"}
-                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold disabled:opacity-50"
               >
                 Keep Active
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => void handleCancel()}
-                disabled={busyAction === "cancel"}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger disabled:opacity-50"
+                loading={busyAction === "cancel"}
+                loadingLabel="Cancelling..."
               >
-                {busyAction === "cancel" ? "Cancelling..." : "Cancel Pick List"}
-              </button>
-            </div>
-          </div>
-        </div>
+                Cancel Pick List
+              </Button>
+            </>
+          }
+        />
       )}
 
       {pendingRemove && (
-        <div className="operations-modal-overlay fixed inset-0 z-[80] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="remove-pick-list-item-title"
-            className="glass-modal w-full max-w-md p-6 sm:p-7"
-          >
-            <p className="text-xs font-black uppercase tracking-[0.17em] text-red-300">
-              Remove line item
-            </p>
-            <h2
-              id="remove-pick-list-item-title"
-              className="mt-3 break-words text-2xl font-black"
-            >
-              Remove {pendingRemove.item_name_snapshot}?
-            </h2>
-            <p className="mt-3 leading-7 text-theme-muted">
-              This only removes the line from this Pick List. Inventory stock
-              will not change.
-            </p>
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
-              <button
-                type="button"
+        <DialogShell
+          title={`Remove ${pendingRemove.item_name_snapshot}?`}
+          eyebrow="Remove line item"
+          description="This only removes the line from this Pick List. Inventory stock will not change."
+          tone="danger"
+          onClose={() => setPendingRemove(null)}
+          closeDisabled={busyAction === "remove"}
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setPendingRemove(null)}
                 disabled={busyAction === "remove"}
-                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold disabled:opacity-50"
               >
                 Keep Item
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => void handleRemove()}
-                disabled={busyAction === "remove"}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger disabled:opacity-50"
+                loading={busyAction === "remove"}
+                loadingLabel="Removing..."
               >
-                {busyAction === "remove" ? "Removing..." : "Remove Item"}
-              </button>
-            </div>
-          </div>
-        </div>
+                Remove Item
+              </Button>
+            </>
+          }
+        />
       )}
 
       {completeOpen && (
-        <div className="operations-modal-overlay fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="complete-pick-list-title"
-            className="glass-modal my-8 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto p-5 sm:p-7"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.17em] text-emerald-300">
-                  Final review
-                </p>
-                <h2
-                  id="complete-pick-list-title"
-                  className="mt-2 text-xl font-black"
-                >
-                  Complete Pick List
-                </h2>
-                <p className="mt-2 text-sm leading-6 text-theme-muted">
-                  Completion is permanent. This marks the list prepared and
-                  keeps inventory quantities unchanged.
-                </p>
-              </div>
-              <ModalCloseButton
-                label="Close completion review"
-                disabled={busyAction === "complete"}
+        <DialogShell
+          title="Complete Pick List"
+          eyebrow="Final review"
+          description="Completion is permanent. It marks the list prepared and leaves inventory quantities unchanged."
+          onClose={() => setCompleteOpen(false)}
+          closeDisabled={busyAction === "complete"}
+          className="ui-dialog-wide"
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setCompleteOpen(false)}
-              />
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-sydin-blue/35 bg-sydin-blue/12 p-4">
-                <p className="font-black text-theme-primary">
-                  Complete without deducting
-                </p>
-                <p className="mt-2 text-sm leading-6 text-theme-muted">
-                  Close the Pick List as prepared while leaving inventory
-                  quantities unchanged.
-                </p>
-            </div>
-
-            <div className="mt-6 space-y-3">
+                disabled={busyAction === "complete"}
+              >
+                Continue Preparing
+              </Button>
+              <Button
+                onClick={() => void handleComplete()}
+                disabled={!allPrepared}
+                loading={busyAction === "complete"}
+                loadingLabel="Completing..."
+              >
+                Complete Without Deducting
+              </Button>
+            </>
+          }
+        >
+          <div className="px-5 pb-4">
+            <div className="space-y-2">
               {detail.items.map((item) => {
                 const shortage =
                   !item.inventory ||
@@ -1529,7 +1407,7 @@ export default function PickListDetailPage() {
                 return (
                   <div
                     key={item.id}
-                    className={`rounded-2xl border p-4 ${
+                    className={`rounded-xl border p-3 ${
                       shortage
                         ? "border-amber-300/25 bg-amber-400/[0.08]"
                         : "border-theme bg-theme-inset"
@@ -1561,50 +1439,31 @@ export default function PickListDetailPage() {
             </div>
 
             {!allPrepared && (
-              <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-theme-warning">
-                Every line must be fully prepared before completion.
+              <div className="mt-4">
+                <DashboardNotice tone="warning">
+                  Every line must be fully prepared before completion.
+                </DashboardNotice>
               </div>
             )}
 
             {shortages.length > 0 && (
-              <div className="mt-5 rounded-2xl border border-amber-300/25 bg-amber-400/10 px-4 py-3 text-sm font-semibold text-theme-warning">
-                {shortages.length} line{shortages.length === 1 ? "" : "s"}{" "}
-                has a current stock shortage. You can still complete this pick
-                list because inventory quantities are not deducted.
+              <div className="mt-4">
+                <DashboardNotice tone="warning">
+                  {shortages.length} line{shortages.length === 1 ? "" : "s"}{" "}
+                  {shortages.length === 1 ? "has" : "have"} a current stock
+                  shortage. You can still complete this pick list because
+                  inventory quantities are not deducted.
+                </DashboardNotice>
               </div>
             )}
 
             {completionError && (
-              <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
-                {completionError}
+              <div className="mt-4">
+                <DashboardNotice tone="danger">{completionError}</DashboardNotice>
               </div>
             )}
-
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
-              <button
-                type="button"
-                onClick={() => setCompleteOpen(false)}
-                disabled={busyAction === "complete"}
-                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold disabled:opacity-50"
-              >
-                Continue Preparing
-              </button>
-              <button
-                type="button"
-                onClick={() => void handleComplete()}
-                disabled={
-                  busyAction === "complete" ||
-                  !allPrepared
-                }
-                className="flex-1 rounded-2xl border border-emerald-300/30 bg-emerald-400/20 px-5 py-3.5 font-bold text-theme-success disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                {busyAction === "complete"
-                  ? "Completing..."
-                  : "Complete Without Deducting"}
-              </button>
-            </div>
           </div>
-        </div>
+        </DialogShell>
       )}
     </div>
   );

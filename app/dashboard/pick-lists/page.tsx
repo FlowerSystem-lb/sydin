@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
@@ -10,8 +10,19 @@ import {
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
+  DashboardToolbar,
+  FilterBar,
+  FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  ResultsAnnouncer,
+  SearchInput,
+} from "@/components/ui";
 import {
   addPickListItem,
   createPickList,
@@ -45,9 +56,6 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
-
-const inputClassName =
-  "w-full rounded-2xl border border-theme bg-[var(--sydin-input-bg)] px-4 py-3.5 text-base text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 const statusLabels: Record<PickListStatus, string> = {
   draft: "Draft",
@@ -89,6 +97,7 @@ function PickListForm({
   values,
   error,
   saving,
+  handoffCount,
   onChange,
   onCancel,
   onSubmit,
@@ -96,127 +105,126 @@ function PickListForm({
   values: PickListInput;
   error: string;
   saving: boolean;
+  handoffCount: number;
   onChange: (field: keyof PickListInput, value: string) => void;
   onCancel: () => void;
   onSubmit: (event: React.FormEvent) => void;
 }) {
   const [touched, setTouched] = useState(false);
+  const titleRef = useRef<HTMLInputElement>(null);
   const titleMissing = touched && !values.title.trim();
+  const formId = "pick-list-create";
 
+  /* The button stays enabled: a disabled button explains nothing. Pressing it
+     with no title shows the message and puts the cursor back in the field. */
+  const handleSubmit = (event: React.FormEvent) => {
+    if (!values.title.trim()) {
+      event.preventDefault();
+      setTouched(true);
+      titleRef.current?.focus();
+      return;
+    }
+    onSubmit(event);
+  };
+
+  /* Was a hand-built overlay: no dialog role, no Escape, no focus move, and
+     positioned inside the shell's backdrop-filter -- the same containing-block
+     trap Overlay.tsx documents. The shared DialogShell fixes all four. The
+     footer buttons live outside the <form>, so the submit points at it by id. */
   return (
-    <form onSubmit={onSubmit} noValidate>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
-            Order preparation
-          </p>
-          <h2 className="mt-2 text-xl font-black text-theme-primary">
+    <DialogShell
+      title="Create Pick List"
+      eyebrow="Order preparation"
+      description="Start with the order, event, or project details. Stock stays unchanged until completion."
+      onClose={onCancel}
+      closeDisabled={saving}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onCancel} disabled={saving}>
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            form={formId}
+            loading={saving}
+            loadingLabel="Creating..."
+          >
             Create Pick List
-          </h2>
-          <p className="mt-2 text-sm leading-6 text-theme-muted">
-            Start with the order, event, or project details. Stock stays
-            unchanged until completion.
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={saving}
-          aria-label="Close create pick list form"
-          className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-surface text-xl text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
-        >
-          X
-        </button>
-      </div>
+          </Button>
+        </>
+      }
+    >
+      <form id={formId} onSubmit={handleSubmit} noValidate className="item-form -mx-1">
+        {error && (
+          <div className="mx-5 mb-3">
+            <DashboardNotice tone="danger">{error}</DashboardNotice>
+          </div>
+        )}
 
-      <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Pick list title <span className="text-theme-accent">*</span>
-          </label>
-          <input
-            autoFocus
-            value={values.title}
-            onBlur={() => setTouched(true)}
-            onChange={(event) => onChange("title", event.target.value)}
-            disabled={saving}
-            aria-invalid={titleMissing}
-            placeholder="e.g. Wedding setup - June 20"
-            className={`${inputClassName} ${
-              titleMissing ? "border-red-400/50 bg-red-500/[0.08]" : ""
-            }`}
-          />
-          {titleMissing && (
-            <p className="mt-2 text-sm font-semibold text-theme-danger">
-              Pick list title is required.
-            </p>
-          )}
-        </div>
+        {handoffCount > 0 && (
+          <div className="mx-5 mb-3">
+            <DashboardNotice tone="info">
+              {handoffCount} selected Inventory item
+              {handoffCount === 1 ? "" : "s"} will be added with quantity 1.
+              Review quantities before picking; stock will not be deducted.
+            </DashboardNotice>
+          </div>
+        )}
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Customer name
-          </label>
-          <input
-            value={values.customer_name || ""}
-            onChange={(event) => onChange("customer_name", event.target.value)}
-            disabled={saving}
-            placeholder="Optional"
-            className={inputClassName}
-          />
-        </div>
+        <FieldGroup label="Order">
+          <FieldRow label="Title" htmlFor="pick-list-title" required>
+            <input
+              id="pick-list-title"
+              ref={titleRef}
+              value={values.title}
+              onChange={(event) => onChange("title", event.target.value)}
+              disabled={saving}
+              aria-invalid={titleMissing}
+              aria-describedby={titleMissing ? "pick-list-title-error" : undefined}
+              placeholder="e.g. Wedding setup - June 20"
+            />
+            {titleMissing && (
+              <p
+                id="pick-list-title-error"
+                className="mt-1 text-xs font-semibold text-theme-danger"
+              >
+                A title is required.
+              </p>
+            )}
+          </FieldRow>
 
-        <div>
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Due / event date
-          </label>
-          <input
-            type="date"
-            value={values.due_date || ""}
-            onChange={(event) => onChange("due_date", event.target.value)}
-            disabled={saving}
-            className={inputClassName}
-          />
-        </div>
+          <FieldRow label="Customer" htmlFor="pick-list-customer">
+            <input
+              id="pick-list-customer"
+              value={values.customer_name || ""}
+              onChange={(event) => onChange("customer_name", event.target.value)}
+              disabled={saving}
+              placeholder="Optional"
+            />
+          </FieldRow>
 
-        <div className="sm:col-span-2">
-          <label className="mb-2 block text-sm font-semibold text-theme-secondary">
-            Notes
-          </label>
+          <FieldRow label="Due date" htmlFor="pick-list-due">
+            <input
+              id="pick-list-due"
+              type="date"
+              value={values.due_date || ""}
+              onChange={(event) => onChange("due_date", event.target.value)}
+              disabled={saving}
+            />
+          </FieldRow>
+        </FieldGroup>
+
+        <FieldGroup label="Notes">
           <textarea
             value={values.notes || ""}
             onChange={(event) => onChange("notes", event.target.value)}
             disabled={saving}
             placeholder="Optional preparation instructions"
-            className={`${inputClassName} min-h-28 resize-y`}
+            className="item-panel-textarea"
           />
-        </div>
-      </div>
-
-      {error && (
-        <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
-          {error}
-        </div>
-      )}
-
-      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={saving}
-          className="rounded-2xl border border-theme bg-theme-surface px-6 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={saving || !values.title.trim()}
-          className="dashboard-action-button dashboard-action-button-primary disabled:opacity-50"
-        >
-          {saving ? "Creating..." : "Create Pick List"}
-        </button>
-      </div>
-    </form>
+        </FieldGroup>
+      </form>
+    </DialogShell>
   );
 }
 
@@ -426,52 +434,34 @@ export default function PickListsPage() {
             />
           )}
 
-          <section className="dashboard-toolbar-card">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end">
-              <div className="flex-1">
-                <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                  Search Pick Lists
-                </label>
-                <input
-                  type="search"
-                  value={search}
-                  onChange={(event) => setSearch(event.target.value)}
-                  placeholder="Title or customer"
-                  className={inputClassName}
-                />
-              </div>
-
-              <div className="flex flex-wrap gap-2">
-                {filters.map((item) => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setFilter(item.id)}
-                    className={`rounded-xl border px-4 py-3 text-sm font-bold transition ${
-                      filter === item.id
-                        ? "border-sydin-blue/30 bg-sydin-blue/15 text-theme-accent"
-                        : "border-theme bg-theme-surface text-theme-muted hover:bg-theme-hover hover:text-theme-primary"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </div>
-
-              <p className="rounded-2xl border border-theme bg-theme-inset px-4 py-3 text-sm font-bold text-theme-secondary">
-                {activeCount} / {pickListLimit ?? "Unlimited"} active
-              </p>
-            </div>
-          </section>
-
-          {selectedHandoffIds.length > 0 && formOpen && (
-            <div className="rounded-2xl border border-sydin-blue/25 bg-sydin-blue/10 px-5 py-4 text-sm font-semibold text-theme-accent">
-              {selectedHandoffIds.length} selected Inventory item
-              {selectedHandoffIds.length === 1 ? "" : "s"} will be added with
-              quantity 1. Review quantities before picking; stock will not be
-              deducted.
-            </div>
-          )}
+          <DashboardToolbar className="flex flex-col gap-3 lg:flex-row lg:items-center">
+            {/* Was a hand-rolled search box with a caption above it and four
+                bespoke chip buttons. Same shared search + chips as Sales and
+                Customers; the chips carry aria-pressed so the active filter is
+                announced. */}
+            <SearchInput
+              label="Search Pick Lists"
+              value={search}
+              onChange={setSearch}
+              placeholder="Title or customer"
+              className="w-full lg:max-w-sm"
+            />
+            <FilterBar label="Pick List status" className="lg:ml-auto">
+              {filters.map((item) => (
+                <FilterChip
+                  key={item.id}
+                  active={filter === item.id}
+                  onClick={() => setFilter(item.id)}
+                >
+                  {item.label}
+                </FilterChip>
+              ))}
+            </FilterBar>
+            <p className="text-sm font-semibold text-theme-muted lg:whitespace-nowrap">
+              {activeCount} / {pickListLimit ?? "Unlimited"} active
+            </p>
+          </DashboardToolbar>
+          <ResultsAnnouncer count={visibleLists.length} noun="pick list" />
 
           {loading ? (
             <LoadingSkeletonGroup
@@ -578,28 +568,33 @@ export default function PickListsPage() {
           ) : (
             <DashboardEmptyState
               icon="search"
-              title="No matching Pick Lists"
-              description="Try another filter, title, or customer name."
+              title={
+                search.trim()
+                  ? "No matching Pick Lists"
+                  : `No ${filter === "all" ? "" : `${filter} `}Pick Lists`
+              }
+              description={
+                search.trim()
+                  ? "Try another title or customer name."
+                  : "Completed and cancelled lists are under their own tabs, or choose All."
+              }
             />
           )}
         </DashboardPageShell>
       </main>
 
       {formOpen && (
-        <div className="operations-modal-overlay fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="glass-modal my-8 w-full max-w-2xl p-5 sm:p-7">
-            <PickListForm
-              values={formValues}
-              error={formError}
-              saving={saving}
-              onChange={(field, value) =>
-                setFormValues((current) => ({ ...current, [field]: value }))
-              }
-              onCancel={closeCreateForm}
-              onSubmit={handleCreate}
-            />
-          </div>
-        </div>
+        <PickListForm
+          values={formValues}
+          error={formError}
+          saving={saving}
+          handoffCount={selectedHandoffIds.length}
+          onChange={(field, value) =>
+            setFormValues((current) => ({ ...current, [field]: value }))
+          }
+          onCancel={closeCreateForm}
+          onSubmit={handleCreate}
+        />
       )}
     </div>
   );

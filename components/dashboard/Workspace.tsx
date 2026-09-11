@@ -49,15 +49,29 @@ export function DashboardPageHeader({
   description,
   actions,
   className,
+  record = false,
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
   actions?: ReactNode;
   className?: string;
+  /**
+   * The heading is normally hidden from sight on desktop because the app
+   * chrome already prints the page name. On a record page (one invoice, one
+   * pick list) the title IS the record -- "INV-0042", "Wedding setup" -- and
+   * the chrome only says "Details", so it has to stay visible.
+   */
+  record?: boolean;
 }) {
   return (
-    <section className={cx("dashboard-page-header-card", className)}>
+    <section
+      className={cx(
+        "dashboard-page-header-card",
+        record && "dashboard-page-header-record",
+        className
+      )}
+    >
       <div className="dashboard-page-header-content">
         <div className="min-w-0">
           {eyebrow && <p className="dashboard-eyebrow">{eyebrow}</p>}
