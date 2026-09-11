@@ -854,8 +854,20 @@ export default function DashboardShell({
      the page is called for the bar at the top -- the same answer makes the
      title, so there is one place to change and nothing to keep in sync. */
   useEffect(() => {
-    document.title = `${currentPage.label} · SydIN`;
-  }, [currentPage.label]);
+    /* A page can name itself by rendering `data-page-title`, and this defers
+       to it. The 404 needs that: its URL is by definition not a real route,
+       so deriving a name from the path produced "Details · SydIN" on a page
+       whose entire message is that nothing is there.
+
+       Reading the DOM here is safe and deterministic -- React runs child
+       effects before parent ones, so by the time this fires the page below
+       has already rendered and declared itself if it wanted to. */
+    const declared = document
+      .querySelector("[data-page-title]")
+      ?.getAttribute("data-page-title");
+
+    document.title = `${declared || currentPage.label} · SydIN`;
+  }, [currentPage.label, pathname]);
 
   const planName = formatPlanName(usage.subscription.plan);
   const itemLimit = usage.subscription.item_limit;

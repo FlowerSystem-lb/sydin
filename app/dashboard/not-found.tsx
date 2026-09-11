@@ -9,8 +9,13 @@ import {
 // is still inside the app.
 export default function DashboardNotFound() {
   return (
-    <DashboardPageShell>
-      <DashboardEmptyState
+    /* `data-page-title` names this page for the browser tab: the shell derives
+       page names from the URL, and a 404's URL is by definition not a real
+       route. On a wrapper rather than on DashboardPageShell, which takes a
+       fixed set of props and would drop it. */
+    <div data-page-title="Page not found">
+      <DashboardPageShell>
+        <DashboardEmptyState
         icon="search"
         title="Page not found"
         description="This page does not exist, or the item it pointed to was removed."
@@ -25,7 +30,8 @@ export default function DashboardNotFound() {
             </ActionButton>
           </>
         }
-      />
-    </DashboardPageShell>
+        />
+      </DashboardPageShell>
+    </div>
   );
 }
