@@ -7686,8 +7686,10 @@ select.glass-input option {
 
 .ui-select-trigger:focus-visible,
 .ui-select-trigger[aria-expanded="true"] {
-  border-color: rgba(99, 102, 241, 0.55);
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  /* Was indigo; a second rule further down painted the same control cyan.
+     One control, two focus colours, neither of them the brand. */
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
 .ui-select-trigger:disabled {
@@ -8175,7 +8177,7 @@ body [class*="tracking-["],
   border-color: var(--border-focus);
   background: #ffffff;
   box-shadow:
-    0 0 0 4px rgba(14, 165, 198, 0.14),
+    0 0 0 4px rgba(37, 99, 235, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -9067,9 +9069,11 @@ body [class*="tracking-["],
 }
 
 .inventory-search-input:focus {
-  border-color: rgba(14, 165, 198, 0.36);
+  /* Was cyan, and a second rule further down painted it a brighter cyan
+     again. Every other field in the dashboard focuses brand blue. */
+  border-color: rgba(37, 99, 235, 0.4);
   box-shadow:
-    0 0 0 4px rgba(14, 165, 198, 0.12),
+    0 0 0 4px rgba(37, 99, 235, 0.12),
     inset 0 1px 0 rgba(255, 255, 255, 0.9);
 }
 
@@ -10209,8 +10213,9 @@ body [class*="tracking-["],
 }
 
 .inventory-search-input:focus {
-  border-color: rgba(25, 195, 221, 0.56);
-  box-shadow: 0 0 0 4px rgba(25, 195, 221, 0.12);
+  /* The rule that actually won: a third colour for the same focus state. */
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
 }
 
 .inventory-toolbar-secondary {

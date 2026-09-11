@@ -338,7 +338,7 @@ function DataActionCard({
   );
 
   const className =
-    "flex min-h-11 flex-col rounded-2xl border border-theme bg-theme-surface p-4 text-left transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 disabled:cursor-not-allowed disabled:opacity-60";
+    "flex min-h-11 flex-col rounded-2xl border border-theme bg-theme-surface p-4 text-left transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20 disabled:cursor-not-allowed disabled:opacity-60";
 
   if (href) {
     return (

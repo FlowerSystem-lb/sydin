@@ -2557,7 +2557,7 @@ export default function InventoryPage() {
     >
       <InventoryActionMenu
         label="More"
-        buttonClassName="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20"
+        buttonClassName="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20"
         menuClassName={menuClassName}
       >
         <button
@@ -3356,7 +3356,7 @@ export default function InventoryPage() {
                        2.5rem/2.75rem holding a 3rem/3.5rem image, so the image
                        overran its column by 8px (mobile) / 12px (desktop) and
                        sat on top of the first characters of the name and SKU. */
-                    className={`inventory-list-row grid cursor-pointer grid-cols-[auto_3rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 sm:grid-cols-[auto_3.5rem_minmax(0,1fr)_auto] ${
+                    className={`inventory-list-row grid cursor-pointer grid-cols-[auto_3rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20 sm:grid-cols-[auto_3.5rem_minmax(0,1fr)_auto] ${
                       selected
                         ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/30"
                         : "border-theme"
@@ -3369,7 +3369,7 @@ export default function InventoryPage() {
                         onChange={() => toggleItemSelection(item.id)}
                         onClick={(event) => event.stopPropagation()}
                         aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
-                        className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                        className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
                       />
                     ) : (
                       <span className="h-4 w-4" aria-hidden="true" />
@@ -3551,7 +3551,7 @@ export default function InventoryPage() {
                               }
                               setDetailsItem({ id: item.id, tab: "details" });
                             }}
-                            className={`cursor-pointer transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 ${
+                            className={`cursor-pointer transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20 ${
                               selected ? "bg-cyan-500/[0.08]" : ""
                             }`}
                           >
@@ -3563,7 +3563,7 @@ export default function InventoryPage() {
                                   onChange={() => toggleItemSelection(item.id)}
                                   onClick={(event) => event.stopPropagation()}
                                   aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
-                                  className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                                  className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
                                 />
                               )}
                             </td>
@@ -3730,7 +3730,7 @@ export default function InventoryPage() {
                         onClick={() =>
                           setDetailsItem({ id: item.id, tab: "alerts" })
                         }
-                        className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-theme bg-theme-inset px-3 py-2 text-left transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20"
+                        className="grid min-h-12 grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-xl border border-theme bg-theme-inset px-3 py-2 text-left transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20"
                       >
                         <span className="min-w-0">
                           <span className="block truncate text-xs font-black text-theme-primary">
@@ -4120,7 +4120,7 @@ export default function InventoryPage() {
                   checked={bulkConfirmed}
                   onChange={(event) => setBulkConfirmed(event.target.checked)}
                   disabled={bulkSubmitting || bulkChangeSummary.length === 0}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
                 />
                 Confirm these enabled fields should change for the selected
                 items.
@@ -4489,7 +4489,7 @@ export default function InventoryPage() {
                     bulkSubmitting ||
                     (bulkCategoryMode === "keep" && bulkDepotMode === "keep")
                   }
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
                 />
                 Confirm this move for the selected items.
               </label>

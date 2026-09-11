@@ -197,7 +197,7 @@ function WorkflowCard({
   return (
     <Link
       href={locked ? "/pricing" : workflow.href}
-      className={`dashboard-card flex flex-col p-4 transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/20 ${
+      className={`dashboard-card flex flex-col p-4 transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20 ${
         locked ? "opacity-70" : ""
       }`}
     >

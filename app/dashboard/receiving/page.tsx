@@ -130,7 +130,7 @@ const sourceLabels: Record<ReceivingSource, string> = {
 };
 
 const inputClassName =
-  "min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15 disabled:opacity-60";
+  "min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15 disabled:opacity-60";
 const textareaClassName = `${inputClassName} min-h-24 resize-y py-3`;
 
 function makeLineId() {
@@ -1178,7 +1178,7 @@ export default function ReceivingPage() {
                       value={receiveSearch}
                       onChange={(event) => setReceiveSearch(event.target.value)}
                       placeholder="Search receiving"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                     />
                   </label>
                   <Select
@@ -1457,7 +1457,7 @@ export default function ReceivingPage() {
                                 receivedQuantity: event.target.value,
                               })
                             }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                           />
                         </label>
                         {detail.overReceived && (
@@ -1478,7 +1478,7 @@ export default function ReceivingPage() {
                                 unitCost: event.target.value,
                               })
                             }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                           />
                         </label>
                         <label className="grid gap-1 text-sm font-bold text-theme-primary">
@@ -1491,7 +1491,7 @@ export default function ReceivingPage() {
                                 note: event.target.value,
                               })
                             }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-cyan-300/60 focus:ring-4 focus:ring-cyan-300/15"
+                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                           />
                         </label>
                         <div className="grid grid-cols-2 gap-2">
@@ -1784,7 +1784,7 @@ export default function ReceivingPage() {
                     checked={confirmFinalize}
                     onChange={(event) => setConfirmFinalize(event.target.checked)}
                     disabled={finalizing}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
                   />
                   Finalizing will record stock-in movements for received
                   quantities. Zero rows will be skipped.

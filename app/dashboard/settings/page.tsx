@@ -1859,7 +1859,7 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => switchSection(section.id)}
                     aria-current={section.active ? "page" : undefined}
-                    className={`flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-cyan-300/15 ${
+                    className={`flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/15 ${
                       section.active
                         ? "border-cyan-300/30 bg-cyan-500/10 text-theme-accent"
                         : "border-transparent text-theme-secondary hover:border-theme hover:bg-theme-inset"
