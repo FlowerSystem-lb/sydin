@@ -9915,8 +9915,18 @@ body [class*="tracking-["],
     display: none !important;
   }
 
-  .dashboard-brand-logo {
-    display: block !important;
+  /* Scoped to the expanded sidebar (2026-09-11). Unscoped and `!important`,
+     this showed the 118px wordmark inside the 61px rail: it spilled 63px past
+     the sidebar edge and printed on top of the page name in the header, while
+     the logo mark itself was pushed to x:-31, off screen entirely.
+
+     It survived the earlier pass because that pass moved the rules that
+     mention `.dashboard-nav-label` and this one only mentions the wordmark --
+     so the hide rules lost their `!important` and this kept its own, which
+     beats specificity every time. Exactly the failure the last commit
+     described and then walked into. */
+  .dashboard-shell-expanded .dashboard-brand-logo {
+    display: block;
     width: 8.65rem;
   }
 
