@@ -416,34 +416,33 @@ export default function DepotsPage() {
                     </FieldGroup>
 
                     <FieldGroup>
-                      <label className="flex cursor-pointer items-center justify-between gap-4 rounded-xl border border-sydin-blue/20 bg-sydin-blue/10 px-4 py-3">
-                        <span>
-                          <span className="block text-sm font-bold text-theme-primary">
-                            Active
-                          </span>
-
-                          <span className="mt-1 block text-xs text-theme-muted">
-                            Active depots appear in item forms.
-                          </span>
-                        </span>
-
-                        <input
-                          type="checkbox"
-                          checked={isActive}
-                          onChange={(event) => setIsActive(event.target.checked)}
-                          className="h-6 w-6 accent-sydin-blue"
-                        />
-                      </label>
+                      <FieldRow label="Active" htmlFor="depot-active">
+                        <label
+                          htmlFor="depot-active"
+                          className="flex items-center gap-2 text-sm text-theme-primary"
+                        >
+                          <input
+                            id="depot-active"
+                            type="checkbox"
+                            checked={isActive}
+                            onChange={(event) => setIsActive(event.target.checked)}
+                            className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
+                          />
+                          Shown in item forms
+                        </label>
+                      </FieldRow>
                     </FieldGroup>
                   </div>
 
-                  <button
-                    type="submit"
-                    disabled={saving}
-                    className="mt-6 w-full rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
-                  >
-                    {saving ? "Saving depot..." : "Add Depot"}
-                  </button>
+                  <div className="mt-4 flex justify-end">
+                    <Button
+                      type="submit"
+                      loading={saving}
+                      loadingLabel="Saving depot..."
+                    >
+                      Add Depot
+                    </Button>
+                  </div>
                 </>
               )}
             </form>
@@ -491,89 +490,91 @@ export default function DepotsPage() {
                       className="organize-row organize-depot-row relative rounded-2xl border border-theme bg-theme-inset p-4"
                     >
                       {editingId === depot.id ? (
-                        <form
-                          onSubmit={handleUpdateDepot}
-                          className="grid grid-cols-1 gap-4"
-                        >
-                          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                            <div>
-                              <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                                Name
-                              </label>
-
-                              <input
-                                type="text"
-                                value={editName}
-                                onChange={(event) =>
-                                  setEditName(event.target.value)
-                                }
-                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-sydin-blue/50 focus:bg-theme-surface"
+                        <form onSubmit={handleUpdateDepot}>
+                          {/* Was the old boxed layout while the Add form next
+                              to it had already moved to rows: two shapes for
+                              the same four fields. */}
+                          <div className="item-form -mx-1">
+                            <FieldGroup>
+                              <FieldRow
+                                label="Name"
+                                htmlFor={`depot-edit-name-${depot.id}`}
                                 required
-                              />
-                            </div>
+                              >
+                                <input
+                                  id={`depot-edit-name-${depot.id}`}
+                                  type="text"
+                                  value={editName}
+                                  onChange={(event) =>
+                                    setEditName(event.target.value)
+                                  }
+                                  required
+                                  autoFocus
+                                />
+                              </FieldRow>
+                              <FieldRow
+                                label="Code"
+                                htmlFor={`depot-edit-code-${depot.id}`}
+                              >
+                                <input
+                                  id={`depot-edit-code-${depot.id}`}
+                                  type="text"
+                                  value={editCode}
+                                  onChange={(event) =>
+                                    setEditCode(event.target.value)
+                                  }
+                                  placeholder="Short label, e.g. WH1"
+                                />
+                              </FieldRow>
+                              <FieldRow
+                                label="Active"
+                                htmlFor={`depot-edit-active-${depot.id}`}
+                              >
+                                <label
+                                  htmlFor={`depot-edit-active-${depot.id}`}
+                                  className="flex items-center gap-2 text-sm text-theme-primary"
+                                >
+                                  <input
+                                    id={`depot-edit-active-${depot.id}`}
+                                    type="checkbox"
+                                    checked={editIsActive}
+                                    onChange={(event) =>
+                                      setEditIsActive(event.target.checked)
+                                    }
+                                    className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
+                                  />
+                                  Shown in item forms
+                                </label>
+                              </FieldRow>
+                            </FieldGroup>
 
-                            <div>
-                              <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                                Code
-                              </label>
-
-                              <input
-                                type="text"
-                                value={editCode}
+                            <FieldGroup label="Notes">
+                              <textarea
+                                value={editNotes}
                                 onChange={(event) =>
-                                  setEditCode(event.target.value)
+                                  setEditNotes(event.target.value)
                                 }
-                                className="w-full rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-sydin-blue/50 focus:bg-theme-surface"
+                                placeholder="Anything worth remembering about this location"
+                                className="item-panel-textarea"
                               />
-                            </div>
+                            </FieldGroup>
                           </div>
 
-                          <div>
-                            <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                              Notes
-                            </label>
-
-                            <textarea
-                              value={editNotes}
-                              onChange={(event) =>
-                                setEditNotes(event.target.value)
-                              }
-                              className="min-h-[100px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-base text-theme-primary outline-none transition focus:border-sydin-blue/50 focus:bg-theme-surface"
-                            />
-                          </div>
-
-                          <label className="flex cursor-pointer items-center justify-between gap-4 rounded-2xl border border-sydin-blue/20 bg-sydin-blue/10 px-4 py-3">
-                            <span className="text-sm font-bold text-theme-primary">
-                              Active
-                            </span>
-
-                            <input
-                              type="checkbox"
-                              checked={editIsActive}
-                              onChange={(event) =>
-                                setEditIsActive(event.target.checked)
-                              }
-                              className="h-6 w-6 accent-sydin-blue"
-                            />
-                          </label>
-
-                          <div className="flex flex-col gap-3 sm:flex-row">
-                            <button
-                              type="button"
+                          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+                            <Button
+                              variant="secondary"
                               onClick={cancelEditing}
                               disabled={saving}
-                              className="flex-1 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
                             >
                               Cancel
-                            </button>
-
-                            <button
+                            </Button>
+                            <Button
                               type="submit"
-                              disabled={saving}
-                              className="flex-1 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50"
+                              loading={saving}
+                              loadingLabel="Saving..."
                             >
-                              {saving ? "Saving..." : "Save Changes"}
-                            </button>
+                              Save Changes
+                            </Button>
                           </div>
                         </form>
                       ) : (

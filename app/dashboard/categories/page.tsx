@@ -9,7 +9,14 @@ import ItemDetailsSlideOver, {
 } from "@/components/inventory/ItemDetailsSlideOver";
 import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import UiIcon from "@/components/UiIcon";
-import { DialogShell, Select } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  SearchInput,
+  Select,
+} from "@/components/ui";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -94,8 +101,6 @@ const DEFAULT_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
-const inputClassName =
-  "w-full rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:opacity-60";
 
 // Centralized, translation-ready copy for the states polished in this workspace.
 const CATEGORY_COPY = {
@@ -141,76 +146,53 @@ function formatUpdatedDate(value?: string | null) {
 }
 
 function CategoryForm({
-  editing,
   values,
   error,
   saving,
   onChange,
-  onCancel,
   onSubmit,
 }: {
-  editing: boolean;
   values: CategoryInput;
   error: string;
   saving: boolean;
   onChange: (field: keyof CategoryInput, value: string) => void;
-  onCancel: () => void;
   onSubmit: (event: React.FormEvent) => void;
 }) {
+  /* Same label-left rows as every other record form. The buttons live in
+     the dialog footer and reach this form by id. */
   return (
-    <form onSubmit={onSubmit} noValidate>
-      <div className="grid gap-4">
-        <label>
-          <span className="mb-2 block text-sm font-bold text-theme-secondary">
-            Category name <span className="text-theme-danger">*</span>
-          </span>
+    <form
+      id="category-form"
+      onSubmit={onSubmit}
+      noValidate
+      className="item-form -mx-1"
+    >
+      {error && (
+        <div className="mx-5 mb-3">
+          <DashboardNotice tone="danger">{error}</DashboardNotice>
+        </div>
+      )}
+      <FieldGroup>
+        <FieldRow label="Name" htmlFor="category-name" required>
           <input
+            id="category-name"
             autoFocus
             value={values.name}
             onChange={(event) => onChange("name", event.target.value)}
             disabled={saving}
-            required
             placeholder="e.g. Flower Arrangements"
-            className={inputClassName}
           />
-        </label>
-        <label>
-          <span className="mb-2 block text-sm font-bold text-theme-secondary">
-            Description
-          </span>
-          <textarea
-            value={values.description || ""}
-            onChange={(event) => onChange("description", event.target.value)}
-            disabled={saving}
-            placeholder="Optional internal description"
-            className={`${inputClassName} min-h-28 resize-y`}
-          />
-        </label>
-      </div>
-
-      {error && (
-        <DashboardNotice tone="danger" className="mt-4">
-          {error}
-        </DashboardNotice>
-      )}
-
-      <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onCancel}
+        </FieldRow>
+      </FieldGroup>
+      <FieldGroup label="Description">
+        <textarea
+          value={values.description || ""}
+          onChange={(event) => onChange("description", event.target.value)}
           disabled={saving}
-          className="rounded-xl border border-theme bg-theme-surface px-5 py-3 text-sm font-bold text-theme-primary hover:bg-theme-hover disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={saving || !values.name.trim()}
-          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] disabled:opacity-50"
-        >
-          {saving ? "Saving..." : editing ? "Save Changes" : "Add Category"}
-        </button>
-      </div>
+          placeholder="Optional internal description"
+          className="item-panel-textarea"
+        />
+      </FieldGroup>
     </form>
   );
 }
@@ -976,20 +958,13 @@ export default function CategoriesPage() {
                 </ActionButton>
               </div>
 
-              <label className="relative mt-4 block">
-                <span className="sr-only">Search categories</span>
-                <UiIcon
-                  name="search"
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-                />
-                <input
-                  type="search"
-                  value={categorySearch}
-                  onChange={(event) => setCategorySearch(event.target.value)}
-                  placeholder="Search categories"
-                  className={`${inputClassName} py-2.5 pl-9`}
-                />
-              </label>
+              <SearchInput
+                label="Search categories"
+                value={categorySearch}
+                onChange={setCategorySearch}
+                placeholder="Search categories"
+                className="mt-4 w-full"
+              />
             </div>
 
             <div className="organize-filter-panel border-b border-theme p-3">
@@ -1267,20 +1242,13 @@ export default function CategoriesPage() {
             <div className="p-3 sm:p-4">
               <div className="rounded-2xl border border-theme bg-theme-surface p-3">
                 <div className="grid gap-2 md:grid-cols-[minmax(0,1fr)_repeat(3,minmax(9rem,auto))]">
-                  <label className="relative">
-                    <span className="sr-only">Search selected category</span>
-                    <UiIcon
-                      name="search"
-                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-                    />
-                    <input
-                      type="search"
-                      value={itemSearch}
-                      onChange={(event) => setItemSearch(event.target.value)}
-                      placeholder="Search items"
-                      className={`${inputClassName} py-2.5 pl-9`}
-                    />
-                  </label>
+                  <SearchInput
+                    label="Search items in this view"
+                    value={itemSearch}
+                    onChange={setItemSearch}
+                    placeholder="Search items"
+                    className="w-full"
+                  />
                   <Select
                     value={stockFilter}
                     onChange={(value) =>
@@ -1605,20 +1573,13 @@ export default function CategoriesPage() {
         ) : (
           <div>
             <div className="flex flex-col gap-3 sm:flex-row">
-              <label className="relative flex-1">
-                <span className="sr-only">Search inventory items</span>
-                <UiIcon
-                  name="search"
-                  className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-                />
-                <input
-                  type="search"
-                  value={assignSearch}
-                  onChange={(event) => setAssignSearch(event.target.value)}
-                  placeholder="Search name, SKU, category, or depot"
-                  className={`${inputClassName} pl-9`}
-                />
-              </label>
+              <SearchInput
+                label="Search inventory items"
+                value={assignSearch}
+                onChange={setAssignSearch}
+                placeholder="Search name, SKU, category, or depot"
+                className="flex-1"
+              />
               <button
                 type="button"
                 onClick={selectVisibleAssignmentItems}
@@ -1730,17 +1691,35 @@ export default function CategoriesPage() {
             : "Create a category that can be assigned across inventory."
         }
         onClose={closeForm}
-        className="max-w-lg"
+        closeDisabled={saving}
+        footer={
+          <>
+            <Button
+              variant="secondary"
+              onClick={() => closeForm()}
+              disabled={saving}
+            >
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              form="category-form"
+              disabled={!formValues.name.trim()}
+              loading={saving}
+              loadingLabel="Saving..."
+            >
+              {editingCategory ? "Save Changes" : "Add Category"}
+            </Button>
+          </>
+        }
       >
         <CategoryForm
-          editing={Boolean(editingCategory)}
           values={formValues}
           error={formError}
           saving={saving}
           onChange={(field, value) =>
             setFormValues((current) => ({ ...current, [field]: value }))
           }
-          onCancel={closeForm}
           onSubmit={handleSubmit}
         />
       </DialogShell>

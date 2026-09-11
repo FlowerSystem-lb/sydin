@@ -920,22 +920,22 @@ export default function DashboardShell({
      wants the room back. The rail is still the small-screen shape, and still
      what you get by collapsing.
 
-     `null` until the stored answer is read, so the first paint matches the
-     server and the toggle never flashes the wrong way on hydration. */
-  const [sidebarExpanded, setSidebarExpanded] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      try {
-        const stored = window.localStorage.getItem(SIDEBAR_EXPANDED_KEY);
-        setSidebarExpanded(stored === null ? true : stored === "1");
-      } catch {
-        setSidebarExpanded(true);
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+     Read synchronously on first render. This shell only ever mounts on the
+     client -- the dashboard layout shows its session check until then -- so
+     there is no server paint to match, and reading in an effect (as this
+     did) meant every full page load painted the sidebar open and then
+     snapped it shut a frame later for anyone who had collapsed it. The
+     `typeof window` guard keeps a future server render honest: it falls
+     back to the expanded default rather than throwing. */
+  const [sidebarExpanded, setSidebarExpanded] = useState<boolean | null>(() => {
+    if (typeof window === "undefined") return null;
+    try {
+      const stored = window.localStorage.getItem(SIDEBAR_EXPANDED_KEY);
+      return stored === null ? true : stored === "1";
+    } catch {
+      return true;
+    }
+  });
 
   const toggleSidebarExpanded = useCallback(() => {
     setSidebarExpanded((current) => {
