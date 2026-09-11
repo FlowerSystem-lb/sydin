@@ -3623,3 +3623,56 @@ wrong.
 
 ---
 
+
+## Page-by-page audit, second half — workflow, list and record screens  *(Complete)*
+
+**Date:** 11 September 2026 · **Branch:** `main` · **Commits:** `d299c3a` → `47a76c8`
+
+**Why:** Sayed's page-by-page audit prompt. First half (dashboard, inventory, add/edit item,
+PO, invoice, customers, suppliers, settings, receiving) is logged above. This half covers Stock
+Counts, Pick Lists, Sales, Item Details, Alerts, Categories, Depots, Import, Help, Search,
+Scanner, signup/login and the public item page.
+
+**Delivered:**
+- **Stock Counts** — "Start Count" rendered as an 89×87px circle: the form and the taller Scope
+  preview share a grid row, and `align-content: stretch` handed the spare height to the button
+  row. `content-start` fixed it. Step 1 moved to `FieldGroup`/`FieldRow`; notices to
+  `DashboardNotice`. The "show expected" checkbox was 268px wide because
+  `.item-field-row-control input { width: 100% }` applied to it — checkbox/radio now excluded.
+- **Pick Lists** — six hand-built overlays (create, edit details, add item, cancel, remove line,
+  complete) became `DialogShell` with shared `Button`s and rows. Toolbar uses `SearchInput`,
+  `FilterChip`, `ResultsAnnouncer`; filtered-empty state names the active tab; "1 items" fixed.
+- **Record titles** — `DashboardPageHeader` hid its `<h1>` at desktop widths (the chrome already
+  prints the page name), which on a record page meant the pick list's or invoice's own name
+  appeared nowhere. New `record` prop keeps it visible as a compact line; applied to
+  `pick-lists/[id]` and `sales/[id]`.
+- **Secondary buttons had no visible edge** — the frosted-glass rule forced a white border on
+  `.ui-button-secondary`, invisible on every white card, dialog and toolbar. Hairline restored.
+- **Sales** — search by invoice number or customer, with its own no-match state.
+- **Item Details** — its private Record Movement modal (a second copy of
+  `StockMovementDialog`, in emerald) and hand-built delete confirm replaced by the shared ones.
+- **Categories / Depots** — category dialog and the inline depot editor on shared rows; three
+  hand-rolled search boxes → `SearchInput`.
+- **Sidebar flash** — for anyone who collapsed it, every full load painted the sidebar open then
+  snapped it shut. The shell only mounts on the client, so the stored preference is read in the
+  `useState` initialiser instead of an effect.
+- **Colour** — `--text-accent` was teal (#047c99) against blue buttons and rings → blue-700.
+  Six rules repainted every `emerald` utility cyan, so success looked like a link → removed;
+  success tokens green again. 25 hand-written gradient CTAs across 12 files →
+  `buttonClassName()`. Import page tints and Help's "OK" badge (now a check) follow.
+- **Titles** — `login`, `signup`, `request-plan`, `admin/plan-requests` get a `layout.tsx` with
+  metadata (client pages cannot export it); the public item page sets the item name as title.
+
+**Verification:** `npm run lint` ✅ · `npx tsc --noEmit` ✅ · `npm run build` ✅ after every
+commit. Every dialog opened and closed in the running app (Escape works, nothing saved —
+the dev server writes to live data). Pick List editable dialogs were checked by temporarily
+forcing `editable` locally; the override was reverted before commit.
+
+**Untouchables:** no auth, schema, routing or business-logic changes.
+
+**Worth remembering:** Turbopack served stale CSS three times this session (token edits and new
+rules did not reach the page while "Compiled" printed). Recovery each time: stop the dev
+server, delete `.next`, start again, then confirm by fetching the stylesheet and searching for
+the new selector.
+
+---

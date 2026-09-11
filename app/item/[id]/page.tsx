@@ -93,6 +93,11 @@ export default function PublicItemPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  /* A shared item link should name the item in the tab, not the app. */
+  useEffect(() => {
+    document.title = item ? `${item.name} · SydIN` : "Item · SydIN";
+  }, [item]);
+
   useEffect(() => {
     if (!publicId) return;
 
