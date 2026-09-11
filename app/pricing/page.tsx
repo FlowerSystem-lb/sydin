@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   MarketingCTA,
   MarketingPage,
@@ -7,6 +8,17 @@ import {
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
 import { PLAN_COMPARISON_ROWS } from "@/app/lib/subscription";
+
+
+/* Every route shared one title until now, so a tab open on Pricing and
+   a tab open on Terms looked identical. This is a public page: the
+   title is what a shared link shows and what search results read. */
+export const metadata: Metadata = {
+  title: "Pricing · SydIN",
+  description:
+    "SydIN plans for wholesale depots and small businesses. Start free, move up when your catalogue does.",
+};
+
 
 const faqs = [
   {

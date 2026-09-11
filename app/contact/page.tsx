@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { MarketingPage, SectionIntro } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
 import PlanCtaLink from "@/components/PlanCtaLink";
@@ -7,6 +8,17 @@ import {
   SYDIN_SUPPORT_EMAIL,
   SYDIN_WHATSAPP_DISPLAY,
 } from "@/app/lib/support";
+
+
+/* Every route shared one title until now, so a tab open on Pricing and
+   a tab open on Terms looked identical. This is a public page: the
+   title is what a shared link shows and what search results read. */
+export const metadata: Metadata = {
+  title: "Contact · SydIN",
+  description:
+    "Talk to the SydIN team about plans, setup or anything your depot needs.",
+};
+
 
 const contactMethods = [
   {

@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import {
   CTAButtons,
   DashboardPreview,
@@ -8,6 +9,17 @@ import {
   SectionIntro,
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
+
+
+/* Every route shared one title until now, so a tab open on Pricing and
+   a tab open on Terms looked identical. This is a public page: the
+   title is what a shared link shows and what search results read. */
+export const metadata: Metadata = {
+  title: "Features · SydIN",
+  description:
+    "Photo-first inventory, QR item pages, stock history, purchase orders and invoices in one workspace.",
+};
+
 
 const operationalFeatures = [
   "CSV and Excel inventory import",

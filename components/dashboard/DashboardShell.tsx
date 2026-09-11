@@ -844,6 +844,19 @@ export default function DashboardShell({
     pathname,
     searchParams.get("action")
   );
+  /* Every one of the 43 routes shared the single title declared in
+     app/layout.tsx, so every browser tab, every history entry and every
+     bookmark read "SydIN - Visual Inventory Management Software". Two tabs
+     open on Inventory and Settings were indistinguishable.
+
+     Dashboard pages are client components and cannot export `metadata`,
+     which is why this was never done. But the shell already works out what
+     the page is called for the bar at the top -- the same answer makes the
+     title, so there is one place to change and nothing to keep in sync. */
+  useEffect(() => {
+    document.title = `${currentPage.label} · SydIN`;
+  }, [currentPage.label]);
+
   const planName = formatPlanName(usage.subscription.plan);
   const itemLimit = usage.subscription.item_limit;
   const usagePercent =

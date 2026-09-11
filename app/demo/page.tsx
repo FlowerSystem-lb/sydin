@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import {
   DashboardPreview,
@@ -8,6 +9,17 @@ import {
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
 import PlanCtaLink from "@/components/PlanCtaLink";
+
+
+/* Every route shared one title until now, so a tab open on Pricing and
+   a tab open on Terms looked identical. This is a public page: the
+   title is what a shared link shows and what search results read. */
+export const metadata: Metadata = {
+  title: "Demo · SydIN",
+  description:
+    "See how SydIN tracks stock, prints QR labels and records what moved.",
+};
+
 
 const demoItems = [
   {
