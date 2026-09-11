@@ -97,7 +97,9 @@ const ADD_MENU_ITEMS: {
     icon: "file",
   },
   {
-    label: "Receive stock",
+    /* "Stock In", matching the page it opens and the Workflows card for
+       it. Was "Receive stock" -- a third name for one feature. */
+    label: "Stock In",
     description: "Log stock arriving without a PO",
     href: "/dashboard/receiving",
     icon: "download",
@@ -116,6 +118,18 @@ function getDashboardPageContext(pathname: string, action?: string | null) {
     return {
       label: "Search",
       shortLabel: "Search",
+    };
+  }
+
+  /* The route is /receiving, but the feature is called "Stock In" everywhere
+     the user meets it by name -- the page heading, the Workflows hub, the
+     stock-movement type it records. Deriving the label from the URL put a
+     fourth name on it ("Receiving") in the header bar and the browser tab,
+     so one click from the + menu passed through three different names. */
+  if (pathname === "/dashboard/receiving") {
+    return {
+      label: "Stock In",
+      shortLabel: "Stock In",
     };
   }
 
