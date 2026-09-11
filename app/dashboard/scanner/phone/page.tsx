@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClassName } from "@/components/ui";
 import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
@@ -157,7 +158,7 @@ function PhoneScannerInner() {
             type="button"
             onClick={() => void join(code)}
             disabled={joining || code.length !== 6}
-            className="mt-4 w-full rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            className={buttonClassName({ className: "mt-4 w-full" })}
           >
             {joining ? "Connecting…" : "Connect to laptop"}
           </button>

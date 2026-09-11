@@ -38,7 +38,11 @@ import EditItemForm, {
 } from "@/app/dashboard/inventory/EditItemForm";
 import ItemPanel from "@/components/inventory/ItemPanel";
 import StockMovementDialog from "@/components/inventory/StockMovementDialog";
-import { Button, DialogShell } from "@/components/ui";
+import {
+  Button,
+  buttonClassName,
+  DialogShell,
+} from "@/components/ui";
 import {
   createCategoryInline,
   createDepotInline,
@@ -893,7 +897,7 @@ export default function ItemDetailsPage() {
 
               <Link
                 href="/dashboard/inventory"
-                className="mt-6 inline-flex rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                className={buttonClassName({ className: "mt-6" })}
               >
                 Back to Inventory
               </Link>
@@ -1191,7 +1195,7 @@ export default function ItemDetailsPage() {
                         type="button"
                         onClick={downloadQrCode}
                         disabled={!qrUrl}
-                        className="flex-1 rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50"
+                        className={buttonClassName({ className: "flex-1" })}
                       >
                         Download QR
                       </button>

@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClassName } from "@/components/ui";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
@@ -218,7 +219,7 @@ export default function PublicItemPage() {
 
             <Link
               href="/"
-              className="mt-6 inline-flex rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-[14px] font-medium text-white shadow-[0_12px_28px_rgba(37,99,235,0.35)] transition hover:brightness-110"
+              className={buttonClassName({ className: "mt-6" })}
             >
               Go to SydIN
             </Link>

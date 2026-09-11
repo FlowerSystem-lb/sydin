@@ -1,5 +1,6 @@
 "use client";
 
+import UiIcon from "@/components/UiIcon";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -259,11 +260,13 @@ export default function HelpCenterPage() {
                               : "border-theme bg-theme-surface text-theme-secondary"
                         }`}
                       >
-                        {step.status === "completed"
-                          ? "OK"
-                          : step.status === "unavailable"
-                            ? "?"
-                            : " "}
+                        {step.status === "completed" ? (
+                          <UiIcon name="check" className="h-4 w-4" />
+                        ) : step.status === "unavailable" ? (
+                          "?"
+                        ) : (
+                          " "
+                        )}
                       </span>
                       <h3 className="mt-4 font-black text-theme-primary">
                         {step.title}

@@ -4,7 +4,11 @@ import Image from "next/image";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import CategorySelector from "@/components/CategorySelector";
 import Select from "@/components/ui/Select";
-import { FieldGroup, FieldRow } from "@/components/ui";
+import {
+  buttonClassName,
+  FieldGroup,
+  FieldRow,
+} from "@/components/ui";
 import type { Category } from "@/app/lib/categories";
 import { formatDepotLabel, type Depot } from "@/app/lib/depots";
 import {
@@ -807,7 +811,7 @@ export default function EditItemForm({
         <button
           type="submit"
           disabled={saving}
-          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition duration-[140ms] ease-[ease] hover:brightness-110 disabled:opacity-50"
+          className={buttonClassName()}
         >
           {saving ? "Saving..." : "Save Changes"}
         </button>

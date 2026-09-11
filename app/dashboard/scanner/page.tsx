@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClassName } from "@/components/ui";
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
@@ -754,7 +755,7 @@ function ScannerWorkspace() {
                   setArmed(true);
                   setScanning(true);
                 }}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                className={buttonClassName()}
               >
                 <UiIcon name="scan" className="h-4 w-4" />
                 Start scanning
@@ -930,7 +931,7 @@ function ScannerWorkspace() {
                             mode === "receive" ? "stock_in" : "stock_out"
                           )
                         }
-                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                        className={buttonClassName()}
                       >
                         {busy
                           ? "Saving..."
@@ -954,7 +955,7 @@ function ScannerWorkspace() {
                     <button
                       type="button"
                       onClick={() => applyCountScan(scannedItem)}
-                      className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                      className={buttonClassName()}
                     >
                       Count 1
                     </button>
@@ -964,7 +965,7 @@ function ScannerWorkspace() {
                 {mode === "lookup" && (
                   <Link
                     href={`/dashboard/inventory/${scannedItem.id}`}
-                    className="inline-flex min-h-11 items-center justify-center rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                    className={buttonClassName()}
                   >
                     Open item
                   </Link>
@@ -1003,7 +1004,7 @@ function ScannerWorkspace() {
                         type="button"
                         disabled={busy || !selectedDepot}
                         onClick={() => applyTransfer(scannedItem)}
-                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                        className={buttonClassName()}
                       >
                         {busy ? "Moving..." : "Move to depot"}
                       </button>
@@ -1064,7 +1065,7 @@ function ScannerWorkspace() {
                           selectedAssetId &&
                           applyAssetEvent(selectedAssetId, "assigned")
                         }
-                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                        className={buttonClassName()}
                       >
                         {busy ? "Assigning..." : "Assign unit"}
                       </button>
@@ -1105,7 +1106,7 @@ function ScannerWorkspace() {
                           selectedAssetId &&
                           applyAssetEvent(selectedAssetId, "status_changed")
                         }
-                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                        className={buttonClassName()}
                       >
                         {busy ? "Marking..." : "Mark for repair"}
                       </button>
@@ -1146,7 +1147,7 @@ function ScannerWorkspace() {
                           selectedAssetId &&
                           applyAssetEvent(selectedAssetId, "status_changed")
                         }
-                        className="min-h-11 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                        className={buttonClassName()}
                       >
                         {busy ? "Returning..." : "Return to stock"}
                       </button>

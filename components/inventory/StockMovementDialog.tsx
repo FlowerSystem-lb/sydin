@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { DialogShell, Select } from "@/components/ui";
+import {
+  buttonClassName,
+  DialogShell,
+  Select,
+} from "@/components/ui";
 import {
   recordStockMovement,
   STOCK_MOVEMENT_LABELS,
@@ -255,7 +259,7 @@ function StockMovementDialogContent({
           <button
             type="submit"
             disabled={saving}
-            className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] disabled:cursor-not-allowed disabled:opacity-50"
+            className={buttonClassName()}
           >
             {saving ? "Recording..." : "Record Movement"}
           </button>

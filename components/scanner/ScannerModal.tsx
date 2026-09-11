@@ -1,5 +1,6 @@
 "use client";
 
+import { buttonClassName } from "@/components/ui";
 import { useCallback, useEffect, useState } from "react";
 import BarcodeScannerView, {
   type ScannerViewStatus,
@@ -242,7 +243,7 @@ export default function ScannerModal({
               <button
                 type="button"
                 onClick={handleRetry}
-                className="rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-base font-semibold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                className={buttonClassName()}
               >
                 Try Again
               </button>

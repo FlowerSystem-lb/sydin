@@ -16,6 +16,7 @@ import {
 } from "@/components/dashboard/Workspace";
 import {
   Button,
+  buttonClassName,
   DialogShell,
   FieldGroup,
   FieldRow,
@@ -240,7 +241,7 @@ function SupplierForm({
         <button
           type="submit"
           disabled={saving || !values.name.trim() || emailError}
-          className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+          className={buttonClassName()}
         >
           {saving ? "Saving..." : "Save Supplier"}
         </button>

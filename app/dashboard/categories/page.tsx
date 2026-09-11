@@ -11,6 +11,7 @@ import InventoryItemCard from "@/components/inventory/InventoryItemCard";
 import UiIcon from "@/components/UiIcon";
 import {
   Button,
+  buttonClassName,
   DialogShell,
   FieldGroup,
   FieldRow,
@@ -1564,7 +1565,7 @@ export default function CategoriesPage() {
                 type="button"
                 onClick={() => void assignExistingItems()}
                 disabled={assigning}
-                className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+                className={buttonClassName()}
               >
                 {assigning ? "Moving Items..." : "Confirm Move"}
               </button>
@@ -1672,7 +1673,7 @@ export default function CategoriesPage() {
                 type="button"
                 onClick={() => setAssignConfirming(true)}
                 disabled={assignSelectedIds.size === 0}
-                className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+                className={buttonClassName()}
               >
                 Review Move ({assignSelectedIds.size})
               </button>

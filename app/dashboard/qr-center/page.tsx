@@ -21,6 +21,7 @@ import ItemDetailsSlideOver, {
 import SydINMark from "@/components/brand/SydINMark";
 import SydINWordmark from "@/components/brand/SydINWordmark";
 import {
+  buttonClassName,
   DialogShell,
   ResultsAnnouncer,
   SearchInput,
@@ -850,7 +851,7 @@ export default function QrCenterPage() {
             <button
               type="button"
               onClick={printLabels}
-              className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+              className={buttonClassName()}
             >
               {selectedCount === 1 ? "Print Label" : "Print Labels"}
             </button>

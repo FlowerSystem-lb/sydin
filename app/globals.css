@@ -263,10 +263,10 @@
   --text-muted: var(--ink-muted);
   --text-subtle: var(--ink-muted);
   --text-inverse: #ffffff;
-  --text-accent: #087f9a;
+  --text-accent: #1d4ed8;
   --border-default: var(--border-hairline);
   --border-strong: rgba(30, 64, 175, 0.3);
-  --border-focus: #089fc0;
+  --border-focus: #2563eb;
   --border-divider: var(--border-hairline);
   --border-danger: rgba(190, 24, 93, 0.42);
   --border-warning: rgba(180, 83, 9, 0.38);
@@ -7988,7 +7988,7 @@ select.glass-input option {
   --sydin-blue-strong: #1d4ed8;
   --sydin-blue-deep: #1e40af;
   --sydin-cyan: #0ea5c6;
-  --sydin-focus: rgba(14, 165, 198, 0.18);
+  --sydin-focus: rgba(37, 99, 235, 0.16);
   --sydin-shadow: 0 24px 70px rgba(36, 79, 135, 0.13);
   --sydin-shadow-soft: 0 12px 36px rgba(36, 79, 135, 0.09);
   --sydin-success-surface: rgba(5, 150, 105, 0.1);
@@ -8018,10 +8018,10 @@ select.glass-input option {
   --text-muted: var(--ink-muted);
   --text-subtle: var(--ink-muted);
   --text-inverse: #ffffff;
-  --text-accent: #047c99;
+  --text-accent: #1d4ed8;
   --border-default: rgba(58, 100, 145, 0.18);
   --border-strong: rgba(22, 130, 180, 0.34);
-  --border-focus: #0ea5c6;
+  --border-focus: #2563eb;
   --border-divider: rgba(58, 100, 145, 0.13);
   --border-danger: rgba(190, 24, 93, 0.36);
   --border-warning: rgba(180, 83, 9, 0.34);
@@ -8422,8 +8422,8 @@ body [class*="tracking-["],
 }
 
 .dashboard-mobile-nav-item-active {
-  background: rgba(25, 195, 221, 0.14);
-  color: #047c99;
+  background: rgba(37, 99, 235, 0.1);
+  color: #1d4ed8;
 }
 
 .dashboard-mobile-scan-icon {
@@ -8799,7 +8799,7 @@ body [class*="tracking-["],
 
 .dashboard-nav-link-active .dashboard-nav-icon {
   background: #ffffff;
-  color: #047c99;
+  color: #1d4ed8;
   box-shadow: 0 8px 18px rgba(36, 79, 135, 0.1);
 }
 
@@ -9315,9 +9315,9 @@ body [class*="tracking-["],
 }
 
 .inventory-card-tag-blue {
-  border-color: rgba(14, 165, 198, 0.18);
-  background: rgba(236, 253, 255, 0.86);
-  color: #047c99;
+  border-color: rgba(37, 99, 235, 0.18);
+  background: rgba(239, 246, 255, 0.9);
+  color: #1d4ed8;
 }
 
 .inventory-card-tag-green {
@@ -10819,18 +10819,19 @@ body [class*="tracking-["],
   --sydin-blue-deep: #1e40af;
   --sydin-cyan: #0ea5c6;
   --sydin-violet: #7d5cff;
-  --sydin-focus: rgba(14, 165, 198, 0.18);
+  --sydin-focus: rgba(37, 99, 235, 0.16);
   --sydin-shadow: 0 24px 70px var(--border-hairline);
   --sydin-shadow-soft: 0 12px 34px var(--border-hairline);
-  --sydin-success-surface: rgba(14, 165, 198, 0.1);
-  --sydin-success-text: #047c99;
+  /* Success is green, not brand cyan -- see the emerald note further down. */
+  --sydin-success-surface: rgba(5, 150, 105, 0.1);
+  --sydin-success-text: #047857;
   --sydin-warning-surface: rgba(245, 158, 11, 0.11);
   --sydin-warning-text: #9a4f05;
   --sydin-danger-surface: rgba(225, 29, 72, 0.08);
   --sydin-danger-text: #be123c;
   --sydin-info-surface: rgba(37, 99, 235, 0.1);
   --sydin-info-text: #1d4ed8;
-  --sydin-accent-text: #047c99;
+  --sydin-accent-text: #1d4ed8;
   --brand-navy: var(--ink);
   --brand-cyan: #0ea5c6;
   --brand-cyan-strong: #047c99;
@@ -10849,10 +10850,13 @@ body [class*="tracking-["],
   --text-muted: var(--ink-muted);
   --text-subtle: var(--ink-muted);
   --text-inverse: #ffffff;
-  --text-accent: #047c99;
+  /* Accent text was teal (#047c99) while every button, ring and link
+     was brand blue -- the fifth colour family the audit flagged. Blue-700
+     reads 6.3:1 on white. */
+  --text-accent: #1d4ed8;
   --border-default: var(--border-hairline);
-  --border-strong: rgba(14, 165, 198, 0.34);
-  --border-focus: #0ea5c6;
+  --border-strong: rgba(37, 99, 235, 0.3);
+  --border-focus: #2563eb;
   --border-divider: var(--border-hairline);
   --border-danger: rgba(190, 24, 93, 0.36);
   --border-warning: rgba(180, 83, 9, 0.34);
@@ -10873,9 +10877,9 @@ body [class*="tracking-["],
   --button-danger-bg: rgba(225, 29, 72, 0.08);
   --button-danger-hover: rgba(225, 29, 72, 0.13);
   --button-danger-text: #be123c;
-  --status-success-surface: rgba(14, 165, 198, 0.1);
-  --status-success-text: #047c99;
-  --status-success-border: rgba(14, 165, 198, 0.3);
+  --status-success-surface: rgba(5, 150, 105, 0.1);
+  --status-success-text: #047857;
+  --status-success-border: rgba(5, 150, 105, 0.28);
   --status-info-surface: rgba(37, 99, 235, 0.1);
   --status-info-text: #1d4ed8;
   --status-info-border: rgba(37, 99, 235, 0.28);
@@ -10953,7 +10957,7 @@ body,
 .marketing-site input:focus,
 .marketing-site textarea:focus {
   border-color: var(--border-focus);
-  box-shadow: 0 0 0 4px rgba(14, 165, 198, 0.14);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.14);
 }
 
 .ui-badge-success,
@@ -10963,44 +10967,11 @@ body,
   color: var(--status-success-text);
 }
 
-.marketing-site [class*="text-emerald"],
-.dashboard-shell-content [class*="text-emerald"],
-.login-page [class*="text-emerald"] {
-  color: var(--text-accent) !important;
-}
-
-.marketing-site [class*="bg-emerald"],
-.dashboard-shell-content [class*="bg-emerald"],
-.login-page [class*="bg-emerald"] {
-  background-color: rgba(14, 165, 198, 0.1) !important;
-}
-
-.marketing-site [class*="border-emerald"],
-.dashboard-shell-content [class*="border-emerald"],
-.login-page [class*="border-emerald"] {
-  border-color: rgba(14, 165, 198, 0.28) !important;
-}
-
-.marketing-site [class*="from-emerald"],
-.dashboard-shell-content [class*="from-emerald"],
-.login-page [class*="from-emerald"] {
-  --tw-gradient-from: #cff7ff !important;
-  --tw-gradient-to: rgba(207, 247, 255, 0) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
-}
-
-.marketing-site [class*="via-emerald"],
-.dashboard-shell-content [class*="via-emerald"],
-.login-page [class*="via-emerald"] {
-  --tw-gradient-to: rgba(219, 229, 255, 0) !important;
-  --tw-gradient-stops: var(--tw-gradient-from), var(--border-hairline), var(--tw-gradient-to) !important;
-}
-
-.marketing-site [class*="to-emerald"],
-.dashboard-shell-content [class*="to-emerald"],
-.login-page [class*="to-emerald"] {
-  --tw-gradient-to: var(--border-hairline) !important;
-}
+/* Six rules here used to repaint every `emerald` utility in the dashboard
+   cyan. Green is the app's one "success / in stock / prepared" colour; with
+   the brand now firmly blue, painting it cyan made a finished step look like
+   a link and an in-stock badge look like decoration. Removed 11 Sep 2026;
+   emerald means green again. */
 
 /* Marketing and auth */
 .marketing-site {
@@ -13808,16 +13779,14 @@ body,
   backdrop-filter: blur(10px) saturate(1.4);
 }
 
-/* The frosted white border above was written for buttons sitting on the
-   tinted page background. Inside a white card, toolbar or dialog it is
-   white-on-white: "Print Pick Sheet", "Cancel", "Export CSV" read as bare
-   text. Same repetition trick as elsewhere to outrank the !important. */
-.dashboard-card .ui-button-secondary.ui-button-secondary,
-.dashboard-toolbar-card .ui-button-secondary.ui-button-secondary,
-.ui-dialog .ui-button-secondary.ui-button-secondary,
-.dashboard-card .ui-icon-button.ui-icon-button,
-.dashboard-toolbar-card .ui-icon-button.ui-icon-button,
-.ui-dialog .ui-icon-button.ui-icon-button {
+/* The frosted white border above was written for pills sitting on the
+   tinted page background. A secondary button is almost always on a white
+   surface -- a card, a dialog, a toolbar, a hand-built panel -- where a
+   white border is no border: "Print Pick Sheet", "Cancel", "Download CSV
+   Template" read as bare text. Buttons keep the hairline everywhere; the
+   top-bar pills keep the frosted look. */
+.ui-button-secondary.ui-button-secondary,
+.ui-icon-button.ui-icon-button {
   border-color: var(--border-default) !important;
 }
 

@@ -14,6 +14,7 @@ import {
 } from "@/components/dashboard/Workspace";
 import Select from "@/components/ui/Select";
 import {
+  buttonClassName,
   FieldGroup,
   FieldRow,
   UnsavedChangesGuard,
@@ -1335,7 +1336,7 @@ export default function AddItemForm({
           <button
             type="submit"
             disabled={loading}
-            className="min-w-[140px] rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-4 py-2.5 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+            className={buttonClassName({ className: "min-w-[140px]" })}
           >
             {loading ? "Saving..." : "Save Item"}
           </button>

@@ -4,7 +4,10 @@ import {
   createProductImagePath,
   getPhotoFileKey,
 } from "@/app/lib/productImage";
-import { Select } from "@/components/ui";
+import {
+  buttonClassName,
+  Select,
+} from "@/components/ui";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
@@ -794,7 +797,7 @@ export default function InventoryImportPage() {
                 key={String(number)}
                 className={`flex min-h-14 items-center justify-center gap-2 rounded-2xl px-2 py-3 text-center text-xs font-bold transition sm:text-sm ${
                   active
-                    ? "bg-cyan-500/10 text-theme-accent ring-1 ring-cyan-300/30"
+                    ? "bg-sydin-blue/10 text-theme-accent ring-1 ring-sydin-blue/25"
                     : "bg-theme-inset text-theme-secondary"
                 }`}
               >
@@ -858,7 +861,7 @@ export default function InventoryImportPage() {
               <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link
                   href="/dashboard/inventory"
-                  className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-6 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                  className={buttonClassName()}
                 >
                   Back to Inventory
                 </Link>
@@ -892,7 +895,7 @@ export default function InventoryImportPage() {
                     <button
                       type="button"
                       onClick={downloadInventoryCsvTemplate}
-                      className="rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
+                      className={buttonClassName({ variant: "secondary" })}
                     >
                       Download CSV Template
                     </button>
@@ -901,7 +904,7 @@ export default function InventoryImportPage() {
                       type="button"
                       onClick={handleExcelTemplateDownload}
                       disabled={isDownloadingExcel}
-                      className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 px-5 py-4 text-sm font-bold text-theme-success transition hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-60"
+                      className={buttonClassName({ variant: "secondary" })}
                     >
                       {isDownloadingExcel
                         ? "Creating Template..."
@@ -985,7 +988,7 @@ export default function InventoryImportPage() {
                     Your file is reviewed locally first. Nothing is imported until every row passes validation and you confirm.
                   </span>
 
-                  <span className="mt-5 rounded-xl bg-cyan-500/10 px-5 py-3 text-sm font-black text-theme-accent">
+                  <span className={buttonClassName({ className: "mt-5" })}>
                     Choose CSV or Excel
                   </span>
                 </button>
@@ -1649,7 +1652,7 @@ export default function InventoryImportPage() {
                         usage.subscription.plan,
                         "import-item-limit"
                       )}
-                      className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-center text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                      className={buttonClassName({ className: "text-center" })}
                     >
                       {getUpgradeActionLabel(usage.subscription.plan)}
                     </Link>
@@ -1686,7 +1689,7 @@ export default function InventoryImportPage() {
                     validation.validRows.length === 0 ||
                     exceedsPlanLimit
                   }
-                  className="rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-7 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={buttonClassName()}
                 >
                   {isImporting
                     ? `Importing ${validation.validRows.length} items...`
@@ -1779,7 +1782,7 @@ export default function InventoryImportPage() {
                   <button
                     type="button"
                     onClick={retryBatchScan}
-                    className="mt-3 w-full rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110"
+                    className={buttonClassName({ className: "mt-3 w-full" })}
                   >
                     Try Again
                   </button>
@@ -1872,7 +1875,7 @@ export default function InventoryImportPage() {
                   type="button"
                   onClick={continueBatchToReview}
                   disabled={!canContinueBatch}
-                  className="mt-4 rounded-xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] px-5 py-3 text-sm font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
+                  className={buttonClassName({ className: "mt-4" })}
                 >
                   {batchRows.length === 0
                     ? "Scan an item to continue"
