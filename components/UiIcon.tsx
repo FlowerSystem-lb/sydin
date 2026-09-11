@@ -38,7 +38,11 @@ export type UiIconName =
   | "arrow-up"
   | "sliders"
   | "edit"
-  | "bell";
+  | "bell"
+  | "cart"
+  | "receipt"
+  | "stock-in"
+  | "clipboard";
 
 export default function UiIcon({
   name,
@@ -274,6 +278,35 @@ export default function UiIcon({
         <>
           <path d="M6 8a6 6 0 1 1 12 0c0 3.6 1 5.4 1.6 6.2.3.4 0 1-.5 1H4.9c-.5 0-.8-.6-.5-1C5 13.4 6 11.6 6 8Z" />
           <path d="M9.5 19a2.5 2.5 0 0 0 5 0" />
+        </>
+      )}
+      {/* Buying: a trolley. */}
+      {name === "cart" && (
+        <>
+          <path d="M3 4h2l2.4 11.2a1.5 1.5 0 0 0 1.5 1.2h8.6a1.5 1.5 0 0 0 1.4-1l1.9-6.4H6.3" />
+          <circle cx="9.5" cy="20" r="1.25" />
+          <circle cx="17" cy="20" r="1.25" />
+        </>
+      )}
+      {/* Selling: a receipt with a torn edge. */}
+      {name === "receipt" && (
+        <>
+          <path d="M6 3h12v18l-2-1.5-2 1.5-2-1.5-2 1.5-2-1.5L6 21V3Z" />
+          <path d="M9 8h6M9 12h6M9 16h3.5" />
+        </>
+      )}
+      {/* Stock In: an arrow landing in a tray. */}
+      {name === "stock-in" && (
+        <>
+          <path d="M12 3v10M8.5 9.5 12 13l3.5-3.5" />
+          <path d="M4 14v4a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-4" />
+        </>
+      )}
+      {/* Stock Counts: a clipboard with a tick. */}
+      {name === "clipboard" && (
+        <>
+          <rect x="5" y="4.5" width="14" height="16.5" rx="2" />
+          <path d="M9 4.5V3.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M9 13l2 2 4-4.5" />
         </>
       )}
     </svg>
