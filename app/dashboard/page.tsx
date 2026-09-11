@@ -980,13 +980,34 @@ export default function DashboardPage() {
                     label: "By category",
                     rows: dashboardData.stockByCategory,
                   },
-                ].map((group) => (
+                ].map((group) => {
+                  /* The panel answers "where does my stock sit?" -- a question
+                     about proportion -- and answered it with bare numbers, so
+                     34,786 against 391 against 8 had to be compared digit by
+                     digit. Each row now carries its own share as a tint behind
+                     it. No extra height, and it borrows the bar language the
+                     health strip two panels above already established. */
+                  const groupTotal = group.rows.reduce(
+                    (sum, row) => sum + Math.max(0, row.quantity),
+                    0
+                  );
+
+                  return (
                   <div key={group.key} className="ov-split-col">
                     <p className="ov-figure-label">{group.label}</p>
                     <ul className="ov-list">
                       {group.rows.map((row) => (
                         <li key={row.label}>
-                          <span className="ov-row ov-row-static">
+                          <span
+                            className="ov-row ov-row-static ov-row-share"
+                            style={
+                              {
+                                "--share": groupTotal
+                                  ? `${Math.round((Math.max(0, row.quantity) / groupTotal) * 100)}%`
+                                  : "0%",
+                              } as React.CSSProperties
+                            }
+                          >
                             <span className="ov-row-text">
                               <strong>{row.label}</strong>
                             </span>
@@ -998,7 +1019,8 @@ export default function DashboardPage() {
                       ))}
                     </ul>
                   </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </section>
