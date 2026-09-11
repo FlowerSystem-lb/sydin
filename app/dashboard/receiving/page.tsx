@@ -4,7 +4,13 @@ import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import UiIcon from "@/components/UiIcon";
-import { Button, DialogShell, Select } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  Select,
+} from "@/components/ui";
 import {
   DashboardNotice,
   DashboardPageHeader,
@@ -131,7 +137,6 @@ const sourceLabels: Record<ReceivingSource, string> = {
 
 const inputClassName =
   "min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15 disabled:opacity-60";
-const textareaClassName = `${inputClassName} min-h-24 resize-y py-3`;
 
 function makeLineId() {
   if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
@@ -988,125 +993,137 @@ export default function ReceivingPage() {
                 </p>
               )}
               {setupError && (
-                <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
-                  {setupError}
-                </p>
+                <DashboardNotice tone="danger">{setupError}</DashboardNotice>
               )}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Stock in title/reference
-                  <input
-                    type="text"
-                    value={details.title}
-                    onChange={(event) => updateDetails("title", event.target.value)}
-                    placeholder="RCV-20260622"
-                    className={inputClassName}
-                  />
-                </label>
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Source
-                  <Select
-                    value={details.source}
-                    onChange={(value) =>
-                      updateDetails("source", value as ReceivingSource)
-                    }
-                    options={SOURCE_OPTIONS.map((option) => ({
-                      value: option.value,
-                      label: option.label,
-                    }))}
-                  />
-                  {details.source === "supplier_delivery" && (
-                    <span className="receiving-po-hint">
-                      <UiIcon name="info" className="h-4 w-4 shrink-0" />
-                      <span>
-                        Buying from a supplier? A{" "}
-                        <Link
-                          href={`/dashboard/purchase-orders/new?returnTo=${encodeURIComponent(
-                            "/dashboard/receiving"
-                          )}`}
-                        >
-                          purchase order
-                        </Link>{" "}
-                        also tracks cost, payment, and the invoice — and adds
-                        stock when received.
-                      </span>
-                    </span>
-                  )}
-                </label>
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Supplier
-                  {suppliers.length > 0 ? (
-                    <Select
-                      value={details.supplierId}
-                      onChange={handleSupplierChange}
-                      placeholder="No supplier selected"
-                      clearable
-                      searchable={suppliers.length > 8}
-                      options={suppliers.map((supplier) => ({
-                        value: String(supplier.id),
-                        label: supplier.name,
-                      }))}
+              {/* Was the last form but one still on the old shape: a caption
+                  stacked above every boxed input. Same label-left rows as
+                  Add Item, the invoice and New PO now. Labels shortened to
+                  fit the 6.5rem label column -- "Stock in title/reference"
+                  is "Reference", "Default depot/location" is "Depot". */}
+              <div className="item-form">
+                <div className="item-form-groups">
+                  <FieldGroup label="Delivery">
+                    <FieldRow label="Reference" htmlFor="rcv-title">
+                      <input
+                        id="rcv-title"
+                        type="text"
+                        value={details.title}
+                        onChange={(event) => updateDetails("title", event.target.value)}
+                        placeholder="RCV-20260622"
+                      />
+                    </FieldRow>
+
+                    <FieldRow label="Source">
+                      <Select
+                        ariaLabel="Source"
+                        value={details.source}
+                        onChange={(value) =>
+                          updateDetails("source", value as ReceivingSource)
+                        }
+                        options={SOURCE_OPTIONS.map((option) => ({
+                          value: option.value,
+                          label: option.label,
+                        }))}
+                      />
+                      {details.source === "supplier_delivery" && (
+                        <span className="receiving-po-hint mt-2">
+                          <UiIcon name="info" className="h-4 w-4 shrink-0" />
+                          <span>
+                            Buying from a supplier? A{" "}
+                            <Link
+                              href={`/dashboard/purchase-orders/new?returnTo=${encodeURIComponent(
+                                "/dashboard/receiving"
+                              )}`}
+                            >
+                              purchase order
+                            </Link>{" "}
+                            also tracks cost, payment, and the invoice — and adds
+                            stock when received.
+                          </span>
+                        </span>
+                      )}
+                    </FieldRow>
+
+                    <FieldRow label="Date" htmlFor="rcv-date">
+                      <input
+                        id="rcv-date"
+                        type="date"
+                        value={details.receivedDate}
+                        onChange={(event) =>
+                          updateDetails("receivedDate", event.target.value)
+                        }
+                      />
+                    </FieldRow>
+
+                    <FieldRow label="Depot">
+                      <Select
+                        ariaLabel="Default depot"
+                        value={details.depotId}
+                        onChange={(value) => updateDetails("depotId", value)}
+                        placeholder="No default depot"
+                        clearable
+                        searchable={depots.length > 8}
+                        options={depots.map((depot) => ({
+                          value: String(depot.id),
+                          label: formatDepotLabel(depot),
+                        }))}
+                      />
+                    </FieldRow>
+                  </FieldGroup>
+
+                  <FieldGroup label="Supplier">
+                    {suppliers.length > 0 ? (
+                      <>
+                        <FieldRow label="Supplier">
+                          <Select
+                            ariaLabel="Supplier"
+                            value={details.supplierId}
+                            onChange={handleSupplierChange}
+                            placeholder="No supplier selected"
+                            clearable
+                            searchable={suppliers.length > 8}
+                            options={suppliers.map((supplier) => ({
+                              value: String(supplier.id),
+                              label: supplier.name,
+                            }))}
+                          />
+                        </FieldRow>
+                        <FieldRow label="Source text" htmlFor="rcv-supplier-text">
+                          <input
+                            id="rcv-supplier-text"
+                            type="text"
+                            value={details.supplierName}
+                            onChange={(event) =>
+                              updateDetails("supplierName", event.target.value)
+                            }
+                            placeholder="Optional receiving source text"
+                          />
+                        </FieldRow>
+                      </>
+                    ) : (
+                      <FieldRow label="Supplier" htmlFor="rcv-supplier-name">
+                        <input
+                          id="rcv-supplier-name"
+                          type="text"
+                          value={details.supplierName}
+                          onChange={(event) =>
+                            updateDetails("supplierName", event.target.value)
+                          }
+                          placeholder="Supplier or source name"
+                        />
+                      </FieldRow>
+                    )}
+                  </FieldGroup>
+
+                  <FieldGroup label="Notes">
+                    <textarea
+                      value={details.notes}
+                      onChange={(event) => updateDetails("notes", event.target.value)}
+                      placeholder="Optional receiving notes"
+                      className="item-panel-textarea"
                     />
-                  ) : (
-                    <input
-                      type="text"
-                      value={details.supplierName}
-                      onChange={(event) =>
-                        updateDetails("supplierName", event.target.value)
-                      }
-                      placeholder="Supplier or source name"
-                      className={inputClassName}
-                    />
-                  )}
-                </label>
-                {suppliers.length > 0 && (
-                  <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                    Supplier/source text
-                    <input
-                      type="text"
-                      value={details.supplierName}
-                      onChange={(event) =>
-                        updateDetails("supplierName", event.target.value)
-                      }
-                      placeholder="Optional receiving source text"
-                      className={inputClassName}
-                    />
-                  </label>
-                )}
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Received date
-                  <input
-                    type="date"
-                    value={details.receivedDate}
-                    onChange={(event) =>
-                      updateDetails("receivedDate", event.target.value)
-                    }
-                    className={inputClassName}
-                  />
-                </label>
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Default depot/location
-                  <Select
-                    value={details.depotId}
-                    onChange={(value) => updateDetails("depotId", value)}
-                    placeholder="No default depot"
-                    clearable
-                    searchable={depots.length > 8}
-                    options={depots.map((depot) => ({
-                      value: String(depot.id),
-                      label: formatDepotLabel(depot),
-                    }))}
-                  />
-                </label>
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary sm:col-span-2">
-                  Notes
-                  <textarea
-                    value={details.notes}
-                    onChange={(event) => updateDetails("notes", event.target.value)}
-                    placeholder="Optional receiving notes"
-                    className={textareaClassName}
-                  />
-                </label>
+                  </FieldGroup>
+                </div>
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button onClick={startReceiving} disabled={items.length === 0}>
@@ -1218,9 +1235,9 @@ export default function ReceivingPage() {
                 </Button>
               </div>
               {lineError && (
-                <p className="mt-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
+                <DashboardNotice tone="danger" className="mt-3">
                   {lineError}
-                </p>
+                </DashboardNotice>
               )}
               <p className="sr-only" aria-live="polite">
                 {receivedLineDetails.length} received lines, {skippedCount} skipped
@@ -1229,11 +1246,11 @@ export default function ReceivingPage() {
             </DashboardToolbar>
 
             {invalidQuantityCount > 0 || invalidCostCount > 0 ? (
-              <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
+              <DashboardNotice tone="danger">
                 Fix {invalidQuantityCount} invalid received quantity value
                 {invalidQuantityCount === 1 ? "" : "s"} and {invalidCostCount}{" "}
                 invalid cost value{invalidCostCount === 1 ? "" : "s"}.
-              </p>
+              </DashboardNotice>
             ) : null}
 
             <section className="dashboard-table-card">
@@ -1623,9 +1640,7 @@ export default function ReceivingPage() {
             )}
 
             {finalizeError && (
-              <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
-                {finalizeError}
-              </p>
+              <DashboardNotice tone="danger">{finalizeError}</DashboardNotice>
             )}
 
             <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
