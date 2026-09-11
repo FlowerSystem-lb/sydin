@@ -37,6 +37,8 @@ import EditItemForm, {
   type EditItemFormValues,
 } from "@/app/dashboard/inventory/EditItemForm";
 import ItemPanel from "@/components/inventory/ItemPanel";
+import StockMovementDialog from "@/components/inventory/StockMovementDialog";
+import { Button, DialogShell } from "@/components/ui";
 import {
   createCategoryInline,
   createDepotInline,
@@ -71,10 +73,8 @@ import {
 import {
   formatStockMovementNotes,
   getStockMovementsForItem,
-  recordStockMovement,
   STOCK_MOVEMENT_LABELS,
   type StockMovement,
-  type StockMovementType,
 } from "@/app/lib/stockMovements";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -114,19 +114,6 @@ interface InventoryHistory {
   created_at: string;
 }
 
-const movementTypes: StockMovementType[] = [
-  "stock_in",
-  "stock_out",
-  "adjustment",
-  "damaged_lost",
-];
-
-const movementHelperText: Record<StockMovementType, string> = {
-  stock_in: "Stock In adds quantity to current stock.",
-  stock_out: "Stock Out removes quantity from current stock.",
-  adjustment: "Adjustment sets the final quantity for this item.",
-  damaged_lost: "Damaged / Lost removes damaged or missing stock.",
-};
 
 function formatCreatedDate(date?: string) {
   if (!date) return "Not available";
@@ -277,12 +264,6 @@ export default function ItemDetailsPage() {
      box icon, so it keeps the same rule locally: hold the src that failed, so
      editing the item to a different photo clears the failure by itself. */
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
-  const [movementType, setMovementType] =
-    useState<StockMovementType>("stock_in");
-  const [movementQuantity, setMovementQuantity] = useState("");
-  const [movementNotes, setMovementNotes] = useState("");
-  const [movementError, setMovementError] = useState("");
-  const [isRecordingMovement, setIsRecordingMovement] = useState(false);
   const [backLabel, setBackLabel] = useState("Back to Inventory");
 
   const fetchHistory = async (userId: string, historyItemId: number) => {
@@ -351,10 +332,6 @@ export default function ItemDetailsPage() {
         // and nothing in the app linked to it. The link now opens the dialog.
         setIsEditModalOpen(true);
       } else if (action === "stock") {
-        setMovementType("stock_in");
-        setMovementQuantity("");
-        setMovementNotes("");
-        setMovementError("");
         setIsMovementModalOpen(true);
       } else if (action === "delete") {
         setIsDeleteDialogOpen(true);
@@ -569,98 +546,8 @@ export default function ItemDetailsPage() {
 
   const openMovementModal = () => {
     if (!item) return;
-
-    setMovementType("stock_in");
-    setMovementQuantity("");
-    setMovementNotes("");
-    setMovementError("");
+    setPageNotice("");
     setIsMovementModalOpen(true);
-  };
-
-  const closeMovementModal = (force = false) => {
-    if (isRecordingMovement && !force) return;
-
-    setIsMovementModalOpen(false);
-    setMovementType("stock_in");
-    setMovementQuantity("");
-    setMovementNotes("");
-    setMovementError("");
-  };
-
-  const handleRecordMovement = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!item || isRecordingMovement) return;
-
-    const quantityValue = Number(movementQuantity);
-
-    if (
-      movementQuantity === "" ||
-      Number.isNaN(quantityValue) ||
-      !Number.isInteger(quantityValue) ||
-      quantityValue < 0
-    ) {
-      setMovementError("Enter a whole quantity of 0 or more.");
-      return;
-    }
-
-    if (
-      (movementType === "stock_out" || movementType === "damaged_lost") &&
-      item.quantity - quantityValue < 0
-    ) {
-      setMovementError("This movement would make the item quantity negative.");
-      return;
-    }
-
-    try {
-      setIsRecordingMovement(true);
-      setMovementError("");
-      setPageNotice("");
-
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        setMovementError("Please sign in again before recording movement.");
-        return;
-      }
-
-      const movement = await recordStockMovement({
-        itemId: item.id,
-        movementType,
-        quantity: quantityValue,
-        notes: movementNotes,
-      });
-
-      const { data: refreshedItem, error: refreshError } = await supabase
-        .from("inventory")
-        .select("*")
-        .eq("id", item.id)
-        .eq("user_id", user.id)
-        .limit(1);
-
-      if (!refreshError && refreshedItem?.[0]) {
-        setItem(refreshedItem[0] as Item);
-      } else {
-        setItem({
-          ...item,
-          quantity: movement.quantity_after,
-        });
-      }
-
-      await fetchStockMovements(user.id, item.id);
-      closeMovementModal(true);
-      setPageNotice("Stock movement recorded successfully.");
-    } catch (movementError) {
-      setMovementError(
-        movementError instanceof Error
-          ? movementError.message
-          : "We could not record this movement. Please try again."
-      );
-    } finally {
-      setIsRecordingMovement(false);
-    }
   };
 
   const handleUpdateItem = async (e: React.FormEvent) => {
@@ -1524,179 +1411,38 @@ export default function ItemDetailsPage() {
         </div>
       </main>
 
-      {isMovementModalOpen && item && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-8 max-h-[calc(100vh-2rem)] w-full max-w-2xl overflow-y-auto rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] p-5 shadow-[0_14px_42px_rgba(15,23,42,0.12)] backdrop-blur-2xl sm:p-7 md:p-9">
-            <div className="mb-8 flex items-start justify-between gap-4">
-              <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-success">
-                  Stock activity
-                </p>
+      {/* The Inventory page already has this dialog; this page had a second,
+          hand-built copy of it in emerald with its own validation. One
+          dialog now, the item pre-selected. */}
+      <StockMovementDialog
+        open={isMovementModalOpen && Boolean(item)}
+        items={item ? [item] : []}
+        initialItemId={item?.id}
+        onClose={() => setIsMovementModalOpen(false)}
+        onRecorded={async (movement, itemId) => {
+          if (!item) return;
+          const {
+            data: { user },
+          } = await supabase.auth.getUser();
+          if (!user) return;
 
-                <h2 className="mt-2 text-3xl font-bold tracking-tight md:text-4xl">
-                  Record Movement
-                </h2>
+          const { data: refreshedItem, error: refreshError } = await supabase
+            .from("inventory")
+            .select("*")
+            .eq("id", itemId)
+            .eq("user_id", user.id)
+            .limit(1);
 
-                <p className="mt-3 text-sm leading-6 text-theme-muted">
-                  Current quantity:{" "}
-                  <span className="font-bold text-theme-accent">
-                    {item.quantity}
-                  </span>
-                </p>
-              </div>
+          if (!refreshError && refreshedItem?.[0]) {
+            setItem(refreshedItem[0] as Item);
+          } else {
+            setItem({ ...item, quantity: movement.quantity_after });
+          }
 
-              <button
-                type="button"
-                onClick={() => closeMovementModal()}
-                disabled={isRecordingMovement}
-                className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-2xl border border-theme bg-theme-surface p-2 text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary disabled:opacity-50"
-              >
-                <svg
-                  className="h-8 w-8"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-
-            <form
-              onSubmit={handleRecordMovement}
-              className="flex flex-col gap-5 sm:gap-6"
-            >
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                  Movement Type
-                </label>
-
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {movementTypes.map((type) => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setMovementType(type)}
-                      disabled={isRecordingMovement}
-                      className={`rounded-2xl border px-4 py-4 text-left transition disabled:cursor-not-allowed disabled:opacity-50 ${
-                        movementType === type
-                          ? "border-emerald-300/60 bg-emerald-500/15 shadow-[0_0_0_4px_rgba(16,185,129,0.1)]"
-                          : "border-theme bg-theme-surface hover:border-theme-strong hover:bg-theme-hover"
-                      }`}
-                      aria-pressed={movementType === type}
-                    >
-                      <span className="flex items-center gap-3">
-                        <span
-                          className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border text-sm font-black ${
-                            movementType === type
-                              ? "border-emerald-300/35 bg-emerald-400/20 text-theme-success"
-                              : "border-theme bg-theme-inset text-theme-secondary"
-                          }`}
-                        >
-                          {STOCK_MOVEMENT_LABELS[type].charAt(0)}
-                        </span>
-
-                        <span className="min-w-0">
-                          <span className="block text-base font-bold text-theme-primary">
-                            {STOCK_MOVEMENT_LABELS[type]}
-                          </span>
-
-                          <span className="mt-1 block text-sm leading-5 text-theme-muted">
-                            {movementHelperText[type]}
-                          </span>
-                        </span>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 gap-5 md:grid-cols-[0.8fr_1.2fr] md:items-start">
-                <div>
-                <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                  {movementType === "adjustment"
-                    ? "Final Quantity"
-                    : "Quantity"}
-                </label>
-
-                  <div className="rounded-2xl border border-theme bg-theme-inset p-1 transition focus-within:border-emerald-300/60 focus-within:bg-theme-surface focus-within:shadow-[0_0_0_4px_rgba(16,185,129,0.12)]">
-                    <input
-                      type="number"
-                      min="0"
-                      step="1"
-                      inputMode="numeric"
-                      value={movementQuantity}
-                      onChange={(e) => setMovementQuantity(e.target.value)}
-                      disabled={isRecordingMovement}
-                      className="w-full rounded-[14px] bg-transparent px-4 py-4 text-2xl font-black text-theme-primary outline-none placeholder:text-theme-subtle disabled:opacity-50"
-                      placeholder="0"
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-2xl border border-emerald-300/20 bg-emerald-500/10 p-4">
-                  <p className="text-sm font-bold text-theme-success">
-                    {STOCK_MOVEMENT_LABELS[movementType]}
-                  </p>
-
-                  <p className="mt-2 text-sm leading-6 text-theme-secondary">
-                    {movementHelperText[movementType]}
-                  </p>
-
-                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
-                    Current quantity: {item.quantity}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <label className="mb-2 block text-sm font-semibold text-theme-muted">
-                  Notes
-                </label>
-
-                <textarea
-                  value={movementNotes}
-                  onChange={(e) => setMovementNotes(e.target.value)}
-                  disabled={isRecordingMovement}
-                  className="min-h-[120px] w-full resize-y rounded-2xl border border-theme bg-theme-surface px-5 py-4 text-base text-theme-primary outline-none transition focus:border-emerald-300/60 focus:bg-theme-surface focus:shadow-[0_0_0_4px_rgba(16,185,129,0.12)] disabled:opacity-50 sm:text-lg"
-                  placeholder="Optional reason, order note, or context"
-                />
-              </div>
-
-              {movementError && (
-                <div className="rounded-2xl border border-red-500/30 bg-red-500/10 px-5 py-4 text-theme-danger">
-                  {movementError}
-                </div>
-              )}
-
-              <div className="mt-2 flex flex-col gap-3 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => closeMovementModal()}
-                  disabled={isRecordingMovement}
-                  className="flex-1 rounded-2xl border border-theme bg-theme-surface py-4 text-base font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
-                >
-                  Cancel
-                </button>
-
-                <button
-                  type="submit"
-                  disabled={isRecordingMovement}
-                  className="flex-1 rounded-2xl bg-[linear-gradient(135deg,#10c4dc,#2563eb_58%,#7d5cff)] py-4 text-base font-bold text-white shadow-[0_12px_28px_rgba(37,99,235,0.16)] transition hover:brightness-110 disabled:opacity-50"
-                >
-                  {isRecordingMovement ? "Recording..." : "Record Movement"}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+          await fetchStockMovements(user.id, itemId);
+          setPageNotice("Stock movement recorded successfully.");
+        }}
+      />
 
       {/* Same shell as Inventory's own quick edit (components/inventory/ItemPanel),
           so one design covers both instead of two dialogs doing the same job
@@ -1733,42 +1479,33 @@ export default function ItemDetailsPage() {
       )}
 
       {isDeleteDialogOpen && item && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center theme-overlay p-4 backdrop-blur-xl">
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="delete-detail-item-title"
-            className="w-full max-w-md rounded-[28px] border border-red-400/20 bg-[var(--sydin-surface-strong)] p-6 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-7"
-          >
-            <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-danger">
-              Delete inventory item
-            </p>
-            <h2 id="delete-detail-item-title" className="mt-3 break-words text-2xl font-bold text-theme-primary">
-              Delete {item.name}?
-            </h2>
-            <p className="mt-3 leading-7 text-theme-muted">
-              This removes the item from inventory. This action cannot be undone.
-            </p>
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row">
-              <button
-                type="button"
+        <DialogShell
+          title={`Delete ${item.name}?`}
+          eyebrow="Delete inventory item"
+          description="This removes the item from inventory. This action cannot be undone."
+          tone="danger"
+          onClose={() => setIsDeleteDialogOpen(false)}
+          closeDisabled={isDeleting}
+          footer={
+            <>
+              <Button
+                variant="secondary"
                 onClick={() => setIsDeleteDialogOpen(false)}
                 disabled={isDeleting}
-                className="flex-1 rounded-2xl border border-theme bg-theme-surface px-5 py-3.5 font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => void deleteItem()}
-                disabled={isDeleting}
-                className="flex-1 rounded-2xl border border-red-400/25 bg-red-500/20 px-5 py-3.5 font-bold text-theme-danger transition hover:bg-red-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+                loading={isDeleting}
+                loadingLabel="Deleting..."
               >
-                {isDeleting ? "Deleting..." : "Delete Item"}
-              </button>
-            </div>
-          </div>
-        </div>
+                Delete Item
+              </Button>
+            </>
+          }
+        />
       )}
 
       {/* Mounted only while open, so zoom and pan reset on close by unmounting

@@ -12,6 +12,7 @@ import {
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import { ResultsAnnouncer, SearchInput } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -53,6 +54,7 @@ export default function SalesPage() {
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [search, setSearch] = useState("");
 
   useEffect(() => {
     let isActive = true;
@@ -97,11 +99,20 @@ export default function SalesPage() {
   }, []);
 
   const visible = useMemo(
-    () =>
-      statusFilter === "all"
-        ? orders
-        : orders.filter((order) => order.status === statusFilter),
-    [orders, statusFilter]
+    () => {
+      const byStatus =
+        statusFilter === "all"
+          ? orders
+          : orders.filter((order) => order.status === statusFilter);
+      const needle = search.trim().toLowerCase();
+      if (!needle) return byStatus;
+      return byStatus.filter((order) =>
+        [order.invoice_number, order.customer_name_snapshot]
+          .filter(Boolean)
+          .some((value) => String(value).toLowerCase().includes(needle))
+      );
+    },
+    [orders, statusFilter, search]
   );
 
   const totals = useMemo(() => {
@@ -152,7 +163,16 @@ export default function SalesPage() {
           </div>
         )}
 
-        <FilterBar label="Invoice status" className="mt-4">
+        <FilterBar label="Invoice filters" className="mt-4">
+          {/* Only chips until now: with a year of invoices, finding one by
+              number or customer meant scrolling. */}
+          <SearchInput
+            label="Search invoices"
+            value={search}
+            onChange={setSearch}
+            placeholder="Invoice number or customer"
+            className="w-full sm:max-w-xs"
+          />
           {STATUS_FILTERS.map((filter) => (
             <FilterChip
               key={filter.value}
@@ -163,6 +183,7 @@ export default function SalesPage() {
             </FilterChip>
           ))}
         </FilterBar>
+        <ResultsAnnouncer count={visible.length} noun="invoice" />
 
         {loading ? (
           <LoadingSkeletonGroup count={3} />
@@ -172,12 +193,16 @@ export default function SalesPage() {
             title={
               orders.length === 0
                 ? "No invoices yet"
-                : "No invoice with that status"
+                : search.trim()
+                  ? "No matching invoices"
+                  : "No invoice with that status"
             }
             description={
               orders.length === 0
                 ? "Raise one when you sell something. It records what left, who bought it, and what they owe."
-                : "Try a different status."
+                : search.trim()
+                  ? "Try another invoice number or customer name."
+                  : "Try a different status."
             }
             action={
               orders.length === 0 ? (
