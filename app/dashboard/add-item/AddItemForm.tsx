@@ -1171,7 +1171,14 @@ export default function AddItemForm({
                 </FieldRow>
 
                 <div className="mt-1 grid grid-cols-2 gap-3">
-                  <div className="rounded-[14px] border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
+                  {/* Both tiles were tinted, cyan for cost and violet for
+                      retail -- the only cyan and the only violet in the form.
+                      The tints encoded nothing: same label colour, same value
+                      colour, and the captions already say which is which. Two
+                      boxes in a form that is deliberately unboxed everywhere
+                      else. Same neutral inset for both now; the words do the
+                      distinguishing. */}
+                  <div className="rounded-[14px] border border-theme bg-theme-inset p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
                       Cost value
                     </p>
@@ -1179,7 +1186,7 @@ export default function AddItemForm({
                       {formattedCostValue || "—"}
                     </p>
                   </div>
-                  <div className="rounded-[14px] border border-violet-300/15 bg-violet-500/[0.07] p-3">
+                  <div className="rounded-[14px] border border-theme bg-theme-inset p-3">
                     <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
                       Retail value
                     </p>

@@ -225,8 +225,11 @@ export default function InventoryValueOverview({
               </div>
 
               {!analytics.hasCostPriceData ? (
-                <div className="mt-6 rounded-3xl border border-dashed border-indigo-300/25 bg-indigo-500/[0.06] px-5 py-12 text-center">
-                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
+                /* An empty state tinted indigo -- the only indigo on the
+                   screen, encoding nothing. Empty states elsewhere in the
+                   dashboard use the neutral inset. */
+                <div className="mt-6 rounded-3xl border border-dashed border-theme bg-theme-inset px-5 py-12 text-center">
+                  <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-theme bg-theme-surface text-theme-accent">
                     <UiIcon name="layers" className="h-7 w-7" />
                   </span>
                   <h4 className="mt-5 text-xl font-bold text-theme-primary">

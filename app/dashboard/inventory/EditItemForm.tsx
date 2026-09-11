@@ -708,7 +708,9 @@ export default function EditItemForm({
               </FieldRow>
 
               <div className="mt-1 grid grid-cols-2 gap-3">
-                <div className="rounded-[14px] border border-cyan-300/15 bg-cyan-500/[0.07] p-3">
+                {/* Same pair as Add Item: tints that encoded nothing, in a
+                    form that is otherwise unboxed. */}
+                <div className="rounded-[14px] border border-theme bg-theme-inset p-3">
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
                     Cost value
                   </p>
@@ -716,7 +718,7 @@ export default function EditItemForm({
                     {formattedCostValue || "—"}
                   </p>
                 </div>
-                <div className="rounded-[14px] border border-violet-300/15 bg-violet-500/[0.07] p-3">
+                <div className="rounded-[14px] border border-theme bg-theme-inset p-3">
                   <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
                     Retail value
                   </p>
