@@ -243,7 +243,9 @@ export default function InventoryItemCard({
               type="checkbox"
               checked={selected}
               onChange={onToggleSelected}
-              className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-cyan-300"
+              /* Was cyan on a blue-accented app -- the selection tick was a
+                 different accent from every button around it. */
+              className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/40"
             />
           </label>
         )}
@@ -267,7 +269,7 @@ export default function InventoryItemCard({
           />
         ) : (
           <div className="flex h-full flex-col items-center justify-center text-theme-subtle">
-            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-indigo-200/60 bg-white text-theme-accent shadow-sm">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl border border-theme bg-white text-theme-accent shadow-sm">
               <UiIcon name="box" className="h-5 w-5" />
             </span>
             <span className="mt-1 text-xs font-semibold">No image</span>
