@@ -3,7 +3,13 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import UiIcon from "@/components/UiIcon";
-import { Button, DialogShell, Select } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  FieldGroup,
+  FieldRow,
+  Select,
+} from "@/components/ui";
 import {
   DashboardNotice,
   DashboardPageHeader,
@@ -784,101 +790,125 @@ export default function StockCountsPage() {
           />
         ) : loadError ? null : step === "setup" ? (
           <section className="dashboard-card grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="grid gap-4">
+            {/* `content-start` is the fix for the Start Count button rendering
+                as an 87px circle. This column sits beside the taller Scope
+                preview, so the grid is stretched to match it -- and a grid's
+                default `align-content: stretch` hands that extra height to
+                every row. The button row went from 36px to 87px, and with the
+                pill radius that made the primary action of the page a blob.
+                The rows now keep their own height and the slack goes to the
+                bottom, where empty space belongs. */}
+            <div className="grid content-start gap-4">
               <div className="rounded-2xl border border-sydin-blue/20 bg-sydin-blue/10 px-4 py-3 text-sm text-theme-accent">
                 Draft saved on this device. Review differences before
                 finalizing stock adjustments.
               </div>
               {draftRestored && (
-                <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-theme-warning">
+                <DashboardNotice tone="warning">
                   A stock count draft saved on this device was restored. Review
                   it before continuing or clear it to restart.
-                </p>
+                </DashboardNotice>
               )}
               {setupError && (
-                <p className="rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
-                  {setupError}
-                </p>
+                <DashboardNotice tone="danger">{setupError}</DashboardNotice>
               )}
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Count name
-                  <input
-                    type="text"
-                    value={countName}
-                    onChange={(event) => setCountName(event.target.value)}
-                    placeholder="June shelf count"
-                    className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
-                  />
-                </label>
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                  Scope
-                  <Select
-                    value={scope}
-                    onChange={(value) => setScope(value as CountScope)}
-                    options={[
-                      { value: "all", label: "All inventory" },
-                      { value: "category", label: "Category" },
-                      { value: "depot", label: "Depot/location" },
-                      { value: "low-stock", label: "Low-stock items" },
-                      ...(selectedItemIds.length > 0
-                        ? [
-                            {
-                              value: "selected",
-                              label: `Selected items (${selectedItemIds.length})`,
-                            },
-                          ]
-                        : []),
-                    ]}
-                  />
-                </label>
-                {scope === "category" && (
-                  <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                    Category
-                    <Select
-                      value={categoryId}
-                      onChange={setCategoryId}
-                      searchable={categories.length > 8}
-                      options={categories.map((category) => ({
-                        value: String(category.id),
-                        label: category.name,
-                      }))}
+              {/* The last form on the old shape -- caption above every boxed
+                  input -- now the same label-left rows as everything else.
+                  The "show expected quantity" toggle keeps its own row inside
+                  the group rather than a bordered box of its own; a lone
+                  checkbox does not need a card. */}
+              <div className="item-form">
+                <div className="item-form-groups">
+                  <FieldGroup label="Count">
+                    <FieldRow label="Name" htmlFor="count-name">
+                      <input
+                        id="count-name"
+                        type="text"
+                        value={countName}
+                        onChange={(event) => setCountName(event.target.value)}
+                        placeholder="June shelf count"
+                      />
+                    </FieldRow>
+
+                    <FieldRow label="Scope">
+                      <Select
+                        ariaLabel="Scope"
+                        value={scope}
+                        onChange={(value) => setScope(value as CountScope)}
+                        options={[
+                          { value: "all", label: "All inventory" },
+                          { value: "category", label: "Category" },
+                          { value: "depot", label: "Depot/location" },
+                          { value: "low-stock", label: "Low-stock items" },
+                          ...(selectedItemIds.length > 0
+                            ? [
+                                {
+                                  value: "selected",
+                                  label: `Selected items (${selectedItemIds.length})`,
+                                },
+                              ]
+                            : []),
+                        ]}
+                      />
+                    </FieldRow>
+
+                    {scope === "category" && (
+                      <FieldRow label="Category">
+                        <Select
+                          ariaLabel="Category"
+                          value={categoryId}
+                          onChange={setCategoryId}
+                          searchable={categories.length > 8}
+                          options={categories.map((category) => ({
+                            value: String(category.id),
+                            label: category.name,
+                          }))}
+                        />
+                      </FieldRow>
+                    )}
+
+                    {scope === "depot" && (
+                      <FieldRow label="Depot">
+                        <Select
+                          ariaLabel="Depot"
+                          value={depotId}
+                          onChange={setDepotId}
+                          searchable={depots.length > 8}
+                          options={depots.map((depot) => ({
+                            value: String(depot.id),
+                            label: formatDepotLabel(depot),
+                          }))}
+                        />
+                      </FieldRow>
+                    )}
+
+                    <FieldRow label="While counting" htmlFor="count-show-expected">
+                      <label
+                        htmlFor="count-show-expected"
+                        className="flex items-center gap-2 text-sm text-theme-primary"
+                      >
+                        <input
+                          id="count-show-expected"
+                          type="checkbox"
+                          checked={showExpected}
+                          onChange={(event) => setShowExpected(event.target.checked)}
+                          className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
+                        />
+                        Show the expected system quantity
+                      </label>
+                    </FieldRow>
+                  </FieldGroup>
+
+                  <FieldGroup label="Notes">
+                    <textarea
+                      value={countNotes}
+                      onChange={(event) => setCountNotes(event.target.value)}
+                      placeholder="Optional internal notes for this count"
+                      className="item-panel-textarea"
                     />
-                  </label>
-                )}
-                {scope === "depot" && (
-                  <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
-                    Depot/location
-                    <Select
-                      value={depotId}
-                      onChange={setDepotId}
-                      searchable={depots.length > 8}
-                      options={depots.map((depot) => ({
-                        value: String(depot.id),
-                        label: formatDepotLabel(depot),
-                      }))}
-                    />
-                  </label>
-                )}
-                <label className="grid gap-1.5 text-sm font-bold text-theme-primary sm:col-span-2">
-                  Notes
-                  <textarea
-                    value={countNotes}
-                    onChange={(event) => setCountNotes(event.target.value)}
-                    placeholder="Optional internal notes for this count"
-                    className="min-h-24 resize-y rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
-                  />
-                </label>
+                  </FieldGroup>
+                </div>
               </div>
-              <label className="flex min-h-11 items-center gap-3 rounded-xl border border-theme bg-theme-inset px-3 text-sm font-bold text-theme-primary">
-                <input
-                  type="checkbox"
-                  checked={showExpected}
-                  onChange={(event) => setShowExpected(event.target.checked)}
-                  className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
-                />
-                Show expected system quantity while counting
-              </label>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button onClick={startCount} disabled={items.length === 0}>
                   Start Count

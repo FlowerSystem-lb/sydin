@@ -20607,7 +20607,10 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    controls keep their normal boxed style; those are shared components used
    everywhere else in the app and are not being restyled just for this
    panel, so their row looks slightly different on purpose. */
-.item-field-row-control input:not([type="file"]),
+/* Checkboxes and radios are excluded: `width: 100%` turned the Stock Counts
+   "show expected quantity" box into a 268px-wide invisible click target with
+   the text pushed to the far right. */
+.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
 .item-field-row-control textarea {
   width: 100%;
   border: none;
