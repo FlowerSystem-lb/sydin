@@ -21332,6 +21332,13 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     min-width: 44px;
   }
 
+  /* The trash glyph on a purchase-order line is a 2rem square on desktop
+     (27px at this root size); on a phone it is the only way to drop a line. */
+  .po-line-remove.po-line-remove {
+    height: 44px;
+    width: 44px;
+  }
+
   /* Inventory's page actions are held at 2.45rem by a (0,4,0) rule --
      `:is(.dashboard-shell:has(.inventory-workspace) .inventory-workspace
      .dashboard-action-button, ...)`. Rather than stack more repeats until

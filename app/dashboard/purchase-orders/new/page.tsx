@@ -891,20 +891,29 @@ export default function NewPurchaseOrderPage() {
         }
       >
         {lines.length === 0 ? (
-          <p className="rounded-xl border border-dashed border-theme bg-theme-inset px-4 py-6 text-center text-sm font-semibold text-theme-muted">
+          <p className="rounded-xl border border-dashed border-theme px-4 py-6 text-center text-sm text-theme-muted">
             No lines yet. Add an inventory item, or a general purchase like
             &ldquo;New AC unit&rdquo; or &ldquo;Cleaning supplies&rdquo;.
           </p>
         ) : (
-          <div className="grid gap-3">
+          /* Same shape as the invoice's "What was sold": a line is a row, not
+             a card. Name, quantity, unit cost and either the category (a
+             general purchase) or the line total (an inventory item) sit on
+             one row; the stock toggle and the note fold under it. The old
+             card also squeezed the general-purchase name into ~110px because
+             its wrapper had no room to grow. */
+          <ul className="border-t border-theme">
             {lines.map((line) => {
               const quantity = parsePositiveNumber(line.quantity) || 0;
               const unitCost = parseNonNegativeNumber(line.unitCost);
               const lineTotal = unitCost === null ? null : quantity * unitCost;
 
               return (
-                <article key={line.key} className="po-line-card">
-                  <div className="flex flex-wrap items-start justify-between gap-2">
+                <li
+                  key={line.key}
+                  className="border-b border-theme px-1 py-3 last:border-b-0"
+                >
+                  <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_7rem_9rem_auto] sm:items-end">
                     <div className="flex min-w-0 items-center gap-2">
                       <span className="po-line-type-chip" aria-hidden="true">
                         <UiIcon
@@ -912,73 +921,65 @@ export default function NewPurchaseOrderPage() {
                           className="h-4 w-4"
                         />
                       </span>
-                      <div className="min-w-0">
-                        {line.lineType === "inventory" ? (
-                          <>
-                            <p className="truncate text-sm font-black text-theme-primary">
-                              {line.name}
-                            </p>
-                            <p className="truncate text-xs font-semibold text-theme-muted">
-                              {[line.itemCode, line.sku, line.unitLabel]
-                                .filter(Boolean)
-                                .join(" · ") || "Inventory item"}
-                            </p>
-                          </>
-                        ) : (
+                      {line.lineType === "inventory" ? (
+                        <div className="min-w-0">
+                          <p className="truncate text-sm font-semibold text-theme-primary">
+                            {line.name}
+                          </p>
+                          <p className="truncate text-xs text-theme-muted">
+                            {[line.itemCode, line.sku, line.unitLabel]
+                              .filter(Boolean)
+                              .join(" · ") || "Inventory item"}
+                          </p>
+                        </div>
+                      ) : (
+                        <label className="grid min-w-0 flex-1 gap-1 text-xs font-semibold text-theme-secondary">
+                          <span className="sr-only">What did you buy</span>
                           <input
                             value={line.name}
                             onChange={(event) =>
                               updateLine(line.key, { name: event.target.value })
                             }
                             placeholder="What did you buy? e.g. New AC unit"
-                            className={inputClassName}
+                            className="sale-input"
                           />
-                        )}
-                      </div>
+                        </label>
+                      )}
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => removeLine(line.key)}
-                      className="po-line-remove"
-                      aria-label={`Remove ${line.name || "line"}`}
-                      title="Remove line"
-                    >
-                      <UiIcon name="trash" className="h-4 w-4" />
-                    </button>
-                  </div>
 
-                  <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                    <label className="grid gap-1.5">
-                      <span className="text-xs font-bold text-theme-secondary">
-                        Quantity{line.unitLabel ? ` (${line.unitLabel})` : ""}
+                    <label className="grid gap-1 text-xs font-semibold text-theme-secondary">
+                      <span>
+                        Qty{line.unitLabel ? ` (${line.unitLabel})` : ""}
                       </span>
                       <input
                         type="number"
                         min="0"
                         step={line.affectsStock ? "1" : "any"}
+                        inputMode="decimal"
                         value={line.quantity}
                         onChange={(event) =>
                           updateLine(line.key, { quantity: event.target.value })
                         }
-                        className={inputClassName}
+                        className="sale-input"
                       />
                     </label>
-                    <label className="grid gap-1.5">
-                      <span className="text-xs font-bold text-theme-secondary">
-                        Unit cost ({currencyCode})
-                      </span>
+
+                    <label className="grid gap-1 text-xs font-semibold text-theme-secondary">
+                      <span>Unit cost ({currencyCode})</span>
                       <input
                         type="number"
                         min="0"
                         step="any"
+                        inputMode="decimal"
                         value={line.unitCost}
                         onChange={(event) =>
                           updateLine(line.key, { unitCost: event.target.value })
                         }
                         placeholder="Optional"
-                        className={inputClassName}
+                        className="sale-input"
                       />
                     </label>
+
                     {line.lineType === "expense" ? (
                       <Select
                         label="Category"
@@ -993,58 +994,68 @@ export default function NewPurchaseOrderPage() {
                         ).map(([value, label]) => ({ value, label }))}
                       />
                     ) : (
-                      <div className="grid gap-1.5">
-                        <span className="text-xs font-bold text-theme-secondary">
-                          Line total
-                        </span>
-                        <p className="flex min-h-11 items-center rounded-xl border border-theme bg-theme-inset px-3 text-sm font-black text-theme-primary">
+                      <div className="grid gap-1 text-xs font-semibold text-theme-secondary">
+                        <span>Line total</span>
+                        <p className="flex min-h-11 items-center text-sm font-semibold text-theme-primary tabular-nums">
                           {lineTotal === null
                             ? "—"
                             : formatInventoryPrice(lineTotal, currencyCode)}
                         </p>
                       </div>
                     )}
+
+                    <button
+                      type="button"
+                      onClick={() => removeLine(line.key)}
+                      className="po-line-remove mb-1.5 justify-self-start sm:justify-self-end"
+                      aria-label={`Remove ${line.name || "line"}`}
+                      title="Remove line"
+                    >
+                      <UiIcon name="trash" className="h-4 w-4" />
+                    </button>
                   </div>
 
-                  {line.lineType === "inventory" && (
-                    <label className="po-affects-stock-toggle">
+                  <div className="mt-2 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)] sm:items-center">
+                    {line.lineType === "inventory" ? (
+                      <label className="flex items-center gap-2 text-xs text-theme-secondary">
+                        <input
+                          type="checkbox"
+                          checked={line.affectsStock}
+                          onChange={(event) =>
+                            updateLine(line.key, {
+                              affectsStock: event.target.checked,
+                            })
+                          }
+                          className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
+                        />
+                        <span>
+                          Add to stock when received
+                          <span className="text-theme-subtle">
+                            {" "}
+                            — the change shows in {line.name}&rsquo;s history
+                            as this PO
+                          </span>
+                        </span>
+                      </label>
+                    ) : (
+                      <span aria-hidden="true" className="hidden sm:block" />
+                    )}
+                    <label className="grid gap-1 text-xs font-semibold text-theme-secondary">
+                      <span className="sr-only">Line note</span>
                       <input
-                        type="checkbox"
-                        checked={line.affectsStock}
+                        value={line.note}
                         onChange={(event) =>
-                          updateLine(line.key, {
-                            affectsStock: event.target.checked,
-                          })
+                          updateLine(line.key, { note: event.target.value })
                         }
+                        placeholder="Note — brand, model, reason (optional)"
+                        className="sale-input"
                       />
-                      <span>
-                        <strong>Add to stock when received</strong>
-                        <small>
-                          When you mark this order as received, {line.name}
-                          &rsquo;s quantity increases and the change appears in
-                          its history as this PO.
-                        </small>
-                      </span>
                     </label>
-                  )}
-
-                  <label className="mt-3 grid gap-1.5">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Line note (optional)
-                    </span>
-                    <input
-                      value={line.note}
-                      onChange={(event) =>
-                        updateLine(line.key, { note: event.target.value })
-                      }
-                      placeholder="Brand, model, reason…"
-                      className={inputClassName}
-                    />
-                  </label>
-                </article>
+                  </div>
+                </li>
               );
             })}
-          </div>
+          </ul>
         )}
 
         {lines.length > 0 && (
