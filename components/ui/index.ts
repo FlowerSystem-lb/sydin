@@ -1,4 +1,5 @@
 export { default as Badge, StatusBadge } from "@/components/ui/Badge";
+export { default as DocumentTimeline } from "@/components/ui/DocumentTimeline";
 export { default as Button, buttonClassName } from "@/components/ui/Button";
 export { default as Card, SectionCard } from "@/components/ui/Card";
 export { FormField, Input, Textarea } from "@/components/ui/Field";

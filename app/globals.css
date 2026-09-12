@@ -21826,3 +21826,104 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
   outline: none;
 }
+
+/* ===[ DOCUMENT TIMELINE ]===
+   One row of steps on an order or invoice: done (tick), current (brand ring),
+   upcoming (grey), stopped (cancelled). The connecting line is the list's
+   own border, so the row needs no extra markup. */
+.doc-timeline {
+  display: flex;
+  align-items: flex-start;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.doc-timeline-step {
+  position: relative;
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.doc-timeline-step:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  top: 0.75rem;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--border-default);
+}
+
+.doc-timeline-step-done:not(:last-child)::after {
+  background: rgba(37, 99, 235, 0.45);
+}
+
+.doc-timeline-marker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  width: 1.5rem;
+  height: 1.5rem;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--border-default);
+  border-radius: 999px;
+  background: var(--bg-surface);
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.doc-timeline-step-done .doc-timeline-marker {
+  border-color: var(--sydin-blue);
+  background: var(--sydin-blue);
+  color: #fff;
+}
+
+.doc-timeline-step-current .doc-timeline-marker {
+  border-color: var(--sydin-blue);
+  color: var(--sydin-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+}
+
+.doc-timeline-step-stopped .doc-timeline-marker {
+  border-color: rgba(239, 68, 68, 0.6);
+  color: #b91c1c;
+}
+
+.doc-timeline-copy {
+  display: grid;
+  gap: 0.1rem;
+  max-width: 100%;
+  padding: 0 0.25rem;
+}
+
+.doc-timeline-copy strong {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.doc-timeline-step-done .doc-timeline-copy strong,
+.doc-timeline-step-current .doc-timeline-copy strong {
+  color: var(--text-primary);
+}
+
+.doc-timeline-step-stopped .doc-timeline-copy strong {
+  color: #b91c1c;
+}
+
+.doc-timeline-copy small {
+  font-size: 0.68rem;
+  color: var(--text-subtle);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

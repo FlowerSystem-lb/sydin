@@ -9,7 +9,14 @@ import {
   DashboardPageShell,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell, HelpLink, Select } from "@/components/ui";
+import { Button, DialogShell, DocumentTimeline, HelpLink, Select } from "@/components/ui";
+
+function formatShortDate(value: string | null | undefined) {
+  if (!value) return null;
+  const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
+}
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -409,6 +416,56 @@ export default function SaleDetailPage() {
         {notice && <DashboardNotice tone="success">{notice}</DashboardNotice>}
 
         <div className="mt-4 grid gap-4">
+          {/* Brief point 39: the invoice's life in one row. */}
+          <section className="dashboard-card p-4">
+            <DocumentTimeline
+              steps={
+                order.status === "cancelled"
+                  ? [
+                      { label: "Draft", detail: formatShortDate(order.created_at), state: "done" },
+                      { label: "Cancelled", detail: formatShortDate(order.cancelled_at), state: "stopped" },
+                    ]
+                  : [
+                      {
+                        label: "Draft",
+                        detail: formatShortDate(order.created_at),
+                        state: order.status === "draft" ? "current" : "done",
+                      },
+                      {
+                        label: "Issued",
+                        detail:
+                          order.status === "draft"
+                            ? null
+                            : formatShortDate(order.issued_at || order.issue_date),
+                        state:
+                          order.status === "draft"
+                            ? "upcoming"
+                            : order.status === "issued"
+                              ? "current"
+                              : "done",
+                      },
+                      {
+                        label: "Paid",
+                        detail:
+                          order.status === "paid"
+                            ? "Settled in full"
+                            : order.payment_status === "partial"
+                              ? "Partly paid"
+                              : order.due_date
+                                ? `Due ${formatShortDate(order.due_date)}`
+                                : null,
+                        state:
+                          order.status === "paid"
+                            ? "done"
+                            : order.payment_status === "partial"
+                              ? "current"
+                              : "upcoming",
+                      },
+                    ]
+              }
+            />
+          </section>
+
           <section className="dashboard-card p-4">
             <h2 className="text-sm font-semibold text-theme-primary">
               What was sold

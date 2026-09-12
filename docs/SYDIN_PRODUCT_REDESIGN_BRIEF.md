@@ -48,7 +48,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 36. ◐ Mobile operations: Home, Items, Item detail, More done per canvas; Scan untouched by instruction.
 37. ◐ Design system: shared FieldGroup/FieldRow, Button, DialogShell, Badge, Select, SearchInput, toasts; `globals.css` still carries stacked redesigns.
 38. ◐ Status system: Draft / Ordered / Partially received / Received / Cancelled; Unpaid / Partially paid / Paid; Issued / Paid. Tones consistent on PO and sales.
-39. ☐ Document status timelines.
+39. ✅ Document status timelines: Created → Ordered → Received → Paid on the order dialog, Draft → Issued → Paid on the invoice page; cancelled ends in a stopped step (13 Sep).
 40. ◐ Relationships: PO → supplier, receipts, payments, movements shown on the order; invoice → customer, payments. ☐ supplier bill link.
 41. ☐ "Related documents" section.
 42. ✅ Customer account view: sales, balance, documents.

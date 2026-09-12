@@ -9,6 +9,7 @@ import {
   Badge,
   Button,
   DialogShell,
+  DocumentTimeline,
   HelpLink,
   ResultsAnnouncer,
   Select,
@@ -1446,7 +1447,8 @@ export default function PurchaseOrdersPage() {
                     <div className="grid gap-3 sm:grid-cols-2">
                       <label className="grid gap-1.5">
                         <span className="text-xs font-bold text-theme-secondary">
-                          Amount paid now ({selectedOrder.currency_code || currencyCode})
+                          Amount paid now (
+                          {selectedOrder.currency_code || currencyCode})
                         </span>
                         <input
                           type="number"
@@ -1514,7 +1516,8 @@ export default function PurchaseOrdersPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="grid gap-1.5">
                     <span className="text-xs font-bold text-theme-secondary">
-                      Amount paid now ({selectedOrder.currency_code || currencyCode})
+                      Amount paid now (
+                      {selectedOrder.currency_code || currencyCode})
                     </span>
                     <input
                       type="number"
@@ -1574,7 +1577,10 @@ export default function PurchaseOrdersPage() {
               </div>
             )}
 
-            {(paymentMode !== "receive" || receivePaymentOpen) &&
+            {/* A cancelled order owes nobody anything; the strip would say
+                "Still owe" over a figure that no longer means anything. */}
+            {selectedOrder.status !== "cancelled" &&
+              (paymentMode !== "receive" || receivePaymentOpen) &&
               (() => {
                 const balance = getPurchaseOrderBalance(selectedOrder);
                 return (
@@ -1582,15 +1588,19 @@ export default function PurchaseOrdersPage() {
                     <div>
                       <small>Order total</small>
                       <strong>
-                        {formatPurchaseOrderAmount(selectedOrder, balance.total) ||
-                          "—"}
+                        {formatPurchaseOrderAmount(
+                          selectedOrder,
+                          balance.total,
+                        ) || "—"}
                       </strong>
                     </div>
                     <div>
                       <small>Paid</small>
                       <strong>
-                        {formatPurchaseOrderAmount(selectedOrder, balance.paid) ||
-                          "—"}
+                        {formatPurchaseOrderAmount(
+                          selectedOrder,
+                          balance.paid,
+                        ) || "—"}
                       </strong>
                     </div>
                     <div
@@ -1605,13 +1615,94 @@ export default function PurchaseOrdersPage() {
                       </small>
                       <strong>
                         {balance.remaining > 0
-                          ? formatPurchaseOrderAmount(selectedOrder, balance.remaining)
+                          ? formatPurchaseOrderAmount(
+                              selectedOrder,
+                              balance.remaining,
+                            )
                           : "✓"}
                       </strong>
                     </div>
                   </div>
                 );
               })()}
+
+            {/* Brief point 39: where this order is in its life, in one row.
+                The receiving line below says how much; this says what stage. */}
+            {paymentMode === "none" && (
+              <DocumentTimeline
+                steps={
+                  selectedOrder.status === "cancelled"
+                    ? [
+                        {
+                          label: "Created",
+                          detail: formatDate(selectedOrder.created_at),
+                          state: "done",
+                        },
+                        {
+                          label: "Cancelled",
+                          detail: formatDate(selectedOrder.cancelled_at),
+                          state: "stopped",
+                        },
+                      ]
+                    : [
+                        {
+                          label: "Created",
+                          detail: formatDate(selectedOrder.created_at),
+                          state:
+                            selectedOrder.status === "draft"
+                              ? "current"
+                              : "done",
+                        },
+                        {
+                          label: "Ordered",
+                          detail:
+                            selectedOrder.status === "draft"
+                              ? null
+                              : formatDate(
+                                  selectedOrder.purchase_date ||
+                                    selectedOrder.created_at,
+                                ),
+                          state:
+                            selectedOrder.status === "draft"
+                              ? "upcoming"
+                              : selectedOrder.status === "ordered"
+                                ? "current"
+                                : "done",
+                        },
+                        {
+                          label: "Received",
+                          detail:
+                            selectedOrder.status === "received"
+                              ? `${formatDate(selectedOrder.received_at)}${selectedOrder.closed_short ? " · short" : ""}`
+                              : selectedOrder.status === "partially_received"
+                                ? "In parts"
+                                : null,
+                          state:
+                            selectedOrder.status === "received"
+                              ? "done"
+                              : selectedOrder.status === "partially_received"
+                                ? "current"
+                                : "upcoming",
+                        },
+                        {
+                          label: "Paid",
+                          detail:
+                            selectedOrder.payment_status === "paid"
+                              ? "Fully paid"
+                              : selectedOrder.payment_status === "partial"
+                                ? "Partly paid"
+                                : null,
+                          state:
+                            selectedOrder.payment_status === "paid"
+                              ? "done"
+                              : selectedOrder.payment_status === "partial"
+                                ? "current"
+                                : "upcoming",
+                        },
+                      ]
+                }
+              />
+            )}
 
             {paymentMode === "none" &&
               selectedOrder.status !== "draft" &&
@@ -1701,7 +1792,10 @@ export default function PurchaseOrdersPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-black text-theme-primary">
-                        {formatPurchaseOrderAmount(selectedOrder, payment.amount)}
+                        {formatPurchaseOrderAmount(
+                          selectedOrder,
+                          payment.amount,
+                        )}
                       </span>
                       <span className="block truncate text-xs font-semibold text-theme-muted">
                         {[
@@ -1786,7 +1880,10 @@ export default function PurchaseOrdersPage() {
                             ? `Paid by ${selectedOrder.paid_by}`
                             : "",
                           selectedOrder.amount_paid !== null
-                            ? formatPurchaseOrderAmount(selectedOrder, selectedOrder.amount_paid)
+                            ? formatPurchaseOrderAmount(
+                                selectedOrder,
+                                selectedOrder.amount_paid,
+                              )
                             : "",
                         ]
                           .filter(Boolean)
@@ -1852,12 +1949,18 @@ export default function PurchaseOrdersPage() {
                             {line.quantity} ×{" "}
                             {line.unit_cost === null
                               ? "—"
-                              : formatPurchaseOrderAmount(selectedOrder, line.unit_cost)}
+                              : formatPurchaseOrderAmount(
+                                  selectedOrder,
+                                  line.unit_cost,
+                                )}
                           </span>
                           <span className="block text-sm font-black text-theme-primary">
                             {lineTotal === null
                               ? "—"
-                              : formatPurchaseOrderAmount(selectedOrder, lineTotal)}
+                              : formatPurchaseOrderAmount(
+                                  selectedOrder,
+                                  lineTotal,
+                                )}
                           </span>
                         </span>
                       </div>
@@ -1866,7 +1969,10 @@ export default function PurchaseOrdersPage() {
                   <div className="po-detail-total">
                     <span>Total</span>
                     <strong>
-                      {formatPurchaseOrderAmount(selectedOrder, getPurchaseOrderTotal(selectedOrder)) || "—"}
+                      {formatPurchaseOrderAmount(
+                        selectedOrder,
+                        getPurchaseOrderTotal(selectedOrder),
+                      ) || "—"}
                     </strong>
                   </div>
                 </div>
