@@ -5,15 +5,15 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
-import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
   Badge,
   Button,
-  FormField,
-  Input,
+  FieldGroup,
+  FieldRow,
   SectionCard,
   SectionHeader,
+  Select,
   UnsavedChangesGuard,
   buttonClassName,
   useToast,
@@ -26,6 +26,7 @@ import {
 } from "@/components/dashboard/Workspace";
 import {
   DEFAULT_BUSINESS_SETTINGS,
+  isCompanyProfileSchemaMissing,
   getOrCreateBusinessSettings,
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
@@ -72,14 +73,14 @@ interface SettingsSection {
 const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "workspace",
-    label: "Workspace",
-    description: "Business profile, contact details, and branding",
+    label: "Company",
+    description: "Name, logo, contact, address and what prints on documents",
     icon: "dashboard",
   },
   {
     id: "profile",
-    label: "Profile",
-    description: "Signed-in account and workspace style",
+    label: "Account",
+    description: "Who is signed in, and how the app looks",
     icon: "settings",
   },
   {
@@ -111,6 +112,25 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
 const SECTION_IDS = new Set<SettingsSectionId>(
   SETTINGS_SECTIONS.map((section) => section.id)
 );
+
+/* The currencies a Lebanese wholesale depot actually invoices in, plus the
+   usual suspects. Any ISO code already stored is kept as an option so a
+   business on something else does not see its currency vanish. */
+const CURRENCY_OPTIONS: { value: string; label: string }[] = [
+  { value: "USD", label: "USD — US dollar" },
+  { value: "LBP", label: "LBP — Lebanese pound" },
+  { value: "EUR", label: "EUR — Euro" },
+  { value: "GBP", label: "GBP — British pound" },
+  { value: "AED", label: "AED — UAE dirham" },
+  { value: "SAR", label: "SAR — Saudi riyal" },
+  { value: "QAR", label: "QAR — Qatari riyal" },
+  { value: "KWD", label: "KWD — Kuwaiti dinar" },
+  { value: "JOD", label: "JOD — Jordanian dinar" },
+  { value: "EGP", label: "EGP — Egyptian pound" },
+  { value: "TRY", label: "TRY — Turkish lira" },
+  { value: "CAD", label: "CAD — Canadian dollar" },
+  { value: "AUD", label: "AUD — Australian dollar" },
+];
 
 const inputClassName =
   "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
@@ -380,36 +400,6 @@ export default function SettingsPage() {
     SETTINGS_SECTIONS.find((section) => section.id === activeSection) ||
     SETTINGS_SECTIONS[0];
 
-  const workspaceStatus = settings.business_name.trim()
-    ? "Business name configured"
-    : "Missing business name";
-  const logoStatus = settings.business_logo_url
-    ? "Logo configured"
-    : "No logo";
-  const contactCount = [
-    settings.contact_email,
-    settings.contact_phone,
-    settings.contact_website,
-  ].filter((value) => value.trim()).length;
-  const contactStatus =
-    contactCount === 0
-      ? "Contact details missing"
-      : contactCount === 3
-        ? "Contact details configured"
-        : "Contact details partial";
-  const contactTone =
-    contactCount === 0 ? "neutral" : contactCount === 3 ? "success" : "info";
-  const publicContactStatus = canShowPublicContact
-    ? settings.show_contact_publicly
-      ? "Public contact enabled"
-      : "Public contact off"
-    : savedSettings.show_contact_publicly
-      ? "Public contact preserved"
-      : "Public contact locked";
-  const reportBrandingStatus =
-    canUseCustomLogo && settings.business_logo_url
-      ? "Business logo ready"
-      : "SydIN fallback active";
   const effectiveLowStockThreshold = canCustomizeThreshold
     ? settings.low_stock_threshold
     : FREE_LOW_STOCK_THRESHOLD;
@@ -543,23 +533,36 @@ export default function SettingsPage() {
           : savedSettings.show_contact_publicly
             ? settings.show_contact_publicly
             : false,
+        currency_code: currencyCode,
       };
 
-      const { data, error: updateError } = await supabase
-        .from("business_settings")
-        .upsert(
-          {
-            user_id: user.id,
-            ...updatedSettings,
-          },
-          {
-            onConflict: "user_id",
-          }
-        )
-        .select(
-          "business_name, business_logo_url, low_stock_threshold, contact_email, contact_phone, contact_website, show_contact_publicly"
-        )
-        .single();
+      const documentFields = {
+        business_address: settings.business_address.trim() || null,
+        tax_id: settings.tax_id.trim() || null,
+        payment_terms: settings.payment_terms.trim() || null,
+        document_footer: settings.document_footer.trim() || null,
+      };
+
+      const upsert = (fields: Record<string, unknown>) =>
+        supabase
+          .from("business_settings")
+          .upsert({ user_id: user.id, ...fields }, { onConflict: "user_id" })
+          .select("business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly")
+          .single();
+
+      let { data, error: updateError } = await upsert({
+        ...updatedSettings,
+        ...documentFields,
+      });
+
+      // The document columns arrive with sql/phase-24-company-profile.sql.
+      // Until it is run, everything else still saves, and the user is told
+      // exactly what is missing rather than shown a generic failure.
+      let documentFieldsSkipped = false;
+      if (updateError && isCompanyProfileSchemaMissing(updateError)) {
+        documentFieldsSkipped = Object.values(documentFields).some(Boolean);
+        ({ data, error: updateError } = await upsert(updatedSettings));
+      }
 
       if (updateError) {
         setError("We could not save your business settings. Please try again.");
@@ -573,17 +576,27 @@ export default function SettingsPage() {
         low_stock_threshold: Number.isFinite(savedThreshold)
           ? savedThreshold
           : updatedSettings.low_stock_threshold,
-        currency_code: currencyCode,
+        currency_code: normalizeCurrencyCode(data?.currency_code, currencyCode),
         contact_email: data?.contact_email || "",
         contact_phone: data?.contact_phone || "",
         contact_website: data?.contact_website || "",
         show_contact_publicly: Boolean(data?.show_contact_publicly),
+        business_address: documentFieldsSkipped ? "" : settings.business_address.trim(),
+        tax_id: documentFieldsSkipped ? "" : settings.tax_id.trim(),
+        payment_terms: documentFieldsSkipped ? "" : settings.payment_terms.trim(),
+        document_footer: documentFieldsSkipped ? "" : settings.document_footer.trim(),
       };
       setSettings(normalizedSettings);
       setSavedSettings(normalizedSettings);
       setLogoFile(null);
-      setSuccess("Business settings saved.");
-      showToast({ tone: "success", message: "Business settings saved." });
+      if (documentFieldsSkipped) {
+        setError(
+          "Saved, except the address, tax ID, payment terms and footer: those need a one-time database update. Open Supabase → SQL Editor, run sql/phase-24-company-profile.sql from the project, then save again."
+        );
+      } else {
+        setSuccess("Company settings saved.");
+      }
+      showToast({ tone: "success", message: "Company settings saved." });
     } catch {
       setError("Something went wrong while saving business settings.");
       showToast({
@@ -609,112 +622,152 @@ export default function SettingsPage() {
       </div>
     );
 
-  const renderWorkspacePanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Workspace profile"
-        description="Manage the business details used across the dashboard, public QR pages, reports, and exports."
-        action={
-          <StatusChip tone={settings.business_name.trim() ? "success" : "warning"}>
-            {workspaceStatus}
-          </StatusChip>
-        }
+  const renderCompanyPanel = () => (
+    <div className="item-form -mx-1">
+      {/* One form, the same label-left rows as every record in the app.
+          Was two panels of status chips, boxed inputs and copy written for
+          the developer ("Settings v1", "storage flow"). */}
+      <FieldGroup
+        label="Company"
+        description="Shown across the app and printed on every document you export."
       >
-        <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="Business name" htmlFor="business-name">
-            <Input
-              id="business-name"
-              type="text"
-              value={settings.business_name}
-              onChange={(event) =>
-                setSettings((current) => ({
-                  ...current,
-                  business_name: event.target.value,
-                }))
-              }
-              required
-            />
-          </FormField>
-          <div>
-            <p className="text-sm font-bold text-theme-primary">Currency</p>
-            <div className="mt-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-sm font-black text-theme-primary">
-                {currencyCode}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-subtle">
-                Currency is read from existing workspace settings. Changing
-                currency is not exposed in Settings v1.
-              </p>
-            </div>
-          </div>
-        </div>
-      </SettingCard>
+        <FieldRow label="Name" htmlFor="business-name" required>
+          <input
+            id="business-name"
+            type="text"
+            value={settings.business_name}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                business_name: event.target.value,
+              }))
+            }
+            required
+          />
+        </FieldRow>
 
-      <SettingCard
-        title="Contact details"
-        description="These fields are saved today and can be shown on public QR item pages when your plan supports public contact branding."
-        action={<StatusChip>{contactCount} of 3 filled</StatusChip>}
-      >
-        <div className="grid gap-4 md:grid-cols-3">
-          <label className="grid min-w-0 gap-2 text-sm font-bold text-theme-primary">
-            Contact email
-            <input
-              type="email"
-              value={settings.contact_email}
-              onChange={(event) =>
-                setSettings((current) => ({
-                  ...current,
-                  contact_email: event.target.value,
-                }))
-              }
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid min-w-0 gap-2 text-sm font-bold text-theme-primary">
-            Contact phone
-            <input
-              type="tel"
-              value={settings.contact_phone}
-              onChange={(event) =>
-                setSettings((current) => ({
-                  ...current,
-                  contact_phone: event.target.value,
-                }))
-              }
-              className={inputClassName}
-            />
-          </label>
-          <label className="grid min-w-0 gap-2 text-sm font-bold text-theme-primary">
-            Contact website
-            <input
-              type="url"
-              value={settings.contact_website}
-              onChange={(event) =>
-                setSettings((current) => ({
-                  ...current,
-                  contact_website: event.target.value,
-                }))
-              }
-              className={inputClassName}
-            />
-          </label>
-        </div>
-
-        {canShowPublicContact || savedSettings.show_contact_publicly ? (
-          <label className="mt-4 flex cursor-pointer flex-col gap-3 rounded-xl border border-theme bg-theme-surface p-3 sm:flex-row sm:items-center sm:justify-between">
-            <span className="min-w-0">
-              <span className={`block ${valueTextClassName}`}>
-                Show contact publicly
-              </span>
-              <span className={`mt-1 block ${mutedTextClassName}`}>
-                Public QR item pages can show these contact fields. Private
-                inventory, supplier, pricing, and Pick List data stay private.
-                {!canShowPublicContact &&
-                  " You can turn off the existing setting, but Standard is required to enable it again."}
-              </span>
+        <FieldRow label="Logo">
+          <div className="flex flex-wrap items-center gap-3">
+            <span className="settings-logo-preview">
+              {settings.business_logo_url ? (
+                <Image
+                  src={settings.business_logo_url}
+                  alt={`Logo for ${settings.business_name}`}
+                  fill
+                  sizes="72px"
+                  className="object-contain p-1.5"
+                />
+              ) : (
+                <BrandMark className="h-9 w-9 rounded-xl" />
+              )}
             </span>
-            <span className="relative shrink-0">
+            {canUseCustomLogo ? (
+              <div className="min-w-0 flex-1">
+                <label
+                  htmlFor="business-logo-upload"
+                  className={buttonClassName({ variant: "secondary", size: "sm" })}
+                >
+                  {settings.business_logo_url ? "Change logo" : "Upload logo"}
+                </label>
+                <input
+                  id="business-logo-upload"
+                  type="file"
+                  accept="image/*"
+                  onChange={(event) =>
+                    setLogoFile(event.target.files?.[0] || null)
+                  }
+                  className="sr-only"
+                />
+                <p className="mt-1.5 text-xs text-theme-muted">
+                  {logoFile
+                    ? `Selected: ${logoFile.name} — saved when you press Save.`
+                    : "PNG or JPG, square works best. Prints on invoices, orders and labels."}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-theme-muted">
+                A custom logo comes with the Standard plan.{" "}
+                <Link
+                  href={upgradeHref}
+                  className="font-semibold text-theme-accent underline-offset-2 hover:underline"
+                >
+                  Compare plans
+                </Link>
+              </p>
+            )}
+          </div>
+        </FieldRow>
+
+        <FieldRow label="Currency">
+          <Select
+            ariaLabel="Currency"
+            value={currencyCode}
+            onChange={(value) =>
+              setSettings((current) => ({ ...current, currency_code: value }))
+            }
+            options={
+              CURRENCY_OPTIONS.some((option) => option.value === currencyCode)
+                ? CURRENCY_OPTIONS
+                : [{ value: currencyCode, label: currencyCode }, ...CURRENCY_OPTIONS]
+            }
+          />
+        </FieldRow>
+      </FieldGroup>
+
+      <FieldGroup
+        label="Contact"
+        description="Printed in the document footer, and on public item pages when you allow it."
+      >
+        <FieldRow label="Phone" htmlFor="contact-phone">
+          <input
+            id="contact-phone"
+            type="tel"
+            value={settings.contact_phone}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                contact_phone: event.target.value,
+              }))
+            }
+            placeholder="+961 …"
+          />
+        </FieldRow>
+        <FieldRow label="Email" htmlFor="contact-email">
+          <input
+            id="contact-email"
+            type="email"
+            value={settings.contact_email}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                contact_email: event.target.value,
+              }))
+            }
+            placeholder="orders@yourbusiness.com"
+          />
+        </FieldRow>
+        <FieldRow label="Website" htmlFor="contact-website">
+          <input
+            id="contact-website"
+            type="url"
+            value={settings.contact_website}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                contact_website: event.target.value,
+              }))
+            }
+            placeholder="https://"
+          />
+        </FieldRow>
+        <FieldRow label="Public pages" htmlFor="show-contact-publicly">
+          {canShowPublicContact || savedSettings.show_contact_publicly ? (
+            <label
+              htmlFor="show-contact-publicly"
+              className="flex items-start gap-2 text-sm text-theme-primary"
+            >
               <input
+                id="show-contact-publicly"
                 type="checkbox"
                 checked={settings.show_contact_publicly}
                 onChange={(event) =>
@@ -722,33 +775,103 @@ export default function SettingsPage() {
                     if (!canShowPublicContact && event.target.checked) {
                       return current;
                     }
-
                     return {
                       ...current,
                       show_contact_publicly: event.target.checked,
                     };
                   })
                 }
-                className="peer sr-only"
+                className="mt-0.5 h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
               />
-              <span className="block h-7 w-12 rounded-full border border-theme bg-[var(--sydin-input-bg)] transition peer-checked:border-sydin-blue/40 peer-checked:bg-sydin-blue/25 peer-focus-visible:ring-2 peer-focus-visible:ring-sydin-blue/60" />
-              <span className="absolute left-1 top-1 h-5 w-5 rounded-full bg-slate-400 shadow-md transition peer-checked:translate-x-5 peer-checked:bg-white" />
-            </span>
-          </label>
-        ) : (
-          <div className="mt-4">
-            <LockedFeaturePanel
-              feature="Public contact branding"
-              benefit="Show business contact details on public QR item pages with Standard or Pro."
-              currentPlan={currentPlanName}
-              requiredPlan="Standard"
-              source="public-contact-branding"
-              compact
-            />
-          </div>
-        )}
-      </SettingCard>
+              <span>
+                Show these contact details on public QR item pages
+                <span className="block text-xs text-theme-muted">
+                  Stock, prices, suppliers and pick lists stay private.
+                  {!canShowPublicContact &&
+                    " Turning it back on needs the Standard plan."}
+                </span>
+              </span>
+            </label>
+          ) : (
+            <p className="text-xs text-theme-muted">
+              Showing contact details on public item pages comes with the
+              Standard plan.{" "}
+              <Link
+                href={upgradeHref}
+                className="font-semibold text-theme-accent underline-offset-2 hover:underline"
+              >
+                Compare plans
+              </Link>
+            </p>
+          )}
+        </FieldRow>
+      </FieldGroup>
 
+      <FieldGroup
+        label="Address & registration"
+        description="Printed under your name on invoices and purchase orders."
+      >
+        <FieldRow label="Address" htmlFor="business-address">
+          <textarea
+            id="business-address"
+            value={settings.business_address}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                business_address: event.target.value,
+              }))
+            }
+            placeholder={"Street, building\nCity, country"}
+            rows={3}
+            className="item-panel-textarea"
+          />
+        </FieldRow>
+        <FieldRow label="Tax / reg. no." htmlFor="tax-id">
+          <input
+            id="tax-id"
+            type="text"
+            value={settings.tax_id}
+            onChange={(event) =>
+              setSettings((current) => ({ ...current, tax_id: event.target.value }))
+            }
+            placeholder="VAT number or commercial registration"
+          />
+        </FieldRow>
+      </FieldGroup>
+
+      <FieldGroup
+        label="Documents"
+        description="Defaults for every invoice and purchase order you export. Each document can still say its own thing in its notes."
+      >
+        <FieldRow label="Payment terms" htmlFor="payment-terms">
+          <input
+            id="payment-terms"
+            type="text"
+            value={settings.payment_terms}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                payment_terms: event.target.value,
+              }))
+            }
+            placeholder="e.g. Due within 14 days · Cash on delivery"
+          />
+        </FieldRow>
+        <FieldRow label="Footer line" htmlFor="document-footer">
+          <input
+            id="document-footer"
+            type="text"
+            value={settings.document_footer}
+            onChange={(event) =>
+              setSettings((current) => ({
+                ...current,
+                document_footer: event.target.value,
+              }))
+            }
+            placeholder="e.g. Thank you for your business · Bank: … IBAN …"
+          />
+        </FieldRow>
+      </FieldGroup>
     </div>
   );
 
@@ -820,310 +943,6 @@ export default function SettingsPage() {
           </div>
         </div>
       </SectionCard>
-    </div>
-  );
-
-  const renderBrandingPanel = () => (
-    <div className="grid gap-4">
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(320px,0.85fr)]">
-        <div className="grid gap-4">
-          <SettingCard
-            title="Brand identity"
-            description="Used on reports, exports, QR labels, and public item pages where your plan supports business branding."
-            action={<Badge tone="accent">{currentPlanName} plan</Badge>}
-          >
-            <div className="flex flex-wrap gap-2">
-              <StatusChip
-                tone={settings.business_name.trim() ? "success" : "warning"}
-              >
-                {workspaceStatus}
-              </StatusChip>
-              <StatusChip
-                tone={settings.business_logo_url ? "success" : "neutral"}
-              >
-                {logoStatus}
-              </StatusChip>
-              <StatusChip tone={contactTone}>{contactStatus}</StatusChip>
-              <StatusChip tone={canUseCustomLogo ? "success" : "neutral"}>
-                {canUseCustomLogo
-                  ? "Logo available on plan"
-                  : "Logo locked on plan"}
-              </StatusChip>
-            </div>
-            <div className="mt-4 flex min-w-0 flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0">
-                <p className={valueTextClassName}>
-                  {settings.business_name ||
-                    DEFAULT_BUSINESS_SETTINGS.business_name}
-                </p>
-                {/* The button that used to sit here switched to the Workspace
-                    section -- from inside the Workspace section. Now that both
-                    panels share one form on this tab, the field it pointed at is
-                    a few rows further up the same page. */}
-                <p className={`mt-1 ${mutedTextClassName}`}>
-                  Edit this in Workspace profile, above.
-                </p>
-              </div>
-            </div>
-          </SettingCard>
-
-          <SettingCard
-            title="Logo"
-            description="Upload or change the company logo using the existing business logo storage flow and plan rules."
-            action={
-              <StatusChip
-                tone={settings.business_logo_url ? "success" : "neutral"}
-              >
-                {logoStatus}
-              </StatusChip>
-            }
-          >
-            <div className="grid gap-4 md:grid-cols-[180px_1fr]">
-              <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                <p className="mb-3 text-sm font-semibold text-theme-muted">
-                  Current logo
-                </p>
-                <div className="flex h-32 w-full items-center justify-center overflow-hidden rounded-xl border border-sydin-blue/20 bg-sydin-blue/10">
-                  {settings.business_logo_url ? (
-                    <div className="relative h-full w-full">
-                      <Image
-                        src={settings.business_logo_url}
-                        alt={`Business logo for ${settings.business_name}`}
-                        fill
-                        sizes="180px"
-                        className="object-contain p-4"
-                      />
-                    </div>
-                  ) : (
-                    <BrandMark className="h-16 w-16 rounded-2xl" />
-                  )}
-                </div>
-              </div>
-
-              <div>
-                {canUseCustomLogo ? (
-                  <div className="rounded-xl border border-dashed border-sydin-blue/25 bg-theme-surface p-4 transition hover:border-sydin-blue/45 hover:bg-theme-hover">
-                    <label
-                      htmlFor="business-logo-upload"
-                      className="grid gap-2 text-sm font-bold text-theme-primary"
-                    >
-                      Upload business logo
-                      <input
-                        id="business-logo-upload"
-                        type="file"
-                        accept="image/*"
-                        onChange={(event) =>
-                          setLogoFile(event.target.files?.[0] || null)
-                        }
-                        className="w-full cursor-pointer text-sm text-theme-secondary file:mr-4 file:rounded-xl file:border-0 file:bg-sydin-blue/20 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-theme-accent transition-colors hover:file:bg-sydin-blue/30"
-                      />
-                    </label>
-                    <p className="mt-3 text-xs leading-5 text-theme-subtle">
-                      Choose a replacement logo, then save settings. Existing
-                      logo removal is not exposed in v1.
-                    </p>
-
-                    {logoFile && (
-                      <p
-                        className="mt-3 min-w-0 truncate rounded-xl border border-theme bg-theme-inset px-3 py-2 text-sm text-theme-secondary"
-                        title={`Selected: ${logoFile.name}`}
-                        aria-label={`Selected: ${logoFile.name}`}
-                      >
-                        Selected: {logoFile.name}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <LockedFeaturePanel
-                    feature="Custom business logo"
-                    benefit={
-                      settings.business_logo_url
-                        ? "Your existing logo is preserved and remains visible. Upgrade before replacing it with a new file."
-                        : "Add your business logo to the workspace, exports, and public inventory identity."
-                    }
-                    currentPlan={currentPlanName}
-                    requiredPlan="Standard"
-                    source="business-logo"
-                    compact
-                  />
-                )}
-              </div>
-            </div>
-          </SettingCard>
-
-          <SettingCard
-            title="Public contact branding"
-            description="Public contact details are shown only when enabled and supported by the current plan."
-            action={
-              <StatusChip
-                tone={
-                  canShowPublicContact && settings.show_contact_publicly
-                    ? "success"
-                    : canShowPublicContact
-                      ? "info"
-                      : "neutral"
-                }
-              >
-                {publicContactStatus}
-              </StatusChip>
-            }
-          >
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                ["Email", settings.contact_email],
-                ["Phone", settings.contact_phone],
-                ["Website", settings.contact_website],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
-                >
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                    {label}
-                  </p>
-                  <LongSettingValue
-                    value={value}
-                    className={`mt-1 ${valueTextClassName}`}
-                  />
-                </div>
-              ))}
-            </div>
-
-            {canShowPublicContact || savedSettings.show_contact_publicly ? (
-              <div className="mt-4 flex min-w-0 flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-                <div className="min-w-0">
-                  <p className={valueTextClassName}>
-                    Show contact on public item pages:{" "}
-                    {settings.show_contact_publicly ? "On" : "Off"}
-                  </p>
-                  <p className={`mt-1 ${mutedTextClassName}`}>
-                    Change it in Contact details, above, next to the fields it
-                    controls.
-                  </p>
-                </div>
-              </div>
-            ) : (
-              <div className="mt-4">
-                <LockedFeaturePanel
-                  feature="Public contact branding"
-                  benefit="Show business contact details on public QR item pages with Standard or Pro."
-                  currentPlan={currentPlanName}
-                  requiredPlan="Standard"
-                  source="public-contact-branding"
-                  compact
-                />
-              </div>
-            )}
-          </SettingCard>
-        </div>
-
-        <div className="grid gap-4">
-          <SettingCard
-            title="Brand preview"
-            description="Static preview of the identity customers may see in report headers and public item pages."
-          >
-            <div className="overflow-hidden rounded-xl border border-theme bg-theme-surface">
-              <div className="flex items-center gap-3 border-b border-theme px-4 py-3">
-                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-theme bg-theme-inset">
-                  {settings.business_logo_url ? (
-                    <Image
-                      src={settings.business_logo_url}
-                      alt={`Business logo for ${settings.business_name}`}
-                      fill
-                      sizes="48px"
-                      className="object-contain p-1.5"
-                    />
-                  ) : (
-                    <BrandMark compact className="border-0 shadow-none" />
-                  )}
-                </div>
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-black text-theme-primary">
-                    {settings.business_name ||
-                      DEFAULT_BUSINESS_SETTINGS.business_name}
-                  </p>
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                    Report header preview
-                  </p>
-                </div>
-              </div>
-              <div className="grid gap-2 px-4 py-3 text-xs leading-5 text-theme-muted">
-                {settings.contact_email && (
-                  <LongSettingValue
-                    value={settings.contact_email}
-                    prefix="Email: "
-                    className="min-w-0 truncate text-xs leading-5 text-theme-muted"
-                  />
-                )}
-                {settings.contact_phone && (
-                  <LongSettingValue
-                    value={settings.contact_phone}
-                    prefix="Phone: "
-                    className="min-w-0 truncate text-xs leading-5 text-theme-muted"
-                  />
-                )}
-                {settings.contact_website && (
-                  <LongSettingValue
-                    value={settings.contact_website}
-                    prefix="Website: "
-                    className="min-w-0 truncate text-xs leading-5 text-theme-muted"
-                  />
-                )}
-                {contactCount === 0 && (
-                  <p>No public contact details configured yet.</p>
-                )}
-              </div>
-            </div>
-          </SettingCard>
-
-          <SettingCard
-            title="Report branding"
-            description="PDF report dialogs can use Business logo, SydIN logo, or No logo. Business logo falls back safely when unavailable."
-            action={<StatusChip tone="info">{reportBrandingStatus}</StatusChip>}
-          >
-            <div className="grid gap-2">
-              <Link
-                href="/dashboard/reports"
-                className={buttonClassName({ size: "sm" })}
-              >
-                Open Reports Hub
-              </Link>
-              <p className="text-xs leading-5 text-theme-subtle">
-                Report contact details appear only when public contact branding
-                is enabled and supported by your plan.
-              </p>
-            </div>
-          </SettingCard>
-
-          <SettingCard
-            title="Public item identity"
-            description="QR Center and public item pages use the saved business name, logo, and enabled contact details."
-            action={
-              <Link
-                href="/dashboard/qr-center"
-                className={buttonClassName({ variant: "secondary", size: "sm" })}
-              >
-                Open QR Center
-              </Link>
-            }
-          >
-            <div className="flex flex-wrap gap-2">
-              <StatusChip>{contactStatus}</StatusChip>
-              <StatusChip
-                tone={
-                  settings.show_contact_publicly && canShowPublicContact
-                    ? "success"
-                    : "neutral"
-                }
-              >
-                {publicContactStatus}
-              </StatusChip>
-            </div>
-          </SettingCard>
-
-        </div>
-      </div>
-
     </div>
   );
 
@@ -1817,8 +1636,7 @@ export default function SettingsPage() {
       default:
         return (
           <form onSubmit={handleSave} aria-busy={saving} className="grid gap-4">
-            {renderWorkspacePanel()}
-            {renderBrandingPanel()}
+            {renderCompanyPanel()}
             {renderNotice()}
             <SaveBar saving={saving} onCancel={resetBusinessFields} />
           </form>
@@ -1835,19 +1653,9 @@ export default function SettingsPage() {
           <DashboardPageHeader
             eyebrow="Control center"
             title="Settings"
-            description="Manage your workspace, branding, inventory defaults, plan, and data."
+            description="Your company, account, inventory defaults, plan and data."
             className="settings-hero"
-            actions={
-              <div className="flex flex-wrap gap-2">
-                <StatusChip tone={settings.business_name.trim() ? "success" : "warning"}>
-                  {workspaceStatus}
-                </StatusChip>
-                <StatusChip tone={settings.business_logo_url ? "success" : "neutral"}>
-                  {logoStatus}
-                </StatusChip>
-                <Badge tone="accent">{currentPlanName} plan</Badge>
-              </div>
-            }
+            actions={<Badge tone="accent">{currentPlanName} plan</Badge>}
           />
 
           <div className="settings-layout grid gap-4 lg:grid-cols-[280px_1fr] lg:items-start">

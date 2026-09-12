@@ -21636,3 +21636,19 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     }
   }
 }
+
+/* Settings > Company: the logo sits in the row like any other value. */
+.settings-logo-preview {
+  position: relative;
+  display: inline-flex;
+  width: 4.5rem;
+  height: 4.5rem;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+}
+

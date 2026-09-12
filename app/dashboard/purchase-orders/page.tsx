@@ -33,6 +33,7 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { exportPurchaseOrderExcel } from "@/app/lib/purchaseOrderExcelExport";
 import { exportPurchaseOrderPdf } from "@/app/lib/purchaseOrderPdfExport";
+import { brandingFromSettings } from "@/app/lib/documentPdf";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
   PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
@@ -125,7 +126,8 @@ function isInCurrentMonth(order: PurchaseOrder) {
 
   const now = new Date();
   return (
-    date.getFullYear() === now.getFullYear() && date.getMonth() === now.getMonth()
+    date.getFullYear() === now.getFullYear() &&
+    date.getMonth() === now.getMonth()
   );
 }
 
@@ -135,11 +137,12 @@ export default function PurchaseOrdersPage() {
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(true);
   const [schemaMissing, setSchemaMissing] = useState(false);
-  const [subscription, setSubscription] =
-    useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
+  const [subscription, setSubscription] = useState<UserSubscription>(
+    FALLBACK_SUBSCRIPTION,
+  );
   const [loadError, setLoadError] = useState("");
   const [settings, setSettings] = useState<BusinessSettings>(
-    DEFAULT_BUSINESS_SETTINGS
+    DEFAULT_BUSINESS_SETTINGS,
   );
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
 
@@ -147,24 +150,34 @@ export default function PurchaseOrdersPage() {
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [depotFilter, setDepotFilter] = useState("all");
 
-  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
+    new Set(),
+  );
   const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
   // "receive" = confirm receive + record payment together; "edit" = record payment only.
   const [paymentMode, setPaymentMode] = useState<"none" | "receive" | "edit">(
-    "none"
+    "none",
   );
   const [payAmount, setPayAmount] = useState("");
   const [payMethod, setPayMethod] = useState("");
   const [payBy, setPayBy] = useState("");
   const [payDate, setPayDate] = useState("");
   const [payNote, setPayNote] = useState("");
-  const [selectedPayments, setSelectedPayments] = useState<PurchaseOrderPayment[]>([]);
+  const [selectedPayments, setSelectedPayments] = useState<
+    PurchaseOrderPayment[]
+  >([]);
   // Deliveries recorded against the open order, and item photos for its lines
   // -- a name alone is not enough to know which carton is which.
-  const [selectedReceipts, setSelectedReceipts] = useState<PurchaseOrderReceipt[]>([]);
-  const [lineImages, setLineImages] = useState<Record<number, string | null>>({});
+  const [selectedReceipts, setSelectedReceipts] = useState<
+    PurchaseOrderReceipt[]
+  >([]);
+  const [lineImages, setLineImages] = useState<Record<number, string | null>>(
+    {},
+  );
   // Receive mode: how much of each line is arriving now, keyed by line id.
-  const [receiveQuantities, setReceiveQuantities] = useState<Record<number, string>>({});
+  const [receiveQuantities, setReceiveQuantities] = useState<
+    Record<number, string>
+  >({});
   const [receiveNotes, setReceiveNotes] = useState("");
   const [receiveClose, setReceiveClose] = useState(false);
   const [receivePaymentOpen, setReceivePaymentOpen] = useState(false);
@@ -175,14 +188,14 @@ export default function PurchaseOrdersPage() {
   // cancelled or closed, never deleted, so the record survives.
   const [confirmDeleteDraft, setConfirmDeleteDraft] = useState(false);
   const [successNotice, setSuccessNotice] = useState("");
-  const [successNoticeTone, setSuccessNoticeTone] = useState<"success" | "warning">(
-    "success"
-  );
+  const [successNoticeTone, setSuccessNoticeTone] = useState<
+    "success" | "warning"
+  >("success");
 
   const currencyCode = normalizeCurrencyCode(settings.currency_code, "USD");
   const selectedOrder = useMemo(
     () => orders.find((order) => order.id === selectedOrderId) || null,
-    [orders, selectedOrderId]
+    [orders, selectedOrderId],
   );
 
   useEffect(() => {
@@ -216,7 +229,7 @@ export default function PurchaseOrdersPage() {
           setSchemaMissing(true);
         } else {
           setLoadError(
-            "Purchase orders could not be loaded. Refresh and try again."
+            "Purchase orders could not be loaded. Refresh and try again.",
           );
         }
       }
@@ -225,7 +238,9 @@ export default function PurchaseOrdersPage() {
 
     loadData().catch(() => {
       if (!active) return;
-      setLoadError("Purchase orders could not be loaded. Refresh and try again.");
+      setLoadError(
+        "Purchase orders could not be loaded. Refresh and try again.",
+      );
       setLoading(false);
     });
 
@@ -260,8 +275,8 @@ export default function PurchaseOrdersPage() {
       new Set(
         (order?.lines || [])
           .map((line) => line.inventory_item_id)
-          .filter((id): id is number => id !== null)
-      )
+          .filter((id): id is number => id !== null),
+      ),
     );
     // Photos for the lines. An order with no inventory lines simply keeps
     // whatever map is there; nothing reads it.
@@ -272,7 +287,10 @@ export default function PurchaseOrdersPage() {
         .select("id, image")
         .in("id", itemIds);
       const next: Record<number, string | null> = {};
-      for (const row of (data || []) as { id: number; image: string | null }[]) {
+      for (const row of (data || []) as {
+        id: number;
+        image: string | null;
+      }[]) {
         next[row.id] = row.image;
       }
       return next;
@@ -307,25 +325,30 @@ export default function PurchaseOrdersPage() {
     handledOpenRef.current = openParam;
     const order = orders.find((entry) => entry.id === openParam);
     if (!order) return;
-    setSelectedOrderId(order.id);
-    if (receiveParam && isPurchaseOrderOpen(order)) {
-      const seeded: Record<number, string> = {};
-      for (const line of order.lines) {
-        const outstanding = lineOutstanding(line);
-        if (outstanding > 0) seeded[line.id] = formatUnits(outstanding);
+    // Deferred a frame, like the `created` notice below: opening a dialog
+    // from inside the effect that noticed the URL is a render inside a render.
+    const frame = window.requestAnimationFrame(() => {
+      setSelectedOrderId(order.id);
+      if (receiveParam && isPurchaseOrderOpen(order)) {
+        const seeded: Record<number, string> = {};
+        for (const line of order.lines) {
+          const outstanding = lineOutstanding(line);
+          if (outstanding > 0) seeded[line.id] = formatUnits(outstanding);
+        }
+        setReceiveQuantities(seeded);
+        setReceiveNotes("");
+        setReceiveClose(false);
+        setReceivePaymentOpen(false);
+        setPayAmount("");
+        setPayMethod(order.payment_method || "");
+        setPayBy(order.paid_by || "");
+        setPayDate(todayIsoDate());
+        setPayNote("");
+        setPaymentMode("receive");
       }
-      setReceiveQuantities(seeded);
-      setReceiveNotes("");
-      setReceiveClose(false);
-      setReceivePaymentOpen(false);
-      setPayAmount("");
-      setPayMethod(order.payment_method || "");
-      setPayBy(order.paid_by || "");
-      setPayDate(todayIsoDate());
-      setPayNote("");
-      setPaymentMode("receive");
-    }
-    window.history.replaceState(null, "", "/dashboard/purchase-orders");
+      window.history.replaceState(null, "", "/dashboard/purchase-orders");
+    });
+    return () => window.cancelAnimationFrame(frame);
   }, [openParam, receiveParam, loading, orders]);
 
   useEffect(() => {
@@ -338,7 +361,7 @@ export default function PurchaseOrdersPage() {
       if (receiveFailed) {
         setSuccessNoticeTone("warning");
         setSuccessNotice(
-          "Purchase order saved, but the stock update didn't run. Open it below and press Mark received to add the items to inventory."
+          "Purchase order saved, but the stock update didn't run. Open it below and press Mark received to add the items to inventory.",
         );
       } else {
         setSuccessNoticeTone("success");
@@ -396,7 +419,11 @@ export default function PurchaseOrdersPage() {
 
   // Group the (already newest-first) filtered orders into collapsible month sections.
   const monthGroups = useMemo(() => {
-    const groups: Array<{ key: string; label: string; orders: PurchaseOrder[] }> = [];
+    const groups: Array<{
+      key: string;
+      label: string;
+      orders: PurchaseOrder[];
+    }> = [];
     const indexByKey = new Map<string, number>();
 
     for (const order of filteredOrders) {
@@ -405,9 +432,14 @@ export default function PurchaseOrdersPage() {
         ? new Date(source.includes("T") ? source : `${source}T00:00:00`)
         : null;
       const valid = date && !Number.isNaN(date.getTime());
-      const key = valid ? `${date!.getFullYear()}-${date!.getMonth()}` : "undated";
+      const key = valid
+        ? `${date!.getFullYear()}-${date!.getMonth()}`
+        : "undated";
       const label = valid
-        ? new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date!)
+        ? new Intl.DateTimeFormat("en", {
+            month: "long",
+            year: "numeric",
+          }).format(date!)
         : "No date";
 
       if (!indexByKey.has(key)) {
@@ -422,7 +454,7 @@ export default function PurchaseOrdersPage() {
 
   const spending = useMemo(() => {
     const monthOrders = orders.filter(
-      (order) => order.status !== "cancelled" && isInCurrentMonth(order)
+      (order) => order.status !== "cancelled" && isInCurrentMonth(order),
     );
     let inventoryTotal = 0;
     let expenseTotal = 0;
@@ -527,12 +559,14 @@ export default function PurchaseOrdersPage() {
     if (!selectedOrder) return;
     if (receivingSummary.invalid) {
       setActionError(
-        "Check the quantities: each must be a whole number no larger than what is still outstanding."
+        "Check the quantities: each must be a whole number no larger than what is still outstanding.",
       );
       return;
     }
     if (receivingSummary.now <= 0 && !receiveClose) {
-      setActionError("Enter what arrived for at least one line, or close the order short.");
+      setActionError(
+        "Enter what arrived for at least one line, or close the order short.",
+      );
       return;
     }
     setActionBusy(true);
@@ -557,20 +591,20 @@ export default function PurchaseOrdersPage() {
       setSuccessNotice(
         receivingSummary.after > 0 && !receiveClose
           ? `${selectedOrder.po_number}: ${received} units received and added to stock. ${formatUnits(
-              receivingSummary.after
+              receivingSummary.after,
             )} still to come — the order stays open.`
           : receiveClose && receivingSummary.after > 0
             ? `${selectedOrder.po_number} closed short: ${received} units received, ${formatUnits(
-                receivingSummary.after
+                receivingSummary.after,
               )} never arrived.`
-            : `${selectedOrder.po_number} fully received. Stock lines were added to inventory.`
+            : `${selectedOrder.po_number} fully received. Stock lines were added to inventory.`,
       );
       setSelectedOrderId(null);
     } catch (error) {
       setActionError(
         isReceivingSchemaMissing(error)
           ? RECEIVING_SCHEMA_MESSAGE
-          : "The delivery could not be recorded. Refresh and try again — if a line's item was deleted, edit the order first."
+          : "The delivery could not be recorded. Refresh and try again — if a line's item was deleted, edit the order first.",
       );
     } finally {
       setActionBusy(false);
@@ -596,7 +630,7 @@ export default function PurchaseOrdersPage() {
       setActionError(
         isPaymentsSchemaMissing(error)
           ? "Payments need a one-time database update — run sql/phase-9-purchase-order-payments.sql in Supabase, then try again."
-          : "The payment could not be recorded. Try again."
+          : "The payment could not be recorded. Try again.",
       );
     } finally {
       setActionBusy(false);
@@ -717,12 +751,17 @@ export default function PurchaseOrdersPage() {
           code: line.item_code_snapshot || undefined,
           sku: line.sku_snapshot || undefined,
           unit: line.unit_label_snapshot || "unit",
+          imageUrl:
+            line.inventory_item_id !== null
+              ? lineImages[line.inventory_item_id] ?? null
+              : null,
           orderQuantity: line.quantity,
+          receivedQuantity: line.received_quantity,
           unitCost: line.unit_cost,
           lineTotal: getPurchaseOrderLineTotal(line),
           note: line.notes || undefined,
         })),
-        branding: exportBranding(),
+        branding: brandingFromSettings(settings),
         currencyCode,
       });
     } catch {
@@ -802,18 +841,26 @@ export default function PurchaseOrdersPage() {
       />
 
       {successNotice && (
-        <DashboardNotice tone={successNoticeTone}>{successNotice}</DashboardNotice>
+        <DashboardNotice tone={successNoticeTone}>
+          {successNotice}
+        </DashboardNotice>
       )}
-      {loadError && <DashboardNotice tone="danger">{loadError}</DashboardNotice>}
+      {loadError && (
+        <DashboardNotice tone="danger">{loadError}</DashboardNotice>
+      )}
       {schemaMissing && (
-        <DashboardNotice tone="warning">{SCHEMA_MISSING_MESSAGE}</DashboardNotice>
+        <DashboardNotice tone="warning">
+          {SCHEMA_MISSING_MESSAGE}
+        </DashboardNotice>
       )}
 
       {!schemaMissing && (
         <div className="po-summary-grid">
           <MetricCard
             label="Spent this month"
-            value={formatInventoryPrice(spending.monthTotal, currencyCode) || "—"}
+            value={
+              formatInventoryPrice(spending.monthTotal, currencyCode) || "—"
+            }
             detail={`${spending.monthCount} purchase${
               spending.monthCount === 1 ? "" : "s"
             }`}
@@ -860,7 +907,7 @@ export default function PurchaseOrdersPage() {
             options={[
               { value: "all", label: "All statuses" },
               ...Object.entries(PURCHASE_ORDER_STATUS_LABELS).map(
-                ([value, label]) => ({ value, label })
+                ([value, label]) => ({ value, label }),
               ),
             ]}
           />
@@ -892,7 +939,9 @@ export default function PurchaseOrdersPage() {
       ) : filteredOrders.length === 0 ? (
         <DashboardEmptyState
           icon="file"
-          title={orders.length === 0 ? "No purchases yet" : "No matching purchases"}
+          title={
+            orders.length === 0 ? "No purchases yet" : "No matching purchases"
+          }
           description={
             orders.length === 0
               ? "Record your first purchase — a stock restock or anything you buy for a depot."
@@ -912,7 +961,7 @@ export default function PurchaseOrdersPage() {
             const collapsed = collapsedMonths.has(group.key);
             const groupTotal = group.orders.reduce(
               (sum, order) => sum + getPurchaseOrderTotal(order),
-              0
+              0,
             );
 
             return (
@@ -964,11 +1013,14 @@ export default function PurchaseOrdersPage() {
                           }}
                           className={`po-history-row po-history-row-${order.status}`}
                         >
-                          <span className="po-history-row-icon" aria-hidden="true">
+                          <span
+                            className="po-history-row-icon"
+                            aria-hidden="true"
+                          >
                             <UiIcon
                               name={
                                 order.lines.some(
-                                  (line) => line.line_type === "expense"
+                                  (line) => line.line_type === "expense",
                                 )
                                   ? "file"
                                   : "box"
@@ -983,7 +1035,9 @@ export default function PurchaseOrdersPage() {
                             </span>
                             <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted">
                               {[
-                                formatDate(order.purchase_date || order.created_at),
+                                formatDate(
+                                  order.purchase_date || order.created_at,
+                                ),
                                 order.depot_name_snapshot,
                                 order.supplier_name_snapshot,
                                 `${order.lines.length} line${
@@ -998,26 +1052,29 @@ export default function PurchaseOrdersPage() {
                             {(order.status === "ordered" ||
                               order.status === "partially_received") &&
                               (() => {
-                                const progress = getPurchaseOrderReceivingProgress(order);
+                                const progress =
+                                  getPurchaseOrderReceivingProgress(order);
                                 return progress.received > 0 ? (
                                   <span
                                     className="rounded-lg border border-amber-300/50 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
                                     title="Units received so far"
                                   >
-                                    {formatUnits(progress.received)} / {formatUnits(progress.ordered)}{" "}
-                                    received
+                                    {formatUnits(progress.received)} /{" "}
+                                    {formatUnits(progress.ordered)} received
                                   </span>
                                 ) : null;
                               })()}
                             {/* The status badge beside this already says
                                 Cancelled; a second grey "Cancelled" pill in
                                 the payment slot said it twice. */}
-                            {order.status === "cancelled" ? null : remaining > 0 ? (
+                            {order.status === "cancelled" ? null : remaining >
+                              0 ? (
                               <span
                                 className="rounded-lg border border-amber-300/50 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
                                 title="Balance still owed"
                               >
-                                Owe {formatInventoryPrice(remaining, currencyCode)}
+                                Owe{" "}
+                                {formatInventoryPrice(remaining, currencyCode)}
                               </span>
                             ) : (
                               <span
@@ -1077,7 +1134,9 @@ export default function PurchaseOrdersPage() {
                 </Button>
                 <Button
                   onClick={handleReceive}
-                  disabled={actionBusy || (receivingSummary.now <= 0 && !receiveClose)}
+                  disabled={
+                    actionBusy || (receivingSummary.now <= 0 && !receiveClose)
+                  }
                   loading={actionBusy}
                   loadingLabel="Recording…"
                 >
@@ -1136,7 +1195,9 @@ export default function PurchaseOrdersPage() {
                     onClick={() => setConfirmDeleteDraft(true)}
                     disabled={actionBusy}
                   >
-                    {selectedOrder.status === "draft" ? "Delete draft" : "Delete"}
+                    {selectedOrder.status === "draft"
+                      ? "Delete draft"
+                      : "Delete"}
                   </Button>
                 ) : (
                   selectedOrder.status === "ordered" && (
@@ -1225,7 +1286,11 @@ export default function PurchaseOrdersPage() {
                               )}
                             </span>
                             <span className="block truncate text-xs text-theme-muted">
-                              {[line.item_code_snapshot, line.sku_snapshot, line.unit_label_snapshot]
+                              {[
+                                line.item_code_snapshot,
+                                line.sku_snapshot,
+                                line.unit_label_snapshot,
+                              ]
                                 .filter(Boolean)
                                 .join(" · ") ||
                                 (line.line_type === "expense"
@@ -1240,7 +1305,10 @@ export default function PurchaseOrdersPage() {
                         <span className="po-receive-num" data-label="Received">
                           {formatUnits(line.received_quantity)}
                         </span>
-                        <span className="po-receive-input" data-label="Arriving now">
+                        <span
+                          className="po-receive-input"
+                          data-label="Arriving now"
+                        >
                           {done ? (
                             <span className="text-xs font-semibold text-theme-success">
                               Complete
@@ -1251,7 +1319,9 @@ export default function PurchaseOrdersPage() {
                               min="0"
                               max={outstanding}
                               step={line.affects_stock ? "1" : "any"}
-                              inputMode={line.affects_stock ? "numeric" : "decimal"}
+                              inputMode={
+                                line.affects_stock ? "numeric" : "decimal"
+                              }
                               value={receiveQuantities[line.id] ?? ""}
                               onChange={(event) =>
                                 setReceiveQuantities((current) => ({
@@ -1260,7 +1330,7 @@ export default function PurchaseOrdersPage() {
                                 }))
                               }
                               aria-label={`Quantity of ${line.name_snapshot} arriving now (${formatUnits(
-                                outstanding
+                                outstanding,
                               )} outstanding)`}
                               className="sale-input"
                             />
@@ -1303,14 +1373,16 @@ export default function PurchaseOrdersPage() {
                     <input
                       type="checkbox"
                       checked={receiveClose}
-                      onChange={(event) => setReceiveClose(event.target.checked)}
+                      onChange={(event) =>
+                        setReceiveClose(event.target.checked)
+                      }
                     />
                     <span>
                       <strong>Close the order after this delivery</strong>
                       <small>
                         The supplier will not send the rest. The order is marked
-                        received with {formatUnits(receivingSummary.after)} units
-                        recorded as never arrived.
+                        received with {formatUnits(receivingSummary.after)}{" "}
+                        units recorded as never arrived.
                       </small>
                     </span>
                   </label>
@@ -1326,67 +1398,69 @@ export default function PurchaseOrdersPage() {
                   </button>
                 ) : (
                   <div className="grid gap-2">
-                    <p className="po-detail-label">Payment on delivery (optional)</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Amount paid now ({currencyCode})
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={payAmount}
-                      onChange={(event) => setPayAmount(event.target.value)}
-                      placeholder="This payment"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Payment date
-                    </span>
-                    <input
-                      type="date"
-                      value={payDate}
-                      onChange={(event) => setPayDate(event.target.value)}
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                  <Select
-                    label="Payment method"
-                    value={payMethod}
-                    onChange={setPayMethod}
-                    options={[
-                      { value: "", label: "Not set" },
-                      ...Object.entries(
-                        PURCHASE_ORDER_PAYMENT_METHOD_LABELS
-                      ).map(([value, label]) => ({ value, label })),
-                    ]}
-                  />
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Paid by (optional)
-                    </span>
-                    <input
-                      value={payBy}
-                      onChange={(event) => setPayBy(event.target.value)}
-                      placeholder="Person or account"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                  <label className="grid gap-1.5 sm:col-span-2">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Note (optional)
-                    </span>
-                    <input
-                      value={payNote}
-                      onChange={(event) => setPayNote(event.target.value)}
-                      placeholder="e.g. deposit, balance on delivery"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                </div>
+                    <p className="po-detail-label">
+                      Payment on delivery (optional)
+                    </p>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <label className="grid gap-1.5">
+                        <span className="text-xs font-bold text-theme-secondary">
+                          Amount paid now ({currencyCode})
+                        </span>
+                        <input
+                          type="number"
+                          min="0"
+                          step="any"
+                          value={payAmount}
+                          onChange={(event) => setPayAmount(event.target.value)}
+                          placeholder="This payment"
+                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                        />
+                      </label>
+                      <label className="grid gap-1.5">
+                        <span className="text-xs font-bold text-theme-secondary">
+                          Payment date
+                        </span>
+                        <input
+                          type="date"
+                          value={payDate}
+                          onChange={(event) => setPayDate(event.target.value)}
+                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                        />
+                      </label>
+                      <Select
+                        label="Payment method"
+                        value={payMethod}
+                        onChange={setPayMethod}
+                        options={[
+                          { value: "", label: "Not set" },
+                          ...Object.entries(
+                            PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
+                          ).map(([value, label]) => ({ value, label })),
+                        ]}
+                      />
+                      <label className="grid gap-1.5">
+                        <span className="text-xs font-bold text-theme-secondary">
+                          Paid by (optional)
+                        </span>
+                        <input
+                          value={payBy}
+                          onChange={(event) => setPayBy(event.target.value)}
+                          placeholder="Person or account"
+                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                        />
+                      </label>
+                      <label className="grid gap-1.5 sm:col-span-2">
+                        <span className="text-xs font-bold text-theme-secondary">
+                          Note (optional)
+                        </span>
+                        <input
+                          value={payNote}
+                          onChange={(event) => setPayNote(event.target.value)}
+                          placeholder="e.g. deposit, balance on delivery"
+                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                        />
+                      </label>
+                    </div>
                   </div>
                 )}
               </div>
@@ -1428,7 +1502,7 @@ export default function PurchaseOrdersPage() {
                     options={[
                       { value: "", label: "Not set" },
                       ...Object.entries(
-                        PURCHASE_ORDER_PAYMENT_METHOD_LABELS
+                        PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
                       ).map(([value, label]) => ({ value, label })),
                     ]}
                   />
@@ -1458,55 +1532,66 @@ export default function PurchaseOrdersPage() {
               </div>
             )}
 
-            {(paymentMode !== "receive" || receivePaymentOpen) && (() => {
-              const balance = getPurchaseOrderBalance(selectedOrder);
-              return (
-                <div className="po-balance-strip">
-                  <div>
-                    <small>Order total</small>
-                    <strong>
-                      {formatInventoryPrice(balance.total, currencyCode) || "—"}
-                    </strong>
+            {(paymentMode !== "receive" || receivePaymentOpen) &&
+              (() => {
+                const balance = getPurchaseOrderBalance(selectedOrder);
+                return (
+                  <div className="po-balance-strip">
+                    <div>
+                      <small>Order total</small>
+                      <strong>
+                        {formatInventoryPrice(balance.total, currencyCode) ||
+                          "—"}
+                      </strong>
+                    </div>
+                    <div>
+                      <small>Paid</small>
+                      <strong>
+                        {formatInventoryPrice(balance.paid, currencyCode) ||
+                          "—"}
+                      </strong>
+                    </div>
+                    <div
+                      className={
+                        balance.remaining > 0
+                          ? "po-balance-remaining-due"
+                          : "po-balance-remaining-clear"
+                      }
+                    >
+                      <small>
+                        {balance.remaining > 0 ? "Still owe" : "Fully paid"}
+                      </small>
+                      <strong>
+                        {balance.remaining > 0
+                          ? formatInventoryPrice(
+                              balance.remaining,
+                              currencyCode,
+                            )
+                          : "✓"}
+                      </strong>
+                    </div>
                   </div>
-                  <div>
-                    <small>Paid</small>
-                    <strong>
-                      {formatInventoryPrice(balance.paid, currencyCode) || "—"}
-                    </strong>
-                  </div>
-                  <div
-                    className={
-                      balance.remaining > 0
-                        ? "po-balance-remaining-due"
-                        : "po-balance-remaining-clear"
-                    }
-                  >
-                    <small>{balance.remaining > 0 ? "Still owe" : "Fully paid"}</small>
-                    <strong>
-                      {balance.remaining > 0
-                        ? formatInventoryPrice(balance.remaining, currencyCode)
-                        : "✓"}
-                    </strong>
-                  </div>
-                </div>
-              );
-            })()}
+                );
+              })()}
 
             {paymentMode === "none" &&
               selectedOrder.status !== "draft" &&
               selectedOrder.status !== "cancelled" &&
               (() => {
-                const progress = getPurchaseOrderReceivingProgress(selectedOrder);
+                const progress =
+                  getPurchaseOrderReceivingProgress(selectedOrder);
                 return (
                   <div className="po-receiving-progress">
                     <div className="flex flex-wrap items-baseline justify-between gap-2">
                       <p className="po-detail-label">Receiving</p>
                       <p className="text-xs font-semibold text-theme-muted">
-                        {formatUnits(progress.received)} of {formatUnits(progress.ordered)}{" "}
-                        units received
+                        {formatUnits(progress.received)} of{" "}
+                        {formatUnits(progress.ordered)} units received
                         {progress.remaining > 0
                           ? ` · ${formatUnits(progress.remaining)} ${
-                              selectedOrder.closed_short ? "never arrived" : "still to come"
+                              selectedOrder.closed_short
+                                ? "never arrived"
+                                : "still to come"
                             }`
                           : ""}
                       </p>
@@ -1521,14 +1606,17 @@ export default function PurchaseOrdersPage() {
                     >
                       <div
                         className={`po-progress-fill${
-                          selectedOrder.closed_short ? " po-progress-fill-short" : ""
+                          selectedOrder.closed_short
+                            ? " po-progress-fill-short"
+                            : ""
                         }`}
                         style={{ width: `${progress.percent}%` }}
                       />
                     </div>
                     {selectedOrder.closed_short && (
                       <p className="text-xs font-semibold text-theme-warning">
-                        Closed short — the supplier did not send everything ordered.
+                        Closed short — the supplier did not send everything
+                        ordered.
                       </p>
                     )}
                   </div>
@@ -1539,7 +1627,10 @@ export default function PurchaseOrdersPage() {
               <div className="grid gap-1.5">
                 <p className="po-detail-label">Deliveries</p>
                 {selectedReceipts.map((receipt) => {
-                  const units = receipt.lines.reduce((sum, line) => sum + line.quantity, 0);
+                  const units = receipt.lines.reduce(
+                    (sum, line) => sum + line.quantity,
+                    0,
+                  );
                   return (
                     <div key={receipt.id} className="po-payment-row">
                       <span className="po-payment-row-icon" aria-hidden="true">
@@ -1577,7 +1668,9 @@ export default function PurchaseOrdersPage() {
                         {[
                           formatDate(payment.paid_at),
                           payment.method
-                            ? PURCHASE_ORDER_PAYMENT_METHOD_LABELS[payment.method]
+                            ? PURCHASE_ORDER_PAYMENT_METHOD_LABELS[
+                                payment.method
+                              ]
                             : "",
                           payment.paid_by ? `by ${payment.paid_by}` : "",
                           payment.note,
@@ -1646,7 +1739,8 @@ export default function PurchaseOrdersPage() {
                           }`
                         : ""}
                     </p>
-                    {(selectedOrder.paid_by || selectedOrder.amount_paid !== null) && (
+                    {(selectedOrder.paid_by ||
+                      selectedOrder.amount_paid !== null) && (
                       <p className="po-detail-sub">
                         {[
                           selectedOrder.paid_by
@@ -1655,7 +1749,7 @@ export default function PurchaseOrdersPage() {
                           selectedOrder.amount_paid !== null
                             ? formatInventoryPrice(
                                 selectedOrder.amount_paid,
-                                currencyCode
+                                currencyCode,
                               )
                             : "",
                         ]
@@ -1695,8 +1789,8 @@ export default function PurchaseOrdersPage() {
                               selectedOrder.status !== "cancelled" &&
                               line.received_quantity < line.quantity && (
                                 <span className="po-received-flag">
-                                  {formatUnits(line.received_quantity)} / {formatUnits(line.quantity)}{" "}
-                                  received
+                                  {formatUnits(line.received_quantity)} /{" "}
+                                  {formatUnits(line.quantity)} received
                                 </span>
                               )}
                           </span>
@@ -1722,7 +1816,10 @@ export default function PurchaseOrdersPage() {
                             {line.quantity} ×{" "}
                             {line.unit_cost === null
                               ? "—"
-                              : formatInventoryPrice(line.unit_cost, currencyCode)}
+                              : formatInventoryPrice(
+                                  line.unit_cost,
+                                  currencyCode,
+                                )}
                           </span>
                           <span className="block text-sm font-black text-theme-primary">
                             {lineTotal === null
@@ -1738,7 +1835,7 @@ export default function PurchaseOrdersPage() {
                     <strong>
                       {formatInventoryPrice(
                         getPurchaseOrderTotal(selectedOrder),
-                        currencyCode
+                        currencyCode,
                       ) || "—"}
                     </strong>
                   </div>
@@ -1760,7 +1857,10 @@ export default function PurchaseOrdersPage() {
                     >
                       <Image
                         src={selectedOrder.attachment_url}
-                        alt={selectedOrder.attachment_label || "Purchase attachment"}
+                        alt={
+                          selectedOrder.attachment_label ||
+                          "Purchase attachment"
+                        }
                         width={480}
                         height={280}
                         unoptimized
@@ -1787,7 +1887,9 @@ export default function PurchaseOrdersPage() {
       {selectedOrder && confirmDeleteDraft && (
         <DialogShell
           title={`Delete ${selectedOrder.po_number}?`}
-          eyebrow={selectedOrder.status === "draft" ? "Delete draft" : "Delete order"}
+          eyebrow={
+            selectedOrder.status === "draft" ? "Delete draft" : "Delete order"
+          }
           description="Nothing has been received or paid on it, so nothing else changes. This cannot be undone."
           tone="danger"
           onClose={() => setConfirmDeleteDraft(false)}

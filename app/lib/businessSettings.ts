@@ -10,6 +10,11 @@ export interface BusinessSettings {
   contact_phone: string;
   contact_website: string;
   show_contact_publicly: boolean;
+  /* Printed on documents (phase 24). Empty strings until the migration runs. */
+  business_address: string;
+  tax_id: string;
+  payment_terms: string;
+  document_footer: string;
 }
 
 export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
@@ -21,6 +26,10 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   contact_phone: "",
   contact_website: "",
   show_contact_publicly: false,
+  business_address: "",
+  tax_id: "",
+  payment_terms: "",
+  document_footer: "",
 };
 
 function normalizeThreshold(value: unknown) {
@@ -44,17 +53,49 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
     contact_phone: data?.contact_phone || "",
     contact_website: data?.contact_website || "",
     show_contact_publicly: Boolean(data?.show_contact_publicly),
+    business_address: data?.business_address || "",
+    tax_id: data?.tax_id || "",
+    payment_terms: data?.payment_terms || "",
+    document_footer: data?.document_footer || "",
   };
 }
 
+const SETTINGS_SELECT =
+  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer";
+
+/* The same row without the phase-24 columns, for a database where that
+   migration has not been run yet. */
+const SETTINGS_SELECT_LEGACY =
+  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly";
+
+/** True when the error means sql/phase-24-company-profile.sql has not been run. */
+export function isCompanyProfileSchemaMissing(error: unknown) {
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message: unknown }).message)
+      : String(error ?? "");
+  return (
+    /business_address|tax_id|payment_terms|document_footer/.test(message) &&
+    (message.includes("does not exist") ||
+      message.includes("schema cache") ||
+      message.includes("Could not find"))
+  );
+}
+
 export async function getOrCreateBusinessSettings(userId: string) {
-  const { data, error } = await supabase
+  let { data, error } = await supabase
     .from("business_settings")
-    .select(
-      "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly"
-    )
+    .select(SETTINGS_SELECT)
     .eq("user_id", userId)
     .maybeSingle();
+
+  if (error && isCompanyProfileSchemaMissing(error)) {
+    ({ data, error } = await supabase
+      .from("business_settings")
+      .select(SETTINGS_SELECT_LEGACY)
+      .eq("user_id", userId)
+      .maybeSingle());
+  }
 
   if (error) {
     console.warn("Business settings fetch failed:", error.message);
@@ -74,9 +115,7 @@ export async function getOrCreateBusinessSettings(userId: string) {
         low_stock_threshold: DEFAULT_BUSINESS_SETTINGS.low_stock_threshold,
       },
     ])
-    .select(
-      "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly"
-    )
+    .select(SETTINGS_SELECT_LEGACY)
     .single();
 
   if (createError) {

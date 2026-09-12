@@ -14,9 +14,12 @@ import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
+  type BusinessSettings,
 } from "@/app/lib/businessSettings";
+import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
 import { exportSalesInvoicePdf } from "@/app/lib/salesInvoicePdf";
+import { brandingFromSettings } from "@/app/lib/documentPdf";
 import {
   addSalesOrderPayment,
   deleteSalesOrder,
@@ -74,11 +77,14 @@ export default function SaleDetailPage() {
     useState<SalesOrderPaymentMethod>("cash");
   const [savingPayment, setSavingPayment] = useState(false);
   const [paymentError, setPaymentError] = useState("");
-  const [businessName, setBusinessName] = useState("");
-  const [businessLogoUrl, setBusinessLogoUrl] = useState("");
-  const [contactEmail, setContactEmail] = useState("");
-  const [contactPhone, setContactPhone] = useState("");
+  // The whole company block, so the PDF prints address, tax number, terms and
+  // footer as well as the name -- not four fields picked out of it.
+  const [businessSettings, setBusinessSettings] = useState<BusinessSettings>(
+    DEFAULT_BUSINESS_SETTINGS
+  );
   const [downloading, setDownloading] = useState(false);
+  // Item photos for the lines, by inventory item id: on screen and in the PDF.
+  const [lineImages, setLineImages] = useState<Record<number, string | null>>({});
 
   useEffect(() => {
     let isActive = true;
@@ -103,13 +109,29 @@ export default function SaleDetailPage() {
 
         setOrder(found);
         setPayments(paid);
+        const itemIds = Array.from(
+          new Set(
+            (found?.lines || [])
+              .map((line) => line.inventory_item_id)
+              .filter((id): id is number => id !== null && id !== undefined)
+          )
+        );
+        if (itemIds.length > 0) {
+          const { data: rows } = await supabase
+            .from("inventory")
+            .select("id, image")
+            .in("id", itemIds);
+          if (!isActive) return;
+          const next: Record<number, string | null> = {};
+          for (const row of (rows || []) as { id: number; image: string | null }[]) {
+            next[row.id] = row.image;
+          }
+          setLineImages(next);
+        }
         setCurrencyCode(
           settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code
         );
-        setBusinessName(settings?.business_name || "");
-        setBusinessLogoUrl(settings?.business_logo_url || "");
-        setContactEmail(settings?.contact_email || "");
-        setContactPhone(settings?.contact_phone || "");
+        setBusinessSettings(settings || DEFAULT_BUSINESS_SETTINGS);
       })
       .catch(() => {
         if (isActive) setError("We could not find that invoice.");
@@ -237,13 +259,12 @@ export default function SaleDetailPage() {
           unitPrice: line.unit_price,
           lineTotal: getSalesOrderLineTotal(line),
           isCharge: line.line_type === "charge",
+          imageUrl:
+            line.inventory_item_id !== null && line.inventory_item_id !== undefined
+              ? lineImages[line.inventory_item_id] ?? null
+              : null,
         })),
-        branding: {
-          businessName: businessName || "SydIN",
-          businessLogoUrl: businessLogoUrl || undefined,
-          contactEmail: contactEmail || undefined,
-          contactPhone: contactPhone || undefined,
-        },
+        branding: brandingFromSettings(businessSettings),
         currencyCode,
       });
     } catch {
@@ -367,7 +388,23 @@ export default function SaleDetailPage() {
                   key={line.id}
                   className="flex items-center justify-between gap-3 border-b border-theme py-2 last:border-b-0"
                 >
-                  <div className="min-w-0">
+                  {line.line_type !== "charge" && (
+                    <span className="po-line-thumb">
+                      <ProductThumbnail
+                        src={
+                          line.inventory_item_id !== null &&
+                          line.inventory_item_id !== undefined
+                            ? lineImages[line.inventory_item_id]
+                            : null
+                        }
+                        alt=""
+                        width={40}
+                        height={40}
+                        sizes="40px"
+                      />
+                    </span>
+                  )}
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold text-theme-primary">
                       {line.name_snapshot}
                     </p>

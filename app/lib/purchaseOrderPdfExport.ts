@@ -1,11 +1,34 @@
-import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 import { formatInventoryPrice, normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 import {
-  getContainedImageSize,
-  loadExportImage,
-  type LoadedExportImage,
-} from "@/app/lib/exportImage";
+  DOCUMENT_FILL,
+  DOCUMENT_INK,
+  DOCUMENT_MUTED,
+  DOCUMENT_RULE,
+  THUMB_COLUMN_PADDING,
+  THUMB_SIZE,
+  drawColumns,
+  drawDocumentHeader,
+  ensureRoom,
+  finishDocument,
+  formatDocumentDate,
+  fromColumn,
+  loadLineImages,
+  openDocument,
+  slugifyDocumentName,
+  thumbnailCellHook,
+  type DocumentBranding,
+} from "@/app/lib/documentPdf";
+
+/**
+ * The purchase order a supplier receives: "please send us these".
+ *
+ * Shares its page furniture with the invoice (documentPdf) and nothing else --
+ * see the note at the top of salesInvoicePdf for why the two are not one
+ * template. What this one adds is the receiving state: when part of the
+ * order has already arrived, the table says so per line, because the copy a
+ * supplier is chasing is the one that shows what is still owed to the depot.
+ */
 
 export interface PurchaseOrderPdfLine {
   name: string;
@@ -13,7 +36,9 @@ export interface PurchaseOrderPdfLine {
   code?: string;
   sku?: string;
   unit: string;
+  imageUrl?: string | null;
   orderQuantity: number;
+  receivedQuantity?: number;
   unitCost: number | null;
   lineTotal: number | null;
   note?: string;
@@ -36,13 +61,7 @@ export interface PurchaseOrderPdfDetails {
   internalReference?: string;
 }
 
-export interface PurchaseOrderPdfBranding {
-  businessName: string;
-  businessLogoUrl?: string;
-  contactEmail?: string;
-  contactPhone?: string;
-  contactWebsite?: string;
-}
+export type PurchaseOrderPdfBranding = DocumentBranding;
 
 export interface ExportPurchaseOrderPdfOptions {
   details: PurchaseOrderPdfDetails;
@@ -51,214 +70,21 @@ export interface ExportPurchaseOrderPdfOptions {
   currencyCode?: string;
 }
 
-const HEADER_HEIGHT = 36;
-
-function formatDateForDisplay(date: Date) {
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
-function formatDateOnly(value?: string) {
-  if (!value) return "Not set";
-  const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
-}
-
 function formatDateForFilename(date: Date) {
   const year = date.getFullYear();
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
-
   return `${year}-${month}-${day}`;
-}
-
-function slugifyFilename(value: string) {
-  return (
-    value
-      .trim()
-      .replace(/[^a-z0-9]+/gi, "-")
-      .replace(/(^-|-$)/g, "") || "purchase-order"
-  );
 }
 
 function formatMoney(value: number | null | undefined, currencyCode: string) {
   return value === null || value === undefined
-    ? "Not set"
-    : formatInventoryPrice(value, currencyCode) || "Not set";
+    ? "--"
+    : formatInventoryPrice(value, currencyCode) || "--";
 }
 
-function drawHeader({
-  document,
-  pageWidth,
-  margin,
-  businessName,
-  contactLine,
-  generatedAt,
-  poNumber,
-  logo,
-}: {
-  document: jsPDF;
-  pageWidth: number;
-  margin: number;
-  businessName: string;
-  contactLine: string;
-  generatedAt: Date;
-  poNumber: string;
-  logo: LoadedExportImage | null;
-}) {
-  document.setFillColor(15, 23, 42);
-  document.rect(0, 0, pageWidth, HEADER_HEIGHT, "F");
-  // Brand accent underline (cyan → indigo feel from the app theme).
-  document.setFillColor(18, 184, 214);
-  document.rect(0, HEADER_HEIGHT, pageWidth, 1.4, "F");
-
-  let textX = margin;
-
-  if (logo) {
-    const logoSize = getContainedImageSize(logo.width, logo.height, 22, 22);
-    // White rounded plate so transparent/dark logos stay legible on the dark bar.
-    document.setFillColor(255, 255, 255);
-    document.roundedRect(margin, 7, 24, 24, 3, 3, "F");
-    document.addImage(
-      logo.dataUrl,
-      logo.extension === "png" ? "PNG" : "JPEG",
-      margin + (24 - logoSize.width) / 2,
-      7 + (24 - logoSize.height) / 2,
-      logoSize.width,
-      logoSize.height
-    );
-    textX = margin + 30;
-  }
-
-  document.setFont("helvetica", "bold");
-  document.setFontSize(13);
-  document.setTextColor(255, 255, 255);
-  document.text(businessName, textX, 15);
-  document.setFont("helvetica", "normal");
-  document.setFontSize(9);
-  document.setTextColor(148, 163, 184);
-  document.text("Purchase Order", textX, 22);
-
-  if (contactLine) {
-    document.setFontSize(7.5);
-    document.setTextColor(203, 213, 225);
-    document.text(contactLine, textX, 29, { maxWidth: pageWidth / 2 });
-  }
-
-  document.setFont("helvetica", "bold");
-  document.setFontSize(11);
-  document.setTextColor(226, 232, 240);
-  document.text(poNumber, pageWidth - margin, 15, { align: "right" });
-  document.setFont("helvetica", "normal");
-  document.setFontSize(7);
-  document.setTextColor(148, 163, 184);
-  document.text(`Generated ${formatDateForDisplay(generatedAt)}`, pageWidth - margin, 22, {
-    align: "right",
-  });
-  document.text("Generated by SydIN", pageWidth - margin, 28, { align: "right" });
-}
-
-function drawFooter({
-  document,
-  pageWidth,
-  pageHeight,
-  margin,
-  pageNumber,
-  pageCount,
-  generatedAt,
-}: {
-  document: jsPDF;
-  pageWidth: number;
-  pageHeight: number;
-  margin: number;
-  pageNumber: number;
-  pageCount: number;
-  generatedAt: Date;
-}) {
-  document.setDrawColor(226, 232, 240);
-  document.line(margin, pageHeight - 12, pageWidth - margin, pageHeight - 12);
-  document.setFont("helvetica", "normal");
-  document.setFontSize(7.5);
-  document.setTextColor(100, 116, 139);
-  document.text("Generated by SydIN", margin, pageHeight - 7);
-  document.text(
-    `Page ${pageNumber} of ${pageCount} | ${formatDateForDisplay(generatedAt)}`,
-    pageWidth - margin,
-    pageHeight - 7,
-    { align: "right" }
-  );
-}
-
-function drawInfoColumns({
-  document,
-  pageWidth,
-  margin,
-  startY,
-  details,
-  currency,
-}: {
-  document: jsPDF;
-  pageWidth: number;
-  margin: number;
-  startY: number;
-  details: PurchaseOrderPdfDetails;
-  currency: string;
-}) {
-  const columnGap = 6;
-  const columnWidth = (pageWidth - margin * 2 - columnGap * 2) / 3;
-  const paymentLine = [
-    details.paymentStatus,
-    details.paymentMethod,
-  ]
-    .filter(Boolean)
-    .join(" · ");
-
-  const columns: Array<{ heading: string; rows: string[] }> = [
-    {
-      heading: "Supplier",
-      rows: [
-        details.supplierName || "Not set",
-        details.supplierContact || "",
-      ].filter(Boolean),
-    },
-    {
-      heading: "Order",
-      rows: [
-        details.title ? details.title : "",
-        `Depot: ${details.depotName || "Not set"}`,
-        `Purchased: ${formatDateOnly(details.purchaseDate)}`,
-        `Expected: ${formatDateOnly(details.expectedDeliveryDate)}`,
-        `Status: ${details.status}`,
-        details.internalReference ? `Ref: ${details.internalReference}` : "",
-      ].filter(Boolean),
-    },
-    {
-      heading: "Payment",
-      rows: [
-        paymentLine || "Not set",
-        details.paidBy ? `Paid by: ${details.paidBy}` : "",
-        details.amountPaid !== null && details.amountPaid !== undefined
-          ? `Amount paid: ${formatMoney(details.amountPaid, currency)}`
-          : "",
-      ].filter(Boolean),
-    },
-  ];
-
-  columns.forEach((column, index) => {
-    const x = margin + index * (columnWidth + columnGap);
-    document.setFont("helvetica", "bold");
-    document.setFontSize(9);
-    document.setTextColor(15, 23, 42);
-    document.text(column.heading, x, startY);
-    document.setFont("helvetica", "normal");
-    document.setFontSize(8);
-    document.setTextColor(51, 65, 85);
-    document.text(column.rows, x, startY + 6, { maxWidth: columnWidth });
-  });
+function formatUnits(value: number) {
+  return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
 export async function exportPurchaseOrderPdf({
@@ -267,24 +93,17 @@ export async function exportPurchaseOrderPdf({
   branding,
   currencyCode,
 }: ExportPurchaseOrderPdfOptions) {
-  const generatedAt = new Date();
   const currency = normalizeCurrencyCode(currencyCode, "USD");
-  const document = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const pageWidth = document.internal.pageSize.getWidth();
-  const pageHeight = document.internal.pageSize.getHeight();
-  const margin = 14;
-  const businessName = branding.businessName.trim() || "SydIN Account";
-  const contactLine = [
-    branding.contactEmail,
-    branding.contactPhone,
-    branding.contactWebsite,
-  ]
-    .filter(Boolean)
-    .join("  |  ");
-  const logo = branding.businessLogoUrl
-    ? await loadExportImage(branding.businessLogoUrl)
-    : null;
+  const header = {
+    kind: "Purchase Order",
+    number: details.poNumber || "Purchase Order",
+    meta: details.status.toUpperCase(),
+  };
+  const context = await openDocument(branding, header);
+  const { doc, pageWidth, margin } = context;
+
   const orderedLines = lines.filter((line) => line.orderQuantity > 0);
+  const images = await loadLineImages(orderedLines.map((line) => line.imageUrl));
   const subtotal = orderedLines.reduce(
     (total, line) => total + Number(line.lineTotal || 0),
     0
@@ -293,174 +112,169 @@ export async function exportPurchaseOrderPdf({
     (total, line) => total + Number(line.orderQuantity || 0),
     0
   );
+  const receivedQuantity = orderedLines.reduce(
+    (total, line) => total + Number(line.receivedQuantity || 0),
+    0
+  );
+  const showReceived = receivedQuantity > 0;
 
-  drawHeader({
-    document,
-    pageWidth,
-    margin,
-    businessName,
-    contactLine,
-    generatedAt,
-    poNumber: details.poNumber || "Purchase Order",
-    logo,
-  });
+  // ---- from, supplier, order --------------------------------------------
+  const paymentLine = [details.paymentStatus, details.paymentMethod]
+    .filter(Boolean)
+    .join(" · ");
 
-  drawInfoColumns({
-    document,
-    pageWidth,
-    margin,
-    startY: 50,
-    details,
-    currency,
-  });
+  const cursorY = drawColumns(context, context.contentTop, [
+    fromColumn(branding),
+    {
+      heading: "Supplier",
+      rows: [details.supplierName || "Not set", details.supplierContact || ""].filter(
+        Boolean
+      ),
+    },
+    {
+      heading: "Order",
+      rows: [
+        details.title || "",
+        `Ordered ${formatDocumentDate(details.purchaseDate)}`,
+        `Expected ${formatDocumentDate(details.expectedDeliveryDate)}`,
+        `Deliver to ${details.depotName || "main depot"}`,
+        details.internalReference ? `Ref. ${details.internalReference}` : "",
+        paymentLine ? `Payment: ${paymentLine}` : "",
+        details.paidBy ? `Paid by ${details.paidBy}` : "",
+        branding.paymentTerms ? `Terms: ${branding.paymentTerms}` : "",
+      ].filter(Boolean),
+    },
+  ]);
 
-  const summaryY = 82;
-  const cards = [
-    ["Lines", String(orderedLines.length)],
-    ["Total quantity", String(orderedQuantity)],
-    ["Order total", formatMoney(subtotal, currency)],
-  ];
-  const cardWidth = (pageWidth - margin * 2 - 6) / 3;
-  cards.forEach(([label, value], index) => {
-    const x = margin + index * (cardWidth + 3);
-    document.setFillColor(248, 250, 252);
-    document.setDrawColor(226, 232, 240);
-    document.roundedRect(x, summaryY, cardWidth, 16, 2.5, 2.5, "FD");
-    document.setFont("helvetica", "bold");
-    document.setFontSize(6.8);
-    document.setTextColor(100, 116, 139);
-    document.text(label.toUpperCase(), x + 3, summaryY + 5.2);
-    document.setFontSize(10.2);
-    document.setTextColor(15, 23, 42);
-    document.text(value, x + 3, summaryY + 12.2, { maxWidth: cardWidth - 6 });
-  });
+  // ---- the lines ----------------------------------------------------------
+  const head = showReceived
+    ? [["Item", "Unit", "Ordered", "Received", "Unit cost", "Line total"]]
+    : [["Item", "Unit", "Qty", "Unit cost", "Line total"]];
 
-  autoTable(document, {
-    startY: 104,
-    head: [["Item", "Category / Code", "Unit", "Qty", "Unit cost", "Line total", "Notes"]],
-    body: orderedLines.map((line) => [
-      line.name,
-      [
-        line.category,
-        line.code,
-        line.sku ? `SKU ${line.sku}` : "",
-      ]
-        .filter(Boolean)
-        .join("\n") || "-",
-      line.unit || "Unit",
-      line.orderQuantity,
-      formatMoney(line.unitCost, currency),
-      formatMoney(line.lineTotal, currency),
-      line.note || "",
-    ]),
+  autoTable(doc, {
+    startY: cursorY,
+    margin: {
+      left: margin,
+      right: margin,
+      top: context.contentTop,
+      bottom: context.pageHeight - context.contentBottom,
+    },
+    head,
+    body: orderedLines.map((line) => {
+      const cells: (string | number)[] = [
+        [line.name, [line.code, line.sku ? `SKU ${line.sku}` : ""].filter(Boolean).join(" · "), line.note]
+          .filter(Boolean)
+          .join("\n"),
+        line.unit || "Unit",
+        formatUnits(line.orderQuantity),
+      ];
+      if (showReceived) cells.push(formatUnits(line.receivedQuantity || 0));
+      cells.push(formatMoney(line.unitCost, currency), formatMoney(line.lineTotal, currency));
+      return cells;
+    }),
     foot: [
       [
         {
-          content: "Order total",
-          colSpan: 5,
-          styles: { halign: "right", fontStyle: "bold" },
+          content: showReceived
+            ? `${formatUnits(orderedQuantity)} units ordered · ${formatUnits(
+                receivedQuantity
+              )} received`
+            : `${formatUnits(orderedQuantity)} units`,
+          colSpan: showReceived ? 4 : 3,
+          styles: { halign: "left", fontStyle: "normal", textColor: DOCUMENT_MUTED },
         },
-        {
-          content: formatMoney(subtotal, currency),
-          styles: { halign: "right", fontStyle: "bold" },
-        },
-        "",
+        { content: "Order total", styles: { halign: "right", fontStyle: "bold" } },
+        { content: formatMoney(subtotal, currency), styles: { halign: "right", fontStyle: "bold" } },
       ],
     ],
-    margin: { left: margin, right: margin, top: HEADER_HEIGHT + 5, bottom: 18 },
     showHead: "everyPage",
-    pageBreak: "auto",
+    showFoot: "lastPage",
     rowPageBreak: "avoid",
     styles: {
       font: "helvetica",
-      fontSize: 7.4,
-      cellPadding: 2.3,
+      fontSize: 8.5,
+      cellPadding: 2.4,
       overflow: "linebreak",
-      valign: "top",
-      lineColor: [226, 232, 240],
+      valign: "middle",
+      lineColor: DOCUMENT_RULE,
       lineWidth: 0.12,
-      textColor: [15, 23, 42],
+      textColor: DOCUMENT_INK,
+      minCellHeight: THUMB_SIZE + 4,
     },
     headStyles: {
-      fillColor: [15, 23, 42],
-      textColor: [255, 255, 255],
+      fillColor: [238, 242, 248],
+      textColor: [70, 80, 95],
       fontStyle: "bold",
-      fontSize: 7.4,
     },
-    footStyles: {
-      fillColor: [241, 245, 249],
-      textColor: [15, 23, 42],
-    },
-    alternateRowStyles: { fillColor: [248, 250, 252] },
-    columnStyles: {
-      0: { cellWidth: 42 },
-      1: { cellWidth: 27 },
-      2: { cellWidth: 21 },
-      3: { cellWidth: 16, halign: "right" },
-      4: { cellWidth: 25, halign: "right" },
-      5: { cellWidth: 26, halign: "right" },
-      6: { cellWidth: 25 },
-    },
-    willDrawPage: () => {
-      const pageNumber = document.getCurrentPageInfo().pageNumber;
-      if (pageNumber > 1) {
-        drawHeader({
-          document,
-          pageWidth,
-          margin,
-          businessName,
-          contactLine,
-          generatedAt,
-          poNumber: details.poNumber || "Purchase Order",
-          logo,
-        });
-      }
+    footStyles: { fillColor: [241, 245, 249], textColor: DOCUMENT_INK },
+    alternateRowStyles: { fillColor: DOCUMENT_FILL },
+    columnStyles: showReceived
+      ? {
+          0: { cellPadding: { left: THUMB_COLUMN_PADDING, top: 2.4, right: 2.4, bottom: 2.4 } },
+          1: { cellWidth: 18 },
+          2: { cellWidth: 18, halign: "right" },
+          3: { cellWidth: 20, halign: "right" },
+          4: { cellWidth: 26, halign: "right" },
+          5: { cellWidth: 28, halign: "right" },
+        }
+      : {
+          0: { cellPadding: { left: THUMB_COLUMN_PADDING, top: 2.4, right: 2.4, bottom: 2.4 } },
+          1: { cellWidth: 20 },
+          2: { cellWidth: 18, halign: "right" },
+          3: { cellWidth: 28, halign: "right" },
+          4: { cellWidth: 30, halign: "right" },
+        },
+    didDrawCell: thumbnailCellHook(doc, (rowIndex) => {
+      const line = orderedLines[rowIndex];
+      if (!line) return undefined;
+      return line.imageUrl ? images.get(line.imageUrl) ?? null : null;
+    }),
+    willDrawPage: (data) => {
+      if (data.pageNumber > 1) drawDocumentHeader(context, header);
     },
   });
 
-  const finalY =
-    (document as jsPDF & { lastAutoTable?: { finalY: number } }).lastAutoTable
-      ?.finalY || 104;
-  let notesY = finalY + 8;
+  // ---- notes ----------------------------------------------------------------
+  const tableEnd =
+    (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ??
+    cursorY;
+  let y = tableEnd + 8;
+
+  if (details.amountPaid !== null && details.amountPaid !== undefined && details.amountPaid > 0) {
+    y = ensureRoom(context, header, y, 14);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...DOCUMENT_MUTED);
+    doc.text("Paid so far", pageWidth - margin - 60, y);
+    doc.setTextColor(...DOCUMENT_INK);
+    doc.text(formatMoney(details.amountPaid, currency), pageWidth - margin, y, {
+      align: "right",
+    });
+    y += 8;
+  }
 
   if (details.notes?.trim()) {
-    if (notesY > pageHeight - 42) {
-      document.addPage();
-      notesY = 42;
-    }
-    document.setFillColor(248, 250, 252);
-    document.setDrawColor(226, 232, 240);
-    document.roundedRect(margin, notesY, pageWidth - margin * 2, 24, 2.5, 2.5, "FD");
-    document.setFont("helvetica", "bold");
-    document.setFontSize(8.5);
-    document.setTextColor(15, 23, 42);
-    document.text("Notes", margin + 4, notesY + 7);
-    document.setFont("helvetica", "normal");
-    document.setFontSize(8);
-    document.setTextColor(51, 65, 85);
-    document.text(details.notes.trim(), margin + 4, notesY + 14, {
-      maxWidth: pageWidth - margin * 2 - 8,
-    });
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const text = doc.splitTextToSize(details.notes.trim(), pageWidth - margin * 2) as string[];
+    y = ensureRoom(context, header, y, text.length * 4.2 + 8);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...DOCUMENT_MUTED);
+    doc.text("NOTES", margin, y);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...DOCUMENT_INK);
+    doc.text(text, margin, y + 5);
   }
 
-  const pageCount = document.getNumberOfPages();
-  for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
-    document.setPage(pageNumber);
-    drawFooter({
-      document,
-      pageWidth,
-      pageHeight,
-      margin,
-      pageNumber,
-      pageCount,
-      generatedAt,
-    });
-  }
+  finishDocument(context, details.poNumber || "Purchase order");
 
-  const filename = `${slugifyFilename(businessName)}-${slugifyFilename(
-    details.poNumber || "purchase-order"
-  )}-${formatDateForFilename(generatedAt)}.pdf`;
+  const filename = `${slugifyDocumentName(branding.businessName, "sydin")}-${slugifyDocumentName(
+    details.poNumber || "purchase-order",
+    "purchase-order"
+  )}-${formatDateForFilename(context.generatedAt)}.pdf`;
 
-  document.save(filename);
+  doc.save(filename);
   return filename;
 }
