@@ -28,6 +28,7 @@ import {
 } from "@/app/lib/inlineCreate";
 import { getDepotsForUser, type Depot } from "@/app/lib/depots";
 import { getInventoryUnitLabel } from "@/app/lib/inventoryItemModel";
+import { getLastDepotId, rememberDepotId } from "@/app/lib/lastUsed";
 import {
   convertAmount,
   currencyChoicesIncluding,
@@ -171,6 +172,11 @@ export default function NewSalePage() {
             : current
         );
         setDepots(depotRows);
+        // The depot you shipped from last time is probably the one again.
+        const lastDepot = getLastDepotId();
+        if (lastDepot && depotRows.some((row) => String(row.id) === lastDepot)) {
+          setDepotId((current) => current || lastDepot);
+        }
         setItems((itemResult.data as SellableItem[] | null) || []);
         setCurrencyCode(
           settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
@@ -353,6 +359,7 @@ export default function NewSalePage() {
       setSaving(true);
       setError("");
 
+      rememberDepotId(depotId);
       const created = await createSalesOrder(user.id, {
         invoice_number: invoiceNumber,
         customer_id: customer ? customer.id : null,

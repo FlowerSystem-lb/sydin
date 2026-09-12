@@ -50,6 +50,7 @@ import {
   type PurchaseOrder,
 } from "@/app/lib/purchaseOrders";
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
+import { getLastDepotId, rememberDepotId } from "@/app/lib/lastUsed";
 import { supabase } from "@/app/lib/supabase";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
@@ -500,6 +501,14 @@ export default function ReceivingPage() {
       setItems((inventoryRows || []) as ReceivingInventoryItem[]);
       setSuppliers(loadedSuppliers);
       setDepots(loadedDepots);
+      // A draft restored from this device keeps its own depot; a fresh form
+      // starts from the depot used last time.
+      const lastDepot = getLastDepotId();
+      if (lastDepot && loadedDepots.some((row) => String(row.id) === lastDepot)) {
+        setDetails((current) =>
+          current.depotId ? current : { ...current, depotId: lastDepot }
+        );
+      }
       setBusinessSettings(settings);
       setRecentStockIn(
         loadedMovements.filter(
@@ -845,6 +854,7 @@ export default function ReceivingPage() {
     try {
       setFinalizing(true);
       setFinalizeError("");
+      rememberDepotId(details.depotId);
       const failed: FinalizeResult["failed"] = [];
       let recorded = 0;
 

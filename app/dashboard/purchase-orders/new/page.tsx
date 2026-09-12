@@ -40,6 +40,12 @@ import {
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
 import {
+  getLastDepotId,
+  getLastPaymentMethod,
+  rememberDepotId,
+  rememberPaymentMethod,
+} from "@/app/lib/lastUsed";
+import {
   convertAmount,
   currencyChoicesIncluding,
   formatExactPrice,
@@ -246,6 +252,13 @@ export default function NewPurchaseOrderPage() {
       if (!active) return;
       setSettings(loadedSettings);
       setDepots(loadedDepots);
+      // Last depot and usual payment method come back pre-filled.
+      const lastDepot = getLastDepotId();
+      if (lastDepot && loadedDepots.some((row) => String(row.id) === lastDepot)) {
+        setDepotId((current) => current || lastDepot);
+      }
+      const lastMethod = getLastPaymentMethod();
+      if (lastMethod) setPaymentMethod((current) => current || lastMethod);
       setSuppliers(loadedSuppliers);
 
       // "New purchase order" from a supplier's account page names the
@@ -649,6 +662,8 @@ export default function NewPurchaseOrderPage() {
         notes: line.note.trim() || null,
       }));
 
+      rememberDepotId(depotId);
+      rememberPaymentMethod(paymentMethod);
       const orderId = await createPurchaseOrder(
         userId,
         {
