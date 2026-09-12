@@ -498,7 +498,21 @@
      reading their own stock value. */
   .ov-figure-value--long {
     font-size: 28px;
-    overflow-wrap: anywhere;
+    white-space: nowrap;
+  }
+
+  /* Currency codes made the totals longer again ("QAR 6,232,162",
+     "LBP 153,235,858,750"): two more tiers, chosen by length in
+     app/dashboard/page.tsx. A number must never break in the middle. */
+  .ov-figure-value--very-long {
+    font-size: 22px;
+    white-space: nowrap;
+  }
+
+  .ov-figure-value--longest {
+    font-size: 17px;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
   }
 }
 

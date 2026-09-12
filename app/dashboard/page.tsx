@@ -106,6 +106,17 @@ function formatDateShort(value: string | null | undefined) {
   return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
 }
 
+/* A phone cell is 160px wide; the value has to fit on one line. The class
+   is chosen from the formatted length because CSS cannot measure text:
+   "$1,712,130" is long, "QAR 6,232,162" is very long, "LBP 153,235,858,750"
+   longer still. Each tier is a smaller size in app/mobile.css. */
+function figureSizeClass(rendered: string) {
+  if (rendered.length >= 16) return " ov-figure-value--longest";
+  if (rendered.length >= 12) return " ov-figure-value--very-long";
+  if (rendered.length >= 8) return " ov-figure-value--long";
+  return "";
+}
+
 function formatCurrency(value: number, currencyCode: string) {
   value = convertFromBase(value, currencyCode);
   const currency = normalizeCurrencyCode(currencyCode);
@@ -784,7 +795,7 @@ export default function DashboardPage() {
             <span className="ov-figure-label">{card.label}</span>
             <span
               className={`ov-figure-value${
-                rendered.length >= 8 ? " ov-figure-value--long" : ""
+                figureSizeClass(rendered)
               }`}
             >
               {loading || card.rawValue === null ? (
@@ -811,7 +822,7 @@ export default function DashboardPage() {
                 <span className="ov-figure-label">{card.label}</span>
                 <span
                   className={`ov-figure-value${
-                    rendered.length >= 8 ? " ov-figure-value--long" : ""
+                    figureSizeClass(rendered)
                   }`}
                 >
                   {loading ? "--" : rendered}

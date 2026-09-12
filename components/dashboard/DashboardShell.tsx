@@ -24,6 +24,7 @@ import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 import {
   canConvertToDisplay,
   fetchLiveRates,
+  getCurrencyContext,
   mergeRates,
   ratesAreStale,
   setCurrencyContext,
@@ -710,12 +711,26 @@ export default function DashboardShell({
            here, once, from Settings. Live rates refresh once a day, only when
            they are actually needed (display differs from base) and saved back
            so the next load, and every other device, starts from them. */
+        const previous = getCurrencyContext();
         setCurrencyContext({
           base: settings.base_currency,
           display: settings.currency_code || settings.base_currency,
           rates: mergeRates(settings.exchange_rates, settings.manual_rates),
         });
         const display = normalizeCurrencyCode(settings.currency_code, settings.base_currency);
+        /* The page's own data can resolve before Settings does, in which
+           case it has already painted unconverted numbers and nothing tells
+           it to look again. When the conversion that just became possible
+           changes anything (display differs from base, or the base moved),
+           remount the page once. */
+        if (
+          display !== settings.base_currency &&
+          (previous.base !== settings.base_currency ||
+            previous.display !== display ||
+            !Object.keys(previous.rates).some((code) => code === display))
+        ) {
+          setCurrencyEpoch((epoch) => epoch + 1);
+        }
         if (display !== settings.base_currency && ratesAreStale(settings.rates_updated_at)) {
           const hadNoRate = !canConvertToDisplay();
           fetchLiveRates()
