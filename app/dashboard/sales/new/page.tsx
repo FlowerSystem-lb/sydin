@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
 import {
   DashboardNotice,
@@ -77,6 +77,7 @@ const newKey = () =>
  */
 export default function NewSalePage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
@@ -86,7 +87,8 @@ export default function NewSalePage() {
   );
 
   const [invoiceNumber, setInvoiceNumber] = useState("");
-  const [customerId, setCustomerId] = useState("");
+  // "New invoice" from a customer's account page names the customer.
+  const [customerId, setCustomerId] = useState(() => searchParams.get("customer") || "");
   const [depotId, setDepotId] = useState("");
   const [issueDate, setIssueDate] = useState(
     () => new Date().toISOString().slice(0, 10)
@@ -140,6 +142,13 @@ export default function NewSalePage() {
         if (!isActive) return;
 
         setCustomers(customerRows);
+        // A customer id from the URL that is not in the list is dropped, so
+        // the select never shows an id it cannot name.
+        setCustomerId((current) =>
+          current && !customerRows.some((row) => String(row.id) === current)
+            ? ""
+            : current
+        );
         setDepots(depotRows);
         setItems((itemResult.data as SellableItem[] | null) || []);
         setCurrencyCode(

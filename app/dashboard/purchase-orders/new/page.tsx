@@ -219,6 +219,22 @@ export default function NewPurchaseOrderPage() {
       setDepots(loadedDepots);
       setSuppliers(loadedSuppliers);
 
+      // "New purchase order" from a supplier's account page names the
+      // supplier (?supplier=12), the same way the select would.
+      const supplierParam = new URLSearchParams(window.location.search).get("supplier");
+      const preselected = loadedSuppliers.find(
+        (entry) => String(entry.id) === supplierParam
+      );
+      if (preselected) {
+        setSupplierId(String(preselected.id));
+        setSupplierName(preselected.name);
+        setSupplierContact(
+          [preselected.contact_name, preselected.email, preselected.phone]
+            .filter(Boolean)
+            .join(" | ")
+        );
+      }
+
       // Prefill lines when arriving from inventory "Create purchase order" (?items=1,2,3).
       const itemsParam = new URLSearchParams(window.location.search).get("items");
       const prefillIds = (itemsParam || "")

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -11,13 +12,28 @@ import {
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import {
+  Badge,
   Button,
   DialogShell,
   FieldGroup,
   FieldRow,
   ResultsAnnouncer,
   SearchInput,
+  SheetShell,
+  buttonClassName,
 } from "@/components/ui";
+import {
+  DEFAULT_BUSINESS_SETTINGS,
+  getOrCreateBusinessSettings,
+} from "@/app/lib/businessSettings";
+import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
+import {
+  SALES_ORDER_STATUS_LABELS,
+  getSalesOrderBalance,
+  getSalesOrderTotal,
+  getSalesOrdersForUser,
+  type SalesOrder,
+} from "@/app/lib/salesOrders";
 import { supabase } from "@/app/lib/supabase";
 import {
   createCustomer,
@@ -62,6 +78,13 @@ const EMPTY_FORM: CustomerInput = {
 
 export default function CustomersPage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
+  // Every invoice, once, so each customer's balance and history come from
+  // the same list the Sales page shows -- no second source of truth.
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [currencyCode, setCurrencyCode] = useState(
+    DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
+  );
+  const [accountCustomer, setAccountCustomer] = useState<Customer | null>(null);
   const [subscription, setSubscription] =
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [loading, setLoading] = useState(true);
@@ -76,6 +99,34 @@ export default function CustomersPage() {
   const [saving, setSaving] = useState(false);
   const [pendingDelete, setPendingDelete] = useState<Customer | null>(null);
   const [deleting, setDeleting] = useState(false);
+
+  /* Invoices by customer, with the two numbers a row needs: how many, and
+     what is still owed. Drafts and cancelled invoices are not money. */
+  const accounts = useMemo(() => {
+    const map = new Map<
+      number,
+      { orders: SalesOrder[]; owed: number; billed: number; overdue: number }
+    >();
+    const today = new Date().toISOString().slice(0, 10);
+    for (const order of salesOrders) {
+      if (order.customer_id === null || order.customer_id === undefined) continue;
+      const entry = map.get(order.customer_id) || {
+        orders: [],
+        owed: 0,
+        billed: 0,
+        overdue: 0,
+      };
+      entry.orders.push(order);
+      if (order.status !== "draft" && order.status !== "cancelled") {
+        entry.billed += getSalesOrderTotal(order);
+        const remaining = getSalesOrderBalance(order);
+        entry.owed += remaining;
+        if (remaining > 0 && order.due_date && order.due_date < today) entry.overdue += 1;
+      }
+      map.set(order.customer_id, entry);
+    }
+    return map;
+  }, [salesOrders]);
 
   /** Used after a save or a delete, from an event handler. */
   const reload = useCallback(async () => {
@@ -118,15 +169,19 @@ export default function CustomersPage() {
           return;
         }
 
-        const [rows, plan] = await Promise.all([
+        const [rows, plan, orders, settings] = await Promise.all([
           getCustomersForUser(user.id),
           getUserSubscription(user.id),
+          getSalesOrdersForUser(user.id).catch(() => [] as SalesOrder[]),
+          getOrCreateBusinessSettings(user.id).catch(() => DEFAULT_BUSINESS_SETTINGS),
         ]);
 
         if (!isActive) return;
 
         setCustomers(rows);
         setSubscription(plan);
+        setSalesOrders(orders);
+        setCurrencyCode(settings.currency_code || "USD");
       })
       .catch((error) => {
         if (isActive) setPageError(getCustomerErrorMessage(error));
@@ -336,6 +391,24 @@ export default function CustomersPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2">
+                  {(() => {
+                    const account = accounts.get(customer.id);
+                    if (!account || account.orders.length === 0) return null;
+                    return account.owed > 0 ? (
+                      <Badge tone={account.overdue > 0 ? "danger" : "warning"}>
+                        Owes {formatInventoryPrice(account.owed, currencyCode)}
+                      </Badge>
+                    ) : (
+                      <Badge tone="success">Settled</Badge>
+                    );
+                  })()}
+                  <button
+                    type="button"
+                    onClick={() => setAccountCustomer(customer)}
+                    className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-semibold text-theme-primary transition hover:bg-theme-hover"
+                  >
+                    Account
+                  </button>
                   {customer.phone && (
                     <a
                       href={`tel:${customer.phone}`}
@@ -382,6 +455,134 @@ export default function CustomersPage() {
           </div>
         )}
       </DashboardPageShell>
+
+      {accountCustomer && (() => {
+        const account = accounts.get(accountCustomer.id) || {
+          orders: [],
+          owed: 0,
+          billed: 0,
+          overdue: 0,
+        };
+        const orders = [...account.orders].sort((a, b) =>
+          (b.issue_date || b.created_at).localeCompare(a.issue_date || a.created_at)
+        );
+        return (
+          <SheetShell
+            title={accountCustomer.name}
+            eyebrow="Customer account"
+            description={
+              [accountCustomer.contact_name, accountCustomer.phone, accountCustomer.email]
+                .filter(Boolean)
+                .join(" · ") || undefined
+            }
+            onClose={() => setAccountCustomer(null)}
+            footer={
+              <>
+                <Button variant="secondary" onClick={() => setAccountCustomer(null)}>
+                  Close
+                </Button>
+                <Link
+                  href={`/dashboard/sales/new?customer=${accountCustomer.id}`}
+                  className={buttonClassName()}
+                >
+                  New invoice
+                </Link>
+              </>
+            }
+          >
+            <div className="grid gap-4">
+              {/* The three numbers a customer conversation turns on. */}
+              {account.orders.length > 0 && (
+              <div className="po-balance-strip">
+                <div>
+                  <small>Invoiced</small>
+                  <strong>{formatInventoryPrice(account.billed, currencyCode) || "—"}</strong>
+                </div>
+                <div>
+                  <small>Paid</small>
+                  <strong>
+                    {formatInventoryPrice(
+                      Math.max(0, account.billed - account.owed),
+                      currencyCode
+                    ) || "—"}
+                  </strong>
+                </div>
+                <div
+                  className={
+                    account.owed > 0 ? "po-balance-remaining-due" : "po-balance-remaining-clear"
+                  }
+                >
+                  <small>{account.owed > 0 ? "Still owes" : "Settled"}</small>
+                  <strong>
+                    {account.owed > 0
+                      ? formatInventoryPrice(account.owed, currencyCode)
+                      : "✓"}
+                  </strong>
+                </div>
+              </div>
+              )}
+
+              {accountCustomer.address && (
+                <div>
+                  <p className="po-detail-label">Address</p>
+                  <p className="whitespace-pre-line text-sm text-theme-secondary">
+                    {accountCustomer.address}
+                  </p>
+                </div>
+              )}
+
+              <div className="grid gap-1.5">
+                <p className="po-detail-label">Invoices</p>
+                {orders.length === 0 ? (
+                  <p className="text-sm text-theme-muted">
+                    Nothing invoiced to this customer yet.
+                  </p>
+                ) : (
+                  orders.map((order) => {
+                    const remaining = getSalesOrderBalance(order);
+                    const money = order.status !== "draft" && order.status !== "cancelled";
+                    return (
+                      <Link
+                        key={order.id}
+                        href={`/dashboard/sales/${order.id}`}
+                        className="po-detail-line"
+                      >
+                        <span className="min-w-0 flex-1">
+                          <span className="block truncate text-sm font-bold text-theme-primary">
+                            {order.invoice_number}
+                            {order.title ? ` — ${order.title}` : ""}
+                          </span>
+                          <span className="block truncate text-xs font-semibold text-theme-muted">
+                            {[
+                              order.issue_date || order.created_at.slice(0, 10),
+                              SALES_ORDER_STATUS_LABELS[order.status],
+                              money && remaining > 0
+                                ? `${formatInventoryPrice(remaining, currencyCode)} still owed`
+                                : "",
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
+                          </span>
+                        </span>
+                        <span className="shrink-0 text-sm font-black text-theme-primary">
+                          {formatInventoryPrice(getSalesOrderTotal(order), currencyCode) || "—"}
+                        </span>
+                      </Link>
+                    );
+                  })
+                )}
+              </div>
+
+              {accountCustomer.notes && (
+                <div>
+                  <p className="po-detail-label">Notes</p>
+                  <p className="text-sm text-theme-secondary">{accountCustomer.notes}</p>
+                </div>
+              )}
+            </div>
+          </SheetShell>
+        );
+      })()}
 
       {formOpen && (
         <DialogShell
