@@ -18,6 +18,9 @@ import { supabase } from "@/app/lib/supabase";
 
 export type SearchGroup =
   | "Items"
+  | "Invoices"
+  | "Purchase Orders"
+  | "Customers"
   | "Categories"
   | "Locations"
   | "Suppliers"
@@ -59,6 +62,37 @@ interface SearchCategory {
   id: number;
   name: string;
   description: string | null;
+}
+
+interface SalesOrderRow {
+  id: number;
+  invoice_number: string;
+  title: string | null;
+  customer_name_snapshot: string | null;
+  status: string | null;
+  payment_status: string | null;
+  amount_paid: number | null;
+  issue_date: string | null;
+  created_at: string | null;
+}
+
+interface PurchaseOrderRow {
+  id: number;
+  po_number: string;
+  title: string | null;
+  supplier_name_snapshot: string | null;
+  status: string | null;
+  payment_status: string | null;
+  purchase_date: string | null;
+  created_at: string | null;
+}
+
+interface CustomerRow {
+  id: number;
+  name: string;
+  contact_name: string | null;
+  phone: string | null;
+  email: string | null;
 }
 
 interface PickListRow {
@@ -106,6 +140,9 @@ const INVENTORY_ITEM_SEARCH_SELECT =
 
 export const SEARCH_GROUP_ORDER: SearchGroup[] = [
   "Items",
+  "Invoices",
+  "Purchase Orders",
+  "Customers",
   "Categories",
   "Locations",
   "Suppliers",
@@ -116,6 +153,9 @@ export const SEARCH_GROUP_ORDER: SearchGroup[] = [
 
 export const GROUP_ICON: Record<SearchGroup, UiIconName> = {
   Items: "box",
+  Invoices: "receipt",
+  "Purchase Orders": "cart",
+  Customers: "customers",
   Categories: "categories",
   Locations: "depots",
   Suppliers: "suppliers",
@@ -526,6 +566,9 @@ export async function runGlobalSearch(
     categoriesResult,
     movementsResult,
     pickListsResult,
+    invoicesResult,
+    purchaseOrdersResult,
+    customersResult,
   ] = await Promise.allSettled([
     getSuppliersForUser(userId),
     getDepotsForUser(userId),
@@ -554,6 +597,41 @@ export async function runGlobalSearch(
         `title.ilike.${likeTerm},customer_name.ilike.${likeTerm},status.ilike.${likeTerm},notes.ilike.${likeTerm}`
       )
       .order("created_at", { ascending: false })
+      .limit(pickListQueryLimit),
+    // Documents and people: the things a phone call is usually about.
+    // "INV-2026-0042", a customer's name, a PO number. Each search is its
+    // own settled promise, so a table that does not exist yet (a migration
+    // not run) leaves the rest of the results untouched.
+    supabase
+      .from("sales_orders")
+      .select(
+        "id, invoice_number, title, customer_name_snapshot, status, payment_status, amount_paid, issue_date, created_at"
+      )
+      .eq("user_id", userId)
+      .or(
+        `invoice_number.ilike.${likeTerm},title.ilike.${likeTerm},customer_name_snapshot.ilike.${likeTerm}`
+      )
+      .order("created_at", { ascending: false })
+      .limit(pickListQueryLimit),
+    supabase
+      .from("purchase_orders")
+      .select(
+        "id, po_number, title, supplier_name_snapshot, status, payment_status, purchase_date, created_at"
+      )
+      .eq("user_id", userId)
+      .or(
+        `po_number.ilike.${likeTerm},title.ilike.${likeTerm},supplier_name_snapshot.ilike.${likeTerm},internal_reference.ilike.${likeTerm}`
+      )
+      .order("created_at", { ascending: false })
+      .limit(pickListQueryLimit),
+    supabase
+      .from("customers")
+      .select("id, name, contact_name, phone, email")
+      .eq("user_id", userId)
+      .or(
+        `name.ilike.${likeTerm},contact_name.ilike.${likeTerm},phone.ilike.${likeTerm},email.ilike.${likeTerm}`
+      )
+      .order("name", { ascending: true })
       .limit(pickListQueryLimit),
   ]);
 
@@ -829,6 +907,76 @@ export async function runGlobalSearch(
     }
   }
 
+  const statusLabel = (value: string | null) =>
+    value ? value.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase()) : "";
+  const statusTone = (value: string | null): SearchTone =>
+    value === "paid" || value === "received"
+      ? "success"
+      : value === "cancelled"
+        ? "danger"
+        : value === "partially_received" || value === "partial"
+          ? "warning"
+          : value === "issued" || value === "ordered"
+            ? "accent"
+            : "default";
+
+  if (invoicesResult.status === "fulfilled" && !invoicesResult.value.error) {
+    for (const row of (invoicesResult.value.data || []) as SalesOrderRow[]) {
+      nextResults.push({
+        id: `invoice-${row.id}`,
+        group: "Invoices",
+        title: row.invoice_number,
+        subtitle:
+          [row.customer_name_snapshot || row.title, formatDate(row.issue_date || row.created_at)]
+            .filter(Boolean)
+            .join(" | ") || "Invoice",
+        chip:
+          row.status === "issued" && row.payment_status === "partial"
+            ? "Partially paid"
+            : statusLabel(row.status) || "Invoice",
+        tone: statusTone(row.status === "issued" ? row.payment_status : row.status),
+        href: `/dashboard/sales/${row.id}`,
+        keywords: [row.invoice_number, row.title, row.customer_name_snapshot]
+          .filter(Boolean)
+          .join(" "),
+      });
+    }
+  }
+
+  if (purchaseOrdersResult.status === "fulfilled" && !purchaseOrdersResult.value.error) {
+    for (const row of (purchaseOrdersResult.value.data || []) as PurchaseOrderRow[]) {
+      nextResults.push({
+        id: `purchase-order-${row.id}`,
+        group: "Purchase Orders",
+        title: row.po_number,
+        subtitle:
+          [row.supplier_name_snapshot || row.title, formatDate(row.purchase_date || row.created_at)]
+            .filter(Boolean)
+            .join(" | ") || "Purchase order",
+        chip: statusLabel(row.status) || "Purchase order",
+        tone: statusTone(row.status),
+        href: `/dashboard/purchase-orders?open=${row.id}`,
+        keywords: [row.po_number, row.title, row.supplier_name_snapshot]
+          .filter(Boolean)
+          .join(" "),
+      });
+    }
+  }
+
+  if (customersResult.status === "fulfilled" && !customersResult.value.error) {
+    for (const row of (customersResult.value.data || []) as CustomerRow[]) {
+      nextResults.push({
+        id: `customer-${row.id}`,
+        group: "Customers",
+        title: row.name,
+        subtitle: [row.contact_name, row.phone, row.email].filter(Boolean).join(" | ") || "Customer",
+        chip: "Customer",
+        href: "/dashboard/customers",
+        keywords: [row.name, row.contact_name, row.phone, row.email].filter(Boolean).join(" "),
+      });
+    }
+  }
+
   const failedSearches = [
     suppliersResult,
     depotsResult,
@@ -836,10 +984,13 @@ export async function runGlobalSearch(
     categoriesResult,
     movementsResult,
     pickListsResult,
+    invoicesResult,
+    purchaseOrdersResult,
+    customersResult,
   ].filter((result) => result.status === "rejected").length;
 
   return {
     results: nextResults,
-    failed: failedSearches === 6,
+    failed: failedSearches === 9,
   };
 }
