@@ -418,3 +418,38 @@ Do **not** scale media-query breakpoints (they are real device widths) or 1px ha
 (a border should stay one physical pixel at any scale). If a future element does not shrink with the
 rest of the site, it is hardcoded in `px` — convert that value to `rem` rather than reaching for
 `zoom` again. **Status:** Active.
+
+### 2026-09-12 · The sidebar names the operations
+**Decision:** Sales, Purchase Orders, Stock In, Pick Lists and Stock Counts are sidebar entries
+again, grouped Buying / Selling / Stock control; the `/dashboard/workflows` hub stays as a page
+but is not the only door. **Why:** the one test a sidebar must pass is "where do I receive this
+delivery?" and a hub called Workflows does not answer it. Every inventory tool a small business
+runs on names the operations. **How to apply:** new pages go into `navigation.ts` under the
+business activity they belong to, never into a catch-all group. **Status:** Active.
+
+### 2026-09-12 · A purchase order is Ordered when saved
+**Decision:** "Save purchase order" saves as `ordered`; "Save as draft" is the secondary action;
+drafts get "Mark as ordered". **Why:** nothing in the app ever set `ordered`, so Draft and Ordered
+meant the same thing and "Deliveries expected" could not exist. **Status:** Active.
+
+### 2026-09-12 · Receiving is per delivery, never a rewrite of the order
+**Decision:** `receive_purchase_order_lines` records a receipt row per delivery and adds to each
+line's `received_quantity`; the order becomes `partially_received` until everything is in, and
+can be closed short but never cancelled once stock has moved. Lines freeze at the first receipt.
+**Why:** suppliers ship in parts; the order must say what is still to come, and the history must
+say what arrived when. **How to apply:** anything that changes stock from a document must go
+through an RPC that writes the stock movement and the document state in one transaction, with
+the `sydin.receive_purchase_order` flag for the triggers. **Status:** Active.
+
+### 2026-09-12 · One page furniture for every document
+**Decision:** `app/lib/documentPdf.ts` (and `documentDocx.ts`) own the header, From block,
+thumbnails, repeated table head and footer; invoice, purchase order and reports draw their own
+body in between. **Why:** documents leave the same business and should look like it, while an
+invoice and a purchase order must not be one template with the labels swapped. **How to apply:**
+a new document type (quote, receipt, statement) is a new body on the same furniture, tested by
+rendering it in Node with realistic data and reading the pages. **Status:** Active.
+
+### 2026-09-12 · Documents shrink photos before embedding them
+**Decision:** product photos and logos are redrawn at thumbnail size (240px / 512px) before going
+into a PDF or Word file. **Why:** a 2MB phone upload was being embedded in full for a 9mm
+square; a 40-line invoice would have been 80MB. **Status:** Active.

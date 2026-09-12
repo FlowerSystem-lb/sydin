@@ -3676,3 +3676,58 @@ server, delete `.next`, start again, then confirm by fetching the stylesheet and
 the new selector.
 
 ---
+
+## Product-level redesign — sidebar, receiving, documents, money  *(Complete, two SQL files pending)*
+
+**Date:** 12 September 2026 · **Branch:** `main` · **Commits:** `1e80e88` → `074a36e`
+
+**Why:** Sayed's "complete product redesign, UX audit, workflow architecture" prompt. Executed
+surface by surface, each verified in the running app and pushed, per the founder manual — never
+as a blind sweep.
+
+**Delivered:**
+- **Sidebar** grouped by business activity (Daily work / Buying / Selling / Stock control /
+  Insight / Settings & help); four new glyphs (cart, receipt, stock-in, clipboard). Stock
+  Movements back in the sidebar; Stock In on the phone bar.
+- **Partial receiving** — `sql/phase-23-partial-receiving.sql`: `partially_received` status,
+  `received_quantity` per line, `purchase_order_receipts` + lines, `closed_short`, the
+  `receive_purchase_order_lines` RPC (the old `receive_purchase_order` now means "everything
+  outstanding"). Dialog: goods-received table with photos, ordered / received / arriving now,
+  delivery note, optional payment on delivery, close-short switch; progress line and Deliveries
+  history; list rows show "60 / 100 received". New POs save as Ordered; "Mark as ordered" for
+  drafts; delete allowed while nothing has been received or paid. Stock In lists "Deliveries
+  expected" deep-linking to `?open=id&receive=1`. The app keeps working before the migration
+  (query fallback + a message naming the file).
+- **Company profile** — `sql/phase-24-company-profile.sql`: address, tax id, payment terms,
+  footer. Settings > Company rebuilt on the shared rows; currency editable at last.
+- **Documents** — `documentPdf.ts` shared furniture; invoice and PO PDFs rebuilt on it (From
+  block, thumbnails, header + table head on every page, footer with page numbers, long-name
+  fit); `documentDocx.ts` + `documentDocxExports.ts` for Word. Rendered in Node
+  (`scratchpad/pdftest`) with a logo, photos, a 39-line 3-page invoice, an empty-fields invoice
+  and a partially received order; every page read as an image and fixed (name overflow, notes
+  wrap width, charge-row placeholder, duplicate terms).
+- **Overview** money row + Action required. **Customer / supplier account drawers.**
+  **Help Center** rebuilt (26 articles, search, categories, deep links, `HelpLink`).
+  **Global search** covers invoices, POs, customers. **Reports**: four money reports (PDF + CSV).
+- **Bugs fixed:** sidebar toggle hidden in the collapsed rail (no way back); New PO save bar
+  squeezed to 34px by the "last card scrolls" rule; top bar wrapping beside an expanded
+  sidebar; double "Cancelled" on PO rows; a lint error (setState in effect) that `tail -1` had
+  hidden from an earlier gate.
+
+**Verification:** lint ✅ tsc ✅ build ✅ after every commit. Browser: sidebar expanded and
+collapsed; a test PO created through the real form, marked ordered, opened for receiving from
+Stock In, then deleted (nothing left in live data); Settings saved with identical values; Help
+search and deep link; global search; Overview figures; customer and supplier drawers; report
+export notice. Mobile (375px): Overview, Settings, Help. PDFs: Node render + page images.
+DOCX: generated in Node, structure checked (tables, media, PAGE/NUMPAGES fields) — not
+visually opened, no Word on this machine.
+
+**Untouchables:** no auth or routing changes. Schema changes are additive and in the two SQL
+files for Sayed to run; the receive path stays an RPC with the trigger flag.
+
+**Worth remembering:** jsPDF's Node build mutes `console.log` — log to stderr in harnesses.
+jsPDF plugin methods live on `jsPDF.API`, not the prototype. The orphaned dev server on port
+3000 (PID 23308) could not be stopped from this session and returns 500 for remote images;
+production serves them.
+
+---

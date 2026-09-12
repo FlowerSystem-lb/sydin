@@ -579,7 +579,52 @@ both places. Never hardcode a nav list again.
 
 ---
 
+## N. Product-level redesign — 12 September 2026
+
+Sayed's "complete product redesign" prompt (sidebar by workflow, receiving as a
+first-class workflow, documents that carry the company, payments visible,
+help that teaches). Done incrementally, one surface per commit, verified in
+the running app, all pushed. What changed:
+
+- **Sidebar by what the business is doing.** Daily work · Buying (Purchase
+  Orders, Stock In, Suppliers) · Selling (Sales, Pick Lists, Customers) ·
+  Stock control (Stock Counts, Stock Movements, Depots, Categories) · Insight
+  (Reports) · Settings & help. Section L's "Workflows" door is no longer the
+  only way in; the route still exists. Stock In takes the phone bar slot.
+- **Partial receiving** (`sql/phase-23-partial-receiving.sql`, **needs Sayed
+  to run it**): Ordered → Partially received → Received; a receipt row per
+  delivery; received quantity per line; close-short when a supplier never
+  sends the rest. New POs save as Ordered (drafts on request). Stock In shows
+  "Deliveries expected" linking into the order's receiving dialog.
+- **Company profile & documents** (`sql/phase-24-company-profile.sql`, **needs
+  Sayed to run it**): address, tax number, payment terms, footer line;
+  currency editable. `app/lib/documentPdf.ts` is the shared page furniture
+  (logo header, From block, thumbnails, repeated table head, footer with page
+  numbers); invoice and PO PDFs use it; `documentDocx.ts` writes the Word
+  twins. All rendered in Node with realistic data and read page by page.
+- **Overview** has a money row (sold this month, customers owe you, you owe
+  suppliers, deliveries expected) and an Action required list.
+- **Customer and supplier account drawers** with balances and every document.
+- **Help Center** rebuilt as searchable step-by-step articles; `HelpLink`
+  "what is this?" on receiving, Stock In and invoice payments.
+- **Global search** finds invoices, purchase orders and customers.
+- **Reports** gains four money reports (PDF + CSV).
+- Fixed on the way: the sidebar could not be re-expanded once collapsed; the
+  New PO save bar was cut off; the top bar wrapped beside an expanded sidebar.
+
+**Not done, deliberately:** quotes, customer statements as documents, receipt
+documents, a report builder, tax/discount lines on invoices, team roles. Each
+is a schema change or a new module and should be its own sprint with Sayed's
+go-ahead. Known local-only issue: the dev machine's Next image optimizer
+returns 500 for Supabase-hosted images; production (Vercel) serves them.
+
+---
+
 ## M. What is left
+
+0. **Run two SQL files in Supabase** (Sayed): `sql/phase-23-partial-receiving.sql`
+   and `sql/phase-24-company-profile.sql`. Until then receiving in parts and the
+   document fields show a message saying what to run; everything else works.
 
 1. **Plan gating for Sales** is written (`sales` capability, Free = false) but
    has only been seen on a Pro account. Confirm the padlock on a Free account.
