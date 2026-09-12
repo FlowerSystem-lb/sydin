@@ -227,6 +227,19 @@ export default function CustomersPage() {
     setFormOpen(true);
   };
 
+  /* "New customer" from the top bar's Add menu lands on ?new=1 and opens the
+     form straight away, then drops the flag so a refresh does not reopen it. */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("new") !== "1") return;
+    const frame = window.requestAnimationFrame(() => {
+      openCreate();
+      window.history.replaceState(null, "", "/dashboard/customers");
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, []);
+
   const openEdit = (customer: Customer) => {
     setEditing(customer);
     setForm({

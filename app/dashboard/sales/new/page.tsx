@@ -111,6 +111,9 @@ export default function NewSalePage() {
   const [issueDate, setIssueDate] = useState(
     () => new Date().toISOString().slice(0, 10)
   );
+  /* Optional. Overview and Reports call an invoice overdue from this date;
+     without one it is simply "open". */
+  const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<DraftLine[]>([]);
 
@@ -360,6 +363,7 @@ export default function NewSalePage() {
         depot_id: depot ? depot.id : null,
         depot_name_snapshot: depot ? depot.name : null,
         issue_date: issueDate || null,
+        due_date: dueDate || null,
         currency_code: currencyCode,
         exchange_rate: exchangeRate ?? 1,
         notes: notes.trim() || null,
@@ -419,6 +423,19 @@ export default function NewSalePage() {
                       value={issueDate}
                       onChange={(event) => setIssueDate(event.target.value)}
                     />
+                  </FieldRow>
+
+                  <FieldRow label="Due" htmlFor="invoice-due">
+                    <input
+                      id="invoice-due"
+                      type="date"
+                      value={dueDate}
+                      min={issueDate || undefined}
+                      onChange={(event) => setDueDate(event.target.value)}
+                    />
+                    <p className="mt-1 text-xs text-theme-muted">
+                      Optional. After this date an unpaid invoice shows as overdue.
+                    </p>
                   </FieldRow>
 
                   <FieldRow label="Currency">

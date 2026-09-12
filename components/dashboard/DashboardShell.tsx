@@ -101,10 +101,18 @@ const ADD_MENU_ITEMS: {
     icon: "box",
   },
   {
+    /* Selling is half the working day and had no entry here (brief point
+       24: quick actions). The invoice form is where a sale starts. */
+    label: "New invoice",
+    description: "Sell to a customer and record what they owe",
+    href: "/dashboard/sales/new",
+    icon: "receipt",
+  },
+  {
     label: "Purchase order",
-    description: "Record a purchase or expense",
+    description: "Order from a supplier, or record an expense",
     href: "/dashboard/purchase-orders/new",
-    icon: "file",
+    icon: "cart",
   },
   {
     /* "Stock In", matching the page it opens and the Workflows card for
@@ -112,7 +120,13 @@ const ADD_MENU_ITEMS: {
     label: "Stock In",
     description: "Log stock arriving without a PO",
     href: "/dashboard/receiving",
-    icon: "download",
+    icon: "stock-in",
+  },
+  {
+    label: "New customer",
+    description: "Someone you sell to",
+    href: "/dashboard/customers?new=1",
+    icon: "customers",
   },
 ];
 

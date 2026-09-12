@@ -22,7 +22,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 10. ✅ Sales workflow: customer → lines → invoice → payment → paid (existing; currency added).
 11. ◐ Daily operation view: Overview has sold / owed / owe suppliers / deliveries expected + Action required. No "today" split yet.
 12. ✅ Payments: partial/full, outstanding, method, date, note (existing ledgers on invoices and POs).
-13. ◐ Invoice as a document: number, dates, company block, customer, lines with photos, totals, paid, balance, terms, notes, footer. ✗ discount/tax lines (schema — own sprint). ☐ due date on the form. ☐ signature area.
+13. ◐ Invoice as a document: number, dates, company block, customer, lines with photos, totals, paid, balance, terms, notes, footer. ✅ due date on the form (13 Sep). ✗ discount/tax lines (schema — own sprint). ☐ signature area.
 14. ◐ Document family: invoice, PO share `documentPdf.ts`. ☐ goods-received note, receipt, statement, quote.
 15. ✅ Company branding: name, logo, address, phone, email, website, tax/reg no., currency, payment terms, footer. ☐ document prefix/numbering, accent colour.
 16. ☐ Live document preview while editing (edit left / preview right).
@@ -33,7 +33,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 21. ◐ Reporting: sales by month, outstanding invoices, purchases by supplier/month, inventory reports. ☐ top items, by customer, by category, payments by method, stock aging.
 22. ☐ Report builder (date range, columns, grouping, saved reports).
 23. ✅ Dashboard hierarchy: figures → action required → recent activity.
-24. ◐ Quick actions: Add menu (item, order, stock in); ☐ new sale / record payment / add customer from the top bar.
+24. ✅ Quick actions: Add menu has New item · New invoice · Purchase order · Stock In · New customer (13 Sep). Record payment stays on the document it belongs to.
 25. ✅ Global search: items, customers, suppliers, invoices, POs — typed results.
 26. ◐ Item detail as source of truth: photo, codes, stock, movement history. ☐ purchase/sales/receiving history tabs.
 27. ✅ Settings rebuilt: Company · Account · Inventory · Plan & billing · Data & reports, one row style, business words.
