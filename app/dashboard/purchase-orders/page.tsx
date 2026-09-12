@@ -37,6 +37,7 @@ import { exportPurchaseOrderExcel } from "@/app/lib/purchaseOrderExcelExport";
 import { exportPurchaseOrderPdf } from "@/app/lib/purchaseOrderPdfExport";
 import { exportPurchaseOrderDocx } from "@/app/lib/documentDocxExports";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
+import { exportGoodsReceivedPdf } from "@/app/lib/goodsReceivedPdf";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
   PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
@@ -783,6 +784,47 @@ export default function PurchaseOrdersPage() {
     branding: brandingFromSettings(settings),
     currencyCode: getPurchaseOrderCurrency(order),
   });
+
+  /* The paper for one delivery: what arrived, against what, signed by whom.
+     Counts come from the receipt's lines; ordered and received-so-far from
+     the order's lines as they stand now. */
+  const handleExportReceipt = async (receipt: PurchaseOrderReceipt) => {
+    if (!selectedOrder) return;
+    setActionBusy(true);
+    setActionError("");
+    try {
+      const byLine = new Map(receipt.lines.map((line) => [line.purchase_order_line_id, line.quantity]));
+      await exportGoodsReceivedPdf({
+        details: {
+          receiptNumber: receipt.receipt_number,
+          poNumber: selectedOrder.po_number,
+          receivedAt: receipt.received_at,
+          supplierName: selectedOrder.supplier_name_snapshot || undefined,
+          supplierContact: selectedOrder.supplier_contact_snapshot || undefined,
+          depotName: selectedOrder.depot_name_snapshot || undefined,
+          notes: receipt.notes || undefined,
+          orderStatus: PURCHASE_ORDER_STATUS_LABELS[selectedOrder.status],
+        },
+        lines: selectedOrder.lines.map((line) => ({
+          name: line.name_snapshot,
+          code: line.item_code_snapshot || line.sku_snapshot || undefined,
+          unit: line.unit_label_snapshot || undefined,
+          imageUrl:
+            line.inventory_item_id !== null
+              ? (lineImages[line.inventory_item_id] ?? null)
+              : null,
+          ordered: line.quantity,
+          receivedNow: byLine.get(line.id) ?? 0,
+          receivedTotal: line.received_quantity,
+        })),
+        branding: brandingFromSettings(settings),
+      });
+    } catch {
+      setActionError("The goods received note could not be generated. Try again.");
+    } finally {
+      setActionBusy(false);
+    }
+  };
 
   const handleExportDocument = async (format: "pdf" | "docx") => {
     if (!selectedOrder) return;
@@ -1776,6 +1818,16 @@ export default function PurchaseOrdersPage() {
                             .join(" · ")}
                         </span>
                       </span>
+                      <button
+                        type="button"
+                        onClick={() => void handleExportReceipt(receipt)}
+                        disabled={actionBusy}
+                        className="po-line-remove"
+                        aria-label={`Goods received note for ${receipt.receipt_number} (PDF)`}
+                        title="Goods received note (PDF)"
+                      >
+                        <UiIcon name="download" className="h-4 w-4" />
+                      </button>
                     </div>
                   );
                 })}

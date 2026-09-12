@@ -23,7 +23,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 11. ◐ Daily operation view: Overview has sold / owed / owe suppliers / deliveries expected + Action required. No "today" split yet.
 12. ✅ Payments: partial/full, outstanding, method, date, note (existing ledgers on invoices and POs).
 13. ◐ Invoice as a document: number, dates, company block, customer, lines with photos, totals, paid, balance, terms, notes, footer. ✅ due date on the form (13 Sep). ✗ discount/tax lines (schema — own sprint). ☐ signature area.
-14. ◐ Document family: invoice, PO share `documentPdf.ts`. ☐ goods-received note, receipt, statement, quote.
+14. ◐ Document family on `documentPdf.ts`: invoice, purchase order, ✅ goods-received note per delivery with signature lines (13 Sep). ☐ payment receipt, customer statement, quote.
 15. ✅ Company branding: name, logo, address, phone, email, website, tax/reg no., currency, payment terms, footer. ☐ document prefix/numbering, accent colour.
 16. ☐ Live document preview while editing (edit left / preview right).
 17. ◐ Exports: PDF + Word + Excel for invoice/PO; inventory PDF/Excel; reports PDF/CSV.
