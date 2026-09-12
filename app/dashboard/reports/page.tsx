@@ -81,7 +81,9 @@ import {
   purchasesByMonth,
   purchasesBySupplier,
   reportCsvRows,
+  salesByCustomer,
   salesByMonth,
+  topSellingItems,
   type ReportTable,
 } from "@/app/lib/businessReportsPdf";
 import { supabase } from "@/app/lib/supabase";
@@ -195,6 +197,26 @@ const BUSINESS_REPORTS: ReportCard[] = [
     id: "outstanding-invoices",
     name: "Outstanding invoices",
     description: "Every invoice with a balance, oldest due date first, overdue flagged.",
+    category: "business",
+    source: "Sales",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "customers",
+  },
+  {
+    id: "top-selling-items",
+    name: "Top-selling items",
+    description: "Which products bring in the money: units sold and revenue per item.",
+    category: "business",
+    source: "Sales",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "box",
+  },
+  {
+    id: "sales-by-customer",
+    name: "Sales by customer",
+    description: "Who buys the most, what they paid, and who still owes.",
     category: "business",
     source: "Sales",
     formats: ["PDF", "CSV"],
@@ -821,6 +843,10 @@ export default function ReportsPage() {
         return salesByMonth(salesOrders, currencyCode);
       case "outstanding-invoices":
         return outstandingInvoices(salesOrders, currencyCode);
+      case "top-selling-items":
+        return topSellingItems(salesOrders, currencyCode);
+      case "sales-by-customer":
+        return salesByCustomer(salesOrders, currencyCode);
       case "purchases-by-supplier":
         return purchasesBySupplier(purchaseOrders, currencyCode);
       case "purchases-by-month":

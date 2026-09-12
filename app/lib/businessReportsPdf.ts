@@ -17,6 +17,7 @@ import {
   getSalesOrderBalanceInBase,
   getSalesOrderPaidInBase,
   getSalesOrderTotalInBase,
+  toSalesOrderBase,
   type SalesOrder,
 } from "@/app/lib/salesOrders";
 
@@ -140,6 +141,100 @@ export function outstandingInvoices(orders: SalesOrder[], currency: string): Rep
     foot: ["Total", "", "", "", "", "", money(owed, currency)],
     rightAligned: [4, 5, 6],
     filename: "outstanding-invoices",
+  };
+}
+
+/** Best sellers: units and money per product across every issued invoice. */
+export function topSellingItems(orders: SalesOrder[], currency: string): ReportTable {
+  const buckets = new Map<
+    string,
+    { name: string; code: string; units: number; revenue: number; invoices: Set<number> }
+  >();
+  for (const order of orders.filter(isSale)) {
+    for (const line of order.lines || []) {
+      if (line.line_type === "charge") continue;
+      const key = line.inventory_item_id ? `item-${line.inventory_item_id}` : `name-${line.name_snapshot}`;
+      const bucket = buckets.get(key) || {
+        name: line.name_snapshot,
+        code: line.item_code_snapshot || line.sku_snapshot || "",
+        units: 0,
+        revenue: 0,
+        invoices: new Set<number>(),
+      };
+      bucket.units += Number(line.quantity || 0);
+      bucket.revenue += toSalesOrderBase(
+        order,
+        Number(line.quantity || 0) * Number(line.unit_price || 0)
+      );
+      bucket.invoices.add(order.id);
+      buckets.set(key, bucket);
+    }
+  }
+  const rows = Array.from(buckets.values()).sort((a, b) => b.revenue - a.revenue);
+  const totalUnits = rows.reduce((sum, row) => sum + row.units, 0);
+  const totalRevenue = rows.reduce((sum, row) => sum + row.revenue, 0);
+  return {
+    title: "Top-selling items",
+    subtitle: `${rows.length} product${rows.length === 1 ? "" : "s"} sold · by revenue`,
+    head: ["Item", "Code", "Invoices", "Units sold", "Revenue"],
+    rows: rows.map((row) => [
+      row.name,
+      row.code || "--",
+      row.invoices.size,
+      Number.isInteger(row.units) ? row.units : row.units.toFixed(2),
+      money(row.revenue, currency),
+    ]),
+    foot: ["Total", "", "", String(Number.isInteger(totalUnits) ? totalUnits : totalUnits.toFixed(2)), money(totalRevenue, currency)],
+    rightAligned: [2, 3, 4],
+    filename: "top-selling-items",
+  };
+}
+
+/** Who buys the most, and who still owes: one row per customer. */
+export function salesByCustomer(orders: SalesOrder[], currency: string): ReportTable {
+  const buckets = new Map<string, { count: number; total: number; paid: number; open: number }>();
+  for (const order of orders.filter(isSale)) {
+    const key = order.customer_name_snapshot || "No customer";
+    const bucket = buckets.get(key) || { count: 0, total: 0, paid: 0, open: 0 };
+    bucket.count += 1;
+    bucket.total += getSalesOrderTotalInBase(order);
+    bucket.paid += getSalesOrderPaidInBase(order);
+    if (getSalesOrderBalanceInBase(order) > 0) bucket.open += 1;
+    buckets.set(key, bucket);
+  }
+  const keys = Array.from(buckets.keys()).sort((a, b) => buckets.get(b)!.total - buckets.get(a)!.total);
+  const totals = keys.reduce(
+    (sum, key) => {
+      const bucket = buckets.get(key)!;
+      return { count: sum.count + bucket.count, total: sum.total + bucket.total, paid: sum.paid + bucket.paid };
+    },
+    { count: 0, total: 0, paid: 0 }
+  );
+  return {
+    title: "Sales by customer",
+    subtitle: `${totals.count} invoice${totals.count === 1 ? "" : "s"} · drafts and cancelled excluded`,
+    head: ["Customer", "Invoices", "Still open", "Invoiced", "Paid", "Still owed"],
+    rows: keys.map((key) => {
+      const bucket = buckets.get(key)!;
+      return [
+        key,
+        bucket.count,
+        bucket.open,
+        money(bucket.total, currency),
+        money(bucket.paid, currency),
+        money(Math.max(0, bucket.total - bucket.paid), currency),
+      ];
+    }),
+    foot: [
+      "Total",
+      String(totals.count),
+      "",
+      money(totals.total, currency),
+      money(totals.paid, currency),
+      money(Math.max(0, totals.total - totals.paid), currency),
+    ],
+    rightAligned: [1, 2, 3, 4, 5],
+    filename: "sales-by-customer",
   };
 }
 
