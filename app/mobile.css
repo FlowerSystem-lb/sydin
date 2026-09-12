@@ -930,3 +930,64 @@
 .mobile-more-menu-group:first-child .mobile-more-menu-heading {
   padding-top: 10px;
 }
+
+/* ---- Item detail on a phone (plan section J, step 4) --------------------
+   The canvas: the quantity is the largest thing on the screen, the
+   threshold is a line under it, and an item with no photo does not spend
+   220px of a phone on a box saying "No image". Desktop is untouched; every
+   rule here sits behind the phone media query. */
+@media (max-width: 767px) {
+  /* The empty photo block collapses; a real photo keeps a shorter frame. */
+  .item-details-image-area:has(.item-details-image-placeholder) {
+    display: none;
+  }
+
+  .item-details-image-area {
+    min-height: 0;
+    height: clamp(9rem, 22vh, 11rem);
+  }
+
+  .item-details-quantity-strip {
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin-top: 0.5rem;
+    margin-bottom: 0.9rem;
+  }
+
+  .item-details-quantity-strip > div {
+    border: none;
+    box-shadow: none;
+    background: transparent;
+    padding: 0.2rem 0;
+  }
+
+  /* Quantity: the number a depot opens the item for, at the canvas's size. */
+  .item-details-quantity-strip > div:first-child strong {
+    display: block;
+    font-family: var(--font-serif-display), ui-serif, Georgia, serif;
+    font-size: 40px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Threshold reads as one quiet line: "Threshold 10". */
+  .item-details-quantity-strip > div:last-child {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    padding-top: 0;
+  }
+
+  .item-details-quantity-strip > div:last-child p {
+    margin: 0;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+  }
+
+  .item-details-quantity-strip > div:last-child strong {
+    font-size: 14px;
+    font-weight: 600;
+  }
+}
