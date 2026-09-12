@@ -991,3 +991,23 @@
     font-weight: 600;
   }
 }
+
+/* ---- Inventory on a phone: less furniture above the photos ---------------
+   Measured at 375px: 366px of header before the first item. The folder strip
+   already carries All / Low / Out / No image, so the second chip row under
+   the toolbar said the same things again; "Select items" is a desktop bulk
+   tool; the running count is noise on a phone. Each button in the toolbar
+   row keeps 44px. */
+@media (max-width: 767px) {
+  .inventory-toolbar-secondary {
+    display: none;
+  }
+
+  .inventory-toolbar-actions > .inventory-toolbar-button:last-child {
+    display: none;
+  }
+
+  .inventory-toolbar-panel {
+    padding-bottom: 0.5rem;
+  }
+}
