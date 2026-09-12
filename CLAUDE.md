@@ -19,6 +19,9 @@ Every session, before doing work, read the **core** project brain in `docs/`:
   It is mirrored for Sayed at
   https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4 — update that artifact
   when the plan changes materially, rather than publishing a new one.
+- [docs/SYDIN_PRODUCT_REDESIGN_BRIEF.md](docs/SYDIN_PRODUCT_REDESIGN_BRIEF.md) — Sayed's
+  64-point product redesign prompt (12 Sep 2026) with a status per point. **The standing
+  mission: pick the next open point, build it, verify it, update its status.**
 - [docs/SYDIN_PRODUCT_BRAIN.md](docs/SYDIN_PRODUCT_BRAIN.md) — what SydIN is, architecture, current state.
 - [docs/SYDIN_ROADMAP.md](docs/SYDIN_ROADMAP.md) — the 5-phase master roadmap + immediate sprint sequence.
 - [docs/SYDIN_SPRINT_LOG.md](docs/SYDIN_SPRINT_LOG.md) — what each sprint changed (append-only history).

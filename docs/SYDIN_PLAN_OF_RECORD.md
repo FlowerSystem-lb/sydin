@@ -585,6 +585,10 @@ both places. Never hardcode a nav list again.
 
 ## N. Product-level redesign — 12 September 2026
 
+The full 64-point prompt, with a status per point, is kept in
+[SYDIN_PRODUCT_REDESIGN_BRIEF.md](SYDIN_PRODUCT_REDESIGN_BRIEF.md). This section
+is the narrative of what changed; the brief is the checklist.
+
 Sayed's "complete product redesign" prompt (sidebar by workflow, receiving as a
 first-class workflow, documents that carry the company, payments visible,
 help that teaches). Done incrementally, one surface per commit, verified in
