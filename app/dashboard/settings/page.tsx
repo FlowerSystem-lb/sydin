@@ -11,8 +11,6 @@ import {
   Button,
   FieldGroup,
   FieldRow,
-  SectionCard,
-  SectionHeader,
   Select,
   UnsavedChangesGuard,
   buttonClassName,
@@ -56,7 +54,6 @@ type SettingsSectionId =
   | "profile"
   | "inventory"
   | "billing"
-  | "security"
   | "data";
 
 /**
@@ -68,7 +65,10 @@ const MERGED_SECTION_ALIASES: Record<string, SettingsSectionId> = {
   branding: "workspace",
   reports: "data",
   operations: "inventory",
-  email: "security",
+  // Security & Email folded into Account (13 Sep 2026): both only said who
+  // is signed in and how to sign out.
+  email: "profile",
+  security: "profile",
 };
 
 interface SettingsSection {
@@ -88,32 +88,26 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "profile",
     label: "Account",
-    description: "Who is signed in, and how the app looks",
+    description: "Who is signed in, sign out, appearance",
     icon: "settings",
   },
   {
     id: "inventory",
     label: "Inventory",
-    description: "Low-stock threshold and item defaults",
+    description: "When an item counts as low stock",
     icon: "box",
   },
   {
     id: "billing",
-    label: "Billing & Plan",
-    description: "Current plan and workspace limits",
+    label: "Plan & billing",
+    description: "Your plan, what it includes, how to change it",
     icon: "file",
   },
   {
     id: "data",
-    label: "Data & Reports",
-    description: "Import, export, and report defaults",
+    label: "Data & reports",
+    description: "Import, export and reports",
     icon: "upload",
-  },
-  {
-    id: "security",
-    label: "Security & Email",
-    description: "Sign-in, data protection, and sender identity",
-    icon: "check",
   },
 ];
 
@@ -121,11 +115,6 @@ const SECTION_IDS = new Set<SettingsSectionId>(
   SETTINGS_SECTIONS.map((section) => section.id)
 );
 
-const inputClassName =
-  "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
-const valueTextClassName =
-  "min-w-0 truncate text-sm font-black text-theme-primary";
-const mutedTextClassName = "min-w-0 text-xs leading-5 text-theme-muted";
 
 function getLogoExtension(fileName: string) {
   const extension = fileName.split(".").pop()?.toLowerCase();
@@ -144,115 +133,6 @@ function normalizeSectionId(value: string | null | undefined) {
 
   // Resolve links that still point at a pre-merge section id.
   return MERGED_SECTION_ALIASES[value ?? ""] ?? "workspace";
-}
-
-function StatusChip({
-  children,
-  tone = "neutral",
-}: {
-  children: React.ReactNode;
-  tone?: "neutral" | "success" | "warning" | "info";
-}) {
-  const toneClass =
-    tone === "success"
-      ? "border-emerald-300/25 bg-emerald-500/10 text-theme-success"
-      : tone === "warning"
-        ? "border-amber-300/25 bg-amber-500/10 text-theme-warning"
-        : tone === "info"
-          ? "border-cyan-300/25 bg-cyan-500/10 text-theme-accent"
-          : "border-theme bg-theme-inset text-theme-secondary";
-
-  return (
-    <span
-      className={`inline-flex min-h-7 max-w-full items-center rounded-full border px-2.5 text-xs font-bold whitespace-normal ${toneClass}`}
-    >
-      {children}
-    </span>
-  );
-}
-
-function LongSettingValue({
-  value,
-  fallback = "Not set",
-  prefix = "",
-  className = valueTextClassName,
-}: {
-  value: string | null | undefined;
-  fallback?: string;
-  prefix?: string;
-  className?: string;
-}) {
-  const displayValue = value || fallback;
-  const accessibleValue = `${prefix}${displayValue}`;
-
-  return (
-    <p className={className} title={accessibleValue} aria-label={accessibleValue}>
-      {accessibleValue}
-    </p>
-  );
-}
-
-function SettingCard({
-  title,
-  description,
-  children,
-  action,
-}: {
-  title: string;
-  description: string;
-  children?: React.ReactNode;
-  action?: React.ReactNode;
-}) {
-  return (
-    // settings-card, not raw Tailwind: these are nested inside the panel card,
-    // so they need the quiet nested-surface treatment (matching radius, no
-    // shadow of their own) rather than a second full card competing with the
-    // one containing them. Styling lives in globals.css with the other
-    // dashboard surfaces so it cannot drift from them again.
-    <article className="settings-card min-w-0 p-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="min-w-0">
-          <h3 className="text-base font-black text-theme-primary">{title}</h3>
-          <p className="mt-1 text-sm leading-6 text-theme-muted">
-            {description}
-          </p>
-        </div>
-        {action && <div className="min-w-0 sm:shrink-0">{action}</div>}
-      </div>
-      {children && <div className="mt-4 min-w-0">{children}</div>}
-    </article>
-  );
-}
-
-function ModuleLink({
-  href,
-  label,
-  description,
-  icon,
-}: {
-  href: string;
-  label: string;
-  description: string;
-  icon: UiIconName;
-}) {
-  return (
-    <Link
-      href={href}
-      className="flex min-h-14 items-center gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-left transition hover:border-theme-strong hover:bg-theme-hover"
-    >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg border border-theme bg-theme-inset text-theme-accent">
-        <UiIcon name={icon} className="h-4 w-4" />
-      </span>
-      <span className="min-w-0">
-        <span className="block text-sm font-black text-theme-primary">
-          {label}
-        </span>
-        <span className="mt-0.5 block text-xs leading-5 text-theme-muted">
-          {description}
-        </span>
-      </span>
-    </Link>
-  );
 }
 
 function SaveBar({
@@ -391,9 +271,6 @@ export default function SettingsPage() {
     SETTINGS_SECTIONS.find((section) => section.id === activeSection) ||
     SETTINGS_SECTIONS[0];
 
-  const effectiveLowStockThreshold = canCustomizeThreshold
-    ? settings.low_stock_threshold
-    : FREE_LOW_STOCK_THRESHOLD;
 
   const navigationSummary = useMemo(
     () =>
@@ -993,722 +870,207 @@ export default function SettingsPage() {
     </div>
   );
 
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
+
+  /* Every section is the same shape as Company: label-left rows, business
+     words, no status chips. What used to be five cards of "this is read from
+     the existing session" is three rows. */
   const renderProfilePanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Signed-in user"
-        description="Account identity comes from the current Supabase Auth session. Settings does not change authentication logic."
-        action={<StatusChip tone={userEmail ? "success" : "warning"}>Session</StatusChip>}
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Email
-            </p>
-            <LongSettingValue
-              value={userEmail}
-              fallback="Email unavailable"
-              className={`mt-1 ${valueTextClassName}`}
-            />
-          </div>
-          <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Account actions
-            </p>
-            <p className="mt-1 text-sm text-theme-muted">
-              Sign out and account menu actions remain in DashboardShell.
+    <div className="item-form -mx-1">
+      <FieldGroup label="Signed in">
+        <FieldRow label="Email">
+          <span className="text-sm text-theme-primary">{userEmail || "—"}</span>
+        </FieldRow>
+        <FieldRow label="Password">
+          <span className="text-sm text-theme-muted">
+            Managed by the way you sign in — email link, Google or Microsoft.
+          </span>
+        </FieldRow>
+        <FieldRow label="Sign out">
+          <div>
+            <Button variant="secondary" size="sm" onClick={() => void signOut()}>
+              Sign out of SydIN
+            </Button>
+            <p className="mt-1 text-xs text-theme-muted">
+              You can sign back in with the same email.
             </p>
           </div>
-        </div>
-      </SettingCard>
+        </FieldRow>
+      </FieldGroup>
 
-      <SectionCard aria-labelledby="appearance-heading" className="p-4">
-        <SectionHeader
-          id="appearance-heading"
-          eyebrow="Appearance"
-          title="Light Liquid Glass workspace"
-          description="SydIN now uses one consistent light workspace across web, tablet, and mobile."
-          action={
-            <StatusChip tone="success">Active</StatusChip>
-          }
-        />
-
-        <div className="mt-4 grid gap-3 md:grid-cols-[1.1fr_0.9fr]">
-          <div className="relative min-h-32 overflow-hidden rounded-xl border border-theme bg-[linear-gradient(135deg,rgba(255,255,255,0.94),rgba(235,247,255,0.76)_52%,rgba(245,241,255,0.72))] p-4 shadow-[0_18px_48px_rgba(30,64,175,0.1)]">
-            <div className="relative grid gap-3">
-              <div className="flex items-center justify-between gap-3">
-                <span className="h-2.5 w-28 rounded-full bg-white/80 shadow-inner" />
-                <span className="rounded-full border border-cyan-200 bg-white/70 px-2.5 py-1 text-xs font-black text-theme-accent">
-                  Light only
-                </span>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-3">
-                <span className="h-16 rounded-xl border border-white/80 bg-white/70 shadow-sm" />
-                <span className="h-16 rounded-xl border border-white/80 bg-white/60 shadow-sm" />
-                <span className="h-16 rounded-xl border border-white/80 bg-white/70 shadow-sm" />
-              </div>
-              <span className="h-12 rounded-xl border border-white/80 bg-white/72 shadow-sm" />
-            </div>
-          </div>
-          <div className="grid content-center gap-3 rounded-xl border border-theme bg-theme-inset p-4">
-            <p className="text-sm font-black text-theme-primary">
-              Dark and system switching are paused for this redesign pass.
-            </p>
-            <p className="text-sm leading-6 text-theme-muted">
-              Keeping one light visual system improves consistency for the
-              app shell, forms, tables, sheets, and mobile bottom navigation.
-            </p>
-          </div>
-        </div>
-      </SectionCard>
-    </div>
-  );
-
-  const renderReportsPanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Reports Hub"
-        description="Generate inventory and activity reports from live workspace data."
-        action={
-          <Link href="/dashboard/reports" className={buttonClassName({ size: "sm" })}>
-            Open Reports
-          </Link>
-        }
-      >
-        <div className="grid gap-3 sm:grid-cols-3">
-          <StatusChip tone="success">PDF inventory reports</StatusChip>
-          <StatusChip tone="success">CSV movement export</StatusChip>
-          <StatusChip tone="success">Supplier &amp; depot reports</StatusChip>
-        </div>
-      </SettingCard>
-      <SettingCard
-        title="Report defaults"
-        description="Report branding follows your business settings and plan capabilities."
-      >
-        <div className="grid gap-3 sm:grid-cols-2">
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-sm font-black text-theme-primary">
-              Branding source
-            </p>
-            <p className="mt-1 text-xs leading-5 text-theme-muted">
-              Business logo when available; SydIN logo otherwise.
-            </p>
-          </div>
-          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-            <p className="text-sm font-black text-theme-primary">
-              Current workflow
-            </p>
-            <p className="mt-1 text-xs leading-5 text-theme-muted">
-              Generate reports manually from Reports Hub. No delivery jobs are
-              configured in Settings v1.
-            </p>
-          </div>
-        </div>
-      </SettingCard>
+      <FieldGroup label="Appearance">
+        <FieldRow label="Theme">
+          <span className="text-sm text-theme-primary" id="appearance-heading">
+            Light
+            <span className="block text-xs text-theme-muted">
+              One light look everywhere for now; a dark theme is on the list.
+            </span>
+          </span>
+        </FieldRow>
+      </FieldGroup>
     </div>
   );
 
   const renderInventoryPanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Low-stock behavior"
-        description="The dashboard and reports use the existing plan-aware low-stock threshold behavior."
-        action={<StatusChip>{effectiveLowStockThreshold} units</StatusChip>}
+    <div className="item-form -mx-1">
+      <FieldGroup
+        label="Low stock"
+        description="An item at or below this number shows as low on Overview, Inventory and Alerts. An item can set its own number too."
       >
-        <label className="grid gap-2 text-sm font-bold text-theme-primary sm:max-w-xs">
-          Low-stock threshold
-          <input
-            type="number"
-            min="0"
-            value={
-              canCustomizeThreshold
-                ? settings.low_stock_threshold
-                : FREE_LOW_STOCK_THRESHOLD
-            }
-            onChange={(event) =>
-              setSettings((current) => ({
-                ...current,
-                low_stock_threshold: Number(event.target.value),
-              }))
-            }
-            disabled={!canCustomizeThreshold}
-            className={inputClassName}
-            required
-          />
-        </label>
-        {!canCustomizeThreshold && (
-          <p className="mt-2 text-xs leading-5 text-theme-subtle">
-            Free uses a fixed threshold of 10. Your saved custom value is
-            preserved for a future upgrade.
-          </p>
-        )}
-      </SettingCard>
-
-
-    </div>
-  );
-
-  const renderBillingPanel = () => (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.08fr)_minmax(320px,0.92fr)]">
-      <div className="grid gap-4">
-        <SettingCard
-          title="Current plan"
-          description="Your plan controls access to branding, reporting, imports, scanner tools, and workspace limits."
-          action={<Badge tone="accent">{currentPlanName} plan</Badge>}
-        >
-          <div className="grid gap-3 sm:grid-cols-3">
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Plan
-              </p>
-              <p className="mt-1 text-sm font-black text-theme-primary">
-                {currentPlanName}
-              </p>
-              <div className="mt-2">
-                <StatusChip>Current plan</StatusChip>
-              </div>
-            </div>
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Status
-              </p>
-              <p className="mt-1 text-sm font-black text-theme-primary">
-                {subscription.status || "active"}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
-                Read from existing subscription data.
-              </p>
-            </div>
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Item limit
-              </p>
-              <p className="mt-1 text-sm font-black text-theme-primary">
-                {subscription.item_limit.toLocaleString()}
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
-                Usage count remains in the dashboard account area.
-              </p>
-            </div>
+        <FieldRow label="Threshold" htmlFor="low-stock-threshold">
+          <div className="flex flex-wrap items-center gap-2">
+            <input
+              id="low-stock-threshold"
+              type="number"
+              min="0"
+              inputMode="numeric"
+              className="settings-rate-input"
+              value={
+                canCustomizeThreshold
+                  ? settings.low_stock_threshold
+                  : FREE_LOW_STOCK_THRESHOLD
+              }
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  low_stock_threshold: Number(event.target.value),
+                }))
+              }
+              disabled={!canCustomizeThreshold}
+              required
+            />
+            <span className="text-xs text-theme-muted">units</span>
           </div>
-          <div className="mt-4 flex flex-col gap-2 rounded-xl border border-theme bg-theme-surface px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <p className="text-sm font-black text-theme-primary">
-                Manual early-access plan changes
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
-                SydIN currently uses plan requests and manual activation. No
-                checkout or billing portal is exposed in Settings v1.
-              </p>
-            </div>
-            <Link
-              href={upgradeHref}
-              className={buttonClassName({ size: "sm" })}
-            >
-              {upgradeLabel}
-            </Link>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Included capabilities"
-          description="Feature availability is based on the current workspace plan and the existing entitlement checks."
-        >
-          <div className="grid gap-2 md:grid-cols-2">
-            {[
-              [
-                "Business logo",
-                "Used in branding and exports",
-                planCapabilities.customBusinessLogo,
-                "Logo included",
-                "Logo locked",
-              ],
-              [
-                "Public contact branding",
-                "Contact details on public item pages",
-                planCapabilities.publicContactBranding,
-                "Public branding included",
-                "Public branding locked",
-              ],
-              [
-                "Custom low-stock threshold",
-                "Workspace low-stock rule",
-                planCapabilities.customLowStockThreshold,
-                "Low-stock threshold included",
-                "Low-stock threshold locked",
-              ],
-              [
-                "PDF and report exports",
-                "Inventory reports and export branding",
-                planCapabilities.pdfExport === "basic",
-                "PDF export included",
-                "PDF export locked",
-              ],
-              [
-                "Inventory import",
-                "CSV/Excel import workflow",
-                planCapabilities.csvExcelImport,
-                "Import included",
-                "Import locked",
-              ],
-              [
-                "Scanner",
-                "Barcode scanner workflow",
-                planCapabilities.scanner,
-                "Scanner included",
-                "Scanner locked",
-              ],
-            ].map(([title, description, included, includedLabel, lockedLabel]) => (
-              <div
-                key={String(title)}
-                className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5"
+          {!canCustomizeThreshold && (
+            <p className="mt-1 text-xs text-theme-muted">
+              The Free plan uses 10. Your own number comes with Standard;{" "}
+              <Link
+                href={upgradeHref}
+                className="font-semibold text-theme-accent underline-offset-2 hover:underline"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-black text-theme-primary">
-                      {title}
-                    </p>
-                    <p className="mt-0.5 text-xs leading-5 text-theme-muted">
-                      {description}
-                    </p>
-                  </div>
-                  <StatusChip tone={included ? "success" : "neutral"}>
-                    {included ? includedLabel : lockedLabel}
-                  </StatusChip>
-                </div>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Plan-related settings"
-          description="Jump to the existing settings and modules affected by your current plan."
-        >
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("workspace")}
-            >
-              Review Branding
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("inventory")}
-            >
-              Review Inventory
-            </Button>
-            <Link
-              href="/dashboard/reports"
-              className={buttonClassName({ variant: "secondary", size: "sm" })}
-            >
-              Open Reports Hub
-            </Link>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("workspace")}
-            >
-              Review Workspace
-            </Button>
-          </div>
-        </SettingCard>
-      </div>
-
-      <div className="grid gap-4">
-        <SettingCard
-          title="Plan-gated features"
-          description="Locked items are available on higher plans through the existing manual request flow."
-          action={<StatusChip>Based on plan</StatusChip>}
-        >
-          <div className="grid gap-2">
-            {[
-              [
-                "Branding",
-                planCapabilities.customBusinessLogo &&
-                  planCapabilities.publicContactBranding,
-              ],
-              ["Import and scanner", planCapabilities.csvExcelImport && planCapabilities.scanner],
-              ["Advanced reports", planCapabilities.advancedReports],
-              ["Dashboard value analytics", planCapabilities.dashboardAnalytics],
-              ["Priority manual support", planCapabilities.priorityManualSupport],
-            ].map(([label, available]) => (
-              <div
-                key={String(label)}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
-              >
-                <span className="text-sm font-bold text-theme-primary">
-                  {label}
-                </span>
-                <StatusChip tone={available ? "success" : "neutral"}>
-                  {available ? "Included" : "Higher plan"}
-                </StatusChip>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Usage and limits"
-          description="Your current plan and workspace item limit."
-          action={<StatusChip tone="success">Limit visible</StatusChip>}
-        >
-          <div className="grid gap-3">
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Current item limit
-              </p>
-              <p className="mt-1 text-sm font-black text-theme-primary">
-                {subscription.item_limit.toLocaleString()} items
-              </p>
-            </div>
-          </div>
-        </SettingCard>
-
-      </div>
-    </div>
-  );
-
-  const renderEmailPanel = () => (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-      <div className="grid gap-4">
-        <SettingCard
-          title="Current email setup"
-          description="Account verification and password-related emails are handled by SydIN's authentication provider. Custom sender controls are not active in Settings v1."
-          action={<StatusChip tone="success">Auth email active</StatusChip>}
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Account email
-              </p>
-              <LongSettingValue
-                value={userEmail}
-                fallback="Email unavailable"
-                className={`mt-1 ${valueTextClassName}`}
-              />
-              <p
-                className={`mt-1 ${mutedTextClassName}`}
-              >
-                Used for sign-in, verification, and account access emails.
-              </p>
-            </div>
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Custom sender
-              </p>
-              <LongSettingValue
-                value="Not configured"
-                className={`mt-1 ${valueTextClassName}`}
-              />
-              <div className="mt-2">
-                <StatusChip tone="neutral">Not available yet</StatusChip>
-              </div>
-            </div>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Business contact email"
-          description="The saved business contact email is used for public contact branding when enabled and allowed by your plan."
-          action={
-            <StatusChip tone={settings.contact_email ? "success" : "neutral"}>
-              {settings.contact_email
-                ? "Business email configured"
-                : "Business email missing"}
-            </StatusChip>
-          }
-        >
-          <div className="grid gap-3 sm:grid-cols-[1fr_auto] sm:items-center">
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Public contact email
-              </p>
-              <LongSettingValue
-                value={settings.contact_email}
-                className={`mt-1 ${valueTextClassName}`}
-              />
-              <p
-                className={`mt-1 ${mutedTextClassName}`}
-              >
-                Public contact display is controlled in Branding and Workspace.
-              </p>
-            </div>
-            <div className="flex flex-col gap-2 sm:min-w-40">
-              <Button
-                type="button"
-                variant="secondary"
-                size="sm"
-                onClick={() => switchSection("workspace")}
-              >
-                Edit Workspace
-              </Button>
-            </div>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Report emails"
-          description="Manual PDF and CSV exports are available today from Reports. Scheduled email reports need notification preferences and delivery controls in a later phase."
-          action={<StatusChip tone="info">Manual reports</StatusChip>}
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-sm font-black text-theme-primary">
-                Available today
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
-                Generate inventory PDFs and stock movement CSV files manually.
-              </p>
-            </div>
-            <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-sm font-black text-theme-primary">
-                Scheduled delivery
-              </p>
-              <p className="mt-1 text-xs leading-5 text-theme-muted">
-                Automated email alerts are not available yet.
-              </p>
-            </div>
-          </div>
-          <div className="mt-3">
-            <Link
-              href="/dashboard/reports"
-              className={buttonClassName({ size: "sm" })}
-            >
-              Open Reports Hub
-            </Link>
-          </div>
-        </SettingCard>
-      </div>
-
-      <div className="grid gap-4">
-
-        <SettingCard
-          title="Operational context"
-          description="Stock movement history is available today. Email alerts for operational events are intentionally not enabled in this phase."
-          action={
-            <Link
-              href="/dashboard/stock-movements"
-              className={buttonClassName({ variant: "secondary", size: "sm" })}
-            >
-              Open Movements
-            </Link>
-          }
-        >
-          <div className="flex flex-wrap gap-2">
-            <StatusChip tone="success">Stock history available</StatusChip>
-          </div>
-        </SettingCard>
-      </div>
-    </div>
-  );
-
-  const renderSecurityPanel = () => (
-    <div className="grid gap-4 xl:grid-cols-[minmax(0,1.05fr)_minmax(320px,0.95fr)]">
-      <div className="grid gap-4">
-        <SettingCard
-          title="Account access"
-          description="Your dashboard session is managed by SydIN authentication. This page displays the current account state without changing auth settings."
-          action={<StatusChip tone="success">Signed in</StatusChip>}
-        >
-          <div className="grid gap-3">
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Signed in as
-              </p>
-              <LongSettingValue
-                value={userEmail}
-                fallback="Current user"
-                className={`mt-1 ${valueTextClassName}`}
-              />
-              <p
-                className={`mt-1 ${mutedTextClassName}`}
-              >
-                Account email comes from the current authenticated session.
-              </p>
-            </div>
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-                Sign out
-              </p>
-              <p
-                className="mt-1 min-w-0 text-sm text-theme-muted"
-              >
-                Sign-out remains in the dashboard account menu and mobile More
-                sheet.
-              </p>
-              <div className="mt-2">
-                <StatusChip>Account menu action</StatusChip>
-              </div>
-            </div>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Sign-in methods"
-          description="These are the sign-in methods exposed by the existing login and signup screens. Settings does not connect or unlink providers."
-          action={<StatusChip>OAuth available</StatusChip>}
-        >
-          <div className="grid gap-2">
-            {[
-              ["Email and password", "Available sign-in method"],
-              ["Google", "Available OAuth sign-in method"],
-              ["Microsoft", "Available OAuth sign-in method"],
-            ].map(([method, status]) => (
-              <div
-                key={method}
-                className="flex min-h-11 items-center justify-between gap-3 rounded-xl border border-theme bg-theme-surface px-3 py-2"
-              >
-                <span className="min-w-0">
-                  <span className={`block ${valueTextClassName}`}>
-                    {method}
-                  </span>
-                  <span
-                    className={`mt-0.5 block ${mutedTextClassName}`}
-                  >
-                    {status}
-                  </span>
-                </span>
-                <StatusChip>Available</StatusChip>
-              </div>
-            ))}
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Password and recovery"
-          description="Password recovery emails are handled by the authentication provider through the existing sign-in support flow."
-          action={<StatusChip tone="success">Auth email active</StatusChip>}
-        >
-          <div className="grid gap-3 sm:grid-cols-2">
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className={valueTextClassName}>
-                Email verification
-              </p>
-              <p
-                className={`mt-1 ${mutedTextClassName}`}
-              >
-                Signup verification uses the current auth email flow.
-              </p>
-            </div>
-            <div className="min-w-0 rounded-xl border border-theme bg-theme-surface px-3 py-2.5">
-              <p className={valueTextClassName}>
-                Password help
-              </p>
-              <p
-                className={`mt-1 ${mutedTextClassName}`}
-              >
-                Managed during sign-in and support. No new password reset
-                controls were added here.
-              </p>
-            </div>
-          </div>
-          <div className="mt-3">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("security")}
-            >
-              Review Email Settings
-            </Button>
-          </div>
-        </SettingCard>
-
-        <SettingCard
-          title="Workspace security"
-          description="Dashboard access is protected by the existing authenticated session and workspace data rules. Advanced team security belongs in a later phase."
-          action={<StatusChip tone="success">Authenticated dashboard</StatusChip>}
-        >
-          <div className="grid gap-2 sm:grid-cols-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("profile")}
-            >
-              Review Profile
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("data")}
-            >
-              Review Data Settings
-            </Button>
-          </div>
-        </SettingCard>
-      </div>
-
-      <div className="grid gap-4">
-
-        <SettingCard
-          title="Data protection"
-          description="Inventory and business settings are available inside the authenticated dashboard. Public item pages expose only their limited public item view."
-          action={<StatusChip>Dashboard data private</StatusChip>}
-        >
-          <div className="grid gap-2">
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() => switchSection("data")}
-            >
-              Open Data Settings
-            </Button>
-            <p className="min-w-0 text-xs leading-5 text-theme-subtle">
-              This section avoids exposing internal account IDs or security
-              implementation details.
+                compare plans
+              </Link>
+              .
             </p>
-          </div>
-        </SettingCard>
-      </div>
+          )}
+        </FieldRow>
+      </FieldGroup>
     </div>
   );
+
+  const renderBillingPanel = () => {
+    const included: [string, boolean][] = [
+      ["Your logo on documents and labels", planCapabilities.customBusinessLogo],
+      ["Contact details on public item pages", planCapabilities.publicContactBranding],
+      ["Your own low-stock threshold", planCapabilities.customLowStockThreshold],
+      ["PDF and Word exports", planCapabilities.pdfExport === "basic"],
+      ["Import from CSV or Excel", planCapabilities.csvExcelImport],
+      ["Barcode scanner", planCapabilities.scanner],
+      ["Advanced reports", planCapabilities.advancedReports],
+      ["Priority support", planCapabilities.priorityManualSupport],
+    ];
+    return (
+      <div className="item-form -mx-1">
+        <FieldGroup label="Your plan">
+          <FieldRow label="Plan">
+            <span className="text-sm font-semibold text-theme-primary">
+              {currentPlanName}
+              <span className="ml-2 text-xs font-normal text-theme-muted">
+                {subscription.status && subscription.status !== "active"
+                  ? subscription.status
+                  : "active"}
+              </span>
+            </span>
+          </FieldRow>
+          <FieldRow label="Items">
+            <span className="text-sm text-theme-primary">
+              Up to {subscription.item_limit.toLocaleString()} items
+            </span>
+          </FieldRow>
+          <FieldRow label="Included">
+            <ul className="grid gap-1 text-sm">
+              {included.map(([label, yes]) => (
+                <li key={label} className="flex items-start gap-2">
+                  <span
+                    className={yes ? "text-theme-success" : "text-theme-subtle"}
+                    aria-hidden="true"
+                  >
+                    {yes ? "✓" : "—"}
+                  </span>
+                  <span className={yes ? "text-theme-primary" : "text-theme-muted"}>
+                    {label}
+                    {!yes && " (higher plan)"}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </FieldRow>
+          <FieldRow label="Change plan">
+            <div>
+              <Link href={upgradeHref} className={buttonClassName({ size: "sm" })}>
+                {upgradeLabel}
+              </Link>
+              <p className="mt-1 text-xs text-theme-muted">
+                Send a request and we reply by email or WhatsApp to set it up.
+                Payment is arranged with you directly; nothing is charged
+                automatically.
+              </p>
+            </div>
+          </FieldRow>
+        </FieldGroup>
+      </div>
+    );
+  };
 
   const renderDataPanel = () => (
-    <div className="grid gap-4">
-      <SettingCard
-        title="Data movement"
-        description="Use existing import and export surfaces. Settings v1 does not add backup jobs or destructive data tools."
+    <div className="item-form -mx-1">
+      <FieldGroup
+        label="Move your data"
+        description="Everything you export carries your company name and logo."
       >
-        <div className="grid gap-2 md:grid-cols-2">
-          <ModuleLink
-            href="/dashboard/inventory/import"
-            label="Inventory import"
-            description="Import inventory with the existing route"
-            icon="upload"
-          />
-          <ModuleLink
-            href="/dashboard/inventory"
-            label="Inventory exports"
-            description="Use Inventory for selected item exports"
-            icon="download"
-          />
-          <ModuleLink
-            href="/dashboard/reports"
-            label="Report exports"
-            description="Generate PDF and CSV reports"
-            icon="reports"
-          />
-          {/* The Import & Export page carries the same name as this section and
-              was the one destination it never linked to -- so the section named
-              "Data & Reports" sent people everywhere except the page built for
-              exactly this. */}
-          <ModuleLink
-            href="/dashboard/import-export"
-            label="Import & Export"
-            description="Full import and export history in one place"
-            icon="sheet"
-          />
-        </div>
-      </SettingCard>
+        <FieldRow label="Import">
+          <div>
+            <Link
+              href="/dashboard/inventory/import"
+              className={buttonClassName({ variant: "secondary", size: "sm" })}
+            >
+              Import items
+            </Link>
+            <p className="mt-1 text-xs text-theme-muted">
+              From a CSV or Excel file, or by scanning a batch of barcodes.
+            </p>
+          </div>
+        </FieldRow>
+        <FieldRow label="Export">
+          <div>
+            <Link
+              href="/dashboard/import-export"
+              className={buttonClassName({ variant: "secondary", size: "sm" })}
+            >
+              Export and history
+            </Link>
+            <p className="mt-1 text-xs text-theme-muted">
+              Your whole inventory as Excel or PDF, and every past import and export.
+            </p>
+          </div>
+        </FieldRow>
+        <FieldRow label="Reports">
+          <div>
+            <Link
+              href="/dashboard/reports"
+              className={buttonClassName({ variant: "secondary", size: "sm" })}
+            >
+              Open Reports
+            </Link>
+            <p className="mt-1 text-xs text-theme-muted">
+              Sales by month, outstanding invoices, purchases, stock value.
+            </p>
+          </div>
+        </FieldRow>
+      </FieldGroup>
     </div>
   );
 
@@ -1736,20 +1098,8 @@ export default function SettingsPage() {
         );
       case "billing":
         return renderBillingPanel();
-      case "security":
-        return (
-          <div className="grid gap-4">
-            {renderSecurityPanel()}
-            {renderEmailPanel()}
-          </div>
-        );
       case "data":
-        return (
-          <div className="grid gap-4">
-            {renderDataPanel()}
-            {renderReportsPanel()}
-          </div>
-        );
+        return renderDataPanel();
       case "workspace":
       default:
         return (
