@@ -42,6 +42,12 @@ import {
   recordStockMovement,
   type StockMovement,
 } from "@/app/lib/stockMovements";
+import {
+  getPurchaseOrderReceivingProgress,
+  getPurchaseOrdersForUser,
+  isPurchaseOrderOpen,
+  type PurchaseOrder,
+} from "@/app/lib/purchaseOrders";
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
 import { supabase } from "@/app/lib/supabase";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
@@ -233,6 +239,10 @@ export default function ReceivingPage() {
   const [confirmClearDraft, setConfirmClearDraft] = useState(false);
   const [draftRestored, setDraftRestored] = useState(false);
   const [recentStockIn, setRecentStockIn] = useState<StockMovement[]>([]);
+  // Orders still waiting on a delivery. Stock In is where someone stands when
+  // the van arrives; if what arrived was ordered, the order is the place to
+  // receive it, and this is the hand-off.
+  const [expectedOrders, setExpectedOrders] = useState<PurchaseOrder[]>([]);
   const [finalizeResult, setFinalizeResult] = useState<FinalizeResult | null>(
     null
   );
@@ -463,6 +473,7 @@ export default function ReceivingPage() {
         settings,
         loadedMovements,
         loadedSubscription,
+        loadedOrders,
       ] = await Promise.all([
         supabase
           .from("inventory")
@@ -478,6 +489,7 @@ export default function ReceivingPage() {
         ),
         getRecentStockMovements(user.id, 150).catch(() => []),
         getUserSubscription(user.id),
+        getPurchaseOrdersForUser(user.id).catch(() => [] as PurchaseOrder[]),
       ]);
 
       if (inventoryError) throw inventoryError;
@@ -491,6 +503,14 @@ export default function ReceivingPage() {
       setRecentStockIn(
         loadedMovements.filter(
           (movement) => movement.movement_type === "stock_in"
+        )
+      );
+      setExpectedOrders(
+        loadedOrders.filter(
+          (order) =>
+            order.status !== "draft" &&
+            isPurchaseOrderOpen(order) &&
+            order.lines.length > 0
         )
       );
       setLoading(false);
@@ -1160,8 +1180,48 @@ export default function ReceivingPage() {
                   </p>
                 </div>
               </div>
+              {expectedOrders.length > 0 && (
+                <div className="grid gap-1.5">
+                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    Deliveries expected
+                  </p>
+                  {expectedOrders.slice(0, 5).map((order) => {
+                    const progress = getPurchaseOrderReceivingProgress(order);
+                    return (
+                      <Link
+                        key={order.id}
+                        href={`/dashboard/purchase-orders?open=${order.id}&receive=1`}
+                        className="receiving-expected-row"
+                      >
+                        <span className="min-w-0">
+                          <span className="block truncate text-sm font-semibold text-theme-primary">
+                            {order.po_number}
+                            {order.supplier_name_snapshot
+                              ? ` · ${order.supplier_name_snapshot}`
+                              : ""}
+                          </span>
+                          <span className="block truncate text-xs text-theme-muted">
+                            {progress.remaining} of {progress.ordered} units still to come
+                          </span>
+                        </span>
+                        <span className="receiving-expected-cta">Receive</span>
+                      </Link>
+                    );
+                  })}
+                  {expectedOrders.length > 5 && (
+                    <Link
+                      href="/dashboard/purchase-orders?status=ordered"
+                      className="text-xs font-semibold text-theme-accent underline-offset-2 hover:underline"
+                    >
+                      All {expectedOrders.length} open orders
+                    </Link>
+                  )}
+                </div>
+              )}
               <p className="text-xs leading-5 text-theme-muted">
-                Receiving history is tracked through Stock Movements.
+                Use this page for stock that arrives without a purchase order.
+                Deliveries against an order are received on the order, so the
+                order knows what is still to come.
               </p>
               {items.length === 0 && (
                 <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">

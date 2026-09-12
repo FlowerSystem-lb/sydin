@@ -1,6 +1,11 @@
 import { supabase } from "@/app/lib/supabase";
 
-export type PurchaseOrderStatus = "draft" | "ordered" | "received" | "cancelled";
+export type PurchaseOrderStatus =
+  | "draft"
+  | "ordered"
+  | "partially_received"
+  | "received"
+  | "cancelled";
 export type PurchaseOrderPaymentMethod = "cash" | "card" | "transfer" | "other";
 export type PurchaseOrderPaymentStatus = "unpaid" | "partial" | "paid";
 export type PurchaseOrderLineType = "inventory" | "expense";
@@ -24,8 +29,25 @@ export interface PurchaseOrderLine {
   item_code_snapshot: string | null;
   unit_label_snapshot: string | null;
   quantity: number;
+  /** Kept in step by the receive RPC (phase 23). 0 before the migration runs. */
+  received_quantity: number;
   unit_cost: number | null;
   notes: string | null;
+}
+
+/** One delivery against an order: what arrived and when (phase 23). */
+export interface PurchaseOrderReceipt {
+  id: number;
+  purchase_order_id: number;
+  receipt_number: string;
+  received_at: string;
+  notes: string | null;
+  lines: Array<{
+    id: number;
+    purchase_order_line_id: number;
+    inventory_item_id: number | null;
+    quantity: number;
+  }>;
 }
 
 export interface PurchaseOrderPayment {
@@ -63,6 +85,8 @@ export interface PurchaseOrder {
   created_at: string;
   received_at: string | null;
   cancelled_at: string | null;
+  /** True when the order was marked received with quantities still outstanding. */
+  closed_short: boolean;
   lines: PurchaseOrderLine[];
   payments: PurchaseOrderPayment[];
 }
@@ -106,6 +130,7 @@ export interface PurchaseOrderInput {
 export const PURCHASE_ORDER_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
   draft: "Draft",
   ordered: "Ordered",
+  partially_received: "Partially received",
   received: "Received",
   cancelled: "Cancelled",
 };
@@ -141,14 +166,41 @@ export const PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS: Record<
   other: "Other",
 };
 
-const PURCHASE_ORDER_SELECT = `id, po_number, title, supplier_id, supplier_name_snapshot,
+const PURCHASE_ORDER_SELECT_BASE = `id, po_number, title, supplier_id, supplier_name_snapshot,
 supplier_contact_snapshot, depot_id, depot_name_snapshot, purchase_date,
 expected_delivery_date, status, payment_method, paid_by, payment_status, amount_paid,
 currency_code, notes, internal_reference, attachment_url, attachment_label, created_at,
-received_at, cancelled_at,
-purchase_order_lines (id, purchase_order_id, line_type, inventory_item_id, affects_stock,
-expense_category, name_snapshot, sku_snapshot, item_code_snapshot, unit_label_snapshot,
-quantity, unit_cost, notes)`;
+received_at, cancelled_at`;
+
+const PURCHASE_ORDER_LINE_SELECT_BASE = `id, purchase_order_id, line_type, inventory_item_id,
+affects_stock, expense_category, name_snapshot, sku_snapshot, item_code_snapshot,
+unit_label_snapshot, quantity, unit_cost, notes`;
+
+/* Two shapes of the same query: with the phase-23 receiving columns, and
+   without them for a database where that migration has not been run yet.
+   The page must keep working in between -- Sayed runs SQL by hand. */
+const PURCHASE_ORDER_SELECT = `${PURCHASE_ORDER_SELECT_BASE}, closed_short,
+purchase_order_lines (${PURCHASE_ORDER_LINE_SELECT_BASE}, received_quantity)`;
+
+const PURCHASE_ORDER_SELECT_LEGACY = `${PURCHASE_ORDER_SELECT_BASE},
+purchase_order_lines (${PURCHASE_ORDER_LINE_SELECT_BASE})`;
+
+/** True when the error means sql/phase-23-partial-receiving.sql has not been run. */
+export function isReceivingSchemaMissing(error: unknown) {
+  const message =
+    typeof error === "object" && error !== null && "message" in error
+      ? String((error as { message: unknown }).message)
+      : String(error ?? "");
+
+  return (
+    /received_quantity|closed_short|purchase_order_receipts|receive_purchase_order_lines/.test(
+      message
+    ) &&
+    (message.includes("does not exist") ||
+      message.includes("schema cache") ||
+      message.includes("Could not find"))
+  );
+}
 
 /** True when the error means the phase-8 SQL migration has not been run yet. */
 export function isPurchaseOrdersSchemaMissing(error: unknown) {
@@ -182,6 +234,7 @@ function normalizeLine(data: Record<string, unknown>): PurchaseOrderLine {
     item_code_snapshot: (data.item_code_snapshot as string | null) ?? null,
     unit_label_snapshot: (data.unit_label_snapshot as string | null) ?? null,
     quantity: Number(data.quantity || 0),
+    received_quantity: Number(data.received_quantity || 0),
     unit_cost:
       data.unit_cost === null || data.unit_cost === undefined
         ? null
@@ -230,6 +283,7 @@ function normalizeOrder(data: Record<string, unknown>): PurchaseOrder {
     created_at: String(data.created_at || ""),
     received_at: (data.received_at as string | null) ?? null,
     cancelled_at: (data.cancelled_at as string | null) ?? null,
+    closed_short: Boolean(data.closed_short),
     lines: rawLines
       .map(normalizeLine)
       .sort((first, second) => first.id - second.id),
@@ -290,18 +344,128 @@ export function getPurchaseOrderSplit(order: PurchaseOrder) {
 }
 
 export async function getPurchaseOrdersForUser(userId: string) {
-  const { data, error } = await supabase
-    .from("purchase_orders")
-    .select(PURCHASE_ORDER_SELECT)
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(200);
+  const query = (select: string) =>
+    supabase
+      .from("purchase_orders")
+      .select(select)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .limit(200);
+
+  let result = await query(PURCHASE_ORDER_SELECT);
+
+  if (result.error && isReceivingSchemaMissing(result.error)) {
+    result = await query(PURCHASE_ORDER_SELECT_LEGACY);
+  }
+
+  if (result.error) {
+    throw result.error;
+  }
+
+  return ((result.data || []) as unknown as Record<string, unknown>[]).map(
+    normalizeOrder
+  );
+}
+
+/** True while the order can still take a delivery. */
+export function isPurchaseOrderOpen(order: Pick<PurchaseOrder, "status">) {
+  return (
+    order.status === "draft" ||
+    order.status === "ordered" ||
+    order.status === "partially_received"
+  );
+}
+
+/**
+ * Ordered / received / outstanding across the order, counted in units. Every
+ * line counts -- a general purchase "arrives" too -- but the stock flag is
+ * carried so the UI can say which lines will change inventory.
+ */
+export function getPurchaseOrderReceivingProgress(order: PurchaseOrder) {
+  let ordered = 0;
+  let received = 0;
+  for (const line of order.lines) {
+    ordered += line.quantity;
+    received += Math.min(line.received_quantity, line.quantity);
+  }
+  const remaining = Math.max(0, ordered - received);
+  return {
+    ordered,
+    received,
+    remaining,
+    percent: ordered > 0 ? Math.min(100, Math.round((received / ordered) * 100)) : 0,
+  };
+}
+
+export interface ReceiveLineInput {
+  line_id: number;
+  quantity: number;
+}
+
+/**
+ * Receives the given quantities against an open order. Stock-affecting lines
+ * add to inventory through a stock_in movement that points at the receipt.
+ * `close` marks the order received even if something is still outstanding.
+ */
+export async function receivePurchaseOrderLines(
+  orderId: number,
+  lines: ReceiveLineInput[],
+  options: { notes?: string | null; close?: boolean } = {}
+) {
+  const { data, error } = await supabase.rpc("receive_purchase_order_lines", {
+    p_purchase_order_id: orderId,
+    p_lines: lines
+      .filter((line) => line.quantity > 0)
+      .map((line) => ({ line_id: line.line_id, quantity: line.quantity })),
+    p_notes: options.notes?.trim() || null,
+    p_close: Boolean(options.close),
+  });
 
   if (error) {
     throw error;
   }
 
-  return ((data || []) as Record<string, unknown>[]).map(normalizeOrder);
+  return data;
+}
+
+function normalizeReceipt(data: Record<string, unknown>): PurchaseOrderReceipt {
+  const rawLines = Array.isArray(data.purchase_order_receipt_lines)
+    ? (data.purchase_order_receipt_lines as Record<string, unknown>[])
+    : [];
+  return {
+    id: Number(data.id),
+    purchase_order_id: Number(data.purchase_order_id),
+    receipt_number: String(data.receipt_number || ""),
+    received_at: String(data.received_at || ""),
+    notes: (data.notes as string | null) ?? null,
+    lines: rawLines.map((line) => ({
+      id: Number(line.id),
+      purchase_order_line_id: Number(line.purchase_order_line_id),
+      inventory_item_id:
+        line.inventory_item_id === null || line.inventory_item_id === undefined
+          ? null
+          : Number(line.inventory_item_id),
+      quantity: Number(line.quantity || 0),
+    })),
+  };
+}
+
+/** Deliveries recorded against one order, newest first. Empty before phase 23. */
+export async function getPurchaseOrderReceipts(orderId: number) {
+  const { data, error } = await supabase
+    .from("purchase_order_receipts")
+    .select(
+      "id, purchase_order_id, receipt_number, received_at, notes, purchase_order_receipt_lines (id, purchase_order_line_id, inventory_item_id, quantity)"
+    )
+    .eq("purchase_order_id", orderId)
+    .order("received_at", { ascending: false });
+
+  if (error) {
+    if (isReceivingSchemaMissing(error)) return [];
+    throw error;
+  }
+
+  return ((data || []) as Record<string, unknown>[]).map(normalizeReceipt);
 }
 
 export async function createPurchaseOrder(
@@ -371,6 +535,24 @@ export async function cancelPurchaseOrder(userId: string, orderId: number) {
     .update({ status: "cancelled" })
     .eq("id", orderId)
     .eq("user_id", userId);
+
+  if (error) {
+    throw error;
+  }
+}
+
+/**
+ * Draft -> ordered: the order has been placed with the supplier. Until now
+ * nothing in the app ever set "ordered", so every order sat as a draft until
+ * the day it was received and the two statuses meant the same thing.
+ */
+export async function markPurchaseOrderOrdered(userId: string, orderId: number) {
+  const { error } = await supabase
+    .from("purchase_orders")
+    .update({ status: "ordered" })
+    .eq("id", orderId)
+    .eq("user_id", userId)
+    .eq("status", "draft");
 
   if (error) {
     throw error;

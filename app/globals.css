@@ -10559,10 +10559,12 @@ body [class*="tracking-["],
   /* Scoped to the collapsed rail (2026-09-11); was unscoped, so it hid these
      in every state and the expanded sidebar had to win with a matching
      `!important`. `.dashboard-sidebar-workspace` stays unscoped: it is hidden
-     in both states on purpose. */
+     in both states on purpose.
+     The toggle is NOT in this list (2026-09-12): hiding it in the rail meant
+     that once you collapsed the sidebar there was nothing to click to bring
+     it back. The rail shape for it is set above. */
   .dashboard-sidebar-workspace,
   .dashboard-shell-collapsed .dashboard-brand-logo,
-  .dashboard-shell-collapsed .dashboard-sidebar-toggle,
   .dashboard-shell-collapsed .dashboard-nav-group-label,
   .dashboard-shell-collapsed .dashboard-nav-label,
   .dashboard-shell-collapsed .dashboard-nav-active-mark,
@@ -11707,7 +11709,6 @@ body,
      restated the whole hide-list for themselves. */
   .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-workspace,
   .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-brand-logo,
-  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-sidebar-toggle,
   .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-group-label,
   .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-label,
   .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-active-mark,
@@ -12892,6 +12893,10 @@ body,
   border-left-color: rgba(14, 165, 198, 0.65);
 }
 
+.po-history-row-partially_received {
+  border-left-color: rgba(245, 158, 11, 0.7);
+}
+
 .po-history-row-received {
   border-left-color: rgba(16, 185, 129, 0.65);
 }
@@ -13057,6 +13062,32 @@ body,
 /* Dashboard "Spending this month" panel (purchase orders analytics). */
 
 /* ===[ RECEIVING: reposition + PO-style history ]=== */
+/* Stock In -> Purchase Orders hand-off: the open orders waiting on a
+   delivery, each a link into that order's receiving dialog. */
+.receiving-expected-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  padding: 0.5rem 0.65rem;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.receiving-expected-row:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.receiving-expected-cta {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
 .receiving-po-hint {
   display: flex;
   align-items: flex-start;
@@ -13515,6 +13546,192 @@ body,
   border-radius: 12px;
   background: var(--sydin-surface-inset);
   padding: 0.55rem 0.75rem;
+}
+
+/* Receiving against a purchase order (phase 23). The dialog gets a small
+   goods-received table -- photo, ordered, received so far, arriving now --
+   and the detail view a progress line. Same inset surface and hairlines as
+   the rest of the dialog; the only colour is the progress fill. */
+.po-line-thumb {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+  width: 2.5rem;
+  height: 2.5rem;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--bg-surface);
+}
+
+.po-received-flag {
+  margin-left: 0.4rem;
+  border-radius: 999px;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  background: rgba(245, 158, 11, 0.1);
+  padding: 0.05rem 0.45rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--text-warning, #92400e);
+  vertical-align: middle;
+}
+
+.po-receive-panel {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.po-receive-lines {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--sydin-surface-inset);
+  overflow: hidden;
+}
+
+.po-receive-head,
+.po-receive-line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem 6.5rem;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.55rem 0.75rem;
+}
+
+.po-receive-head {
+  border-bottom: 1px solid var(--border-default);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.po-receive-head span:not(:first-child),
+.po-receive-num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.po-receive-line + .po-receive-line {
+  border-top: 1px solid var(--border-default);
+}
+
+.po-receive-line-done {
+  opacity: 0.6;
+}
+
+.po-receive-num {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.po-receive-input {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.po-receive-input .sale-input {
+  width: 100%;
+  text-align: right;
+}
+
+/* Below 560px the four columns do not fit: the numbers drop under the item
+   as labelled cells. */
+@media (max-width: 559px) {
+  .po-receive-head {
+    display: none;
+  }
+
+  .po-receive-line {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .po-receive-line > div:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .po-receive-num,
+  .po-receive-input {
+    display: grid;
+    gap: 0.15rem;
+    text-align: left;
+    justify-content: stretch;
+  }
+
+  .po-receive-num::before,
+  .po-receive-input::before {
+    content: attr(data-label);
+    font-size: 0.68rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+
+  .po-receive-input .sale-input {
+    text-align: left;
+  }
+}
+
+.po-receive-close {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: 12px;
+  background: rgba(245, 158, 11, 0.08);
+  padding: 0.6rem 0.75rem;
+  cursor: pointer;
+}
+
+.po-receive-close input {
+  margin-top: 0.2rem;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+  accent-color: var(--sydin-blue);
+}
+
+.po-receive-close strong {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.po-receive-close small {
+  display: block;
+  margin-top: 0.1rem;
+  font-size: 0.78rem;
+  line-height: 1.1rem;
+  color: var(--text-muted);
+}
+
+.po-receiving-progress {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.po-progress-track {
+  height: 0.45rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--sydin-surface-inset);
+  border: 1px solid var(--border-default);
+}
+
+.po-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--sydin-blue);
+  transition: width 240ms ease;
+}
+
+.po-progress-fill-short {
+  background: #f59e0b;
 }
 
 .po-stock-flag {
@@ -17785,40 +18002,45 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
      `min-height: auto` and refuses to shrink below its content, so omitting it
      anywhere in the chain makes the overflow silently never engage.
 
+     `.po-save-bar` is excluded by name (2026-09-12): New Purchase Order ends
+     in that sticky bar, which is a `.dashboard-card`, so this rule made the
+     BAR the scroll region -- squeezed to 34px with its own scrollbar and the
+     Save button cut off below the viewport.
+
      Guarded by :has() so it applies only to pages that really are
      header -> toolbar -> one data surface. Pages built from several stacked
      sections (settings, help) keep the whole panel scrolling; making only
      their final section scrollable would strand everything above it. */
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) {
     display: flex;
     flex-direction: column;
     overflow: hidden !important;
   }
 
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) > .dashboard-route-transition,
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) :is(main, div):has(> .dashboard-page-shell) {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) > .dashboard-route-transition,
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) :is(main, div):has(> .dashboard-page-shell) {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
   }
 
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) .dashboard-page-shell {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) .dashboard-page-shell {
     flex: 1 1 auto;
     min-height: 0;
   }
 
   /* Page header and filters keep their natural height, and therefore hold
      still: they are part of the frame now, not part of the scroll. */
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child) .dashboard-page-shell > * {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) .dashboard-page-shell > * {
     flex: 0 0 auto;
   }
 
   /* The data region takes what is left and owns the scrollbar, so the bar sits
      beside the rows rather than beside the whole page. */
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child)
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar))
     .dashboard-page-shell
-    > :is(.dashboard-card, .dashboard-table-card):last-child {
+    > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar) {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;

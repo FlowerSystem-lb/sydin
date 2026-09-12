@@ -515,7 +515,12 @@ export default function NewPurchaseOrderPage() {
     setLines((current) => current.filter((line) => line.key !== key));
   };
 
-  const handleSave = async () => {
+  /* "Save purchase order" means the order has been placed: it is saved as
+     ordered and shows up under Deliveries expected on Stock In. "Save as
+     draft" keeps it out of that list until it is actually sent. Before this
+     every order was a draft until the day it was received, so the two words
+     meant the same thing. */
+  const handleSave = async (mode: "ordered" | "draft" = "ordered") => {
     setError("");
 
     if (!poNumber.trim()) {
@@ -600,7 +605,7 @@ export default function NewPurchaseOrderPage() {
             : null,
           purchase_date: purchaseDate || null,
           expected_delivery_date: expectedDeliveryDate || null,
-          status: "draft",
+          status: receiveNow ? "draft" : mode,
           payment_method: (paymentMethod ||
             null) as PurchaseOrderPaymentMethod | null,
           paid_by: paidBy.trim() || null,
@@ -1177,8 +1182,17 @@ export default function NewPurchaseOrderPage() {
           <ActionButton href="/dashboard/purchase-orders" variant="ghost">
             Cancel
           </ActionButton>
+          {!receiveNow && (
+            <Button
+              variant="secondary"
+              onClick={() => handleSave("draft")}
+              disabled={saving}
+            >
+              Save as draft
+            </Button>
+          )}
           <Button
-            onClick={handleSave}
+            onClick={() => handleSave("ordered")}
             disabled={saving}
             leadingIcon={<UiIcon name="check" className="h-4 w-4" />}
           >
