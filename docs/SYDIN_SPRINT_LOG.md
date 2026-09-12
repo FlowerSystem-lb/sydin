@@ -3782,7 +3782,7 @@ the selector is in the served stylesheet. The rate feed needed a CSP
 
 ## Brief points, one by one  *(In progress — local commits, push on Sayed's word)*
 
-**Date:** 13 September 2026 · **Branch:** `main` · **Commits:** `05100c9` → `f4c4f24` (not pushed)
+**Date:** 13 September 2026 · **Branch:** `main` · **Commits:** `05100c9` → `483a27a` (not pushed — Sayed: push later)
 
 **Why:** Sayed: "push later, continue, and when you compact don't forget the
 data and the full prompt". The prompt is now `docs/SYDIN_PRODUCT_REDESIGN_BRIEF.md`
@@ -3800,6 +3800,8 @@ with a status per point; this sprint walks its open points.
 - Goods-received note PDF per delivery, with signature lines; rendered in
   Node and read.
 - Overview: a "Today" line (sold today, units in/out).
+- Reports: top-selling items, sales by customer.
+- Duplicate an order or an invoice (same party, lines, currency; new number).
 - Earlier the same day (pushed): currencies convert, receiving live, sidebar
   hover, private attachments, inventory windowed at 60, phone item detail.
 
