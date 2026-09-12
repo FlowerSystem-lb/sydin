@@ -20,7 +20,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 8. ✅ Partial receiving: multiple deliveries recorded (`purchase_order_receipts`), close short.
 9. ✅ Stock movements carry reason + reference (existing) and now the receipt that caused them.
 10. ✅ Sales workflow: customer → lines → invoice → payment → paid (existing; currency added).
-11. ◐ Daily operation view: Overview has sold / owed / owe suppliers / deliveries expected + Action required. No "today" split yet.
+11. ✅ Daily operation view: Overview has a "Today" line (sold today, units in, units out, or "nothing yet"), the month's money figures, action required and recent activity (13 Sep).
 12. ✅ Payments: partial/full, outstanding, method, date, note (existing ledgers on invoices and POs).
 13. ◐ Invoice as a document: number, dates, company block, customer, lines with photos, totals, paid, balance, terms, notes, footer. ✅ due date on the form (13 Sep). ✗ discount/tax lines (schema — own sprint). ☐ signature area.
 14. ◐ Document family on `documentPdf.ts`: invoice, purchase order, ✅ goods-received note per delivery with signature lines (13 Sep). ☐ payment receipt, customer statement, quote.

@@ -21927,3 +21927,26 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Overview: "Today" in one line above the month figures. */
+.ov-today {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem 0.75rem;
+  margin: 0;
+  padding: 0.55rem 0.9rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+}
+
+.ov-today strong {
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}

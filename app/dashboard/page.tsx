@@ -626,8 +626,13 @@ export default function DashboardPage() {
       );
     };
 
+    const isToday = (source: string | null | undefined) =>
+      Boolean(source) && String(source).slice(0, 10) === today;
+
     let soldThisMonth = 0;
     let soldCount = 0;
+    let soldToday = 0;
+    let soldTodayCount = 0;
     let customersOwe = 0;
     let owingInvoices = 0;
     const overdue: SalesOrder[] = [];
@@ -636,6 +641,10 @@ export default function DashboardPage() {
       if (inThisMonth(order.issue_date || order.created_at)) {
         soldThisMonth += getSalesOrderTotalInBase(order);
         soldCount += 1;
+      }
+      if (isToday(order.issue_date || order.created_at)) {
+        soldToday += getSalesOrderTotalInBase(order);
+        soldTodayCount += 1;
       }
       const remaining = getSalesOrderBalanceInBase(order);
       if (remaining > 0) {
@@ -662,9 +671,25 @@ export default function DashboardPage() {
       }
     }
 
+    // What moved today, from the stock ledger: units in, units out, changes.
+    let receivedTodayUnits = 0;
+    let shippedTodayUnits = 0;
+    let movementsToday = 0;
+    for (const movement of movements) {
+      if (!isToday(movement.created_at)) continue;
+      movementsToday += 1;
+      if (movement.quantity_delta > 0) receivedTodayUnits += movement.quantity_delta;
+      else shippedTodayUnits += -movement.quantity_delta;
+    }
+
     return {
       soldThisMonth,
       soldCount,
+      soldToday,
+      soldTodayCount,
+      receivedTodayUnits,
+      shippedTodayUnits,
+      movementsToday,
       customersOwe,
       owingInvoices,
       overdue: overdue.sort((a, b) => (a.due_date || "").localeCompare(b.due_date || "")),
@@ -673,7 +698,32 @@ export default function DashboardPage() {
       expected,
       expectedUnits,
     };
-  }, [salesOrders, purchaseOrders]);
+  }, [salesOrders, purchaseOrders, movements]);
+
+  /* Brief point 11: "what happened today?" in one line, above the month
+     figures. Empty days say so plainly rather than showing four zeros. */
+  const todayLine = (() => {
+    const parts: string[] = [];
+    if (business.soldTodayCount > 0) {
+      parts.push(
+        `${formatCurrency(business.soldToday, currencyCode)} sold on ${formatNumber(
+          business.soldTodayCount
+        )} invoice${business.soldTodayCount === 1 ? "" : "s"}`
+      );
+    }
+    if (business.receivedTodayUnits > 0) {
+      parts.push(`${formatNumber(business.receivedTodayUnits)} units in`);
+    }
+    if (business.shippedTodayUnits > 0) {
+      parts.push(`${formatNumber(business.shippedTodayUnits)} units out`);
+    }
+    if (parts.length === 0 && business.movementsToday > 0) {
+      parts.push(
+        `${formatNumber(business.movementsToday)} stock change${business.movementsToday === 1 ? "" : "s"}`
+      );
+    }
+    return parts;
+  })();
 
   const businessCards = [
     {
@@ -813,6 +863,17 @@ export default function DashboardPage() {
       {/* The money row. Same hairline figures as the stock row above it, in
           the order an owner reads them: what came in, what is still coming,
           what goes out, what is on the way. */}
+      {!hasNoItems && !loading && (
+        <p className="ov-today" aria-label="Today">
+          <strong>Today</strong>
+          <span>
+            {todayLine.length > 0
+              ? todayLine.join(" · ")
+              : "Nothing sold or moved yet today."}
+          </span>
+        </p>
+      )}
+
       {!hasNoItems && (
         <div className="ov-figures ov-figures-business" role="group" aria-label="Business summary">
           {businessCards.map((card) => {
