@@ -21767,3 +21767,42 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   outline-offset: 2px;
 }
 
+
+/* ===[ SIDEBAR: OPENS ON HOVER, ONE LOGO WHEN OPEN (2026-09-12) ]===
+   Sayed: "why don't we make it auto open" and "another logo appears when
+   it opens".
+
+   Peek: the rail carries `.dashboard-shell-expanded` while the pointer is
+   over it, so every expanded rule applies to the sidebar -- but the page
+   must not move, so the canvas keeps the rail's margin and the sidebar
+   (already `position: fixed`) slides over the content with a shadow.
+
+   Logo: expanded showed the square mark AND the wordmark, and the wordmark
+   already contains the mark -- two logos side by side. Open, only the
+   wordmark shows, at a size that reads. */
+@media (min-width: 900px) {
+  .dashboard-shell-peek.dashboard-shell-peek.dashboard-shell-peek .dashboard-main-canvas {
+    width: calc(100% - 4.75rem) !important;
+    margin-left: 4.75rem !important;
+  }
+
+  .dashboard-shell-peek.dashboard-shell-peek.dashboard-workspace-shell .dashboard-main-canvas,
+  .dashboard-shell-peek.dashboard-shell-peek.dashboard-shell-peek:has(.inventory-workspace) .dashboard-main-canvas {
+    width: calc(100% - 4.5rem) !important;
+    margin-left: 4.5rem !important;
+  }
+
+  .dashboard-shell-peek .dashboard-sidebar {
+    box-shadow:
+      inset -1px 0 0 rgba(58, 100, 145, 0.08),
+      28px 0 64px rgba(36, 79, 135, 0.22);
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-brand-mark {
+    display: none !important;
+  }
+
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-brand-logo {
+    height: 2.75rem !important;
+  }
+}

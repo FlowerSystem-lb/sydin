@@ -335,7 +335,18 @@ function placeRailChip(chip: HTMLDivElement, link: HTMLElement) {
   chip.style.left = `${Math.round(railRight + 10)}px`;
 }
 
+/* Set by the shell while the rail is peeking open. The rail's mouseenter
+   runs before the icon's, but the icon's `compact` prop is a render behind,
+   so it would still show a chip beside a label that is already on screen. */
+let railChipSuppressed = false;
+
+export function setRailChipSuppressed(value: boolean) {
+  railChipSuppressed = value;
+  if (value) hideRailChip();
+}
+
 function showRailChip(link: HTMLElement, label: string) {
+  if (railChipSuppressed) return;
   const chip = getRailChip();
   if (!chip) return;
 
@@ -937,7 +948,17 @@ export default function DashboardShell({
     }
   });
 
+  /* Sayed, 12 Sep: "why don't we make it auto open". The rail opens itself
+     while the pointer is over it and closes when the pointer leaves -- the
+     Sortly / Notion pattern -- so nobody has to find the chevron to read a
+     label. It opens OVER the page (the content does not move), and the
+     chevron becomes "keep it open", which pins it the way it always did.
+     The short leave delay stops a flicker when the pointer crosses the edge. */
+  const [sidebarPeek, setSidebarPeek] = useState(false);
+  const peekLeaveTimer = useRef<number | null>(null);
+
   const toggleSidebarExpanded = useCallback(() => {
+    setSidebarPeek(false);
     setSidebarExpanded((current) => {
       const next = !(current ?? true);
       try {
@@ -950,6 +971,37 @@ export default function DashboardShell({
   }, []);
 
   const effectiveCollapsed = sidebarExpanded === false;
+
+  const openPeek = useCallback(() => {
+    if (!effectiveCollapsed) return;
+    if (peekLeaveTimer.current !== null) {
+      window.clearTimeout(peekLeaveTimer.current);
+      peekLeaveTimer.current = null;
+    }
+    setRailChipSuppressed(true);
+    setSidebarPeek(true);
+  }, [effectiveCollapsed]);
+
+  const closePeek = useCallback(() => {
+    if (peekLeaveTimer.current !== null) window.clearTimeout(peekLeaveTimer.current);
+    peekLeaveTimer.current = window.setTimeout(() => {
+      peekLeaveTimer.current = null;
+      setRailChipSuppressed(false);
+      setSidebarPeek(false);
+    }, 160);
+  }, []);
+
+  useEffect(
+    () => () => {
+      if (peekLeaveTimer.current !== null) window.clearTimeout(peekLeaveTimer.current);
+    },
+    []
+  );
+
+  // Pinning it open (or collapsing it) ends the peek either way.
+  const sidebarShowsLabels = !effectiveCollapsed || sidebarPeek;
+
+
 
   const requestAddItemPanel = useCallback(() => {
     requestAddItem({}, { pathname, navigate: (href) => router.push(href) });
@@ -1029,8 +1081,9 @@ export default function DashboardShell({
     <div
       className={cx(
         "dashboard-shell dashboard-workspace-shell liquid-bg min-h-screen text-theme-primary",
-        effectiveCollapsed && "dashboard-shell-collapsed",
-        !effectiveCollapsed && "dashboard-shell-expanded"
+        !sidebarShowsLabels && "dashboard-shell-collapsed",
+        sidebarShowsLabels && "dashboard-shell-expanded",
+        effectiveCollapsed && sidebarPeek && "dashboard-shell-peek"
       )}
     >
       {/* Production brief item 57: a printed page must carry SydIN branding, the
@@ -1055,14 +1108,18 @@ export default function DashboardShell({
       <aside
         className={cx(
           "dashboard-sidebar glass-navigation",
-          effectiveCollapsed && "dashboard-sidebar-collapsed",
-          !effectiveCollapsed && "dashboard-sidebar-expanded"
+          !sidebarShowsLabels && "dashboard-sidebar-collapsed",
+          sidebarShowsLabels && "dashboard-sidebar-expanded"
         )}
+        onMouseEnter={openPeek}
         // Safety net for the name chip. The per-link handler covers the normal
         // case, but a fast exit, a pointer warped out of the window, or a link
         // unmounting under the cursor can all skip it -- and because the chip
         // lives on <body> it would then hang there with nothing to clear it.
-        onMouseLeave={hideRailChip}
+        onMouseLeave={() => {
+          hideRailChip();
+          closePeek();
+        }}
       >
         <div className="dashboard-sidebar-header">
           <Link
@@ -1117,9 +1174,19 @@ export default function DashboardShell({
             /* One control, one name. The tooltip said "Collapse" while a
                screen reader heard "Hide sidebar labels". */
             aria-label={
-              effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"
+              effectiveCollapsed
+                ? sidebarPeek
+                  ? "Keep sidebar open"
+                  : "Expand sidebar"
+                : "Collapse sidebar"
             }
-            title={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={
+              effectiveCollapsed
+                ? sidebarPeek
+                  ? "Keep sidebar open"
+                  : "Expand sidebar"
+                : "Collapse sidebar"
+            }
           >
             <UiIcon
               name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
@@ -1144,7 +1211,9 @@ export default function DashboardShell({
         </div>
 
         <div className="dashboard-sidebar-scroll">
-          <NavigationGroups pathname={pathname} compact={effectiveCollapsed} />
+          {/* `compact` drives the name chips: while the rail is peeking open,
+              the labels are on screen, so no chip. */}
+          <NavigationGroups pathname={pathname} compact={!sidebarShowsLabels} />
         </div>
 
       </aside>
