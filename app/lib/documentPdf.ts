@@ -109,9 +109,10 @@ export async function openDocument(
   header: DocumentHeaderSpec
 ): Promise<DocumentContext> {
   const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
-  const logo = branding.businessLogoUrl
+  const loadedLogo = branding.businessLogoUrl
     ? await loadExportImage(branding.businessLogoUrl)
     : null;
+  const logo = loadedLogo ? await shrinkForThumbnail(loadedLogo, 512) : null;
   const context: DocumentContext = {
     doc,
     pageWidth: doc.internal.pageSize.getWidth(),
@@ -305,8 +306,54 @@ export const THUMB_SIZE = 9;
 export const THUMB_COLUMN_PADDING = THUMB_SIZE + 4;
 
 /**
- * Loads up to `limit` line images in parallel batches. Anything missing or
- * failing is simply absent from the map; the row prints without a photo.
+ * A product photo is a phone upload -- often 3000px and 2MB -- and a
+ * thumbnail on paper is 9mm. Embedding the original would put every one of
+ * those megabytes into the PDF or Word file. In the browser the image is
+ * redrawn at thumbnail size first; where there is no canvas (tests) it is
+ * used as it is.
+ */
+export async function shrinkForThumbnail(
+  image: LoadedExportImage,
+  maxPx = 240
+): Promise<LoadedExportImage> {
+  if (typeof document === "undefined" || Math.max(image.width, image.height) <= maxPx) {
+    return image;
+  }
+  try {
+    const scale = maxPx / Math.max(image.width, image.height);
+    const width = Math.max(1, Math.round(image.width * scale));
+    const height = Math.max(1, Math.round(image.height * scale));
+    const bitmap = await new Promise<HTMLImageElement>((resolve, reject) => {
+      const element = new Image();
+      element.onload = () => resolve(element);
+      element.onerror = () => reject(new Error("decode failed"));
+      element.src = image.dataUrl;
+    });
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) return image;
+    // White behind transparent PNGs: JPEG has no alpha, and a black square
+    // where the background was is worse than no photo.
+    context.fillStyle = "#ffffff";
+    context.fillRect(0, 0, width, height);
+    context.drawImage(bitmap, 0, 0, width, height);
+    return {
+      dataUrl: canvas.toDataURL("image/jpeg", 0.82),
+      extension: "jpeg",
+      width,
+      height,
+    };
+  } catch {
+    return image;
+  }
+}
+
+/**
+ * Loads up to `limit` line images in parallel batches, shrunk to thumbnail
+ * size. Anything missing or failing is simply absent from the map; the row
+ * prints without a photo.
  */
 export async function loadLineImages(
   urls: Array<string | null | undefined>,
@@ -320,7 +367,12 @@ export async function loadLineImages(
   const batch = 6;
   for (let index = 0; index < unique.length; index += batch) {
     const slice = unique.slice(index, index + batch);
-    const loaded = await Promise.all(slice.map((url) => loadExportImage(url, 900_000)));
+    const loaded = await Promise.all(
+      slice.map(async (url) => {
+        const image = await loadExportImage(url, 6_000_000);
+        return image ? shrinkForThumbnail(image) : null;
+      })
+    );
     loaded.forEach((image, offset) => {
       if (image) images.set(slice[offset], image);
     });

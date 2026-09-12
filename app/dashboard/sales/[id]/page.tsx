@@ -19,6 +19,7 @@ import {
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
 import { exportSalesInvoicePdf } from "@/app/lib/salesInvoicePdf";
+import { exportSalesInvoiceDocx } from "@/app/lib/documentDocxExports";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import {
   addSalesOrderPayment,
@@ -62,7 +63,7 @@ export default function SaleDetailPage() {
 
   const [order, setOrder] = useState<SalesOrder | null>(null);
   const [currencyCode, setCurrencyCode] = useState(
-    DEFAULT_BUSINESS_SETTINGS.currency_code
+    DEFAULT_BUSINESS_SETTINGS.currency_code,
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -80,11 +81,13 @@ export default function SaleDetailPage() {
   // The whole company block, so the PDF prints address, tax number, terms and
   // footer as well as the name -- not four fields picked out of it.
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings>(
-    DEFAULT_BUSINESS_SETTINGS
+    DEFAULT_BUSINESS_SETTINGS,
   );
   const [downloading, setDownloading] = useState(false);
   // Item photos for the lines, by inventory item id: on screen and in the PDF.
-  const [lineImages, setLineImages] = useState<Record<number, string | null>>({});
+  const [lineImages, setLineImages] = useState<Record<number, string | null>>(
+    {},
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -113,8 +116,8 @@ export default function SaleDetailPage() {
           new Set(
             (found?.lines || [])
               .map((line) => line.inventory_item_id)
-              .filter((id): id is number => id !== null && id !== undefined)
-          )
+              .filter((id): id is number => id !== null && id !== undefined),
+          ),
         );
         if (itemIds.length > 0) {
           const { data: rows } = await supabase
@@ -123,13 +126,16 @@ export default function SaleDetailPage() {
             .in("id", itemIds);
           if (!isActive) return;
           const next: Record<number, string | null> = {};
-          for (const row of (rows || []) as { id: number; image: string | null }[]) {
+          for (const row of (rows || []) as {
+            id: number;
+            image: string | null;
+          }[]) {
             next[row.id] = row.image;
           }
           setLineImages(next);
         }
         setCurrencyCode(
-          settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code
+          settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code,
         );
         setBusinessSettings(settings || DEFAULT_BUSINESS_SETTINGS);
       })
@@ -228,47 +234,60 @@ export default function SaleDetailPage() {
     }
   };
 
-  const downloadPdf = async () => {
+  /* One description of the document; PDF and Word both print it. */
+  const buildInvoiceDocument = () => {
+    if (!order) return null;
+    return {
+      details: {
+        invoiceNumber: order.invoice_number,
+        customerName: order.customer_name_snapshot || undefined,
+        customerContact: order.customer_contact_snapshot || undefined,
+        depotName: order.depot_name_snapshot || undefined,
+        issueDate: order.issue_date || undefined,
+        dueDate: order.due_date || undefined,
+        status: SALES_ORDER_STATUS_LABELS[order.status],
+        paymentStatus: SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status],
+        amountPaid: order.amount_paid,
+        notes: order.notes || undefined,
+      },
+      /* Everything printed comes from the SNAPSHOTS on the invoice, never
+           from the live catalogue. A product renamed or repriced next month
+           must not change a document the customer is already holding. */
+      lines: (order.lines || []).map((line) => ({
+        name: line.name_snapshot,
+        code: line.item_code_snapshot || line.sku_snapshot || undefined,
+        unit: line.unit_label_snapshot || undefined,
+        quantity: Number(line.quantity),
+        unitPrice: line.unit_price,
+        lineTotal: getSalesOrderLineTotal(line),
+        isCharge: line.line_type === "charge",
+        imageUrl:
+          line.inventory_item_id !== null &&
+          line.inventory_item_id !== undefined
+            ? (lineImages[line.inventory_item_id] ?? null)
+            : null,
+      })),
+      branding: brandingFromSettings(businessSettings),
+      currencyCode,
+    };
+  };
+
+  const downloadDocument = async (format: "pdf" | "docx") => {
     if (!order || downloading) return;
+    const spec = buildInvoiceDocument();
+    if (!spec) return;
 
     try {
       setDownloading(true);
       setError("");
-
-      await exportSalesInvoicePdf({
-        details: {
-          invoiceNumber: order.invoice_number,
-          customerName: order.customer_name_snapshot || undefined,
-          customerContact: order.customer_contact_snapshot || undefined,
-          depotName: order.depot_name_snapshot || undefined,
-          issueDate: order.issue_date || undefined,
-          dueDate: order.due_date || undefined,
-          status: SALES_ORDER_STATUS_LABELS[order.status],
-          paymentStatus: SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status],
-          amountPaid: order.amount_paid,
-          notes: order.notes || undefined,
-        },
-        /* Everything printed comes from the SNAPSHOTS on the invoice, never
-           from the live catalogue. A product renamed or repriced next month
-           must not change a document the customer is already holding. */
-        lines: (order.lines || []).map((line) => ({
-          name: line.name_snapshot,
-          code: line.item_code_snapshot || line.sku_snapshot || undefined,
-          unit: line.unit_label_snapshot || undefined,
-          quantity: Number(line.quantity),
-          unitPrice: line.unit_price,
-          lineTotal: getSalesOrderLineTotal(line),
-          isCharge: line.line_type === "charge",
-          imageUrl:
-            line.inventory_item_id !== null && line.inventory_item_id !== undefined
-              ? lineImages[line.inventory_item_id] ?? null
-              : null,
-        })),
-        branding: brandingFromSettings(businessSettings),
-        currencyCode,
-      });
+      if (format === "pdf") await exportSalesInvoicePdf(spec);
+      else await exportSalesInvoiceDocx(spec);
     } catch {
-      setError("We could not build the PDF. Please try again.");
+      setError(
+        format === "pdf"
+          ? "We could not build the PDF. Please try again."
+          : "We could not build the Word file. Please try again.",
+      );
     } finally {
       setDownloading(false);
     }
@@ -351,11 +370,18 @@ export default function SaleDetailPage() {
                   figures before anything ships, and printing changes nothing. */}
               <Button
                 variant="secondary"
-                onClick={() => void downloadPdf()}
+                onClick={() => void downloadDocument("pdf")}
                 loading={downloading}
                 loadingLabel="Building..."
               >
                 Download PDF
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => void downloadDocument("docx")}
+                disabled={downloading}
+              >
+                Word
               </Button>
               {order.status === "draft" && (
                 <>
@@ -418,7 +444,7 @@ export default function SaleDetailPage() {
                         line.unit_price !== null
                           ? `at ${formatInventoryPrice(
                               line.unit_price,
-                              currencyCode
+                              currencyCode,
                             )}`
                           : "no price",
                         line.line_type === "charge" ? "Charge" : null,
@@ -430,7 +456,7 @@ export default function SaleDetailPage() {
                   <span className="shrink-0 text-sm font-semibold text-theme-primary tabular-nums">
                     {formatInventoryPrice(
                       getSalesOrderLineTotal(line),
-                      currencyCode
+                      currencyCode,
                     ) || "--"}
                   </span>
                 </li>
@@ -459,7 +485,9 @@ export default function SaleDetailPage() {
               <div className="flex flex-wrap items-baseline justify-between gap-2">
                 <h2 className="flex items-center gap-2 text-sm font-semibold text-theme-primary">
                   Payments
-                  <HelpLink article="record-customer-payment">How payments work</HelpLink>
+                  <HelpLink article="record-customer-payment">
+                    How payments work
+                  </HelpLink>
                 </h2>
                 <p className="text-sm font-semibold text-theme-primary tabular-nums">
                   {formatInventoryPrice(balance, currencyCode) || "--"}
@@ -556,7 +584,9 @@ export default function SaleDetailPage() {
 
           {order.notes && (
             <section className="dashboard-card p-4">
-              <h2 className="text-sm font-semibold text-theme-primary">Notes</h2>
+              <h2 className="text-sm font-semibold text-theme-primary">
+                Notes
+              </h2>
               <p className="mt-2 whitespace-pre-line text-sm text-theme-secondary">
                 {order.notes}
               </p>
@@ -570,7 +600,8 @@ export default function SaleDetailPage() {
             </p>
           ) : order.status === "issued" ? (
             <p className="rounded-xl border border-theme bg-theme-inset px-4 py-3 text-xs text-theme-muted">
-              Issued{order.issued_at
+              Issued
+              {order.issued_at
                 ? ` on ${new Date(order.issued_at).toLocaleDateString()}`
                 : ""}
               . The stock has left the depot and each line is recorded in Stock

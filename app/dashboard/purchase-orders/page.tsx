@@ -34,6 +34,7 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { exportPurchaseOrderExcel } from "@/app/lib/purchaseOrderExcelExport";
 import { exportPurchaseOrderPdf } from "@/app/lib/purchaseOrderPdfExport";
+import { exportPurchaseOrderDocx } from "@/app/lib/documentDocxExports";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
@@ -736,37 +737,46 @@ export default function PurchaseOrdersPage() {
     contactWebsite: settings.contact_website || undefined,
   });
 
-  const handleExportPdf = async () => {
+  /* One description of the document; PDF and Word both print it. */
+  const buildOrderDocument = (order: PurchaseOrder) => ({
+    details: exportDetails(order),
+    lines: order.lines.map((line) => ({
+      name: line.name_snapshot,
+      category:
+        line.line_type === "expense" && line.expense_category
+          ? PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS[line.expense_category]
+          : undefined,
+      code: line.item_code_snapshot || undefined,
+      sku: line.sku_snapshot || undefined,
+      unit: line.unit_label_snapshot || "unit",
+      imageUrl:
+        line.inventory_item_id !== null
+          ? (lineImages[line.inventory_item_id] ?? null)
+          : null,
+      orderQuantity: line.quantity,
+      receivedQuantity: line.received_quantity,
+      unitCost: line.unit_cost,
+      lineTotal: getPurchaseOrderLineTotal(line),
+      note: line.notes || undefined,
+    })),
+    branding: brandingFromSettings(settings),
+    currencyCode,
+  });
+
+  const handleExportDocument = async (format: "pdf" | "docx") => {
     if (!selectedOrder) return;
     setActionBusy(true);
     setActionError("");
     try {
-      await exportPurchaseOrderPdf({
-        details: exportDetails(selectedOrder),
-        lines: selectedOrder.lines.map((line) => ({
-          name: line.name_snapshot,
-          category:
-            line.line_type === "expense" && line.expense_category
-              ? PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS[line.expense_category]
-              : undefined,
-          code: line.item_code_snapshot || undefined,
-          sku: line.sku_snapshot || undefined,
-          unit: line.unit_label_snapshot || "unit",
-          imageUrl:
-            line.inventory_item_id !== null
-              ? lineImages[line.inventory_item_id] ?? null
-              : null,
-          orderQuantity: line.quantity,
-          receivedQuantity: line.received_quantity,
-          unitCost: line.unit_cost,
-          lineTotal: getPurchaseOrderLineTotal(line),
-          note: line.notes || undefined,
-        })),
-        branding: brandingFromSettings(settings),
-        currencyCode,
-      });
+      const spec = buildOrderDocument(selectedOrder);
+      if (format === "pdf") await exportPurchaseOrderPdf(spec);
+      else await exportPurchaseOrderDocx(spec);
     } catch {
-      setActionError("The PDF could not be generated. Try again.");
+      setActionError(
+        format === "pdf"
+          ? "The PDF could not be generated. Try again."
+          : "The Word file could not be generated. Try again.",
+      );
     } finally {
       setActionBusy(false);
     }
@@ -1164,10 +1174,18 @@ export default function PurchaseOrdersPage() {
                 <Button
                   variant="secondary"
                   leadingIcon={<UiIcon name="download" className="h-4 w-4" />}
-                  onClick={handleExportPdf}
+                  onClick={() => handleExportDocument("pdf")}
                   disabled={actionBusy}
                 >
-                  Export PDF
+                  PDF
+                </Button>
+                <Button
+                  variant="secondary"
+                  leadingIcon={<UiIcon name="file" className="h-4 w-4" />}
+                  onClick={() => handleExportDocument("docx")}
+                  disabled={actionBusy}
+                >
+                  Word
                 </Button>
                 <Button
                   variant="secondary"
@@ -1175,7 +1193,7 @@ export default function PurchaseOrdersPage() {
                   onClick={handleExportExcel}
                   disabled={actionBusy}
                 >
-                  Export Excel
+                  Excel
                 </Button>
                 {selectedOrder.status !== "cancelled" && (
                   <Button
@@ -1248,7 +1266,9 @@ export default function PurchaseOrdersPage() {
                   <span className="po-stock-flag">→ stock</span> are added to
                   inventory now; anything left over stays open on the order
                   until the next delivery.{" "}
-                  <HelpLink article="receive-against-order">How receiving works</HelpLink>
+                  <HelpLink article="receive-against-order">
+                    How receiving works
+                  </HelpLink>
                 </p>
 
                 <div className="po-receive-lines">
