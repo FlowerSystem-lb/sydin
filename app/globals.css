@@ -21652,3 +21652,13 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   background: var(--bg-surface);
 }
 
+
+/* Overview: the money row sits under the stock row, sharing its hairlines;
+   only the top border would double up, so it is dropped. */
+.ov-figures-business {
+  border-top: 0;
+}
+
+.ov-row-value-danger {
+  color: var(--text-danger, #b91c1c);
+}

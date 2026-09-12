@@ -38,10 +38,19 @@ import {
   type Category,
 } from "@/app/lib/categories";
 import {
+  getPurchaseOrderBalance,
+  getPurchaseOrderReceivingProgress,
   getPurchaseOrderSplit,
   getPurchaseOrdersForUser,
+  isPurchaseOrderOpen,
   type PurchaseOrder,
 } from "@/app/lib/purchaseOrders";
+import {
+  getSalesOrderBalance,
+  getSalesOrderTotal,
+  getSalesOrdersForUser,
+  type SalesOrder,
+} from "@/app/lib/salesOrders";
 import { supabase } from "@/app/lib/supabase";
 import {
   ActionButton,
@@ -85,6 +94,13 @@ function getDashboardItemHref(itemId: number) {
 
 function formatNumber(value: number) {
   return new Intl.NumberFormat("en-US").format(value);
+}
+
+function formatDateShort(value: string | null | undefined) {
+  if (!value) return "";
+  const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
 }
 
 function formatCurrency(value: number, currencyCode: string) {
@@ -239,6 +255,7 @@ export default function DashboardPage() {
   const [depots, setDepots] = useState<Depot[]>([]);
   const [movements, setMovements] = useState<StockMovement[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
   const [businessSettings, setBusinessSettings] =
@@ -299,6 +316,7 @@ export default function DashboardPage() {
           // Empty when the phase-8 SQL has not been run yet — the panel
           // falls back to its empty state instead of breaking the dashboard.
           getPurchaseOrdersForUser(user.id).catch(() => []),
+          getSalesOrdersForUser(user.id).catch(() => [] as SalesOrder[]),
         ])
           .then(
             ([
@@ -309,6 +327,7 @@ export default function DashboardPage() {
               loadedDepots,
               loadedMovements,
               loadedPurchaseOrders,
+              loadedSalesOrders,
             ]) => {
               if (!isActive) return;
 
@@ -327,6 +346,7 @@ export default function DashboardPage() {
               setDepots(loadedDepots);
               setMovements(loadedMovements);
               setPurchaseOrders(loadedPurchaseOrders);
+              setSalesOrders(loadedSalesOrders);
               setLoading(false);
             }
           )
@@ -574,6 +594,117 @@ export default function DashboardPage() {
 
   const recentMovements = movements.slice(0, 6);
 
+  /* The business, not the shelves: what was sold this month, what customers
+     still owe, what is owed to suppliers, and what is on its way. Each one
+     is a question the owner asks every morning; each one links to the page
+     that answers it in full. */
+  const business = useMemo(() => {
+    const now = new Date();
+    const today = now.toISOString().slice(0, 10);
+    const inThisMonth = (source: string | null | undefined) => {
+      if (!source) return false;
+      const date = new Date(source.includes("T") ? source : `${source}T00:00:00`);
+      return (
+        !Number.isNaN(date.getTime()) &&
+        date.getFullYear() === now.getFullYear() &&
+        date.getMonth() === now.getMonth()
+      );
+    };
+
+    let soldThisMonth = 0;
+    let soldCount = 0;
+    let customersOwe = 0;
+    let owingInvoices = 0;
+    const overdue: SalesOrder[] = [];
+    for (const order of salesOrders) {
+      if (order.status === "draft" || order.status === "cancelled") continue;
+      if (inThisMonth(order.issue_date || order.created_at)) {
+        soldThisMonth += getSalesOrderTotal(order);
+        soldCount += 1;
+      }
+      const remaining = getSalesOrderBalance(order);
+      if (remaining > 0) {
+        customersOwe += remaining;
+        owingInvoices += 1;
+        if (order.due_date && order.due_date < today) overdue.push(order);
+      }
+    }
+
+    let oweSuppliers = 0;
+    let unpaidOrders = 0;
+    const expected: PurchaseOrder[] = [];
+    let expectedUnits = 0;
+    for (const order of purchaseOrders) {
+      if (order.status === "cancelled" || order.status === "draft") continue;
+      const remaining = getPurchaseOrderBalance(order).remaining;
+      if (remaining > 0) {
+        oweSuppliers += remaining;
+        unpaidOrders += 1;
+      }
+      if (isPurchaseOrderOpen(order) && order.lines.length > 0) {
+        expected.push(order);
+        expectedUnits += getPurchaseOrderReceivingProgress(order).remaining;
+      }
+    }
+
+    return {
+      soldThisMonth,
+      soldCount,
+      customersOwe,
+      owingInvoices,
+      overdue: overdue.sort((a, b) => (a.due_date || "").localeCompare(b.due_date || "")),
+      oweSuppliers,
+      unpaidOrders,
+      expected,
+      expectedUnits,
+    };
+  }, [salesOrders, purchaseOrders]);
+
+  const businessCards = [
+    {
+      label: "Sold this month",
+      rawValue: business.soldThisMonth,
+      format: (n: number) => formatCurrency(n, currencyCode),
+      detail:
+        business.soldCount === 0
+          ? "No invoices yet this month"
+          : `${formatNumber(business.soldCount)} invoice${business.soldCount === 1 ? "" : "s"}`,
+      href: "/dashboard/sales",
+    },
+    {
+      label: "Customers owe you",
+      rawValue: business.customersOwe,
+      format: (n: number) => formatCurrency(n, currencyCode),
+      detail:
+        business.overdue.length > 0
+          ? `${formatNumber(business.overdue.length)} overdue`
+          : business.owingInvoices > 0
+            ? `${formatNumber(business.owingInvoices)} open invoice${business.owingInvoices === 1 ? "" : "s"}`
+            : "Everything is settled",
+      href: "/dashboard/sales?status=issued",
+    },
+    {
+      label: "You owe suppliers",
+      rawValue: business.oweSuppliers,
+      format: (n: number) => formatCurrency(n, currencyCode),
+      detail:
+        business.unpaidOrders > 0
+          ? `${formatNumber(business.unpaidOrders)} order${business.unpaidOrders === 1 ? "" : "s"} not fully paid`
+          : "No supplier balance",
+      href: "/dashboard/purchase-orders",
+    },
+    {
+      label: "Deliveries expected",
+      rawValue: business.expected.length,
+      format: (n: number) => formatNumber(Math.round(n)),
+      detail:
+        business.expected.length > 0
+          ? `${formatNumber(business.expectedUnits)} units still to come`
+          : "Nothing on order",
+      href: "/dashboard/receiving",
+    },
+  ];
+
   const hasNoItems = !loading && dashboardData.totalItems === 0;
   const setupGaps = [
     {
@@ -663,6 +794,30 @@ export default function DashboardPage() {
           );
         })}
       </div>
+
+      {/* The money row. Same hairline figures as the stock row above it, in
+          the order an owner reads them: what came in, what is still coming,
+          what goes out, what is on the way. */}
+      {!hasNoItems && (
+        <div className="ov-figures ov-figures-business" role="group" aria-label="Business summary">
+          {businessCards.map((card) => {
+            const rendered = card.format(card.rawValue);
+            return (
+              <Link key={card.label} href={card.href} className="ov-figure">
+                <span className="ov-figure-label">{card.label}</span>
+                <span
+                  className={`ov-figure-value${
+                    rendered.length >= 8 ? " ov-figure-value--long" : ""
+                  }`}
+                >
+                  {loading ? "--" : rendered}
+                </span>
+                <span className="ov-figure-note">{card.detail}</span>
+              </Link>
+            );
+          })}
+        </div>
+      )}
 
       {hasNoItems ? (
         /* One empty state for the whole screen. The old Overview stacked three
@@ -889,6 +1044,63 @@ export default function DashboardPage() {
               </ul>
             )}
           </section>
+
+          {(business.overdue.length > 0 || business.expected.length > 0) && (
+            <section className="ov-section" aria-labelledby="ov-action-title">
+              <div className="ov-section-head">
+                <h2 id="ov-action-title" className="ov-section-title">
+                  Action required
+                </h2>
+              </div>
+              <ul className="ov-list">
+                {business.overdue.slice(0, 4).map((order) => (
+                  <li key={`inv-${order.id}`}>
+                    <Link href={`/dashboard/sales/${order.id}`} className="ov-row">
+                      <span className="ov-row-text">
+                        <strong>
+                          {order.invoice_number}
+                          {order.customer_name_snapshot
+                            ? ` · ${order.customer_name_snapshot}`
+                            : ""}
+                        </strong>
+                        <small>Overdue since {formatDateShort(order.due_date)}</small>
+                      </span>
+                      <span className="ov-row-value ov-row-value-danger">
+                        {formatCurrency(getSalesOrderBalance(order), currencyCode)}
+                      </span>
+                    </Link>
+                  </li>
+                ))}
+                {business.expected.slice(0, 4).map((order) => {
+                  const progress = getPurchaseOrderReceivingProgress(order);
+                  return (
+                    <li key={`po-${order.id}`}>
+                      <Link
+                        href={`/dashboard/purchase-orders?open=${order.id}&receive=1`}
+                        className="ov-row"
+                      >
+                        <span className="ov-row-text">
+                          <strong>
+                            {order.po_number}
+                            {order.supplier_name_snapshot
+                              ? ` · ${order.supplier_name_snapshot}`
+                              : ""}
+                          </strong>
+                          <small>
+                            {order.expected_delivery_date
+                              ? `Expected ${formatDateShort(order.expected_delivery_date)} · `
+                              : ""}
+                            {formatNumber(progress.remaining)} units to receive
+                          </small>
+                        </span>
+                        <span className="ov-row-value">Receive</span>
+                      </Link>
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
 
           <section className="ov-section" aria-labelledby="ov-spending-title">
             <div className="ov-section-head">
