@@ -72,10 +72,22 @@ import {
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
+import { getPurchaseOrdersForUser, type PurchaseOrder } from "@/app/lib/purchaseOrders";
+import { getSalesOrdersForUser, type SalesOrder } from "@/app/lib/salesOrders";
+import { brandingFromSettings } from "@/app/lib/documentPdf";
+import {
+  exportReportPdf,
+  outstandingInvoices,
+  purchasesByMonth,
+  purchasesBySupplier,
+  reportCsvRows,
+  salesByMonth,
+  type ReportTable,
+} from "@/app/lib/businessReportsPdf";
 import { supabase } from "@/app/lib/supabase";
 
-type ReportCategory = "all" | "inventory" | "operations" | "valuation" | "activity";
-type ReportAction = "inventory-pdf" | "movement-csv" | "route";
+type ReportCategory = "all" | "business" | "inventory" | "operations" | "valuation" | "activity";
+type ReportAction = "inventory-pdf" | "movement-csv" | "business" | "route";
 type MovementFilter = "all" | StockMovementType;
 
 interface ReportInventoryItem extends InventoryReportItem {
@@ -162,6 +174,52 @@ const INVENTORY_REPORTS: ReportCard[] = [
     action: "inventory-pdf",
     reportType: "valuation",
     icon: "reports",
+  },
+];
+
+/* The money reports. Built from the same invoices and purchase orders the
+   Sales and Purchase Orders pages show; each comes as a branded PDF and a
+   CSV of the same rows. */
+const BUSINESS_REPORTS: ReportCard[] = [
+  {
+    id: "sales-by-month",
+    name: "Sales by month",
+    description: "Invoiced, paid and still owed, month by month.",
+    category: "business",
+    source: "Sales",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "receipt",
+  },
+  {
+    id: "outstanding-invoices",
+    name: "Outstanding invoices",
+    description: "Every invoice with a balance, oldest due date first, overdue flagged.",
+    category: "business",
+    source: "Sales",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "customers",
+  },
+  {
+    id: "purchases-by-supplier",
+    name: "Purchases by supplier",
+    description: "What was ordered from each supplier, what was paid, what you still owe.",
+    category: "business",
+    source: "Purchase Orders",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "suppliers",
+  },
+  {
+    id: "purchases-by-month",
+    name: "Purchases by month",
+    description: "Stock purchases and general spending, month by month.",
+    category: "business",
+    source: "Purchase Orders",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "cart",
   },
 ];
 
@@ -270,7 +328,7 @@ const OPERATION_REPORTS: ReportCard[] = [
   },
 ];
 
-const REPORTS = [...INVENTORY_REPORTS, ...VALUATION_REPORTS, ...OPERATION_REPORTS];
+const REPORTS = [...BUSINESS_REPORTS, ...INVENTORY_REPORTS, ...VALUATION_REPORTS, ...OPERATION_REPORTS];
 
 function formatCurrency(value: number, currencyCode: string) {
   return (
@@ -310,6 +368,8 @@ function FormatChip({ label }: { label: string }) {
 export default function ReportsPage() {
   const [items, setItems] = useState<ReportInventoryItem[]>([]);
   const [movements, setMovements] = useState<ReportStockMovement[]>([]);
+  const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -373,6 +433,8 @@ export default function ReportsPage() {
         loadedCategories,
         settings,
         usage,
+        loadedSales,
+        loadedPurchases,
       ] = await Promise.all([
         supabase
           .from("inventory")
@@ -394,6 +456,8 @@ export default function ReportsPage() {
         getCategoriesForUser(user.id).catch(() => []),
         getOrCreateBusinessSettings(user.id),
         getSubscriptionUsage(user.id),
+        getSalesOrdersForUser(user.id).catch(() => [] as SalesOrder[]),
+        getPurchaseOrdersForUser(user.id).catch(() => [] as PurchaseOrder[]),
       ]);
 
       if (inventoryResult.error) throw inventoryResult.error;
@@ -407,6 +471,8 @@ export default function ReportsPage() {
       setCategories(loadedCategories);
       setBusinessSettings(settings);
       setSubscriptionUsage(usage);
+      setSalesOrders(loadedSales);
+      setPurchaseOrders(loadedPurchases);
       setLoading(false);
     }
 
@@ -469,6 +535,7 @@ export default function ReportsPage() {
 
   const reportCategories: Array<{ id: ReportCategory; label: string }> = [
     { id: "all", label: "All" },
+    { id: "business", label: "Sales & purchases" },
     { id: "inventory", label: "Inventory" },
     { id: "operations", label: "Operations" },
     { id: "valuation", label: "Inventory Value" },
@@ -748,10 +815,47 @@ export default function ReportsPage() {
     setDepotReportOpen(false);
   };
 
+  const buildBusinessReport = (id: string): ReportTable | null => {
+    switch (id) {
+      case "sales-by-month":
+        return salesByMonth(salesOrders, currencyCode);
+      case "outstanding-invoices":
+        return outstandingInvoices(salesOrders, currencyCode);
+      case "purchases-by-supplier":
+        return purchasesBySupplier(purchaseOrders, currencyCode);
+      case "purchases-by-month":
+        return purchasesByMonth(purchaseOrders, currencyCode);
+      default:
+        return null;
+    }
+  };
+
+  const runBusinessReport = async (report: ReportCard, format: "pdf" | "csv") => {
+    const table = buildBusinessReport(report.id);
+    if (!table || exporting) return;
+    setNotice("");
+    try {
+      setExporting(true);
+      if (format === "pdf") {
+        await exportReportPdf(table, brandingFromSettings(businessSettings));
+        setNotice(`${table.title} exported as PDF.`);
+      } else {
+        downloadCsv(`sydin-${table.filename}.csv`, reportCsvRows(table));
+        setNotice(`${table.title} exported as CSV.`);
+      }
+    } catch {
+      setNotice(`${table.title} could not be exported. Try again.`);
+    } finally {
+      setExporting(false);
+    }
+  };
+
   const openReport = (report: ReportCard) => {
     setNotice("");
     setExportStatus("");
-    if (report.action === "inventory-pdf") {
+    if (report.action === "business") {
+      void runBusinessReport(report, "pdf");
+    } else if (report.action === "inventory-pdf") {
       setInventoryDialogReport(report);
     } else if (report.action === "movement-csv") {
       setMovementDialogOpen(true);
@@ -948,6 +1052,15 @@ export default function ReportsPage() {
                       <Button
                         variant="secondary"
                         onClick={exportDetailedInventoryCsv}
+                      >
+                        Export CSV
+                      </Button>
+                    )}
+                    {report.action === "business" && (
+                      <Button
+                        variant="secondary"
+                        onClick={() => void runBusinessReport(report, "csv")}
+                        disabled={exporting}
                       >
                         Export CSV
                       </Button>
