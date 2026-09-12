@@ -115,6 +115,11 @@ function formatUnits(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
+/** "1 unit", "3 units", "2.50 units". */
+function unitsLabel(value: number) {
+  return `${formatUnits(value)} ${value === 1 ? "unit" : "units"}`;
+}
+
 /** What is still to come on a line. Never negative. */
 function lineOutstanding(line: PurchaseOrderLine) {
   return Math.max(0, line.quantity - line.received_quantity);
@@ -589,14 +594,14 @@ export default function PurchaseOrdersPage() {
       await refreshOrders();
       setPaymentMode("none");
       setSuccessNoticeTone("success");
-      const received = formatUnits(receivingSummary.now);
+      const received = unitsLabel(receivingSummary.now);
       setSuccessNotice(
         receivingSummary.after > 0 && !receiveClose
-          ? `${selectedOrder.po_number}: ${received} units received and added to stock. ${formatUnits(
+          ? `${selectedOrder.po_number}: ${received} received and added to stock. ${formatUnits(
               receivingSummary.after,
             )} still to come — the order stays open.`
           : receiveClose && receivingSummary.after > 0
-            ? `${selectedOrder.po_number} closed short: ${received} units received, ${formatUnits(
+            ? `${selectedOrder.po_number} closed short: ${received} received, ${formatUnits(
                 receivingSummary.after,
               )} never arrived.`
             : `${selectedOrder.po_number} fully received. Stock lines were added to inventory.`,
@@ -1153,7 +1158,7 @@ export default function PurchaseOrdersPage() {
                 >
                   {receiveClose && receivingSummary.now <= 0
                     ? "Close order"
-                    : `Receive ${formatUnits(receivingSummary.now)} units`}
+                    : `Receive ${unitsLabel(receivingSummary.now)}`}
                 </Button>
               </div>
             ) : paymentMode === "edit" ? (
@@ -1366,7 +1371,7 @@ export default function PurchaseOrdersPage() {
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-theme-muted">
                   <span>
                     {receivingSummary.after > 0
-                      ? `${formatUnits(receivingSummary.after)} units will still be outstanding after this delivery.`
+                      ? `${unitsLabel(receivingSummary.after)} will still be outstanding after this delivery.`
                       : "This delivery completes the order."}
                   </span>
                   <button
@@ -1660,7 +1665,7 @@ export default function PurchaseOrdersPage() {
                       </span>
                       <span className="min-w-0 flex-1">
                         <span className="block text-sm font-black text-theme-primary">
-                          {formatUnits(units)} units · {receipt.receipt_number}
+                          {unitsLabel(units)} · {receipt.receipt_number}
                         </span>
                         <span className="block truncate text-xs font-semibold text-theme-muted">
                           {[formatDate(receipt.received_at), receipt.notes]

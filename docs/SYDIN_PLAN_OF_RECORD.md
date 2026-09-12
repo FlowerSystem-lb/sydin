@@ -622,9 +622,13 @@ returns 500 for Supabase-hosted images; production (Vercel) serves them.
 
 ## M. What is left
 
-0. **Run two SQL files in Supabase** (Sayed): `sql/phase-23-partial-receiving.sql`
-   and `sql/phase-24-company-profile.sql`. Until then receiving in parts and the
-   document fields show a message saying what to run; everything else works.
+0. ~~Run two SQL files in Supabase~~ **Done 12 Sep 2026** — phases 23 and 24
+   were applied to the live project through the Supabase connector (recorded
+   as migrations `phase_23_partial_receiving` and `phase_24_company_profile`),
+   then partial receiving was tested end to end on the live database (order
+   for 4, received 3 then 1; stock, receipt and movement all correct) and the
+   test rows removed. From now on SQL phases are applied the same way, not
+   pasted by Sayed.
 
 1. **Plan gating for Sales** is written (`sales` capability, Free = false) but
    has only been seen on a Pro account. Confirm the padlock on a Free account.
