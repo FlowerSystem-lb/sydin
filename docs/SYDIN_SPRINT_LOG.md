@@ -3731,3 +3731,50 @@ jsPDF plugin methods live on `jsPDF.API`, not the prototype. The orphaned dev se
 production serves them.
 
 ---
+
+
+## Money that converts, receiving live, sidebar on hover  *(Complete)*
+
+**Date:** 12 September 2026 · **Branch:** `main` · **Commits:** `ee75b80` → `0f8c81e`
+
+**Why:** Sayed: "why don't we make it auto open, and another logo appears when it
+opens"; "you have access to Supabase, do it and tell me to check"; "from USD to
+LBP it stayed 1,711,650 … should multiply by the current rate … auto live
+convert … inside invoices can change the currency"; "why are the numbers rounded
+in inventory".
+
+**Delivered:**
+- **Sidebar** opens itself while the pointer is over the rail and closes on
+  leave, over the page (content does not move); the chevron pins it. One logo
+  when open (the mark was showing beside a wordmark that already contains it).
+- **Database phases applied through the Supabase connector**, no more pasting:
+  23 (partial receiving), 24 (company profile), 25 (currencies), 26 (private
+  PO attachments). Partial receiving tested end to end on the live database
+  and the test rows removed.
+- **Currencies** — `app/lib/currency.ts`. Base currency (what is stored) vs
+  display currency (what is shown); live rates from open.er-api.com saved daily,
+  a typed rate wins; Settings › Company › Money. Invoices and purchase orders
+  carry their own currency and the day's rate; sums across documents add up in
+  base. LBP prints without decimals. Item prices are typed in base.
+  Also: pages that loaded before Settings painted unconverted numbers — the
+  shell now remounts the page once when conversion becomes possible.
+- **Inventory card values** print exactly under 10,000 ("QAR 9.10", not "QAR 9").
+- **PO attachments private** — bucket private, owner-only read, one-hour signed
+  URLs.
+- **Phone item detail** — quantity first at 40px serif, no empty photo block.
+  Phone Home totals get size tiers instead of breaking mid-number.
+
+**Verification:** lint · tsc · build after every commit. Live checks in the
+running app: receiving 3 then 1 of 4 (stock 533 → 536 → 537, receipt R1, then
+cleaned up); an invoice typed as $100 switched to LBP 8,950,000, saved, shown
+exactly, Sales list showed QAR 364 owed, then deleted; Settings shows the live
+rate; Overview converted after the remount fix.
+
+**Untouchables:** no auth or routing changes. Schema changes were the four
+phases above, all additive; triggers were re-enabled after the receiving test
+cleanup (verified `tgenabled = O`).
+
+**Worth remembering:** Turbopack served stale CSS twice more (the settings rate
+input, the sidebar peek). Same recovery: stop, delete `.next`, start, confirm
+the selector is in the served stylesheet. The rate feed needed a CSP
+`connect-src` entry; a silent "Failed to fetch" was the only symptom.

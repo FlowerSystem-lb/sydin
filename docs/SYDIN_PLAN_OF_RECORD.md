@@ -483,7 +483,11 @@ design, not a different width.
 2. **Home** — the one screen where the canvas and the current page differ most,
    and the first thing anyone opens. Serif title, two figures, low-stock rows.
 3. **Items** — the square-photo grid, behind the open question above.
-4. **Item detail** — quantity as the largest element, one action.
+4. ~~**Item detail**~~ — done 12 Sep (`0f8c81e`): the empty photo block no
+   longer shows, the quantity is 40px serif with the threshold as a line under
+   it, facts and Adjust stock fit above the fold. Photo items keep a shorter
+   frame. Home also got size tiers so a long currency total never breaks
+   mid-number (`d13d7a7`).
 5. **More** — the grouped menu.
 6. **Scan** — last on purpose. Sayed likes the Scanner page and it is not to be
    redesigned; the canvas screen mostly matches what is there.
