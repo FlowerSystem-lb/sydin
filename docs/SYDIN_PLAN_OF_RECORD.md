@@ -638,7 +638,10 @@ returns 500 for Supabase-hosted images; production (Vercel) serves them.
    has only been seen on a Pro account. Confirm the padlock on a Free account.
 2. **Mobile screens** — section J's order still stands: Home, Items, Item, More.
    Scan last, and the Scanner is not to be redesigned.
-3. **Pagination**, then the real 500-product test.
+3. ~~**Pagination**~~ — done 13 Sep as windowing: Inventory renders 60 items at
+   a time with "Show 60 more"; search, filters and counts still run on the full
+   list, and the window resets when the list changes. The real 500-product
+   test is still to run (the query itself has no limit below Supabase's 1000).
 4. **Limits and abuse** — rate limiting needs Supabase settings + Vercel Pro.
 5. ~~`po-attachments` is public-read~~ **Done 12 Sep 2026** — bucket private,
    owner-only read policy, the app opens attachments through one-hour signed

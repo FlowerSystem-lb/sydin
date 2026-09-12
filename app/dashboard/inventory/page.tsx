@@ -164,6 +164,9 @@ type QuickFilter =
   | "no-activity"
   | "unassigned";
 type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
+/** Items rendered per "Show more" step. */
+const RENDER_WINDOW = 60;
+
 type ViewMode = "grid" | "photo" | "list" | "table";
 type ItemDetailsTarget = {
   id: number;
@@ -2368,6 +2371,18 @@ export default function InventoryPage() {
 
     return secondItem.id - firstItem.id;
   });
+  /* Render in windows of 60. Five hundred products is a normal depot; five
+     hundred cards with photos at once is not a normal page. The window
+     resets whenever what is shown changes (search, filter, sort, view), so
+     "Show more" never carries over from a different list. Filtering and
+     counting still run on the full array -- only the DOM is windowed. */
+  const listSignature = `${viewMode}|${sortBy}|${quickFilter}|${visibleItems.length}|${visibleItems[0]?.id ?? ""}`;
+  const [renderWindow, setRenderWindow] = useState({ limit: RENDER_WINDOW, signature: "" });
+  const renderLimit = renderWindow.signature === listSignature ? renderWindow.limit : RENDER_WINDOW;
+  const renderedItems = renderLimit >= visibleItems.length ? visibleItems : visibleItems.slice(0, renderLimit);
+  const showMoreItems = () =>
+    setRenderWindow({ limit: renderLimit + RENDER_WINDOW, signature: listSignature });
+
   const selectedItems = items.filter((item) => selectedItemIds.has(item.id));
   const visibleSelectedCount = visibleItems.filter((item) =>
     selectedItemIds.has(item.id)
@@ -3275,7 +3290,7 @@ export default function InventoryPage() {
                 viewMode === "photo" ? "inventory-items-grid--photo" : ""
               }`}
             >
-              {visibleItems.map((item) => {
+              {renderedItems.map((item) => {
                 const status = getStockStatus(item);
                 const itemValue =
                   calculateInventoryValue(item.quantity, item.selling_price) ??
@@ -3331,7 +3346,7 @@ export default function InventoryPage() {
             </div>
           ) : viewMode === "list" ? (
             <div className="inventory-list">
-              {visibleItems.map((item) => {
+              {renderedItems.map((item) => {
                 const selected = selectedItemIds.has(item.id);
                 const quantityLabel = getInventoryQuantityLabel(
                   item.quantity,
@@ -3456,7 +3471,7 @@ export default function InventoryPage() {
           ) : (
             <>
               <div className="grid gap-2 md:hidden">
-                {visibleItems.map((item) => {
+                {renderedItems.map((item) => {
                   const selected = selectedItemIds.has(item.id);
                   return (
                     <div
@@ -3533,7 +3548,7 @@ export default function InventoryPage() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border-divider)]">
-                      {visibleItems.map((item) => {
+                      {renderedItems.map((item) => {
                         const selected = selectedItemIds.has(item.id);
                         const depot = getDepotForItem(item);
                         const status = getStockStatus(item);
@@ -3669,6 +3684,17 @@ export default function InventoryPage() {
                 </div>
               </div>
             </>
+          )}
+
+          {!loadingItems && visibleItems.length > renderedItems.length && (
+            <div className="flex flex-col items-center gap-1 py-3">
+              <Button variant="secondary" onClick={showMoreItems}>
+                Show {Math.min(RENDER_WINDOW, visibleItems.length - renderedItems.length)} more
+              </Button>
+              <span className="text-xs text-theme-muted">
+                {renderedItems.length} of {visibleItems.length} shown
+              </span>
+            </div>
           )}
 
           {/* Empty State */}
