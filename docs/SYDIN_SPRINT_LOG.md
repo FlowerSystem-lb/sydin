@@ -3778,3 +3778,32 @@ cleanup (verified `tgenabled = O`).
 input, the sidebar peek). Same recovery: stop, delete `.next`, start, confirm
 the selector is in the served stylesheet. The rate feed needed a CSP
 `connect-src` entry; a silent "Failed to fetch" was the only symptom.
+
+
+## Brief points, one by one  *(In progress — local commits, push on Sayed's word)*
+
+**Date:** 13 September 2026 · **Branch:** `main` · **Commits:** `05100c9` → `f4c4f24` (not pushed)
+
+**Why:** Sayed: "push later, continue, and when you compact don't forget the
+data and the full prompt". The prompt is now `docs/SYDIN_PRODUCT_REDESIGN_BRIEF.md`
+with a status per point; this sprint walks its open points.
+
+**Delivered (each verified in the running app):**
+- Settings: Account, Inventory, Plan & billing, Data & reports on the same rows
+  as Company; Security & Email folded into Account; six dead helpers removed.
+- Add menu: New item · New invoice · Purchase order · Stock In · New customer.
+- Invoices ask for an optional due date (the column existed; nothing set it).
+- Document timelines on the order dialog and the invoice page; a cancelled
+  order no longer shows "Still owe".
+- Last depot and payment method come back pre-filled (invoice, PO, Stock In).
+- Item page: "Documents with this item" — every invoice and order it is on.
+- Goods-received note PDF per delivery, with signature lines; rendered in
+  Node and read.
+- Overview: a "Today" line (sold today, units in/out).
+- Earlier the same day (pushed): currencies convert, receiving live, sidebar
+  hover, private attachments, inventory windowed at 60, phone item detail.
+
+**Verification:** lint · tsc · build after every commit; screenshots of each
+surface; the GRN rendered from realistic data.
+
+**Untouchables:** no auth, routing or schema changes in this sprint.
