@@ -17,7 +17,7 @@ import {
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
-import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
+import { formatExactPrice } from "@/app/lib/currency";
 import { exportSalesInvoicePdf } from "@/app/lib/salesInvoicePdf";
 import { exportSalesInvoiceDocx } from "@/app/lib/documentDocxExports";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
@@ -62,8 +62,8 @@ export default function SaleDetailPage() {
   const orderId = Number(params?.id);
 
   const [order, setOrder] = useState<SalesOrder | null>(null);
-  const [currencyCode, setCurrencyCode] = useState(
-    DEFAULT_BUSINESS_SETTINGS.currency_code,
+  const [currencyCode, setCurrencyCode] = useState<string>(
+    DEFAULT_BUSINESS_SETTINGS.currency_code || "USD",
   );
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -134,8 +134,14 @@ export default function SaleDetailPage() {
           }
           setLineImages(next);
         }
+        // Everything on this page is in the INVOICE's currency -- what the
+        // customer was billed in -- not what the app happens to show today.
         setCurrencyCode(
-          settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code,
+          found?.currency_code ||
+            settings?.base_currency ||
+            settings?.currency_code ||
+            DEFAULT_BUSINESS_SETTINGS.currency_code ||
+            "USD",
         );
         setBusinessSettings(settings || DEFAULT_BUSINESS_SETTINGS);
       })
@@ -442,7 +448,7 @@ export default function SaleDetailPage() {
                             : ""
                         }`,
                         line.unit_price !== null
-                          ? `at ${formatInventoryPrice(
+                          ? `at ${formatExactPrice(
                               line.unit_price,
                               currencyCode,
                             )}`
@@ -454,7 +460,7 @@ export default function SaleDetailPage() {
                     </p>
                   </div>
                   <span className="shrink-0 text-sm font-semibold text-theme-primary tabular-nums">
-                    {formatInventoryPrice(
+                    {formatExactPrice(
                       getSalesOrderLineTotal(line),
                       currencyCode,
                     ) || "--"}
@@ -468,14 +474,14 @@ export default function SaleDetailPage() {
                 Total
               </span>
               <span className="text-xl font-semibold text-theme-primary tabular-nums">
-                {formatInventoryPrice(total, currencyCode) || "--"}
+                {formatExactPrice(total, currencyCode) || "--"}
               </span>
             </div>
 
             <p className="mt-2 text-xs text-theme-subtle">
               {SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status]}
               {order.amount_paid
-                ? ` · ${formatInventoryPrice(order.amount_paid, currencyCode)} received`
+                ? ` · ${formatExactPrice(order.amount_paid, currencyCode)} received`
                 : ""}
             </p>
           </section>
@@ -490,7 +496,7 @@ export default function SaleDetailPage() {
                   </HelpLink>
                 </h2>
                 <p className="text-sm font-semibold text-theme-primary tabular-nums">
-                  {formatInventoryPrice(balance, currencyCode) || "--"}
+                  {formatExactPrice(balance, currencyCode) || "--"}
                   <span className="ml-1.5 text-xs font-normal text-theme-muted">
                     still owed
                   </span>
@@ -521,7 +527,7 @@ export default function SaleDetailPage() {
                       </span>
                       <span className="flex shrink-0 items-center gap-3">
                         <span className="font-semibold text-theme-primary tabular-nums">
-                          {formatInventoryPrice(payment.amount, currencyCode)}
+                          {formatExactPrice(payment.amount, currencyCode)}
                         </span>
                         <button
                           type="button"

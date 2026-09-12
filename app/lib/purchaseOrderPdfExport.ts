@@ -1,5 +1,6 @@
 import autoTable from "jspdf-autotable";
-import { formatInventoryPrice, normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import { formatExactPrice } from "@/app/lib/currency";
 import {
   DOCUMENT_FILL,
   DOCUMENT_INK,
@@ -77,10 +78,11 @@ function formatDateForFilename(date: Date) {
   return `${year}-${month}-${day}`;
 }
 
+// Amounts on an order are already in the order's currency: no conversion.
 function formatMoney(value: number | null | undefined, currencyCode: string) {
   return value === null || value === undefined
     ? "--"
-    : formatInventoryPrice(value, currencyCode) || "--";
+    : formatExactPrice(value, currencyCode) || "--";
 }
 
 function formatUnits(value: number) {

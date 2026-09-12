@@ -21806,3 +21806,23 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     height: 2.75rem !important;
   }
 }
+
+/* Settings > Money: the manual-rate box keeps a visible edge inside a row
+   (row inputs are borderless by design; this one sits beside a button). */
+/* The row's borderless-input rule carries three :not([type]) filters, which
+   count as (0,4,1); this has to outrank it without !important. */
+.item-field-row-control input.settings-rate-input.settings-rate-input.settings-rate-input.settings-rate-input {
+  width: 9rem;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  padding: 0.35rem 0.6rem;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.item-field-row-control input.settings-rate-input.settings-rate-input.settings-rate-input.settings-rate-input:focus {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  outline: none;
+}

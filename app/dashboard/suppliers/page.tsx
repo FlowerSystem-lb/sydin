@@ -32,9 +32,12 @@ import {
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
 import {
   PURCHASE_ORDER_STATUS_LABELS,
+  formatPurchaseOrderAmount,
   getPurchaseOrderBalance,
+  getPurchaseOrderBalanceInBase,
   getPurchaseOrderReceivingProgress,
   getPurchaseOrderTotal,
+  getPurchaseOrderTotalInBase,
   getPurchaseOrdersForUser,
   isPurchaseOrderOpen,
   type PurchaseOrder,
@@ -381,8 +384,9 @@ export default function SuppliersPage() {
       };
       entry.orders.push(order);
       if (order.status !== "draft" && order.status !== "cancelled") {
-        entry.spent += getPurchaseOrderTotal(order);
-        entry.owed += getPurchaseOrderBalance(order).remaining;
+        // Orders in different currencies add up in base.
+        entry.spent += getPurchaseOrderTotalInBase(order);
+        entry.owed += getPurchaseOrderBalanceInBase(order).remaining;
         if (isPurchaseOrderOpen(order)) entry.expected += 1;
       }
       map.set(order.supplier_id, entry);
@@ -934,7 +938,7 @@ export default function SuppliersPage() {
                                 ? `${progress.remaining} units to come`
                                 : "",
                               remaining > 0 && order.status !== "cancelled" && order.status !== "draft"
-                                ? `${formatInventoryPrice(remaining, currencyCode)} still owed`
+                                ? `${formatPurchaseOrderAmount(order, remaining)} still owed`
                                 : "",
                             ]
                               .filter(Boolean)
@@ -942,7 +946,7 @@ export default function SuppliersPage() {
                           </span>
                         </span>
                         <span className="shrink-0 text-sm font-black text-theme-primary">
-                          {formatInventoryPrice(getPurchaseOrderTotal(order), currencyCode) || "—"}
+                          {formatPurchaseOrderAmount(order, getPurchaseOrderTotal(order)) || "—"}
                         </span>
                       </Link>
                     );

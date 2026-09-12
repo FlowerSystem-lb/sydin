@@ -1,3 +1,5 @@
+import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
+import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 
 /**
@@ -48,7 +50,10 @@ export interface SalesOrder {
   status: SalesOrderStatus;
   payment_status: SalesOrderPaymentStatus;
   amount_paid: number | null;
+  /** The currency every amount on this invoice is in (lines, payments). */
   currency_code: string | null;
+  /** Units of currency_code per unit of base currency when it was made. */
+  exchange_rate?: number | null;
   notes: string | null;
   internal_reference: string | null;
   created_at: string;
@@ -82,6 +87,7 @@ export interface SalesOrderInput {
   issue_date?: string | null;
   due_date?: string | null;
   currency_code?: string | null;
+  exchange_rate?: number | null;
   notes?: string | null;
   internal_reference?: string | null;
   lines: SalesOrderLineInput[];
@@ -104,7 +110,7 @@ export const SALES_ORDER_PAYMENT_STATUS_LABELS: Record<
 };
 
 const ORDER_SELECT =
-  "id, user_id, invoice_number, title, customer_id, customer_name_snapshot, customer_contact_snapshot, depot_id, depot_name_snapshot, issue_date, due_date, status, payment_status, amount_paid, currency_code, notes, internal_reference, created_at, updated_at, issued_at, cancelled_at";
+  "id, user_id, invoice_number, title, customer_id, customer_name_snapshot, customer_contact_snapshot, depot_id, depot_name_snapshot, issue_date, due_date, status, payment_status, amount_paid, currency_code, exchange_rate, notes, internal_reference, created_at, updated_at, issued_at, cancelled_at";
 
 const LINE_SELECT =
   "id, sales_order_id, line_type, inventory_item_id, affects_stock, name_snapshot, sku_snapshot, item_code_snapshot, unit_label_snapshot, quantity, unit_price, notes";
@@ -139,6 +145,46 @@ export function getSalesOrderTotal(order: SalesOrder) {
 
 export function getSalesOrderBalance(order: SalesOrder) {
   return Math.max(getSalesOrderTotal(order) - Number(order.amount_paid || 0), 0);
+}
+
+/* ---- currency -------------------------------------------------------------
+   Everything on an invoice is in the invoice's own currency. Adding invoices
+   up -- sold this month, still owed, a customer's account -- has to happen in
+   the base currency, dividing by the rate each invoice was made at; the
+   result is then shown in the display currency like any other base amount.
+   A single invoice is shown as it was written, with formatSalesOrderAmount. */
+
+export function getSalesOrderCurrency(order: Pick<SalesOrder, "currency_code">) {
+  return normalizeCurrencyCode(order.currency_code, getCurrencyContext().base);
+}
+
+export function getSalesOrderExchangeRate(order: Pick<SalesOrder, "exchange_rate">) {
+  const rate = Number(order.exchange_rate);
+  return Number.isFinite(rate) && rate > 0 ? rate : 1;
+}
+
+export function toSalesOrderBase(order: Pick<SalesOrder, "exchange_rate">, amount: number) {
+  return amount / getSalesOrderExchangeRate(order);
+}
+
+export function getSalesOrderTotalInBase(order: SalesOrder) {
+  return toSalesOrderBase(order, getSalesOrderTotal(order));
+}
+
+export function getSalesOrderPaidInBase(order: SalesOrder) {
+  return toSalesOrderBase(order, Number(order.amount_paid || 0));
+}
+
+export function getSalesOrderBalanceInBase(order: SalesOrder) {
+  return toSalesOrderBase(order, getSalesOrderBalance(order));
+}
+
+/** An amount that is on this invoice, in the invoice's currency. */
+export function formatSalesOrderAmount(
+  order: Pick<SalesOrder, "currency_code">,
+  amount: number | null | undefined
+) {
+  return formatExactPrice(amount, getSalesOrderCurrency(order));
 }
 
 /**

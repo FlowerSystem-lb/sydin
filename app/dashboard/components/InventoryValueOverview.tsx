@@ -1,6 +1,7 @@
 "use client";
 
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import { convertFromBase } from "@/app/lib/currency";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   formatInventoryPrice,
@@ -33,6 +34,7 @@ interface InventoryValueOverviewProps {
 }
 
 function formatCompactCurrency(value: number, currencyCode: string) {
+  value = convertFromBase(value, currencyCode);
   const normalizedCurrency = normalizeCurrencyCode(currencyCode, "USD");
 
   try {
@@ -51,6 +53,7 @@ function formatCompactCurrency(value: number, currencyCode: string) {
 }
 
 function formatSignedCurrency(value: number, currencyCode: string) {
+  value = convertFromBase(value, currencyCode);
   const normalizedCurrency = normalizeCurrencyCode(currencyCode, "USD");
 
   try {

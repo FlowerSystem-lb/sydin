@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { convertFromBase } from "@/app/lib/currency";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -38,7 +39,7 @@ import {
   type Category,
 } from "@/app/lib/categories";
 import {
-  getPurchaseOrderBalance,
+  getPurchaseOrderBalanceInBase,
   getPurchaseOrderReceivingProgress,
   getPurchaseOrderSplit,
   getPurchaseOrdersForUser,
@@ -46,8 +47,10 @@ import {
   type PurchaseOrder,
 } from "@/app/lib/purchaseOrders";
 import {
+  formatSalesOrderAmount,
   getSalesOrderBalance,
-  getSalesOrderTotal,
+  getSalesOrderBalanceInBase,
+  getSalesOrderTotalInBase,
   getSalesOrdersForUser,
   type SalesOrder,
 } from "@/app/lib/salesOrders";
@@ -104,6 +107,7 @@ function formatDateShort(value: string | null | undefined) {
 }
 
 function formatCurrency(value: number, currencyCode: string) {
+  value = convertFromBase(value, currencyCode);
   const currency = normalizeCurrencyCode(currencyCode);
 
   try {
@@ -619,10 +623,10 @@ export default function DashboardPage() {
     for (const order of salesOrders) {
       if (order.status === "draft" || order.status === "cancelled") continue;
       if (inThisMonth(order.issue_date || order.created_at)) {
-        soldThisMonth += getSalesOrderTotal(order);
+        soldThisMonth += getSalesOrderTotalInBase(order);
         soldCount += 1;
       }
-      const remaining = getSalesOrderBalance(order);
+      const remaining = getSalesOrderBalanceInBase(order);
       if (remaining > 0) {
         customersOwe += remaining;
         owingInvoices += 1;
@@ -636,7 +640,7 @@ export default function DashboardPage() {
     let expectedUnits = 0;
     for (const order of purchaseOrders) {
       if (order.status === "cancelled" || order.status === "draft") continue;
-      const remaining = getPurchaseOrderBalance(order).remaining;
+      const remaining = getPurchaseOrderBalanceInBase(order).remaining;
       if (remaining > 0) {
         oweSuppliers += remaining;
         unpaidOrders += 1;
@@ -1066,7 +1070,7 @@ export default function DashboardPage() {
                         <small>Overdue since {formatDateShort(order.due_date)}</small>
                       </span>
                       <span className="ov-row-value ov-row-value-danger">
-                        {formatCurrency(getSalesOrderBalance(order), currencyCode)}
+                        {formatSalesOrderAmount(order, getSalesOrderBalance(order))}
                       </span>
                     </Link>
                   </li>

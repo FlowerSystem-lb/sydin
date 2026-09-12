@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import CategorySelector from "@/components/CategorySelector";
 import Select from "@/components/ui/Select";
@@ -14,7 +15,6 @@ import { formatDepotLabel, type Depot } from "@/app/lib/depots";
 import {
   calculateInventoryValue,
   DEFAULT_INVENTORY_UNIT_TYPE,
-  formatInventoryPrice,
   INVENTORY_UNIT_LABELS,
   INVENTORY_UNIT_TYPES,
   normalizeInventoryUnitType,
@@ -362,14 +362,18 @@ export default function EditItemForm({
     values.quantity,
     values.sellingPrice
   );
+  /* Prices are typed and previewed in the base currency (what is stored),
+     whatever the app is set to show elsewhere. The prop still arrives from
+     older callers; the context is the authority. */
+  const entryCurrency = getCurrencyContext().base || currencyCode;
   const formattedCostValue =
     stockCostValue === null
       ? null
-      : formatInventoryPrice(stockCostValue, currencyCode);
+      : formatExactPrice(stockCostValue, entryCurrency);
   const formattedRetailValue =
     stockRetailValue === null
       ? null
-      : formatInventoryPrice(stockRetailValue, currencyCode);
+      : formatExactPrice(stockRetailValue, entryCurrency);
   const itemCode = item.item_code?.trim();
   /* Last of the product-photo sites to get this: a photo that fails to load
      falls back to the plain placeholder icon an item without one shows,
@@ -651,7 +655,7 @@ export default function EditItemForm({
               >
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-theme-accent">
-                    {currencyCode}
+                    {entryCurrency}
                   </span>
                   <input
                     id="edit-cost-price-input"
@@ -685,7 +689,7 @@ export default function EditItemForm({
               >
                 <div className="flex items-center gap-2">
                   <span className="text-xs font-black text-theme-accent">
-                    {currencyCode}
+                    {entryCurrency}
                   </span>
                   <input
                     id="edit-selling-price-input"

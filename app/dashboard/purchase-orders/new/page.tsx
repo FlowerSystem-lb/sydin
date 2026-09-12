@@ -35,11 +35,17 @@ import {
   type Depot,
 } from "@/app/lib/depots";
 import {
-  formatInventoryPrice,
   getInventoryUnitLabel,
   normalizeCurrencyCode,
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
+import {
+  convertAmount,
+  currencyChoicesIncluding,
+  formatExactPrice,
+  getCurrencyContext,
+  getExchangeRate,
+} from "@/app/lib/currency";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
   PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
@@ -67,6 +73,13 @@ interface PickerItem {
   unit_type: InventoryUnitType | string | null;
   custom_unit_label: string | null;
   cost_price: number | string | null;
+}
+
+/** LBP is quoted in whole pounds; everything else to the cent. */
+function roundForCurrency(value: number, currencyCode: string) {
+  const digits = ["LBP", "JPY", "KRW", "IQD", "SYP"].includes(currencyCode.toUpperCase()) ? 0 : 2;
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
 }
 
 interface LineDraft {
@@ -189,7 +202,23 @@ export default function NewPurchaseOrderPage() {
       Boolean(paymentMethod) ||
       poNumberEdited);
 
-  const currencyCode = normalizeCurrencyCode(settings.currency_code, "USD");
+  /* The order's own currency: what the supplier quotes in. Starts as the
+     currency the app shows, can be changed per order. Item costs are stored
+     in base and converted into it when a line is added; the day's rate is
+     saved with the order so spending can be added up across currencies. */
+  const [orderCurrency, setOrderCurrency] = useState<string | null>(null);
+  const currencyCode = normalizeCurrencyCode(
+    orderCurrency ?? settings.currency_code,
+    "USD"
+  );
+  const baseCurrency = getCurrencyContext().base;
+  const exchangeRate = getExchangeRate(baseCurrency, currencyCode);
+  const costInOrderCurrency = (cost: number | string | null | undefined) =>
+    cost === null || cost === undefined || cost === ""
+      ? ""
+      : String(
+          roundForCurrency(convertAmount(Number(cost), baseCurrency, currencyCode), currencyCode)
+        );
   const selectedDepot = useMemo(
     () => depots.find((depot) => String(depot.id) === depotId) || null,
     [depots, depotId]
@@ -273,10 +302,21 @@ export default function NewPurchaseOrderPage() {
                 item.custom_unit_label
               ),
               quantity: "1",
+              // Converted with the settings just loaded: the closure above
+              // still holds the defaults at this point.
               unitCost:
                 item.cost_price === null || item.cost_price === undefined
                   ? ""
-                  : String(item.cost_price),
+                  : String(
+                      roundForCurrency(
+                        convertAmount(
+                          Number(item.cost_price),
+                          loadedSettings.base_currency,
+                          normalizeCurrencyCode(loadedSettings.currency_code, "USD")
+                        ),
+                        normalizeCurrencyCode(loadedSettings.currency_code, "USD")
+                      )
+                    ),
               affectsStock: true,
               expenseCategory: "other" as const,
               note: "",
@@ -492,10 +532,7 @@ export default function NewPurchaseOrderPage() {
           itemCode: item.item_code,
           unitLabel: getInventoryUnitLabel(item.unit_type, item.custom_unit_label),
           quantity: "1",
-          unitCost:
-            item.cost_price === null || item.cost_price === undefined
-              ? ""
-              : String(item.cost_price),
+          unitCost: costInOrderCurrency(item.cost_price),
           affectsStock: true,
           expenseCategory: "other",
           note: "",
@@ -633,6 +670,7 @@ export default function NewPurchaseOrderPage() {
           payment_status: paymentStatus,
           amount_paid: parseNonNegativeNumber(amountPaid),
           currency_code: currencyCode,
+          exchange_rate: exchangeRate ?? 1,
           notes: notes.trim() || null,
           attachment_url: attachmentUrl,
           attachment_label: attachmentLabel,
@@ -820,6 +858,37 @@ export default function NewPurchaseOrderPage() {
             label="Payment"
             description="Shown on the PDF and counted in spending analytics."
           >
+            <FieldRow label="Currency">
+              <Select
+                ariaLabel="Order currency"
+                value={currencyCode}
+                onChange={(next) => {
+                  const from = currencyCode;
+                  setOrderCurrency(next);
+                  // Lines already priced follow, so they keep their value.
+                  setLines((current) =>
+                    current.map((line) =>
+                      line.unitCost === ""
+                        ? line
+                        : {
+                            ...line,
+                            unitCost: String(
+                              roundForCurrency(convertAmount(Number(line.unitCost), from, next), next)
+                            ),
+                          }
+                    )
+                  );
+                }}
+                options={currencyChoicesIncluding(currencyCode, baseCurrency)}
+              />
+              {currencyCode !== baseCurrency && (
+                <p className="mt-1 text-xs text-theme-muted">
+                  {exchangeRate === null
+                    ? `No rate for ${currencyCode} yet — set one in Settings › Company.`
+                    : `1 ${baseCurrency} = ${formatExactPrice(exchangeRate, currencyCode)} today. Saved with the order.`}
+                </p>
+              )}
+            </FieldRow>
             <FieldRow label="Method">
               <Select
                 ariaLabel="Payment method"
@@ -1034,7 +1103,7 @@ export default function NewPurchaseOrderPage() {
                         <p className="flex min-h-11 items-center text-sm font-semibold text-theme-primary tabular-nums">
                           {lineTotal === null
                             ? "—"
-                            : formatInventoryPrice(lineTotal, currencyCode)}
+                            : formatExactPrice(lineTotal, currencyCode)}
                         </p>
                       </div>
                     )}
@@ -1098,20 +1167,20 @@ export default function NewPurchaseOrderPage() {
             <span>
               Stock purchases:{" "}
               <strong>
-                {formatInventoryPrice(lineTotals.inventoryTotal, currencyCode) ||
+                {formatExactPrice(lineTotals.inventoryTotal, currencyCode) ||
                   "—"}
               </strong>
             </span>
             <span>
               General purchases:{" "}
               <strong>
-                {formatInventoryPrice(lineTotals.expenseTotal, currencyCode) || "—"}
+                {formatExactPrice(lineTotals.expenseTotal, currencyCode) || "—"}
               </strong>
             </span>
             <span className="po-totals-grand">
               Total:{" "}
               <strong>
-                {formatInventoryPrice(lineTotals.total, currencyCode) || "—"}
+                {formatExactPrice(lineTotals.total, currencyCode) || "—"}
               </strong>
             </span>
           </div>
@@ -1205,7 +1274,7 @@ export default function NewPurchaseOrderPage() {
           </p>
           <p className="text-xs font-semibold text-theme-muted">
             {lines.length} line{lines.length === 1 ? "" : "s"} ·{" "}
-            {formatInventoryPrice(lineTotals.total, currencyCode) || "No total yet"}
+            {formatExactPrice(lineTotals.total, currencyCode) || "No total yet"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

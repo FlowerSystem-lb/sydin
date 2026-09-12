@@ -12,10 +12,11 @@ import {
   slugifyDocumentName,
   type DocumentBranding,
 } from "@/app/lib/documentPdf";
-import { getPurchaseOrderBalance, type PurchaseOrder } from "@/app/lib/purchaseOrders";
+import { getPurchaseOrderBalanceInBase, type PurchaseOrder } from "@/app/lib/purchaseOrders";
 import {
-  getSalesOrderBalance,
-  getSalesOrderTotal,
+  getSalesOrderBalanceInBase,
+  getSalesOrderPaidInBase,
+  getSalesOrderTotalInBase,
   type SalesOrder,
 } from "@/app/lib/salesOrders";
 
@@ -68,10 +69,10 @@ export function salesByMonth(orders: SalesOrder[], currency: string): ReportTabl
   for (const order of orders.filter(isSale)) {
     const key = monthKey(order.issue_date || order.created_at);
     const bucket = buckets.get(key) || { count: 0, total: 0, paid: 0 };
-    const total = getSalesOrderTotal(order);
+    const total = getSalesOrderTotalInBase(order);
     bucket.count += 1;
     bucket.total += total;
-    bucket.paid += Math.min(total, Number(order.amount_paid || 0));
+    bucket.paid += Math.min(total, getSalesOrderPaidInBase(order));
     buckets.set(key, bucket);
   }
   const keys = Array.from(buckets.keys()).sort().reverse();
@@ -115,9 +116,9 @@ export function salesByMonth(orders: SalesOrder[], currency: string): ReportTabl
 export function outstandingInvoices(orders: SalesOrder[], currency: string): ReportTable {
   const today = new Date().toISOString().slice(0, 10);
   const open = orders
-    .filter((order) => isSale(order) && getSalesOrderBalance(order) > 0)
+    .filter((order) => isSale(order) && getSalesOrderBalanceInBase(order) > 0)
     .sort((a, b) => (a.due_date || "9999").localeCompare(b.due_date || "9999"));
-  const owed = open.reduce((sum, order) => sum + getSalesOrderBalance(order), 0);
+  const owed = open.reduce((sum, order) => sum + getSalesOrderBalanceInBase(order), 0);
   const overdue = open.filter((order) => order.due_date && order.due_date < today).length;
   return {
     title: "Outstanding invoices",
@@ -132,9 +133,9 @@ export function outstandingInvoices(orders: SalesOrder[], currency: string): Rep
       order.due_date
         ? `${formatDocumentDate(order.due_date)}${order.due_date < today ? " (overdue)" : ""}`
         : "--",
-      money(getSalesOrderTotal(order), currency),
-      money(Number(order.amount_paid || 0), currency),
-      money(getSalesOrderBalance(order), currency),
+      money(getSalesOrderTotalInBase(order), currency),
+      money(getSalesOrderPaidInBase(order), currency),
+      money(getSalesOrderBalanceInBase(order), currency),
     ]),
     foot: ["Total", "", "", "", "", "", money(owed, currency)],
     rightAligned: [4, 5, 6],
@@ -147,7 +148,7 @@ export function purchasesBySupplier(orders: PurchaseOrder[], currency: string): 
   for (const order of orders.filter(isPurchase)) {
     const key = order.supplier_name_snapshot || "No supplier";
     const bucket = buckets.get(key) || { count: 0, total: 0, paid: 0, open: 0 };
-    const balance = getPurchaseOrderBalance(order);
+    const balance = getPurchaseOrderBalanceInBase(order);
     bucket.count += 1;
     bucket.total += balance.total;
     bucket.paid += balance.paid;

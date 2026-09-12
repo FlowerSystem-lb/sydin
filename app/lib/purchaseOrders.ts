@@ -1,3 +1,5 @@
+import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
+import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 
 export type PurchaseOrderStatus =
@@ -77,7 +79,10 @@ export interface PurchaseOrder {
   paid_by: string | null;
   payment_status: PurchaseOrderPaymentStatus;
   amount_paid: number | null;
+  /** The currency every amount on this order is in (lines, payments). */
   currency_code: string | null;
+  /** Units of currency_code per unit of base currency when it was made. */
+  exchange_rate: number;
   notes: string | null;
   internal_reference: string | null;
   attachment_url: string | null;
@@ -121,6 +126,7 @@ export interface PurchaseOrderInput {
   payment_status?: PurchaseOrderPaymentStatus;
   amount_paid?: number | null;
   currency_code?: string | null;
+  exchange_rate?: number | null;
   notes?: string | null;
   internal_reference?: string | null;
   attachment_url?: string | null;
@@ -169,7 +175,7 @@ export const PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS: Record<
 const PURCHASE_ORDER_SELECT_BASE = `id, po_number, title, supplier_id, supplier_name_snapshot,
 supplier_contact_snapshot, depot_id, depot_name_snapshot, purchase_date,
 expected_delivery_date, status, payment_method, paid_by, payment_status, amount_paid,
-currency_code, notes, internal_reference, attachment_url, attachment_label, created_at,
+currency_code, exchange_rate, notes, internal_reference, attachment_url, attachment_label, created_at,
 received_at, cancelled_at`;
 
 const PURCHASE_ORDER_LINE_SELECT_BASE = `id, purchase_order_id, line_type, inventory_item_id,
@@ -276,6 +282,10 @@ function normalizeOrder(data: Record<string, unknown>): PurchaseOrder {
         ? null
         : Number(data.amount_paid),
     currency_code: (data.currency_code as string | null) ?? null,
+    exchange_rate:
+      Number.isFinite(Number(data.exchange_rate)) && Number(data.exchange_rate) > 0
+        ? Number(data.exchange_rate)
+        : 1,
     notes: (data.notes as string | null) ?? null,
     internal_reference: (data.internal_reference as string | null) ?? null,
     attachment_url: (data.attachment_url as string | null) ?? null,
@@ -324,6 +334,40 @@ export function getPurchaseOrderBalance(order: PurchaseOrder) {
   const paid = order.amount_paid ?? 0;
   const remaining = Math.max(0, total - paid);
   return { total, paid, remaining };
+}
+
+/* ---- currency -------------------------------------------------------------
+   Amounts on an order are in the order's own currency. Sums across orders --
+   spent this month, owed to suppliers -- happen in base, dividing by the rate
+   each order was made at; one order is shown as it was written. */
+
+export function getPurchaseOrderCurrency(order: Pick<PurchaseOrder, "currency_code">) {
+  return normalizeCurrencyCode(order.currency_code, getCurrencyContext().base);
+}
+
+export function toPurchaseOrderBase(order: Pick<PurchaseOrder, "exchange_rate">, amount: number) {
+  return amount / (order.exchange_rate > 0 ? order.exchange_rate : 1);
+}
+
+export function getPurchaseOrderTotalInBase(order: PurchaseOrder) {
+  return toPurchaseOrderBase(order, getPurchaseOrderTotal(order));
+}
+
+export function getPurchaseOrderBalanceInBase(order: PurchaseOrder) {
+  const balance = getPurchaseOrderBalance(order);
+  return {
+    total: toPurchaseOrderBase(order, balance.total),
+    paid: toPurchaseOrderBase(order, balance.paid),
+    remaining: toPurchaseOrderBase(order, balance.remaining),
+  };
+}
+
+/** An amount that is on this order, in the order's currency. */
+export function formatPurchaseOrderAmount(
+  order: Pick<PurchaseOrder, "currency_code">,
+  amount: number | null | undefined
+) {
+  return formatExactPrice(amount, getPurchaseOrderCurrency(order));
 }
 
 /** Splits an order's total into stock purchases vs general expenses for analytics. */

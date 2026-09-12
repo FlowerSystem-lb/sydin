@@ -29,8 +29,11 @@ import {
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
 import {
   SALES_ORDER_STATUS_LABELS,
+  formatSalesOrderAmount,
   getSalesOrderBalance,
+  getSalesOrderBalanceInBase,
   getSalesOrderTotal,
+  getSalesOrderTotalInBase,
   getSalesOrdersForUser,
   type SalesOrder,
 } from "@/app/lib/salesOrders";
@@ -118,8 +121,10 @@ export default function CustomersPage() {
       };
       entry.orders.push(order);
       if (order.status !== "draft" && order.status !== "cancelled") {
-        entry.billed += getSalesOrderTotal(order);
-        const remaining = getSalesOrderBalance(order);
+        // Invoices in different currencies add up in base (the account
+        // figures are then shown in the display currency).
+        entry.billed += getSalesOrderTotalInBase(order);
+        const remaining = getSalesOrderBalanceInBase(order);
         entry.owed += remaining;
         if (remaining > 0 && order.due_date && order.due_date < today) entry.overdue += 1;
       }
@@ -557,7 +562,7 @@ export default function CustomersPage() {
                               order.issue_date || order.created_at.slice(0, 10),
                               SALES_ORDER_STATUS_LABELS[order.status],
                               money && remaining > 0
-                                ? `${formatInventoryPrice(remaining, currencyCode)} still owed`
+                                ? `${formatSalesOrderAmount(order, remaining)} still owed`
                                 : "",
                             ]
                               .filter(Boolean)
@@ -565,7 +570,7 @@ export default function CustomersPage() {
                           </span>
                         </span>
                         <span className="shrink-0 text-sm font-black text-theme-primary">
-                          {formatInventoryPrice(getSalesOrderTotal(order), currencyCode) || "—"}
+                          {formatSalesOrderAmount(order, getSalesOrderTotal(order)) || "—"}
                         </span>
                       </Link>
                     );

@@ -1,4 +1,5 @@
-import { formatInventoryPrice, normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import { formatExactPrice } from "@/app/lib/currency";
 import {
   docxFromColumn,
   saveDocx,
@@ -24,7 +25,8 @@ import type {
 
 function money(value: number | null | undefined, currency: string) {
   if (value === null || value === undefined) return "--";
-  return formatInventoryPrice(value, currency) || "--";
+  // Document amounts are already in the document's currency: no conversion.
+  return formatExactPrice(value, currency) || "--";
 }
 
 function units(value: number) {

@@ -20,7 +20,10 @@ import {
 } from "@/app/lib/businessSettings";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
 import {
+  formatSalesOrderAmount,
+  getSalesOrderBalanceInBase,
   getSalesOrderTotal,
+  getSalesOrderTotalInBase,
   getSalesOrdersForUser,
   isSalesSchemaMissing,
   SALES_ORDER_PAYMENT_STATUS_LABELS,
@@ -119,16 +122,17 @@ export default function SalesPage() {
     /* Cancelled invoices are excluded from both figures. A cancelled sale did
        not happen, and counting it would overstate what the depot has sold and
        what it is owed. */
-    const live = orders.filter((order) => order.status !== "cancelled");
+    // A draft is not a sale yet either -- it has not been issued, nothing
+    // has left stock and nobody owes anything on it.
+    const live = orders.filter(
+      (order) => order.status !== "cancelled" && order.status !== "draft"
+    );
 
+    // Invoices can be in different currencies; they add up in base, and
+    // formatInventoryPrice shows the base sum in the display currency.
     return {
-      sold: live.reduce((sum, order) => sum + getSalesOrderTotal(order), 0),
-      owed: live.reduce(
-        (sum, order) =>
-          sum +
-          Math.max(getSalesOrderTotal(order) - Number(order.amount_paid || 0), 0),
-        0
-      ),
+      sold: live.reduce((sum, order) => sum + getSalesOrderTotalInBase(order), 0),
+      owed: live.reduce((sum, order) => sum + getSalesOrderBalanceInBase(order), 0),
     };
   }, [orders]);
 
@@ -243,7 +247,7 @@ export default function SalesPage() {
 
                   <div className="flex items-center gap-3">
                     <span className="text-sm font-semibold text-theme-primary">
-                      {formatInventoryPrice(total, currencyCode) || "--"}
+                      {formatSalesOrderAmount(order, total) || "--"}
                     </span>
                     <StatusPill status={order.status} />
                   </div>

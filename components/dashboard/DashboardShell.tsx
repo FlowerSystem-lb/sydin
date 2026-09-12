@@ -18,7 +18,16 @@ import {
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
+  saveLiveRates,
 } from "@/app/lib/businessSettings";
+import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import {
+  canConvertToDisplay,
+  fetchLiveRates,
+  mergeRates,
+  ratesAreStale,
+  setCurrencyContext,
+} from "@/app/lib/currency";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -634,6 +643,12 @@ export default function DashboardShell({
     DEFAULT_BUSINESS_SETTINGS
   );
   const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
+  /* Bumped when live rates arrive for a display currency that had NO rate
+     yet -- the page already painted unconverted numbers, and money is
+     formatted by sixty call sites that do not subscribe to anything, so the
+     page is remounted once. Daily refreshes of an existing rate do not do
+     this; the new number applies on the next navigation. */
+  const [currencyEpoch, setCurrencyEpoch] = useState(0);
 
   useEffect(() => {
     if (!/mac/i.test(navigator.platform || navigator.userAgent)) return;
@@ -689,6 +704,33 @@ export default function DashboardShell({
         if (!active) return;
         setBusinessSettings(settings);
         setUsage(loadedUsage);
+
+        /* Money: every page formats base-currency numbers in the display
+           currency, and the conversion lives in one module-level context set
+           here, once, from Settings. Live rates refresh once a day, only when
+           they are actually needed (display differs from base) and saved back
+           so the next load, and every other device, starts from them. */
+        setCurrencyContext({
+          base: settings.base_currency,
+          display: settings.currency_code || settings.base_currency,
+          rates: mergeRates(settings.exchange_rates, settings.manual_rates),
+        });
+        const display = normalizeCurrencyCode(settings.currency_code, settings.base_currency);
+        if (display !== settings.base_currency && ratesAreStale(settings.rates_updated_at)) {
+          const hadNoRate = !canConvertToDisplay();
+          fetchLiveRates()
+            .then(async (live) => {
+              if (!live || !active) return;
+              setCurrencyContext({
+                rates: mergeRates(live.rates, settings.manual_rates),
+              });
+              if (hadNoRate && canConvertToDisplay()) {
+                setCurrencyEpoch((epoch) => epoch + 1);
+              }
+              await saveLiveRates(userId, live.rates, live.updatedAt);
+            })
+            .catch(() => undefined);
+        }
 
         // Chained on the settings/usage this just resolved, rather than a
         // separate effect keyed off state, so this never runs twice (once
@@ -1667,7 +1709,10 @@ export default function DashboardShell({
           </div>
         </div>
 
-        <div ref={shellContentRef} className="dashboard-shell-content">
+        {/* Keyed so a first-ever exchange rate remounts the page (see
+            currencyEpoch); no wrapper element, because the scroll-chain CSS
+            selects this element's direct children. */}
+        <div key={currencyEpoch} ref={shellContentRef} className="dashboard-shell-content">
           {children}
         </div>
       </div>

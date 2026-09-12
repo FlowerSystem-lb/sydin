@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
+import { convertFromBase } from "@/app/lib/currency";
 import {
   calculateInventoryValue,
   getEffectiveItemLowStockThreshold,
@@ -316,6 +317,11 @@ export async function exportInventoryExcel({
     ? lowStockThreshold
     : 10;
   const normalizedCurrency = normalizeCurrencyCode(currencyCode, "USD");
+  const moneyCell = (value: number | string | null | undefined) => {
+    if (value === null || value === undefined || value === "") return "";
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? convertFromBase(numeric, normalizedCurrency) : "";
+  };
   const isLowStock = (item: ExcelInventoryItem) =>
     item.quantity <=
     getEffectiveItemLowStockThreshold(item.minStockLevel, threshold);
@@ -531,10 +537,12 @@ export async function exportInventoryExcel({
       item.itemCode || "",
       item.unitType || "piece",
       item.unitType === "custom" ? item.customUnitLabel || "" : "",
-      item.costPrice ?? "",
-      item.sellingPrice ?? "",
-      calculateInventoryValue(item.quantity, item.costPrice) ?? "",
-      calculateInventoryValue(item.quantity, item.sellingPrice) ?? "",
+      // Stored in base; the sheet is labelled with the display currency, so
+      // the numbers are converted to match the label.
+      moneyCell(item.costPrice),
+      moneyCell(item.sellingPrice),
+      moneyCell(calculateInventoryValue(item.quantity, item.costPrice)),
+      moneyCell(calculateInventoryValue(item.quantity, item.sellingPrice)),
       item.minStockLevel ?? "",
       item.barcode || "",
     ].map(neutralizeSpreadsheetFormula);

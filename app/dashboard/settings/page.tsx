@@ -31,6 +31,14 @@ import {
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import {
+  currencyChoicesIncluding,
+  fetchLiveRates,
+  formatExactPrice,
+  getExchangeRate,
+  mergeRates,
+  setCurrencyContext,
+} from "@/app/lib/currency";
 import { supabase } from "@/app/lib/supabase";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -112,25 +120,6 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
 const SECTION_IDS = new Set<SettingsSectionId>(
   SETTINGS_SECTIONS.map((section) => section.id)
 );
-
-/* The currencies a Lebanese wholesale depot actually invoices in, plus the
-   usual suspects. Any ISO code already stored is kept as an option so a
-   business on something else does not see its currency vanish. */
-const CURRENCY_OPTIONS: { value: string; label: string }[] = [
-  { value: "USD", label: "USD — US dollar" },
-  { value: "LBP", label: "LBP — Lebanese pound" },
-  { value: "EUR", label: "EUR — Euro" },
-  { value: "GBP", label: "GBP — British pound" },
-  { value: "AED", label: "AED — UAE dirham" },
-  { value: "SAR", label: "SAR — Saudi riyal" },
-  { value: "QAR", label: "QAR — Qatari riyal" },
-  { value: "KWD", label: "KWD — Kuwaiti dinar" },
-  { value: "JOD", label: "JOD — Jordanian dinar" },
-  { value: "EGP", label: "EGP — Egyptian pound" },
-  { value: "TRY", label: "TRY — Turkish lira" },
-  { value: "CAD", label: "CAD — Canadian dollar" },
-  { value: "AUD", label: "AUD — Australian dollar" },
-];
 
 const inputClassName =
   "w-full min-h-11 rounded-xl border border-theme bg-[var(--sydin-input-bg)] px-3.5 py-2.5 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:bg-[var(--sydin-input-focus)] focus:shadow-[0_0_0_4px_rgba(37,99,235,0.12)] disabled:cursor-not-allowed disabled:opacity-60";
@@ -312,6 +301,8 @@ export default function SettingsPage() {
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [userEmail, setUserEmail] = useState("");
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [refreshingRates, setRefreshingRates] = useState(false);
+  const [ratesNotice, setRatesNotice] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -498,7 +489,9 @@ export default function SettingsPage() {
 
       if (logoFile) {
         const extension = getLogoExtension(logoFile.name);
-        const logoPath = `${user.id}/logo-${Date.now()}.${extension}`;
+        // The file's own timestamp keeps the path unique per upload without
+        // reading the clock inside the component.
+        const logoPath = `${user.id}/logo-${logoFile.lastModified}-${logoFile.size}.${extension}`;
         const { error: uploadError } = await supabase.storage
           .from("business-logos")
           .upload(logoPath, logoFile, {
@@ -541,6 +534,7 @@ export default function SettingsPage() {
         tax_id: settings.tax_id.trim() || null,
         payment_terms: settings.payment_terms.trim() || null,
         document_footer: settings.document_footer.trim() || null,
+        manual_rates: settings.manual_rates,
       };
 
       const upsert = (fields: Record<string, unknown>) =>
@@ -585,9 +579,20 @@ export default function SettingsPage() {
         tax_id: documentFieldsSkipped ? "" : settings.tax_id.trim(),
         payment_terms: documentFieldsSkipped ? "" : settings.payment_terms.trim(),
         document_footer: documentFieldsSkipped ? "" : settings.document_footer.trim(),
+        base_currency: settings.base_currency,
+        exchange_rates: settings.exchange_rates,
+        manual_rates: documentFieldsSkipped ? {} : settings.manual_rates,
+        rates_updated_at: settings.rates_updated_at,
       };
       setSettings(normalizedSettings);
       setSavedSettings(normalizedSettings);
+      // The rest of the app converts through this; make the new choice count
+      // immediately, not on the next full load.
+      setCurrencyContext({
+        base: normalizedSettings.base_currency,
+        display: normalizedSettings.currency_code,
+        rates: mergeRates(normalizedSettings.exchange_rates, normalizedSettings.manual_rates),
+      });
       setLogoFile(null);
       if (documentFieldsSkipped) {
         setError(
@@ -698,20 +703,133 @@ export default function SettingsPage() {
           </div>
         </FieldRow>
 
-        <FieldRow label="Currency">
+      </FieldGroup>
+
+      <FieldGroup
+        label="Money"
+        description={`Your prices are stored in ${settings.base_currency}. Choose what the app shows; every amount is converted at the rate below.`}
+      >
+        <FieldRow label="Show prices in">
           <Select
-            ariaLabel="Currency"
+            ariaLabel="Currency shown across the app"
             value={currencyCode}
             onChange={(value) =>
               setSettings((current) => ({ ...current, currency_code: value }))
             }
-            options={
-              CURRENCY_OPTIONS.some((option) => option.value === currencyCode)
-                ? CURRENCY_OPTIONS
-                : [{ value: currencyCode, label: currencyCode }, ...CURRENCY_OPTIONS]
-            }
+            options={currencyChoicesIncluding(currencyCode, settings.base_currency)}
           />
         </FieldRow>
+
+        {currencyCode !== settings.base_currency && (
+          <FieldRow label="Exchange rate" htmlFor="manual-rate">
+            {(() => {
+              const liveRate = getExchangeRate(
+                settings.base_currency,
+                currencyCode,
+                mergeRates(settings.exchange_rates, {})
+              );
+              const manualRate = getExchangeRate(
+                settings.base_currency,
+                currencyCode,
+                mergeRates(settings.exchange_rates, settings.manual_rates)
+              );
+              const usingManual = Object.keys(settings.manual_rates).includes(currencyCode);
+              const rateText = (rate: number | null) =>
+                rate === null
+                  ? "not available"
+                  : `1 ${settings.base_currency} = ${formatExactPrice(rate, currencyCode)}`;
+              return (
+                <div className="grid gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm font-semibold text-theme-primary">
+                      {rateText(manualRate)}
+                    </span>
+                    <span className="text-xs text-theme-muted">
+                      {usingManual
+                        ? `your rate · live is ${rateText(liveRate)}`
+                        : settings.rates_updated_at
+                          ? `live rate, updated ${new Date(settings.rates_updated_at).toLocaleDateString("en", { dateStyle: "medium" })}`
+                          : "no live rate yet"}
+                    </span>
+                  </div>
+                  <label htmlFor="manual-rate" className="text-xs font-semibold text-theme-secondary">
+                    Use my own rate instead — 1 {settings.base_currency} =
+                  </label>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <input
+                      id="manual-rate"
+                      type="number"
+                      min="0"
+                      step="any"
+                      inputMode="decimal"
+                      className="settings-rate-input"
+                      placeholder={liveRate === null ? "e.g. 89500" : String(liveRate)}
+                      value={
+                        settings.manual_rates[currencyCode] !== undefined
+                          ? String(
+                              settings.base_currency === "USD"
+                                ? settings.manual_rates[currencyCode]
+                                : (manualRate ?? "")
+                            )
+                          : ""
+                      }
+                      onChange={(event) => {
+                        const typed = Number(event.target.value);
+                        setSettings((current) => {
+                          const manual = { ...current.manual_rates };
+                          if (!event.target.value.trim() || !Number.isFinite(typed) || typed <= 0) {
+                            delete manual[currencyCode];
+                          } else {
+                            // Rates are kept as 1 USD = x. A base other than
+                            // USD types "1 base = x", so convert through the
+                            // base's own USD rate.
+                            const baseUsd = mergeRates(current.exchange_rates, current.manual_rates)[
+                              current.base_currency
+                            ];
+                            manual[currencyCode] =
+                              current.base_currency === "USD" || !baseUsd ? typed : typed * baseUsd;
+                          }
+                          return { ...current, manual_rates: manual };
+                        });
+                      }}
+                    />
+                    <span className="text-xs text-theme-muted">{currencyCode}</span>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      loading={refreshingRates}
+                      loadingLabel="Updating…"
+                      onClick={async () => {
+                        setRefreshingRates(true);
+                        setRatesNotice("");
+                        const live = await fetchLiveRates();
+                        setRefreshingRates(false);
+                        if (!live) {
+                          setRatesNotice("Live rates could not be fetched right now. Type your own rate, or try again later.");
+                          return;
+                        }
+                        setSettings((current) => ({
+                          ...current,
+                          exchange_rates: live.rates,
+                          rates_updated_at: live.updatedAt,
+                        }));
+                        setRatesNotice("Live rates updated. Press Save settings to keep them.");
+                      }}
+                    >
+                      Update live rates
+                    </Button>
+                  </div>
+                  {ratesNotice && (
+                    <p className="text-xs text-theme-muted">{ratesNotice}</p>
+                  )}
+                  <p className="text-xs text-theme-muted">
+                    Leave the box empty to follow the live rate. Invoices and orders keep the rate of the day they were made.
+                  </p>
+                </div>
+              );
+            })()}
+          </FieldRow>
+        )}
       </FieldGroup>
 
       <FieldGroup

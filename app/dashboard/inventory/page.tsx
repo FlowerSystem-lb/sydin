@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import { convertFromBase } from "@/app/lib/currency";
 import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import {
   createProductImagePath,
@@ -459,6 +460,7 @@ function slugifyFilename(value: string) {
 
 
 function formatCompactCurrency(value: number, currencyCode: string) {
+  value = convertFromBase(value, currencyCode);
   try {
     return new Intl.NumberFormat("en-US", {
       style: "currency",

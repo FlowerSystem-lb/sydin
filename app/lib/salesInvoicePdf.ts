@@ -1,8 +1,6 @@
 import autoTable from "jspdf-autotable";
-import {
-  formatInventoryPrice,
-  normalizeCurrencyCode,
-} from "@/app/lib/inventoryItemModel";
+import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import { formatExactPrice } from "@/app/lib/currency";
 import {
   DOCUMENT_FILL,
   DOCUMENT_HEADER_HEIGHT,
@@ -70,9 +68,10 @@ export interface SalesInvoicePdfDetails {
 
 export type SalesInvoicePdfBranding = DocumentBranding;
 
+// Amounts on an invoice are already in the invoice's currency: no conversion.
 function money(value: number | null | undefined, currencyCode: string) {
   if (value === null || value === undefined) return "--";
-  return formatInventoryPrice(value, currencyCode) || "--";
+  return formatExactPrice(value, currencyCode) || "--";
 }
 
 export async function exportSalesInvoicePdf({

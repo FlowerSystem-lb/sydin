@@ -50,8 +50,12 @@ import {
   getPurchaseOrderPayments,
   getPurchaseOrderReceipts,
   getPurchaseOrderReceivingProgress,
+  formatPurchaseOrderAmount,
+  getPurchaseOrderCurrency,
   getPurchaseOrderSplit,
   getPurchaseOrderTotal,
+  getPurchaseOrderTotalInBase,
+  toPurchaseOrderBase,
   getPurchaseOrdersForUser,
   isPaymentsSchemaMissing,
   isPurchaseOrderOpen,
@@ -467,9 +471,10 @@ export default function PurchaseOrdersPage() {
     let expenseTotal = 0;
 
     for (const order of monthOrders) {
+      // Orders in different currencies add up in base.
       const split = getPurchaseOrderSplit(order);
-      inventoryTotal += split.inventoryTotal;
-      expenseTotal += split.expenseTotal;
+      inventoryTotal += toPurchaseOrderBase(order, split.inventoryTotal);
+      expenseTotal += toPurchaseOrderBase(order, split.expenseTotal);
     }
 
     return {
@@ -765,7 +770,7 @@ export default function PurchaseOrdersPage() {
       note: line.notes || undefined,
     })),
     branding: brandingFromSettings(settings),
-    currencyCode,
+    currencyCode: getPurchaseOrderCurrency(order),
   });
 
   const handleExportDocument = async (format: "pdf" | "docx") => {
@@ -811,7 +816,7 @@ export default function PurchaseOrdersPage() {
           note: line.notes || undefined,
         })),
         branding: exportBranding(),
-        currencyCode,
+        currencyCode: getPurchaseOrderCurrency(selectedOrder),
       });
     } catch {
       setActionError("The Excel file could not be generated. Try again.");
@@ -976,7 +981,7 @@ export default function PurchaseOrdersPage() {
           {monthGroups.map((group) => {
             const collapsed = collapsedMonths.has(group.key);
             const groupTotal = group.orders.reduce(
-              (sum, order) => sum + getPurchaseOrderTotal(order),
+              (sum, order) => sum + getPurchaseOrderTotalInBase(order),
               0,
             );
 
@@ -1090,7 +1095,7 @@ export default function PurchaseOrdersPage() {
                                 title="Balance still owed"
                               >
                                 Owe{" "}
-                                {formatInventoryPrice(remaining, currencyCode)}
+                                {formatPurchaseOrderAmount(order, remaining)}
                               </span>
                             ) : (
                               <span
@@ -1114,7 +1119,7 @@ export default function PurchaseOrdersPage() {
                             </Badge>
                           </div>
                           <span className="shrink-0 text-right text-sm font-black text-theme-primary">
-                            {formatInventoryPrice(total, currencyCode) || "—"}
+                            {formatPurchaseOrderAmount(order, total) || "—"}
                           </span>
                         </button>
                       );
@@ -1431,7 +1436,7 @@ export default function PurchaseOrdersPage() {
                     <div className="grid gap-3 sm:grid-cols-2">
                       <label className="grid gap-1.5">
                         <span className="text-xs font-bold text-theme-secondary">
-                          Amount paid now ({currencyCode})
+                          Amount paid now ({selectedOrder.currency_code || currencyCode})
                         </span>
                         <input
                           type="number"
@@ -1499,7 +1504,7 @@ export default function PurchaseOrdersPage() {
                 <div className="grid gap-3 sm:grid-cols-2">
                   <label className="grid gap-1.5">
                     <span className="text-xs font-bold text-theme-secondary">
-                      Amount paid now ({currencyCode})
+                      Amount paid now ({selectedOrder.currency_code || currencyCode})
                     </span>
                     <input
                       type="number"
@@ -1567,14 +1572,14 @@ export default function PurchaseOrdersPage() {
                     <div>
                       <small>Order total</small>
                       <strong>
-                        {formatInventoryPrice(balance.total, currencyCode) ||
+                        {formatPurchaseOrderAmount(selectedOrder, balance.total) ||
                           "—"}
                       </strong>
                     </div>
                     <div>
                       <small>Paid</small>
                       <strong>
-                        {formatInventoryPrice(balance.paid, currencyCode) ||
+                        {formatPurchaseOrderAmount(selectedOrder, balance.paid) ||
                           "—"}
                       </strong>
                     </div>
@@ -1590,10 +1595,7 @@ export default function PurchaseOrdersPage() {
                       </small>
                       <strong>
                         {balance.remaining > 0
-                          ? formatInventoryPrice(
-                              balance.remaining,
-                              currencyCode,
-                            )
+                          ? formatPurchaseOrderAmount(selectedOrder, balance.remaining)
                           : "✓"}
                       </strong>
                     </div>
@@ -1689,7 +1691,7 @@ export default function PurchaseOrdersPage() {
                     </span>
                     <span className="min-w-0 flex-1">
                       <span className="block text-sm font-black text-theme-primary">
-                        {formatInventoryPrice(payment.amount, currencyCode)}
+                        {formatPurchaseOrderAmount(selectedOrder, payment.amount)}
                       </span>
                       <span className="block truncate text-xs font-semibold text-theme-muted">
                         {[
@@ -1774,10 +1776,7 @@ export default function PurchaseOrdersPage() {
                             ? `Paid by ${selectedOrder.paid_by}`
                             : "",
                           selectedOrder.amount_paid !== null
-                            ? formatInventoryPrice(
-                                selectedOrder.amount_paid,
-                                currencyCode,
-                              )
+                            ? formatPurchaseOrderAmount(selectedOrder, selectedOrder.amount_paid)
                             : "",
                         ]
                           .filter(Boolean)
@@ -1843,15 +1842,12 @@ export default function PurchaseOrdersPage() {
                             {line.quantity} ×{" "}
                             {line.unit_cost === null
                               ? "—"
-                              : formatInventoryPrice(
-                                  line.unit_cost,
-                                  currencyCode,
-                                )}
+                              : formatPurchaseOrderAmount(selectedOrder, line.unit_cost)}
                           </span>
                           <span className="block text-sm font-black text-theme-primary">
                             {lineTotal === null
                               ? "—"
-                              : formatInventoryPrice(lineTotal, currencyCode)}
+                              : formatPurchaseOrderAmount(selectedOrder, lineTotal)}
                           </span>
                         </span>
                       </div>
@@ -1860,10 +1856,7 @@ export default function PurchaseOrdersPage() {
                   <div className="po-detail-total">
                     <span>Total</span>
                     <strong>
-                      {formatInventoryPrice(
-                        getPurchaseOrderTotal(selectedOrder),
-                        currencyCode,
-                      ) || "—"}
+                      {formatPurchaseOrderAmount(selectedOrder, getPurchaseOrderTotal(selectedOrder)) || "—"}
                     </strong>
                   </div>
                 </div>

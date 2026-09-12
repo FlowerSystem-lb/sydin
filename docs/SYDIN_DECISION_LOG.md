@@ -453,3 +453,31 @@ rendering it in Node with realistic data and reading the pages. **Status:** Acti
 **Decision:** product photos and logos are redrawn at thumbnail size (240px / 512px) before going
 into a PDF or Word file. **Why:** a 2MB phone upload was being embedded in full for a 9mm
 square; a 40-line invoice would have been 80MB. **Status:** Active.
+
+## 12 Sep 2026 — Money: base currency, display currency, document currency
+
+**Decision.** Every stored amount (item prices, stock values, order and
+invoice lines) is in the account's **base currency** (`base_currency`,
+USD for Sayed). Settings has a separate **display currency** — what the app
+shows — and switching it *converts* every base amount at an exchange rate; it
+never rewrites stored numbers. Each invoice and purchase order carries its
+**own currency** and the rate of the day it was made (`exchange_rate`), so a
+customer can be billed in LBP while the shop keeps USD prices; sums across
+documents happen in base.
+
+**Rates.** Kept the way free feeds publish them: 1 USD = x. Live rates come
+from open.er-api.com (daily, no key, fetched by the browser and saved to
+`business_settings.exchange_rates`); a rate the business types in Settings
+(`manual_rates`) wins over the live one. Item prices are typed in base.
+
+**Why not convert in the database.** Prices in the catalogue are what the
+depot thinks in; a market rate that moves daily must not silently change
+them. Converting on display keeps one truth and lets the label follow the
+reader.
+
+**Mechanism.** `app/lib/currency.ts` holds a module-level context set once by
+the shell from Settings. `formatInventoryPrice` (sixty call sites, all base
+amounts + display currency) converts on the way out; `formatExactPrice` /
+`formatSalesOrderAmount` / `formatPurchaseOrderAmount` print document amounts
+as written. The four private "formatCurrency" helpers in pages call
+`convertFromBase` first.

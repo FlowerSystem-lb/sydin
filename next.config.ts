@@ -43,7 +43,9 @@ const contentSecurityPolicy = [
   // The barcode scanner draws camera frames into a blob-backed video element.
   "media-src 'self' blob:",
   "font-src 'self' data:",
-  `connect-src 'self' ${supabaseHost} ${supabaseHost.replace("https://", "wss://")}${
+  // open.er-api.com: the free daily exchange-rate feed (app/lib/currency.ts).
+  // Read-only, no key, nothing of ours is sent to it.
+  `connect-src 'self' ${supabaseHost} ${supabaseHost.replace("https://", "wss://")} https://open.er-api.com${
     isDev ? " ws://localhost:* http://localhost:*" : ""
   }`,
   "worker-src 'self' blob:",

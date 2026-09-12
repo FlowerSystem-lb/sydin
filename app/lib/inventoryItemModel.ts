@@ -1,3 +1,8 @@
+import {
+  convertAmount,
+  formatExactPrice,
+  getCurrencyContext,
+} from "@/app/lib/currency";
 export const INVENTORY_UNIT_TYPES = [
   "piece",
   "box",
@@ -149,6 +154,14 @@ function normalizeNonNegativeNumber(value: unknown) {
     : null;
 }
 
+/**
+ * Formats a stored (base-currency) amount in `currencyCode`, converting on the
+ * way when that is not the base currency and a rate is known -- see
+ * app/lib/currency.ts. Every call site passes the display currency from
+ * Settings and a base-currency number, which is exactly this case. An amount
+ * that is already in `currencyCode` (an invoice issued in LBP) must use
+ * `formatExactPrice` instead, or it would be converted twice.
+ */
 export function formatInventoryPrice(
   value: unknown,
   currencyCode = "USD",
@@ -161,17 +174,13 @@ export function formatInventoryPrice(
   }
 
   const normalizedCurrency = normalizeCurrencyCode(currencyCode);
+  const { base } = getCurrencyContext();
+  const converted =
+    normalizedCurrency === base
+      ? normalizedValue
+      : convertAmount(normalizedValue, base, normalizedCurrency);
 
-  try {
-    return new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: normalizedCurrency,
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    }).format(normalizedValue);
-  } catch {
-    return `${normalizedCurrency} ${normalizedValue.toFixed(2)}`;
-  }
+  return formatExactPrice(converted, normalizedCurrency, locale);
 }
 
 export function calculateInventoryValue(

@@ -15,6 +15,12 @@ export interface BusinessSettings {
   tax_id: string;
   payment_terms: string;
   document_footer: string;
+  /* Phase 25. `base_currency` is what stored amounts are in; `currency_code`
+     is what the app shows. Rates are 1 USD = x. */
+  base_currency: string;
+  exchange_rates: Record<string, number>;
+  manual_rates: Record<string, number>;
+  rates_updated_at: string | null;
 }
 
 export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
@@ -30,7 +36,23 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   tax_id: "",
   payment_terms: "",
   document_footer: "",
+  base_currency: "USD",
+  exchange_rates: {},
+  manual_rates: {},
+  rates_updated_at: null,
 };
+
+function normalizeRateTable(value: unknown): Record<string, number> {
+  if (!value || typeof value !== "object") return {};
+  const table: Record<string, number> = {};
+  for (const [code, rate] of Object.entries(value as Record<string, unknown>)) {
+    const numeric = Number(rate);
+    if (/^[A-Za-z]{3}$/.test(code) && Number.isFinite(numeric) && numeric > 0) {
+      table[code.toUpperCase()] = numeric;
+    }
+  }
+  return table;
+}
 
 function normalizeThreshold(value: unknown) {
   const threshold = Number(value);
@@ -57,11 +79,20 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
     tax_id: data?.tax_id || "",
     payment_terms: data?.payment_terms || "",
     document_footer: data?.document_footer || "",
+    // Before phase 25 there was no base: the display currency was the only
+    // currency, so it is also what the amounts are in.
+    base_currency: normalizeCurrencyCode(
+      data?.base_currency || data?.currency_code,
+      "USD"
+    ),
+    exchange_rates: normalizeRateTable(data?.exchange_rates),
+    manual_rates: normalizeRateTable(data?.manual_rates),
+    rates_updated_at: data?.rates_updated_at || null,
   };
 }
 
 const SETTINGS_SELECT =
-  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer";
+  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer, base_currency, exchange_rates, manual_rates, rates_updated_at";
 
 /* The same row without the phase-24 columns, for a database where that
    migration has not been run yet. */
@@ -75,7 +106,7 @@ export function isCompanyProfileSchemaMissing(error: unknown) {
       ? String((error as { message: unknown }).message)
       : String(error ?? "");
   return (
-    /business_address|tax_id|payment_terms|document_footer/.test(message) &&
+    /business_address|tax_id|payment_terms|document_footer|base_currency|exchange_rates|manual_rates|rates_updated_at/.test(message) &&
     (message.includes("does not exist") ||
       message.includes("schema cache") ||
       message.includes("Could not find"))
@@ -124,4 +155,20 @@ export async function getOrCreateBusinessSettings(userId: string) {
   }
 
   return normalizeBusinessSettings(createdSettings);
+}
+
+/**
+ * Saves freshly fetched live rates. Best effort: a failure here leaves the
+ * last saved rates in place and is not worth interrupting the page for.
+ */
+export async function saveLiveRates(
+  userId: string,
+  rates: Record<string, number>,
+  updatedAt: string
+) {
+  const { error } = await supabase
+    .from("business_settings")
+    .update({ exchange_rates: rates, rates_updated_at: updatedAt })
+    .eq("user_id", userId);
+  return !error;
 }

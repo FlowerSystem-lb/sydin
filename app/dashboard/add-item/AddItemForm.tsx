@@ -87,16 +87,19 @@ type FieldName =
 
 type FieldErrors = Partial<Record<FieldName, string>>;
 
+/* Prices on an item are typed in the BASE currency -- the one every stored
+   amount is in -- not the display currency, which is only how the rest of
+   the app shows them. Before phase 25 the two were the same field. */
 async function getBusinessCurrency(userId: string) {
   const { data, error } = await supabase
     .from("business_settings")
-    .select("currency_code")
+    .select("base_currency, currency_code")
     .eq("user_id", userId)
     .maybeSingle();
 
   if (error) return "USD";
 
-  return normalizeCurrencyCode(data?.currency_code, "USD");
+  return normalizeCurrencyCode(data?.base_currency || data?.currency_code, "USD");
 }
 
 function getSaveErrorMessage(error: {

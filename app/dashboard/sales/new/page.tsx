@@ -27,16 +27,27 @@ import {
   createDepotInline,
 } from "@/app/lib/inlineCreate";
 import { getDepotsForUser, type Depot } from "@/app/lib/depots";
+import { getInventoryUnitLabel } from "@/app/lib/inventoryItemModel";
 import {
-  formatInventoryPrice,
-  getInventoryUnitLabel,
-} from "@/app/lib/inventoryItemModel";
+  convertAmount,
+  currencyChoicesIncluding,
+  formatExactPrice,
+  getCurrencyContext,
+  getExchangeRate,
+} from "@/app/lib/currency";
 import {
   createSalesOrder,
   getSalesOrderErrorMessage,
   suggestNextInvoiceNumber,
   type SalesOrderLineInput,
 } from "@/app/lib/salesOrders";
+
+/** LBP is quoted in whole pounds; everything else to the cent. */
+function roundForCurrency(value: number, currencyCode: string) {
+  const digits = ["LBP", "JPY", "KRW", "IQD", "SYP"].includes(currencyCode.toUpperCase()) ? 0 : 2;
+  const factor = 10 ** digits;
+  return Math.round(value * factor) / factor;
+}
 
 interface SellableItem {
   id: number;
@@ -82,9 +93,16 @@ export default function NewSalePage() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [items, setItems] = useState<SellableItem[]>([]);
-  const [currencyCode, setCurrencyCode] = useState(
-    DEFAULT_BUSINESS_SETTINGS.currency_code
+  /* The invoice's own currency. Defaults to what the app shows; a customer
+     who pays in dollars gets a dollar invoice even when the app is set to
+     LBP. Product prices are stored in the base currency and are converted
+     into the invoice currency when a line is added, at today's rate; the
+     rate is saved with the invoice so totals can be added up later. */
+  const [currencyCode, setCurrencyCode] = useState<string>(
+    DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
   );
+  const baseCurrency = getCurrencyContext().base;
+  const exchangeRate = getExchangeRate(baseCurrency, currencyCode);
 
   const [invoiceNumber, setInvoiceNumber] = useState("");
   // "New invoice" from a customer's account page names the customer.
@@ -152,7 +170,7 @@ export default function NewSalePage() {
         setDepots(depotRows);
         setItems((itemResult.data as SellableItem[] | null) || []);
         setCurrencyCode(
-          settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code
+          settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
         );
         setInvoiceNumber(suggested);
       })
@@ -232,7 +250,14 @@ export default function NewSalePage() {
            copied into the line so it can be changed for this customer without
            touching the catalogue -- and once saved, the line keeps what was
            agreed even if the catalogue price moves later. */
-        unitPrice: item.selling_price ? String(item.selling_price) : "",
+        unitPrice: item.selling_price
+          ? String(
+              roundForCurrency(
+                convertAmount(Number(item.selling_price), baseCurrency, currencyCode),
+                currencyCode
+              )
+            )
+          : "",
         available: Number(item.quantity) || 0,
       },
     ]);
@@ -336,6 +361,7 @@ export default function NewSalePage() {
         depot_name_snapshot: depot ? depot.name : null,
         issue_date: issueDate || null,
         currency_code: currencyCode,
+        exchange_rate: exchangeRate ?? 1,
         notes: notes.trim() || null,
         lines: payload,
       });
@@ -393,6 +419,42 @@ export default function NewSalePage() {
                       value={issueDate}
                       onChange={(event) => setIssueDate(event.target.value)}
                     />
+                  </FieldRow>
+
+                  <FieldRow label="Currency">
+                    <Select
+                      ariaLabel="Invoice currency"
+                      value={currencyCode}
+                      onChange={(next) => {
+                        // Lines already priced follow the change, so the
+                        // numbers on screen stay the same value of money.
+                        const from = currencyCode;
+                        setCurrencyCode(next);
+                        setLines((current) =>
+                          current.map((line) =>
+                            line.unitPrice === ""
+                              ? line
+                              : {
+                                  ...line,
+                                  unitPrice: String(
+                                    roundForCurrency(
+                                      convertAmount(Number(line.unitPrice), from, next),
+                                      next
+                                    )
+                                  ),
+                                }
+                          )
+                        );
+                      }}
+                      options={currencyChoicesIncluding(currencyCode, baseCurrency)}
+                    />
+                    {currencyCode !== baseCurrency && (
+                      <p className="mt-1 text-xs text-theme-muted">
+                        {exchangeRate === null
+                          ? `No rate for ${currencyCode} yet — set one in Settings › Company, or prices will not convert.`
+                          : `1 ${baseCurrency} = ${formatExactPrice(exchangeRate, currencyCode)} today. Saved with the invoice.`}
+                      </p>
+                    )}
                   </FieldRow>
                 </FieldGroup>
 
@@ -554,7 +616,7 @@ export default function NewSalePage() {
                         </label>
 
                         <p className="text-sm font-semibold text-theme-primary tabular-nums sm:text-right">
-                          {formatInventoryPrice(lineTotal, currencyCode) || "--"}
+                          {formatExactPrice(lineTotal, currencyCode) || "--"}
                         </p>
 
                         <button
@@ -583,7 +645,7 @@ export default function NewSalePage() {
                   Total
                 </span>
                 <span className="text-xl font-semibold text-theme-primary tabular-nums">
-                  {formatInventoryPrice(total, currencyCode) || "--"}
+                  {formatExactPrice(total, currencyCode) || "--"}
                 </span>
               </div>
             </section>
