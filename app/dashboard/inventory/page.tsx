@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { convertFromBase } from "@/app/lib/currency";
+import { convertFromBase, formatExactPrice } from "@/app/lib/currency";
 import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import {
   createProductImagePath,
@@ -459,17 +459,26 @@ function slugifyFilename(value: string) {
 }
 
 
+/* The value chip on a card. Sayed, 12 Sep: "why are the numbers rounded" --
+   a $2.50 item showed "$3", because everything was cut to whole units.
+   Under 10,000 the amount prints exactly (cents, or whole pounds for LBP);
+   from 10,000 up it abbreviates ("LBP 224K", "$1.7M") so a chip stays a
+   chip -- and the abbreviation keeps one decimal, so 1.7M is not 2M. */
 function formatCompactCurrency(value: number, currencyCode: string) {
   value = convertFromBase(value, currencyCode);
+  const currency = normalizeCurrencyCode(currencyCode, "USD");
+  if (Math.abs(value) < 10000) {
+    return formatExactPrice(value, currency) || `${currency} ${value.toFixed(2)}`;
+  }
   try {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
-      currency: normalizeCurrencyCode(currencyCode, "USD"),
-      notation: Math.abs(value) >= 10000 ? "compact" : "standard",
-      maximumFractionDigits: 0,
+      currency,
+      notation: "compact",
+      maximumFractionDigits: 1,
     }).format(value);
   } catch {
-    return `${normalizeCurrencyCode(currencyCode, "USD")} ${value.toFixed(0)}`;
+    return `${currency} ${value.toFixed(0)}`;
   }
 }
 
