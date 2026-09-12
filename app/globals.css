@@ -21603,3 +21603,36 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     isolation: isolate;
   }
 }
+
+/* ===[ TOP BAR NEVER WRAPS (2026-09-12) ]===
+   With the sidebar expanded on a ~1100px window the bar had ~900px to work
+   with, and `.dashboard-top-tools` was told to wrap: the account pill dropped
+   to a second line under Add / scan / bell, the bar grew to 106px and the
+   page name was pushed against the search. The tools now hold one line, the
+   search is what gives, and below a width where even that is not enough the
+   account pill keeps only its avatar. Measured against the bar itself
+   (container query), so it does not matter whether the space went to the
+   sidebar or to a narrow window. */
+@media (min-width: 900px) {
+  .dashboard-desktop-toolbar {
+    container-type: inline-size;
+    container-name: topbar;
+  }
+
+  .dashboard-workspace-shell .dashboard-top-tools {
+    flex: 0 0 auto !important;
+    flex-wrap: nowrap !important;
+  }
+
+  .dashboard-top-search {
+    flex: 1 1 10rem;
+    min-width: 6rem;
+  }
+
+  @container topbar (max-width: 980px) {
+    .dashboard-top-account-pill > span:not(:first-child),
+    .dashboard-top-account-chevron {
+      display: none;
+    }
+  }
+}

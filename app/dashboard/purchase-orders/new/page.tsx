@@ -4,6 +4,7 @@ import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
+import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
 import {
   Button,
@@ -59,6 +60,7 @@ import { supabase } from "@/app/lib/supabase";
 interface PickerItem {
   id: number;
   name: string;
+  image?: string | null;
   quantity: number;
   sku: string | null;
   item_code: string | null;
@@ -71,6 +73,7 @@ interface LineDraft {
   key: string;
   lineType: "inventory" | "expense";
   inventoryItemId: number | null;
+  image?: string | null;
   name: string;
   sku: string | null;
   itemCode: string | null;
@@ -227,7 +230,7 @@ export default function NewPurchaseOrderPage() {
         const { data: prefillItems } = await supabase
           .from("inventory")
           .select(
-            "id, name, quantity, sku, item_code, unit_type, custom_unit_label, cost_price"
+            "id, name, image, quantity, sku, item_code, unit_type, custom_unit_label, cost_price"
           )
           .eq("user_id", user.id)
           .in("id", prefillIds);
@@ -245,6 +248,7 @@ export default function NewPurchaseOrderPage() {
               key: makeLineKey(),
               lineType: "inventory" as const,
               inventoryItemId: item.id,
+              image: item.image ?? null,
               name: item.name,
               sku: item.sku,
               itemCode: item.item_code,
@@ -331,7 +335,7 @@ export default function NewPurchaseOrderPage() {
       let query = supabase
         .from("inventory")
         .select(
-          "id, name, quantity, sku, item_code, unit_type, custom_unit_label, cost_price"
+          "id, name, image, quantity, sku, item_code, unit_type, custom_unit_label, cost_price"
         )
         .eq("user_id", userId)
         .order("name", { ascending: true })
@@ -466,6 +470,7 @@ export default function NewPurchaseOrderPage() {
           key: makeLineKey(),
           lineType: "inventory",
           inventoryItemId: item.id,
+          image: item.image ?? null,
           name: item.name,
           sku: item.sku,
           itemCode: item.item_code,
@@ -920,12 +925,21 @@ export default function NewPurchaseOrderPage() {
                 >
                   <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_5.5rem_7rem_9rem_auto] sm:items-end">
                     <div className="flex min-w-0 items-center gap-2">
-                      <span className="po-line-type-chip" aria-hidden="true">
-                        <UiIcon
-                          name={line.lineType === "inventory" ? "box" : "file"}
-                          className="h-4 w-4"
-                        />
-                      </span>
+                      {line.lineType === "inventory" ? (
+                        <span className="po-line-thumb">
+                          <ProductThumbnail
+                            src={line.image}
+                            alt=""
+                            width={40}
+                            height={40}
+                            sizes="40px"
+                          />
+                        </span>
+                      ) : (
+                        <span className="po-line-type-chip" aria-hidden="true">
+                          <UiIcon name="file" className="h-4 w-4" />
+                        </span>
+                      )}
                       {line.lineType === "inventory" ? (
                         <div className="min-w-0">
                           <p className="truncate text-sm font-semibold text-theme-primary">
@@ -1290,7 +1304,18 @@ export default function NewPurchaseOrderPage() {
                     onClick={() => addInventoryLine(item)}
                     className="po-picker-row"
                   >
-                    <span className="min-w-0">
+                    {/* A name is not enough to tell two similar cartons apart;
+                        the photo is what a depot recognises. */}
+                    <span className="po-line-thumb">
+                      <ProductThumbnail
+                        src={item.image}
+                        alt=""
+                        width={40}
+                        height={40}
+                        sizes="40px"
+                      />
+                    </span>
+                    <span className="min-w-0 flex-1">
                       <span className="block truncate text-sm font-black text-theme-primary">
                         {item.name}
                       </span>
