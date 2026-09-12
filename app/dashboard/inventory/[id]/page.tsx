@@ -59,6 +59,8 @@ import {
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
 import { rememberRecentItem } from "@/app/lib/globalSearch";
+import { getDocumentsForItem, type ItemDocument } from "@/app/lib/itemDocuments";
+import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
 import { supabase } from "@/app/lib/supabase";
 import {
   getSuppliersForUser,
@@ -234,6 +236,8 @@ export default function ItemDetailsPage() {
   const [item, setItem] = useState<Item | null>(null);
   const [history, setHistory] = useState<InventoryHistory[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  // Every invoice and purchase order this item is on (brief points 26, 40).
+  const [itemDocuments, setItemDocuments] = useState<ItemDocument[]>([]);
   const [qrUrl, setQrUrl] = useState("");
   const [copyLabel, setCopyLabel] = useState("Copy Link");
   const [businessSettings, setBusinessSettings] =
@@ -295,6 +299,13 @@ export default function ItemDetailsPage() {
       setStockMovements(movements);
     } catch {
       setStockMovements([]);
+    }
+    // Same moment, same reason: the documents are the other half of the
+    // item's history. A failure leaves the section empty, never the page.
+    try {
+      setItemDocuments(await getDocumentsForItem(userId, movementItemId));
+    } catch {
+      setItemDocuments([]);
     }
   };
 
@@ -1204,6 +1215,83 @@ export default function ItemDetailsPage() {
                 </div>
               </section>
               </div>
+
+              <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+                      Bought and sold
+                    </p>
+                    <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
+                      Documents with this item
+                    </h2>
+                  </div>
+                  <span className="self-start rounded-full border border-theme bg-theme-inset px-4 py-2 text-sm font-bold text-theme-secondary sm:self-auto">
+                    {itemDocuments.length}{" "}
+                    {itemDocuments.length === 1 ? "document" : "documents"}
+                  </span>
+                </div>
+
+                {itemDocuments.length === 0 ? (
+                  <p className="mt-4 rounded-xl border border-dashed border-theme px-4 py-5 text-center text-sm text-theme-muted">
+                    Not on any invoice or purchase order yet.
+                  </p>
+                ) : (
+                  <ul className="mt-4 divide-y divide-[var(--border-divider)]">
+                    {itemDocuments.map((document) => (
+                      <li key={`${document.kind}-${document.id}`}>
+                        <Link
+                          href={document.href}
+                          className="flex flex-wrap items-center justify-between gap-2 py-2.5 transition hover:bg-theme-hover"
+                        >
+                          <span className="flex min-w-0 items-center gap-2.5">
+                            <span className="po-line-type-chip" aria-hidden="true">
+                              <UiIcon
+                                name={document.kind === "invoice" ? "receipt" : "cart"}
+                                className="h-4 w-4"
+                              />
+                            </span>
+                            <span className="min-w-0">
+                              <span className="block truncate text-sm font-semibold text-theme-primary">
+                                {document.number}
+                                {document.party ? ` · ${document.party}` : ""}
+                              </span>
+                              <span className="block truncate text-xs text-theme-muted">
+                                {document.date
+                                  ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
+                                      new Date(
+                                        document.date.includes("T")
+                                          ? document.date
+                                          : `${document.date}T00:00:00`
+                                      )
+                                    )
+                                  : ""}
+                                {" · "}
+                                {document.kind === "invoice"
+                                  ? `sold ${document.quantity}`
+                                  : `ordered ${document.quantity}${
+                                      document.received !== null && document.received > 0
+                                        ? `, received ${document.received}`
+                                        : ""
+                                    }`}
+                                {document.unitAmount !== null
+                                  ? ` at ${formatExactPrice(
+                                      document.unitAmount,
+                                      document.currency || getCurrencyContext().base
+                                    )}`
+                                  : ""}
+                              </span>
+                            </span>
+                          </span>
+                          <span className="text-xs font-semibold capitalize text-theme-secondary">
+                            {document.status.replace(/_/g, " ")}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
 
               <section
                 id="history"

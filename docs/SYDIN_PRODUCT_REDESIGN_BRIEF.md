@@ -35,7 +35,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 23. ✅ Dashboard hierarchy: figures → action required → recent activity.
 24. ✅ Quick actions: Add menu has New item · New invoice · Purchase order · Stock In · New customer (13 Sep). Record payment stays on the document it belongs to.
 25. ✅ Global search: items, customers, suppliers, invoices, POs — typed results.
-26. ◐ Item detail as source of truth: photo, codes, stock, movement history. ☐ purchase/sales/receiving history tabs.
+26. ✅ Item detail as source of truth: photo, codes, stock, movement history, and "Documents with this item" — every invoice and purchase order it is on, with quantity, price in the document's currency, received-so-far and status (13 Sep).
 27. ✅ Settings rebuilt: Company · Account · Inventory · Plan & billing · Data & reports, one row style, business words.
 28. ✅ Help Center rebuilt: searchable articles by category.
 29. ✅ Contextual help links on receiving, Stock In, invoice payments.
@@ -50,7 +50,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 38. ◐ Status system: Draft / Ordered / Partially received / Received / Cancelled; Unpaid / Partially paid / Paid; Issued / Paid. Tones consistent on PO and sales.
 39. ✅ Document status timelines: Created → Ordered → Received → Paid on the order dialog, Draft → Issued → Paid on the invoice page; cancelled ends in a stopped step (13 Sep).
 40. ◐ Relationships: PO → supplier, receipts, payments, movements shown on the order; invoice → customer, payments. ☐ supplier bill link.
-41. ☐ "Related documents" section.
+41. ◐ Related documents: on the item page (all its invoices and orders); orders show their deliveries and payments; invoices their payments. ☐ supplier bill / statement links.
 42. ✅ Customer account view: sales, balance, documents.
 43. ✅ Supplier account view: orders, receiving, balance.
 44. ◐ Conveniences: PO from low stock (Alerts), receiving from PO, invoice from customer page, inline create customer/depot; ✅ last depot and payment method come back pre-filled on invoice, PO and Stock In (13 Sep). ☐ duplicate PO/sale.
