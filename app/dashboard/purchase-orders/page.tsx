@@ -48,6 +48,7 @@ import {
   getPurchaseOrderBalance,
   getPurchaseOrderLineTotal,
   getPurchaseOrderPayments,
+  getPurchaseOrderAttachmentUrl,
   getPurchaseOrderReceipts,
   getPurchaseOrderReceivingProgress,
   formatPurchaseOrderAmount,
@@ -182,6 +183,8 @@ export default function PurchaseOrdersPage() {
   const [selectedReceipts, setSelectedReceipts] = useState<
     PurchaseOrderReceipt[]
   >([]);
+  // A signed, one-hour link to the order's attachment; the bucket is private.
+  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
   const [lineImages, setLineImages] = useState<Record<number, string | null>>(
     {},
   );
@@ -282,6 +285,13 @@ export default function PurchaseOrdersPage() {
       });
 
     const order = orders.find((entry) => entry.id === selectedOrderId);
+    getPurchaseOrderAttachmentUrl(order?.attachment_url)
+      .then((url) => {
+        if (active) setAttachmentUrl(url);
+      })
+      .catch(() => {
+        if (active) setAttachmentUrl(null);
+      });
     const itemIds = Array.from(
       new Set(
         (order?.lines || [])
@@ -1861,7 +1871,7 @@ export default function PurchaseOrdersPage() {
                   </div>
                 </div>
 
-                {selectedOrder.attachment_url && (
+                {selectedOrder.attachment_url && attachmentUrl && (
                   <div className="grid gap-1.5">
                     <p className="po-detail-label">
                       Attachment
@@ -1870,13 +1880,13 @@ export default function PurchaseOrdersPage() {
                         : ""}
                     </p>
                     <a
-                      href={selectedOrder.attachment_url}
+                      href={attachmentUrl}
                       target="_blank"
                       rel="noreferrer"
                       className="po-attachment-link"
                     >
                       <Image
-                        src={selectedOrder.attachment_url}
+                        src={attachmentUrl}
                         alt={
                           selectedOrder.attachment_label ||
                           "Purchase attachment"

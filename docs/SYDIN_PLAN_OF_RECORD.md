@@ -636,7 +636,8 @@ returns 500 for Supabase-hosted images; production (Vercel) serves them.
    Scan last, and the Scanner is not to be redesigned.
 3. **Pagination**, then the real 500-product test.
 4. **Limits and abuse** — rate limiting needs Supabase settings + Vercel Pro.
-5. **`po-attachments` is public-read** — supplier invoices readable by anyone
-   with the link. Needs signed URLs.
+5. ~~`po-attachments` is public-read~~ **Done 12 Sep 2026** — bucket private,
+   owner-only read policy, the app opens attachments through one-hour signed
+   URLs (`sql/phase-26-private-po-attachments.sql`, applied live).
 6. **Still needs Sayed:** leaked-password checkbox in Supabase · test Google and
    Microsoft sign-in · confirm prices, contact email and WhatsApp are real.

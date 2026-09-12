@@ -744,9 +744,35 @@ export async function uploadPurchaseOrderAttachment(userId: string, file: File) 
     throw uploadError;
   }
 
-  const { data } = supabase.storage.from("po-attachments").getPublicUrl(path);
+  /* The bucket is private (phase 26): what is stored is the object PATH,
+     and a short-lived signed URL is minted whenever it is shown. Older rows
+     hold the public URL from before; getPurchaseOrderAttachmentUrl reads
+     the path back out of those too. */
+  return { url: path, label: file.name };
+}
 
-  return { url: data.publicUrl, label: file.name };
+/** Where the attachment lives in the bucket, from either a path or an old public URL. */
+export function getPurchaseOrderAttachmentPath(stored: string | null | undefined) {
+  if (!stored) return null;
+  const marker = "/po-attachments/";
+  const index = stored.indexOf(marker);
+  if (index >= 0) return stored.slice(index + marker.length).split("?")[0];
+  return stored.startsWith("http") ? null : stored;
+}
+
+/**
+ * A URL the current user can open for the next hour, or null when the file
+ * is not theirs or is gone. Never the stored value itself: the bucket is
+ * private, so a public URL no longer opens anything.
+ */
+export async function getPurchaseOrderAttachmentUrl(stored: string | null | undefined) {
+  const path = getPurchaseOrderAttachmentPath(stored);
+  if (!path) return null;
+  const { data, error } = await supabase.storage
+    .from("po-attachments")
+    .createSignedUrl(path, 60 * 60);
+  if (error || !data?.signedUrl) return null;
+  return data.signedUrl;
 }
 
 /**
