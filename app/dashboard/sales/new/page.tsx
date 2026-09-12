@@ -38,6 +38,7 @@ import {
 } from "@/app/lib/currency";
 import {
   createSalesOrder,
+  getSalesOrder,
   getSalesOrderErrorMessage,
   suggestNextInvoiceNumber,
   type SalesOrderLineInput,
@@ -182,6 +183,46 @@ export default function NewSalePage() {
           settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
         );
         setInvoiceNumber(suggested);
+
+        /* Duplicate (?from=12): the same invoice again for the same customer
+           -- customer, depot, currency, notes and every line at the price it
+           had. New number, new date, nothing issued. */
+        const fromId = Number(new URLSearchParams(window.location.search).get("from"));
+        if (Number.isFinite(fromId) && fromId > 0) {
+          try {
+            const source = await getSalesOrder(user.id, fromId);
+            if (!isActive || !source) return;
+            if (source.customer_id && customerRows.some((row) => row.id === source.customer_id)) {
+              setCustomerId(String(source.customer_id));
+            }
+            if (source.depot_id && depotRows.some((row) => row.id === source.depot_id)) {
+              setDepotId(String(source.depot_id));
+            }
+            if (source.currency_code) setCurrencyCode(source.currency_code);
+            setNotes(source.notes || "");
+            const stock = new Map(
+              ((itemResult.data as SellableItem[] | null) || []).map((item) => [item.id, Number(item.quantity) || 0])
+            );
+            setLines(
+              (source.lines || []).map((line) => ({
+                key: newKey(),
+                itemId: line.inventory_item_id ?? null,
+                name: line.name_snapshot,
+                sku: line.sku_snapshot ?? null,
+                itemCode: line.item_code_snapshot ?? null,
+                unitLabel: line.unit_label_snapshot ?? null,
+                quantity: String(line.quantity),
+                unitPrice: line.unit_price === null || line.unit_price === undefined ? "" : String(line.unit_price),
+                available:
+                  line.inventory_item_id !== null && line.inventory_item_id !== undefined
+                    ? stock.get(line.inventory_item_id) ?? 0
+                    : null,
+              }))
+            );
+          } catch {
+            /* A duplicate that cannot be read is simply a blank form. */
+          }
+        }
       })
       .catch(() => {
         if (isActive) setError("We could not load this page. Please refresh.");

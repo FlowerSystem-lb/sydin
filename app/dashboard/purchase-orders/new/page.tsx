@@ -58,6 +58,7 @@ import {
   PURCHASE_ORDER_PAYMENT_STATUS_LABELS,
   createPurchaseOrder,
   getNextPoNumber,
+  getPurchaseOrdersForUser,
   isPurchaseOrdersSchemaMissing,
   receivePurchaseOrder,
   uploadPurchaseOrderAttachment,
@@ -335,6 +336,65 @@ export default function NewPurchaseOrderPage() {
               note: "",
             }))
           );
+        }
+      }
+
+      /* Duplicate (?from=12): the same order again -- supplier, depot, title,
+         notes and every line with its quantity and cost, in the source
+         order's currency. The number is new, nothing is received, nothing is
+         paid. A depot re-orders the same list every week; this is that. */
+      const fromParam = new URLSearchParams(window.location.search).get("from");
+      const fromId = Number(fromParam);
+      if (Number.isFinite(fromId) && fromId > 0) {
+        try {
+          const source = (await getPurchaseOrdersForUser(user.id)).find(
+            (order) => order.id === fromId
+          );
+          if (source && active) {
+            setTitle(source.title || "");
+            setNotes(source.notes || "");
+            if (source.supplier_id && loadedSuppliers.some((entry) => entry.id === source.supplier_id)) {
+              setSupplierId(String(source.supplier_id));
+            }
+            setSupplierName(source.supplier_name_snapshot || "");
+            setSupplierContact(source.supplier_contact_snapshot || "");
+            if (source.depot_id && loadedDepots.some((entry) => entry.id === source.depot_id)) {
+              setDepotId(String(source.depot_id));
+            }
+            if (source.currency_code) setOrderCurrency(normalizeCurrencyCode(source.currency_code, "USD"));
+            const sourceItemIds = source.lines
+              .map((line) => line.inventory_item_id)
+              .filter((id): id is number => id !== null);
+            const { data: sourceItems } = sourceItemIds.length
+              ? await supabase
+                  .from("inventory")
+                  .select("id, image")
+                  .eq("user_id", user.id)
+                  .in("id", sourceItemIds)
+              : { data: [] as { id: number; image: string | null }[] };
+            const imageById = new Map(
+              ((sourceItems || []) as { id: number; image: string | null }[]).map((row) => [row.id, row.image])
+            );
+            setLines(
+              source.lines.map((line) => ({
+                key: makeLineKey(),
+                lineType: line.line_type,
+                inventoryItemId: line.inventory_item_id,
+                image: line.inventory_item_id !== null ? imageById.get(line.inventory_item_id) ?? null : null,
+                name: line.name_snapshot,
+                sku: line.sku_snapshot,
+                itemCode: line.item_code_snapshot,
+                unitLabel: line.unit_label_snapshot,
+                quantity: String(line.quantity),
+                unitCost: line.unit_cost === null ? "" : String(line.unit_cost),
+                affectsStock: line.affects_stock,
+                expenseCategory: line.expense_category || "other",
+                note: line.notes || "",
+              }))
+            );
+          }
+        } catch {
+          /* A duplicate that cannot be read is simply a blank form. */
         }
       }
 

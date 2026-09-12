@@ -53,7 +53,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 41. ◐ Related documents: on the item page (all its invoices and orders); orders show their deliveries and payments; invoices their payments. ☐ supplier bill / statement links.
 42. ✅ Customer account view: sales, balance, documents.
 43. ✅ Supplier account view: orders, receiving, balance.
-44. ◐ Conveniences: PO from low stock (Alerts), receiving from PO, invoice from customer page, inline create customer/depot; ✅ last depot and payment method come back pre-filled on invoice, PO and Stock In (13 Sep). ☐ duplicate PO/sale.
+44. ◐ Conveniences: PO from low stock (Alerts), receiving from PO, invoice from customer page, inline create customer/depot; ✅ last depot and payment method come back pre-filled on invoice, PO and Stock In; ✅ Duplicate on any order or invoice — same supplier/customer, lines and currency, new number (13 Sep).
 45. ✅ Low stock → PO → receive flow.
 46. ◐ Report exports (PDF/CSV) per report; ☐ filters before export.
 47. ◐ Branded PDF reports: title, date, table, totals, page numbers.

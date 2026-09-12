@@ -396,6 +396,13 @@ export default function SaleDetailPage() {
               >
                 Word
               </Button>
+              <Button
+                variant="secondary"
+                onClick={() => router.push(`/dashboard/sales/new?from=${order.id}`)}
+                title="Start a new invoice for the same customer with the same lines"
+              >
+                Duplicate
+              </Button>
               {order.status === "draft" && (
                 <>
                   <Button

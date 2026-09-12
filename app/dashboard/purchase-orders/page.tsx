@@ -1268,6 +1268,16 @@ export default function PurchaseOrdersPage() {
                     Record payment
                   </Button>
                 )}
+                <Button
+                  variant="secondary"
+                  onClick={() =>
+                    router.push(`/dashboard/purchase-orders/new?from=${selectedOrder.id}`)
+                  }
+                  disabled={actionBusy}
+                  title="Start a new order with the same supplier and lines"
+                >
+                  Duplicate
+                </Button>
                 {/* Cancelling stops at the first delivery: stock has been
                     added, so a partially received order is finished by
                     receiving the rest or closing it short, never undone. */}
