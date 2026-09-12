@@ -21662,3 +21662,108 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-row-value-danger {
   color: var(--text-danger, #b91c1c);
 }
+
+/* ===[ HELP CENTER (2026-09-12) ]===
+   One question, articles by workflow, a person at the end. Articles are the
+   same hairline rows as everything else; only the open one gets a surface. */
+.help-ask-label {
+  display: block;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.help-section-title {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.help-article {
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.help-article-open {
+  border-color: rgba(37, 99, 235, 0.35);
+  box-shadow: var(--shadow-subtle);
+}
+
+.help-article-toggle {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  border-radius: 12px;
+}
+
+.help-article-toggle:hover {
+  background: var(--bg-hover);
+}
+
+.help-article-toggle:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline-offset: -2px;
+}
+
+.help-article-body {
+  padding: 0 0.9rem 0.9rem 0.9rem;
+}
+
+.help-steps {
+  display: grid;
+  gap: 0.35rem;
+  margin: 0;
+  padding-left: 1.4rem;
+  font-size: 0.9rem;
+  line-height: 1.45rem;
+  color: var(--text-primary);
+  list-style: decimal;
+}
+
+.help-steps li::marker {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+.help-note {
+  margin-top: 0.6rem;
+  border-left: 3px solid rgba(37, 99, 235, 0.4);
+  padding-left: 0.65rem;
+  font-size: 0.85rem;
+  line-height: 1.3rem;
+  color: var(--text-muted);
+}
+
+.help-topic-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
+  gap: 0.6rem;
+}
+
+.help-topic {
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  padding: 0.75rem 0.9rem;
+  text-align: left;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.help-topic:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.help-topic:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 2px;
+}
+

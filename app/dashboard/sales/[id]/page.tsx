@@ -9,7 +9,7 @@ import {
   DashboardPageShell,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell, Select } from "@/components/ui";
+import { Button, DialogShell, HelpLink, Select } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -457,8 +457,9 @@ export default function SaleDetailPage() {
           {order.status !== "draft" && order.status !== "cancelled" && (
             <section className="dashboard-card p-4">
               <div className="flex flex-wrap items-baseline justify-between gap-2">
-                <h2 className="text-sm font-semibold text-theme-primary">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-theme-primary">
                   Payments
+                  <HelpLink article="record-customer-payment">How payments work</HelpLink>
                 </h2>
                 <p className="text-sm font-semibold text-theme-primary tabular-nums">
                   {formatInventoryPrice(balance, currencyCode) || "--"}

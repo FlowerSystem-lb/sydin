@@ -9,6 +9,7 @@ import {
   Badge,
   Button,
   DialogShell,
+  HelpLink,
   ResultsAnnouncer,
   Select,
 } from "@/components/ui";
@@ -1246,7 +1247,8 @@ export default function PurchaseOrdersPage() {
                   Enter what arrived. Lines marked{" "}
                   <span className="po-stock-flag">→ stock</span> are added to
                   inventory now; anything left over stays open on the order
-                  until the next delivery.
+                  until the next delivery.{" "}
+                  <HelpLink article="receive-against-order">How receiving works</HelpLink>
                 </p>
 
                 <div className="po-receive-lines">
