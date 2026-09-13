@@ -3845,3 +3845,18 @@ Rebuilt on flexbox, which does not have that ambiguity. Verified live in the
 browser on both pages, in the two-column and phone-stacked layouts, actually
 typing into the form and watching the preview update — not just reading the
 code.
+
+**Two more reports (brief 21)** *(local, same day)* — Sales by category
+(units and revenue per category, resolved from each line's CURRENT
+inventory category — not a snapshot, same trade-off `topSellingItems`
+already makes for names) and Payments by method (cash/card/transfer/other,
+received from customers alongside paid to suppliers, net of each — the one
+report that answers "am I mostly a cash business"). The second needed a new
+kind of read: every payment across every order, not one order at a time —
+`getAllSalesOrderPaymentsForUser`/`getAllPurchaseOrderPaymentsForUser` in
+`app/lib/salesOrders.ts`/`purchaseOrders.ts`, joining to the parent order
+only for its exchange rate so each payment converts to base correctly.
+Verified by generating both as PDF and CSV against the live account (no
+writes, so nothing to clean up), and cross-checked the payment total against
+a direct SQL query. Brief point 21 updated; only stock aging left open on
+it.

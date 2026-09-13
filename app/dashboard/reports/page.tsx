@@ -72,15 +72,27 @@ import {
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
-import { getPurchaseOrdersForUser, type PurchaseOrder } from "@/app/lib/purchaseOrders";
-import { getSalesOrdersForUser, type SalesOrder } from "@/app/lib/salesOrders";
+import {
+  getAllPurchaseOrderPaymentsForUser,
+  getPurchaseOrdersForUser,
+  type PurchaseOrder,
+  type PurchasePaymentForReport,
+} from "@/app/lib/purchaseOrders";
+import {
+  getAllSalesOrderPaymentsForUser,
+  getSalesOrdersForUser,
+  type SalesOrder,
+  type SalesPaymentForReport,
+} from "@/app/lib/salesOrders";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import {
   exportReportPdf,
   outstandingInvoices,
+  paymentsByMethod,
   purchasesByMonth,
   purchasesBySupplier,
   reportCsvRows,
+  salesByCategory,
   salesByCustomer,
   salesByMonth,
   topSellingItems,
@@ -222,6 +234,26 @@ const BUSINESS_REPORTS: ReportCard[] = [
     formats: ["PDF", "CSV"],
     action: "business",
     icon: "customers",
+  },
+  {
+    id: "sales-by-category",
+    name: "Sales by category",
+    description: "Which product categories bring in the money: units and revenue per category.",
+    category: "business",
+    source: "Sales",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "box",
+  },
+  {
+    id: "payments-by-method",
+    name: "Payments by method",
+    description: "Cash, card or transfer: how customers paid you, and how you paid suppliers.",
+    category: "business",
+    source: "Sales & Purchase Orders",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "usage",
   },
   {
     id: "purchases-by-supplier",
@@ -392,6 +424,9 @@ export default function ReportsPage() {
   const [movements, setMovements] = useState<ReportStockMovement[]>([]);
   const [salesOrders, setSalesOrders] = useState<SalesOrder[]>([]);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
+  // For "Payments by method" only -- every payment, not grouped by order.
+  const [salesPayments, setSalesPayments] = useState<SalesPaymentForReport[]>([]);
+  const [purchasePayments, setPurchasePayments] = useState<PurchasePaymentForReport[]>([]);
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -457,6 +492,8 @@ export default function ReportsPage() {
         usage,
         loadedSales,
         loadedPurchases,
+        loadedSalesPayments,
+        loadedPurchasePayments,
       ] = await Promise.all([
         supabase
           .from("inventory")
@@ -480,6 +517,8 @@ export default function ReportsPage() {
         getSubscriptionUsage(user.id),
         getSalesOrdersForUser(user.id).catch(() => [] as SalesOrder[]),
         getPurchaseOrdersForUser(user.id).catch(() => [] as PurchaseOrder[]),
+        getAllSalesOrderPaymentsForUser(user.id).catch(() => [] as SalesPaymentForReport[]),
+        getAllPurchaseOrderPaymentsForUser(user.id).catch(() => [] as PurchasePaymentForReport[]),
       ]);
 
       if (inventoryResult.error) throw inventoryResult.error;
@@ -495,6 +534,8 @@ export default function ReportsPage() {
       setSubscriptionUsage(usage);
       setSalesOrders(loadedSales);
       setPurchaseOrders(loadedPurchases);
+      setSalesPayments(loadedSalesPayments);
+      setPurchasePayments(loadedPurchasePayments);
       setLoading(false);
     }
 
@@ -847,6 +888,13 @@ export default function ReportsPage() {
         return topSellingItems(salesOrders, currencyCode);
       case "sales-by-customer":
         return salesByCustomer(salesOrders, currencyCode);
+      case "sales-by-category":
+        return salesByCategory(salesOrders, currencyCode, (inventoryItemId) => {
+          const item = inventoryItemId !== null ? itemById.get(inventoryItemId) : undefined;
+          return item ? getCategoryLabel(item) : "";
+        });
+      case "payments-by-method":
+        return paymentsByMethod(salesPayments, purchasePayments, currencyCode);
       case "purchases-by-supplier":
         return purchasesBySupplier(purchaseOrders, currencyCode);
       case "purchases-by-month":

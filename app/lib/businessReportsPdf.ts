@@ -238,6 +238,120 @@ export function salesByCustomer(orders: SalesOrder[], currency: string): ReportT
   };
 }
 
+/** Which product categories bring in the money -- units and revenue per
+ * category. `categoryLabel` resolves an item's CURRENT category (not a
+ * snapshot; a product renamed into a different category later shows there
+ * now), the same trade-off `topSellingItems` makes for names. */
+export function salesByCategory(
+  orders: SalesOrder[],
+  currency: string,
+  categoryLabel: (inventoryItemId: number | null) => string
+): ReportTable {
+  const buckets = new Map<string, { units: number; revenue: number }>();
+  for (const order of orders.filter(isSale)) {
+    for (const line of order.lines || []) {
+      if (line.line_type === "charge") continue;
+      const key = categoryLabel(line.inventory_item_id) || "Uncategorized";
+      const bucket = buckets.get(key) || { units: 0, revenue: 0 };
+      bucket.units += Number(line.quantity || 0);
+      bucket.revenue += toSalesOrderBase(
+        order,
+        Number(line.quantity || 0) * Number(line.unit_price || 0)
+      );
+      buckets.set(key, bucket);
+    }
+  }
+  const keys = Array.from(buckets.keys()).sort((a, b) => buckets.get(b)!.revenue - buckets.get(a)!.revenue);
+  const totalUnits = keys.reduce((sum, key) => sum + buckets.get(key)!.units, 0);
+  const totalRevenue = keys.reduce((sum, key) => sum + buckets.get(key)!.revenue, 0);
+  return {
+    title: "Sales by category",
+    subtitle: `${keys.length} categor${keys.length === 1 ? "y" : "ies"} · by revenue`,
+    head: ["Category", "Units sold", "Revenue"],
+    rows: keys.map((key) => {
+      const bucket = buckets.get(key)!;
+      return [
+        key,
+        Number.isInteger(bucket.units) ? bucket.units : bucket.units.toFixed(2),
+        money(bucket.revenue, currency),
+      ];
+    }),
+    foot: [
+      "Total",
+      String(Number.isInteger(totalUnits) ? totalUnits : totalUnits.toFixed(2)),
+      money(totalRevenue, currency),
+    ],
+    rightAligned: [1, 2],
+    filename: "sales-by-category",
+  };
+}
+
+const PAYMENT_METHOD_LABELS: Record<string, string> = {
+  cash: "Cash",
+  card: "Card",
+  transfer: "Transfer",
+  other: "Other",
+};
+
+export interface ReportPayment {
+  amount: number;
+  method: string | null;
+  exchangeRate: number;
+}
+
+/** Cash in from customers and cash out to suppliers, side by side, by how it
+ * moved. The one report that answers "am I mostly a cash business or a bank
+ * transfer business" -- and the two directions net against each other, so a
+ * depot that pays suppliers in cash from the same drawer it collects in sees
+ * that immediately instead of reading two separate reports. */
+export function paymentsByMethod(
+  received: ReportPayment[],
+  paid: ReportPayment[],
+  currency: string
+): ReportTable {
+  const methods = ["cash", "card", "transfer", "other"];
+  const toBase = (payment: ReportPayment) =>
+    payment.amount / (payment.exchangeRate > 0 ? payment.exchangeRate : 1);
+
+  const receivedByMethod = new Map<string, number>();
+  for (const payment of received) {
+    const key = payment.method || "other";
+    receivedByMethod.set(key, (receivedByMethod.get(key) || 0) + toBase(payment));
+  }
+  const paidByMethod = new Map<string, number>();
+  for (const payment of paid) {
+    const key = payment.method || "other";
+    paidByMethod.set(key, (paidByMethod.get(key) || 0) + toBase(payment));
+  }
+
+  const totalReceived = Array.from(receivedByMethod.values()).reduce((sum, v) => sum + v, 0);
+  const totalPaid = Array.from(paidByMethod.values()).reduce((sum, v) => sum + v, 0);
+
+  return {
+    title: "Payments by method",
+    subtitle: `${received.length + paid.length} payment${received.length + paid.length === 1 ? "" : "s"} · how customers paid you, and how you paid suppliers`,
+    head: ["Method", "Received from customers", "Paid to suppliers", "Net"],
+    rows: methods.map((method) => {
+      const inflow = receivedByMethod.get(method) || 0;
+      const outflow = paidByMethod.get(method) || 0;
+      return [
+        PAYMENT_METHOD_LABELS[method] || method,
+        money(inflow, currency),
+        money(outflow, currency),
+        money(inflow - outflow, currency),
+      ];
+    }),
+    foot: [
+      "Total",
+      money(totalReceived, currency),
+      money(totalPaid, currency),
+      money(totalReceived - totalPaid, currency),
+    ],
+    rightAligned: [1, 2, 3],
+    filename: "payments-by-method",
+  };
+}
+
 export function purchasesBySupplier(orders: PurchaseOrder[], currency: string): ReportTable {
   const buckets = new Map<string, { count: number; total: number; paid: number; open: number }>();
   for (const order of orders.filter(isPurchase)) {

@@ -407,6 +407,38 @@ export async function getSalesOrderPayments(orderId: number) {
   return (data as SalesOrderPayment[]) || [];
 }
 
+/** One payment, with the exchange rate its invoice was issued at -- everything
+ * a report needs to add it into base currency without re-reading the order. */
+export interface SalesPaymentForReport {
+  amount: number;
+  method: SalesOrderPaymentMethod | null;
+  exchangeRate: number;
+}
+
+/** Every customer payment across every invoice -- for "payments by method". */
+export async function getAllSalesOrderPaymentsForUser(
+  userId: string
+): Promise<SalesPaymentForReport[]> {
+  const { data, error } = await supabase
+    .from("sales_order_payments")
+    .select("amount, method, sales_orders!inner(user_id, exchange_rate)")
+    .eq("sales_orders.user_id", userId);
+
+  if (error) throw error;
+
+  return (
+    (data || []) as unknown as Array<{
+      amount: number | string;
+      method: SalesOrderPaymentMethod | null;
+      sales_orders: { exchange_rate: number | string | null } | null;
+    }>
+  ).map((row) => ({
+    amount: Number(row.amount) || 0,
+    method: row.method,
+    exchangeRate: Number(row.sales_orders?.exchange_rate) || 1,
+  }));
+}
+
 /**
  * The invoice's amount_paid and payment_status are NOT written here. A database
  * trigger recomputes them from the whole log after every change, so a deleted

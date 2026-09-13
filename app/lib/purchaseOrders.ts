@@ -696,6 +696,42 @@ export async function getPurchaseOrderPayments(orderId: number) {
   return ((data || []) as Record<string, unknown>[]).map(normalizePayment);
 }
 
+/** One payment, with the exchange rate its order was placed at -- everything
+ * a report needs to add it into base currency without re-reading the order. */
+export interface PurchasePaymentForReport {
+  amount: number;
+  method: PurchaseOrderPaymentMethod | null;
+  exchangeRate: number;
+}
+
+/** Every supplier payment across every order -- for "payments by method".
+ * Returns [] if the payments table is missing, same as the per-order read. */
+export async function getAllPurchaseOrderPaymentsForUser(
+  userId: string
+): Promise<PurchasePaymentForReport[]> {
+  const { data, error } = await supabase
+    .from("purchase_order_payments")
+    .select("amount, method, purchase_orders!inner(user_id, exchange_rate)")
+    .eq("purchase_orders.user_id", userId);
+
+  if (error) {
+    if (isPaymentsSchemaMissing(error)) return [];
+    throw error;
+  }
+
+  return (
+    (data || []) as unknown as Array<{
+      amount: number | string;
+      method: PurchaseOrderPaymentMethod | null;
+      purchase_orders: { exchange_rate: number | string | null } | null;
+    }>
+  ).map((row) => ({
+    amount: Number(row.amount) || 0,
+    method: row.method,
+    exchangeRate: Number(row.purchase_orders?.exchange_rate) || 1,
+  }));
+}
+
 /** Logs a payment. The phase-9 trigger recomputes the order's amount_paid + status. */
 export async function addPurchaseOrderPayment(
   orderId: number,
