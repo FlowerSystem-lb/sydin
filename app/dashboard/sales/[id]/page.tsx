@@ -294,8 +294,14 @@ export default function SaleDetailPage() {
     try {
       setDownloading(true);
       setError("");
-      if (format === "pdf") await exportSalesInvoicePdf(spec);
-      else await exportSalesInvoiceDocx(spec);
+      // A draft has not been invoiced yet -- the PDF prints as a quote for
+      // the customer to approve, not a bill. Word export is invoice-only
+      // for now.
+      if (format === "pdf") {
+        await exportSalesInvoicePdf({ ...spec, asQuote: order.status === "draft" });
+      } else {
+        await exportSalesInvoiceDocx(spec);
+      }
     } catch {
       setError(
         format === "pdf"
@@ -428,14 +434,16 @@ export default function SaleDetailPage() {
           actions={
             <div className="flex flex-wrap items-center gap-2">
               {/* Available on a draft too: a customer often wants to see the
-                  figures before anything ships, and printing changes nothing. */}
+                  figures before anything ships, and printing changes nothing.
+                  A draft prints as a quote -- no paid/balance, since nothing
+                  has been invoiced yet -- rather than a bill for zero. */}
               <Button
                 variant="secondary"
                 onClick={() => void downloadDocument("pdf")}
                 loading={downloading}
                 loadingLabel="Building..."
               >
-                Download PDF
+                {order.status === "draft" ? "Download quote" : "Download PDF"}
               </Button>
               <Button
                 variant="secondary"

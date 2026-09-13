@@ -3907,3 +3907,17 @@ a one-line addition. Document prefix/numbering left open: both invoice and
 PO numbers already continue whatever pattern was last used (or derive from
 the depot for POs), so a fixed-prefix setting looked lower-value than the
 other open points; not attempted this sprint.
+
+**Quote document (brief 14, closes the document family)** *(local, same
+day)* — a draft invoice's "Download PDF" becomes "Download quote" and
+prints as one: header says Quote, "Quote for" instead of "Bill to",
+"Prepared"/"Valid until" instead of "Issued"/"Due", and a single Total line
+— no Paid or Still owed, since nothing has been invoiced yet and printing
+those on a proposal reads as money already due. No new record, no new
+numbering: the draft already is the quote; issuing it later is what turns
+it into the real invoice. `exportSalesInvoicePdf` takes an `asQuote` flag;
+Word export stays invoice-only for now. Verified by rendering a quote and
+its issued counterpart side by side from the harness (correct in both
+directions) and, separately, by creating a real draft invoice in the
+browser, confirming the button read "Download quote" and the export ran
+with no console errors, then deleting the draft afterward.

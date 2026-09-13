@@ -79,17 +79,24 @@ export async function exportSalesInvoicePdf({
   lines,
   branding,
   currencyCode = "USD",
+  asQuote = false,
 }: {
   details: SalesInvoicePdfDetails;
   lines: SalesInvoicePdfLine[];
   branding: SalesInvoicePdfBranding;
   currencyCode?: string;
+  /** A draft printed for a customer to approve, not a bill. Same document,
+   * same lines and total; no paid/balance (nothing has been invoiced yet),
+   * "Valid until" instead of "Due", and the header says Quote. Converting a
+   * quote into the real invoice later needs no new record -- it already is
+   * the draft; issuing it is what makes it one. */
+  asQuote?: boolean;
 }) {
   const currency = normalizeCurrencyCode(currencyCode);
   const header = {
-    kind: "Invoice",
+    kind: asQuote ? "Quote" : "Invoice",
     number: details.invoiceNumber,
-    meta: details.status.toUpperCase(),
+    meta: asQuote ? undefined : details.status.toUpperCase(),
   };
   const context = await openDocument(branding, header);
   const { doc, pageWidth, margin } = context;
@@ -99,7 +106,7 @@ export async function exportSalesInvoicePdf({
   const cursorY = drawColumns(context, context.contentTop, [
     fromColumn(branding),
     {
-      heading: "Bill to",
+      heading: asQuote ? "Quote for" : "Bill to",
       rows: [
         details.customerName || "Not set",
         ...(details.customerAddress ? details.customerAddress.split(/\r?\n/) : []),
@@ -107,10 +114,14 @@ export async function exportSalesInvoicePdf({
       ].filter(Boolean),
     },
     {
-      heading: "Invoice",
+      heading: asQuote ? "Quote" : "Invoice",
       rows: [
-        details.issueDate ? `Issued ${formatDocumentDate(details.issueDate)}` : "Not issued yet",
-        details.dueDate ? `Due ${formatDocumentDate(details.dueDate)}` : "",
+        details.issueDate
+          ? `${asQuote ? "Prepared" : "Issued"} ${formatDocumentDate(details.issueDate)}`
+          : "Not issued yet",
+        details.dueDate
+          ? `${asQuote ? "Valid until" : "Due"} ${formatDocumentDate(details.dueDate)}`
+          : "",
         details.depotName ? `From depot ${details.depotName}` : "",
       ].filter(Boolean),
     },
@@ -163,7 +174,10 @@ export async function exportSalesInvoicePdf({
     },
   });
 
-  // ---- the three numbers that settle an argument -----------------------
+  // ---- the numbers ------------------------------------------------------
+  // A quote has not been invoiced yet: one figure, not three. Paid and
+  // still-owed describe a bill, and printing them on a proposal reads as
+  // one -- as if money were already due.
   const total = lines.reduce((sum, line) => sum + line.lineTotal, 0);
   const paid = Number(details.amountPaid || 0);
   const balance = Math.max(total - paid, 0);
@@ -176,11 +190,13 @@ export async function exportSalesInvoicePdf({
   const totalsX = pageWidth - margin;
   const labelX = totalsX - 60;
 
-  const rows: [string, string, boolean][] = [
-    ["Total", money(total, currency), false],
-    ["Paid", money(paid, currency), false],
-    ["Still owed", money(balance, currency), true],
-  ];
+  const rows: [string, string, boolean][] = asQuote
+    ? [["Total", money(total, currency), true]]
+    : [
+        ["Total", money(total, currency), false],
+        ["Paid", money(paid, currency), false],
+        ["Still owed", money(balance, currency), true],
+      ];
 
   rows.forEach(([label, value, emphasise]) => {
     if (emphasise) {
@@ -238,7 +254,7 @@ export async function exportSalesInvoicePdf({
   });
 
   finishDocument(context, details.invoiceNumber);
-  doc.save(`${slugifyDocumentName(details.invoiceNumber, "invoice")}.pdf`);
+  doc.save(`${slugifyDocumentName(details.invoiceNumber, asQuote ? "quote" : "invoice")}.pdf`);
 }
 
 // Kept for callers that measured against the old constant.
