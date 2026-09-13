@@ -9,10 +9,12 @@ import ContextBackButton from "@/components/navigation/ContextBackButton";
 import {
   Button,
   DialogShell,
+  DocumentPreview,
   FieldGroup,
   FieldRow,
   Select,
   UnsavedChangesGuard,
+  type DocumentPreviewLine,
 } from "@/components/ui";
 import {
   ActionButton,
@@ -542,6 +544,21 @@ export default function NewPurchaseOrderPage() {
     return { total, inventoryTotal, expenseTotal };
   }, [lines]);
 
+  // For the live preview (brief 16) -- the same lines, in the shape the
+  // preview card wants, so it never needs its own parsing rules.
+  const previewLines: DocumentPreviewLine[] = lines.map((line) => {
+    const quantity = parsePositiveNumber(line.quantity) || 0;
+    const unitCost = parseNonNegativeNumber(line.unitCost);
+    return {
+      key: line.key,
+      name: line.name,
+      detail: line.unitLabel,
+      quantity,
+      unitPrice: unitCost,
+      lineTotal: unitCost === null ? 0 : quantity * unitCost,
+    };
+  });
+
   const handleSelectSupplier = (value: string) => {
     setSupplierId(value);
     const supplier = suppliers.find((entry) => String(entry.id) === value);
@@ -808,7 +825,9 @@ export default function NewPurchaseOrderPage() {
           container query, so the same groups reflow at whatever width they
           are given, and the old `.po-new-grid` order/nth-child juggling is
           gone with the sections it was counting. */}
-      <div className="po-new-grid">
+      <div className="po-new-grid doc-editor-layout">
+      <div className="doc-editor-row">
+      <div className="doc-editor-main">
       {/* One card, four groups of label-left rows -- the same shape as the
           new invoice (app/dashboard/sales/new/page.tsx) and Add Item. This
           was four boxed cards with every caption stacked above its own
@@ -1317,6 +1336,37 @@ export default function NewPurchaseOrderPage() {
           </Button>
         )}
       </DashboardFormSection>
+      </div>
+
+      {/* Live preview (brief 16): beside the form on a wide screen, stacked
+          under it on a phone. Never re-renders a PDF; a lighter mimic of the
+          same shape, from the same state the form already holds. */}
+      <DocumentPreview
+        kind="Purchase Order"
+        number={poNumber}
+        meta={
+          purchaseDate
+            ? new Date(`${purchaseDate}T00:00:00`).toLocaleDateString()
+            : undefined
+        }
+        businessName={settings.business_name || "Your business"}
+        businessLogoUrl={settings.business_logo_url}
+        partyLabel="Supplier"
+        partyName={supplierName || undefined}
+        partyContact={supplierContact || undefined}
+        detailRows={[
+          selectedDepot ? `To ${selectedDepot.name}` : "",
+          expectedDeliveryDate
+            ? `Expected ${new Date(`${expectedDeliveryDate}T00:00:00`).toLocaleDateString()}`
+            : "",
+        ].filter(Boolean)}
+        lines={previewLines}
+        emptyMessage="Nothing on this order yet."
+        currency={currencyCode}
+        total={lineTotals.total}
+        notes={notes}
+      />
+      </div>
       </div>
 
       <UnsavedChangesGuard

@@ -21950,3 +21950,237 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   text-transform: uppercase;
   color: var(--text-subtle);
 }
+
+/* ===[ DOCUMENT EDITOR + LIVE PREVIEW ]===
+   New invoice / new purchase order: form on the left, a small mimic of the
+   printed document on the right, updating on every keystroke (brief point
+   16). A container query, not a media query -- the split depends on the
+   space this form actually has (a phone, or a laptop with the sidebar
+   pinned open), not the viewport. Below the threshold the preview is not
+   hidden, just stacked at its place in the DOM -- still live, just not
+   side-by-side.
+
+   Flexbox, not a grid with a spanning row: the form's own section count can
+   change (a supplier form has more fields than a customer one), and a grid
+   row-span needs `-1` to resolve against an EXPLICIT row track count, which
+   this layout has none of -- the span silently collapses to nothing and the
+   later sections spill into the second column instead of stacking under the
+   first. Flex's "beside, whatever the height" is exactly what this needs.
+
+   `.doc-editor-row` holds the form and the preview; Save/Cancel sit outside
+   it, in `.doc-editor-layout` directly, so they stay one full-width bar
+   under both columns instead of trailing the shorter one. */
+.doc-editor-layout {
+  container-type: inline-size;
+  display: grid;
+  gap: 1rem;
+}
+
+.doc-editor-row {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  gap: 1rem;
+}
+
+.doc-editor-main {
+  display: grid;
+  min-width: 0;
+  gap: 1rem;
+}
+
+@container (min-width: 56rem) {
+  .doc-editor-row {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .doc-editor-main {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .doc-editor-row > .doc-preview {
+    flex: 0 0 21rem;
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+.doc-preview-card {
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 18px;
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card, 0 10px 30px rgba(15, 23, 42, 0.08));
+}
+
+.doc-preview-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.9rem 1rem;
+  background: var(--ink, #0f172a);
+  color: #fff;
+}
+
+.doc-preview-brand {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.doc-preview-logo {
+  height: 2rem;
+  width: 2rem;
+  flex-shrink: 0;
+  border-radius: 8px;
+  background: #fff;
+  object-fit: contain;
+}
+
+.doc-preview-logo-placeholder {
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.doc-preview-business {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.doc-preview-kind {
+  display: block;
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.doc-preview-number {
+  flex-shrink: 0;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.doc-preview-number small {
+  display: block;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.68);
+}
+
+.doc-preview-body {
+  display: grid;
+  gap: 0.85rem;
+  padding: 1rem;
+}
+
+.doc-preview-parties {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.doc-preview-label {
+  margin: 0 0 0.2rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-subtle);
+}
+
+.doc-preview-value {
+  margin: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.doc-preview-muted {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.doc-preview-lines {
+  border-top: 1px solid var(--border-divider, var(--border-default));
+  padding-top: 0.75rem;
+}
+
+.doc-preview-empty {
+  margin: 0;
+  padding: 1rem 0;
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+}
+
+.doc-preview-lines ul {
+  display: grid;
+  gap: 0.55rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.doc-preview-lines li {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.6rem;
+}
+
+.doc-preview-line-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.doc-preview-line-total {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-preview-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid var(--border-divider, var(--border-default));
+  padding-top: 0.75rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.doc-preview-total strong {
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  font-variant-numeric: tabular-nums;
+}
+
+.doc-preview-notes {
+  border-top: 1px solid var(--border-divider, var(--border-default));
+  padding-top: 0.75rem;
+}
+
+.doc-preview-notes p:last-child {
+  margin: 0;
+  white-space: pre-line;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+}

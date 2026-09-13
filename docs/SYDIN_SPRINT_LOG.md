@@ -3830,3 +3830,18 @@ in the currency it was issued in. Caught and fixed in testing: an empty
 account was drawing a bare table header with nothing under it — a customer
 with no invoices yet now gets a plain "Nothing invoiced yet" line instead.
 Brief point 14 updated again (only "quote" left open on it).
+
+**Live document preview (brief 16)** *(local, same day)* — New invoice and
+New purchase order now show the document beside the form as it is built,
+updating on every keystroke: `components/ui/DocumentPreview.tsx`, a light
+mimic of the printed layout (header, party, lines, total), never a re-render
+of the actual PDF. `.doc-editor-layout` / `.doc-editor-row` / `.doc-editor-main`
+in `globals.css`, a container query so the split depends on the space the
+form has, not the viewport. Caught and fixed in testing: the first version
+used a CSS grid with the preview spanning `grid-row: 1 / -1` — with no
+explicit row tracks that span resolves against nothing, so later sections
+(Notes) landed in the preview's column instead of stacking under the form.
+Rebuilt on flexbox, which does not have that ambiguity. Verified live in the
+browser on both pages, in the two-column and phone-stacked layouts, actually
+typing into the form and watching the preview update — not just reading the
+code.

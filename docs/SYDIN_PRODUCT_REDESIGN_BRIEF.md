@@ -25,7 +25,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 13. ◐ Invoice as a document: number, dates, company block, customer, lines with photos, totals, paid, balance, terms, notes, footer. ✅ due date on the form (13 Sep). ✗ discount/tax lines (schema — own sprint). ☐ signature area.
 14. ◐ Document family on `documentPdf.ts`: invoice, purchase order, ✅ goods-received note per delivery with signature lines (13 Sep), ✅ payment receipt on every invoice/PO payment (13 Sep), ✅ customer statement from the customer account sheet (13 Sep). ☐ quote.
 15. ✅ Company branding: name, logo, address, phone, email, website, tax/reg no., currency, payment terms, footer. ☐ document prefix/numbering, accent colour.
-16. ☐ Live document preview while editing (edit left / preview right).
+16. ✅ Live document preview while editing (edit left / preview right) on New invoice and New purchase order, updating on every keystroke; stacks under the form on a phone (13 Sep).
 17. ◐ Exports: PDF + Word + Excel for invoice/PO; inventory PDF/Excel; reports PDF/CSV.
 18. ✅ Exports actually tested (rendered in Node, read page by page: long names, many lines, empty fields, logo, thumbnails).
 19. ✅ Multi-page: headers repeat, footer + page numbers on every page.

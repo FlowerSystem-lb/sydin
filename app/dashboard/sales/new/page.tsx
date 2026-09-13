@@ -11,15 +11,18 @@ import {
 } from "@/components/dashboard/Workspace";
 import {
   Button,
+  DocumentPreview,
   FieldGroup,
   FieldRow,
   Select,
   UnsavedChangesGuard,
+  type DocumentPreviewLine,
 } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
+  type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { getCustomersForUser, type Customer } from "@/app/lib/customers";
 import {
@@ -118,6 +121,11 @@ export default function NewSalePage() {
   const [dueDate, setDueDate] = useState("");
   const [notes, setNotes] = useState("");
   const [lines, setLines] = useState<DraftLine[]>([]);
+  // Just the name and logo, for the live preview's header -- the rest of the
+  // company block belongs to the finished PDF, not a form in progress.
+  const [businessSettings, setBusinessSettings] = useState<BusinessSettings>(
+    DEFAULT_BUSINESS_SETTINGS
+  );
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -182,6 +190,7 @@ export default function NewSalePage() {
         setCurrencyCode(
           settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
         );
+        setBusinessSettings(settings || DEFAULT_BUSINESS_SETTINGS);
         setInvoiceNumber(suggested);
 
         /* Duplicate (?from=12): the same invoice again for the same customer
@@ -256,6 +265,22 @@ export default function NewSalePage() {
       ),
     [lines]
   );
+
+  const selectedCustomer = customers.find(
+    (candidate) => String(candidate.id) === customerId
+  );
+  const selectedDepot = depots.find(
+    (candidate) => String(candidate.id) === depotId
+  );
+
+  const previewLines: DocumentPreviewLine[] = lines.map((line) => ({
+    key: line.key,
+    name: line.name,
+    detail: line.unitLabel,
+    quantity: Number(line.quantity) || 0,
+    unitPrice: line.unitPrice === "" ? null : Number(line.unitPrice),
+    lineTotal: (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0),
+  }));
 
   /* Add a customer or depot without leaving a half-built invoice. Only the
      name is captured -- the rest of the customer record is filled in on the
@@ -446,13 +471,15 @@ export default function NewSalePage() {
             itemClassName="min-h-[160px] rounded-[20px]"
           />
         ) : (
-          <div className="mt-4 grid gap-4">
+          <div className="mt-4 doc-editor-layout">
             {/* The same label/value rows Add Item uses, in the same
                 container so they go two-column here and stay stacked on a
                 phone. Was four boxed fields in a card with the label stacked
                 above each one -- a different shape for the same job. */}
             <UnsavedChangesGuard when={hasUnsavedWork} what="this invoice" />
 
+            <div className="doc-editor-row">
+            <div className="doc-editor-main">
             <section className="dashboard-card item-form p-0">
               <div className="item-form-groups">
                 <FieldGroup label="Invoice">
@@ -725,6 +752,45 @@ export default function NewSalePage() {
                 />
               </FieldGroup>
             </section>
+
+            </div>
+
+            {/* Live preview (brief 16): beside the form on a wide screen,
+                stacked under it on a phone -- either way, live, from the
+                same state the form already holds. Never re-renders a PDF;
+                a lighter mimic of the same shape. */}
+            <DocumentPreview
+              kind="Invoice"
+              number={invoiceNumber}
+              meta={
+                issueDate
+                  ? new Date(`${issueDate}T00:00:00`).toLocaleDateString()
+                  : undefined
+              }
+              businessName={businessSettings.business_name || "Your business"}
+              businessLogoUrl={businessSettings.business_logo_url}
+              partyLabel="Sold to"
+              partyName={selectedCustomer?.name}
+              partyContact={
+                selectedCustomer
+                  ? [selectedCustomer.phone, selectedCustomer.email]
+                      .filter(Boolean)
+                      .join(" · ") || undefined
+                  : undefined
+              }
+              detailRows={[
+                selectedDepot ? `From ${selectedDepot.name}` : "",
+                dueDate
+                  ? `Due ${new Date(`${dueDate}T00:00:00`).toLocaleDateString()}`
+                  : "",
+              ].filter(Boolean)}
+              lines={previewLines}
+              emptyMessage="Nothing on this invoice yet."
+              currency={currencyCode}
+              total={total}
+              notes={notes}
+            />
+            </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
               {overStock.length > 0 && (
