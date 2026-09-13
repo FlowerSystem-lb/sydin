@@ -3780,9 +3780,11 @@ the selector is in the served stylesheet. The rate feed needed a CSP
 `connect-src` entry; a silent "Failed to fetch" was the only symptom.
 
 
-## Brief points, one by one  *(In progress — local commits, push on Sayed's word)*
+## Brief points, one by one  *(pushed 13 Sep; continuing, still local until Sayed says push)*
 
-**Date:** 13 September 2026 · **Branch:** `main` · **Commits:** `05100c9` → `483a27a` (not pushed — Sayed: push later)
+**Date:** 13 September 2026 · **Branch:** `main` · **Commits:** `05100c9` → `b128aa4`
+pushed to `origin/main` on Sayed's word ("push last and continue"). Work below
+this line continues local-only again until he next says push.
 
 **Why:** Sayed: "push later, continue, and when you compact don't forget the
 data and the full prompt". The prompt is now `docs/SYDIN_PRODUCT_REDESIGN_BRIEF.md`
@@ -3809,3 +3811,12 @@ with a status per point; this sprint walks its open points.
 surface; the GRN rendered from realistic data.
 
 **Untouchables:** no auth, routing or schema changes in this sprint.
+
+**Payment receipt PDF** *(local, after the push above)* — a "Receipt" button
+next to every payment on an invoice, and next to every payment on a purchase
+order; `app/lib/paymentReceiptPdf.ts` on the shared `documentPdf.ts` furniture.
+One figure (amount received), the document's total and the balance right
+after that specific payment (walked chronologically through the payment log,
+not just today's running balance — a customer's second payment still reads
+correctly). Rendered in Node with realistic USD and LBP data and read as
+images before wiring into the pages. Brief point 14 updated.

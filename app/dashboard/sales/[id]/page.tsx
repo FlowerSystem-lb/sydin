@@ -26,6 +26,7 @@ import {
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import { formatExactPrice } from "@/app/lib/currency";
 import { exportSalesInvoicePdf } from "@/app/lib/salesInvoicePdf";
+import { exportPaymentReceiptPdf } from "@/app/lib/paymentReceiptPdf";
 import { exportSalesInvoiceDocx } from "@/app/lib/documentDocxExports";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import {
@@ -303,6 +304,53 @@ export default function SaleDetailPage() {
       );
     } finally {
       setDownloading(false);
+    }
+  };
+
+  /**
+   * The balance a receipt should print is the balance right after THAT
+   * payment, not today's -- a customer who paid twice needs each slip to
+   * still add up when read in order. Payments arrive most-recent-first, so
+   * the running total is walked in the other direction.
+   */
+  const downloadPaymentReceipt = async (payment: SalesOrderPayment) => {
+    if (!order) return;
+    const invoiceTotal = getSalesOrderTotal(order);
+    const chronological = [...payments].sort((a, b) =>
+      a.paid_at === b.paid_at ? a.id - b.id : a.paid_at.localeCompare(b.paid_at),
+    );
+    let paidSoFar = 0;
+    let balanceAfter = invoiceTotal;
+    for (const entry of chronological) {
+      paidSoFar += Number(entry.amount);
+      if (entry.id === payment.id) {
+        balanceAfter = Math.max(0, invoiceTotal - paidSoFar);
+        break;
+      }
+    }
+    try {
+      await exportPaymentReceiptPdf({
+        details: {
+          receiptNumber: `RCT-${order.invoice_number}-${payment.id}`,
+          documentKind: "Invoice",
+          documentNumber: order.invoice_number,
+          partyLabel: "Customer",
+          partyName: order.customer_name_snapshot || "Walk-in customer",
+          partyContact: order.customer_contact_snapshot || undefined,
+          paidAt: payment.paid_at,
+          amount: Number(payment.amount),
+          currency: currencyCode,
+          method: payment.method
+            ? SALES_ORDER_PAYMENT_METHOD_LABELS[payment.method]
+            : null,
+          note: payment.note || undefined,
+          documentTotal: invoiceTotal,
+          balanceAfter,
+        },
+        branding: brandingFromSettings(businessSettings),
+      });
+    } catch {
+      setPaymentError("We could not build the receipt. Please try again.");
     }
   };
 
@@ -593,6 +641,13 @@ export default function SaleDetailPage() {
                         <span className="font-semibold text-theme-primary tabular-nums">
                           {formatExactPrice(payment.amount, currencyCode)}
                         </span>
+                        <button
+                          type="button"
+                          onClick={() => void downloadPaymentReceipt(payment)}
+                          className="text-xs font-semibold text-theme-accent transition hover:opacity-80"
+                        >
+                          Receipt
+                        </button>
                         <button
                           type="button"
                           onClick={() => void removePayment(payment.id)}

@@ -38,6 +38,7 @@ import { exportPurchaseOrderPdf } from "@/app/lib/purchaseOrderPdfExport";
 import { exportPurchaseOrderDocx } from "@/app/lib/documentDocxExports";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import { exportGoodsReceivedPdf } from "@/app/lib/goodsReceivedPdf";
+import { exportPaymentReceiptPdf } from "@/app/lib/paymentReceiptPdf";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
   PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
@@ -821,6 +822,55 @@ export default function PurchaseOrdersPage() {
       });
     } catch {
       setActionError("The goods received note could not be generated. Try again.");
+    } finally {
+      setActionBusy(false);
+    }
+  };
+
+  /* Same paper trail as the invoice side: what a supplier was handed, and
+     the order's balance right after that particular payment (brief 14). */
+  const handleExportPaymentReceipt = async (payment: PurchaseOrderPayment) => {
+    if (!selectedOrder) return;
+    setActionBusy(true);
+    setActionError("");
+    try {
+      const orderTotal = getPurchaseOrderTotal(selectedOrder);
+      const chronological = [...selectedPayments].sort((a, b) =>
+        a.paid_at === b.paid_at ? a.id - b.id : a.paid_at.localeCompare(b.paid_at),
+      );
+      let paidSoFar = 0;
+      let balanceAfter = orderTotal;
+      for (const entry of chronological) {
+        paidSoFar += Number(entry.amount);
+        if (entry.id === payment.id) {
+          balanceAfter = Math.max(0, orderTotal - paidSoFar);
+          break;
+        }
+      }
+      await exportPaymentReceiptPdf({
+        details: {
+          receiptNumber: `RCT-${selectedOrder.po_number}-${payment.id}`,
+          documentKind: "Purchase order",
+          documentNumber: selectedOrder.po_number,
+          partyLabel: "Supplier",
+          partyName: selectedOrder.supplier_name_snapshot || "Not set",
+          partyContact: selectedOrder.supplier_contact_snapshot || undefined,
+          paidAt: payment.paid_at,
+          amount: Number(payment.amount),
+          currency: getPurchaseOrderCurrency(selectedOrder),
+          method: payment.method
+            ? PURCHASE_ORDER_PAYMENT_METHOD_LABELS[payment.method]
+            : null,
+          note: [payment.paid_by ? `Paid by ${payment.paid_by}` : "", payment.note || ""]
+            .filter(Boolean)
+            .join(" · "),
+          documentTotal: orderTotal,
+          balanceAfter,
+        },
+        branding: brandingFromSettings(settings),
+      });
+    } catch {
+      setActionError("The receipt could not be generated. Try again.");
     } finally {
       setActionBusy(false);
     }
@@ -1874,6 +1924,16 @@ export default function PurchaseOrdersPage() {
                           .join(" · ")}
                       </span>
                     </span>
+                    <button
+                      type="button"
+                      onClick={() => void handleExportPaymentReceipt(payment)}
+                      disabled={actionBusy}
+                      className="po-line-remove"
+                      aria-label={`Payment receipt for ${formatDate(payment.paid_at)} (PDF)`}
+                      title="Payment receipt (PDF)"
+                    >
+                      <UiIcon name="download" className="h-4 w-4" />
+                    </button>
                     <button
                       type="button"
                       onClick={() => handleDeletePayment(payment.id)}
