@@ -26,6 +26,7 @@ import {
   DEFAULT_BUSINESS_SETTINGS,
   isCompanyProfileSchemaMissing,
   getOrCreateBusinessSettings,
+  normalizeAccentColor,
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
@@ -115,6 +116,10 @@ const SECTION_IDS = new Set<SettingsSectionId>(
   SETTINGS_SECTIONS.map((section) => section.id)
 );
 
+// SydIN's own accent blue -- what documentPdf.ts falls back to when a
+// business has not chosen its own. Shown here so the picker starts on the
+// colour a document would actually print today, not an arbitrary one.
+const DEFAULT_ACCENT_COLOR = "#2563EB";
 
 function getLogoExtension(fileName: string) {
   const extension = fileName.split(".").pop()?.toLowerCase();
@@ -411,6 +416,7 @@ export default function SettingsPage() {
         tax_id: settings.tax_id.trim() || null,
         payment_terms: settings.payment_terms.trim() || null,
         document_footer: settings.document_footer.trim() || null,
+        accent_color: normalizeAccentColor(settings.accent_color),
         manual_rates: settings.manual_rates,
       };
 
@@ -456,6 +462,7 @@ export default function SettingsPage() {
         tax_id: documentFieldsSkipped ? "" : settings.tax_id.trim(),
         payment_terms: documentFieldsSkipped ? "" : settings.payment_terms.trim(),
         document_footer: documentFieldsSkipped ? "" : settings.document_footer.trim(),
+        accent_color: documentFieldsSkipped ? null : normalizeAccentColor(settings.accent_color),
         base_currency: settings.base_currency,
         exchange_rates: settings.exchange_rates,
         manual_rates: documentFieldsSkipped ? {} : settings.manual_rates,
@@ -578,6 +585,40 @@ export default function SettingsPage() {
               </p>
             )}
           </div>
+        </FieldRow>
+
+        <FieldRow label="Accent colour" htmlFor="accent-color">
+          <div className="flex flex-wrap items-center gap-3">
+            <input
+              id="accent-color"
+              type="color"
+              className="settings-accent-swatch"
+              value={settings.accent_color || DEFAULT_ACCENT_COLOR}
+              onChange={(event) =>
+                setSettings((current) => ({
+                  ...current,
+                  accent_color: event.target.value,
+                }))
+              }
+            />
+            <span className="text-sm font-semibold text-theme-secondary">
+              {settings.accent_color || `${DEFAULT_ACCENT_COLOR} (default)`}
+            </span>
+            {settings.accent_color && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() =>
+                  setSettings((current) => ({ ...current, accent_color: null }))
+                }
+              >
+                Reset to default
+              </Button>
+            )}
+          </div>
+          <p className="mt-1 text-xs text-theme-muted">
+            The colour bar on invoices, purchase orders and every other document you export.
+          </p>
         </FieldRow>
 
       </FieldGroup>

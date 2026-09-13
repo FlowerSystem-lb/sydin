@@ -3885,3 +3885,25 @@ it would otherwise collide with the footer — checked by reading the actual
 drawn text coordinates out of the PDF, not by eye) and a two-line invoice
 with no optional fields set (fits cleanly on page one). Only "quote" and the
 schema-gated discount/tax lines are left open on the document-family points.
+
+**Accent colour (brief 15)** *(local, same day)* — a colour picker in
+Settings › Company; the bar under the header on every invoice, purchase
+order, goods-received note, payment receipt, customer statement and report
+picks it up automatically, since they all share `drawDocumentHeader` in
+`documentPdf.ts` — one place to change, not six. New column
+(`business_settings.accent_color`, `sql/phase-27-accent-color.sql`, applied
+live). Caught in testing: the colour `<input>` inherited the shared
+`.item-field-row-control input { width: 100% }` rule meant for text fields
+and rendered as a full-width bar instead of a swatch — fixed by excluding
+`type="color"` from that rule, the same way file/checkbox/radio already are.
+Verified the full path for real: picked a colour in the browser, saved,
+confirmed the value landed in the database, rendered a PDF with that exact
+colour and read it back out of the file, then reverted Sayed's account to
+the default before moving on. The older, separate Inventory Summary/
+Detailed/Valuation PDF generator (`inventoryPdfExport.ts`) has its own
+header and was deliberately left alone -- a different, older subsystem
+outside `documentPdf.ts`, and folding it in is its own piece of work, not
+a one-line addition. Document prefix/numbering left open: both invoice and
+PO numbers already continue whatever pattern was last used (or derive from
+the depot for POs), so a fixed-prefix setting looked lower-value than the
+other open points; not attempted this sprint.

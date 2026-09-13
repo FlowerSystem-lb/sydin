@@ -15,6 +15,9 @@ export interface BusinessSettings {
   tax_id: string;
   payment_terms: string;
   document_footer: string;
+  /* Phase 27. The accent bar on printed documents. Null (SydIN's default
+     blue) until the business picks its own. */
+  accent_color: string | null;
   /* Phase 25. `base_currency` is what stored amounts are in; `currency_code`
      is what the app shows. Rates are 1 USD = x. */
   base_currency: string;
@@ -36,6 +39,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   tax_id: "",
   payment_terms: "",
   document_footer: "",
+  accent_color: null,
   base_currency: "USD",
   exchange_rates: {},
   manual_rates: {},
@@ -52,6 +56,12 @@ function normalizeRateTable(value: unknown): Record<string, number> {
     }
   }
   return table;
+}
+
+/** A hex colour or nothing -- never a half-typed value reaching a PDF. */
+export function normalizeAccentColor(value: unknown): string | null {
+  const text = typeof value === "string" ? value.trim() : "";
+  return /^#[0-9a-fA-F]{6}$/.test(text) ? text.toUpperCase() : null;
 }
 
 function normalizeThreshold(value: unknown) {
@@ -79,6 +89,7 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
     tax_id: data?.tax_id || "",
     payment_terms: data?.payment_terms || "",
     document_footer: data?.document_footer || "",
+    accent_color: normalizeAccentColor(data?.accent_color),
     // Before phase 25 there was no base: the display currency was the only
     // currency, so it is also what the amounts are in.
     base_currency: normalizeCurrencyCode(
@@ -92,7 +103,7 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
 }
 
 const SETTINGS_SELECT =
-  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer, base_currency, exchange_rates, manual_rates, rates_updated_at";
+  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer, accent_color, base_currency, exchange_rates, manual_rates, rates_updated_at";
 
 /* The same row without the phase-24 columns, for a database where that
    migration has not been run yet. */
@@ -106,7 +117,7 @@ export function isCompanyProfileSchemaMissing(error: unknown) {
       ? String((error as { message: unknown }).message)
       : String(error ?? "");
   return (
-    /business_address|tax_id|payment_terms|document_footer|base_currency|exchange_rates|manual_rates|rates_updated_at/.test(message) &&
+    /business_address|tax_id|payment_terms|document_footer|accent_color|base_currency|exchange_rates|manual_rates|rates_updated_at/.test(message) &&
     (message.includes("does not exist") ||
       message.includes("schema cache") ||
       message.includes("Could not find"))

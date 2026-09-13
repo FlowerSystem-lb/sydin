@@ -32,6 +32,8 @@ export interface DocumentBranding {
   website?: string;
   paymentTerms?: string;
   footerLine?: string;
+  /** Hex, e.g. "#2563EB". The bar under the header; SydIN blue if unset. */
+  accentColor?: string;
 }
 
 /** Everything a document needs from Settings. `canUseLogo` is the plan gate. */
@@ -49,7 +51,23 @@ export function brandingFromSettings(
     website: settings.contact_website?.trim() || undefined,
     paymentTerms: settings.payment_terms?.trim() || undefined,
     footerLine: settings.document_footer?.trim() || undefined,
+    accentColor: settings.accent_color || undefined,
   };
+}
+
+export const DEFAULT_ACCENT_RGB: [number, number, number] = [37, 99, 235];
+
+/** A validated "#RRGGBB" to the [r,g,b] triple jsPDF wants; SydIN blue for
+ * anything else, so a bad or missing value never breaks a document. */
+function accentRgb(accentColor: string | undefined): [number, number, number] {
+  const match = /^#([0-9a-fA-F]{6})$/.exec(accentColor || "");
+  if (!match) return DEFAULT_ACCENT_RGB;
+  const hex = match[1];
+  return [
+    parseInt(hex.slice(0, 2), 16),
+    parseInt(hex.slice(2, 4), 16),
+    parseInt(hex.slice(4, 6), 16),
+  ];
 }
 
 export const DOCUMENT_MARGIN = 14;
@@ -135,7 +153,7 @@ export function drawDocumentHeader(
 ) {
   doc.setFillColor(...DOCUMENT_INK);
   doc.rect(0, 0, pageWidth, DOCUMENT_HEADER_HEIGHT, "F");
-  doc.setFillColor(37, 99, 235);
+  doc.setFillColor(...accentRgb(branding.accentColor));
   doc.rect(0, DOCUMENT_HEADER_HEIGHT, pageWidth, 1.2, "F");
 
   let textX = margin;

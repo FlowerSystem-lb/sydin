@@ -20836,7 +20836,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 /* Checkboxes and radios are excluded: `width: 100%` turned the Stock Counts
    "show expected quantity" box into a 268px-wide invisible click target with
    the text pushed to the far right. */
-.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]),
+.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]),
 .item-field-row-control textarea {
   width: 100%;
   border: none;
@@ -22183,4 +22183,27 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   white-space: pre-line;
   font-size: 0.78rem;
   color: var(--text-secondary);
+}
+
+/* Settings > Company: the accent-colour picker. A native <input type=color">
+   swatch, sized and framed to sit in a FieldRow the way the logo preview
+   does, rather than the browser's default flat rectangle. */
+.settings-accent-swatch {
+  height: 2.75rem;
+  width: 3.5rem;
+  flex: 0 0 auto;
+  padding: 0.2rem;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: var(--bg-surface);
+  cursor: pointer;
+}
+
+.settings-accent-swatch::-webkit-color-swatch-wrapper {
+  padding: 0;
+}
+
+.settings-accent-swatch::-webkit-color-swatch {
+  border: none;
+  border-radius: 6px;
 }
