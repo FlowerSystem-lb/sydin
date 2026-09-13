@@ -3820,3 +3820,13 @@ after that specific payment (walked chronologically through the payment log,
 not just today's running balance — a customer's second payment still reads
 correctly). Rendered in Node with realistic USD and LBP data and read as
 images before wiring into the pages. Brief point 14 updated.
+
+**Customer statement PDF** *(local, same day)* — "Download statement" on the
+customer account sheet: `app/lib/customerStatementPdf.ts`, same furniture.
+The same three numbers the sheet already shows (invoiced/paid/owed, in the
+account's display currency, since invoices in different currencies cannot be
+summed any other way) plus every invoice with its own total and balance, each
+in the currency it was issued in. Caught and fixed in testing: an empty
+account was drawing a bare table header with nothing under it — a customer
+with no invoices yet now gets a plain "Nothing invoiced yet" line instead.
+Brief point 14 updated again (only "quote" left open on it).

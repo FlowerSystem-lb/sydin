@@ -25,13 +25,17 @@ import {
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
+  type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
+import { brandingFromSettings } from "@/app/lib/documentPdf";
+import { exportCustomerStatementPdf } from "@/app/lib/customerStatementPdf";
 import {
   SALES_ORDER_STATUS_LABELS,
   formatSalesOrderAmount,
   getSalesOrderBalance,
   getSalesOrderBalanceInBase,
+  getSalesOrderCurrency,
   getSalesOrderTotal,
   getSalesOrderTotalInBase,
   getSalesOrdersForUser,
@@ -88,6 +92,10 @@ export default function CustomersPage() {
     DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
   );
   const [accountCustomer, setAccountCustomer] = useState<Customer | null>(null);
+  const [businessSettings, setBusinessSettings] = useState<BusinessSettings>(
+    DEFAULT_BUSINESS_SETTINGS
+  );
+  const [statementBusy, setStatementBusy] = useState(false);
   const [subscription, setSubscription] =
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [loading, setLoading] = useState(true);
@@ -187,6 +195,7 @@ export default function CustomersPage() {
         setSubscription(plan);
         setSalesOrders(orders);
         setCurrencyCode(settings.currency_code || "USD");
+        setBusinessSettings(settings);
       })
       .catch((error) => {
         if (isActive) setPageError(getCustomerErrorMessage(error));
@@ -290,6 +299,56 @@ export default function CustomersPage() {
       setFormError(getCustomerErrorMessage(error));
     } finally {
       setSaving(false);
+    }
+  };
+
+  /* Same three numbers as the sheet on screen, plus every invoice under
+     them, on paper -- brief 14's customer statement. Each invoice keeps its
+     own currency; the summary is the account total already shown above the
+     list, so a customer reading the PDF sees the same figures as the sheet. */
+  const downloadStatement = async (customer: Customer) => {
+    if (statementBusy) return;
+    const account = accounts.get(customer.id) || {
+      orders: [],
+      owed: 0,
+      billed: 0,
+      overdue: 0,
+    };
+    const orders = [...account.orders]
+      .filter((order) => order.status !== "draft" && order.status !== "cancelled")
+      .sort((a, b) =>
+        (b.issue_date || b.created_at).localeCompare(a.issue_date || a.created_at)
+      );
+    try {
+      setStatementBusy(true);
+      await exportCustomerStatementPdf({
+        details: {
+          statementNumber: `STMT-${customer.id}-${new Date().toISOString().slice(0, 10)}`,
+          customerName: customer.name,
+          customerContact: [customer.contact_name, customer.phone, customer.email]
+            .filter(Boolean)
+            .join(" · "),
+          customerAddress: customer.address || undefined,
+          displayCurrency: currencyCode,
+          billed: account.billed,
+          paid: Math.max(0, account.billed - account.owed),
+          owed: account.owed,
+        },
+        lines: orders.map((order) => ({
+          date: order.issue_date || order.created_at,
+          number: order.invoice_number,
+          title: order.title || undefined,
+          status: SALES_ORDER_STATUS_LABELS[order.status],
+          currency: getSalesOrderCurrency(order),
+          total: getSalesOrderTotal(order),
+          balance: getSalesOrderBalance(order),
+        })),
+        branding: brandingFromSettings(businessSettings),
+      });
+    } catch {
+      setPageError("We could not build the statement. Please try again.");
+    } finally {
+      setStatementBusy(false);
     }
   };
 
@@ -498,6 +557,14 @@ export default function CustomersPage() {
               <>
                 <Button variant="secondary" onClick={() => setAccountCustomer(null)}>
                   Close
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => void downloadStatement(accountCustomer)}
+                  loading={statementBusy}
+                  loadingLabel="Building..."
+                >
+                  Download statement
                 </Button>
                 <Link
                   href={`/dashboard/sales/new?customer=${accountCustomer.id}`}
