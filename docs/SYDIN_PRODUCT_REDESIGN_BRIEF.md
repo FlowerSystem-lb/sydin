@@ -22,7 +22,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 10. ✅ Sales workflow: customer → lines → invoice → payment → paid (existing; currency added).
 11. ✅ Daily operation view: Overview has a "Today" line (sold today, units in, units out, or "nothing yet"), the month's money figures, action required and recent activity (13 Sep).
 12. ✅ Payments: partial/full, outstanding, method, date, note (existing ledgers on invoices and POs).
-13. ◐ Invoice as a document: number, dates, company block, customer, lines with photos, totals, paid, balance, terms, notes, footer. ✅ due date on the form (13 Sep). ✗ discount/tax lines (schema — own sprint). ☐ signature area.
+13. ◐ Invoice as a document: number, dates, company block, customer, lines with photos, totals, paid, balance, terms, notes, footer. ✅ due date on the form (13 Sep). ✅ signature area — "Authorized by" / "Customer signature" (13 Sep). ✗ discount/tax lines (schema — own sprint).
 14. ◐ Document family on `documentPdf.ts`: invoice, purchase order, ✅ goods-received note per delivery with signature lines (13 Sep), ✅ payment receipt on every invoice/PO payment (13 Sep), ✅ customer statement from the customer account sheet (13 Sep). ☐ quote.
 15. ✅ Company branding: name, logo, address, phone, email, website, tax/reg no., currency, payment terms, footer. ☐ document prefix/numbering, accent colour.
 16. ✅ Live document preview while editing (edit left / preview right) on New invoice and New purchase order, updating on every keystroke; stacks under the form on a phone (13 Sep).

@@ -202,6 +202,8 @@ export async function exportSalesInvoicePdf({
     branding.paymentTerms ? `Payment terms: ${branding.paymentTerms}` : "",
   ].filter(Boolean) as string[];
 
+  let signatureY = totalsY + 2;
+
   if (notes.length > 0) {
     // Split at the size it will print in; the totals left the font at 12pt.
     doc.setFont("helvetica", "normal");
@@ -217,7 +219,23 @@ export async function exportSalesInvoicePdf({
     doc.setFontSize(9);
     doc.setTextColor(...DOCUMENT_INK);
     doc.text(text, margin, notesY);
+    signatureY = notesY + text.length * 4.2 + 6;
   }
+
+  // ---- two signature lines: who made it out, who took it -----------------
+  signatureY = ensureRoom(context, header, signatureY + 6, 22);
+  const signatureWidth = (pageWidth - margin * 2 - 10) / 2;
+  doc.setDrawColor(...DOCUMENT_RULE);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(8);
+  doc.setTextColor(...DOCUMENT_MUTED);
+  [
+    ["Authorized by", margin],
+    ["Customer signature", margin + signatureWidth + 10],
+  ].forEach(([label, x]) => {
+    doc.line(Number(x), signatureY + 12, Number(x) + signatureWidth, signatureY + 12);
+    doc.text(String(label), Number(x), signatureY + 17);
+  });
 
   finishDocument(context, details.invoiceNumber);
   doc.save(`${slugifyDocumentName(details.invoiceNumber, "invoice")}.pdf`);

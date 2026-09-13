@@ -3875,3 +3875,13 @@ a real one instead. Verified by exporting PDF and CSV against the live
 account and cross-checking every row's last-moved date and day count
 against a direct SQL query — an exact match, in the corrected order. Brief
 point 21 is now fully done.
+
+**Signature area on the invoice (brief 13)** *(local, same day)* — two
+lines at the bottom of every invoice PDF, "Authorized by" and "Customer
+signature", the same pattern the goods-received note and payment receipt
+already use. Verified by re-rendering both the 38-line stress-test invoice
+(where it correctly overflows to its own trailing page once the maths shows
+it would otherwise collide with the footer — checked by reading the actual
+drawn text coordinates out of the PDF, not by eye) and a two-line invoice
+with no optional fields set (fits cleanly on page one). Only "quote" and the
+schema-gated discount/tax lines are left open on the document-family points.
