@@ -352,6 +352,61 @@ export function paymentsByMethod(
   };
 }
 
+export interface StockAgingItem {
+  id: number;
+  name: string;
+  sku?: string | null;
+  quantity: number;
+}
+
+/** Every item by how long it has sat without a stock movement, oldest
+ * first -- the report that answers "what's just sitting there". An item
+ * that has never moved (added, never sold, never adjusted) is not the same
+ * as one moved a year ago and is shown as its own case rather than guessed
+ * at from when the item record was created. */
+export function stockAging(
+  items: StockAgingItem[],
+  lastMovedByItemId: Map<number, string>,
+  categoryLabel: (itemId: number) => string
+): ReportTable {
+  const now = Date.now();
+  const rows = items.map((item) => {
+    const lastMoved = lastMovedByItemId.get(item.id) || null;
+    const daysIdle = lastMoved
+      ? Math.floor((now - new Date(lastMoved).getTime()) / 86_400_000)
+      : null;
+    return { item, lastMoved, daysIdle };
+  });
+  // Oldest known movement first; "never moved" is a different kind of flag
+  // (often a new arrival, not necessarily dead stock) so it sorts after
+  // every item with a real date, not ahead of all of them.
+  rows.sort((a, b) => {
+    if (a.daysIdle === null && b.daysIdle === null) return 0;
+    if (a.daysIdle === null) return 1;
+    if (b.daysIdle === null) return -1;
+    return b.daysIdle - a.daysIdle;
+  });
+  const neverMoved = rows.filter((row) => row.daysIdle === null).length;
+  const idleOver90 = rows.filter((row) => (row.daysIdle ?? 0) > 90).length;
+  return {
+    title: "Stock Aging",
+    subtitle: `${items.length} item${items.length === 1 ? "" : "s"} · ${idleOver90} idle over 90 days${
+      neverMoved > 0 ? ` · ${neverMoved} never moved` : ""
+    }`,
+    head: ["Item", "Code", "Category", "Quantity", "Last moved", "Days idle"],
+    rows: rows.map(({ item, lastMoved, daysIdle }) => [
+      item.name,
+      item.sku || "--",
+      categoryLabel(item.id) || "--",
+      item.quantity,
+      lastMoved ? formatDocumentDate(lastMoved) : "Never",
+      daysIdle === null ? "--" : String(daysIdle),
+    ]),
+    rightAligned: [3, 5],
+    filename: "stock-aging",
+  };
+}
+
 export function purchasesBySupplier(orders: PurchaseOrder[], currency: string): ReportTable {
   const buckets = new Map<string, { count: number; total: number; paid: number; open: number }>();
   for (const order of orders.filter(isPurchase)) {

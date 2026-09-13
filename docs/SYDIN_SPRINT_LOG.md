@@ -3860,3 +3860,18 @@ Verified by generating both as PDF and CSV against the live account (no
 writes, so nothing to clean up), and cross-checked the payment total against
 a direct SQL query. Brief point 21 updated; only stock aging left open on
 it.
+
+**Stock Aging (brief 21, closing it out)** *(local, same day)* — every item
+by how long it has sat without a stock movement, oldest first; an item that
+has never moved is called out separately rather than guessed at from when
+the record was created. Needed a dedicated, uncapped `item_id, created_at`
+read of every movement — the Stock Movements report already loads
+movements, but caps at 250 for its own audit-trail display, which would
+have under-counted idle time on an active account. Caught in testing: the
+first sort put "never moved" items at the very top (ahead of everything),
+because the sort's fallback for a missing date was `Number.MAX_SAFE_INTEGER`
+sorted descending. Fixed so unknown-date items trail behind every item with
+a real one instead. Verified by exporting PDF and CSV against the live
+account and cross-checking every row's last-moved date and day count
+against a direct SQL query — an exact match, in the corrected order. Brief
+point 21 is now fully done.

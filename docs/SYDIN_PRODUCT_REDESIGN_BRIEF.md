@@ -30,7 +30,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 18. ✅ Exports actually tested (rendered in Node, read page by page: long names, many lines, empty fields, logo, thumbnails).
 19. ✅ Multi-page: headers repeat, footer + page numbers on every page.
 20. ✅ Item photos in documents (thumbnail column) and in PO picker/lines, invoice lines, receiving table.
-21. ◐ Reporting: sales by month, outstanding invoices, ✅ top-selling items, ✅ sales by customer (13 Sep), purchases by supplier/month, inventory reports, ✅ sales by category, ✅ payments by method — cash in vs cash out, net (13 Sep). ☐ stock aging.
+21. ✅ Reporting: sales by month, outstanding invoices, top-selling items, sales by customer, purchases by supplier/month, inventory reports, sales by category, payments by method (cash in vs cash out, net), stock aging — oldest-idle-first, never-moved items called out separately (13 Sep).
 22. ☐ Report builder (date range, columns, grouping, saved reports).
 23. ✅ Dashboard hierarchy: figures → action required → recent activity.
 24. ✅ Quick actions: Add menu has New item · New invoice · Purchase order · Stock In · New customer (13 Sep). Record payment stays on the document it belongs to.

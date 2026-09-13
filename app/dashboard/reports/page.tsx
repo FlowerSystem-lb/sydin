@@ -95,6 +95,7 @@ import {
   salesByCategory,
   salesByCustomer,
   salesByMonth,
+  stockAging,
   topSellingItems,
   type ReportTable,
 } from "@/app/lib/businessReportsPdf";
@@ -177,6 +178,16 @@ const INVENTORY_REPORTS: ReportCard[] = [
     action: "inventory-pdf",
     reportType: "low-stock",
     icon: "alert",
+  },
+  {
+    id: "stock-aging",
+    name: "Stock Aging",
+    description: "Every item by how long it has sat without a stock movement — oldest first.",
+    category: "inventory",
+    source: "Inventory",
+    formats: ["PDF", "CSV"],
+    action: "business",
+    icon: "clock",
   },
   {
     id: "valuation",
@@ -427,6 +438,11 @@ export default function ReportsPage() {
   // For "Payments by method" only -- every payment, not grouped by order.
   const [salesPayments, setSalesPayments] = useState<SalesPaymentForReport[]>([]);
   const [purchasePayments, setPurchasePayments] = useState<PurchasePaymentForReport[]>([]);
+  // For "Stock Aging" -- every item's own last movement, not the 250-row
+  // window the Stock Movements report keeps for its audit trail.
+  const [lastMovedByItemId, setLastMovedByItemId] = useState<Map<number, string>>(
+    new Map()
+  );
   const [depots, setDepots] = useState<Depot[]>([]);
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -494,6 +510,7 @@ export default function ReportsPage() {
         loadedPurchases,
         loadedSalesPayments,
         loadedPurchasePayments,
+        movementDatesResult,
       ] = await Promise.all([
         supabase
           .from("inventory")
@@ -519,6 +536,13 @@ export default function ReportsPage() {
         getPurchaseOrdersForUser(user.id).catch(() => [] as PurchaseOrder[]),
         getAllSalesOrderPaymentsForUser(user.id).catch(() => [] as SalesPaymentForReport[]),
         getAllPurchaseOrderPaymentsForUser(user.id).catch(() => [] as PurchasePaymentForReport[]),
+        // Every movement's item and date, nothing else -- the 250-row cap
+        // above is for the Stock Movements audit trail, not this.
+        supabase
+          .from("stock_movements")
+          .select("item_id, created_at")
+          .eq("user_id", user.id)
+          .order("created_at", { ascending: false }),
       ]);
 
       if (inventoryResult.error) throw inventoryResult.error;
@@ -536,6 +560,16 @@ export default function ReportsPage() {
       setPurchaseOrders(loadedPurchases);
       setSalesPayments(loadedSalesPayments);
       setPurchasePayments(loadedPurchasePayments);
+      if (!movementDatesResult.error) {
+        const lastMoved = new Map<number, string>();
+        for (const row of (movementDatesResult.data || []) as {
+          item_id: number;
+          created_at: string;
+        }[]) {
+          if (!lastMoved.has(row.item_id)) lastMoved.set(row.item_id, row.created_at);
+        }
+        setLastMovedByItemId(lastMoved);
+      }
       setLoading(false);
     }
 
@@ -895,6 +929,20 @@ export default function ReportsPage() {
         });
       case "payments-by-method":
         return paymentsByMethod(salesPayments, purchasePayments, currencyCode);
+      case "stock-aging":
+        return stockAging(
+          items.map((item) => ({
+            id: item.id,
+            name: item.name,
+            sku: item.sku,
+            quantity: Number(item.quantity) || 0,
+          })),
+          lastMovedByItemId,
+          (itemId) => {
+            const item = itemById.get(itemId);
+            return item ? getCategoryLabel(item) : "";
+          }
+        );
       case "purchases-by-supplier":
         return purchasesBySupplier(purchaseOrders, currencyCode);
       case "purchases-by-month":
