@@ -2101,8 +2101,12 @@ export default function PurchaseOrdersPage() {
 
                 {selectedOrder.attachment_url && attachmentUrl && (
                   <div className="grid gap-1.5">
+                    {/* Brief 40/41's "supplier bill link": whatever was
+                        uploaded when this order was placed -- almost always
+                        the supplier's own invoice -- shown by that name
+                        instead of the generic "Attachment". */}
                     <p className="po-detail-label">
-                      Attachment
+                      Supplier bill
                       {selectedOrder.attachment_label
                         ? ` — ${selectedOrder.attachment_label}`
                         : ""}

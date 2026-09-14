@@ -49,8 +49,8 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 37. ◐ Design system: shared FieldGroup/FieldRow, Button, DialogShell, Badge, Select, SearchInput, toasts; `globals.css` still carries stacked redesigns.
 38. ◐ Status system: Draft / Ordered / Partially received / Received / Cancelled; Unpaid / Partially paid / Paid; Issued / Paid. Tones consistent on PO and sales.
 39. ✅ Document status timelines: Created → Ordered → Received → Paid on the order dialog, Draft → Issued → Paid on the invoice page; cancelled ends in a stopped step (13 Sep).
-40. ◐ Relationships: PO → supplier, receipts, payments, movements shown on the order; invoice → customer, payments. ☐ supplier bill link.
-41. ◐ Related documents: on the item page (all its invoices and orders); orders show their deliveries and payments; invoices their payments. ☐ supplier bill / statement links.
+40. ✅ Relationships: PO → supplier, receipts, payments, movements shown on the order; invoice → customer, payments. The order's uploaded proof is now labelled "Supplier bill", not "Attachment"; a supplier's order list flags which orders have one ("Bill on file") without opening each order (14 Sep).
+41. ✅ Related documents: on the item page (all its invoices and orders); orders show their deliveries and payments; invoices their payments. Supplier statement PDF from the supplier account sheet — mirrors the customer statement, money reversed (14 Sep).
 42. ✅ Customer account view: sales, balance, documents.
 43. ✅ Supplier account view: orders, receiving, balance.
 44. ◐ Conveniences: PO from low stock (Alerts), receiving from PO, invoice from customer page, inline create customer/depot; ✅ last depot and payment method come back pre-filled on invoice, PO and Stock In; ✅ Duplicate on any order or invoice — same supplier/customer, lines and currency, new number (13 Sep).

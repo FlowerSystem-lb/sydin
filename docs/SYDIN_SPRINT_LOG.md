@@ -3941,3 +3941,20 @@ real account: set Jan 1 - Jun 30 2026, watched the note update, exported
 Sales by month as CSV with no console errors. Read-only (export/generate),
 so nothing needed cleaning up afterward. Columns, grouping and saved
 reports are still open, deliberately deferred to a later sprint.
+
+**Supplier bill and supplier statement (brief 40 and 41)** *(local, 14
+Sep)* — the customer side already had a statement and a clearly-named
+attachment; the supplier side didn't. `supplierStatementPdf.ts` mirrors
+`customerStatementPdf.ts` with the money direction reversed (Ordered /
+Paid / You owe instead of Invoiced / Paid / Owes); "Download statement" on
+the supplier account sheet builds it from the same orders and totals the
+sheet already shows on screen. The proof uploaded when placing an order is
+now labelled "Supplier bill" on the order's own page, not the generic
+"Attachment", and a supplier's order list flags which of their orders have
+one ("Bill on file") without opening each order first. Verified with
+tsc/lint/build, then live: opened a supplier account with no orders yet,
+confirmed the button reads "Download statement" and the empty-orders path
+built with no console errors. No order with both a supplier and an
+uploaded bill exists on the live account to click through end-to-end; the
+label and list-flag changes are reviewed by inspection against the exact
+pattern their surrounding code already uses, not separately screenshotted.

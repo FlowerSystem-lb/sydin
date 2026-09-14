@@ -28,13 +28,17 @@ import {
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
+  type BusinessSettings,
 } from "@/app/lib/businessSettings";
+import { brandingFromSettings } from "@/app/lib/documentPdf";
+import { exportSupplierStatementPdf } from "@/app/lib/supplierStatementPdf";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
 import {
   PURCHASE_ORDER_STATUS_LABELS,
   formatPurchaseOrderAmount,
   getPurchaseOrderBalance,
   getPurchaseOrderBalanceInBase,
+  getPurchaseOrderCurrency,
   getPurchaseOrderReceivingProgress,
   getPurchaseOrderTotal,
   getPurchaseOrderTotalInBase,
@@ -278,6 +282,13 @@ export default function SuppliersPage() {
   const [currencyCode, setCurrencyCode] = useState(
     DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
   );
+  // The whole company block, so the supplier statement prints a logo and
+  // address, not four fields picked out of it -- same reasoning as the
+  // customer statement.
+  const [businessSettings, setBusinessSettings] = useState<BusinessSettings>(
+    DEFAULT_BUSINESS_SETTINGS
+  );
+  const [statementBusy, setStatementBusy] = useState(false);
   const [accountSupplier, setAccountSupplier] = useState<Supplier | null>(null);
   const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
   const [userId, setUserId] = useState("");
@@ -348,6 +359,7 @@ export default function SuppliersPage() {
             setUsage(loadedUsage);
             setPurchaseOrders(loadedOrders);
             setCurrencyCode(settings.currency_code || "USD");
+            setBusinessSettings(settings);
             setLoading(false);
           })
           .catch((error) => {
@@ -393,6 +405,56 @@ export default function SuppliersPage() {
     }
     return map;
   }, [purchaseOrders]);
+
+  /* Same three numbers as the sheet on screen, plus every order under them,
+     on paper -- the supplier side of brief 14's statement (brief 40/41's
+     "supplier statement link"). Each order keeps its own currency; the
+     summary is the account total already shown above the list. */
+  const downloadSupplierStatement = async (supplier: Supplier) => {
+    if (statementBusy) return;
+    const account = accounts.get(supplier.id) || {
+      orders: [],
+      owed: 0,
+      spent: 0,
+      expected: 0,
+    };
+    const orders = [...account.orders]
+      .filter((order) => order.status !== "draft" && order.status !== "cancelled")
+      .sort((a, b) =>
+        (b.purchase_date || b.created_at).localeCompare(a.purchase_date || a.created_at)
+      );
+    try {
+      setStatementBusy(true);
+      await exportSupplierStatementPdf({
+        details: {
+          statementNumber: `SSTMT-${supplier.id}-${new Date().toISOString().slice(0, 10)}`,
+          supplierName: supplier.name,
+          supplierContact: [supplier.contact_name, supplier.phone, supplier.email]
+            .filter(Boolean)
+            .join(" · "),
+          supplierAddress: supplier.address || undefined,
+          displayCurrency: currencyCode,
+          ordered: account.spent,
+          paid: Math.max(0, account.spent - account.owed),
+          owed: account.owed,
+        },
+        lines: orders.map((order) => ({
+          date: order.purchase_date || order.created_at,
+          number: order.po_number,
+          title: order.title || undefined,
+          status: PURCHASE_ORDER_STATUS_LABELS[order.status],
+          currency: getPurchaseOrderCurrency(order),
+          total: getPurchaseOrderTotal(order),
+          balance: getPurchaseOrderBalance(order).remaining,
+        })),
+        branding: brandingFromSettings(businessSettings),
+      });
+    } catch {
+      setPageError("We could not build the statement. Please try again.");
+    } finally {
+      setStatementBusy(false);
+    }
+  };
 
   const supplierLimit = getSubscriptionSupplierLimit(usage.subscription);
   const limitReached = suppliers.length >= supplierLimit;
@@ -862,6 +924,14 @@ export default function SuppliersPage() {
                 <Button variant="secondary" onClick={() => setAccountSupplier(null)}>
                   Close
                 </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => void downloadSupplierStatement(accountSupplier)}
+                  loading={statementBusy}
+                  loadingLabel="Building..."
+                >
+                  Download statement
+                </Button>
                 <Link
                   href={`/dashboard/purchase-orders/new?supplier=${accountSupplier.id}`}
                   className={buttonClassName()}
@@ -940,6 +1010,10 @@ export default function SuppliersPage() {
                               remaining > 0 && order.status !== "cancelled" && order.status !== "draft"
                                 ? `${formatPurchaseOrderAmount(order, remaining)} still owed`
                                 : "",
+                              // The "supplier bill link" (brief 40/41), visible
+                              // right here instead of only after opening the
+                              // order.
+                              order.attachment_url ? "Bill on file" : "",
                             ]
                               .filter(Boolean)
                               .join(" · ")}
