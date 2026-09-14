@@ -130,7 +130,10 @@ const ADD_MENU_ITEMS: {
   },
 ];
 
-function getDashboardPageContext(pathname: string, action?: string | null) {
+function getDashboardPageContext(
+  pathname: string,
+  action?: string | null
+): { label: string; shortLabel: string; section?: DashboardNavigationSection } {
   if (pathname === "/dashboard/add-item") {
     return {
       label: "Inventory / Add Item",
@@ -232,6 +235,12 @@ function getDashboardPageContext(pathname: string, action?: string | null) {
     return {
       label: navigationItem.label,
       shortLabel: navigationItem.shortLabel || navigationItem.label,
+      // Only the top-level pages the sidebar itself groups get a section
+      // crumb ("Selling / Sales"). The hand-written cases above already
+      // read as a trail on their own ("Inventory / Add Item") -- a third
+      // level there would be one more than the mockup's own "Dashboard >
+      // Overview" asks for.
+      section: navigationItem.section,
     };
   }
 
@@ -940,6 +949,14 @@ export default function DashboardShell({
     pathname,
     searchParams.get("action")
   );
+  /* The desktop top bar as a short trail, not one flat name -- a section
+     crumb ("Selling") in front of a page already made of two ("Inventory /
+     Add Item") reads as three, which is one more than any of them need, so
+     only a plain top-level page gets the section prepended. */
+  const breadcrumbTrail = [
+    ...(currentPage.section ? [DASHBOARD_SECTION_LABELS[currentPage.section]] : []),
+    ...currentPage.label.split(" / "),
+  ];
   /* Every one of the 43 routes shared the single title declared in
      app/layout.tsx, so every browser tab, every history entry and every
      bookmark read "SydIN - Visual Inventory Management Software". Two tabs
@@ -1366,7 +1383,31 @@ export default function DashboardShell({
       <div className="dashboard-main-canvas">
         <div className="dashboard-desktop-toolbar">
           <div className="dashboard-top-context">
-            <p className="dashboard-top-context-title">{currentPage.label}</p>
+            {/* The class stays on the outer element (not the strings inside
+                it) because a scoped CSS rule hides it by class name on pages
+                that print their own on-screen heading -- Overview, Inventory. */}
+            <nav className="dashboard-top-context-title" aria-label="Breadcrumb">
+              <ol className="dashboard-breadcrumb-trail">
+                {breadcrumbTrail.map((crumb, index) => (
+                  <li key={`${crumb}-${index}`}>
+                    {index > 0 && (
+                      <span className="dashboard-breadcrumb-sep" aria-hidden="true">
+                        /
+                      </span>
+                    )}
+                    <span
+                      className={
+                        index === breadcrumbTrail.length - 1
+                          ? "dashboard-breadcrumb-current"
+                          : "dashboard-breadcrumb-parent"
+                      }
+                    >
+                      {crumb}
+                    </span>
+                  </li>
+                ))}
+              </ol>
+            </nav>
           </div>
 
           <div

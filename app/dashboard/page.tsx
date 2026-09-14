@@ -117,6 +117,44 @@ function figureSizeClass(rendered: string) {
   return "";
 }
 
+/* A day-by-day bar, real numbers not decoration: 14 bars, the tallest of
+   them full height, today drawn solid where the rest are muted -- so the
+   one glance answers "is today better or worse than the run-up to it"
+   without a legend or a tooltip. All zero draws 14 flat, empty bars rather
+   than nothing, which would read as broken. */
+function Sparkline({ values }: { values: number[] }) {
+  if (values.length === 0) return null;
+  const max = Math.max(...values, 0);
+  const barWidth = 4;
+  const gap = 2;
+  const height = 24;
+  const width = values.length * (barWidth + gap) - gap;
+  return (
+    <svg
+      className="ov-figure-sparkline"
+      viewBox={`0 0 ${width} ${height}`}
+      preserveAspectRatio="none"
+      role="img"
+      aria-label="Last 14 days"
+    >
+      {values.map((value, index) => {
+        const barHeight = max > 0 ? Math.max(2, (value / max) * (height - 2)) : 2;
+        return (
+          <rect
+            key={index}
+            className={index === values.length - 1 ? "ov-figure-sparkline-today" : undefined}
+            x={index * (barWidth + gap)}
+            y={height - barHeight}
+            width={barWidth}
+            height={barHeight}
+            rx={1}
+          />
+        );
+      })}
+    </svg>
+  );
+}
+
 function formatCurrency(value: number, currencyCode: string) {
   value = convertFromBase(value, currencyCode);
   const currency = normalizeCurrencyCode(currencyCode);
@@ -671,6 +709,26 @@ export default function DashboardPage() {
       }
     }
 
+    // The last 14 days of sales, oldest first -- the one figure on this page
+    // with a real day-by-day story to tell. A balance ("customers owe you")
+    // is a snapshot, not a flow, and would need the whole payment history
+    // replayed per day to trend honestly; this does not fake that.
+    const soldTrend: number[] = [];
+    const soldByDay = new Map<string, number>();
+    for (let offset = 13; offset >= 0; offset -= 1) {
+      const day = new Date(now);
+      day.setDate(day.getDate() - offset);
+      soldByDay.set(day.toISOString().slice(0, 10), 0);
+    }
+    for (const order of salesOrders) {
+      if (order.status === "draft" || order.status === "cancelled") continue;
+      const day = (order.issue_date || order.created_at).slice(0, 10);
+      if (soldByDay.has(day)) {
+        soldByDay.set(day, (soldByDay.get(day) || 0) + getSalesOrderTotalInBase(order));
+      }
+    }
+    soldTrend.push(...soldByDay.values());
+
     // What moved today, from the stock ledger: units in, units out, changes.
     let receivedTodayUnits = 0;
     let shippedTodayUnits = 0;
@@ -687,6 +745,7 @@ export default function DashboardPage() {
       soldCount,
       soldToday,
       soldTodayCount,
+      soldTrend,
       receivedTodayUnits,
       shippedTodayUnits,
       movementsToday,
@@ -725,7 +784,16 @@ export default function DashboardPage() {
     return parts;
   })();
 
-  const businessCards = [
+  const businessCards: Array<{
+    label: string;
+    rawValue: number;
+    format: (n: number) => string;
+    detail: string;
+    href: string;
+    /** Last 14 days, oldest first -- only where a day-by-day trend is a
+     * real flow, not a snapshot balance dressed up as one. */
+    trend?: number[];
+  }> = [
     {
       label: "Sold this month",
       rawValue: business.soldThisMonth,
@@ -735,6 +803,8 @@ export default function DashboardPage() {
           ? "No invoices yet this month"
           : `${formatNumber(business.soldCount)} invoice${business.soldCount === 1 ? "" : "s"}`,
       href: "/dashboard/sales",
+      // Last 14 days, oldest first -- the sparkline in the card's corner.
+      trend: business.soldTrend,
     },
     {
       label: "Customers owe you",
@@ -880,7 +950,10 @@ export default function DashboardPage() {
             const rendered = card.format(card.rawValue);
             return (
               <Link key={card.label} href={card.href} className="ov-figure">
-                <span className="ov-figure-label">{card.label}</span>
+                <span className="ov-figure-heading">
+                  <span className="ov-figure-label">{card.label}</span>
+                  {!loading && card.trend && <Sparkline values={card.trend} />}
+                </span>
                 <span
                   className={`ov-figure-value${
                     figureSizeClass(rendered)

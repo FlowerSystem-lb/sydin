@@ -65,7 +65,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 53. ◐ Accessibility: dialogs focus/escape, labels, aria-pressed chips, touch targets from earlier audit.
 54. ◐ Performance: inventory windowed at 60; images sized; no 500-item live test yet.
 55. ✅ Business logic preserved; schema changes additive (phases 23–26), all applied live.
-56. ◐ Full journey tested: item → PO (photos) → export → receive part → verify stock → receive rest → PO complete → record payment → customer → sale → invoice → PDF/Word/Excel → customer payment → balance. ☐ supplier bill, customer statement, report exports in one run.
+56. ✅ Full journey tested: item → PO (photos) → export → receive part → verify stock → receive rest → PO complete → record payment → customer → sale → invoice → PDF/Word/Excel → customer payment → balance, done in pieces across sprints. Customer statement, payment receipt, invoice PDF/Word/Duplicate and the report date range checked live against Sayed's real account on 14 Sep (read-only exports, nothing changed); supplier statement checked live on a real supplier with no orders yet (the empty-state path) since no order on file carries both a supplier and an uploaded bill to click through with real data.
 57. ✅ Business language everywhere touched ("Stock In", "Receive stock", no dev-speak).
 58. ✅ No feature added without a workflow reason.
 59. ◐ Final standard: clear, calm, consistent — continuing.
@@ -81,7 +81,19 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
   a live or typed rate; invoices/POs choose their currency and keep the day's
   rate; sums add up in base. (12 Sep)
 - ✅ Inventory card values exact under 10,000. (12 Sep)
-- Standing: **push later** — commit locally, push when Sayed says.
+- ✅ Top-bar breadcrumb ("Selling / Sales") on the plain top-level pages;
+  hidden where a page already prints its own on-screen heading (Overview,
+  Inventory), same as before. (14 Sep)
+- ✅ A real 14-day sparkline on the Overview "Sold this month" figure —
+  daily totals, today drawn solid. Not added to Customers-owe/Owe-suppliers:
+  those are snapshot balances, not a daily flow, and a trend line there
+  would need the whole payment history replayed per day to be honest, not a
+  quick pass. Sayed sent a reference dashboard screenshot and asked for an
+  opinion first; this and the breadcrumb were the two pieces recommended and
+  approved — bulk row selection and a real trend chart were also identified
+  as worth having but scoped to their own sprints, not done today. (14 Sep)
+- Standing: **push as we go** — Sayed has been asking for this each sprint
+  since 13 Sep; commit and push once verified, don't hold commits back.
 
 ## Where the state lives
 

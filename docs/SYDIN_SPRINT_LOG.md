@@ -3958,3 +3958,42 @@ built with no console errors. No order with both a supplier and an
 uploaded bill exists on the live account to click through end-to-end; the
 label and list-flag changes are reviewed by inspection against the exact
 pattern their surrounding code already uses, not separately screenshotted.
+
+**A design reference, judged rather than copied** *(local, 14 Sep)* —
+Sayed sent a screenshot of a grayscale agency-dashboard template and asked
+for an opinion on the sidebar/UI/dashboard direction, keeping SydIN's own
+(landing-page) colour. Answer given before any code: the grouped,
+collapsible sidebar with section headers he liked is already exactly how
+SydIN's sidebar works (checked `DashboardShell.tsx` before claiming that,
+not from memory) -- nothing to build there. Recommended taking a
+breadcrumb and a real trend line, both small; a full grayscale skin was
+turned down (clashes with keeping SydIN's own blue, which is what he
+asked to keep); an "AI insight" button was skipped as not a SydIN
+feature; a bulk-select claim in the first draft of this plan was corrected
+after checking the Inventory page live and finding it already has full
+bulk selection (checkboxes, Bulk edit, Move, Create labels) -- Sales and
+Purchase Orders do not, which is where that idea would actually apply, in
+its own sprint later. Approved pieces, built same session:
+
+- Top-bar breadcrumb: the existing single page name ("Sales") becomes a
+  short trail ("Selling / Sales"), reusing the section each nav item is
+  already grouped under (`DASHBOARD_SECTION_LABELS`) rather than inventing
+  new data. `getDashboardPageContext` gained an optional `section` field;
+  everywhere that lacked one keeps behaving exactly as before. The current
+  page keeps the bar's original size/weight/colour -- only the crumb in
+  front of it is new, smaller and muted -- and the existing rule hiding
+  this bar on Overview/Inventory (which print their own heading) still
+  applies, because the class it targets stayed on the same element.
+- A real 14-day sparkline on Overview's "Sold this month" figure: daily
+  sold totals from the sales orders already loaded on the page, today's
+  bar drawn solid. Not added to the other three business figures --
+  Customers-owe and Owe-suppliers are snapshot balances, not a daily flow,
+  and faking a trend for them would be decoration, not data; Deliveries
+  expected is a count, not money.
+
+Verified with tsc/lint/build, then live: breadcrumb checked on Sales
+("Selling / Sales") and confirmed absent (unchanged) on Overview and
+Inventory; sparkline's actual `<rect>` heights read back via the console
+against the one real invoice on the account -- 13 flat bars and one tall
+one on the day it was issued, today's bar flat, matching the Overview
+"Today" line exactly.
