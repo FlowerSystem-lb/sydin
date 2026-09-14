@@ -3921,3 +3921,23 @@ its issued counterpart side by side from the harness (correct in both
 directions) and, separately, by creating a real draft invoice in the
 browser, confirming the button read "Download quote" and the export ran
 with no console errors, then deleting the draft afterward.
+
+**Report builder, scoped to a date range (brief 22 and 46)** *(local, 14
+Sep)* — asked Sayed which slice of "report builder" was worth building
+first: a date range on every existing report, a full pick-your-columns
+custom table, or skip it. He picked the date range. One "From / To" filter
+above the report grid narrows every sales, purchase and payment report at
+once (Sales by month, Outstanding invoices, Top-selling items, Sales by
+customer, Sales by category, Payments by method, Purchases by supplier,
+Purchases by month) -- set it once, every export downstream uses it, PDF
+and CSV alike. Stock Aging is a snapshot of today, not a period, and is
+left out on purpose. The exported file's own subtitle states the range
+that produced it, so a report never silently drops rows without saying
+why. `sales_order_payments`/`purchase_order_payments` payments-by-method
+queries gained a `paid_at` column (they only had amount/method/exchange
+rate before) so payments can be filtered by date the same way orders are.
+Verified with tsc/lint/build, then live in the browser against Sayed's
+real account: set Jan 1 - Jun 30 2026, watched the note update, exported
+Sales by month as CSV with no console errors. Read-only (export/generate),
+so nothing needed cleaning up afterward. Columns, grouping and saved
+reports are still open, deliberately deferred to a later sprint.

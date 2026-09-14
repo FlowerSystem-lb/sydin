@@ -84,7 +84,7 @@ import {
   type SalesOrder,
   type SalesPaymentForReport,
 } from "@/app/lib/salesOrders";
-import { brandingFromSettings } from "@/app/lib/documentPdf";
+import { brandingFromSettings, formatDocumentDate } from "@/app/lib/documentPdf";
 import {
   exportReportPdf,
   outstandingInvoices,
@@ -455,6 +455,11 @@ export default function ReportsPage() {
   const [notice, setNotice] = useState("");
   const [activeCategory, setActiveCategory] = useState<ReportCategory>("all");
   const [reportSearch, setReportSearch] = useState("");
+  // Sales, purchase and payment reports only -- Stock Aging is "as of
+  // today", not a period, and the workflow/inventory shortcuts have no
+  // date of their own. Empty means all time, same as before this existed.
+  const [reportDateFrom, setReportDateFrom] = useState("");
+  const [reportDateTo, setReportDateTo] = useState("");
   const [inventoryDialogReport, setInventoryDialogReport] =
     useState<ReportCard | null>(null);
   const [movementDialogOpen, setMovementDialogOpen] = useState(false);
@@ -912,44 +917,88 @@ export default function ReportsPage() {
     setDepotReportOpen(false);
   };
 
+  // Sales, purchase and payment reports only -- Stock Aging is a snapshot
+  // of today, not a period, so it is left out of every check below.
+  const reportRangeActive = Boolean(reportDateFrom || reportDateTo);
+  const withinReportRange = (dateStr: string | null | undefined) => {
+    if (!reportRangeActive) return true;
+    const day = (dateStr || "").slice(0, 10);
+    if (!day) return false;
+    if (reportDateFrom && day < reportDateFrom) return false;
+    if (reportDateTo && day > reportDateTo) return false;
+    return true;
+  };
+  const reportRangeLabel = reportRangeActive
+    ? `${reportDateFrom ? formatDocumentDate(reportDateFrom) : "the start"} to ${
+        reportDateTo ? formatDocumentDate(reportDateTo) : "today"
+      }`
+    : "";
+
   const buildBusinessReport = (id: string): ReportTable | null => {
-    switch (id) {
-      case "sales-by-month":
-        return salesByMonth(salesOrders, currencyCode);
-      case "outstanding-invoices":
-        return outstandingInvoices(salesOrders, currencyCode);
-      case "top-selling-items":
-        return topSellingItems(salesOrders, currencyCode);
-      case "sales-by-customer":
-        return salesByCustomer(salesOrders, currencyCode);
-      case "sales-by-category":
-        return salesByCategory(salesOrders, currencyCode, (inventoryItemId) => {
-          const item = inventoryItemId !== null ? itemById.get(inventoryItemId) : undefined;
+    // Stock Aging has no period to apply the filter to -- return early,
+    // before the range is even considered, rather than silently ignoring it.
+    if (id === "stock-aging") {
+      return stockAging(
+        items.map((item) => ({
+          id: item.id,
+          name: item.name,
+          sku: item.sku,
+          quantity: Number(item.quantity) || 0,
+        })),
+        lastMovedByItemId,
+        (itemId) => {
+          const item = itemById.get(itemId);
           return item ? getCategoryLabel(item) : "";
-        });
-      case "payments-by-method":
-        return paymentsByMethod(salesPayments, purchasePayments, currencyCode);
-      case "stock-aging":
-        return stockAging(
-          items.map((item) => ({
-            id: item.id,
-            name: item.name,
-            sku: item.sku,
-            quantity: Number(item.quantity) || 0,
-          })),
-          lastMovedByItemId,
-          (itemId) => {
-            const item = itemById.get(itemId);
-            return item ? getCategoryLabel(item) : "";
-          }
-        );
-      case "purchases-by-supplier":
-        return purchasesBySupplier(purchaseOrders, currencyCode);
-      case "purchases-by-month":
-        return purchasesByMonth(purchaseOrders, currencyCode);
-      default:
-        return null;
+        }
+      );
     }
+
+    const rangeSalesOrders = reportRangeActive
+      ? salesOrders.filter((order) => withinReportRange(order.issue_date || order.created_at))
+      : salesOrders;
+    const rangePurchaseOrders = reportRangeActive
+      ? purchaseOrders.filter((order) => withinReportRange(order.purchase_date || order.created_at))
+      : purchaseOrders;
+    const rangeSalesPayments = reportRangeActive
+      ? salesPayments.filter((payment) => withinReportRange(payment.paidAt))
+      : salesPayments;
+    const rangePurchasePayments = reportRangeActive
+      ? purchasePayments.filter((payment) => withinReportRange(payment.paidAt))
+      : purchasePayments;
+
+    const table = ((): ReportTable | null => {
+      switch (id) {
+        case "sales-by-month":
+          return salesByMonth(rangeSalesOrders, currencyCode);
+        case "outstanding-invoices":
+          return outstandingInvoices(rangeSalesOrders, currencyCode);
+        case "top-selling-items":
+          return topSellingItems(rangeSalesOrders, currencyCode);
+        case "sales-by-customer":
+          return salesByCustomer(rangeSalesOrders, currencyCode);
+        case "sales-by-category":
+          return salesByCategory(rangeSalesOrders, currencyCode, (inventoryItemId) => {
+            const item = inventoryItemId !== null ? itemById.get(inventoryItemId) : undefined;
+            return item ? getCategoryLabel(item) : "";
+          });
+        case "payments-by-method":
+          return paymentsByMethod(rangeSalesPayments, rangePurchasePayments, currencyCode);
+        case "purchases-by-supplier":
+          return purchasesBySupplier(rangePurchaseOrders, currencyCode);
+        case "purchases-by-month":
+          return purchasesByMonth(rangePurchaseOrders, currencyCode);
+        default:
+          return null;
+      }
+    })();
+
+    // The exported file has to say what period it covers -- a report that
+    // silently dropped everything outside a range, with no note of the
+    // range itself, is worse than the unfiltered one.
+    if (table && reportRangeActive) {
+      return { ...table, subtitle: `${table.subtitle} · ${reportRangeLabel}` };
+    }
+    return table;
   };
 
   const runBusinessReport = async (report: ReportCard, format: "pdf" | "csv") => {
@@ -1071,6 +1120,50 @@ export default function ReportsPage() {
               placeholder="Search reports"
               className="w-full lg:max-w-sm"
             />
+          </div>
+
+          {/* Brief 46: a date range before export, not per report card --
+              every sales, purchase and payment report below reads it, so
+              setting it once narrows all of them. Stock Aging is "as of
+              today" and ignores it; there is nothing to range there. */}
+          <div className="mt-3 flex flex-wrap items-end gap-2 border-t border-theme pt-3">
+            <label className="grid gap-1 text-xs font-semibold text-theme-secondary">
+              From
+              <input
+                type="date"
+                value={reportDateFrom}
+                max={reportDateTo || undefined}
+                onChange={(event) => setReportDateFrom(event.target.value)}
+                className="min-h-10 rounded-lg border border-theme bg-theme-inset px-2.5 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+              />
+            </label>
+            <label className="grid gap-1 text-xs font-semibold text-theme-secondary">
+              To
+              <input
+                type="date"
+                value={reportDateTo}
+                min={reportDateFrom || undefined}
+                onChange={(event) => setReportDateTo(event.target.value)}
+                className="min-h-10 rounded-lg border border-theme bg-theme-inset px-2.5 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+              />
+            </label>
+            {reportRangeActive && (
+              <button
+                type="button"
+                onClick={() => {
+                  setReportDateFrom("");
+                  setReportDateTo("");
+                }}
+                className="min-h-10 rounded-lg px-2 text-xs font-semibold text-theme-muted underline-offset-2 transition hover:text-theme-danger hover:underline"
+              >
+                Clear
+              </button>
+            )}
+            <p className="text-xs text-theme-muted">
+              {reportRangeActive
+                ? `Sales, purchase and payment reports below use ${reportRangeLabel}.`
+                : "Applies to sales, purchase and payment reports below. Leave blank for all time."}
+            </p>
           </div>
         </DashboardToolbar>
 

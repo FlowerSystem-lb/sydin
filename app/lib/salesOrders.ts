@@ -413,6 +413,7 @@ export interface SalesPaymentForReport {
   amount: number;
   method: SalesOrderPaymentMethod | null;
   exchangeRate: number;
+  paidAt: string;
 }
 
 /** Every customer payment across every invoice -- for "payments by method". */
@@ -421,7 +422,7 @@ export async function getAllSalesOrderPaymentsForUser(
 ): Promise<SalesPaymentForReport[]> {
   const { data, error } = await supabase
     .from("sales_order_payments")
-    .select("amount, method, sales_orders!inner(user_id, exchange_rate)")
+    .select("amount, method, paid_at, sales_orders!inner(user_id, exchange_rate)")
     .eq("sales_orders.user_id", userId);
 
   if (error) throw error;
@@ -430,12 +431,14 @@ export async function getAllSalesOrderPaymentsForUser(
     (data || []) as unknown as Array<{
       amount: number | string;
       method: SalesOrderPaymentMethod | null;
+      paid_at: string;
       sales_orders: { exchange_rate: number | string | null } | null;
     }>
   ).map((row) => ({
     amount: Number(row.amount) || 0,
     method: row.method,
     exchangeRate: Number(row.sales_orders?.exchange_rate) || 1,
+    paidAt: row.paid_at,
   }));
 }
 

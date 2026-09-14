@@ -702,6 +702,7 @@ export interface PurchasePaymentForReport {
   amount: number;
   method: PurchaseOrderPaymentMethod | null;
   exchangeRate: number;
+  paidAt: string;
 }
 
 /** Every supplier payment across every order -- for "payments by method".
@@ -711,7 +712,7 @@ export async function getAllPurchaseOrderPaymentsForUser(
 ): Promise<PurchasePaymentForReport[]> {
   const { data, error } = await supabase
     .from("purchase_order_payments")
-    .select("amount, method, purchase_orders!inner(user_id, exchange_rate)")
+    .select("amount, method, paid_at, purchase_orders!inner(user_id, exchange_rate)")
     .eq("purchase_orders.user_id", userId);
 
   if (error) {
@@ -723,12 +724,14 @@ export async function getAllPurchaseOrderPaymentsForUser(
     (data || []) as unknown as Array<{
       amount: number | string;
       method: PurchaseOrderPaymentMethod | null;
+      paid_at: string;
       purchase_orders: { exchange_rate: number | string | null } | null;
     }>
   ).map((row) => ({
     amount: Number(row.amount) || 0,
     method: row.method,
     exchangeRate: Number(row.purchase_orders?.exchange_rate) || 1,
+    paidAt: row.paid_at,
   }));
 }
 
