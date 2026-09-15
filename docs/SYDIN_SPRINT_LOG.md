@@ -4057,3 +4057,14 @@ were down** *(local, 15 Sep)* -- yesterday's new breadcrumb had
 `aria-label="Breadcrumb"` on the nav but no `aria-current="page"` on the
 current-page crumb, the standard pattern for a screen reader to know
 which crumb is "here." Added it to the last crumb.
+
+**Secondary buttons get the same lift** *(local, 15 Sep, "keep doing")* --
+following straight on from the primary-button depth pass: secondary
+buttons ("Cancel", "Duplicate", "Download PDF") were still flat
+(`box-shadow: none`), which now sat oddly next to a primary button with
+real depth. Not the gradient/glow -- they're not the call to action --
+just enough shadow and a soft inset top highlight that a white pill reads
+as raised rather than painted on, plus the same real pressed-dent
+`:active` state the primary buttons got. `.ui-button-secondary` and
+`.dashboard-action-button-secondary`. Verified with tsc/lint/build; the
+browser tools are still down this session.
