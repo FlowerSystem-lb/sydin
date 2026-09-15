@@ -4051,3 +4051,9 @@ gradient+gloss so it never flips to a flat colour. Verified with
 tsc/lint/build (both browser-automation tools were still down this
 session, same MCP config issue as above) -- flagged to Sayed to confirm
 live.
+
+**Small accessibility fix, found by code review while the browser tools
+were down** *(local, 15 Sep)* -- yesterday's new breadcrumb had
+`aria-label="Breadcrumb"` on the nav but no `aria-current="page"` on the
+current-page crumb, the standard pattern for a screen reader to know
+which crumb is "here." Added it to the last crumb.

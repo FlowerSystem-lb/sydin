@@ -1401,6 +1401,9 @@ export default function DashboardShell({
                           ? "dashboard-breadcrumb-current"
                           : "dashboard-breadcrumb-parent"
                       }
+                      aria-current={
+                        index === breadcrumbTrail.length - 1 ? "page" : undefined
+                      }
                     >
                       {crumb}
                     </span>
