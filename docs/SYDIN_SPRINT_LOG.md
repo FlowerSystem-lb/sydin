@@ -3997,3 +3997,37 @@ Inventory; sparkline's actual `<rect>` heights read back via the console
 against the one real invoice on the account -- 13 flat bars and one tall
 one on the day it was issued, today's bar flat, matching the Overview
 "Today" line exactly.
+
+**Sidebar and metric icons: black-and-white workspace pass** *(local, 15
+Sep)* -- Sayed sent a reference dashboard screenshot and asked for the
+workspace to look like it: black/white like the landing page, primary
+buttons like the logo. Read `app/globals.css`'s color-token architecture
+(two background research passes) before touching anything, which changed
+the scope for the better: dark mode is dead code (`layout.tsx` hardcodes
+`data-theme="light"`, no toggle exists), and primary buttons already use
+the exact logo gradient (`#10c4dc -> #2563eb -> #7d5cff`, confirmed the
+winning rule on `.ui-button-primary`, `.dashboard-action-button-primary`
+and the top-bar "Add" button) -- nothing to fix there. The real, narrow gap
+between today and the reference: the sidebar's active nav item was a faint
+13%-opacity blue/violet wash, not the solid dark pill with white text the
+reference shows; and every metric card / empty-state icon sat in a blue
+badge by default regardless of what it meant, pure decoration repeated
+many times per page. Fixed both -- `.dashboard-nav-link-active` (plain
+rule plus its two page-scoped `!important` overrides for Inventory and the
+general workspace shell, all three edited together so the look doesn't
+flip depending on which page you're on) now renders `background:
+var(--ink); color: var(--text-inverse)`; the active-row dot recolours to
+match. `.dashboard-metric-icon, .dashboard-empty-icon` now use
+`--border-default`/`--surface-sunken`/`--text-secondary` instead of the
+blue `--status-info-*` triplet. Left alone on purpose: focus rings,
+links/`text-theme-accent`, checkbox accent-color, success/warning/danger
+status badges, FilterChip's active tint, the Overview sparkline highlight,
+DocumentTimeline's done/current markers -- all functional signals or
+already consistent with how the landing page itself uses its one blue
+accent, not decoration. Verified with tsc/lint/build; the Claude Browser
+and computer-use tools both errored out mid-session (an MCP server-naming
+conflict needing a config fix + fresh session, not something fixable from
+inside the session) so the visual check is from precise before/after
+reads of the exact winning CSS rules rather than a screenshot -- flagged
+to Sayed to confirm live next time either tool is back or he opens the
+app himself.
