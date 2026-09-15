@@ -4031,3 +4031,23 @@ inside the session) so the visual check is from precise before/after
 reads of the exact winning CSS rules rather than a screenshot -- flagged
 to Sayed to confirm live next time either tool is back or he opens the
 app himself.
+
+**Primary buttons: deep, not flat** *(local, 15 Sep)* -- Sayed's next line:
+the buttons read "too soft and simple," wanted "deep 3D" like the
+reference image and the logo's own dimensional cube. The colour was never
+the problem (the gradient is already the logo's); the lighting was --
+a flat fill plus one soft ambient glow reads flat no matter how good the
+gradient is. Added, to the three primary-button classes that share this
+look (`.ui-button-primary`, `.dashboard-action-button-primary`,
+`.dashboard-top-primary-button`): a glossy top-highlight layer over the
+same brand gradient, a seated shadow right at the base (not only the big
+diffuse glow further out, which stays), and a real pressed dent
+(`translateY(1px)` + an inward shadow) in place of the generic 1.5%
+scale-down every button gets. Also fixed a stale hover rule from an
+earlier flat-button era (`.ui-button-primary:hover { background:
+var(--button-primary-hover) }`, a flat dark teal) that would have fought
+the new gloss on hover -- the new hover rule restates the full
+gradient+gloss so it never flips to a flat colour. Verified with
+tsc/lint/build (both browser-automation tools were still down this
+session, same MCP config issue as above) -- flagged to Sayed to confirm
+live.

@@ -22284,3 +22284,52 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border: none;
   border-radius: 6px;
 }
+
+/* ===[ PRIMARY BUTTONS: DEEP, NOT FLAT ]===
+   Sayed's own words: the primary buttons read "too soft and simple" -- a
+   flat gradient fill and one soft ambient glow, nothing that reads as a
+   raised, pressable object. Same brand gradient, same colour -- just lit
+   like one: a glossy top highlight, a seated shadow right at the base
+   (not only a big diffuse glow further out), and a pressed state that
+   actually dents inward instead of a 1.5% scale-down. Comes last on
+   purpose -- these are the winning declarations for every primary CTA
+   (Button.tsx's primary variant, ActionButton's primary variant, and the
+   top-bar "Add" button all share this look). */
+.ui-button-primary,
+.dashboard-action-button-primary,
+.dashboard-top-primary-button {
+  background:
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 45%),
+    linear-gradient(135deg, #10c4dc 0%, #2563eb 58%, #7d5cff 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.4),
+    inset 0 -3px 5px rgba(8, 15, 38, 0.22),
+    0 1px 0 rgba(8, 15, 38, 0.4),
+    0 16px 32px rgba(37, 99, 235, 0.26);
+}
+
+@media (hover: hover) {
+  .ui-button-primary:hover,
+  .dashboard-action-button-primary:hover,
+  .dashboard-top-primary-button:hover {
+    background:
+      linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 45%),
+      linear-gradient(135deg, #10c4dc 0%, #2563eb 58%, #7d5cff 100%);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, 0.45),
+      inset 0 -3px 5px rgba(8, 15, 38, 0.2),
+      0 1px 0 rgba(8, 15, 38, 0.4),
+      0 18px 38px rgba(37, 99, 235, 0.32);
+  }
+}
+
+.ui-button-primary:not(:disabled):active,
+.dashboard-action-button-primary:not(:disabled):not(.dashboard-action-button-disabled):active,
+.dashboard-top-primary-button:not(:disabled):active {
+  /* A real dent -- pressed all the way in, highlight gone, shadow pulled
+     tight underneath -- not just the generic 1.5% scale every button gets. */
+  transform: translateY(1px) scale(0.99);
+  box-shadow:
+    inset 0 2px 5px rgba(8, 15, 38, 0.4),
+    0 4px 10px rgba(37, 99, 235, 0.22);
+}
