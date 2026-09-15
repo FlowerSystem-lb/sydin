@@ -4068,3 +4068,27 @@ as raised rather than painted on, plus the same real pressed-dent
 `:active` state the primary buttons got. `.ui-button-secondary` and
 `.dashboard-action-button-secondary`. Verified with tsc/lint/build; the
 browser tools are still down this session.
+
+**Invoice gets an Excel export -- it only had PDF and Word** *(local, 15
+Sep, brief point 17)* -- PO already had PDF + Word + Excel; the invoice
+only had PDF and Word, so `salesInvoiceExcelExport.ts` mirrors
+`purchaseOrderExcelExport.ts`'s branded-banner-and-table shape (narrower:
+an invoice line is name/code/unit/qty/price/total, no category or
+stock-affecting flag). Wired in as an "Excel" button next to Download
+PDF/Word on the invoice page. Actually generated a file and read it back
+programmatically with exceljs (not just built the button) -- headers,
+line values, currency number formats, the merged summary boxes, the
+frozen header row, the autofilter, and the logo all checked cell by cell
+against what was sent in. Caught one real problem along the way: the
+first test run showed 0 images embedded. Traced it to the test harness
+itself, not the export code -- I'd overridden the global `Blob` class to
+capture the final download, and Node's native `Response.blob()` (used
+earlier in the same flow, to fetch the logo) constructs its result via
+that same global `Blob` at call time, so my override broke image loading
+before the download step ever ran. Fixed by capturing the download via
+`URL.createObjectURL` instead, which never touches `Blob` -- reran, logo
+embedded correctly (716x1021, matches the source PNG), 551KB file.
+Verified with tsc/lint/build. The scratch test folder lived briefly
+inside the repo (`.tmp-xlsx-check`, to get `node_modules` resolution for
+free) and was deleted before committing -- confirmed via `git status`
+that nothing from it was ever tracked.

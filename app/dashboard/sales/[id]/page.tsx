@@ -28,6 +28,7 @@ import { formatExactPrice } from "@/app/lib/currency";
 import { exportSalesInvoicePdf } from "@/app/lib/salesInvoicePdf";
 import { exportPaymentReceiptPdf } from "@/app/lib/paymentReceiptPdf";
 import { exportSalesInvoiceDocx } from "@/app/lib/documentDocxExports";
+import { exportSalesInvoiceExcel } from "@/app/lib/salesInvoiceExcelExport";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import {
   addSalesOrderPayment,
@@ -286,7 +287,7 @@ export default function SaleDetailPage() {
     };
   };
 
-  const downloadDocument = async (format: "pdf" | "docx") => {
+  const downloadDocument = async (format: "pdf" | "docx" | "xlsx") => {
     if (!order || downloading) return;
     const spec = buildInvoiceDocument();
     if (!spec) return;
@@ -295,18 +296,33 @@ export default function SaleDetailPage() {
       setDownloading(true);
       setError("");
       // A draft has not been invoiced yet -- the PDF prints as a quote for
-      // the customer to approve, not a bill. Word export is invoice-only
-      // for now.
+      // the customer to approve, not a bill. Word and Excel export the
+      // invoice as it stands either way.
       if (format === "pdf") {
         await exportSalesInvoicePdf({ ...spec, asQuote: order.status === "draft" });
-      } else {
+      } else if (format === "docx") {
         await exportSalesInvoiceDocx(spec);
+      } else {
+        await exportSalesInvoiceExcel({
+          details: spec.details,
+          lines: spec.lines,
+          branding: {
+            businessName: spec.branding.businessName,
+            businessLogoUrl: spec.branding.businessLogoUrl,
+            contactEmail: spec.branding.email,
+            contactPhone: spec.branding.phone,
+            contactWebsite: spec.branding.website,
+          },
+          currencyCode,
+        });
       }
     } catch {
       setError(
         format === "pdf"
           ? "We could not build the PDF. Please try again."
-          : "We could not build the Word file. Please try again.",
+          : format === "docx"
+            ? "We could not build the Word file. Please try again."
+            : "We could not build the Excel file. Please try again.",
       );
     } finally {
       setDownloading(false);
@@ -451,6 +467,13 @@ export default function SaleDetailPage() {
                 disabled={downloading}
               >
                 Word
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => void downloadDocument("xlsx")}
+                disabled={downloading}
+              >
+                Excel
               </Button>
               <Button
                 variant="secondary"

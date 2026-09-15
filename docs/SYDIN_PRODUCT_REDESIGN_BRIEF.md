@@ -26,7 +26,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 14. ✅ Document family on `documentPdf.ts`: invoice, purchase order, goods-received note per delivery with signature lines, payment receipt on every invoice/PO payment, customer statement from the customer account sheet, quote — a draft invoice downloads as one automatically (no paid/balance, "Valid until" not "Due"), same record, same number; issuing it later is what turns it into the real invoice (13 Sep).
 15. ✅ Company branding: name, logo, address, phone, email, website, tax/reg no., currency, payment terms, footer, ✅ accent colour (13 Sep) — the bar on every invoice/PO/receipt/statement/report; picker in Settings › Company, `business_settings.accent_color` (phase 27). ☐ document prefix/numbering — invoice/PO numbers already continue whatever pattern was last used or derive from the depot, so a fixed prefix setting is lower value; left open, not attempted.
 16. ✅ Live document preview while editing (edit left / preview right) on New invoice and New purchase order, updating on every keystroke; stacks under the form on a phone (13 Sep).
-17. ◐ Exports: PDF + Word + Excel for invoice/PO; inventory PDF/Excel; reports PDF/CSV.
+17. ✅ Exports: PDF + Word + Excel for invoice/PO (Excel was missing for invoices — PO had all three, invoice only had PDF and Word; added `salesInvoiceExcelExport.ts`, 15 Sep); inventory PDF/Excel; reports PDF/CSV.
 18. ✅ Exports actually tested (rendered in Node, read page by page: long names, many lines, empty fields, logo, thumbnails).
 19. ✅ Multi-page: headers repeat, footer + page numbers on every page.
 20. ✅ Item photos in documents (thumbnail column) and in PO picker/lines, invoice lines, receiving table.
