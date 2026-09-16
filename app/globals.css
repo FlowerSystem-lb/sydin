@@ -545,12 +545,15 @@ canvas {
   font-weight: 600;
   line-height: 1.25rem;
   text-decoration: none;
+  /* The eased-overshoot curve (--motion-ease-standard), not plain `ease` --
+     the depth/press treatment added later leans on this to feel like a
+     real object settling into place, not a linear fade between two states. */
   transition:
-    background-color var(--motion-control) ease,
-    border-color var(--motion-control) ease,
-    color var(--motion-control) ease,
-    box-shadow var(--motion-control) ease,
-    transform var(--motion-control) ease;
+    background-color var(--motion-control) var(--motion-ease-standard),
+    border-color var(--motion-control) var(--motion-ease-standard),
+    color var(--motion-control) var(--motion-ease-standard),
+    box-shadow var(--motion-control) var(--motion-ease-standard),
+    transform var(--motion-control) var(--motion-ease-standard);
 }
 
 .ui-button-sm {
@@ -615,9 +618,9 @@ canvas {
   background: var(--button-secondary-bg);
   color: var(--text-secondary);
   transition:
-    background-color var(--motion-control) ease,
-    border-color var(--motion-control) ease,
-    color var(--motion-control) ease;
+    background-color var(--motion-control) var(--motion-ease-standard),
+    border-color var(--motion-control) var(--motion-ease-standard),
+    color var(--motion-control) var(--motion-ease-standard);
 }
 
 .ui-icon-button-sm {
@@ -655,10 +658,10 @@ canvas {
 
 .ui-card-interactive {
   transition:
-    background-color var(--motion-control) ease,
-    border-color var(--motion-control) ease,
-    box-shadow var(--motion-control) ease,
-    transform var(--motion-control) ease;
+    background-color var(--motion-control) var(--motion-ease-standard),
+    border-color var(--motion-control) var(--motion-ease-standard),
+    box-shadow var(--motion-control) var(--motion-ease-standard),
+    transform var(--motion-control) var(--motion-ease-standard);
 }
 
 .ui-section-card {
@@ -901,11 +904,11 @@ canvas {
 .dashboard-action-button,
 .dashboard-filter-chip {
   transition:
-    background-color var(--motion-control) ease,
-    border-color var(--motion-control) ease,
-    color var(--motion-control) ease,
-    box-shadow var(--motion-control) ease,
-    transform var(--motion-control) ease;
+    background-color var(--motion-control) var(--motion-ease-standard),
+    border-color var(--motion-control) var(--motion-ease-standard),
+    color var(--motion-control) var(--motion-ease-standard),
+    box-shadow var(--motion-control) var(--motion-ease-standard),
+    transform var(--motion-control) var(--motion-ease-standard);
 }
 
 .dashboard-toolbar-card {
@@ -1006,6 +1009,15 @@ canvas {
   line-height: 1.25rem;
   text-align: center;
   text-decoration: none;
+  /* Had no transition at all -- hover lift and the pressed dent both
+     snapped instantly. Same curve as .ui-button, so every button in the
+     app settles the same way. */
+  transition:
+    background-color var(--motion-control) var(--motion-ease-standard),
+    border-color var(--motion-control) var(--motion-ease-standard),
+    color var(--motion-control) var(--motion-ease-standard),
+    box-shadow var(--motion-control) var(--motion-ease-standard),
+    transform var(--motion-control) var(--motion-ease-standard);
 }
 
 .dashboard-action-button-primary {
@@ -1205,10 +1217,10 @@ canvas {
   padding: var(--space-3);
   color: var(--text-primary);
   transition:
-    background-color var(--motion-control) ease,
-    border-color var(--motion-control) ease,
-    box-shadow var(--motion-control) ease,
-    transform var(--motion-control) ease;
+    background-color var(--motion-control) var(--motion-ease-standard),
+    border-color var(--motion-control) var(--motion-ease-standard),
+    box-shadow var(--motion-control) var(--motion-ease-standard),
+    transform var(--motion-control) var(--motion-ease-standard);
 }
 
 .dashboard-list-row-leading {

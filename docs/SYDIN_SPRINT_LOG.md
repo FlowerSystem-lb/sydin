@@ -4107,3 +4107,22 @@ overlaps the table, and "Page X of 3" is right on every page. No source
 change needed -- this confirms what was already there holds up under
 load. Scratch folder (`.tmp-report-check`) deleted before anything was
 committed.
+
+**One easing curve, not two, on the interactive elements people touch
+most** *(local, 16 Sep, "use motions... look 2027 animations")* -- the
+codebase already had 35+ keyframe animations and a proper motion-duration
+token system (`--motion-fast`/`--motion-standard`/`--motion-panel`) plus
+a considered overshoot easing curve, `--motion-ease-standard:
+cubic-bezier(0.22, 1, 0.36, 1)` -- used in 39 places, while another 57
+used the plain CSS `ease` keyword instead, split across old and new
+redesign passes. Buttons (`.ui-button`, `.dashboard-action-button`),
+icon buttons, interactive cards (`.ui-card-interactive`,
+`.dashboard-card-interactive`), filter chips and list rows all moved
+onto the one curve, so the hover lift and the new pressed-dent settle
+the same way everywhere instead of half the app using a generic linear
+fade. `.dashboard-action-button` had no transition at all before this --
+its hover/press states were snapping instantly. Purely a duration/easing
+swap: no colours, sizes, or layout touched, and nothing added that
+`prefers-reduced-motion` (already guarded in 10+ places) wouldn't
+already turn off. Verified with tsc/lint/build; the browser tools are
+still down this session.
