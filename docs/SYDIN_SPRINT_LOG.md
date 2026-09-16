@@ -4243,3 +4243,74 @@ Verified with tsc/lint/build, plus live in the browser: collapsed
 rail, peek-open, and three other pages (Inventory, Sales, and Overview
 again) all screenshotted with no console errors beyond the pre-existing
 known local-only next/image 500s on Supabase-hosted photos.
+
+**Visual redesign, pass 1: the foundation** *(16 Sep 2026)* — Sayed, after
+seeing the previous work: "STOP PATCHING THE CURRENT UI. FULL VISUAL REDESIGN
+REQUIRED... You are currently making small modifications to the existing UI:
+adding borders to existing cards, changing spacing, keeping the same layout,
+keeping the same visual language. THIS IS NOT WHAT I WANT."
+
+He was right. The earlier passes were patches. This one starts at the bottom.
+
+*The ground.* Measured in the running app rather than read off the source: the
+workspace was `#e6ecf5` under two blue radial washes (`rgba(37,99,235,.38)`
+plus a cyan companion), stacked across the theme, the shell and the canvas,
+with the rail painting its own copy under a white veil. That is the "generic
+web app" tint he was reacting to. It's gone — flat near-white.
+
+*The tokens.* Every neutral carried a blue cast (`#f4f7fb`, `#e6ecf5`,
+`#64748b`), so the brand blue read as the screen's ambient temperature rather
+than as an accent. Worse, `--text-secondary`, `--text-subtle` and
+`--text-muted` were all the *same* value: three tokens, one colour, so nothing
+could out-rank anything. `--border-strong` was `#2563eb4d` — a blue border,
+which is why every hover went blue. `--shadow-card` resolved to an empty
+string. Replaced with true neutrals, three real ink steps, neutral borders,
+and radius/shadow/control-height scales.
+
+*Buttons.* Deleted the "deep 3D" block from the previous pass — it had taken
+"deep 3D" literally (glossy inset highlight, hard seated edge, coloured glow,
+on a 999px pill). His clarification was explicit: subtle elevation, 1px
+borders, soft ambient shadows, no bevels/gloss/neumorphism, not every button a
+pill, no gradients without a specific reason. So the gradient stays on the
+logo and primary is the solid blue from the middle of it. Four tiers with real
+weight differences plus square icon buttons; 36px controls, 8px radius.
+
+*Blue as jewelry.* Audited every leaf text node on the rendered Inventory
+page: the eyebrow, every SKU and every quantity were brand blue. None are
+links, actions, focus or status — and it inverted the hierarchy, since a
+quantity is the most important number on an inventory card and rendered in the
+same blue as its SKU. Reassigned to the ink scale.
+
+*Sidebar.* 37px rows and an active item that was a solid `#18181b` slab —
+the black equivalent of the "giant blue rectangle" he rejected, and the
+heaviest object on screen. Now 30px rows (the whole workflow fits without
+scrolling), proper small-caps group labels, and a selected state that is a
+quiet surface with a 2px blue left marker and blue icon. Also fixed *why* the
+first attempt did nothing instead of adding another `!important`: two rules
+were applying rail styling (`width: 2.75rem`, centred, `min-height: 2.75rem
+!important`) in **both** states unconditionally, then a separate expanded-only
+block undid it — that back-and-forth is most of why this area carries a dozen
+competing rules. Scoped both to `.dashboard-shell-collapsed` where they
+belonged, so the pile got smaller instead of bigger.
+
+*Overview density.* Only visible in the browser, since it depends on the
+container width the sidebar leaves behind: the KPI grid dropped to two columns
+at a 900px container, turning eight tiles into eight huge stacked blocks and
+pushing the actual work below the fold; the two work panels did the same.
+Compact tiles now, four columns down to 640px, panels two columns to 700px.
+Both KPI rows and both work panels now sit above the fold at 1440×900 with the
+sidebar expanded.
+
+*Consistency.* Settings' category nav used `bg-cyan-500/10` + `font-black` for
+its selected item — a different idea of "you are here" from the sidebar's.
+Same language now.
+
+Every step was checked against a real screenshot of the rendered page, not
+against the CSS. Gate (tsc/lint/build) green at each commit.
+
+**Still open** (honest list): the dashboard's information architecture is
+still eight equally-weighted KPIs — compacted and ranked visually, but not yet
+restructured around his questions in §8; Needs attention is not yet an action
+centre with inline `[Restock]`; tables, inputs, empty/loading states, Help,
+landing page, sign-in and the mobile breakpoints have not been through this
+pass yet.
