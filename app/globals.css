@@ -12058,7 +12058,16 @@ body,
   }
 
   .dashboard-workspace-shell .dashboard-sidebar-header {
-    min-height: 3rem !important;
+    /* Was 3rem. The toggle is `position: absolute` now (see
+       .dashboard-sidebar-toggle) so it takes up no space in this header's
+       own flow -- at 3rem the header shrank to just the logo's height,
+       and the nav list right after it in the DOM started immediately
+       below the logo, overlapping the toggle sitting underneath it. This
+       is the rule that was actually winning here (`!important`, and this
+       block runs regardless of collapsed/expanded), which is why fixing
+       the collapsed-only rule instead did nothing. Reserves room for
+       logo + gap + toggle so the nav list clears both. */
+    min-height: 5.6rem !important;
     justify-content: center !important;
     padding: 0 !important;
   }
@@ -21346,7 +21355,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    or 17.25rem wide. */
 .dashboard-sidebar-toggle {
   position: absolute;
-  top: 3.4rem;
+  top: 3.7rem;
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
@@ -22400,4 +22409,141 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .dashboard-action-button-secondary:not(:disabled):not(.dashboard-action-button-disabled):active {
   transform: translateY(1px) scale(0.99);
   box-shadow: inset 0 2px 4px rgba(8, 15, 38, 0.12);
+}
+
+/* ==========================================================================
+   SYDIN DESIGN FOUNDATION — 16 Sep 2026
+   ==========================================================================
+   Sayed: "STOP PATCHING THE CURRENT UI... I WANT A NEW PROFESSIONAL VISUAL
+   SYSTEM." This block is that system's ground floor. Everything above it in
+   this file is ten months of stacked passes; rather than edit a dozen
+   competing rules per property, the foundation is declared once, here, last.
+
+   What was actually wrong, measured in the running app rather than guessed:
+
+   - The workspace ground was #e6ecf5 with two blue radial washes painted on
+     top (rgba(37,99,235,.38) and a cyan companion), stacked across three
+     elements. That is the "generic web app" tint. Gone.
+   - Every neutral carried a blue cast: #f4f7fb, #e6ecf5, #64748b. Replaced
+     with true neutrals so the SydIN blue reads as an accent instead of as
+     the ambient temperature of the whole screen.
+   - --text-secondary, --text-subtle and --text-muted were all the SAME
+     value (#64748b). Three tokens, one colour, so nothing could out-rank
+     anything. They are now three real steps.
+   - --border-strong was #2563eb4d — a BLUE border, which is why every hover
+     went blue. Now a neutral, darker hairline.
+   - --shadow-card resolved to an empty string.
+   - --radius-pill (999px) was the button radius app-wide. Buttons are
+     controls, not pills.
+   ========================================================================== */
+
+:root,
+[data-theme="light"] {
+  /* --- surfaces: true neutrals, no blue cast --- */
+  --surface-page: #fafafa;
+  --surface-sunken: #f4f4f5;
+  --bg-page-muted: #f7f7f8;
+  --bg-surface: #ffffff;
+  --bg-surface-strong: #ffffff;
+  --bg-inset: #f7f7f8;
+
+  /* --- ink: one near-black plus three real grey steps --- */
+  --ink: #18181b;
+  --ink-muted: #52525b;
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --text-subtle: #a1a1aa;
+  --text-inverse: #ffffff;
+
+  /* --- borders: neutral hairlines that step up on hover --- */
+  --border-hairline: rgba(0, 0, 0, 0.06);
+  --border-divider: rgba(0, 0, 0, 0.07);
+  --border-default: rgba(0, 0, 0, 0.10);
+  --border-strong: rgba(0, 0, 0, 0.18);
+
+  /* --- radius: a scale, not thirty values --- */
+  --radius-chip: 6px;
+  --radius-control: 8px;
+  --radius-card: 12px;
+  --radius-panel: 16px;
+
+  /* --- shadow: soft and ambient, two layers, never cartoonish --- */
+  --shadow-subtle:
+    0 1px 2px rgba(24, 24, 27, 0.04),
+    0 1px 1px rgba(24, 24, 27, 0.03);
+  --shadow-card:
+    0 1px 3px rgba(24, 24, 27, 0.05),
+    0 1px 2px rgba(24, 24, 27, 0.03);
+  --shadow-raised:
+    0 2px 8px rgba(24, 24, 27, 0.07),
+    0 1px 2px rgba(24, 24, 27, 0.04);
+  --shadow-elevated:
+    0 12px 32px rgba(24, 24, 27, 0.10),
+    0 2px 6px rgba(24, 24, 27, 0.05);
+
+  /* --- control sizing: 36px default. 44 was chunky. --- */
+  --control-h-sm: 30px;
+  --control-h: 36px;
+  --control-h-lg: 44px;
+}
+
+/* --------------------------------------------------------------------------
+   The workspace ground. Flat near-white — no gradient, no wash, no tint.
+   `!important` matches the rule it replaces (the eight-times-declared
+   `.liquid-bg` ground), which is itself `!important`.
+   -------------------------------------------------------------------------- */
+.dashboard-shell.liquid-bg,
+.dashboard-shell.dashboard-workspace-shell.liquid-bg,
+.dashboard-workspace-shell.liquid-bg {
+  background-color: var(--surface-page) !important;
+  background-image: none !important;
+}
+
+/* The decorative bloom layer that sat over the ground. */
+.dashboard-workspace-shell.liquid-bg::before,
+.dashboard-shell.liquid-bg::before {
+  display: none !important;
+}
+
+.dashboard-theme,
+.dashboard-theme:has(.dashboard-shell) {
+  background-color: var(--surface-page) !important;
+  background-image: none !important;
+}
+
+.dashboard-main-canvas {
+  background-color: var(--surface-page) !important;
+  background-image: none !important;
+}
+
+/* --------------------------------------------------------------------------
+   The rail. It was painting its own copy of the same blue/cyan radial wash
+   under a white veil — measured in the browser, not read off the source,
+   because a later rule was winning over the gradient declared at :8712.
+   A sidebar is chrome: it should sit quietly beside the work, not glow.
+   White panel, one hairline separating it from the off-white ground.
+   -------------------------------------------------------------------------- */
+.dashboard-sidebar,
+.dashboard-workspace-shell .dashboard-sidebar,
+.dashboard-shell:has(.inventory-workspace) .dashboard-sidebar {
+  background-color: var(--bg-surface) !important;
+  background-image: none !important;
+  border-right: 1px solid var(--border-divider) !important;
+  box-shadow: none !important;
+}
+
+/* Same for the top bar: part of the workspace, not a floating toolbar. */
+.dashboard-desktop-toolbar,
+.dashboard-workspace-shell .dashboard-desktop-toolbar {
+  background-color: var(--bg-surface) !important;
+  background-image: none !important;
+  border-bottom: 1px solid var(--border-divider) !important;
+  box-shadow: none !important;
+}
+
+/* The content area keeps the off-white ground so white cards read against it. */
+.dashboard-shell-content {
+  background-color: var(--surface-page) !important;
+  background-image: none !important;
 }
