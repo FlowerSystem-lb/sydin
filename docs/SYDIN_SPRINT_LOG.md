@@ -4180,3 +4180,21 @@ that would have doubled up with the new per-card border if left alone.
 Verified with tsc/lint/build; the browser tools are still down this
 session, so this one is reasoned through carefully rather than seen --
 flagged plainly to Sayed rather than claimed as verified.
+
+**"Needs attention" and "Recent activity" get the same tile, and a
+specificity trap along the way** *(16 Sep, same instruction)* -- next
+structural gap down the page: these two sections (the reference image's
+Sales Trend / Revenue Breakdown panels) were flat page background with
+just a bottom-border heading, same issue the KPI row just had. First
+attempt at the fix did nothing, because a more specific rule was already
+there: `.ov-page .ov-section` actively *strips* border/background/shadow
+back to zero, added in an earlier sprint specifically to undo a generic
+`main > div > section` rule that had been card-ifying every section on
+every dashboard page by DOM position rather than by meaning ("Undo the
+structural card" says the comment above it). That rule wins over a plain
+`.ov-section` edit on specificity alone, so the fix had to go there
+directly: same border/background/radius/shadow tokens as the KPI tiles,
+in the rule that already existed to control this, not a second
+competing one. Also moved `.ov-row`'s hover transition onto
+`--motion-ease-standard` while in the area, same as the earlier pass.
+Verified with tsc/lint/build; not seen -- browser tools still down.

@@ -17129,7 +17129,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   padding: var(--space-3) var(--space-2);
   margin: 0 calc(-1 * var(--space-2));
   border-radius: 10px;
-  transition: background 140ms ease;
+  transition: background var(--motion-fast) var(--motion-ease-standard);
 }
 
 .ov-row:hover {
@@ -17259,20 +17259,24 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   }
 }
 
-/* Undo the structural card. `.dashboard-shell-content main > div > section`
-   (declared three times in this file) paints EVERY section inside a page grid
-   as a white 16px card with a shadow — which is why "make it consistent" kept
-   producing a screen where nothing could out-rank anything: the box was applied
-   by position in the DOM, not by meaning. Scoped one step deeper so it wins on
-   specificity rather than on source order. */
+/* Was "undo the structural card": `.dashboard-shell-content main > div >
+   section` (declared three times in this file) paints EVERY section inside
+   a page grid as a white 16px card, applied by position in the DOM rather
+   than by meaning, and this rule stripped it back to nothing here on
+   purpose. Sayed's reference image wants exactly that card for "Needs
+   attention" / "Recent activity" (its Sales Trend / Revenue Breakdown
+   panels), same as the KPI tiles above them just got -- so this now sets
+   the card deliberately instead of erasing the accidental one. Still
+   scoped one step deeper than the generic rule so it wins on specificity,
+   not source order; the values are the same tokens every other card in
+   the app uses, not the generic rule's hand-rolled 16px/shadow-subtle. */
 .ov-page .ov-section {
-  background: transparent;
-  background-image: none;
-  border: 0;
-  border-radius: 0;
-  box-shadow: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-subtle);
   backdrop-filter: none;
-  padding: 0;
+  padding: var(--space-4);
 }
 
 /* ==========================================================================
