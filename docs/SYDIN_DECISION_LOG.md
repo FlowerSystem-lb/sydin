@@ -481,3 +481,20 @@ amounts + display currency) converts on the way out; `formatExactPrice` /
 `formatSalesOrderAmount` / `formatPurchaseOrderAmount` print document amounts
 as written. The four private "formatCurrency" helpers in pages call
 `convertFromBase` first.
+
+### 2026-09-16 · Overview's stat row gets a card, reversing an earlier choice
+**Decision:** `.ov-figure` (Overview's top-of-page numbers: Sold this month,
+Customers owe you, etc.) is now a bordered, shadowed tile — border, background,
+radius, matching every other card in the app — instead of the borderless
+hairline-divided row an earlier sprint chose on purpose (the code comment at
+the time argued a bare `<div>` avoided ever being mistaken for a content
+card). **Why:** Sayed sent a reference dashboard image and asked for the
+workspace to match it; its KPI row is exactly bordered tiles, and this was the
+one remaining structural gap between that image and Overview — the generic
+`MetricCard` primitive other pages already use was already carded, only
+Overview's bespoke markup was the outlier. Reversing a documented choice on
+the founder's own direct instruction, not a unilateral re-litigation.
+**Status:** Active. (Not visually confirmed at commit time — the browser
+verification tools were down all session; correctness reasoned from the CSS
+cascade and the mobile breakpoint's now-removed odd/even divider hack, not
+seen.)

@@ -4152,3 +4152,31 @@ fake `NEXT_PUBLIC_SUPABASE_*` env pair was needed since `currency.ts`
 pulls in `supabase.ts` transitively, which constructs a client at
 import time. Scratch folder (`.tmp-docx-check`) deleted before
 committing.
+
+**Overview's numbers get their own tile, not a shared hairline row**
+*(16 Sep, "make the dash look like the image")* -- Sayed, honestly:
+everything up to here had been small and safe on purpose (the screenshot
+tool has been down all session), not the visual change his reference
+image actually called for. Went looking for the real structural gap
+instead of another colour tweak: Overview's own stat row
+(`.ov-figures`/`.ov-figure`) was a deliberately *borderless* row of
+numbers divided by hairlines -- a documented choice from an earlier
+sprint, with its own comment explaining why it avoided looking like a
+card. The reference image's KPI row is exactly bordered card tiles. The
+generic `MetricCard` primitive other pages already use (Reports,
+Suppliers, Inventory) was already carded correctly -- only Overview's
+bespoke markup, which is literally the page the reference image shows,
+was the outlier.
+
+Gave each `.ov-figure` its own border, background, radius and shadow
+(same tokens every other card in the app uses), replaced the shared
+hairline dividers with a grid `gap`, and swapped the old "fade to 62%
+opacity" hover for a border-highlight + lift matching every other
+interactive card. Same label/value/note markup, same data, same hrefs,
+same `CountUpNumber`/`Sparkline` -- nothing about what the numbers are
+or where they come from changed, only the box around them. Fixed the
+matching mobile breakpoint, which had its own odd/even divider hack
+that would have doubled up with the new per-card border if left alone.
+Verified with tsc/lint/build; the browser tools are still down this
+session, so this one is reasoned through carefully rather than seen --
+flagged plainly to Sayed rather than claimed as verified.

@@ -16873,26 +16873,33 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-figures {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  border-top: 1px solid var(--border-hairline);
-  border-bottom: 1px solid var(--border-hairline);
+  gap: var(--space-3);
 }
 
+/* Was a hairline-divided row -- numbers on the bare page background, split
+   by a vertical rule. Sayed's reference: each figure in its own bordered
+   tile. Same label/value/note inside, unchanged -- only the box around it
+   is new. */
 .ov-figure {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-2);
   min-width: 0;
-  padding: var(--space-5) var(--space-5) var(--space-5) 0;
-  transition: opacity 160ms ease;
-}
-
-.ov-figure + .ov-figure {
-  padding-left: var(--space-5);
-  border-left: 1px solid var(--border-hairline);
+  border: 1px solid var(--border-default);
+  border-radius: 16px;
+  background: var(--bg-surface);
+  padding: var(--space-4);
+  box-shadow: var(--shadow-subtle);
+  transition:
+    border-color var(--motion-control) var(--motion-ease-standard),
+    box-shadow var(--motion-control) var(--motion-ease-standard),
+    transform var(--motion-control) var(--motion-ease-standard);
 }
 
 .ov-figure:hover {
-  opacity: 0.62;
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-elevated);
+  transform: translateY(-1px);
 }
 
 .ov-figure-heading {
@@ -17211,17 +17218,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  /* Each figure carries its own full border now (see the base rule) -- the
+     old odd/even divider hack that punched a hole in one shared border is
+     gone with it; `gap` on the grid is the only spacing this needs. */
   .ov-figure {
-    padding: var(--space-4) var(--space-4) var(--space-4) 0;
-  }
-
-  .ov-figure:nth-child(odd) {
-    padding-left: 0;
-    border-left: 0;
-  }
-
-  .ov-figure:nth-child(n + 3) {
-    border-top: 1px solid var(--border-hairline);
+    padding: var(--space-4);
   }
 
   .ov-columns {
