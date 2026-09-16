@@ -11759,7 +11759,7 @@ body,
     gap: 0.5rem !important;
   }
 
-  .dashboard-shell:has(.inventory-workspace) .dashboard-nav-link {
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-link {
     width: 2.75rem !important;
     min-height: 2.75rem !important;
     justify-content: center !important;
@@ -12107,7 +12107,7 @@ body,
     gap: 0.5rem !important;
   }
 
-  .dashboard-workspace-shell .dashboard-nav-link {
+  .dashboard-shell-collapsed.dashboard-workspace-shell .dashboard-nav-link {
     width: 2.75rem !important;
     min-height: 2.75rem !important;
     justify-content: center !important;
@@ -22752,4 +22752,118 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .dashboard-sidebar-workspace-copy > span:first-child,
 .dashboard-sidebar-workspace small {
   color: var(--text-muted) !important;
+}
+
+/* ==========================================================================
+   SIDEBAR
+   ==========================================================================
+   Sayed: "compact, minimal, clean, neutral, professional... The sidebar
+   should NOT dominate the screen... The active navigation item should feel
+   tactile and selected. Not like a giant blue rectangle."
+
+   Measured before touching it: 37px rows, 12px radius, and the active item
+   was a solid #18181b slab with white text -- the black equivalent of the
+   giant blue rectangle, and the heaviest object on the entire screen. A
+   sidebar row is a navigation target, not a button.
+
+   What changes: rows tighten to 30px so the whole workflow fits without
+   scrolling; group labels get real small-caps treatment with space above
+   them (so a label binds to the group beneath it rather than floating
+   between two); the active row becomes a quiet selected surface with a
+   blue left marker and a blue icon -- selected, tactile, and the lightest
+   possible thing that still reads unambiguously as "you are here".
+   ========================================================================== */
+
+.dashboard-nav-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.dashboard-nav-group + .dashboard-nav-group {
+  margin-top: 0.875rem;
+}
+
+.dashboard-shell-expanded .dashboard-nav-group-label,
+.dashboard-nav-group-label {
+  margin-bottom: 0.3rem;
+  padding-inline: 0.625rem;
+  color: var(--text-subtle) !important;
+  font-size: 0.6875rem !important;
+  font-weight: 600 !important;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+
+/* Rows: compact, quiet, one consistent shape. */
+.dashboard-nav-link,
+.dashboard-shell-expanded .dashboard-nav-link {
+  position: relative;
+  min-height: 30px !important;
+  gap: 0.625rem;
+  border-radius: var(--radius-control) !important;
+  padding: 0 0.625rem !important;
+  color: var(--text-secondary) !important;
+  font-size: 0.8125rem !important;
+  font-weight: 450 !important;
+  transition:
+    background-color 120ms var(--motion-ease-standard),
+    color 120ms var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .dashboard-nav-link:not(.dashboard-nav-link-active):hover,
+  .dashboard-shell-expanded .dashboard-nav-link:not(.dashboard-nav-link-active):hover {
+    background: var(--surface-sunken) !important;
+    color: var(--text-primary) !important;
+    transform: none !important;
+  }
+}
+
+/* Selected: a quiet surface, a blue marker, a blue icon. Not a slab. */
+.dashboard-nav-link-active,
+.dashboard-shell-expanded .dashboard-nav-link-active,
+.dashboard-workspace-shell .dashboard-nav-link-active,
+.dashboard-shell:has(.inventory-workspace) .dashboard-nav-link-active {
+  background: var(--surface-sunken) !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+  font-weight: 550 !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+
+.dashboard-nav-link-active::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 16px;
+  transform: translateY(-50%);
+  border-radius: 0 2px 2px 0;
+  background: var(--sydin-blue);
+}
+
+.dashboard-nav-link-active .dashboard-nav-icon,
+.dashboard-workspace-shell .dashboard-nav-link-active .dashboard-nav-icon,
+.dashboard-shell:has(.inventory-workspace) .dashboard-nav-link-active .dashboard-nav-icon {
+  color: var(--sydin-blue) !important;
+}
+
+.dashboard-nav-icon {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: var(--text-muted);
+}
+
+/* The rail: same language, centred, marker on the edge. */
+.dashboard-shell-collapsed .dashboard-nav-link {
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.dashboard-shell-collapsed .dashboard-nav-link-active::before {
+  height: 14px;
 }
