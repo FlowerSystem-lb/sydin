@@ -22343,74 +22343,6 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border-radius: 6px;
 }
 
-/* ===[ PRIMARY BUTTONS: DEEP, NOT FLAT ]===
-   Sayed's own words: the primary buttons read "too soft and simple" -- a
-   flat gradient fill and one soft ambient glow, nothing that reads as a
-   raised, pressable object. Same brand gradient, same colour -- just lit
-   like one: a glossy top highlight, a seated shadow right at the base
-   (not only a big diffuse glow further out), and a pressed state that
-   actually dents inward instead of a 1.5% scale-down. Comes last on
-   purpose -- these are the winning declarations for every primary CTA
-   (Button.tsx's primary variant, ActionButton's primary variant, and the
-   top-bar "Add" button all share this look). */
-.ui-button-primary,
-.dashboard-action-button-primary,
-.dashboard-top-primary-button {
-  background:
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 45%),
-    linear-gradient(135deg, #10c4dc 0%, #2563eb 58%, #7d5cff 100%);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.4),
-    inset 0 -3px 5px rgba(8, 15, 38, 0.22),
-    0 1px 0 rgba(8, 15, 38, 0.4),
-    0 16px 32px rgba(37, 99, 235, 0.26);
-}
-
-@media (hover: hover) {
-  .ui-button-primary:hover,
-  .dashboard-action-button-primary:hover,
-  .dashboard-top-primary-button:hover {
-    background:
-      linear-gradient(to bottom, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 45%),
-      linear-gradient(135deg, #10c4dc 0%, #2563eb 58%, #7d5cff 100%);
-    box-shadow:
-      inset 0 1px 0 rgba(255, 255, 255, 0.45),
-      inset 0 -3px 5px rgba(8, 15, 38, 0.2),
-      0 1px 0 rgba(8, 15, 38, 0.4),
-      0 18px 38px rgba(37, 99, 235, 0.32);
-  }
-}
-
-.ui-button-primary:not(:disabled):active,
-.dashboard-action-button-primary:not(:disabled):not(.dashboard-action-button-disabled):active,
-.dashboard-top-primary-button:not(:disabled):active {
-  /* A real dent -- pressed all the way in, highlight gone, shadow pulled
-     tight underneath -- not just the generic 1.5% scale every button gets. */
-  transform: translateY(1px) scale(0.99);
-  box-shadow:
-    inset 0 2px 5px rgba(8, 15, 38, 0.4),
-    0 4px 10px rgba(37, 99, 235, 0.22);
-}
-
-/* Secondary buttons ("Cancel", "Duplicate", "Download PDF") were flat --
-   box-shadow: none -- which now sits oddly next to a primary button with
-   real depth. Not the same gradient/glow (they're not the call to
-   action), just enough lift that a white pill reads as a raised, pressable
-   object rather than paint on the page. */
-.ui-button-secondary,
-.dashboard-action-button-secondary {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.8),
-    0 1px 2px rgba(8, 15, 38, 0.06),
-    0 4px 10px rgba(8, 15, 38, 0.07);
-}
-
-.ui-button-secondary:not(:disabled):active,
-.dashboard-action-button-secondary:not(:disabled):not(.dashboard-action-button-disabled):active {
-  transform: translateY(1px) scale(0.99);
-  box-shadow: inset 0 2px 4px rgba(8, 15, 38, 0.12);
-}
-
 /* ==========================================================================
    SYDIN DESIGN FOUNDATION — 16 Sep 2026
    ==========================================================================
@@ -22546,4 +22478,278 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .dashboard-shell-content {
   background-color: var(--surface-page) !important;
   background-image: none !important;
+}
+
+/* ==========================================================================
+   SYDIN BUTTON SYSTEM
+   ==========================================================================
+   Replaces the "deep 3D" pass that used to sit here. That pass took Sayed's
+   "deep 3D" literally -- glossy inset highlights, a hard seated edge, a big
+   coloured glow -- on top of a 999px pill. He then spelled out what he
+   actually meant: "extremely subtle elevation, 1px borders, soft ambient
+   shadows... NOT bevels, glossy plastic, neumorphism, huge shadows", and
+   "DO NOT make every button a pill... DO NOT use gradients unless there is a
+   very specific reason."
+
+   So the gradient stays where it belongs -- on the logo -- and the primary
+   button is the solid SydIN blue from the middle of that same gradient.
+   Depth is one hairline plus one soft shadow, and the press is 1px of real
+   movement, not a scale. Four tiers with genuinely different weight, so a
+   page can rank its actions instead of shouting them all equally.
+   ========================================================================== */
+
+.ui-button,
+.dashboard-action-button,
+.dashboard-top-primary-button {
+  min-height: var(--control-h);
+  border-radius: var(--radius-control);
+  padding-inline: 0.875rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  letter-spacing: -0.006em;
+  transition:
+    background-color 130ms var(--motion-ease-standard),
+    border-color 130ms var(--motion-ease-standard),
+    color 130ms var(--motion-ease-standard),
+    box-shadow 130ms var(--motion-ease-standard),
+    transform 130ms var(--motion-ease-standard);
+}
+
+.ui-button-lg {
+  min-height: var(--control-h-lg);
+  padding-inline: 1.125rem;
+  font-size: 0.875rem;
+}
+
+.ui-button-sm {
+  min-height: var(--control-h-sm);
+  padding-inline: 0.625rem;
+  font-size: 0.78125rem;
+}
+
+/* --- primary: solid brand blue, one hairline, one soft shadow --- */
+.ui-button-primary,
+.dashboard-action-button-primary,
+.dashboard-top-primary-button,
+.action-button-primary {
+  border: 1px solid #1d4ed8 !important;
+  background: #2563eb !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 1px 2px rgba(29, 78, 216, 0.24),
+    0 1px 1px rgba(24, 24, 27, 0.04) !important;
+}
+
+@media (hover: hover) {
+  .ui-button-primary:not(:disabled):hover,
+  .dashboard-action-button-primary:not(:disabled):hover,
+  .dashboard-top-primary-button:not(:disabled):hover,
+  .action-button-primary:not(:disabled):hover {
+    background: #1d4ed8 !important;
+    box-shadow:
+      0 2px 6px rgba(29, 78, 216, 0.28),
+      0 1px 2px rgba(24, 24, 27, 0.05) !important;
+    transform: translateY(-0.5px);
+  }
+}
+
+.ui-button-primary:not(:disabled):active,
+.dashboard-action-button-primary:not(:disabled):not(.dashboard-action-button-disabled):active,
+.dashboard-top-primary-button:not(:disabled):active,
+.action-button-primary:not(:disabled):active {
+  background: #1e40af !important;
+  box-shadow: 0 1px 1px rgba(29, 78, 216, 0.2) !important;
+  transform: translateY(1px);
+}
+
+/* --- secondary: white surface, neutral hairline, barely-there lift --- */
+.ui-button-secondary,
+.dashboard-action-button-secondary,
+.inventory-action-secondary,
+.inventory-toolbar-button {
+  border: 1px solid var(--border-default) !important;
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-subtle) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+@media (hover: hover) {
+  .ui-button-secondary:not(:disabled):hover,
+  .dashboard-action-button-secondary:not(:disabled):hover,
+  .inventory-action-secondary:not(:disabled):hover,
+  .inventory-toolbar-button:not(:disabled):hover {
+    border-color: var(--border-strong) !important;
+    background: var(--bg-surface) !important;
+    box-shadow: var(--shadow-raised) !important;
+    transform: translateY(-0.5px);
+  }
+}
+
+.ui-button-secondary:not(:disabled):active,
+.dashboard-action-button-secondary:not(:disabled):not(.dashboard-action-button-disabled):active,
+.inventory-action-secondary:not(:disabled):active,
+.inventory-toolbar-button:not(:disabled):active {
+  background: var(--surface-sunken) !important;
+  box-shadow: none !important;
+  transform: translateY(1px);
+}
+
+/* --- ghost: no container until you touch it --- */
+.ui-button-ghost,
+.dashboard-action-button-ghost {
+  border-color: transparent !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: var(--text-secondary) !important;
+}
+
+@media (hover: hover) {
+  .ui-button-ghost:not(:disabled):hover,
+  .dashboard-action-button-ghost:not(:disabled):hover {
+    background: var(--surface-sunken) !important;
+    color: var(--text-primary) !important;
+  }
+}
+
+.ui-button-ghost:not(:disabled):active,
+.dashboard-action-button-ghost:not(:disabled):active {
+  background: var(--border-hairline) !important;
+}
+
+/* --- destructive: restrained. It should never be the loudest thing here. --- */
+.ui-button-danger,
+.dashboard-action-button-danger {
+  border: 1px solid rgba(190, 18, 60, 0.22) !important;
+  background: var(--bg-surface) !important;
+  color: #be123c !important;
+  box-shadow: var(--shadow-subtle) !important;
+}
+
+@media (hover: hover) {
+  .ui-button-danger:not(:disabled):hover,
+  .dashboard-action-button-danger:not(:disabled):hover {
+    border-color: rgba(190, 18, 60, 0.4) !important;
+    background: #fff1f2 !important;
+  }
+}
+
+.ui-button-danger:not(:disabled):active,
+.dashboard-action-button-danger:not(:disabled):active {
+  background: #ffe4e6 !important;
+  transform: translateY(1px);
+}
+
+/* --- icon buttons: square, precise, quiet until hovered --- */
+.ui-icon-button,
+.dashboard-top-icon-button {
+  width: var(--control-h);
+  min-width: var(--control-h);
+  height: var(--control-h);
+  min-height: var(--control-h);
+  border-radius: var(--radius-control) !important;
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  background-image: none !important;
+  color: var(--text-muted) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transition:
+    background-color 130ms var(--motion-ease-standard),
+    color 130ms var(--motion-ease-standard),
+    border-color 130ms var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .ui-icon-button:not(:disabled):hover,
+  .dashboard-top-icon-button:not(:disabled):hover {
+    background: var(--surface-sunken) !important;
+    color: var(--text-primary) !important;
+    transform: none;
+  }
+}
+
+.ui-icon-button:not(:disabled):active,
+.dashboard-top-icon-button:not(:disabled):active {
+  background: var(--border-hairline) !important;
+  transform: none;
+}
+
+/* One focus treatment for every control, in the brand blue. */
+.ui-button:focus-visible,
+.dashboard-action-button:focus-visible,
+.dashboard-top-primary-button:focus-visible,
+.ui-icon-button:focus-visible,
+.dashboard-top-icon-button:focus-visible {
+  outline: 2px solid var(--sydin-blue);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ui-button,
+  .dashboard-action-button,
+  .dashboard-top-primary-button,
+  .ui-icon-button,
+  .dashboard-top-icon-button {
+    transition: none;
+  }
+  .ui-button:hover,
+  .ui-button:active,
+  .dashboard-action-button:hover,
+  .dashboard-action-button:active,
+  .dashboard-top-primary-button:hover,
+  .dashboard-top-primary-button:active {
+    transform: none;
+  }
+}
+
+/* ==========================================================================
+   BLUE IS JEWELRY, NOT THE OUTFIT
+   ==========================================================================
+   Sayed: "The blue should feel like JEWELRY on a black/white outfit. It
+   should not cover the whole interface." Found by reading the rendered page
+   rather than the source: an audit of every leaf text node on Inventory
+   returned the eyebrow, every SKU and every quantity in brand blue.
+
+   None of those are links, actions, focus or status -- they are content.
+   Worse, it inverted the hierarchy: a quantity is the most important number
+   on an inventory card and was rendering in the same blue as a SKU, which
+   is metadata. Reassigned to the ink scale, so importance is carried by
+   weight and contrast the way it is everywhere else in the system.
+
+   Blue keeps: primary buttons, active nav, focus rings, links, selection,
+   and genuine status. That's it.
+   ========================================================================== */
+
+/* The most important number on the card. Near-black, not blue. */
+.inventory-card-quantity,
+.inventory-workspace .inventory-card-quantity,
+.dashboard-shell:has(.inventory-workspace) .inventory-card-quantity {
+  color: var(--text-primary) !important;
+}
+
+/* Metadata. Recedes. */
+.inventory-card-code,
+.inventory-workspace .inventory-card-code {
+  color: var(--text-muted) !important;
+}
+
+/* Page eyebrow -- tertiary, above the title. */
+.inventory-hero-kicker,
+.inventory-mobile-kicker,
+.inventory-workspace .inventory-hero-kicker,
+.inventory-workspace .inventory-mobile-kicker,
+.ov-eyebrow,
+.dashboard-eyebrow {
+  color: var(--text-muted) !important;
+}
+
+/* Sidebar workspace label. */
+.dashboard-sidebar-workspace-copy > span:first-child,
+.dashboard-sidebar-workspace small {
+  color: var(--text-muted) !important;
 }
