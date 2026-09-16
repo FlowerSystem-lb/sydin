@@ -891,12 +891,12 @@ export default function DashboardPage() {
           an error anywhere else. */}
       {error && <DashboardNotice tone="warning">{error}</DashboardNotice>}
 
-      {/* Key figures. Hairline separators, no boxes: these four numbers used to
-          be four cards, spending four borders and four shadows to say what
-          whitespace says on its own. */}
-      {/* A div, not a <section>: `main > div > section` is what turns any
-          section on a dashboard page into a white card, and this row is
-          deliberately not a card. Avoiding the selector beats overriding it. */}
+      {/* Key figures, back to being cards (16 Sep) -- Sayed's reference image
+          uses bordered tiles for exactly this row, and asked for the
+          workspace to match it. Still a div, not a <section>: `main > div >
+          section` card-ifies by DOM position, and .ov-figure sets its own
+          border/background/shadow explicitly instead, so it looks the same
+          regardless of which selector would otherwise have won. */}
       <div className="ov-figures" role="group" aria-label="Inventory summary">
         {summaryCards.map((card) => {
           /* The phone gives each figure about 160px. At the canvas's 40px that
@@ -930,9 +930,9 @@ export default function DashboardPage() {
         })}
       </div>
 
-      {/* The money row. Same hairline figures as the stock row above it, in
-          the order an owner reads them: what came in, what is still coming,
-          what goes out, what is on the way. */}
+      {/* The money row. Same tiles as the stock row above it, in the order
+          an owner reads them: what came in, what is still coming, what
+          goes out, what is on the way. */}
       {!hasNoItems && !loading && (
         <p className="ov-today" aria-label="Today">
           <strong>Today</strong>
