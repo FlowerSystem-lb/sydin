@@ -4126,3 +4126,29 @@ swap: no colours, sizes, or layout touched, and nothing added that
 `prefers-reduced-motion` (already guarded in 10+ places) wouldn't
 already turn off. Verified with tsc/lint/build; the browser tools are
 still down this session.
+
+**Word export, actually generated and read (brief point 17, no code
+change)** *(16 Sep)* -- the mega-prompt asked specifically for Word
+exports to be tested as real files, not just built. Compiled
+`documentDocxExports.ts` with its full real dependency tree (via a
+throwaway tsconfig pointing the `@/*` alias at the project root --
+cleaner than hand-copying files, since `tsc`'s `paths` only resolves at
+type-check time and needed a small `Module._resolveFilename` patch at
+runtime to match) and generated both a 25-line invoice and a
+partially-received PO. Unzipped each `.docx` (it's a zip of XML) and
+read `word/document.xml` directly: every line, code, note and the very
+long product name meant to test wrapping came through intact; the
+invoice's Total/Paid/Still owed and the PO's order total and "40 units
+ordered / 31 received" line all matched the input exactly; the logo
+embedded as a 716x1021 PNG in `word/media/`, same dimensions as the
+source file; the footer carries real Word `PAGE`/`NUMPAGES` fields, not
+static text, so page numbers stay correct if the document reflows. No
+source change -- confirms what was already there. Two Node quirks hit
+and fixed in the test scaffolding only: jsPDF's Node build reads
+`window.atob`/`window.btoa` when `window` exists at all, so a bare mock
+`window` (needed for `saveDocx`'s `window.document.createElement`) has
+to carry those two over from Node's real globals or jsPDF breaks; and a
+fake `NEXT_PUBLIC_SUPABASE_*` env pair was needed since `currency.ts`
+pulls in `supabase.ts` transitively, which constructs a client at
+import time. Scratch folder (`.tmp-docx-check`) deleted before
+committing.
