@@ -3364,6 +3364,7 @@ select.glass-input option {
   }
 
   .dashboard-sidebar-header {
+    position: relative;
     display: flex;
     min-height: 2.5rem;
     align-items: center;
@@ -11202,10 +11203,16 @@ body,
   font-weight: 600;
   text-decoration: none;
   box-shadow: none;
+  /* box-shadow added: the deep-3D pass gives this button a different
+     shadow on hover/active, and without it in this list the shadow was
+     snapping instead of transitioning -- caught by checking the computed
+     style once the browser tool came back, not visible from the CSS alone
+     since the two states are declared in separate, far-apart rules. */
   transition:
-    border-color 150ms ease,
-    background-color 150ms ease,
-    transform 150ms ease;
+    border-color var(--motion-control) var(--motion-ease-standard),
+    background-color var(--motion-control) var(--motion-ease-standard),
+    box-shadow var(--motion-control) var(--motion-ease-standard),
+    transform var(--motion-control) var(--motion-ease-standard);
 }
 
 .dashboard-top-primary-button {
@@ -21278,8 +21285,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: scale(1.06);
   }
 
+  /* Compounds with the base rule's translateX(-50%) -- it centres the
+     button, this scales it; overwriting `transform` outright here would
+     silently move it back to the left edge. */
   .dashboard-sidebar-toggle:hover {
-    transform: scale(1.08);
+    transform: translateX(-50%) scale(1.08);
   }
 }
 
@@ -21288,7 +21298,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .dashboard-sidebar-toggle:active {
-  transform: scale(0.92);
+  transform: translateX(-50%) scale(0.92);
 }
 
 /* The group heading's chevron should turn, not jump. */
@@ -21307,16 +21317,38 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
   .dashboard-shell-expanded .dashboard-nav-link:hover,
   .dashboard-shell-expanded .dashboard-nav-link:active,
-  .dashboard-shell-expanded .dashboard-nav-link:hover .dashboard-nav-icon,
+  .dashboard-shell-expanded .dashboard-nav-link:hover .dashboard-nav-icon {
+    transform: none;
+  }
+
+  /* Not `none` here -- the toggle's base rule uses translateX(-50%) to
+     centre itself (not decoration, layout), so reduced motion should
+     still keep it centred and only skip the hover/press scale. */
   .dashboard-sidebar-toggle:hover,
   .dashboard-sidebar-toggle:active {
-    transform: none;
+    transform: translateX(-50%);
   }
 }
 
 /* The toggle. Present at every width so the rail can be brought back, and
-   hidden on phones, where the sidebar is not the navigation at all. */
+   hidden on phones, where the sidebar is not the navigation at all.
+
+   `position: absolute`, deliberately, so it sits at the exact same spot in
+   the collapsed rail and the expanded/peek header regardless of which of
+   the many stacked flex-direction/justify-content rules on
+   .dashboard-sidebar-header wins on a given page (there are over a dozen).
+   Before this, collapsing stacked the logo above the toggle and centred
+   both; hovering to peek switched the header to a row with the toggle
+   pushed to the far right -- so a real mouse moving toward the visible
+   collapsed-state icon arrived to find the button already gone. Taking it
+   out of the flex flow entirely means no stacked rule can move it again,
+   and it's centred under the logo the same way whether the rail is 5rem
+   or 17.25rem wide. */
 .dashboard-sidebar-toggle {
+  position: absolute;
+  top: 3.4rem;
+  left: 50%;
+  transform: translateX(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -21327,8 +21359,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border: 1px solid transparent;
   color: var(--text-subtle);
   transition:
-    background-color var(--motion-fast) ease,
-    color var(--motion-fast) ease;
+    background-color var(--motion-fast) var(--motion-ease-standard),
+    color var(--motion-fast) var(--motion-ease-standard);
 }
 
 @media (hover: hover) {

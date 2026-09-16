@@ -4198,3 +4198,48 @@ in the rule that already existed to control this, not a second
 competing one. Also moved `.ov-row`'s hover transition onto
 `--motion-ease-standard` while in the area, same as the earlier pass.
 Verified with tsc/lint/build; not seen -- browser tools still down.
+
+**The sidebar expand/collapse bug, found and fixed (browser tool came
+back)** *(16 Sep)* -- Sayed's own bug report, investigated properly once
+screenshots worked again. Reproduced it precisely: the collapse/expand
+toggle button sits inside `.dashboard-sidebar-header`, and that header
+switches from `flex-direction: column` (collapsed rail, logo above
+toggle, both centred in ~80px) to `flex-direction: row;
+justify-content: space-between` (peek/expanded, logo left, toggle
+pushed to the far right of ~211-276px) the instant the mouse enters the
+rail to peek. Measured it directly: the toggle jumped from x=16 to
+x=178 -- a real target relocating out from under the cursor, not a
+feeling.
+
+Fix: took the toggle out of the header's flex flow entirely
+(`position: absolute; left: 50%; transform: translateX(-50%)` on
+`.dashboard-sidebar-toggle`, `position: relative` added to
+`.dashboard-sidebar-header`) instead of chasing down every one of the
+dozen-plus stacked flex-direction/justify-content rules for that
+header across the file. Centred under the logo at a fixed `top` in
+both states now; the sidebar's own width transition (already existed)
+carries it smoothly from x=16 to its resting x=105 instead of an
+instant jump to x=178. Had to also fix the button's own hover/active/
+reduced-motion rules, which set `transform: scale(...)` / `none`
+outright -- those would have silently overwritten the new centring
+transform the instant the button was touched.
+
+Confirmed with getBoundingClientRect() before/after: the ~162px jump
+is now a ~89px animated slide. The click handler itself
+(`toggleSidebarExpanded`) was never broken -- a direct `.click()` on
+the button always worked, in every test, at every position. What
+still doesn't reproduce cleanly is this session's own browser-automation
+tool successfully delivering a *synthetic* hover-then-click sequence to
+this specific button; several attempts with generous waits between
+hover and click still didn't flip the toggle, even though hit-testing
+confirmed the click coordinate resolved to the button's own child every
+time. Given a direct click always works and real mouse input is a
+trusted, single continuous event rather than a scripted hover-then-click
+sequence, this reads as a tool-timing quirk rather than a rendering bug
+-- but it's flagged here rather than assumed away: **please click the
+collapse/expand chevron yourself once and confirm it behaves.**
+
+Verified with tsc/lint/build, plus live in the browser: collapsed
+rail, peek-open, and three other pages (Inventory, Sales, and Overview
+again) all screenshotted with no console errors beyond the pre-existing
+known local-only next/image 500s on Supabase-hosted photos.
