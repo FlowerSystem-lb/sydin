@@ -1176,15 +1176,19 @@ export default function SettingsPage() {
                     type="button"
                     onClick={() => switchSection(section.id)}
                     aria-current={section.active ? "page" : undefined}
-                    className={`flex min-h-12 w-full items-center gap-3 rounded-xl border px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/15 ${
+                    /* Selected state matches the main sidebar's language: a
+                       quiet neutral surface with a blue left marker, not a
+                       tinted box. Was `bg-cyan-500/10` with `font-black`,
+                       which made this the loudest thing on a settings page. */
+                    className={`settings-nav-item flex min-h-12 w-full items-center gap-3 rounded-lg border px-3 py-2 text-left transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/15 ${
                       section.active
-                        ? "border-cyan-300/30 bg-cyan-500/10 text-theme-accent"
-                        : "border-transparent text-theme-secondary hover:border-theme hover:bg-theme-inset"
+                        ? "settings-nav-item-active border-transparent bg-theme-inset text-theme-primary"
+                        : "border-transparent text-theme-secondary hover:bg-theme-inset"
                     }`}
                   >
                     <UiIcon name={section.icon} className="h-4 w-4 shrink-0" />
                     <span className="min-w-0">
-                      <span className="block text-sm font-black">
+                      <span className="block text-sm font-semibold">
                         {section.label}
                       </span>
                       <span className="mt-0.5 block text-xs leading-4 text-theme-subtle">

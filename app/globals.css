@@ -22964,3 +22964,25 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     gap: var(--space-5);
   }
 }
+
+/* Settings category nav: same selected language as the main sidebar -- quiet
+   surface, blue left marker, blue icon. One selected state across the app. */
+.settings-nav-item {
+  position: relative;
+}
+
+.settings-nav-item-active::before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 2px;
+  height: 20px;
+  transform: translateY(-50%);
+  border-radius: 0 2px 2px 0;
+  background: var(--sydin-blue);
+}
+
+.settings-nav-item-active svg {
+  color: var(--sydin-blue);
+}
