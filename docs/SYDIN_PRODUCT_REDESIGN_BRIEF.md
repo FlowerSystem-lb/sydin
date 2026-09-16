@@ -56,7 +56,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 44. ◐ Conveniences: PO from low stock (Alerts), receiving from PO, invoice from customer page, inline create customer/depot; ✅ last depot and payment method come back pre-filled on invoice, PO and Stock In; ✅ Duplicate on any order or invoice — same supplier/customer, lines and currency, new number (13 Sep).
 45. ✅ Low stock → PO → receive flow.
 46. ✅ Report exports (PDF/CSV) per report; a date range above the report grid narrows every sales, purchase and payment report before export (Stock Aging is a snapshot of today and ignores it) — the range is stated in the exported file's own subtitle (14 Sep).
-47. ◐ Branded PDF reports: title, date, table, totals, page numbers.
+47. ✅ Branded PDF reports: title, date, table, totals, page numbers. Stress-tested with a synthetic 60-row report forced across 3 pages: repeated header/logo and column headings on every page, correct running total, no clipped rows, no footer overlap (15 Sep).
 48. ✅ Word export for invoice and PO (real DOCX).
 49. ◐ Excel: numeric cells, currency formats; inventory Excel converts to the shown currency.
 50. ◐ Realistic test data: used for PDF rendering; live DB kept clean (no seed set).

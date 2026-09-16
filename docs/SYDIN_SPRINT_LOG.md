@@ -4092,3 +4092,18 @@ Verified with tsc/lint/build. The scratch test folder lived briefly
 inside the repo (`.tmp-xlsx-check`, to get `node_modules` resolution for
 free) and was deleted before committing -- confirmed via `git status`
 that nothing from it was ever tracked.
+
+**Multi-page report PDF, stress-tested (brief point 47, no code change)**
+*(15 Sep)* -- Sayed's prompt specifically asked for a document with enough
+rows to force multiple pages, checked for repeated headers, no clipped
+rows, correct totals, no footer overlap. Built a 60-row "Sales by
+customer" table (made up, not real customer data) and ran it through the
+real `exportReportPdf` unchanged, rasterized all 3 resulting pages and
+read them. All correct: branded header + logo repeats on every page, the
+column header row repeats on every page, the running total on the last
+page matches the sum of all 60 rows exactly ($36,475 invoiced - $17,145
+paid = $19,330 owed), no row is cut across a page break, the footer never
+overlaps the table, and "Page X of 3" is right on every page. No source
+change needed -- this confirms what was already there holds up under
+load. Scratch folder (`.tmp-report-check`) deleted before anything was
+committed.
