@@ -23086,3 +23086,21 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     display: none;
   }
 }
+
+/* Needs attention rows: the item link takes the width, the Restock action
+   sits at the end. The link is flex: 1 so its own name/number layout is
+   unchanged; only the action is added beside it. */
+.ov-attention-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.ov-attention-link {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.ov-attention-row > a:last-child {
+  flex: none;
+}

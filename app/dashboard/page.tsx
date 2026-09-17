@@ -240,12 +240,6 @@ function getStockState(quantity: number, threshold: number): StockState {
   return "in";
 }
 
-function getStockLabel(state: StockState) {
-  if (state === "out") return "Out of stock";
-  if (state === "low") return "Low stock";
-  return "In stock";
-}
-
 function ItemThumb({ item }: { item: Item }) {
   return (
     <span className="ov-thumb">
@@ -1055,10 +1049,17 @@ export default function DashboardPage() {
             ) : (
               <ul className="ov-list">
                 {dashboardData.lowStockItems.map((entry) => (
-                  <li key={entry.item.id}>
+                  /* An action centre, not a coloured list (Sayed, §12): each
+                     row says what's wrong in numbers -- current against
+                     minimum -- and carries the fix. Restock opens a new PO
+                     with this item already on it; that route existed for the
+                     Inventory bulk action, it just wasn't reachable from
+                     here. The item link and the action are siblings: a
+                     button inside an <a> is invalid HTML. */
+                  <li key={entry.item.id} className="ov-attention-row">
                     <Link
                       href={getDashboardItemHref(entry.item.id)}
-                      className="ov-row"
+                      className="ov-row ov-attention-link"
                     >
                       <ItemThumb item={entry.item} />
                       <span className="ov-row-text">
@@ -1066,7 +1067,7 @@ export default function DashboardPage() {
                         <small>
                           {[
                             entry.depot,
-                            `${getStockLabel(entry.state)} · min ${formatNumber(
+                            `Current ${formatNumber(entry.item.quantity)} · Minimum ${formatNumber(
                               entry.threshold
                             )}`,
                           ]
@@ -1075,11 +1076,13 @@ export default function DashboardPage() {
                         </small>
                       </span>
                       <span className={`ov-row-value ov-value-${entry.state}`}>
-                        {getInventoryQuantityLabel(
-                          entry.item.quantity,
-                          entry.item.unit_type,
-                          entry.item.custom_unit_label
-                        )}
+                        {entry.state === "out"
+                          ? "Out"
+                          : getInventoryQuantityLabel(
+                              entry.item.quantity,
+                              entry.item.unit_type,
+                              entry.item.custom_unit_label
+                            )}
                       </span>
                       {/* Mobile canvas: "Status is a coloured dot, not a pill:
                           less furniture, same meaning." Safe to add here and
@@ -1108,6 +1111,15 @@ export default function DashboardPage() {
                               : "ov-dot-success"
                         }`}
                       />
+                    </Link>
+                    <Link
+                      href={`/dashboard/purchase-orders/new?items=${entry.item.id}&returnTo=${encodeURIComponent(
+                        DASHBOARD_RETURN_TO
+                      )}`}
+                      className={buttonClassName({ variant: "secondary", size: "sm" })}
+                      aria-label={`Restock ${entry.item.name}`}
+                    >
+                      Restock
                     </Link>
                   </li>
                 ))}
