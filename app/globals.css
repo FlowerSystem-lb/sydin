@@ -23143,3 +23143,100 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   font-size: 0.72rem;
   color: var(--text-subtle);
 }
+
+/* ==========================================================================
+   INPUTS
+   ==========================================================================
+   Sayed (§6): "Focus: SydIN blue focus ring/accent. Hover: subtle border
+   response. Error: clear but restrained red."
+
+   The boxless label/value rows (Add Item, New Invoice, New PO, Settings)
+   set `outline: none` on their inputs and replaced it with nothing --
+   focused, they looked identical to unfocused. Tabbing through a form gave
+   no sign of where you were. The error state on the same rows already
+   speaks in an underline (`inset 0 -1.5px 0 0 #ef4444`), so focus speaks
+   the same way in blue: it belongs to the row's language instead of
+   bolting a box onto a deliberately boxless field.
+
+   Boxed controls (Select triggers, search fields, standalone inputs) get
+   the one shared ring every button already uses.
+   ========================================================================== */
+
+/* Bare row inputs: a blue underline that fades in, nothing else moves. */
+.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.item-field-row-control textarea {
+  box-shadow: inset 0 -1.5px 0 0 transparent;
+  transition: box-shadow 130ms var(--motion-ease-standard);
+}
+
+.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):focus-visible,
+.item-field-row-control textarea:focus-visible {
+  box-shadow: inset 0 -1.5px 0 0 var(--sydin-blue);
+}
+
+/* Error keeps priority over focus. */
+.item-field-row-control input[aria-invalid="true"]:focus-visible,
+.item-field-row-control textarea[aria-invalid="true"]:focus-visible {
+  box-shadow: inset 0 -1.5px 0 0 #ef4444;
+}
+
+/* Boxed controls: neutral hairline at rest, darker on hover, blue ring on
+   focus -- same ring as the buttons. */
+.ui-input,
+.ui-select-trigger,
+.sale-input,
+.glass-input,
+.quick-add-input,
+.dashboard-top-searchbar,
+.ui-search-input {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-control) !important;
+  background: var(--bg-surface) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transition:
+    border-color 130ms var(--motion-ease-standard),
+    box-shadow 130ms var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .ui-input:hover,
+  .ui-select-trigger:hover,
+  .sale-input:hover,
+  .glass-input:hover,
+  .quick-add-input:hover,
+  .ui-search-input:hover {
+    border-color: var(--border-strong) !important;
+  }
+}
+
+.ui-input:focus-visible,
+.ui-select-trigger:focus-visible,
+.ui-select-trigger[aria-expanded="true"],
+.sale-input:focus-visible,
+.glass-input:focus-visible,
+.quick-add-input:focus-visible,
+.ui-search-input:focus-visible {
+  border-color: var(--sydin-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+  outline: none;
+}
+
+.ui-input[aria-invalid="true"],
+.sale-input[aria-invalid="true"] {
+  border-color: #ef4444 !important;
+}
+
+.ui-input[aria-invalid="true"]:focus-visible,
+.sale-input[aria-invalid="true"]:focus-visible {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16) !important;
+}
+
+.ui-input:disabled,
+.sale-input:disabled,
+.item-field-row-control input:disabled {
+  color: var(--text-subtle);
+  background: var(--surface-sunken) !important;
+  cursor: not-allowed;
+}
