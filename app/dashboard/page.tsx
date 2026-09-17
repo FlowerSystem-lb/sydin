@@ -61,6 +61,7 @@ import {
   DashboardNotice,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import { buttonClassName } from "@/components/ui";
 
 interface Item {
   id: number;
@@ -882,6 +883,19 @@ export default function DashboardPage() {
           <h1 id="dashboard-title" className="ov-title">
             Overview
           </h1>
+        </div>
+        {/* The reference's page header is title on the left, context and a
+            primary action on the right. Ours had nothing on the right, which
+            is why the top of the page felt empty next to it. The date is
+            real (today, informational, no filter pretending to exist behind
+            it) and the action is the one a depot starts most days with. */}
+        <div className="ov-head-actions">
+          <span className="ov-head-date">
+            {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date())}
+          </span>
+          <Link href="/dashboard/sales/new" className={buttonClassName()}>
+            New invoice
+          </Link>
         </div>
       </header>
 
