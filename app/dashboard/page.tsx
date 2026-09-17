@@ -1155,6 +1155,26 @@ export default function DashboardPage() {
                   const movementStatus = getMovementStatus(
                     movement.movement_type
                   );
+                  /* A real activity feed (Sayed, §11): WHAT happened, TO
+                     WHAT, how much, against WHICH document, WHEN. The row
+                     used to show the item and the movement type and nothing
+                     else -- a stock-movement feed with no quantity on it.
+                     The delta is the point; it's signed, coloured by
+                     direction, in the item's own unit. The reference comes
+                     out of the note when one was recorded ("PO #12 — ...").
+                     No "who": SydIN is single-user, it is always the owner. */
+                  const delta = movement.quantity_delta;
+                  const deltaLabel =
+                    delta === 0
+                      ? null
+                      : `${delta > 0 ? "+" : "−"}${getInventoryQuantityLabel(
+                          Math.abs(delta),
+                          item?.unit_type,
+                          item?.custom_unit_label
+                        )}`;
+                  const reference = item
+                    ? formatStockMovementNotes(movement.notes)
+                    : "";
 
                   return (
                     <li key={movement.id}>
@@ -1171,13 +1191,36 @@ export default function DashboardPage() {
                           aria-hidden="true"
                         />
                         <span className="ov-row-text">
-                          <strong>{movementLabel}</strong>
+                          <strong>
+                            {movementLabel}
+                            {item?.item_code || item?.sku ? (
+                              <span className="ov-row-code">
+                                {item.item_code || item.sku}
+                              </span>
+                            ) : null}
+                          </strong>
                           <small>
-                            {STOCK_MOVEMENT_LABELS[movement.movement_type]}
+                            {[
+                              STOCK_MOVEMENT_LABELS[movement.movement_type],
+                              reference,
+                            ]
+                              .filter(Boolean)
+                              .join(" · ")}
                           </small>
                         </span>
-                        <span className="ov-row-value ov-row-time">
-                          {formatDateDistance(movement.created_at)}
+                        <span className="ov-row-end">
+                          {deltaLabel && (
+                            <span
+                              className={`ov-row-delta ${
+                                delta > 0 ? "ov-row-delta-in" : "ov-row-delta-out"
+                              }`}
+                            >
+                              {deltaLabel}
+                            </span>
+                          )}
+                          <span className="ov-row-time">
+                            {formatDateDistance(movement.created_at)}
+                          </span>
                         </span>
                       </Link>
                     </li>

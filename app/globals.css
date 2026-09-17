@@ -23104,3 +23104,42 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-attention-row > a:last-child {
   flex: none;
 }
+
+/* Recent activity rows: item + code on the headline, the signed delta and
+   the time stacked at the end. The delta is the fact; the time is context. */
+.ov-row-code {
+  margin-left: 0.4rem;
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: var(--text-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-row-end {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.1rem;
+  flex: none;
+  margin-left: auto;
+}
+
+.ov-row-delta {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.ov-row-delta-in {
+  color: #15803d;
+}
+
+.ov-row-delta-out {
+  color: var(--text-primary);
+}
+
+.ov-row-end .ov-row-time {
+  font-size: 0.72rem;
+  color: var(--text-subtle);
+}
