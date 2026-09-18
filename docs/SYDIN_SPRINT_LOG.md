@@ -4369,3 +4369,50 @@ Help (§27) not rebuilt; tables (§32) are in decent shape — Stock Movements
 already reads as an audit trail — but haven't been systematically reviewed;
 empty/loading/error states (§35, §36); the 768/1024/1920 breakpoints beyond
 375 and 1440; the full end-to-end workflow test (§49).
+
+---
+
+## 2026-09-19 — Visual redesign, pass 3: the edges
+
+Pass 2 ended with a list of what hadn't been looked at. This pass went
+through it.
+
+*Sign-in and landing* (§28, §29). Login's submit was a black pill and its
+providers a different tier again; the landing's CTAs were black 999px
+pills while the product mockup right under them showed a blue 8px "Add
+item". Three ideas of the primary button on one screen. One now: the app's.
+The closing CTA on the landing was hand-rolled Tailwind for a dark panel
+that had since gone light (`text-white`) — it uses the same serif section
+title as the other four sections.
+
+*Help* (§27). It could not scroll. The desktop rule that pins a page's
+header and makes its last card the scroll region matched Help because Help
+ends in a short contact card; the FAQ above was unreachable. Same shape the
+rule already excludes for the PO save bar; excluded the same way. Every
+other route measured (25) — Help was the only one.
+
+*The 1024 laptop* (§37). Never looked at before. Header search: label hidden
+but the box still 250px — an empty pill with a magnifier. Inventory: 464px
+of chrome over the first product because the merged header needs 1120 and
+below that the page fell into the *phone* stacking (the 778px workspace
+trips the phone container query). This band has a laptop layout now: 278px
+of chrome, products get twice the room. Overview's sparkline squeezed the
+KPI label onto two lines at this width; the tile is a container and hides it
+under 220px.
+
+*The last pills, the last gradient, the last wash.* Inventory's Add Item /
+Scan / ⋯ and its search were held at 999px by a pass that split "actions as
+pills, controls as rectangles" — retired at source. The header Add button's
+cyan-to-purple gradient — deleted at source. The "Preparing your workspace"
+gate still sat on `.liquid-bg` — its own neutral ground now.
+
+*Tables* (§32). Stock Movements repeated CHANGE / BEFORE → AFTER / DATE on
+every row. One column header, rows a step quieter.
+
+*Needs attention.* The meta repeated the current quantity (already the value
+column) and truncated the minimum at laptop widths. Depot · Minimum now.
+
+**Still open:** empty/loading/error states (§35, §36) not systematically
+reviewed; 1280/1920 not measured (1440 and 1024 are; 768 and 375 are);
+the full end-to-end workflow test (§49); Sayed has not yet personally
+clicked the sidebar collapse toggle since the fix.
