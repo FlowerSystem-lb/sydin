@@ -469,22 +469,31 @@
    * imported after globals.css and the specificity is equal, so this one wins
    * on order. Deliberate, and the reason it is written here rather than there.
    */
+  /* Was 40px serif, weight 400 -- written for the old two-figure hairline
+     row, where two big serif numbers were the whole focal point. The
+     Overview now has eight compact tiles in the sans-serif system, and 40px
+     serif on each of them stacked eight tall was a full screen of scrolling
+     before any content (measured at 375px: ~120px per tile). Same type as
+     desktop now, sized for a half-width phone cell. */
   .ov-figure-value,
   .ov-spend-total {
-    font-family: var(--font-serif-display), ui-serif, Georgia, serif;
-    font-size: 40px;
-    font-weight: 400;
-    line-height: 1.05;
-    letter-spacing: -0.03em;
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
     font-variant-numeric: tabular-nums;
   }
 
-  /* 11px / .1em / #94a3b8 to match the canvas eyebrow, so the label sits under
-     the number instead of competing with it. */
   .ov-figure-label {
-    font-size: 11px;
-    letter-spacing: 0.1em;
-    color: #94a3b8;
+    font-size: 0.6875rem;
+    letter-spacing: 0.055em;
+    color: var(--text-muted);
+  }
+
+  /* Two across on a phone, not one. A compact tile fits a half-width cell. */
+  .ov-figures {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0.5rem;
   }
 }
 
@@ -496,8 +505,11 @@
      `anywhere` is the last-resort guard: at some amount even 28px will not fit,
      and wrapping an ugly number beats silently hiding digits from someone
      reading their own stock value. */
+  /* Tiers re-based under the new 22px default: they step DOWN from it.
+     Before this they were sized against the old 40px serif, so a "long"
+     figure at 28px was bigger than a normal one at 22px. */
   .ov-figure-value--long {
-    font-size: 28px;
+    font-size: 1.25rem;
     white-space: nowrap;
   }
 
@@ -505,12 +517,12 @@
      "LBP 153,235,858,750"): two more tiers, chosen by length in
      app/dashboard/page.tsx. A number must never break in the middle. */
   .ov-figure-value--very-long {
-    font-size: 22px;
+    font-size: 1.0625rem;
     white-space: nowrap;
   }
 
   .ov-figure-value--longest {
-    font-size: 17px;
+    font-size: 0.9375rem;
     letter-spacing: -0.02em;
     white-space: nowrap;
   }
