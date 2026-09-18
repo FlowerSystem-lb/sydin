@@ -23295,3 +23295,105 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: none;
   }
 }
+
+/* ==========================================================================
+   SIGN-IN
+   ==========================================================================
+   Sayed (§29): "Redesign Sign In to match the same SydIN design language...
+   Use the same: Typography, Brand, Buttons, Inputs."
+
+   The page's bones are already right -- split layout, the serif welcome,
+   the brand illustration. Its controls weren't in the system: the submit
+   was a black 999px pill (every other primary in the app is now SydIN
+   blue at 8px), and the inputs had a 16px radius and a border of
+   rgba(255,255,255,.7) -- a white border on a light page, i.e. invisible,
+   which is why they read as soft floating boxes instead of fields.
+   ========================================================================== */
+.login-submit {
+  min-height: var(--control-h-lg) !important;
+  border: 1px solid #1d4ed8 !important;
+  border-radius: var(--radius-control) !important;
+  background: #2563eb !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  font-size: 0.9375rem !important;
+  font-weight: 600 !important;
+  box-shadow:
+    0 1px 2px rgba(29, 78, 216, 0.24),
+    0 1px 1px rgba(24, 24, 27, 0.04) !important;
+  transition:
+    background-color 130ms var(--motion-ease-standard),
+    box-shadow 130ms var(--motion-ease-standard),
+    transform 130ms var(--motion-ease-standard);
+}
+
+@media (hover: hover) {
+  .login-submit:not(:disabled):hover {
+    background: #1d4ed8 !important;
+    box-shadow:
+      0 2px 6px rgba(29, 78, 216, 0.28),
+      0 1px 2px rgba(24, 24, 27, 0.05) !important;
+    transform: translateY(-0.5px);
+  }
+}
+
+.login-submit:not(:disabled):active {
+  background: #1e40af !important;
+  box-shadow: 0 1px 1px rgba(29, 78, 216, 0.2) !important;
+  transform: translateY(1px);
+}
+
+/* OAuth buttons: the secondary tier -- white, hairline, subtle lift. */
+.login-provider-button {
+  min-height: var(--control-h-lg) !important;
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-control) !important;
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-subtle) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+@media (hover: hover) {
+  .login-provider-button:not(:disabled):hover {
+    border-color: var(--border-strong) !important;
+    box-shadow: var(--shadow-raised) !important;
+    transform: translateY(-0.5px);
+  }
+}
+
+/* Fields: a real hairline, the shared radius, the shared blue ring. */
+.login-input-wrap {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-control) !important;
+  background: var(--bg-surface) !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  transition:
+    border-color 130ms var(--motion-ease-standard),
+    box-shadow 130ms var(--motion-ease-standard);
+}
+
+.login-input-wrap input {
+  min-height: var(--control-h-lg) !important;
+}
+
+@media (hover: hover) {
+  .login-input-wrap:hover {
+    border-color: var(--border-strong) !important;
+  }
+}
+
+.login-input-wrap:focus-within {
+  border-color: var(--sydin-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+}
+
+.login-submit:focus-visible,
+.login-provider-button:focus-visible {
+  outline: 2px solid var(--sydin-blue);
+  outline-offset: 2px;
+}
