@@ -4314,3 +4314,58 @@ restructured around his questions in §8; Needs attention is not yet an action
 centre with inline `[Restock]`; tables, inputs, empty/loading states, Help,
 landing page, sign-in and the mobile breakpoints have not been through this
 pass yet.
+
+**Visual redesign, pass 2: the reference, and the dashboard as a place to
+act** *(17–19 Sep 2026)* — Sayed: "i want same image hl2 yala ll dash and
+sidebar." Then "keep going."
+
+*Sidebar, matched to the picture.* The structural difference was an
+inversion. The reference sidebar sits on a light grey ground and the
+*selected* row is a white card that lifts off it — border, soft shadow,
+pushed forward. Ours was the opposite: white sidebar, selected row pressed
+into it as a grey fill. Flipped; added the hairline dividers between groups
+and the bordered white workspace/account cards bracketing the nav.
+
+*Overview header.* The reference is title-left, context and primary action
+right. Ours had nothing on the right. Now: today's date (real, informational,
+no filter pretending to exist behind it) and **New invoice**.
+
+*Needs attention → action centre* (§12). Rows say what's wrong in numbers
+("Current 1 · Minimum 10") and carry the fix: **Restock** opens a new PO with
+the item already on it. That route existed for the Inventory bulk action; it
+just wasn't reachable from the one place the shortfall is noticed. Item link
+and action are siblings — a button inside an `<a>` is invalid HTML.
+
+*Recent activity → a stock feed with the stock on it* (§11). The row used to
+show item and movement type and nothing else — a stock-movement feed with no
+quantity. Now: item + code, movement type, the document it happened against
+("Stock Out · Invoice INV-0002"), the signed delta in the item's own unit
+(green in, ink out), time. No "who": single-user, always the owner.
+
+*Inputs* (§6). The boxless label/value rows set `outline: none` and replaced
+it with nothing — focused and unfocused were identical. Tabbing through a
+form gave no sign of where you were. Blue underline on focus, in the same
+language the error state already uses; boxed controls get the shared ring.
+Verified with real Tab focus, since `:focus-visible` doesn't fire for
+programmatic `.focus()`.
+
+*Mobile* (§37). At 375px the KPI grid had gone single-column with each
+number at 40px in a serif display face — eight tiles ~120px tall each, a
+full screen before any content. That rule was written for the old
+two-figure hairline row and its premise is gone. Fixed in `app/mobile.css`
+at source (it loads after globals and wins on order): two columns, 22px
+sans, size tiers re-based to step *down* from the default. The H1 keeps the
+serif — that's the landing page's type, which §4 asks the app to share.
+
+*Header* (§17). The toolbar still carried the blue wash (a four-class rule
+outranked the foundation) and the account chip was the last 999px pill.
+
+Every step screenshotted in the browser. Three of them needed a Turbopack
+cache clear to see the CSS — noted each time in the commit rather than
+assumed.
+
+**Still open:** landing page and sign-in (§28, §29) have not had this pass;
+Help (§27) not rebuilt; tables (§32) are in decent shape — Stock Movements
+already reads as an audit trail — but haven't been systematically reviewed;
+empty/loading/error states (§35, §36); the 768/1024/1920 breakpoints beyond
+375 and 1440; the full end-to-end workflow test (§49).
