@@ -12612,7 +12612,13 @@ body,
   }
 }
 
-@media (max-width: 1120px) {
+/* Icon-only search, below the desktop shell. This used to fire at 1120px,
+   but the width part lost to the `.dashboard-workspace-shell` rule above
+   (two classes beat one), so between 900 and 1120 the label vanished while
+   the box stayed 250px wide -- an empty pill with a magnifier in the middle.
+   Measured at 1024: the label fits with room to spare, so the collapse now
+   applies only where the desktop toolbar really is out of space. */
+@media (max-width: 899px) {
   .dashboard-top-searchbar-label,
   .dashboard-top-searchbar-kbd {
     display: none;
@@ -20444,11 +20450,14 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    Nothing lined up with anything, which is the same fault as the search circle
    he photographed — that one was just visible because it was round.
 
-   The rule applied here: everything in the control row is 38px. Shape carries
-   meaning rather than decoration — an ACTION is a pill (Add Item, Scan, ⋯,
-   Search: things that DO something), a CONTROL is a 12px rectangle (Filters,
-   Sort, View, Select items: things that change what you are looking at). That
-   distinction was already 80% present; this makes it exact.
+   The rule applied here: everything in the control row is 38px.
+
+   (2026-09-19) This block used to draw a pill/rectangle distinction --
+   actions as 999px pills, controls as 12px rectangles. Sayed's redesign
+   brief retired it: "DO NOT make every button a pill", one control radius
+   across the app. Add Item on Inventory was the last pill primary while
+   New invoice on the Overview was already 8px. Heights stay; the radius
+   is now the system's.
 
    Chips stay 32px pills: they are a different tier and were already consistent.
    Card controls unify at 28px/11px — the card menu button was 29px/12px against
@@ -20456,14 +20465,14 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    choice.
    =========================================================================== */
 @media (min-width: 900px) {
-  /* Actions: pills. */
+  /* Actions. */
   .inventory-workspace .inventory-page-actions > a,
   .inventory-workspace .inventory-page-actions > button {
     min-height: 38px !important;
-    border-radius: var(--radius-pill) !important;
+    border-radius: var(--radius-control) !important;
   }
 
-  /* Controls: 12px rectangles, matching each other and the search's height.
+  /* Controls, matching each other and the search's height.
      Selectors taken from the live DOM rather than guessed — the first pass
      used `.inventory-toolbar-main > button`, and none of these are direct
      children: Filters and Select items are `.inventory-toolbar-button` inside
@@ -20472,14 +20481,14 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .inventory-workspace .inventory-toolbar-button,
   .inventory-workspace .inventory-toolbar-actions .ui-select-trigger {
     min-height: 38px !important;
-    border-radius: 12px !important;
+    border-radius: var(--radius-control) !important;
   }
 
   /* The ⋯ button sits in the actions row but is a
-     `.dashboard-action-button-secondary`, so the pill rule above missed it. */
+     `.dashboard-action-button-secondary`, so the rule above missed it. */
   .inventory-workspace .inventory-action-more {
     min-height: 38px !important;
-    border-radius: var(--radius-pill) !important;
+    border-radius: var(--radius-control) !important;
   }
 }
 
@@ -23228,6 +23237,29 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   outline: none;
 }
 
+/* Inventory's search is styled by a four-class rule with !important
+   (`.dashboard-shell .inventory-workspace .inventory-toolbar-search
+   .inventory-search-input`), so the list above cannot reach it. Same
+   selector, declared later: it joins the system. */
+.dashboard-shell .inventory-workspace .inventory-toolbar-search .inventory-search-input {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-control) !important;
+  background: var(--bg-surface) !important;
+  box-shadow: none !important;
+}
+
+@media (hover: hover) {
+  .dashboard-shell .inventory-workspace .inventory-toolbar-search .inventory-search-input:hover {
+    border-color: var(--border-strong) !important;
+  }
+}
+
+.dashboard-shell .inventory-workspace .inventory-toolbar-search .inventory-search-input:focus-visible {
+  border-color: var(--sydin-blue) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+  outline: none;
+}
+
 .ui-input[aria-invalid="true"],
 .sale-input[aria-invalid="true"] {
   border-color: #ef4444 !important;
@@ -23470,4 +23502,91 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .marketing-site .marketing-button-secondary:active {
   background: var(--surface-sunken);
   transform: translateY(1px);
+}
+
+/* ==========================================================================
+   KPI SPARKLINE: ONLY WHERE IT FITS
+   ==========================================================================
+   Measured at 1024 with the sidebar open: a figure tile is 168px wide. The
+   14-day sparkline beside "Sold this month" (46px) forced the label onto two
+   lines, and with thirteen empty days it read as a stray dotted mark rather
+   than a chart. The tile is now its own container; under 220px the label
+   keeps the line and the sparkline steps aside. At 1440 the tile is 286px
+   and nothing changes.
+   ========================================================================== */
+.ov-figure {
+  container-type: inline-size;
+}
+
+@container (max-width: 220px) {
+  .ov-figure-sparkline {
+    display: none;
+  }
+}
+
+/* ==========================================================================
+   INVENTORY HEADER ON A LAPTOP (900-1119px viewport)
+   ==========================================================================
+   The merged one-row header above needs ~980px of content and so starts at
+   1120px. Below that the page fell back to the phone stacking, because the
+   workspace container (778px at 1024 with the sidebar open) trips the
+   `@container (max-width: 900px)` rules written for phones. Measured at
+   1024x720: 464px of chrome above the first product -- title, description,
+   plan badge, an actions row, the figures, the search on its own line, the
+   controls on theirs, the chips, the count -- and 178px left for the items.
+
+   This band gets a laptop answer instead of a phone one. Title and actions
+   share a row (250 + 264 in 778), the description and plan badge go the same
+   way they do at 1120+, search and the four controls share a row (208 floor
+   + ~475 in 778), chips and the count share theirs. Same markup, ~120px of
+   chrome saved, and the products get twice the room.
+   ========================================================================== */
+@media (min-width: 900px) and (max-width: 1119px) {
+  @container (max-width: 900px) {
+    .dashboard-shell .inventory-workspace .inventory-hero-top {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .dashboard-shell .inventory-workspace .inventory-hero-description,
+    .dashboard-shell .inventory-workspace .inventory-hero-badges {
+      display: none !important;
+    }
+
+    .dashboard-shell .inventory-workspace .inventory-hero-actions {
+      display: flex;
+      flex-wrap: nowrap;
+      width: auto;
+      max-width: none;
+      justify-content: flex-end;
+    }
+
+    .dashboard-shell .inventory-workspace .inventory-hero-actions .action-button {
+      width: auto;
+    }
+
+    .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-main,
+    .dashboard-workspace-shell .inventory-toolbar-main {
+      grid-template-columns: minmax(12rem, 1fr) auto;
+    }
+
+    .dashboard-shell:has(.inventory-workspace) .inventory-toolbar-actions,
+    .dashboard-workspace-shell .inventory-toolbar-actions {
+      display: flex;
+      flex-wrap: nowrap;
+      justify-content: flex-end;
+    }
+
+    .dashboard-shell .inventory-workspace .inventory-toolbar-actions > * {
+      width: auto;
+    }
+
+    .dashboard-shell .inventory-workspace .inventory-toolbar-secondary {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+    }
+  }
 }

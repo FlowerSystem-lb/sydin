@@ -1065,12 +1065,11 @@ export default function DashboardPage() {
                       <span className="ov-row-text">
                         <strong>{entry.item.name}</strong>
                         <small>
-                          {[
-                            entry.depot,
-                            `Current ${formatNumber(entry.item.quantity)} · Minimum ${formatNumber(
-                              entry.threshold
-                            )}`,
-                          ]
+                          {/* The current quantity is the value column on the
+                              right; repeating it here pushed the minimum --
+                              the one number that explains why the row exists
+                              -- off the end of the line at laptop widths. */}
+                          {[entry.depot, `Minimum ${formatNumber(entry.threshold)}`]
                             .filter(Boolean)
                             .join(" · ")}
                         </small>
