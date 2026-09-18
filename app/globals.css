@@ -18117,40 +18117,45 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
      BAR the scroll region -- squeezed to 34px with its own scrollbar and the
      Save button cut off below the viewport.
 
+     `.help-contact` likewise (2026-09-19): Help ends in a short contact card,
+     so this rule made THAT the scroll region and the whole FAQ above it was
+     unreachable -- the page simply did not scroll. Any page that ends in a
+     card which is not its data surface needs to be listed here.
+
      Guarded by :has() so it applies only to pages that really are
      header -> toolbar -> one data surface. Pages built from several stacked
      sections (settings, help) keep the whole panel scrolling; making only
      their final section scrollable would strand everything above it. */
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar, .help-contact)) {
     display: flex;
     flex-direction: column;
     overflow: hidden !important;
   }
 
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) > .dashboard-route-transition,
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) :is(main, div):has(> .dashboard-page-shell) {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar, .help-contact)) > .dashboard-route-transition,
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar, .help-contact)) :is(main, div):has(> .dashboard-page-shell) {
     display: flex;
     flex-direction: column;
     flex: 1 1 auto;
     min-height: 0;
   }
 
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) .dashboard-page-shell {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar, .help-contact)) .dashboard-page-shell {
     flex: 1 1 auto;
     min-height: 0;
   }
 
   /* Page header and filters keep their natural height, and therefore hold
      still: they are part of the frame now, not part of the scroll. */
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar)) .dashboard-page-shell > * {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar, .help-contact)) .dashboard-page-shell > * {
     flex: 0 0 auto;
   }
 
   /* The data region takes what is left and owns the scrollbar, so the bar sits
      beside the rows rather than beside the whole page. */
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar))
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content:has(.dashboard-page-shell > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar, .help-contact))
     .dashboard-page-shell
-    > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar) {
+    > :is(.dashboard-card, .dashboard-table-card):last-child:not(.po-save-bar, .help-contact) {
     flex: 1 1 auto;
     min-height: 0;
     overflow-y: auto;
