@@ -23240,3 +23240,58 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   background: var(--surface-sunken) !important;
   cursor: not-allowed;
 }
+
+/* ==========================================================================
+   TOP HEADER
+   ==========================================================================
+   Sayed (§17): "It should be visually quiet... Do not put too many floating
+   pills... The header should feel like part of the workspace, not an
+   independent colorful toolbar."
+
+   Two leftovers found by reading the computed style, not the source: the
+   toolbar still carried the blue radial wash under a white veil (a
+   four-class rule at :13947 outranked the foundation's two-class one), and
+   the account chip was the last 999px frosted pill in the app. Same
+   specificity as the rule being replaced, declared later, so it wins
+   without inventing a fifth ancestor.
+   ========================================================================== */
+.dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-desktop-toolbar,
+.dashboard-shell.dashboard-workspace-shell .dashboard-desktop-toolbar,
+.dashboard-workspace-shell .dashboard-desktop-toolbar {
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  border-bottom: 1px solid var(--border-divider) !important;
+}
+
+.dashboard-top-account-pill {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-control) !important;
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+@media (hover: hover) {
+  .dashboard-top-account-pill:hover {
+    border-color: var(--border-strong) !important;
+    background: var(--bg-surface) !important;
+    transform: none;
+  }
+}
+
+/* Search: a quiet neutral field, same radius as every other control. */
+.dashboard-top-searchbar {
+  border: 1px solid var(--border-default) !important;
+  background: var(--surface-sunken) !important;
+  color: var(--text-muted) !important;
+}
+
+@media (hover: hover) {
+  .dashboard-top-searchbar:hover {
+    border-color: var(--border-strong) !important;
+    background: var(--bg-surface) !important;
+    transform: none;
+  }
+}
