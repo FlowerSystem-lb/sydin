@@ -434,15 +434,13 @@ export function MarketingCTA() {
     <section className="px-4 py-16 sm:px-6 lg:px-8">
       <Reveal>
         <div className="marketing-cta mx-auto max-w-7xl overflow-hidden px-5 py-14 text-center sm:px-8 lg:px-12">
-          <p className="marketing-eyebrow marketing-eyebrow-on-dark">
-            Start with clarity
-          </p>
+          <p className="marketing-eyebrow">Start with clarity</p>
 
-          <h2 className="mx-auto mt-3 max-w-3xl text-3xl font-bold tracking-tight text-white sm:text-5xl">
+          <h2 className="marketing-section-title mx-auto mt-3 max-w-3xl">
             Start managing inventory with more confidence.
           </h2>
 
-          <p className="mx-auto mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
+          <p className="marketing-section-copy mx-auto mt-4 max-w-2xl">
             Smart inventory, clear operations, and a workspace your team can learn quickly.
           </p>
 

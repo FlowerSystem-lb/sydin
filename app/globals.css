@@ -23397,3 +23397,72 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   outline: 2px solid var(--sydin-blue);
   outline-offset: 2px;
 }
+
+/* ==========================================================================
+   LANDING PAGE BUTTONS
+   ==========================================================================
+   Sayed (§28): "REDESIGN THE LANDING PAGE TO MATCH THE SAME DESIGN SYSTEM.
+   Do not make the landing page look like a completely different company.
+   Share: fonts, colors, buttons, radius, motion."
+
+   The landing's CTAs were black 999px pills -- while the product mockup
+   sitting right under the hero shows a blue "Add item" button, and the
+   app itself is now blue at 8px. Three ideas of "the primary button" on
+   one screen. One now: the app's. The serif headline, the brand blob and
+   the floating proof cards are marketing and stay.
+   ========================================================================== */
+.marketing-site .marketing-button {
+  border-radius: var(--radius-control);
+  min-height: var(--control-h-lg);
+  font-weight: 600;
+  letter-spacing: -0.006em;
+  transition:
+    background-color 130ms var(--motion-ease-standard),
+    border-color 130ms var(--motion-ease-standard),
+    box-shadow 130ms var(--motion-ease-standard),
+    transform 130ms var(--motion-ease-standard);
+}
+
+.marketing-site .marketing-button-primary {
+  border-color: #1d4ed8;
+  background: #2563eb;
+  background-image: none;
+  color: #ffffff;
+  box-shadow:
+    0 1px 2px rgba(29, 78, 216, 0.24),
+    0 1px 1px rgba(24, 24, 27, 0.04);
+}
+
+.marketing-site .marketing-button-secondary {
+  border-color: var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-subtle);
+}
+
+@media (hover: hover) {
+  .marketing-site .marketing-button-primary:hover {
+    background: #1d4ed8;
+    box-shadow:
+      0 2px 6px rgba(29, 78, 216, 0.28),
+      0 1px 2px rgba(24, 24, 27, 0.05);
+    transform: translateY(-0.5px);
+  }
+
+  .marketing-site .marketing-button-secondary:hover {
+    border-color: var(--border-strong);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-raised);
+    transform: translateY(-0.5px);
+  }
+}
+
+.marketing-site .marketing-button-primary:active {
+  background: #1e40af;
+  transform: translateY(1px);
+}
+
+.marketing-site .marketing-button-secondary:active {
+  background: var(--surface-sunken);
+  transform: translateY(1px);
+}
