@@ -282,6 +282,20 @@ export default function StockMovementsPage() {
             <LoadingSkeletonGroup count={4} className="p-4" itemClassName="min-h-20" />
           ) : visibleMovements.length > 0 ? (
             <div className="divide-y divide-[var(--border-default)]">
+              {/* One header for the whole audit trail. The rows used to carry
+                  their own CHANGE / BEFORE -> AFTER / DATE labels, eight
+                  times down the page; below the sm breakpoint they still
+                  do, because there the row stacks and a header would have
+                  nothing to line up with. */}
+              <div
+                className="hidden gap-3 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:grid sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))]"
+                aria-hidden="true"
+              >
+                <span>Item</span>
+                <span>Change</span>
+                <span>Before → After</span>
+                <span>Date</span>
+              </div>
               {visibleMovements.map((movement) => {
                 const item = movement.item_id
                   ? itemById.get(movement.item_id)
@@ -294,10 +308,10 @@ export default function StockMovementsPage() {
                 return (
                   <article
                     key={movement.id}
-                    className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))] sm:items-center"
+                    className="grid gap-3 px-4 py-3 sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))] sm:items-center"
                   >
                     <div className="flex min-w-0 items-center gap-3">
-                      <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
+                      <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-theme-inset ring-1 ring-black/5">
                         <ProductThumbnail
                           src={item?.image}
                           alt=""
@@ -312,12 +326,12 @@ export default function StockMovementsPage() {
                           <button
                             type="button"
                             onClick={() => setDetailsItemId(item.id)}
-                            className="block max-w-full truncate text-left font-bold text-theme-primary hover:text-theme-accent"
+                            className="block max-w-full truncate text-left text-sm font-semibold text-theme-primary hover:text-theme-accent"
                           >
                             {item.name}
                           </button>
                         ) : (
-                          <p className="truncate font-bold text-theme-primary">
+                          <p className="truncate text-sm font-semibold text-theme-primary">
                             Inventory item
                           </p>
                         )}
@@ -333,11 +347,11 @@ export default function StockMovementsPage() {
                       </div>
                     </div>
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
                         Change
                       </p>
                       <p
-                        className={`mt-1 font-black ${
+                        className={`mt-1 text-sm font-semibold tabular-nums sm:mt-0 ${
                           positive
                             ? "text-theme-success"
                             : movement.quantity_delta < 0
@@ -350,18 +364,18 @@ export default function StockMovementsPage() {
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
                         Before → After
                       </p>
-                      <p className="mt-1 font-black text-theme-primary">
+                      <p className="mt-1 text-sm font-semibold tabular-nums text-theme-primary sm:mt-0">
                         {movement.quantity_before} → {movement.quantity_after}
                       </p>
                     </div>
                     <div>
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
                         Date
                       </p>
-                      <p className="mt-1 text-xs font-semibold text-theme-secondary">
+                      <p className="mt-1 text-xs tabular-nums text-theme-secondary sm:mt-0">
                         {formatMovementDate(movement.created_at)}
                       </p>
                     </div>

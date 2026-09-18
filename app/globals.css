@@ -12216,10 +12216,9 @@ body,
     color: var(--ink-muted) !important;
   }
 
-  .dashboard-workspace-shell .dashboard-top-primary-button {
-    background: linear-gradient(135deg, #10c4dc, #2563eb 58%, #7d5cff) !important;
-    color: #ffffff !important;
-  }
+  /* The cyan-to-purple gradient that used to sit here on the header's Add
+     button was the last gradient primary in the app; the button system at
+     the end of this file (solid brand blue) owns it now. */
 
   .dashboard-workspace-shell .dashboard-top-tools {
     flex: 1 1 18rem !important;
@@ -23589,4 +23588,25 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
       justify-content: space-between;
     }
   }
+}
+
+/* ==========================================================================
+   SESSION GATE
+   ==========================================================================
+   The "Preparing your workspace" screen between sign-in and the dashboard
+   sat on the bare `.liquid-bg` wash -- the one blue background left in the
+   product's own path (the admin page also uses that class, with white text,
+   so it stays untouched). Same ground and card as the dashboard behind it,
+   so the hand-off is a fade, not a colour change.
+   ========================================================================== */
+.dashboard-gate {
+  background-color: var(--surface-page);
+}
+
+.dashboard-gate-card {
+  min-width: 15rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
 }

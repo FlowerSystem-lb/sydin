@@ -54,9 +54,9 @@ export default function DashboardLayout({
   if (loading) {
     return (
       <ThemeProvider>
-        <div className="liquid-bg flex min-h-screen items-center justify-center px-4 text-theme-primary">
-          <div className="glass-panel px-7 py-6 text-center">
-            <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-2xl bg-sydin-blue/25" />
+        <div className="dashboard-gate flex min-h-screen items-center justify-center px-4 text-theme-primary">
+          <div className="dashboard-gate-card px-7 py-6 text-center">
+            <div className="mx-auto mb-4 h-10 w-10 animate-pulse rounded-lg bg-sydin-blue/25" />
 
             <p className="text-lg font-bold">
               Preparing your workspace
