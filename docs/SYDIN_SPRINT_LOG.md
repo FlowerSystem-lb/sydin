@@ -4416,3 +4416,31 @@ column) and truncated the minimum at laptop widths. Depot · Minimum now.
 reviewed; 1280/1920 not measured (1440 and 1024 are; 768 and 375 are);
 the full end-to-end workflow test (§49); Sayed has not yet personally
 clicked the sidebar collapse toggle since the fix.
+
+### Pass 3, continued (same day)
+
+*Sign-in visual* (§29). The mockup beside the form was a different product —
+navy rail, cyan-to-violet active tile, purple chart, gradient bars, two
+floating 3D cubes, orbit rings, a perspective tilt, an amber "orb glow"
+behind the form. Reskinned to the dashboard's actual chrome; cubes and
+orbits gone. Same markup.
+
+*Empty states* (§35). All 35 reviewed. Stock Movements and Activity had no
+button on first run; both now split "nothing yet" (button) from "nothing
+matches these filters" (hint). Primitives moved onto the 12px radius and
+13px copy — in px, because the app root is 13.6px and rem here reads small.
+
+*1280 and 1920* (§37). 1280 needed nothing. At 1920 the Overview ran edge to
+edge (429px KPI tiles, 847px columns); it keeps a 1520px ceiling now.
+Inventory stays fluid — seven columns of cards is the point of a wide screen.
+The KPI sparkline renders only with two or more non-empty days.
+
+*Forms and dialogs* (§49, visual only). Add item, New invoice, New PO and
+Record Movement opened and screenshotted — all in the system. Nothing saved.
+
+*Sidebar toggle.* Expand → collapse → expand with real clicks through the
+browser, state persisted each time. Sayed's own click is still welcome.
+
+**Still open:** the end-to-end workflow test with real records (§49) —
+deliberately not run against the live database; the `sidebar` and `header`
+have not been re-checked at 768 since the tablet uses the mobile shell.
