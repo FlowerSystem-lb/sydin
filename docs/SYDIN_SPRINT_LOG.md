@@ -4540,3 +4540,16 @@ the native control's id in its children. Notes textareas on four forms, the
 item-name title input and the PO receipt file input got aria-labels.
 Targets: section-header links (15–18px) and the stat-tile unit picker
 (14px) now 24px.
+
+---
+
+## 2026-09-20 — The graph (reference dashboard, "same graph details")
+
+Sayed: keep the design as the reference image, with the same graph details.
+The Overview now has the graph: sales and purchases by day from the orders
+already loaded (drafts and cancelled excluded, base currency). 7/30/90-day
+segmented switch, legend-with-totals (Sales, Purchases, Net), one axis, blue
+line + light fill for sales, dashed ink for purchases, crosshair readout on
+hover, honest empty state, and a "Show as a table" fallback. Phone gets a
+narrower drawing so axis text stays 10px. Palette run through the dataviz
+validator. Full width above the two columns. Screenshotted at 1440 and 375.
