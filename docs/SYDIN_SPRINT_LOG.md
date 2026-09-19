@@ -4527,3 +4527,16 @@ Fixed on the way: clearing a search restored an expanded 500-card window
 in one go (now any list change starts at 60); table view rendered the
 phone list and the desktop table both (new `useMediaQuery` renders one);
 the mobile alert badge counted only the first 100 products.
+
+---
+
+## 2026-09-20 — Accessibility sweep (brief §53)
+
+Nine pages checked in the browser for unnamed buttons, unlabelled inputs,
+images without alt, links without text and targets under 24px. Names and
+alt: clean. Labels: `FieldRow` rendered a visible label pointing at nothing
+whenever `htmlFor` was omitted — 39 of 108 rows; the primitive now finds
+the native control's id in its children. Notes textareas on four forms, the
+item-name title input and the PO receipt file input got aria-labels.
+Targets: section-header links (15–18px) and the stat-tile unit picker
+(14px) now 24px.
