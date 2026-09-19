@@ -23610,3 +23610,125 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   background: var(--bg-surface);
   box-shadow: var(--shadow-card);
 }
+
+/* ==========================================================================
+   SIGN-IN VISUAL: THE REAL PRODUCT, NOT A CONCEPT OF IT
+   ==========================================================================
+   The mockup beside the sign-in form was a different product: navy rail
+   with a cyan-to-violet active tile, a #655cff chart on a purple wash,
+   metric bars in a cyan-to-violet gradient, two floating 3D cubes, orbit
+   rings, a perspective tilt. Sayed (§29): sign-in shares the app's design
+   language; (§3) "3D" means subtle depth, not objects. Someone signing in
+   should see the thing they are about to use. Same markup, reskinned to
+   the dashboard's actual chrome. The chart's SVG gradient is set in the
+   component and stays purple at 28% under a blue line -- so the area is
+   simply not drawn.
+   ========================================================================== */
+.login-visual {
+  border-left: 1px solid var(--border-divider);
+  background: var(--surface-page);
+}
+
+.login-visual::before {
+  opacity: 0.6;
+  background-image:
+    linear-gradient(rgba(24, 24, 27, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(24, 24, 27, 0.035) 1px, transparent 1px);
+}
+
+.login-visual-glow,
+.login-orbit,
+.login-orbit-dot,
+.login-cube {
+  display: none;
+}
+
+.login-dashboard {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-panel);
+  background: #ffffff;
+  box-shadow: var(--shadow-elevated);
+  backdrop-filter: none;
+  transform: none;
+}
+
+.login-dashboard-shadow {
+  display: none;
+}
+
+.login-dashboard-rail {
+  background: #fafafa;
+  border-right: 1px solid var(--border-divider);
+  color: var(--text-muted);
+}
+
+.login-dashboard-rail > .login-dashboard-rail-active {
+  color: var(--text-primary);
+  background: #ffffff;
+  box-shadow:
+    inset 0 0 0 1px var(--border-default),
+    0 1px 2px rgba(24, 24, 27, 0.05);
+}
+
+.login-metric-icon-blue,
+.login-metric-icon-cyan,
+.login-metric-icon-violet {
+  background: var(--surface-sunken);
+  color: var(--text-secondary);
+}
+
+.login-metric-icon-blue {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--sydin-blue);
+}
+
+.login-metric-card strong {
+  color: var(--text-primary);
+}
+
+.login-metric-bar i {
+  background: var(--sydin-blue);
+}
+
+.login-chart-area {
+  display: none;
+}
+
+.login-chart-line {
+  stroke: var(--sydin-blue);
+  stroke-width: 2.5;
+}
+
+.login-dashboard-status {
+  border-color: rgba(21, 128, 61, 0.2);
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.login-dashboard-status i {
+  background: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.14);
+}
+
+.login-visual-promise {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: #ffffff;
+  box-shadow: var(--shadow-card);
+}
+
+.login-visual-promise > span {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--sydin-blue);
+}
+
+/* The form side carried a "warm orb glow" from the Glass 2.0 brief -- an
+   amber radial in the corner and a cyan one opposite. Paper now, like the
+   rest of the product. Matches the !important it replaces. */
+.login-auth-panel {
+  background: #ffffff !important;
+}
+
+.login-activity-row > span {
+  color: var(--text-secondary);
+}
