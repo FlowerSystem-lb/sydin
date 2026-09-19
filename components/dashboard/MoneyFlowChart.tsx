@@ -2,88 +2,128 @@
 
 import { useId, useMemo, useState } from "react";
 import { getPurchaseOrderTotalInBase, type PurchaseOrder } from "@/app/lib/purchaseOrders";
-import { getSalesOrderTotalInBase, type SalesOrder } from "@/app/lib/salesOrders";
+import {
+  getSalesOrderPaidInBase,
+  getSalesOrderTotalInBase,
+  type SalesOrder,
+} from "@/app/lib/salesOrders";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
 
 /**
- * Money in and money out, day by day, on the Overview.
+ * The Overview's graphs, built to the anatomy of Sayed's reference dashboard
+ * (20 Sep): a wide "trend" panel whose bars are made of small squares on a
+ * faint dotted grid, stacked two-tone, with the period's total as a lead
+ * figure, a legend beside it and a Weekly / Monthly / Yearly switch; and a
+ * narrower panel at its right with thin vertical bars over a date range.
  *
- * Why it exists: Sayed's reference dashboard has a real graph with its own
- * details -- period switch, two series, a readout on hover -- and the
- * Overview had only a 14-day sparkline beside one figure. This is that
- * graph, built from the sales orders and purchase orders the page already
- * loads. Nothing is estimated: a day's "Sales" is the sum of the invoices
- * issued that day (drafts and cancelled excluded), "Purchases" the sum of
- * the orders placed that day, both converted to the base currency the
- * page's other figures already use.
+ * On real data, with SydIN's meanings:
  *
- * Two series, one axis. Sales in the brand blue; purchases in ink with a
- * dashed line, so identity never rests on colour alone (legend, line
- * style and end labels all carry it). Hover snaps a hairline to the
- * nearest day and reads out both values -- the pointer aims at a date,
- * never at a line. Below the plot the same numbers are in a table for
- * screen readers and for anyone who wants the figures rather than the
- * shape.
+ *   Sales trend   -- each bar is a day (or a month on Yearly). The dark
+ *                    squares are the part of that day's invoices that has
+ *                    been PAID, the light squares what is STILL OWED. A true
+ *                    part-of-whole, which is what a stacked bar is for; the
+ *                    owner's question is "did I get the money?".
+ *   Purchases     -- money out, one thin bar per day, last 30 days.
+ *
+ * Nothing estimated: a day's sales is the sum of invoices issued that day
+ * (drafts and cancelled excluded), paid is their recorded payments, both in
+ * the base currency the page's figures already use. Identity never rests on
+ * colour alone: legend, tone and the readout all carry it.
  */
 
 const PERIODS = [
-  { days: 7, label: "7 days" },
-  { days: 30, label: "30 days" },
-  { days: 90, label: "90 days" },
+  { key: "weekly", label: "Weekly" },
+  { key: "monthly", label: "Monthly" },
+  { key: "yearly", label: "Yearly" },
 ] as const;
+type PeriodKey = (typeof PERIODS)[number]["key"];
 
-type PeriodDays = (typeof PERIODS)[number]["days"];
-
-interface DayPoint {
-  key: string; // YYYY-MM-DD
-  date: Date;
-  sales: number;
+interface Bucket {
+  key: string;
+  label: string; // axis label
+  full: string; // readout label
+  paid: number;
+  owed: number;
   purchases: number;
 }
 
-function dayKey(date: Date) {
+const dayShort = new Intl.DateTimeFormat("en", { month: "short", day: "numeric" });
+const dayLong = new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric" });
+const monthShort = new Intl.DateTimeFormat("en", { month: "short" });
+const monthLong = new Intl.DateTimeFormat("en", { month: "long", year: "numeric" });
+
+function isoDay(date: Date) {
   return date.toISOString().slice(0, 10);
 }
 
-function buildSeries(
-  salesOrders: SalesOrder[],
-  purchaseOrders: PurchaseOrder[],
-  days: PeriodDays
-): DayPoint[] {
+/** Days (weekly/monthly) or months (yearly), oldest first, every slot present. */
+function buildBuckets(period: PeriodKey): Bucket[] {
   const now = new Date();
-  const points: DayPoint[] = [];
-  const byKey = new Map<string, DayPoint>();
+  const buckets: Bucket[] = [];
+  if (period === "yearly") {
+    for (let offset = 11; offset >= 0; offset -= 1) {
+      const date = new Date(now.getFullYear(), now.getMonth() - offset, 1, 12);
+      buckets.push({
+        key: isoDay(date).slice(0, 7),
+        label: monthShort.format(date),
+        full: monthLong.format(date),
+        paid: 0,
+        owed: 0,
+        purchases: 0,
+      });
+    }
+    return buckets;
+  }
+  const days = period === "weekly" ? 7 : 30;
   for (let offset = days - 1; offset >= 0; offset -= 1) {
     const date = new Date(now);
     date.setHours(12, 0, 0, 0);
     date.setDate(date.getDate() - offset);
-    const point = { key: dayKey(date), date, sales: 0, purchases: 0 };
-    points.push(point);
-    byKey.set(point.key, point);
+    buckets.push({
+      key: isoDay(date),
+      label: dayShort.format(date),
+      full: dayLong.format(date),
+      paid: 0,
+      owed: 0,
+      purchases: 0,
+    });
   }
-  for (const order of salesOrders) {
-    if (order.status === "draft" || order.status === "cancelled") continue;
-    const point = byKey.get((order.issue_date || order.created_at).slice(0, 10));
-    if (point) point.sales += getSalesOrderTotalInBase(order);
-  }
-  for (const order of purchaseOrders) {
-    if (order.status === "draft" || order.status === "cancelled") continue;
-    const point = byKey.get((order.purchase_date || order.created_at).slice(0, 10));
-    if (point) point.purchases += getPurchaseOrderTotalInBase(order);
-  }
-  return points;
+  return buckets;
 }
 
-const shortDate = new Intl.DateTimeFormat("en", { month: "short", day: "numeric" });
-const longDate = new Intl.DateTimeFormat("en", { weekday: "short", month: "short", day: "numeric" });
+function fill(buckets: Bucket[], period: PeriodKey, sales: SalesOrder[], purchases: PurchaseOrder[]) {
+  const byKey = new Map(buckets.map((b) => [b.key, b]));
+  const keyFor = (iso: string) => (period === "yearly" ? iso.slice(0, 7) : iso.slice(0, 10));
+  for (const order of sales) {
+    if (order.status === "draft" || order.status === "cancelled") continue;
+    const bucket = byKey.get(keyFor(order.issue_date || order.created_at));
+    if (!bucket) continue;
+    const total = getSalesOrderTotalInBase(order);
+    const paid = Math.min(total, getSalesOrderPaidInBase(order));
+    bucket.paid += paid;
+    bucket.owed += Math.max(0, total - paid);
+  }
+  for (const order of purchases) {
+    if (order.status === "draft" || order.status === "cancelled") continue;
+    const bucket = byKey.get(keyFor(order.purchase_date || order.created_at));
+    if (bucket) bucket.purchases += getPurchaseOrderTotalInBase(order);
+  }
+  return buckets;
+}
 
-/** Round the top of the axis to a "nice" number so gridlines land on values a person would say. */
 function niceCeiling(value: number) {
   if (value <= 0) return 1;
   const magnitude = 10 ** Math.floor(Math.log10(value));
-  const normalised = value / magnitude;
-  const step = normalised <= 1 ? 1 : normalised <= 2 ? 2 : normalised <= 5 ? 5 : 10;
-  return step * magnitude;
+  const n = value / magnitude;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * magnitude;
+}
+
+/** "$20k" style axis labels: short, because the axis is a ruler, not a report. */
+function compact(value: number, formatMoney: (v: number) => string) {
+  if (value === 0) return "0";
+  if (value >= 1_000_000) return formatMoney(value / 1_000_000).replace(/(\.\d*?)0+\b/, "$1").replace(/\.$/, "") + "M";
+  if (value >= 1_000) return formatMoney(value / 1_000).replace(/(\.\d*?)0+\b/, "$1").replace(/\.$/, "") + "k";
+  return formatMoney(value);
 }
 
 export default function MoneyFlowChart({
@@ -97,224 +137,305 @@ export default function MoneyFlowChart({
   formatMoney: (value: number) => string;
   loading: boolean;
 }) {
-  const [days, setDays] = useState<PeriodDays>(30);
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
+  const [period, setPeriod] = useState<PeriodKey>("monthly");
+  const [hover, setHover] = useState<number | null>(null);
+  const [hoverOut, setHoverOut] = useState<number | null>(null);
   const id = useId();
+  const narrow = useMediaQuery("(max-width: 640px)");
 
-  const points = useMemo(
-    () => buildSeries(salesOrders, purchaseOrders, days),
-    [salesOrders, purchaseOrders, days]
+  const buckets = useMemo(
+    () => fill(buildBuckets(period), period, salesOrders, purchaseOrders),
+    [period, salesOrders, purchaseOrders]
   );
-  const totals = useMemo(
-    () =>
-      points.reduce(
-        (sum, point) => ({
-          sales: sum.sales + point.sales,
-          purchases: sum.purchases + point.purchases,
-        }),
-        { sales: 0, purchases: 0 }
-      ),
-    [points]
+  // The right-hand panel is always the last 30 days, whatever the switch says:
+  // it is a companion, not a second view of the same control.
+  const outBuckets = useMemo(
+    () => fill(buildBuckets("monthly"), "monthly", [], purchaseOrders),
+    [purchaseOrders]
   );
-  const hasData = totals.sales > 0 || totals.purchases > 0;
 
-  // ---- geometry: a fixed drawing space, scaled by the viewBox ------------
-  // On a phone the same 720-unit drawing would shrink to half size and take
-  // the 10px axis text down to 5px with it; a narrower drawing keeps the
-  // text at its intended size.
-  const compact = useMediaQuery("(max-width: 640px)");
-  const width = compact ? 360 : 720;
-  const height = compact ? 170 : 220;
-  const pad = { top: 14, right: 16, bottom: 28, left: 8 };
+  const totalSales = buckets.reduce((s, b) => s + b.paid + b.owed, 0);
+  const totalPaid = buckets.reduce((s, b) => s + b.paid, 0);
+  const totalOut = outBuckets.reduce((s, b) => s + b.purchases, 0);
+  const hasSales = totalSales > 0;
+  const hasOut = totalOut > 0;
+
+  // ---- the pixel bars ----------------------------------------------------
+  // A grid of cells; each column is a bucket, each filled cell a slice of
+  // the axis ceiling. The faint background grid is the reference's, and it
+  // does a job: it shows the scale even where a bar is empty.
+  const rows = 18;
+  const width = narrow ? 360 : 640;
+  const height = narrow ? 190 : 230;
+  const pad = { top: 8, right: 8, bottom: 24, left: narrow ? 34 : 40 };
   const plotW = width - pad.left - pad.right;
   const plotH = height - pad.top - pad.bottom;
-  const max = niceCeiling(Math.max(...points.map((p) => Math.max(p.sales, p.purchases)), 0));
-  const x = (index: number) =>
-    pad.left + (points.length === 1 ? plotW / 2 : (index / (points.length - 1)) * plotW);
-  const y = (value: number) => pad.top + plotH - (value / max) * plotH;
-  const path = (pick: (p: DayPoint) => number) =>
-    points.map((p, i) => `${i === 0 ? "M" : "L"}${x(i).toFixed(1)} ${y(pick(p)).toFixed(1)}`).join(" ");
-  const area = `${path((p) => p.sales)} L${x(points.length - 1).toFixed(1)} ${(pad.top + plotH).toFixed(1)} L${x(0).toFixed(1)} ${(pad.top + plotH).toFixed(1)} Z`;
+  const cols = buckets.length;
+  const cellW = plotW / cols;
+  const cellH = plotH / rows;
+  const gap = Math.min(2, cellW * 0.22);
+  const ceiling = niceCeiling(Math.max(0, ...buckets.map((b) => b.paid + b.owed)));
+  const cellsFor = (value: number) => (value <= 0 ? 0 : Math.max(1, Math.round((value / ceiling) * rows)));
+  const tickEvery = period === "weekly" ? 1 : period === "monthly" ? (narrow ? 7 : 5) : narrow ? 2 : 1;
+  const yTicks = [0, 0.25, 0.5, 0.75, 1].map((f) => f * ceiling);
 
-  // Four or five date labels along the bottom, never one per day.
-  const tickEvery = days === 7 ? (compact ? 2 : 1) : days === 30 ? (compact ? 14 : 7) : (compact ? 30 : 15);
-  const ticks = points
-    .map((p, i) => ({ p, i }))
-    .filter(({ i }) => (points.length - 1 - i) % tickEvery === 0);
-  const gridValues = [max, max / 2];
+  const hovered = hover === null ? null : buckets[hover];
 
-  const hovered = hoverIndex === null ? null : points[hoverIndex];
+  // ---- the thin bars ------------------------------------------------------
+  const outW = narrow ? 360 : 300;
+  const outH = narrow ? 150 : 230;
+  const outPad = { top: 8, right: 4, bottom: 24, left: 4 };
+  const outPlotW = outW - outPad.left - outPad.right;
+  const outPlotH = outH - outPad.top - outPad.bottom;
+  const outCeiling = niceCeiling(Math.max(0, ...outBuckets.map((b) => b.purchases)));
+  const outStep = outPlotW / outBuckets.length;
+  const outHovered = hoverOut === null ? null : outBuckets[hoverOut];
 
-  const onPointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+  const columnAt = (event: React.PointerEvent<SVGSVGElement>, left: number, w: number, n: number, total: number) => {
     const rect = event.currentTarget.getBoundingClientRect();
-    const px = ((event.clientX - rect.left) / rect.width) * width;
-    const ratio = Math.min(1, Math.max(0, (px - pad.left) / plotW));
-    setHoverIndex(Math.round(ratio * (points.length - 1)));
+    const px = ((event.clientX - rect.left) / rect.width) * total;
+    return Math.min(n - 1, Math.max(0, Math.floor((px - left) / (w / n))));
   };
 
   return (
-    <section className="ov-section ov-chart" aria-labelledby={`${id}-title`}>
-      <div className="ov-section-head">
-        <div>
-          <h2 id={`${id}-title`} className="ov-section-title">
-            Sales and purchases
+    <div className="ov-graphs">
+      {/* ------------------------------------------------ sales trend ---- */}
+      <section className="ov-section ov-chart" aria-labelledby={`${id}-sales`}>
+        <div className="ov-chart-head">
+          <h2 id={`${id}-sales`} className="ov-chart-title">
+            Sales trend
           </h2>
-          <p className="ov-chart-sub">Money in and money out, by day</p>
-        </div>
-        <div className="ov-chart-periods" role="group" aria-label="Period">
-          {PERIODS.map((period) => (
-            <button
-              key={period.days}
-              type="button"
-              className="ov-chart-period"
-              aria-pressed={period.days === days}
-              onClick={() => {
-                setDays(period.days);
-                setHoverIndex(null);
-              }}
-            >
-              {period.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      <div className="ov-chart-totals" aria-live="polite">
-        <span>
-          <i className="ov-chart-key ov-chart-key-sales" aria-hidden="true" />
-          <small>Sales</small>
-          <strong>{formatMoney(totals.sales)}</strong>
-        </span>
-        <span>
-          <i className="ov-chart-key ov-chart-key-purchases" aria-hidden="true" />
-          <small>Purchases</small>
-          <strong>{formatMoney(totals.purchases)}</strong>
-        </span>
-        <span>
-          <small>Net</small>
-          <strong className={totals.sales - totals.purchases < 0 ? "ov-chart-net-neg" : undefined}>
-            {formatMoney(totals.sales - totals.purchases)}
-          </strong>
-        </span>
-      </div>
-
-      {loading ? (
-        <div className="ov-chart-empty" aria-hidden="true" />
-      ) : !hasData ? (
-        <p className="ov-chart-empty">
-          Nothing sold or bought in the last {days} days.
-        </p>
-      ) : (
-        <div className="ov-chart-plot">
-          <svg
-            viewBox={`0 0 ${width} ${height}`}
-            className="ov-chart-svg"
-            role="img"
-            aria-label={`Sales and purchases per day, last ${days} days`}
-            onPointerMove={onPointerMove}
-            onPointerLeave={() => setHoverIndex(null)}
-          >
-            {gridValues.map((value) => (
-              <g key={value}>
-                <line
-                  x1={pad.left}
-                  x2={width - pad.right}
-                  y1={y(value)}
-                  y2={y(value)}
-                  className="ov-chart-grid"
-                />
-                <text x={width - pad.right} y={y(value) - 4} textAnchor="end" className="ov-chart-axis">
-                  {formatMoney(value)}
-                </text>
-              </g>
-            ))}
-            <line
-              x1={pad.left}
-              x2={width - pad.right}
-              y1={pad.top + plotH}
-              y2={pad.top + plotH}
-              className="ov-chart-baseline"
-            />
-            <path d={area} className="ov-chart-area" />
-            <path d={path((p) => p.purchases)} className="ov-chart-line ov-chart-line-purchases" />
-            <path d={path((p) => p.sales)} className="ov-chart-line ov-chart-line-sales" />
-            {ticks.map(({ p, i }) => (
-              <text
+          <div className="ov-chart-periods" role="group" aria-label="Period">
+            {PERIODS.map((p) => (
+              <button
                 key={p.key}
-                x={x(i)}
-                y={height - 8}
-                textAnchor={i === 0 ? "start" : i === points.length - 1 ? "end" : "middle"}
-                className="ov-chart-axis"
+                type="button"
+                className="ov-chart-period"
+                aria-pressed={p.key === period}
+                onClick={() => {
+                  setPeriod(p.key);
+                  setHover(null);
+                }}
               >
-                {shortDate.format(p.date)}
-              </text>
+                {p.label}
+              </button>
             ))}
-            {hovered && hoverIndex !== null && (
-              <g>
+          </div>
+        </div>
+
+        <div className="ov-chart-lead">
+          <span className="ov-chart-lead-figure">
+            <small>Total sales</small>
+            <strong>{formatMoney(totalSales)}</strong>
+          </span>
+          <span className="ov-chart-legend" aria-label="Legend">
+            <span>
+              <i className="ov-cell ov-cell-paid" aria-hidden="true" /> Paid{" "}
+              <b>{formatMoney(totalPaid)}</b>
+            </span>
+            <span>
+              <i className="ov-cell ov-cell-owed" aria-hidden="true" /> Still owed{" "}
+              <b>{formatMoney(totalSales - totalPaid)}</b>
+            </span>
+          </span>
+        </div>
+
+        {loading ? (
+          <div className="ov-chart-empty" aria-hidden="true" />
+        ) : !hasSales ? (
+          <p className="ov-chart-empty">
+            No invoices in this period.
+          </p>
+        ) : (
+          <div className="ov-chart-plot">
+            <svg
+              viewBox={`0 0 ${width} ${height}`}
+              className="ov-chart-svg"
+              role="img"
+              aria-label={`Sales per ${period === "yearly" ? "month" : "day"}, paid and still owed`}
+              onPointerMove={(e) => setHover(columnAt(e, pad.left, plotW, cols, width))}
+              onPointerLeave={() => setHover(null)}
+            >
+              {/* background grid of faint cells */}
+              {buckets.map((_, c) =>
+                Array.from({ length: rows }, (_, r) => (
+                  <rect
+                    key={`${c}-${r}`}
+                    x={pad.left + c * cellW + gap / 2}
+                    y={pad.top + r * cellH + gap / 2}
+                    width={Math.max(0.5, cellW - gap)}
+                    height={Math.max(0.5, cellH - gap)}
+                    rx={1}
+                    className="ov-cell-bg"
+                  />
+                ))
+              )}
+              {/* y axis */}
+              {yTicks.map((v) => (
+                <text
+                  key={v}
+                  x={pad.left - 6}
+                  y={pad.top + plotH - (v / ceiling) * plotH + 3}
+                  textAnchor="end"
+                  className="ov-chart-axis"
+                >
+                  {compact(v, formatMoney)}
+                </text>
+              ))}
+              {/* the bars */}
+              {buckets.map((b, c) => {
+                const paidCells = cellsFor(b.paid);
+                const owedCells = cellsFor(b.owed);
+                const total = Math.min(rows, paidCells + owedCells);
+                const cells = [];
+                for (let r = 0; r < total; r += 1) {
+                  const paidSlot = r < paidCells;
+                  cells.push(
+                    <rect
+                      key={r}
+                      x={pad.left + c * cellW + gap / 2}
+                      y={pad.top + plotH - (r + 1) * cellH + gap / 2}
+                      width={Math.max(0.5, cellW - gap)}
+                      height={Math.max(0.5, cellH - gap)}
+                      rx={1}
+                      className={paidSlot ? "ov-cell-paid" : "ov-cell-owed"}
+                    />
+                  );
+                }
+                return <g key={b.key}>{cells}</g>;
+              })}
+              {/* x axis */}
+              {buckets.map((b, c) =>
+                (cols - 1 - c) % tickEvery === 0 ? (
+                  <text
+                    key={b.key}
+                    x={pad.left + c * cellW + cellW / 2}
+                    y={height - 7}
+                    textAnchor="middle"
+                    className={`ov-chart-axis${c === cols - 1 ? " ov-chart-axis-now" : ""}`}
+                  >
+                    {b.label}
+                  </text>
+                ) : null
+              )}
+              {hover !== null && (
                 <line
-                  x1={x(hoverIndex)}
-                  x2={x(hoverIndex)}
+                  x1={pad.left + hover * cellW + cellW / 2}
+                  x2={pad.left + hover * cellW + cellW / 2}
                   y1={pad.top}
                   y2={pad.top + plotH}
                   className="ov-chart-crosshair"
                 />
-                <circle cx={x(hoverIndex)} cy={y(hovered.sales)} r={4.5} className="ov-chart-dot ov-chart-dot-sales" />
-                <circle cx={x(hoverIndex)} cy={y(hovered.purchases)} r={4.5} className="ov-chart-dot ov-chart-dot-purchases" />
-              </g>
+              )}
+            </svg>
+            {hovered && hover !== null && (
+              <div
+                className="ov-chart-tip"
+                style={{
+                  left: `${((pad.left + hover * cellW + cellW / 2) / width) * 100}%`,
+                  transform: hover > cols / 2 ? "translateX(-100%)" : undefined,
+                }}
+                role="status"
+              >
+                <div className="ov-chart-tip-date">{hovered.full}</div>
+                <div>
+                  <i className="ov-cell ov-cell-paid" aria-hidden="true" />
+                  <strong>{formatMoney(hovered.paid)}</strong>
+                  <span>Paid</span>
+                </div>
+                <div>
+                  <i className="ov-cell ov-cell-owed" aria-hidden="true" />
+                  <strong>{formatMoney(hovered.owed)}</strong>
+                  <span>Still owed</span>
+                </div>
+              </div>
             )}
-          </svg>
-          {hovered && hoverIndex !== null && (
-            <div
-              className="ov-chart-tip"
-              style={{
-                left: `${(x(hoverIndex) / width) * 100}%`,
-                transform: hoverIndex > points.length / 2 ? "translateX(-100%)" : undefined,
-              }}
-              role="status"
-            >
-              <div className="ov-chart-tip-date">{longDate.format(hovered.date)}</div>
-              <div>
-                <i className="ov-chart-key ov-chart-key-sales" aria-hidden="true" />
-                <strong>{formatMoney(hovered.sales)}</strong>
-                <span>Sales</span>
-              </div>
-              <div>
-                <i className="ov-chart-key ov-chart-key-purchases" aria-hidden="true" />
-                <strong>{formatMoney(hovered.purchases)}</strong>
-                <span>Purchases</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
+          </div>
+        )}
+      </section>
 
-      {/* The same numbers as a table: reachable without a pointer, and
-          readable when the shape is not the point. */}
-      {hasData && !loading && (
-        <details className="ov-chart-table">
-          <summary>Show as a table</summary>
-          <table>
-            <thead>
-              <tr>
-                <th scope="col">Day</th>
-                <th scope="col">Sales</th>
-                <th scope="col">Purchases</th>
-              </tr>
-            </thead>
-            <tbody>
-              {points
-                .filter((p) => p.sales > 0 || p.purchases > 0)
-                .map((p) => (
-                  <tr key={p.key}>
-                    <td>{longDate.format(p.date)}</td>
-                    <td>{formatMoney(p.sales)}</td>
-                    <td>{formatMoney(p.purchases)}</td>
-                  </tr>
-                ))}
-            </tbody>
-          </table>
-        </details>
-      )}
-    </section>
+      {/* ------------------------------------------------- purchases ----- */}
+      <section className="ov-section ov-chart" aria-labelledby={`${id}-out`}>
+        <div className="ov-chart-head">
+          <h2 id={`${id}-out`} className="ov-chart-title">
+            Purchases
+          </h2>
+          <span className="ov-chart-range">
+            {outBuckets[0].label} – {outBuckets[outBuckets.length - 1].label}
+          </span>
+        </div>
+        <div className="ov-chart-lead">
+          <span className="ov-chart-lead-figure">
+            <small>Money out, 30 days</small>
+            <strong>{formatMoney(totalOut)}</strong>
+          </span>
+        </div>
+        {loading ? (
+          <div className="ov-chart-empty" aria-hidden="true" />
+        ) : !hasOut ? (
+          <p className="ov-chart-empty">No purchases in the last 30 days.</p>
+        ) : (
+          <div className="ov-chart-plot">
+            <svg
+              viewBox={`0 0 ${outW} ${outH}`}
+              className="ov-chart-svg"
+              role="img"
+              aria-label="Purchases per day, last 30 days"
+              onPointerMove={(e) => setHoverOut(columnAt(e, outPad.left, outPlotW, outBuckets.length, outW))}
+              onPointerLeave={() => setHoverOut(null)}
+            >
+              <line
+                x1={outPad.left}
+                x2={outW - outPad.right}
+                y1={outPad.top + outPlotH}
+                y2={outPad.top + outPlotH}
+                className="ov-chart-baseline"
+              />
+              {outBuckets.map((b, c) => {
+                const cx = outPad.left + c * outStep + outStep / 2;
+                const h = (b.purchases / outCeiling) * outPlotH;
+                return (
+                  <g key={b.key}>
+                    {/* the faint full-height track behind each bar */}
+                    <line x1={cx} x2={cx} y1={outPad.top} y2={outPad.top + outPlotH} className="ov-bar-track" />
+                    {b.purchases > 0 && (
+                      <line
+                        x1={cx}
+                        x2={cx}
+                        y1={outPad.top + outPlotH - h}
+                        y2={outPad.top + outPlotH}
+                        className={`ov-bar${hoverOut === c ? " is-hover" : ""}`}
+                      />
+                    )}
+                  </g>
+                );
+              })}
+              <text x={outPad.left} y={outH - 7} className="ov-chart-axis">
+                {outBuckets[0].label}
+              </text>
+              <text x={outW - outPad.right} y={outH - 7} textAnchor="end" className="ov-chart-axis ov-chart-axis-now">
+                {outBuckets[outBuckets.length - 1].label}
+              </text>
+            </svg>
+            {outHovered && hoverOut !== null && (
+              <div
+                className="ov-chart-tip"
+                style={{
+                  left: `${((outPad.left + hoverOut * outStep + outStep / 2) / outW) * 100}%`,
+                  transform: hoverOut > outBuckets.length / 2 ? "translateX(-100%)" : undefined,
+                }}
+                role="status"
+              >
+                <div className="ov-chart-tip-date">{outHovered.full}</div>
+                <div>
+                  <strong>{formatMoney(outHovered.purchases)}</strong>
+                  <span>Purchases</span>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </section>
+    </div>
   );
 }

@@ -665,8 +665,22 @@ export default function DashboardPage() {
 
     const isToday = (source: string | null | undefined) =>
       Boolean(source) && String(source).slice(0, 10) === today;
+    // The reference tile carries a comparison line ("+0,94 last year"). Ours
+    // is last calendar month, and only where there is one: a first month has
+    // nothing to compare against and says so instead of showing +100%.
+    const lastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const inLastMonth = (source: string | null | undefined) => {
+      if (!source) return false;
+      const date = new Date(source.includes("T") ? source : `${source}T00:00:00`);
+      return (
+        !Number.isNaN(date.getTime()) &&
+        date.getFullYear() === lastMonth.getFullYear() &&
+        date.getMonth() === lastMonth.getMonth()
+      );
+    };
 
     let soldThisMonth = 0;
+    let soldLastMonth = 0;
     let soldCount = 0;
     let soldToday = 0;
     let soldTodayCount = 0;
@@ -678,6 +692,8 @@ export default function DashboardPage() {
       if (inThisMonth(order.issue_date || order.created_at)) {
         soldThisMonth += getSalesOrderTotalInBase(order);
         soldCount += 1;
+      } else if (inLastMonth(order.issue_date || order.created_at)) {
+        soldLastMonth += getSalesOrderTotalInBase(order);
       }
       if (isToday(order.issue_date || order.created_at)) {
         soldToday += getSalesOrderTotalInBase(order);
@@ -741,6 +757,7 @@ export default function DashboardPage() {
 
     return {
       soldThisMonth,
+      soldLastMonth,
       soldCount,
       soldToday,
       soldTodayCount,
@@ -792,6 +809,8 @@ export default function DashboardPage() {
     /** Last 14 days, oldest first -- only where a day-by-day trend is a
      * real flow, not a snapshot balance dressed up as one. */
     trend?: number[];
+    /** A real comparison line under the figure, or nothing. */
+    compare?: { delta: number | null; label: string };
   }> = [
     {
       label: "Sold this month",
@@ -804,6 +823,15 @@ export default function DashboardPage() {
       href: "/dashboard/sales",
       // Last 14 days, oldest first -- the sparkline in the card's corner.
       trend: business.soldTrend,
+      compare:
+        business.soldLastMonth > 0
+          ? {
+              delta: (business.soldThisMonth - business.soldLastMonth) / business.soldLastMonth,
+              label: "vs last month",
+            }
+          : business.soldThisMonth > 0
+            ? { delta: null, label: "Nothing sold last month" }
+            : undefined,
     },
     {
       label: "Customers owe you",
@@ -974,6 +1002,21 @@ export default function DashboardPage() {
                   {loading ? "--" : rendered}
                 </span>
                 <span className="ov-figure-note">{card.detail}</span>
+                {!loading && card.compare && (
+                  <span className="ov-figure-compare">
+                    {card.compare.delta !== null && (
+                      <b
+                        className={
+                          card.compare.delta < 0 ? "ov-figure-compare-down" : "ov-figure-compare-up"
+                        }
+                      >
+                        {card.compare.delta >= 0 ? "+" : "−"}
+                        {Math.round(Math.abs(card.compare.delta) * 100)}%
+                      </b>
+                    )}
+                    {card.compare.label}
+                  </span>
+                )}
               </Link>
             );
           })}
