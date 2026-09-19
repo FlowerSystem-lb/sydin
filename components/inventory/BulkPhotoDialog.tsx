@@ -8,6 +8,7 @@ import { supabase } from "@/app/lib/supabase";
 import {
   ALLOWED_IMAGE_TYPES,
   createProductImagePath,
+  prepareProductImage,
   getPhotoFileKey,
 } from "@/app/lib/productImage";
 import {
@@ -185,10 +186,11 @@ export default function BulkPhotoDialog({
         if (!next) return;
 
         try {
-          const path = createProductImagePath(user.id, next.file);
+          const upload = await prepareProductImage(next.file);
+          const path = createProductImagePath(user.id, upload);
           const { error: uploadError } = await supabase.storage
             .from("products")
-            .upload(path, next.file);
+            .upload(path, upload);
 
           if (uploadError) throw uploadError;
 

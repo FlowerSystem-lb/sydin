@@ -2,6 +2,7 @@
 
 import {
   createProductImagePath,
+  prepareProductImage,
   getPhotoFileKey,
 } from "@/app/lib/productImage";
 import {
@@ -649,10 +650,11 @@ export default function InventoryImportPage() {
       if (photoFileByRowNumber.size > 0) {
         const uploadOutcomes = await Promise.allSettled(
           [...photoFileByRowNumber.entries()].map(async ([rowNumber, file]) => {
-            const fileName = createProductImagePath(user.id, file);
+            const upload = await prepareProductImage(file);
+            const fileName = createProductImagePath(user.id, upload);
             const { error: uploadError } = await supabase.storage
               .from("products")
-              .upload(fileName, file);
+              .upload(fileName, upload);
 
             if (uploadError) throw uploadError;
 

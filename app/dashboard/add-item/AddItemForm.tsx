@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
   createProductImagePath,
+  prepareProductImage,
   getImageValidationError,
 } from "@/app/lib/productImage";
 import Link from "next/link";
@@ -597,10 +598,11 @@ export default function AddItemForm({
           return;
         }
 
-        const fileName = createProductImagePath(user.id, image);
+        const upload = await prepareProductImage(image);
+        const fileName = createProductImagePath(user.id, upload);
         const { error: uploadError } = await supabase.storage
           .from("products")
-          .upload(fileName, image);
+          .upload(fileName, upload);
 
         if (uploadError) {
           setFormError(

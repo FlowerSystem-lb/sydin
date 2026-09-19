@@ -5,6 +5,7 @@ import { convertFromBase, formatExactPrice } from "@/app/lib/currency";
 import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import {
   createProductImagePath,
+  prepareProductImage,
   getImageValidationError,
 } from "@/app/lib/productImage";
 
@@ -1184,10 +1185,11 @@ export default function InventoryPage() {
           return;
         }
 
-        const fileName = createProductImagePath(user.id, editImage);
+        const upload = await prepareProductImage(editImage);
+        const fileName = createProductImagePath(user.id, upload);
         const { error: uploadError } = await supabase.storage
           .from("products")
-          .upload(fileName, editImage);
+          .upload(fileName, upload);
 
         if (uploadError) {
           setEditError(

@@ -87,3 +87,77 @@ export function createProductImagePath(userId: string, file: File) {
 
   return `${userId}/${Date.now()}-${random}.${getImageExtension(file)}`;
 }
+
+/**
+ * Longest edge of a stored product photo, in pixels. The largest place a
+ * photo is shown is the item page at ~640px wide; 1600 leaves room for a
+ * retina screen and a zoomed detail without storing a 4000px original.
+ */
+export const PRODUCT_IMAGE_MAX_EDGE = 1600;
+
+/** Below this, a photo is left exactly as chosen -- re-encoding would only lose quality. */
+const PRODUCT_IMAGE_KEEP_UNDER = 600 * 1024;
+
+/**
+ * Shrinks a chosen photo before it is uploaded.
+ *
+ * Why: nothing compressed uploads. A phone photo went to the bucket as a
+ * 3-5MB original and that is what every card in the grid then pulled down --
+ * measured on 19 Sep: a 1.1MB photo timed out in the image optimizer on
+ * first load. Point 54 of the redesign brief ("image sizes").
+ *
+ * What it does: decodes the file (honouring the camera's orientation flag),
+ * scales it to at most PRODUCT_IMAGE_MAX_EDGE on the long side, and
+ * re-encodes -- JPEG at 0.82 for photos, PNG stays PNG so a logo keeps its
+ * transparency. Small files are returned untouched.
+ *
+ * What it never does: throw, or return something worse. Any failure (an
+ * image the browser cannot decode, no canvas, a server render) returns the
+ * original file, so the upload still happens exactly as before. The
+ * validation in getImageValidationError runs on the ORIGINAL, before this.
+ */
+export async function prepareProductImage(file: File): Promise<File> {
+  if (typeof document === "undefined" || typeof createImageBitmap !== "function") {
+    return file;
+  }
+  if (!ALLOWED_IMAGE_TYPES.includes(file.type)) return file;
+
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const longest = Math.max(bitmap.width, bitmap.height);
+    const scale = Math.min(1, PRODUCT_IMAGE_MAX_EDGE / longest);
+
+    if (scale === 1 && file.size <= PRODUCT_IMAGE_KEEP_UNDER) {
+      bitmap.close();
+      return file;
+    }
+
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const context = canvas.getContext("2d");
+    if (!context) {
+      bitmap.close();
+      return file;
+    }
+    context.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close();
+
+    const outputType = file.type === "image/png" ? "image/png" : "image/jpeg";
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, outputType, 0.82)
+    );
+
+    // A re-encode that came out bigger is not an improvement.
+    if (!blob || blob.size >= file.size) return file;
+
+    return new File([blob], `photo.${outputType === "image/png" ? "png" : "jpg"}`, {
+      type: outputType,
+      lastModified: file.lastModified,
+    });
+  } catch {
+    return file;
+  }
+}

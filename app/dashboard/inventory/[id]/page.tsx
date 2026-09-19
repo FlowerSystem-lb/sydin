@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
   createProductImagePath,
+  prepareProductImage,
   getImageValidationError,
 } from "@/app/lib/productImage";
 import Link from "next/link";
@@ -602,10 +603,11 @@ export default function ItemDetailsPage() {
           return;
         }
 
-        const fileName = createProductImagePath(user.id, editImage);
+        const upload = await prepareProductImage(editImage);
+        const fileName = createProductImagePath(user.id, upload);
         const { error: uploadError } = await supabase.storage
           .from("products")
-          .upload(fileName, editImage);
+          .upload(fileName, upload);
 
         if (uploadError) {
           setEditError(
