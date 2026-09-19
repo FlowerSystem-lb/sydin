@@ -820,7 +820,12 @@ export default function SuppliersPage() {
                         <ActionButton onClick={() => setAccountSupplier(supplier)}>
                           Account
                         </ActionButton>
-                        <ActionButton onClick={() => openEditForm(supplier)}>
+                        {/* One primary per card. Account is the thing you open
+                            most; Edit and Delete are the quieter pair. */}
+                        <ActionButton
+                          variant="secondary"
+                          onClick={() => openEditForm(supplier)}
+                        >
                           Edit
                         </ActionButton>
                         <ActionButton

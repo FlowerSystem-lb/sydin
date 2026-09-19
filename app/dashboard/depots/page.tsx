@@ -610,7 +610,13 @@ export default function DepotsPage() {
                               buttons against 90px of copy); side by side, the
                               copy sets it again. */}
                           <div className="organize-row-actions organize-desktop-actions flex shrink-0 flex-row gap-2">
-                            <ActionButton onClick={() => startEditing(depot)}>
+                            {/* Secondary: a blue Edit on every row made five
+                                primaries on one screen. The page's primary is
+                                the New depot form beside the list. */}
+                            <ActionButton
+                              variant="secondary"
+                              onClick={() => startEditing(depot)}
+                            >
                               Edit
                             </ActionButton>
 
