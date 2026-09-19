@@ -4444,3 +4444,31 @@ browser, state persisted each time. Sayed's own click is still welcome.
 **Still open:** the end-to-end workflow test with real records (§49) —
 deliberately not run against the live database; the `sidebar` and `header`
 have not been re-checked at 768 since the tablet uses the mobile shell.
+
+### Pass 3, third round (same day)
+
+*Everything that opens on top.* Add menu, notifications, account menu,
+command palette, item slide-over (details and edit), Record Movement
+dialog — opened and screenshotted. The palette's highlighted row was the
+last of the pre-redesign cyan: a family of tokens (`--sydin-surface-
+selected`, `--bg-selected`, `--sydin-cyan`, `--brand-cyan`, two strong-
+border tokens, `--button-primary-bg`) still carried #0ea5c6 and fed
+selection tints, the mobile nav's active tab and a few markers. Redefined
+in the foundation block; every accent is now the one brand blue.
+
+*Settings.* The selected section was a cyan-to-violet gradient tile from an
+`!important` rule — deleted at source. "Workspace style" in the account
+menu linked to Appearance by hash and landed on Company, because the page
+read the hash only on `hashchange`; it reads it on arrival too.
+
+*Eyebrows.* The item page had five blue section labels on one screen. The
+Tailwind combination `uppercase … text-theme-accent` appears 40 times in
+17 files; one rule on the combination itself mutes them all, and the blue
+goes to the one action on the page.
+
+*One primary per card.* Suppliers had Account and Edit both blue; Depots
+had a blue Edit on every row. Edit is secondary on both.
+
+*Every remaining page* — Alerts, Suppliers, Pick Lists, Stock Counts,
+Categories, Stock In, Customers, QR Center, Workflows, Import & Export —
+screenshotted at desktop. Nothing further found.
