@@ -387,8 +387,29 @@ export default function StockMovementsPage() {
             <DashboardEmptyState
               className="m-4"
               icon="movement"
-              title="No movements found"
-              description="Record a movement or adjust the filters."
+              title={
+                movements.length === 0
+                  ? "No movements yet"
+                  : "No movements match these filters"
+              }
+              description={
+                movements.length === 0
+                  ? "Every stock in, stock out and adjustment is recorded here with its before and after."
+                  : "Try another item, movement type or depot."
+              }
+              action={
+                movements.length === 0 ? (
+                  <ActionButton
+                    icon="plus"
+                    onClick={() => {
+                      setInitialItemId(null);
+                      setDialogOpen(true);
+                    }}
+                  >
+                    Record Movement
+                  </ActionButton>
+                ) : undefined
+              }
             />
           )}
         </section>

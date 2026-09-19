@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
+  ActionButton,
   DashboardEmptyState,
   DashboardNotice,
   DashboardPageHeader,
@@ -369,8 +370,23 @@ export default function ActivityPage() {
       ) : (
         <DashboardEmptyState
           icon="layers"
-          title="No activity yet"
-          description="All inventory changes, item edits, and purchase order receipts will appear here."
+          title={
+            events.length === 0
+              ? "No activity yet"
+              : "No activity matches these filters"
+          }
+          description={
+            events.length === 0
+              ? "All inventory changes, item edits, and purchase order receipts will appear here."
+              : "Try another type, item or date range."
+          }
+          action={
+            events.length === 0 ? (
+              <ActionButton variant="secondary" icon="box" href="/dashboard/inventory">
+                Go to inventory
+              </ActionButton>
+            ) : undefined
+          }
         />
       )}
     </DashboardPageShell>

@@ -23732,3 +23732,51 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .login-activity-row > span {
   color: var(--text-secondary);
 }
+
+/* ==========================================================================
+   EMPTY, LOADING, NOTICE: ON THE SYSTEM'S RADIUS
+   ==========================================================================
+   Measured: the empty state, its icon tile and the skeleton block were all
+   at 14px while every card around them is 12px; the empty description was
+   11.9px. Same tokens as everything else now. Sizes in px on purpose: the
+   app root is 13.6px, so 0.8125rem here is 11px, not the 13px intended.
+   ========================================================================== */
+.dashboard-empty-state {
+  border-radius: var(--radius-card);
+  background: var(--bg-inset);
+  border-color: var(--border-default);
+}
+
+.dashboard-empty-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+
+.dashboard-empty-state h3 {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.dashboard-empty-state p {
+  max-width: 34rem;
+  margin-inline: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.dashboard-skeleton-block {
+  border-radius: var(--radius-card);
+}
+
+.dashboard-notice {
+  border-radius: var(--radius-control);
+  font-size: 13px;
+  line-height: 1.45;
+}
