@@ -4472,3 +4472,27 @@ had a blue Edit on every row. Edit is secondary on both.
 *Every remaining page* — Alerts, Suppliers, Pick Lists, Stock Counts,
 Categories, Stock In, Customers, QR Center, Workflows, Import & Export —
 screenshotted at desktop. Nothing further found.
+
+---
+
+## 2026-09-20 — Bug hunt (brief §61)
+
+Four sweeps across every dashboard route, in the browser:
+
+1. **Console errors.** Thirty 500s — every product photo and the company
+   logo, via the image optimizer. Cause was the PC, not the app: Node cannot
+   verify Supabase's certificate chain here (`UNABLE_TO_VERIFY_LEAF_SIGNATURE`),
+   the browser can. Dev launch config now runs Node with `--use-system-ca`;
+   photos show on localhost again. Production was never affected.
+2. **Dead links.** 39 distinct internal links collected from the live DOM of
+   eight pages; all resolve.
+3. **Dead buttons.** Every `<button>` on six pages checked for a React click
+   handler (or submit/summary/popup role). None without one.
+4. **Horizontal overflow at 375.** Six pages; none wider than the screen.
+
+One real finding from sweep 1: uploads were never compressed. A 3024×4032
+phone photo (1.1 MB) went to the bucket as-is and timed out on first load.
+`prepareProductImage()` resizes to 1600px on the long side and re-encodes
+(JPEG 0.82; PNG stays PNG) before upload, at all five product-photo sites;
+measured 1093 KB → 128 KB on that photo. Falls back to the original on any
+failure. Purchase-order attachments keep their originals.
