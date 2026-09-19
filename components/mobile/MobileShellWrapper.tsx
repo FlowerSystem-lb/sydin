@@ -18,11 +18,13 @@ export default function MobileShellWrapper({
 
     const loadAlertCount = async () => {
       try {
+        // No row cap: this badge counts every item that is low or out, and a
+        // cap of 100 silently under-counted a depot with more products than
+        // that (found in the 500-item test). Three small fields per row.
         const { data: items } = await supabase
           .from("inventory")
           .select("id, quantity, min_stock_level")
-          .eq("user_id", userId)
-          .limit(100);
+          .eq("user_id", userId);
 
         if (items) {
           const outOfStock = items.filter((item) => item.quantity === 0).length;

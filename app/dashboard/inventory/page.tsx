@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { convertFromBase, formatExactPrice } from "@/app/lib/currency";
 import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import {
   createProductImagePath,
   prepareProductImage,
@@ -513,6 +514,9 @@ export default function InventoryPage() {
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  // Table view has a phone layout and a desktop layout; only the one that
+  // is visible gets rendered (see useMediaQuery for the numbers).
+  const tableOnDesktop = useMediaQuery("(min-width: 768px)");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showStats, setShowStats] = useState(true);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -2377,9 +2381,25 @@ export default function InventoryPage() {
      hundred cards with photos at once is not a normal page. The window
      resets whenever what is shown changes (search, filter, sort, view), so
      "Show more" never carries over from a different list. Filtering and
-     counting still run on the full array -- only the DOM is windowed. */
-  const listSignature = `${viewMode}|${sortBy}|${quickFilter}|${visibleItems.length}|${visibleItems[0]?.id ?? ""}`;
+     counting still run on the full array -- only the DOM is windowed.
+
+     The search text is part of the signature on purpose. Without it, typing
+     and then clearing a search returned to a list with the same length and
+     first item, so the window was kept -- and a user who had expanded to
+     all 500 got all 500 re-rendered in one go: measured at 461ms of frozen
+     page. Any change to what is shown starts again at 60. */
+  const listSignature = `${viewMode}|${sortBy}|${quickFilter}|${search.trim()}|${visibleItems.length}|${visibleItems[0]?.id ?? ""}`;
   const [renderWindow, setRenderWindow] = useState({ limit: RENDER_WINDOW, signature: "" });
+  // Forget the expanded window as soon as the list changes. Comparing
+  // signatures on render was not enough: the stored window stayed keyed to
+  // the old list and came straight back when a search was cleared.
+  useEffect(() => {
+    setRenderWindow((current) =>
+      current.signature === listSignature || current.signature === ""
+        ? current
+        : { limit: RENDER_WINDOW, signature: listSignature }
+    );
+  }, [listSignature]);
   const renderLimit = renderWindow.signature === listSignature ? renderWindow.limit : RENDER_WINDOW;
   const renderedItems = renderLimit >= visibleItems.length ? visibleItems : visibleItems.slice(0, renderLimit);
   const showMoreItems = () =>
@@ -3472,6 +3492,7 @@ export default function InventoryPage() {
             </div>
           ) : (
             <>
+              {!tableOnDesktop && (
               <div className="grid gap-2 md:hidden">
                 {renderedItems.map((item) => {
                   const selected = selectedItemIds.has(item.id);
@@ -3531,6 +3552,8 @@ export default function InventoryPage() {
                   );
                 })}
               </div>
+              )}
+              {tableOnDesktop && (
               <div className="inventory-table-shell hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface md:block">
                 <div className="inventory-table-scroll">
                   <table className="inventory-table table-fixed text-left text-sm">
@@ -3685,6 +3708,7 @@ export default function InventoryPage() {
                   </table>
                 </div>
               </div>
+              )}
             </>
           )}
 
