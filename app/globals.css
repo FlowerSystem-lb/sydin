@@ -23854,3 +23854,265 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .inventory-stat-unit-select .ui-select-trigger {
   min-height: 24px !important;
 }
+
+/* ==========================================================================
+   OVERVIEW GRAPH: SALES AND PURCHASES BY DAY
+   ==========================================================================
+   The reference dashboard's graph, on real data. Same section anatomy as
+   the two columns below it; sales in the brand blue, purchases in ink and
+   dashed; recessive grid; a hairline crosshair with a readout that lists
+   both series. Period switch is a segmented control, not three buttons.
+   ========================================================================== */
+.ov-chart {
+  padding: 1rem 1.125rem 0.875rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-card);
+}
+
+.ov-chart .ov-section-head {
+  align-items: flex-start;
+}
+
+.ov-chart-sub {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ov-chart-periods {
+  display: inline-flex;
+  flex: none;
+  padding: 2px;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  background: var(--bg-inset);
+}
+
+.ov-chart-period {
+  min-height: 26px;
+  padding: 0 0.625rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition:
+    background-color 130ms var(--motion-ease-standard),
+    color 130ms var(--motion-ease-standard),
+    box-shadow 130ms var(--motion-ease-standard);
+}
+
+.ov-chart-period[aria-pressed="true"] {
+  background: #ffffff;
+  color: var(--text-primary);
+  box-shadow:
+    0 1px 2px rgba(24, 24, 27, 0.06),
+    0 0 0 1px var(--border-hairline);
+}
+
+.ov-chart-totals {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.ov-chart-totals > span {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.375rem;
+}
+
+.ov-chart-totals small {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ov-chart-totals strong {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.ov-chart-net-neg {
+  color: #be123c;
+}
+
+.ov-chart-key {
+  display: inline-block;
+  width: 12px;
+  height: 0;
+  border-top: 2px solid var(--sydin-blue);
+  vertical-align: middle;
+  align-self: center;
+}
+
+.ov-chart-key-purchases {
+  border-top-color: var(--text-primary);
+  border-top-style: dashed;
+}
+
+.ov-chart-plot {
+  position: relative;
+  margin-top: 0.25rem;
+}
+
+.ov-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;
+}
+
+.ov-chart-grid {
+  stroke: var(--border-hairline);
+  stroke-width: 1;
+}
+
+.ov-chart-baseline {
+  stroke: var(--border-default);
+  stroke-width: 1;
+}
+
+.ov-chart-axis {
+  font-size: 10px;
+  fill: var(--text-subtle);
+  font-family: inherit;
+}
+
+.ov-chart-area {
+  fill: rgba(37, 99, 235, 0.07);
+}
+
+.ov-chart-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.ov-chart-line-sales {
+  stroke: var(--sydin-blue);
+}
+
+.ov-chart-line-purchases {
+  stroke: var(--text-primary);
+  stroke-dasharray: 4 4;
+}
+
+.ov-chart-crosshair {
+  stroke: var(--border-strong);
+  stroke-width: 1;
+}
+
+.ov-chart-dot {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.ov-chart-dot-sales {
+  fill: var(--sydin-blue);
+}
+
+.ov-chart-dot-purchases {
+  fill: var(--text-primary);
+}
+
+.ov-chart-tip {
+  position: absolute;
+  top: 0.25rem;
+  margin-left: 0.5rem;
+  min-width: 10rem;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  box-shadow: var(--shadow-raised);
+  font-size: 0.75rem;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.ov-chart-tip[style*="translateX"] {
+  margin-left: -0.5rem;
+}
+
+.ov-chart-tip-date {
+  margin-bottom: 0.25rem;
+  color: var(--text-muted);
+}
+
+.ov-chart-tip > div:not(.ov-chart-tip-date) {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  line-height: 1.6;
+}
+
+.ov-chart-tip strong {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.ov-chart-tip span {
+  color: var(--text-muted);
+}
+
+.ov-chart-empty {
+  min-height: 6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px dashed var(--border-default);
+  border-radius: var(--radius-control);
+  font-size: 0.8125rem;
+  color: var(--text-muted);
+}
+
+.ov-chart-table summary {
+  cursor: pointer;
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.ov-chart-table table {
+  width: 100%;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  border-collapse: collapse;
+}
+
+.ov-chart-table th,
+.ov-chart-table td {
+  padding: 0.375rem 0;
+  text-align: left;
+  border-bottom: 1px solid var(--border-hairline);
+}
+
+.ov-chart-table th:not(:first-child),
+.ov-chart-table td:not(:first-child) {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ov-chart-table th {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-subtle);
+}
+
+@container (max-width: 520px) {
+  .ov-chart .ov-section-head {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .ov-chart-totals {
+    gap: 0.875rem;
+  }
+}

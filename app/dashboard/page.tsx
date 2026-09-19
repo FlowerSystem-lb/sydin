@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { convertFromBase } from "@/app/lib/currency";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
+import MoneyFlowChart from "@/components/dashboard/MoneyFlowChart";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
@@ -1001,6 +1002,17 @@ export default function DashboardPage() {
           }
         />
       ) : (
+        <>
+        {/* The graph from the reference dashboard: money in and out by day,
+            from the orders already loaded here. Full width, above the two
+            columns, because it is the one thing on the page that shows the
+            business moving rather than standing still. */}
+        <MoneyFlowChart
+          salesOrders={salesOrders}
+          purchaseOrders={purchaseOrders}
+          formatMoney={(value) => formatCurrency(value, currencyCode)}
+          loading={loading}
+        />
         <div className="ov-columns">
           {/* Needs attention = the old "Items that need restocking" and "Stock
               health" panels, which rendered the same in/low/out split twice,
@@ -1502,6 +1514,7 @@ export default function DashboardPage() {
             )}
           </section>
         </div>
+        </>
       )}
       </div>
     </main>
