@@ -4510,3 +4510,20 @@ body size. A "#" column; thumbnails moved to the Item column through a
 the next page as one — a 39-line invoice used to strand the signatures
 alone on page 4. Word export carries the same changes. Verified on the
 39-line, paid-in-full and quote renders; DOCX unzipped and checked.
+
+---
+
+## 2026-09-20 — 500 products (brief §54)
+
+Run without touching the database: the inventory list request was
+intercepted in the browser and answered with 500 synthetic products built
+from a real one, then measured on the **production** build (a
+`sydin-prod-3000` launch config keeps the local session). Zero long tasks;
+every "Show 60 more" under 50ms in grid and table view; search 32–41ms;
+46 MB heap with all 500 rendered. Dev-mode numbers (up to 700ms per click)
+were dev tooling, not the app.
+
+Fixed on the way: clearing a search restored an expanded 500-card window
+in one go (now any list change starts at 60); table view rendered the
+phone list and the desktop table both (new `useMediaQuery` renders one);
+the mobile alert badge counted only the first 100 products.
