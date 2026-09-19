@@ -748,6 +748,7 @@ export default function NewSalePage() {
                   value={notes}
                   onChange={(event) => setNotes(event.target.value)}
                   placeholder="Anything the customer should see on the invoice"
+                  aria-label="Notes"
                   className="item-panel-textarea"
                 />
               </FieldGroup>

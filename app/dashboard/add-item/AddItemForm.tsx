@@ -903,6 +903,7 @@ export default function AddItemForm({
                 }}
                 disabled={loading}
                 placeholder="Item name"
+                aria-label="Item name"
                 aria-invalid={Boolean(fieldErrors.name)}
                 aria-describedby={
                   fieldErrors.name ? "product-name-error" : undefined
@@ -1290,6 +1291,7 @@ export default function AddItemForm({
                   onChange={(event) => setNotes(event.target.value)}
                   disabled={loading}
                   placeholder="Internal notes..."
+                  aria-label="Notes"
                   className="item-panel-textarea"
                 />
               </FieldGroup>

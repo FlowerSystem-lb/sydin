@@ -23830,3 +23830,27 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .uppercase.text-theme-accent {
   color: var(--text-muted);
 }
+
+/* ==========================================================================
+   TARGET SIZE: 24px MINIMUM
+   ==========================================================================
+   Accessibility sweep (20 Sep): the inline text links in section headers
+   -- "All low stock", "All activity", "All movements", "What is Stock In?"
+   -- measured 15-18px tall, and the stat-tile unit picker 14px. WCAG 2.2
+   asks for 24px on anything clickable. Same text, same place; the hit
+   area grows through padding that the surrounding layout absorbs.
+   ========================================================================== */
+.ov-link,
+.receiving-history-link,
+.help-link {
+  min-height: 24px;
+  display: inline-flex;
+  align-items: center;
+}
+
+/* The unit picker is reset to min-height 0 !important by its own rule (it
+   sits inside a stat tile and must not look like a form control). Same
+   specificity, later, same !important -- the reset keeps everything else. */
+.inventory-stat-unit-select .ui-select-trigger {
+  min-height: 24px !important;
+}

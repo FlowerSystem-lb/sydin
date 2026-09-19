@@ -1049,6 +1049,7 @@ export default function NewPurchaseOrderPage() {
               value={notes}
               onChange={(event) => setNotes(event.target.value)}
               placeholder="Anything worth remembering about this purchase"
+              aria-label="Notes"
               className="item-panel-textarea"
             />
           </FieldGroup>
@@ -1289,6 +1290,7 @@ export default function NewPurchaseOrderPage() {
           ref={attachmentInputRef}
           type="file"
           accept="image/*"
+          aria-label="Attach a receipt photo"
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0] || null;

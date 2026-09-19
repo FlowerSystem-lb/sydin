@@ -455,6 +455,7 @@ export default function EditItemForm({
               }}
               disabled={saving}
               placeholder="Item name"
+              aria-label="Item name"
               aria-invalid={Boolean(fieldErrors.name)}
               aria-describedby={fieldErrors.name ? "edit-name-error" : undefined}
               className="item-title-input"
@@ -778,6 +779,7 @@ export default function EditItemForm({
                 onChange={(event) => onValueChange("notes", event.target.value)}
                 disabled={saving}
                 placeholder="Internal notes..."
+                aria-label="Notes"
                 className="item-panel-textarea"
               />
             </FieldGroup>

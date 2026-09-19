@@ -21,7 +21,7 @@ export default function HelpLink({
     <Link
       href={`/dashboard/help?article=${encodeURIComponent(article)}`}
       className={cx(
-        "inline-flex items-center gap-1 text-xs font-semibold text-theme-accent underline-offset-2 hover:underline",
+        "help-link inline-flex items-center gap-1 text-xs font-semibold text-theme-accent underline-offset-2 hover:underline",
         className
       )}
     >

@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { Children, isValidElement, type ReactNode } from "react";
 
 /**
  * The label/value row every record form in SydIN is built from: label on the
@@ -49,6 +49,33 @@ export function FieldGroup({
   );
 }
 
+/**
+ * The id of the first native control inside a row's children, so the row's
+ * <label> can point at it without every call site repeating the id.
+ *
+ * Why: 39 of the 108 FieldRows in the app passed no `htmlFor`. Their labels
+ * were visible but not connected, so a screen reader announced the field as
+ * "edit text" with no name, and clicking the label did nothing. Found by the
+ * accessibility sweep on 20 Sep. Custom components (Select, SearchInput) are
+ * opaque here and carry their own aria-label.
+ */
+function findControlId(node: ReactNode): string | undefined {
+  for (const child of Children.toArray(node)) {
+    if (!isValidElement(child)) continue;
+    const props = child.props as { id?: string; children?: ReactNode };
+    if (
+      typeof child.type === "string" &&
+      ["input", "select", "textarea"].includes(child.type) &&
+      props.id
+    ) {
+      return props.id;
+    }
+    const nested = props.children ? findControlId(props.children) : undefined;
+    if (nested) return nested;
+  }
+  return undefined;
+}
+
 export function FieldRow({
   label,
   htmlFor,
@@ -66,7 +93,7 @@ export function FieldRow({
 }) {
   return (
     <div className="item-field-row">
-      <label htmlFor={htmlFor} className="item-field-row-label">
+      <label htmlFor={htmlFor ?? findControlId(children)} className="item-field-row-label">
         {label}
         {required && <span className="text-theme-accent"> *</span>}
       </label>

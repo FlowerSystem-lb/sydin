@@ -1151,6 +1151,7 @@ export default function ReceivingPage() {
                       value={details.notes}
                       onChange={(event) => updateDetails("notes", event.target.value)}
                       placeholder="Optional receiving notes"
+                      aria-label="Notes"
                       className="item-panel-textarea"
                     />
                   </FieldGroup>
