@@ -13,6 +13,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import StockLevelChart from "@/components/inventory/StockLevelChart";
 import { Select } from "@/components/ui";
 import {
   ActionButton,
@@ -1039,6 +1040,21 @@ export default function ItemDetailsSlideOver({
 
                 {tab === "activity" && (
                   <div className="item-details-tab-content">
+                    {/* The shape before the list: stock level at each movement,
+                        with the low-stock line drawn in. Renders nothing until
+                        there are two movements to draw between. */}
+                    {item && (
+                      <StockLevelChart
+                        points={movements.map((movement) => ({
+                          at: movement.created_at,
+                          quantity: movement.quantity_after,
+                        }))}
+                        threshold={itemLowStockThreshold}
+                        unitLabel={(quantity) =>
+                          getInventoryQuantityLabel(quantity, item.unit_type, item.custom_unit_label)
+                        }
+                      />
+                    )}
                     {/* backlog §16D: one merged, one-styled feed instead of a
                         stock-movements list followed by a separately-styled
                         inventory-history list. See combinedActivity above. */}

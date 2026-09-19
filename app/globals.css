@@ -24116,3 +24116,123 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     gap: 0.875rem;
   }
 }
+
+/* ==========================================================================
+   ITEM PANEL: STOCK LEVEL OVER TIME
+   ==========================================================================
+   Same language as the Overview graph, at the item panel's scale: a step
+   line in brand blue with a light fill, the low-stock threshold as a
+   dashed rule, hairline crosshair with a readout.
+   ========================================================================== */
+.stock-chart {
+  margin: 0 0 0.875rem;
+  padding: 0.75rem 0.875rem 0.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  background: var(--bg-surface);
+}
+
+.stock-chart-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.stock-chart-legend {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.stock-chart-legend i {
+  display: inline-block;
+  width: 12px;
+  border-top: 1.5px dashed #be123c;
+}
+
+.stock-chart-plot {
+  position: relative;
+}
+
+.stock-chart-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  touch-action: pan-y;
+}
+
+.stock-chart-baseline {
+  stroke: var(--border-default);
+}
+
+.stock-chart-threshold {
+  stroke: #be123c;
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  opacity: 0.7;
+}
+
+.stock-chart-area {
+  fill: rgba(37, 99, 235, 0.07);
+}
+
+.stock-chart-line {
+  fill: none;
+  stroke: var(--sydin-blue);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+.stock-chart-axis {
+  font-size: 10px;
+  fill: var(--text-subtle);
+  font-family: inherit;
+}
+
+.stock-chart-crosshair {
+  stroke: var(--border-strong);
+}
+
+.stock-chart-dot {
+  fill: var(--sydin-blue);
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+.stock-chart-tip {
+  position: absolute;
+  top: 0;
+  margin-left: 0.5rem;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  background: #ffffff;
+  box-shadow: var(--shadow-raised);
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.stock-chart-tip[style*="translateX"] {
+  margin-left: -0.5rem;
+}
+
+.stock-chart-tip strong {
+  display: block;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary);
+}
+
+.stock-chart-tip span {
+  color: var(--text-muted);
+}
