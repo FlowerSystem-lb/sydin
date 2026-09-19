@@ -4496,3 +4496,17 @@ phone photo (1.1 MB) went to the bucket as-is and timed out on first load.
 (JPEG 0.82; PNG stays PNG) before upload, at all five product-photo sites;
 measured 1093 KB → 128 KB on that photo. Falls back to the original on any
 failure. Purchase-order attachments keep their originals.
+
+---
+
+## 2026-09-20 — Invoice as a document (brief §13)
+
+Rendered with full data and read as a customer would. Due date moved from
+the top meta column to directly under "Still owed" ("Due by …"; "Paid in
+full" when settled). Payment terms out of Notes into their own block at
+body size. A "#" column; thumbnails moved to the Item column through a
+`columnIndex` on the shared hook (PO and GRN untouched). The closing block
+(totals, due line, terms, notes, signatures) is measured first and moves to
+the next page as one — a 39-line invoice used to strand the signatures
+alone on page 4. Word export carries the same changes. Verified on the
+39-line, paid-in-full and quote renders; DOCX unzipped and checked.
