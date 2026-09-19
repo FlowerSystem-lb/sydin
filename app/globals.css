@@ -23780,3 +23780,23 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   font-size: 13px;
   line-height: 1.45;
 }
+
+/* ==========================================================================
+   A CEILING FOR BIG MONITORS
+   ==========================================================================
+   Measured at 1920x1080: the Overview ran edge to edge -- 429px KPI tiles
+   holding one number each, two 847px columns, "Nothing sold or moved yet
+   today" alone on an 1800px line. Reading distance does not grow with the
+   monitor. The page keeps a 1520px ceiling and centres; the list pages
+   (Inventory's grid, the tables) stay fluid because more columns and rows
+   are what a wide screen is for.
+   ========================================================================== */
+/* A blanket "fill the panel" rule near line 11974 forces the Overview's first
+   child to max-width: none / margin 0 with !important at (0,4,1). This
+   selector is the same shape, one class heavier, so it wins. */
+.dashboard-workspace-shell .dashboard-shell-content .dashboard-overview > .ov-inner:first-child {
+  width: 100% !important;
+  max-width: 1520px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}

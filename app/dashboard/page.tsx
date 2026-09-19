@@ -124,7 +124,10 @@ function figureSizeClass(rendered: string) {
    without a legend or a tooltip. All zero draws 14 flat, empty bars rather
    than nothing, which would read as broken. */
 function Sparkline({ values }: { values: number[] }) {
-  if (values.length === 0) return null;
+  // A sparkline with one bar and thirteen empty days is not a trend, it is a
+  // stray mark next to the label. It earns its place once there is a shape
+  // to read: at least two days with something in them.
+  if (values.filter((value) => value > 0).length < 2) return null;
   const max = Math.max(...values, 0);
   const barWidth = 4;
   const gap = 2;
