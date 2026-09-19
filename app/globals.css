@@ -23813,3 +23813,20 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   margin-left: auto !important;
   margin-right: auto !important;
 }
+
+/* ==========================================================================
+   SECTION EYEBROWS: ONE COLOUR, NOT FORTY
+   ==========================================================================
+   The item page had five blue section labels on one screen (ITEM DETAILS,
+   STOCK & UNIT, PRIVATE SUPPLIER, PRICING & VALUE, TRACKING CODES) -- the
+   Tailwind combination `uppercase tracking-[...] text-theme-accent`, used
+   40 times across 17 files. The shared `.dashboard-eyebrow` already went
+   muted in the "blue is jewelry" pass; this brings the hand-rolled ones
+   with it. An uppercase tracked label is an eyebrow by definition, so the
+   selector is the combination itself. Links and other accent text keep
+   the blue. Not scoped to .dashboard-theme: the slide-overs are portalled
+   outside it, and nothing outside the app uses this combination.
+   ========================================================================== */
+.uppercase.text-theme-accent {
+  color: var(--text-muted);
+}
