@@ -4553,3 +4553,17 @@ line + light fill for sales, dashed ink for purchases, crosshair readout on
 hover, honest empty state, and a "Show as a table" fallback. Phone gets a
 narrower drawing so axis text stays 10px. Palette run through the dataviz
 validator. Full width above the two columns. Screenshotted at 1440 and 375.
+
+### Same day — reference image received; graphs rebuilt to its anatomy
+
+Sayed re-sent the reference (pin.it, grayscale agency dashboard). Matched
+on real data: **Sales trend** — bars of small squares on a faint dotted
+grid, stacked two-tone as Paid / Still owed (a true part-of-whole), lead
+figure + legend, Weekly / Monthly / Yearly, short y-axis, dashed crosshair
+readout; **Purchases** — the narrower right panel with thin bars on faint
+tracks over the last 30 days; **tiles** — the comparison line as a real
+"vs last month" under Sold this month, "Nothing sold last month" when there
+is nothing to compare. Also added that day: the item panel's stock-level
+step chart on the Activity tab. Not taken from the reference: the "AI
+insight" bar (not a SydIN feature) and the transactions table (Recent
+activity already covers it in list form).
