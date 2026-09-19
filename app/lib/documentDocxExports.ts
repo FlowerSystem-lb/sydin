@@ -48,13 +48,18 @@ export async function exportSalesInvoiceDocx({
   const images = await loadLineImages(lines.map((line) => line.imageUrl));
   const total = lines.reduce((sum, line) => sum + line.lineTotal, 0);
   const paid = Number(details.amountPaid || 0);
+  const balance = Math.max(total - paid, 0);
 
+  // Same document as the PDF: numbered lines, the due date under the amount
+  // it applies to, payment terms as their own block.
   const table: DocxLineTable = {
-    head: ["Item", "Qty", "Unit price", "Total"],
-    widthsMm: [null, 22, 30, 30],
-    rightAligned: [1, 2, 3],
-    rows: lines.map((line) => ({
+    head: ["#", "Item", "Qty", "Unit price", "Total"],
+    widthsMm: [9, null, 22, 30, 30],
+    rightAligned: [0, 2, 3, 4],
+    imageColumn: 1,
+    rows: lines.map((line, index) => ({
       cells: [
+        String(index + 1),
         [line.name, line.code].filter(Boolean).join("\n"),
         `${line.quantity}${line.unit ? ` ${line.unit}` : ""}`,
         money(line.unitPrice, currency),
@@ -84,7 +89,6 @@ export async function exportSalesInvoiceDocx({
         heading: "Invoice",
         rows: [
           details.issueDate ? `Issued ${formatDocumentDate(details.issueDate)}` : "Not issued yet",
-          details.dueDate ? `Due ${formatDocumentDate(details.dueDate)}` : "",
           details.depotName ? `From depot ${details.depotName}` : "",
         ].filter(Boolean),
       },
@@ -93,12 +97,18 @@ export async function exportSalesInvoiceDocx({
     totals: [
       ["Total", money(total, currency)],
       ["Paid", money(paid, currency)],
-      ["Still owed", money(Math.max(total - paid, 0), currency)],
+      ["Still owed", money(balance, currency)],
     ],
-    notes: [
-      details.notes?.trim() || "",
-      branding.paymentTerms ? `Payment terms: ${branding.paymentTerms}` : "",
-    ].filter(Boolean),
+    totalsNote:
+      total > 0 && balance <= 0
+        ? "Paid in full"
+        : details.dueDate
+          ? `Due by ${formatDocumentDate(details.dueDate)}`
+          : undefined,
+    sections: branding.paymentTerms
+      ? [{ heading: "Payment terms", lines: [branding.paymentTerms] }]
+      : [],
+    notes: [details.notes?.trim() || ""].filter(Boolean),
     filename: `${slugifyDocumentName(details.invoiceNumber, "invoice")}.docx`,
   });
 }

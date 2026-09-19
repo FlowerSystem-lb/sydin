@@ -143,6 +143,9 @@ export interface DocxLineTable {
   rightAligned: number[];
   rows: Array<{ cells: string[]; image?: LoadedExportImage | null; hasImageSlot: boolean }>;
   foot?: string[];
+  /** Which column carries the photo and the muted second line; 0 unless a
+   * line-number column comes first (the invoice). */
+  imageColumn?: number;
 }
 
 export interface DocxDocumentSpec {
@@ -154,6 +157,10 @@ export interface DocxDocumentSpec {
   table: DocxLineTable;
   /** Right-aligned label/value pairs under the table; the last is emphasised. */
   totals?: Array<[string, string]>;
+  /** One quiet line under the totals: "Due by 26 Sep" / "Paid in full". */
+  totalsNote?: string;
+  /** Titled blocks between the totals and the notes -- payment terms. */
+  sections?: Array<{ heading: string; lines: string[] }>;
   notes?: string[];
   filename: string;
 }
@@ -240,7 +247,7 @@ function linesTable(table: DocxLineTable) {
       cantSplit: true,
       children: row.cells.map((value, index) => {
         const lines = value.split("\n");
-        if (index === 0) {
+        if (index === (table.imageColumn ?? 0)) {
           // Photo beside the name: a small table inside the cell keeps the
           // text from wrapping under the picture.
           const runs: (TextRun | ImageRun)[] = [];
@@ -318,6 +325,15 @@ export async function saveDocx(spec: DocxDocumentSpec) {
     para("", { after: 160 }),
   ];
   if (spec.totals) children.push(...totalsBlock(spec.totals));
+  if (spec.totalsNote) {
+    children.push(
+      para([text(spec.totalsNote, { size: 17, color: MUTED })], { align: AlignmentType.RIGHT, after: 80 })
+    );
+  }
+  for (const section of spec.sections ?? []) {
+    children.push(para([text(section.heading.toUpperCase(), { bold: true, size: 15, color: MUTED })], { before: 120, after: 60 }));
+    for (const line of section.lines) children.push(para([text(line, { size: 19 })], { after: 40 }));
+  }
   if (spec.notes && spec.notes.length > 0) {
     children.push(para([text("NOTES", { bold: true, size: 15, color: MUTED })], { before: 120, after: 60 }));
     for (const note of spec.notes) children.push(para([text(note, { size: 19 })], { after: 40 }));

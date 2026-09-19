@@ -399,16 +399,19 @@ export async function loadLineImages(
 }
 
 /**
- * autoTable hook that draws the row's thumbnail inside the first body cell.
- * `imageForRow(index)` returns the loaded image for a body row, or null; a
- * null draws a faint placeholder square so the column stays aligned.
+ * autoTable hook that draws the row's thumbnail inside a body cell -- the
+ * first column unless `columnIndex` says otherwise (the invoice puts a line
+ * number first). `imageForRow(index)` returns the loaded image for a body
+ * row, or null; a null draws a faint placeholder square so the column stays
+ * aligned.
  */
 export function thumbnailCellHook(
   doc: jsPDF,
-  imageForRow: (rowIndex: number) => LoadedExportImage | null | undefined
+  imageForRow: (rowIndex: number) => LoadedExportImage | null | undefined,
+  columnIndex = 0
 ): NonNullable<UserOptions["didDrawCell"]> {
   return (data: CellHookData) => {
-    if (data.section !== "body" || data.column.index !== 0) return;
+    if (data.section !== "body" || data.column.index !== columnIndex) return;
     const image = imageForRow(data.row.index);
     // undefined: this row has no photo slot at all (a delivery charge).
     if (image === undefined) return;

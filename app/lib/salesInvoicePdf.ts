@@ -119,9 +119,8 @@ export async function exportSalesInvoicePdf({
         details.issueDate
           ? `${asQuote ? "Prepared" : "Issued"} ${formatDocumentDate(details.issueDate)}`
           : "Not issued yet",
-        details.dueDate
-          ? `${asQuote ? "Valid until" : "Due"} ${formatDocumentDate(details.dueDate)}`
-          : "",
+        // On an invoice the due date sits under the amount owed instead.
+        asQuote && details.dueDate ? `Valid until ${formatDocumentDate(details.dueDate)}` : "",
         details.depotName ? `From depot ${details.depotName}` : "",
       ].filter(Boolean),
     },
@@ -136,8 +135,10 @@ export async function exportSalesInvoicePdf({
       top: context.contentTop,
       bottom: context.pageHeight - context.contentBottom,
     },
-    head: [["Item", "Qty", "Unit price", "Total"]],
-    body: lines.map((line) => [
+    // Line numbers: with thirty lines, "check line 23" on the phone needs one.
+    head: [["#", "Item", "Qty", "Unit price", "Total"]],
+    body: lines.map((line, index) => [
+      String(index + 1),
       [line.name, line.code].filter(Boolean).join("\n"),
       `${line.quantity}${line.unit ? ` ${line.unit}` : ""}`,
       money(line.unitPrice, currency),
@@ -158,17 +159,18 @@ export async function exportSalesInvoicePdf({
     headStyles: { fillColor: [238, 242, 248], textColor: [70, 80, 95], fontStyle: "bold" },
     alternateRowStyles: { fillColor: DOCUMENT_FILL },
     columnStyles: {
-      0: { cellPadding: { left: THUMB_COLUMN_PADDING, top: 2.5, right: 2.5, bottom: 2.5 } },
-      1: { halign: "right", cellWidth: 24 },
-      2: { halign: "right", cellWidth: 32 },
+      0: { halign: "right", cellWidth: 9, textColor: DOCUMENT_MUTED },
+      1: { cellPadding: { left: THUMB_COLUMN_PADDING, top: 2.5, right: 2.5, bottom: 2.5 } },
+      2: { halign: "right", cellWidth: 24 },
       3: { halign: "right", cellWidth: 32 },
+      4: { halign: "right", cellWidth: 32 },
     },
     // A charge (delivery, service) has no photo and no placeholder either.
     didDrawCell: thumbnailCellHook(doc, (rowIndex) => {
       const line = lines[rowIndex];
       if (!line || line.isCharge) return undefined;
       return line.imageUrl ? images.get(line.imageUrl) ?? null : null;
-    }),
+    }, 1),
     willDrawPage: (data) => {
       if (data.pageNumber > 1) drawDocumentHeader(context, header);
     },
@@ -185,7 +187,36 @@ export async function exportSalesInvoicePdf({
   const tableEnd =
     (doc as unknown as { lastAutoTable?: { finalY: number } }).lastAutoTable?.finalY ??
     cursorY;
-  let totalsY = ensureRoom(context, header, tableEnd + 10, 30);
+
+  // Everything after the table -- totals, the due line, payment terms, notes,
+  // the two signature lines -- is one closing block, and it moves as one.
+  // Measured before anything is drawn: a 39-line invoice used to put the
+  // totals at the foot of page 3 and the terms and signatures alone on page
+  // 4. If the block does not fit under the table, the whole of it starts the
+  // next page, so the amount owed and where to sign are never on different
+  // sheets. Each piece still calls ensureRoom on its own as a safety net for
+  // a notes field longer than a page.
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  const bodyWidth = pageWidth - margin * 2;
+  const termsLines = !asQuote && branding.paymentTerms
+    ? (doc.splitTextToSize(branding.paymentTerms, bodyWidth) as string[]).length
+    : 0;
+  const noteText = [
+    details.notes?.trim(),
+    asQuote && branding.paymentTerms ? `Payment terms: ${branding.paymentTerms}` : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+  const noteLines = noteText
+    ? (doc.splitTextToSize(noteText, bodyWidth) as string[]).length
+    : 0;
+  const tailHeight =
+    (asQuote ? 8 : 6 + 6 + 8 + 4) + // totals rows and the due line
+    (termsLines ? 5 + termsLines * 4.2 + 6 : 0) +
+    (noteLines ? 5 + noteLines * 4.2 + 6 : 0) +
+    6 + 22 + 2; // signatures
+  let totalsY = ensureRoom(context, header, tableEnd + 10, tailHeight);
 
   const totalsX = pageWidth - margin;
   const labelX = totalsX - 60;
@@ -212,20 +243,64 @@ export async function exportSalesInvoicePdf({
     totalsY += emphasise ? 8 : 6;
   });
 
-  // ---- notes and terms ---------------------------------------------------
+  // The two things a customer reads on a bill are how much and by when. The
+  // due date used to sit in the meta column at the top; it now sits under
+  // the amount it applies to. A settled bill says so in the same place.
+  if (!asQuote && total > 0) {
+    const settled = balance <= 0;
+    const line = settled
+      ? "Paid in full"
+      : details.dueDate
+        ? `Due by ${formatDocumentDate(details.dueDate)}`
+        : "";
+    if (line) {
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8.5);
+      doc.setTextColor(...DOCUMENT_MUTED);
+      doc.text(line, totalsX, totalsY - 2, { align: "right" });
+      totalsY += 4;
+    }
+  }
+
+  // ---- how to pay ----------------------------------------------------------
+  // Payment terms used to be a line inside Notes. On an invoice they are the
+  // instruction, not a remark, and get their own block -- the same size and
+  // weight as the rest of the document, not the 7.5pt footer.
+  let sectionY = totalsY + 2;
+
+  if (!asQuote && branding.paymentTerms) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    const text = doc.splitTextToSize(branding.paymentTerms, pageWidth - margin * 2) as string[];
+    let termsY = ensureRoom(context, header, sectionY, text.length * 4.2 + 8);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.setTextColor(...DOCUMENT_MUTED);
+    doc.text("PAYMENT TERMS", margin, termsY);
+    termsY += 5;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...DOCUMENT_INK);
+    doc.text(text, margin, termsY);
+    sectionY = termsY + text.length * 4.2 + 6;
+  }
+
+  // ---- notes ------------------------------------------------------------
   const notes = [
     details.notes?.trim(),
-    branding.paymentTerms ? `Payment terms: ${branding.paymentTerms}` : "",
+    // A quote keeps its terms with the notes: "valid until" is the only
+    // date that matters on a proposal, and it is already in the header.
+    asQuote && branding.paymentTerms ? `Payment terms: ${branding.paymentTerms}` : "",
   ].filter(Boolean) as string[];
 
-  let signatureY = totalsY + 2;
+  let signatureY = sectionY;
 
   if (notes.length > 0) {
     // Split at the size it will print in; the totals left the font at 12pt.
     doc.setFont("helvetica", "normal");
     doc.setFontSize(9);
     const text = doc.splitTextToSize(notes.join("\n"), pageWidth - margin * 2) as string[];
-    let notesY = ensureRoom(context, header, totalsY + 2, text.length * 4.2 + 8);
+    let notesY = ensureRoom(context, header, sectionY, text.length * 4.2 + 8);
     doc.setFont("helvetica", "bold");
     doc.setFontSize(7.5);
     doc.setTextColor(...DOCUMENT_MUTED);
