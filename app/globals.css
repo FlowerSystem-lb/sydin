@@ -11449,11 +11449,10 @@ body,
   box-shadow: 0 10px 26px var(--border-hairline) !important;
 }
 
-.settings-sidebar button[aria-current="page"] {
-  border-color: rgba(14, 165, 198, 0.28) !important;
-  background: linear-gradient(135deg, rgba(14, 165, 198, 0.13), rgba(125, 92, 255, 0.09)) !important;
-  color: var(--overview-blue) !important;
-}
+/* The selected settings section used to get a cyan-to-violet gradient tile
+   here (!important), which outranked the quiet neutral surface and blue
+   marker in `.settings-nav-item-active` at the end of this file. Removed;
+   the sidebar language applies. */
 
 @container (max-width: 1100px) {
   .inventory-stat-grid {
@@ -22431,6 +22430,20 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   --control-h-sm: 30px;
   --control-h: 36px;
   --control-h-lg: 44px;
+
+  /* --- selection and the old cyan (19 Sep) ---
+     Found through the command palette: the highlighted result was a
+     rgba(14,165,198) tint. These tokens were still the pre-redesign cyan
+     (#0ea5c6) and reached list rows, selected states and a couple of
+     borders. Selection is a quiet blue tint; strong borders are ink. */
+  --sydin-surface-selected: rgba(37, 99, 235, 0.08);
+  --bg-selected: rgba(37, 99, 235, 0.08);
+  --sydin-ui-border-strong: rgba(0, 0, 0, 0.18);
+  --sydin-border-strong: rgba(0, 0, 0, 0.18);
+  --button-primary-bg: #2563eb;
+  --sydin-cyan: #2563eb;
+  --brand-cyan: #2563eb;
+  --overview-cyan: #2563eb;
 }
 
 /* --------------------------------------------------------------------------

@@ -209,6 +209,10 @@ export default function SettingsPage() {
       );
     };
 
+    // Read it on arrival too. The state initialiser above sees the hash only
+    // when this component first mounts with it already in the URL; arriving
+    // from the account menu's "Workspace style" link landed on Company.
+    handleHashChange();
     window.addEventListener("hashchange", handleHashChange);
     return () => window.removeEventListener("hashchange", handleHashChange);
   }, []);
