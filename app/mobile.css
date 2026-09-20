@@ -1031,3 +1031,171 @@
     padding-bottom: 0.5rem;
   }
 }
+
+/* =========================================================================
+   Phone: the secondary pages get the canvas's design, not the desktop's
+   Spec: docs/SYDIN_MOBILE_DESIGN_SPEC.md. Sayed, 20 Sep: "on mobile I want
+   a different redesign" -- Reports, Alerts, Purchase Orders, Sales, Stock In
+   and Suppliers were still the desktop workspace shrunk: one full-width
+   stat tile per row, six of them on Reports before any content, a
+   description paragraph under every title, frosted-glass cards.
+
+   What the canvas does instead, applied here:
+   - figures side by side, two to a row, compact, no icon tile
+   - the title sits in white space: no description paragraph on a phone
+   - cards are paper, not glass: white, one hairline, the card radius
+   ========================================================================= */
+@media (max-width: 767px) {
+  /* --- figures: two to a row --------------------------------------------- */
+  .dashboard-shell-content :is(section, div):has(> .dashboard-metric-card),
+  .dashboard-shell-content .po-summary-grid,
+  .dashboard-shell-content .inventory-stat-grid,
+  .dashboard-shell-content :is(section, div):has(> .dashboard-card > .text-2xl.tabular-nums) {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 8px !important;
+  }
+
+  .dashboard-shell-content .dashboard-metric-card.dashboard-metric-card {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    min-height: 0;
+    padding: 12px 14px;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    background: #ffffff !important;
+    box-shadow: var(--shadow-card);
+  }
+
+  /* The icon tile is furniture on a 160px-wide cell. The label names it. */
+  .dashboard-shell-content .dashboard-metric-card .dashboard-metric-icon {
+    display: none;
+  }
+
+  .dashboard-shell-content .dashboard-metric-card > span {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    width: 100%;
+  }
+
+  .dashboard-shell-content .dashboard-metric-card small {
+    order: -1;
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-subtle);
+  }
+
+  .dashboard-shell-content .dashboard-metric-card strong {
+    font-size: 22px;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .dashboard-shell-content .dashboard-metric-card em {
+    font-size: 11px;
+    font-style: normal;
+    color: var(--text-muted);
+  }
+
+  /* Hand-rolled figure tiles (Sales, Stock In): same compaction. */
+  .dashboard-shell-content .dashboard-card:has(> .text-2xl.tabular-nums) {
+    padding: 12px 14px !important;
+  }
+
+  .dashboard-shell-content .dashboard-card > .text-2xl.tabular-nums {
+    font-size: 22px !important;
+    margin-top: 2px !important;
+  }
+
+  /* --- the title sits in white space ------------------------------------ */
+  .dashboard-shell-content .dashboard-page-copy {
+    display: none;
+  }
+
+  /* --- paper, not glass ---------------------------------------------------- */
+  .dashboard-shell-content .dashboard-card.dashboard-card,
+  .dashboard-shell-content .dashboard-toolbar-card.dashboard-toolbar-card,
+  .dashboard-shell-content .dashboard-table-card.dashboard-table-card {
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-card) !important;
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: var(--shadow-card) !important;
+  }
+}
+
+/* Alerts on a phone: one row per item, the canvas way -- thumb, name and
+   reason on the left, the state on the right, the two actions as small
+   buttons underneath. Was 220px per alert (six stacked pieces); ~110 now. */
+@media (max-width: 767px) {
+  .alert-row.alert-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "item status"
+      "actions actions";
+    gap: 8px 12px;
+    padding: 12px 14px;
+    align-items: center;
+  }
+
+  .alert-row .alert-row-item {
+    grid-area: item;
+  }
+
+  .alert-row .alert-row-status {
+    grid-area: status;
+    text-align: right;
+  }
+
+  .alert-row .alert-row-status p:first-child {
+    font-size: 13px;
+  }
+
+  .alert-row .alert-row-actions {
+    grid-area: actions;
+    flex-wrap: nowrap;
+  }
+
+  .alert-row .alert-row-actions > * {
+    flex: 1 1 0;
+    min-height: 36px !important;
+    font-size: 12px;
+  }
+}
+
+/* Inventory's stat row is a borderless strip, not cards, and its own rule
+   forces four columns with !important at (0,3,0). Two by two on a phone,
+   strip cells with hairlines between, no card chrome. */
+@media (max-width: 767px) {
+  .dashboard-shell .dashboard-shell-content .inventory-workspace .inventory-stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .dashboard-shell .dashboard-shell-content .inventory-workspace .inventory-stat-grid .dashboard-metric-card {
+    border: 0 !important;
+    border-bottom: 1px solid var(--border-hairline) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 10px 12px !important;
+    min-height: 0 !important;
+  }
+
+  .dashboard-shell .dashboard-shell-content .inventory-workspace .inventory-stat-grid .dashboard-metric-card:nth-child(odd) {
+    border-right: 1px solid var(--border-hairline) !important;
+  }
+
+  .dashboard-shell .dashboard-shell-content .inventory-workspace .inventory-stat-grid .dashboard-metric-card:nth-last-child(-n + 2) {
+    border-bottom: 0 !important;
+  }
+}

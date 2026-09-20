@@ -334,9 +334,9 @@ export default function StockAlertsPage() {
                 return (
                   <article
                     key={item.id}
-                    className="grid gap-3 p-4 sm:grid-cols-[minmax(0,1.6fr)_minmax(150px,0.7fr)_auto] sm:items-center"
+                    className="alert-row grid gap-3 p-4 sm:grid-cols-[minmax(0,1.6fr)_minmax(150px,0.7fr)_auto] sm:items-center"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="alert-row-item flex min-w-0 items-center gap-3">
                       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
                         <ProductThumbnail
                           src={item.image}
@@ -361,7 +361,7 @@ export default function StockAlertsPage() {
                         </p>
                       </div>
                     </div>
-                    <div>
+                    <div className="alert-row-status">
                       <p
                         className={`text-sm font-black ${
                           state === "out"
@@ -381,7 +381,7 @@ export default function StockAlertsPage() {
                         Alert at {threshold}
                       </p>
                     </div>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="alert-row-actions flex flex-wrap gap-2">
                       <ActionButton
                         variant="secondary"
                         icon="movement"
