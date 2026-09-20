@@ -4709,3 +4709,18 @@ all pushed:
 - Also: the Inventory render-window reset moved from an effect to React's
   adjust-state-during-render pattern (lint asked). The "N" over sheets on
   localhost is Next's dev badge, not the app.
+
+### Same day — phone: the bits between the pages
+
+- **New Purchase Order Save bar** sat mid-screen (a 4.5rem offset for an
+  older tab bar) and was 166px of stacked buttons; pinned like the invoice
+  bar, number and total on one line, buttons in one row (92px).
+- **A tile's "⋯" menu** was the laptop dropdown floating over the header;
+  it is an action sheet from the bottom now, page dimmed by a spread
+  shadow that takes no taps (so the outside-tap close still works), opaque
+  against the glass layer's translucent menus.
+- **Item panel**: photo as a hero on a rounded plate, quantity in the
+  figure mono (the serif was the superseded canvas language).
+- Checked and left: Stock In wizard, Stock Counts, Reports, Pick Lists,
+  Help, Alerts, Add-item sheet. Home tab exists under the localhost-only
+  Next badge.
