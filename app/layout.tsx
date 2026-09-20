@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import "./mobile.css";
@@ -7,6 +7,28 @@ export const metadata: Metadata = {
   title: "SydIN - Visual Inventory Management Software",
   description:
     "SydIN helps small businesses track inventory with photos, QR item pages, stock history, and a clean private workspace.",
+  // Home-screen install on iPhone and Android: the manifest (app/manifest.ts)
+  // carries the icons and full-screen display; iOS reads these two as well.
+  applicationName: "SydIN",
+  appleWebApp: {
+    capable: true,
+    title: "SydIN",
+    statusBarStyle: "default",
+  },
+  icons: {
+    apple: "/icons/apple-touch-icon.png",
+  },
+};
+
+// viewport-fit: cover lets the phone shell draw under the home-indicator
+// area and pad it with env(safe-area-inset-bottom), which mobile.css
+// already does; without it the bar sat above a grey strip on a notched
+// phone. Zoom stays enabled (accessibility).
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#ffffff",
 };
 
 // Marketing-only display serif (Steep reference: editorial headlines,
