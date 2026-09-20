@@ -24250,3 +24250,44 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-figure-compare-down {
   color: #be123c;
 }
+
+/* ==========================================================================
+   DASHBOARD TABLE: ON THE SYSTEM, AND CLICKABLE ROWS
+   ==========================================================================
+   The shared table primitive predates the foundation: 14px radius, a 4px
+   drop shadow, 0.85rem tracked-0.12em headers. Brought to the card radius,
+   card shadow and the 11px header the other tables (Stock Movements,
+   Import & Export) already read at. A row that opens a record gets a
+   pointer and the same hover as a list row.
+   ========================================================================== */
+.dashboard-table-card {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+.dashboard-table thead {
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  background: var(--bg-inset);
+}
+
+.dashboard-table th {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+.dashboard-table td {
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+}
+
+.dashboard-table-row-link {
+  cursor: pointer;
+}
+
+@media (hover: hover) {
+  .dashboard-table-row-link:hover {
+    background: var(--bg-inset);
+  }
+}

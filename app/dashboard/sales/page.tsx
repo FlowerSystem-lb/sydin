@@ -8,11 +8,14 @@ import {
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
+  DashboardTable,
   FilterBar,
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import { ResultsAnnouncer, SearchInput } from "@/components/ui";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
@@ -58,6 +61,8 @@ export default function SalesPage() {
   const [pageError, setPageError] = useState("");
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
+  const router = useRouter();
+  const tableOnDesktop = useMediaQuery("(min-width: 768px)");
 
   useEffect(() => {
     let isActive = true;
@@ -216,6 +221,62 @@ export default function SalesPage() {
               ) : undefined
             }
           />
+        ) : tableOnDesktop ? (
+          /* On a desktop the invoices are a table -- column headers, one row
+             per invoice, the amount in its own column -- the anatomy of the
+             reference dashboard's transactions table and of brief point 32.
+             A phone keeps the card list below, where a seven-column table
+             would only scroll sideways. */
+          <DashboardTable className="mt-4" minWidth="720px">
+            <thead>
+              <tr>
+                <th scope="col">Invoice</th>
+                <th scope="col">Customer</th>
+                <th scope="col">Date</th>
+                <th scope="col" className="text-right">Lines</th>
+                <th scope="col">Status</th>
+                <th scope="col">Payment</th>
+                <th scope="col" className="text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visible.map((order) => {
+                const total = getSalesOrderTotal(order);
+                const href = `/dashboard/sales/${order.id}`;
+                return (
+                  <tr
+                    key={order.id}
+                    className="dashboard-table-row-link"
+                    onClick={() => router.push(href)}
+                  >
+                    <td>
+                      <Link href={href} className="font-semibold text-theme-primary">
+                        {order.invoice_number}
+                      </Link>
+                    </td>
+                    <td className="text-theme-secondary">
+                      {order.customer_name_snapshot || "—"}
+                    </td>
+                    <td className="text-theme-secondary tabular-nums">
+                      {order.issue_date || "No date"}
+                    </td>
+                    <td className="text-right text-theme-secondary tabular-nums">
+                      {(order.lines || []).length}
+                    </td>
+                    <td>
+                      <StatusPill status={order.status} />
+                    </td>
+                    <td className="text-theme-secondary">
+                      {SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status]}
+                    </td>
+                    <td className="text-right font-semibold text-theme-primary tabular-nums">
+                      {formatSalesOrderAmount(order, total) || "--"}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </DashboardTable>
         ) : (
           <div className="mt-4 grid gap-2">
             {visible.map((order) => {
