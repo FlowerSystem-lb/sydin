@@ -1199,3 +1199,139 @@
     border-bottom: 0 !important;
   }
 }
+
+/* =========================================================================
+   Phone: feel like an app -- Pinterest / Canva / Google Photos
+   Sayed, 20 Sep: on an iPhone or Android it should feel like an app in its
+   own right, and he named those three. What they have in common, applied:
+
+   - photo tiles, not boxed cards: the picture IS the tile, rounded, on the
+     page, with the facts under it (Pinterest / Google Photos)
+   - one rounded search pill on a grey field at the top (Google Photos)
+   - lists are native rows: one white group, hairlines between rows, a
+     chevron at the right, nothing boxed inside a box (iOS / Material)
+   - big, single actions: 48px primaries, the bar's centre button (Canva)
+   ========================================================================= */
+@media (max-width: 767px) {
+  /* --- Items: photo tiles ---------------------------------------------- */
+  .inventory-workspace .inventory-items-grid--photo {
+    gap: 14px 10px !important;
+  }
+
+  .inventory-workspace .inventory-item-card--photo {
+    background: transparent !important;
+    border: 0 !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+
+  .inventory-workspace .inventory-item-card--photo .inventory-card-media {
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
+  }
+
+  .inventory-workspace .inventory-item-card--photo .inventory-card-body {
+    padding: 8px 2px 0 !important;
+  }
+
+  /* --- the search pill --------------------------------------------------- */
+  .dashboard-shell-content .inventory-search-input,
+  .dashboard-shell-content .ui-search-input,
+  .dashboard-shell-content .glass-input[type="search"] {
+    min-height: 44px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--surface-sunken) !important;
+    box-shadow: none !important;
+    padding-left: 2.6rem !important;
+  }
+
+  .dashboard-shell-content .inventory-search-input:focus-visible,
+  .dashboard-shell-content .ui-search-input:focus-visible {
+    background: #ffffff !important;
+    box-shadow: 0 0 0 2px var(--sydin-blue) !important;
+  }
+
+  /* --- lists as native rows ---------------------------------------------- */
+  /* A list of card links (Sales, Customers, Pick Lists...) becomes one
+     white group with hairline rows, each with a chevron. */
+  .dashboard-shell-content .grid:has(> a.dashboard-card) {
+    display: block !important;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    background: #ffffff;
+    overflow: hidden;
+  }
+
+  .dashboard-shell-content .grid > a.dashboard-card {
+    position: relative;
+    border: 0 !important;
+    border-bottom: 1px solid var(--border-hairline) !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    padding: 12px 40px 12px 14px !important;
+    min-height: 60px;
+  }
+
+  .dashboard-shell-content .grid > a.dashboard-card:last-child {
+    border-bottom: 0 !important;
+  }
+
+  .dashboard-shell-content .grid > a.dashboard-card::after {
+    content: "";
+    position: absolute;
+    right: 18px;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-top: 1.5px solid var(--text-subtle);
+    border-right: 1.5px solid var(--text-subtle);
+    transform: translateY(-50%) rotate(45deg);
+  }
+
+  .dashboard-shell-content .grid > a.dashboard-card:active {
+    background: var(--bg-inset);
+  }
+
+  /* --- big single actions --------------------------------------------- */
+  .dashboard-shell-content .dashboard-page-actions .dashboard-action-button-primary,
+  .dashboard-shell-content .inventory-page-actions .inventory-action-primary {
+    min-height: 48px !important;
+    font-size: 15px;
+  }
+}
+
+/* The filter bar on a phone: search pill full width on its own line, the
+   chips on a scrolling row under it. Was one nowrap row, which squeezed the
+   search to a 56px circle beside the chips. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .dashboard-filter-bar {
+    flex-wrap: wrap !important;
+    gap: 10px 8px !important;
+  }
+
+  .dashboard-shell-content .dashboard-filter-bar > .ui-search {
+    flex: 1 1 100% !important;
+    max-width: none !important;
+  }
+
+  .dashboard-shell-content .dashboard-filter-bar > .ui-search .ui-search-field,
+  .dashboard-shell-content .dashboard-filter-bar > .ui-search .ui-search-input {
+    width: 100% !important;
+  }
+
+  /* Inventory's search is styled by a four-class desktop rule with
+     !important; this outranks it by one and gives it the same pill. */
+  .dashboard-shell .dashboard-shell-content .inventory-workspace .inventory-toolbar-search .inventory-search-input {
+    min-height: 44px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--surface-sunken) !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell .dashboard-shell-content .inventory-workspace .inventory-toolbar-search .inventory-search-input:focus-visible {
+    background: #ffffff !important;
+    box-shadow: 0 0 0 2px var(--sydin-blue) !important;
+  }
+}
