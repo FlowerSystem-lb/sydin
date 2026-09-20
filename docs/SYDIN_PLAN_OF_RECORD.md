@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 20 September 2026 (visual redesign passes 1–3 · reference-matched graphs · bug hunt · 500-item test · accessibility sweep)
+**Last touched:** 20 September 2026 (visual redesign passes 1–3 · reference-matched graphs · bug hunt · 500-item test · accessibility sweep · phone: every page in the app language, installable)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -51,7 +51,7 @@ running application or the live database**, not what the code appears to do.
 | 3 | Survive 500 products | photos done · database done · pagination deferred by Sayed |
 | 4 | The real 500-product test | blocked on pagination |
 | 5 | **Limits and abuse protection** | mostly done — exports hardened, caps already existed; rate limiting needs Supabase settings + Vercel Pro |
-| 6 | Mobile — its own app-shaped design | **STARTED 2 Sep** at Sayed's instruction. Plan is section J, taken from the canvas. The tab bar and shell already exist; the screens inside them are still the desktop, shrunk. |
+| 6 | Mobile — its own app-shaped design | **DONE 20 Sep.** Every phone page is in one app language (Canva templates + the two most-viewed Dribbble inventory apps): header block, pills, contact rows, feeds, action sheets, tabs; installable from the browser (manifest + icons). Scanner untouched by instruction. Section J is the history. |
 | 7 | Print, PDF, export, domain, Vercel | **print done 27 Aug**; PDF exporters already substantial (1,441 lines for inventory); domain + Vercel Pro are launch steps |
 
 **Phase 3 numbers, measured:** photos averaged 396 kB with the largest at 1.71 MB,
@@ -285,7 +285,7 @@ than speed. Revisit at the same time.
 6. **Pagination**, then the real 500-product test.
 7. ~~**Print / PDF / export**~~ — done 27 Aug. Print stylesheet, and CSV/Excel now follow the on-screen filters.
 8. **Domain, Vercel Pro, backups, final QA.**
-9. **Mobile** — started 2 Sep; section J has the screen-by-screen plan.
+9. ~~**Mobile**~~ — done 20 Sep; every phone page rebuilt in the app language (sprint log, 20 Sep). Sayed's walkthrough on a real phone is what is left.
 10. **N1**, then N2–N4 after launch.
 
 ---
