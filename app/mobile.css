@@ -2373,3 +2373,116 @@
     letter-spacing: -0.01em;
   }
 }
+
+/* The More sheet on a phone, after the reference's profile/settings
+   screen: the account as a centred block, then each group as one white
+   card of 52px rows -- round tinted icon chip, label, chevron -- instead of
+   a two-column grid of small links. */
+@media (max-width: 767px) {
+  .dashboard-more-sheet .dashboard-more-account {
+    padding: 4px 0 8px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-more-sheet .dashboard-more-account > div:first-child > span:first-child {
+    width: 56px !important;
+    height: 56px !important;
+    border-radius: 999px !important;
+    overflow: hidden;
+  }
+
+  .dashboard-more-sheet .dashboard-more-account > div:first-child p:first-child {
+    font-size: 17px !important;
+    font-weight: 700 !important;
+  }
+
+  .dashboard-more-sheet .dashboard-nav-group-label {
+    padding: 0 6px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .dashboard-more-sheet .dashboard-nav-group-label + .grid {
+    display: block !important;
+    margin-top: 6px !important;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: 20px;
+    background: var(--bg-surface);
+  }
+
+  .dashboard-more-sheet .dashboard-nav-group-label + .grid > .dashboard-nav-link {
+    display: grid !important;
+    grid-template-columns: 36px minmax(0, 1fr) 18px;
+    align-items: center;
+    gap: 12px;
+    min-height: 52px;
+    margin: 0 !important;
+    padding: 8px 12px 8px 10px !important;
+    border: 0 !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+
+  .dashboard-more-sheet .dashboard-nav-group-label + .grid > .dashboard-nav-link + .dashboard-nav-link {
+    border-top: 1px solid var(--border-hairline) !important;
+  }
+
+  .dashboard-more-sheet .dashboard-nav-group-label + .grid > .dashboard-nav-link:active {
+    background: var(--surface-sunken) !important;
+  }
+
+  .dashboard-more-sheet .dashboard-nav-link .dashboard-nav-icon {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 999px !important;
+    background: #e9effc !important;
+    color: #2563eb !important;
+  }
+
+  .dashboard-more-sheet .dashboard-nav-link .dashboard-nav-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .dashboard-more-sheet .dashboard-nav-link .dashboard-nav-label {
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* The chevron in the third column; the old active mark is not needed. */
+  .dashboard-more-sheet .dashboard-nav-link .dashboard-nav-active-mark {
+    position: static !important;
+    display: block !important;
+    width: 8px !important;
+    height: 8px !important;
+    margin: 0 4px 0 0 !important;
+    border: 0 !important;
+    border-right: 2px solid var(--text-subtle) !important;
+    border-bottom: 2px solid var(--text-subtle) !important;
+    border-radius: 0 !important;
+    background: transparent !important;
+    opacity: 1 !important;
+    transform: rotate(-45deg) !important;
+  }
+
+  .dashboard-more-sheet .dashboard-nav-link-active .dashboard-nav-icon {
+    background: #2563eb !important;
+    color: #ffffff !important;
+  }
+
+  .dashboard-more-sheet .ui-button {
+    min-height: 48px;
+  }
+}
