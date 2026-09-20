@@ -945,7 +945,10 @@ canvas {
   white-space: nowrap;
 }
 
-.dashboard-filter-chip > span:last-child {
+/* The count, when there is one. A label-only chip has the label as its
+   last child; this must not paint it muted (and grey-on-black once the
+   chip is active). */
+.dashboard-filter-chip > span:last-child:not(:first-child) {
   color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 600;
@@ -24626,4 +24629,35 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .glass-button-secondary:not(:disabled):hover {
     background: var(--bg-inset) !important;
   }
+}
+
+/* ---- ACTIVE FILTER CHIP COUNT ------------------------------------------
+   On the ink-filled active chip the count was still var(--text-muted):
+   grey on black, 3.7:1. Soft white here. */
+.dashboard-filter-chip-active > span:last-child:not(:first-child),
+.inventory-workspace .inventory-quick-filter.dashboard-filter-chip-active > span:last-child:not(:first-child) {
+  color: rgba(255, 255, 255, 0.78) !important;
+}
+
+/* ---- CHART AXIS LABELS AND THE COMPARE LINE -----------------------------
+   10px axis ticks and the 11px "vs last month" line were --text-subtle
+   (#a1a1aa, 2.6:1 on white). Muted ink reads at 4.7:1. */
+.ov-chart-axis,
+.stock-chart-axis {
+  fill: var(--text-muted);
+}
+
+.ov-figure-compare {
+  color: var(--text-muted);
+}
+
+/* ---- SMALL TEXT OFF --text-subtle ----------------------------------------
+   #a1a1aa on white is 2.6:1. Fine for a decorative hairline; not for words
+   and dates someone reads: the item code beside a name, the "when" on an
+   activity row, the TODAY label. Muted ink (4.7:1) at the same size. */
+.ov-today strong,
+.ov-row-code,
+.ov-row-time,
+.ov-row-end .ov-row-time {
+  color: var(--text-muted);
 }

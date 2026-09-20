@@ -4789,3 +4789,19 @@ cyan→violet gradient pill — the button-system pass covered .ui-button and
 the marketing button but never .glass-button (upgrade panel, request-plan
 page, admin plan requests). On the system now. The request-plan page's
 plan and payment chips were indigo on dark-theme classes; blue tint now.
+
+### Same day — gradients that hid in states, and a contrast pass
+
+Gradient utilities that only show in some states or on the public pages:
+the per-category cyan / violet / fuchsia marks (Categories), the violet
+logo tile in the item page's QR block, the pastel gradient "photos" and
+violet Qty pill on Demo, the empty violet squares on Features (now each
+feature's own icon). All on the blue plate; blue stays the only accent.
+
+Contrast, measured in the browser against WCAG AA: the filter-chip
+"count" rule (`> span:last-child`) also caught label-only chips, so "All"
+was muted — and grey on black once active (3.7:1); the count now only
+matches when there is a count, and reads soft white on the ink chip.
+Chart axis ticks, the "vs last month" line, the item code beside a name,
+the TODAY label and activity-row dates were --text-subtle (2.6:1); muted
+ink now (4.7:1). Overview, Inventory and Stock Movements pass the probe.
