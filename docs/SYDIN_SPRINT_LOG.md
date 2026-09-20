@@ -4578,3 +4578,15 @@ system mono stack (KPI values, graph lead/legend/axis) — the reference's
 numerals. Purchase Orders deliberately left as its month-grouped list:
 receiving progress and owed pills would not survive a seven-column table.
 Graph edge labels anchored inside the plot on phones.
+
+### Same day — landing mockup and the last cyan
+
+Landing hero mockup reskinned to the product as it is (grey rail, white
+active tile, solid blue Add, hairline cards). Then a computed-colour scan of
+eight pages for the pre-redesign cyan hue: Inventory still had a page-scoped
+glass cluster (Add gradient, blue-grey canvas, cyan chip and stat icons,
+Scan-tile gradient, sidebar radial), every page's canvas carried a blue
+radial under a white wash, Stock In had tinted tiles and a hint. All retired
+at matching specificity; re-scan: zero hits. Active filter chips are ink on
+white everywhere. Mono figures extended to every page's stat tiles and table
+amounts.
