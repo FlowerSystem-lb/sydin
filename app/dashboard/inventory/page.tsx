@@ -517,6 +517,14 @@ export default function InventoryPage() {
   // Table view has a phone layout and a desktop layout; only the one that
   // is visible gets rendered (see useMediaQuery for the numbers).
   const tableOnDesktop = useMediaQuery("(min-width: 768px)");
+  // On a phone the filter panel is a bottom sheet. It has to leave the
+  // workspace to be one: the workspace is a query container (layout
+  // containment traps position: fixed) and the toolbar keeps a transform,
+  // so a fixed panel inside them sat mid-page. A portal to <body> is the
+  // only way out; mobile.css styles .inventory-filter-panel from there.
+  const phoneSheet = !tableOnDesktop && typeof document !== "undefined";
+  const renderInPhoneSheet = (node: ReactNode) =>
+    phoneSheet ? createPortal(node, document.body) : node;
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showStats, setShowStats] = useState(true);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -3046,7 +3054,7 @@ export default function InventoryPage() {
                 </p>
               </div>
 
-              {filtersOpen && (
+              {filtersOpen && renderInPhoneSheet(
               <div className="inventory-filter-panel grid grid-cols-1 gap-2 sm:grid-cols-3">
                 <div>
                   <Select
@@ -3102,14 +3110,14 @@ export default function InventoryPage() {
                     type="button"
                     onClick={clearInventoryFilters}
                     disabled={!activeFilterCount}
-                    className="min-h-10 flex-1 rounded-xl border border-theme bg-theme-surface px-3 py-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none"
+                    className="ui-button ui-button-secondary flex-1 sm:flex-none"
                   >
                     Clear
                   </button>
                   <button
                     type="button"
                     onClick={() => setFiltersOpen(false)}
-                    className="min-h-10 flex-1 rounded-xl bg-white px-3 py-2 text-xs font-black text-black transition hover:bg-slate-200 sm:flex-none"
+                    className="ui-button ui-button-primary flex-1 sm:flex-none"
                   >
                     Apply
                   </button>
@@ -3121,7 +3129,7 @@ export default function InventoryPage() {
 
           {selectionMode && (
             <section
-              className="inventory-selection-bar fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-cyan-300/25 bg-theme-surface p-2.5 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:top-2 sm:bottom-auto sm:z-20 sm:shadow-[0_12px_30px_rgba(15,23,42,0.1)]"
+              className="inventory-selection-bar fixed inset-x-3 bottom-3 z-40 rounded-2xl border border-theme bg-theme-surface p-2.5 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:top-2 sm:bottom-auto sm:z-20 sm:shadow-[0_12px_30px_rgba(15,23,42,0.1)]"
               aria-live="polite"
             >
               <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
