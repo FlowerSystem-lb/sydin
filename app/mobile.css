@@ -2141,3 +2141,45 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Categories on a phone: the small-screen rule that makes every action
+   button full width (globals ~1358) caught the "Add" beside the title and
+   pushed it over the word "Categories". It is a compact pill here. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .organize-categories .organize-sidebar-add,
+  .dashboard-shell-content .organize-sidebar-header .organize-sidebar-add {
+    width: auto !important;
+    flex: 0 0 auto;
+    min-height: 40px;
+    padding-inline: 16px;
+  }
+
+  .dashboard-shell-content .organize-sidebar-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+}
+
+@media (max-width: 767px) {
+  /* The categories shell is a card sized to the viewport for the laptop's
+     two-pane layout; on a phone it is just the list on the page. */
+  .dashboard-shell-content .organize-category-shell.organize-category-shell.dashboard-card {
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow: visible !important;
+  }
+
+  .dashboard-shell-content .organize-category-shell .organize-sidebar {
+    min-height: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .dashboard-shell-content .organize-category-shell .organize-sidebar-header {
+    padding-inline: 0;
+    border: 0;
+  }
+}

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import ItemDetailsSlideOver, {
   type SlideOverInventoryItem,
 } from "@/components/inventory/ItemDetailsSlideOver";
@@ -220,6 +221,10 @@ export default function CategoriesPage() {
     type: "all",
   });
   const [itemView, setItemView] = useState<ItemView>("cards-2");
+  // On a phone a category's items are the same photo tiles as the Inventory
+  // tab, two-up. The tile styles are scoped to .inventory-workspace, so the
+  // grid borrows that scope on phones only; the laptop keeps its cards.
+  const phoneTiles = useMediaQuery("(max-width: 767px)");
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1293,10 +1298,11 @@ export default function CategoriesPage() {
                   <p className="text-xs font-bold text-theme-muted">
                     {filteredItems.length} of {selectionItems.length} items
                   </p>
+                  {/* Phones always show the photo tiles; the switcher is a laptop control. */}
                   <div
                     role="group"
                     aria-label="Item view"
-                    className="flex flex-wrap gap-1.5 rounded-xl border border-theme bg-theme-inset p-1"
+                    className="hidden flex-wrap gap-1.5 rounded-xl border border-theme bg-theme-inset p-1 md:flex"
                   >
                     {(
                       [
@@ -1382,11 +1388,11 @@ export default function CategoriesPage() {
                     ) : undefined
                   }
                 />
-              ) : itemView === "list" ? (
+              ) : !phoneTiles && itemView === "list" ? (
                 <div className="mt-3 grid gap-2">
                   {filteredItems.map(renderCompactRow)}
                 </div>
-              ) : itemView === "table" ? (
+              ) : !phoneTiles && itemView === "table" ? (
                 <div className="mt-3 overflow-x-auto rounded-2xl border border-theme">
                   <table className="min-w-[760px] w-full border-collapse text-left text-sm">
                     <thead className="bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
@@ -1449,15 +1455,23 @@ export default function CategoriesPage() {
                 </div>
               ) : (
                 <div
-                  className={`mt-3 grid grid-cols-1 gap-3 ${
-                    itemView === "cards-3"
-                      ? "md:grid-cols-2 2xl:grid-cols-3"
-                      : "md:grid-cols-2"
-                  }`}
+                  className={
+                    phoneTiles
+                      ? "inventory-workspace category-item-tiles mt-3"
+                      : undefined
+                  }
                 >
+                  <div
+                    className={`${phoneTiles ? "grid-cols-2" : "mt-3 grid-cols-1"} grid gap-3 ${
+                      itemView === "cards-3"
+                        ? "md:grid-cols-2 2xl:grid-cols-3"
+                        : "md:grid-cols-2"
+                    }`}
+                  >
                   {filteredItems.map((item) => (
                     <InventoryItemCard
                       key={item.id}
+                      variant={phoneTiles ? "photo" : "detail"}
                       item={item}
                       itemCode={item.item_code}
                       quantityLabel={getInventoryQuantityLabel(
@@ -1480,6 +1494,7 @@ export default function CategoriesPage() {
                       )}`}
                     />
                   ))}
+                </div>
                 </div>
               )}
             </div>
