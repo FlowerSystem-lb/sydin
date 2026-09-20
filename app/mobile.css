@@ -13,7 +13,8 @@
     flex: 1;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding-bottom: 88px;
+    /* The tab bar plus the phone home indicator when installed. */
+    padding-bottom: calc(88px + env(safe-area-inset-bottom, 0px));
   }
 
   .mobile-shell-nav {
@@ -21,7 +22,9 @@
     bottom: 0;
     left: 0;
     right: 0;
-    height: 80px;
+    /* On an installed app the home indicator sits inside the bar: the bar
+       grows by that inset, rather than squeezing the tabs into 46px. */
+    height: calc(80px + env(safe-area-inset-bottom, 0px));
     background: var(--sydin-bg-elevated);
     border-top: 1px solid var(--sydin-ui-border);
     display: flex;
