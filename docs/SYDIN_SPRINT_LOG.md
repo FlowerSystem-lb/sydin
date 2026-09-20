@@ -4600,3 +4600,14 @@ image is `absolute`, so it escaped to the card; `relative` fixes it. Item
 page stacked four full-width buttons; now a two-column grid (Back link,
 Record + Edit side by side, Delete). Mono-figures rule had caught h1–h3;
 headings excluded.
+
+### Same day — phone: "I want a different redesign on mobile"
+
+Sayed's instruction while the phone pass was running. The secondary pages
+were the desktop squeezed. Applied from the mobile design spec, in
+`mobile.css`: figures two to a row (compact, eyebrow label, no icon tile;
+Inventory's strip 2×2 with hairlines), no description paragraph under phone
+titles, paper cards instead of the old frosted glass, Alerts rows rebuilt
+as thumb + name + reason / state / two small actions (220px → 113px per
+alert). More sheet: no focus ring on the container, panel radius. Desktop
+verified unchanged.
