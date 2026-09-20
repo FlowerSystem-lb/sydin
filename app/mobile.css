@@ -2851,16 +2851,36 @@
     white-space: nowrap;
   }
 
-  /* Setup | Restart on one row; "Receive ordered quantities" is too long
-     for a third of the width, so it takes a row of its own; then the primary. */
-  .receiving-step-actions > button:nth-child(1) { order: 1; }
-  .receiving-step-actions > button:nth-child(3) { order: 2; }
-  .receiving-step-actions > button:nth-child(2) { order: 3; grid-column: 1 / -1; }
+  /* Three buttons: two quiet ones side by side, then the primary. Four
+     (Stock In step 2): the long "Receive ordered quantities" in the middle
+     takes a row of its own after Setup | Restart. */
+  .receiving-step-actions > button:nth-child(2):nth-last-child(3) {
+    order: 3;
+    grid-column: 1 / -1;
+  }
+
+  .receiving-step-actions > button:nth-child(3):nth-last-child(2) {
+    order: 2;
+  }
 
   .receiving-step-actions > button:last-child {
-    order: 4;
+    order: 9;
     grid-column: 1 / -1;
     min-height: 48px;
     font-size: 15px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .receiving-step-bar > div > label {
+    align-items: flex-start;
+    font-size: 13px !important;
+    line-height: 1.4;
+  }
+
+  .receiving-step-bar > div > label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
   }
 }

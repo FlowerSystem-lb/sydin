@@ -1865,7 +1865,7 @@ export default function ReceivingPage() {
               )}
             </section>
 
-            <section className="fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
+            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <label className="flex items-start gap-2 text-xs font-bold text-theme-primary">
                   <input
@@ -1878,7 +1878,7 @@ export default function ReceivingPage() {
                   Finalizing will record stock-in movements for received
                   quantities. Zero rows will be skipped.
                 </label>
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="receiving-step-actions flex flex-col gap-2 sm:flex-row">
                   <Button
                     variant="secondary"
                     onClick={() => setStep("receive")}
