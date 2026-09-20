@@ -31,7 +31,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 19. ✅ Multi-page: headers repeat, footer + page numbers on every page.
 20. ✅ Item photos in documents (thumbnail column) and in PO picker/lines, invoice lines, receiving table.
 21. ✅ Reporting: sales by month, outstanding invoices, top-selling items, sales by customer, purchases by supplier/month, inventory reports, sales by category, payments by method (cash in vs cash out, net), stock aging — oldest-idle-first, never-moved items called out separately (13 Sep).
-22. ◐ Report builder. ✅ date range, applied to every sales/purchase/payment report at once (14 Sep) — Sayed's pick, over a full custom-columns builder, when asked which was worth building first. ☐ columns, grouping, saved reports.
+22. ◐ Report builder. ✅ date range, applied to every sales/purchase/payment report at once (14 Sep) — Sayed's pick, over a full custom-columns builder, when asked which was worth building first. ✅ on-screen preview (20 Sep): a money report opens as a table in a sheet first, PDF and CSV one tap from there — the phone no longer downloads a file blind. ☐ columns, grouping, saved reports.
 23. ✅ Dashboard hierarchy: figures → action required → recent activity.
 24. ✅ Quick actions: Add menu has New item · New invoice · Purchase order · Stock In · New customer (13 Sep). Record payment stays on the document it belongs to.
 25. ✅ Global search: items, customers, suppliers, invoices, POs — typed results.

@@ -4738,3 +4738,11 @@ all pushed:
   Badge and the PO tone map. Brief points 35, 36, 38 ticked; 61 updated.
 - Sayed: "logo of mobile app is good" — the home-screen icon stays.
 - Plan of record and its shared mirror: Phase 6 (mobile) marked done.
+
+### Same day — reports open on screen first
+
+"Generate" on the nine money reports downloaded a PDF blind, which on a
+phone meant finding a file afterwards. Now "View report": the table opens
+in a sheet (52rem on a laptop, full width on a phone) with Download PDF
+and Export CSV in its footer. Same ReportTable feeds all three, so the
+numbers cannot disagree. Brief point 22 updated.
