@@ -13,7 +13,7 @@ import {
   FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { ResultsAnnouncer, SearchInput } from "@/components/ui";
+import { Badge, ResultsAnnouncer, SearchInput } from "@/components/ui";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
@@ -365,20 +365,17 @@ function MoneyFigure({
  * the same rule the inventory rows and the mobile spec already follow.
  */
 function StatusPill({ status }: { status: SalesOrderStatus }) {
+  // The same Badge and the same tone map as Purchase Orders (draft neutral,
+  // in-flight accent, done success, cancelled danger) -- this was a
+  // hand-rolled rounded pill with its own colours.
   const tone =
     status === "paid"
-      ? "border-emerald-300/30 bg-emerald-500/10 text-emerald-700"
+      ? "success"
       : status === "cancelled"
-        ? "border-red-300/30 bg-red-500/10 text-red-700"
+        ? "danger"
         : status === "issued"
-          ? "border-blue-300/30 bg-blue-500/10 text-blue-700"
-          : "border-theme bg-theme-inset text-theme-secondary";
+          ? "accent"
+          : "neutral";
 
-  return (
-    <span
-      className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${tone}`}
-    >
-      {SALES_ORDER_STATUS_LABELS[status]}
-    </span>
-  );
+  return <Badge tone={tone}>{SALES_ORDER_STATUS_LABELS[status]}</Badge>;
 }
