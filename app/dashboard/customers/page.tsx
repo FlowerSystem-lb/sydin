@@ -28,6 +28,8 @@ import {
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
+import UiIcon from "@/components/UiIcon";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import { exportCustomerStatementPdf } from "@/app/lib/customerStatementPdf";
 import {
@@ -92,6 +94,10 @@ export default function CustomersPage() {
     DEFAULT_BUSINESS_SETTINGS.currency_code || "USD"
   );
   const [accountCustomer, setAccountCustomer] = useState<Customer | null>(null);
+  // On a phone the list is one tappable row per customer (avatar, name, the
+  // money line, chevron) and every action lives in the account sheet. The
+  // laptop keeps its card with the buttons on it.
+  const phoneList = useMediaQuery("(max-width: 767px)");
   const [businessSettings, setBusinessSettings] = useState<BusinessSettings>(
     DEFAULT_BUSINESS_SETTINGS
   );
@@ -446,7 +452,47 @@ export default function CustomersPage() {
           />
         ) : (
           <div className="mt-4 grid gap-2">
-            {visible.map((customer) => (
+            {phoneList
+              ? visible.map((customer) => {
+                  const account = accounts.get(customer.id);
+                  const invoiced = !!account && account.orders.length > 0;
+                  const line = !invoiced
+                    ? [customer.contact_name, customer.phone]
+                        .filter(Boolean)
+                        .join(" · ") || "No invoices yet"
+                    : account.owed > 0
+                      ? `Owes ${formatInventoryPrice(account.owed, currencyCode)}${
+                          account.overdue > 0 ? " · overdue" : ""
+                        }`
+                      : `Settled · ${account.orders.length} invoice${
+                          account.orders.length === 1 ? "" : "s"
+                        }`;
+                  const tone = !invoiced
+                    ? ""
+                    : account.overdue > 0
+                      ? "customer-row-danger"
+                      : account.owed > 0
+                        ? "customer-row-warning"
+                        : "";
+                  return (
+                    <button
+                      key={customer.id}
+                      type="button"
+                      onClick={() => setAccountCustomer(customer)}
+                      className={`customer-row ${tone}`.trim()}
+                    >
+                      <span className="customer-row-avatar" aria-hidden="true">
+                        {(customer.name || "?").trim().charAt(0).toUpperCase()}
+                      </span>
+                      <span className="customer-row-text">
+                        <strong>{customer.name}</strong>
+                        <small>{line}</small>
+                      </span>
+                      <UiIcon name="chevron-right" className="customer-row-chevron" />
+                    </button>
+                  );
+                })
+              : visible.map((customer) => (
               <article
                 key={customer.id}
                 className="dashboard-card flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between"
@@ -528,7 +574,7 @@ export default function CustomersPage() {
                   </button>
                 </div>
               </article>
-            ))}
+                ))}
           </div>
         )}
       </DashboardPageShell>
@@ -576,6 +622,50 @@ export default function CustomersPage() {
             }
           >
             <div className="grid gap-4">
+              {/* On a phone the row has no buttons, so the sheet carries them. */}
+              <div className="customer-sheet-actions md:hidden">
+                {accountCustomer.phone && (
+                  <a href={`tel:${accountCustomer.phone}`}>
+                    Call
+                  </a>
+                )}
+                {accountCustomer.whatsapp && getWhatsAppHref(accountCustomer.whatsapp) && (
+                  <a
+                    href={getWhatsAppHref(accountCustomer.whatsapp)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    WhatsApp
+                  </a>
+                )}
+                {accountCustomer.email && (
+                  <a href={`mailto:${accountCustomer.email}`}>
+                    Email
+                  </a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const customer = accountCustomer;
+                    setAccountCustomer(null);
+                    openEdit(customer);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="customer-sheet-action-danger"
+                  onClick={() => {
+                    const customer = accountCustomer;
+                    setAccountCustomer(null);
+                    setPendingDelete(customer);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+
               {/* The three numbers a customer conversation turns on. */}
               {account.orders.length > 0 && (
               <div className="po-balance-strip">

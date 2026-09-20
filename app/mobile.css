@@ -1793,3 +1793,165 @@
     margin: 0;
   }
 }
+
+/* Customers on a phone: the reference's contact list -- one tappable row per
+   customer with a round initial avatar, the name, the money line and a
+   chevron. The actions moved into the account sheet as a strip of chips. */
+@media (max-width: 767px) {
+  .customer-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) 20px;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    min-height: 64px;
+    padding: 10px 12px 10px 10px;
+    border: 1px solid var(--border-default);
+    border-radius: 20px;
+    background: var(--bg-surface);
+    text-align: left;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .customer-row:active {
+    background: var(--surface-sunken);
+  }
+
+  .customer-row-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+    font-size: 17px;
+    font-weight: 700;
+  }
+
+  .customer-row-text {
+    display: grid;
+    gap: 2px;
+    min-width: 0;
+  }
+
+  .customer-row-text strong {
+    overflow: hidden;
+    color: var(--text-primary);
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.25;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .customer-row-text small {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  /* Money owed reads in the line itself; a coloured dot is the fast second
+     reading, never the only one. */
+  .customer-row-warning .customer-row-text small::before,
+  .customer-row-danger .customer-row-text small::before {
+    content: "";
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    margin-right: 6px;
+    border-radius: 999px;
+    background: #f59e0b;
+    vertical-align: 1px;
+  }
+
+  .customer-row-danger .customer-row-text small::before {
+    background: #dc2626;
+  }
+
+  .customer-row-danger .customer-row-text small {
+    color: #b91c1c;
+  }
+
+  .customer-row-chevron {
+    width: 20px;
+    height: 20px;
+    color: var(--text-subtle);
+  }
+
+  .customer-sheet-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .customer-sheet-actions > a,
+  .customer-sheet-actions > button {
+    display: inline-flex;
+    align-items: center;
+    min-height: 40px;
+    padding: 0 16px;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    background: var(--bg-surface);
+    color: var(--text-primary);
+    font-size: 13.5px;
+    font-weight: 600;
+  }
+
+  .customer-sheet-actions > .customer-sheet-action-danger {
+    color: #b91c1c;
+  }
+}
+
+/* Suppliers search on a phone: no card around it, the label folds into the
+   placeholder, the search is the same pill as everywhere else. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .organize-search-card.organize-search-card {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .organize-search-card label[for="supplier-search"] {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .dashboard-shell-content .organize-search-card #supplier-search {
+    min-height: 44px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--surface-sunken) !important;
+    box-shadow: none !important;
+    padding: 0 18px !important;
+    font-size: 14px !important;
+  }
+
+  .dashboard-shell-content .organize-search-card #supplier-search:focus-visible {
+    background: #ffffff !important;
+    box-shadow: 0 0 0 2px var(--sydin-blue) !important;
+  }
+
+  .organize-search-card p[class*="rounded-2xl"] {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 4px !important;
+    color: var(--text-muted) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+
+  .organize-search-card .dashboard-filter-bar {
+    margin-top: 6px;
+  }
+}

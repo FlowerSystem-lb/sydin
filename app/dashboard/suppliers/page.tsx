@@ -33,6 +33,7 @@ import {
 import { brandingFromSettings } from "@/app/lib/documentPdf";
 import { exportSupplierStatementPdf } from "@/app/lib/supplierStatementPdf";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
+import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import {
   PURCHASE_ORDER_STATUS_LABELS,
   formatPurchaseOrderAmount,
@@ -290,6 +291,9 @@ export default function SuppliersPage() {
   );
   const [statementBusy, setStatementBusy] = useState(false);
   const [accountSupplier, setAccountSupplier] = useState<Supplier | null>(null);
+  // Phone: one tappable row per supplier, same anatomy as Customers; the
+  // actions live in the account sheet. The laptop keeps its cards.
+  const phoneList = useMediaQuery("(max-width: 767px)");
   const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
   const [userId, setUserId] = useState("");
   const [search, setSearch] = useState("");
@@ -671,10 +675,14 @@ export default function SuppliersPage() {
           <DashboardToolbar className="organize-search-card sm:p-5">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div className="flex-1">
-                <label className="mb-2 block text-sm font-semibold text-theme-muted">
+                <label
+                  htmlFor="supplier-search"
+                  className="mb-2 block text-sm font-semibold text-theme-muted"
+                >
                   Search suppliers
                 </label>
                 <input
+                  id="supplier-search"
                   type="search"
                   value={search}
                   onChange={(event) => setSearch(event.target.value)}
@@ -707,6 +715,40 @@ export default function SuppliersPage() {
               className="grid-cols-1 md:grid-cols-2 xl:grid-cols-3"
               itemClassName="min-h-72"
             />
+          ) : visibleSuppliers.length > 0 && phoneList ? (
+            <div className="grid gap-2">
+              {visibleSuppliers.map((supplier) => {
+                const account = accounts.get(supplier.id);
+                const invoiced = !!account && account.orders.length > 0;
+                const items = `${supplier.item_count || 0} item${
+                  supplier.item_count === 1 ? "" : "s"
+                }`;
+                const line = !invoiced
+                  ? [supplier.contact_name, items].filter(Boolean).join(" · ")
+                  : account.owed > 0
+                    ? `You owe ${formatInventoryPrice(account.owed, currencyCode)} · ${items}`
+                    : `Settled · ${items}`;
+                return (
+                  <button
+                    key={supplier.id}
+                    type="button"
+                    onClick={() => setAccountSupplier(supplier)}
+                    className={`customer-row ${
+                      invoiced && account.owed > 0 ? "customer-row-warning" : ""
+                    }`.trim()}
+                  >
+                    <span className="customer-row-avatar" aria-hidden="true">
+                      {(supplier.name || "?").trim().charAt(0).toUpperCase()}
+                    </span>
+                    <span className="customer-row-text">
+                      <strong>{supplier.name}</strong>
+                      <small>{line}</small>
+                    </span>
+                    <UiIcon name="chevron-right" className="customer-row-chevron" />
+                  </button>
+                );
+              })}
+            </div>
           ) : visibleSuppliers.length > 0 ? (
             <div className="organize-list-grid grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
               {visibleSuppliers.map((supplier) => {
@@ -947,6 +989,46 @@ export default function SuppliersPage() {
             }
           >
             <div className="grid gap-4">
+              {/* On a phone the row has no buttons, so the sheet carries them. */}
+              <div className="customer-sheet-actions md:hidden">
+                {accountSupplier.phone && (
+                  <a href={`tel:${accountSupplier.phone}`}>Call</a>
+                )}
+                {accountSupplier.whatsapp && getWhatsAppHref(accountSupplier.whatsapp) && (
+                  <a
+                    href={getWhatsAppHref(accountSupplier.whatsapp)}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    WhatsApp
+                  </a>
+                )}
+                {accountSupplier.email && (
+                  <a href={`mailto:${accountSupplier.email}`}>Email</a>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const supplier = accountSupplier;
+                    setAccountSupplier(null);
+                    openEditForm(supplier);
+                  }}
+                >
+                  Edit
+                </button>
+                <button
+                  type="button"
+                  className="customer-sheet-action-danger"
+                  onClick={() => {
+                    const supplier = accountSupplier;
+                    setAccountSupplier(null);
+                    setPendingDelete(supplier);
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+
               {account.orders.length > 0 && (
               <div className="po-balance-strip">
                 <div>

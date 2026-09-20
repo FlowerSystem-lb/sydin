@@ -2413,13 +2413,11 @@ export default function InventoryPage() {
   // Forget the expanded window as soon as the list changes. Comparing
   // signatures on render was not enough: the stored window stayed keyed to
   // the old list and came straight back when a search was cleared.
-  useEffect(() => {
-    setRenderWindow((current) =>
-      current.signature === listSignature || current.signature === ""
-        ? current
-        : { limit: RENDER_WINDOW, signature: listSignature }
-    );
-  }, [listSignature]);
+  if (renderWindow.signature !== "" && renderWindow.signature !== listSignature) {
+    // React's "adjust state while rendering" pattern: the re-render happens
+    // before this one is committed, so nothing paints with the stale window.
+    setRenderWindow({ limit: RENDER_WINDOW, signature: listSignature });
+  }
   const renderLimit = renderWindow.signature === listSignature ? renderWindow.limit : RENDER_WINDOW;
   const renderedItems = renderLimit >= visibleItems.length ? visibleItems : visibleItems.slice(0, renderLimit);
   const showMoreItems = () =>
