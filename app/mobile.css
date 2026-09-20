@@ -2071,6 +2071,7 @@
 
   /* Month group header: quieter, no card of its own. */
   .po-history-workspace .po-month-header {
+    min-height: 40px;
     padding: 6px 4px;
     border: 0;
     background: transparent;
@@ -2801,5 +2802,22 @@
   select,
   .ui-select-trigger {
     font-size: 16px !important;
+  }
+}
+
+/* Tap targets on the phone: the section links ("All activity", "All low
+   stock") and the chart period buttons were 24px tall -- fine for a mouse,
+   a miss for a thumb. 36px minimum, without moving the text. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .ov-link,
+  .dashboard-shell-content .ov-chart-period {
+    min-height: 36px !important;
+    padding-block: 0 !important;
+    display: inline-flex;
+    align-items: center;
+  }
+
+  .dashboard-shell-content .ov-chart-period {
+    padding-inline: 12px !important;
   }
 }
