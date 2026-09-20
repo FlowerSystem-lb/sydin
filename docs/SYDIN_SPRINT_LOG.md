@@ -4764,3 +4764,12 @@ panel had been made `overflow: visible` earlier today for the pinned Save
 bars. The shell is ordinary flow on the phone now (mobile.css); the other
 page shells already were. Lesson: after changing which element scrolls,
 re-test every page's bottom, not just the one being fixed.
+
+### Same day — product pickers show the photo
+
+The New Purchase Order picker already showed the product photo ("a name
+is not enough to tell two similar cartons apart"); the invoice and Stock
+In pickers did not. The shared Select option takes an optional `image`
+now and draws a 36px thumbnail before the name; both pickers pass it.
+Also confirmed the invoice page's shell grows with content (min-height
+only), so a long invoice cannot clip the way Home did.
