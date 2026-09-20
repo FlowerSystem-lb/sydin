@@ -2769,3 +2769,23 @@
     width: auto !important;
   }
 }
+
+/* Phone Home could not scroll past the Sales trend: a ≤639px rule in
+   globals (~6110) makes the Overview's .dashboard-shell a 100svh flex box
+   with overflow hidden, expecting .dashboard-shell-content to scroll inside
+   it -- but on the phone the one scroller is .mobile-shell-content, and
+   the inner panel was already made overflow: visible above. The shell is
+   ordinary flow here, like every other page. */
+@media (max-width: 767px) {
+  .mobile-shell .dashboard-shell:has(.dashboard-overview) {
+    display: block;
+    height: auto !important;
+    min-height: 0;
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .mobile-shell .dashboard-shell-content:has(.dashboard-overview) {
+    padding-bottom: 0 !important;
+  }
+}
