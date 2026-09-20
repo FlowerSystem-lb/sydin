@@ -1955,3 +1955,189 @@
     margin-top: 6px;
   }
 }
+
+/* Sales on a phone: the same contact-row anatomy, with the money on the
+   right in the figure mono and one state word under it. */
+@media (max-width: 767px) {
+  .customer-row.sales-row {
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+  }
+
+  .sales-row-amount {
+    display: grid;
+    justify-items: end;
+    gap: 2px;
+    text-align: right;
+  }
+
+  .sales-row-amount strong {
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .sales-row-amount small {
+    color: var(--text-muted);
+    font-size: 11.5px;
+    font-weight: 600;
+  }
+
+  .sales-row-owed small {
+    color: #b45309;
+  }
+
+  .sales-row-muted .customer-row-text strong,
+  .sales-row-muted .sales-row-amount strong {
+    color: var(--text-muted);
+    text-decoration: line-through;
+    text-decoration-color: var(--text-subtle);
+  }
+}
+
+/* Purchase Orders on a phone: the history row takes the contact-row
+   anatomy -- round icon, PO and detail, money right -- and its badges drop
+   to a second line under the text instead of wrapping into the amount. */
+@media (max-width: 767px) {
+  .po-history-workspace .po-history-list {
+    gap: 8px;
+    padding: 0;
+  }
+
+  .po-history-workspace .po-history-row {
+    display: grid;
+    grid-template-columns: 44px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "icon text amount"
+      "icon badges badges";
+    column-gap: 12px;
+    row-gap: 6px;
+    align-items: center;
+    padding: 10px 12px 10px 10px;
+    border: 1px solid var(--border-default);
+    border-left-width: 1px;
+    border-radius: 20px;
+    background: var(--bg-surface);
+  }
+
+  .po-history-workspace .po-history-row-icon {
+    grid-area: icon;
+    align-self: start;
+    width: 44px;
+    height: 44px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    color: var(--text-primary);
+  }
+
+  .po-history-workspace .po-history-row > span.min-w-0 {
+    grid-area: text;
+  }
+
+  .po-history-workspace .po-history-row > span.min-w-0 > span:first-child {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .po-history-workspace .po-history-row > span.min-w-0 > span:last-child {
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+
+  .po-history-workspace .po-history-row > div {
+    grid-area: badges;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Only show the badge line when there is something on it. */
+  .po-history-workspace .po-history-row > div:empty {
+    display: none;
+  }
+
+  .po-history-workspace .po-history-row > span.text-right {
+    grid-area: amount;
+    align-self: start;
+    font-family: var(--font-mono);
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+
+  /* Month group header: quieter, no card of its own. */
+  .po-history-workspace .po-month-header {
+    padding: 6px 4px;
+    border: 0;
+    background: transparent;
+  }
+}
+
+@media (max-width: 767px) {
+  .po-history-workspace .po-month-group {
+    overflow: visible;
+    border: 0 !important;
+    border-radius: 0;
+    background: transparent !important;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+    box-shadow: none !important;
+  }
+
+  .po-history-workspace .po-month-header:hover {
+    background: transparent;
+  }
+
+  .po-history-workspace .po-month-label {
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .po-history-workspace .po-month-meta {
+    margin-left: auto;
+    font-size: 12px;
+  }
+}
+
+/* Purchase Orders toolbar on a phone: no card, a search pill, and the two
+   filters side by side as pills under it. Three tiles: the last spans. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .po-history-workspace .dashboard-toolbar-card.dashboard-toolbar-card.dashboard-toolbar-card {
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .po-history-workspace .dashboard-toolbar-card > label.relative {
+    grid-column: 1 / -1;
+  }
+
+  .dashboard-shell-content .po-history-workspace .dashboard-toolbar-card > label.relative > input {
+    min-height: 44px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--surface-sunken) !important;
+    box-shadow: none !important;
+    padding-left: 2.6rem !important;
+  }
+
+  .dashboard-shell-content .po-history-workspace .dashboard-toolbar-card > label.relative > input:focus-visible {
+    background: #ffffff !important;
+    box-shadow: 0 0 0 2px var(--sydin-blue) !important;
+  }
+
+  .po-history-workspace .dashboard-toolbar-card > label.relative > svg {
+    left: 16px;
+  }
+
+  .po-history-workspace .po-summary-grid .dashboard-metric-card:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+}

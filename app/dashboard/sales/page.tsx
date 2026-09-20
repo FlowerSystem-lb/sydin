@@ -279,39 +279,48 @@ export default function SalesPage() {
           </DashboardTable>
         ) : (
           <div className="mt-4 grid gap-2">
+            {/* Phone rows, after the reference's "Recent sales" list: who, then
+                the invoice and date, with the money on the right. One state
+                word, not two: an issued invoice reads its payment state, the
+                rest read their status. */}
             {visible.map((order) => {
               const total = getSalesOrderTotal(order);
+              const who = order.customer_name_snapshot || order.invoice_number;
+              const lines = (order.lines || []).length;
+              const state =
+                order.status === "issued"
+                  ? SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status]
+                  : SALES_ORDER_STATUS_LABELS[order.status];
+              const owed =
+                order.status === "issued" && order.payment_status !== "paid";
 
               return (
                 <Link
                   key={order.id}
                   href={`/dashboard/sales/${order.id}`}
-                  className="dashboard-card flex flex-col gap-2 p-4 transition hover:bg-theme-hover sm:flex-row sm:items-center sm:justify-between"
+                  className={`customer-row sales-row ${
+                    order.status === "cancelled" ? "sales-row-muted" : ""
+                  }`.trim()}
                 >
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-theme-primary">
-                      {order.invoice_number}
-                      {order.customer_name_snapshot
-                        ? ` · ${order.customer_name_snapshot}`
-                        : ""}
-                    </p>
-                    <p className="mt-1 truncate text-xs text-theme-muted">
+                  <span className="customer-row-avatar" aria-hidden="true">
+                    {who.trim().charAt(0).toUpperCase()}
+                  </span>
+                  <span className="customer-row-text">
+                    <strong>{who}</strong>
+                    <small>
                       {[
-                        order.issue_date || "No date",
-                        `${(order.lines || []).length} line${
-                          (order.lines || []).length === 1 ? "" : "s"
-                        }`,
-                        SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status],
-                      ].join(" · ")}
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-semibold text-theme-primary">
-                      {formatSalesOrderAmount(order, total) || "--"}
-                    </span>
-                    <StatusPill status={order.status} />
-                  </div>
+                        order.customer_name_snapshot ? order.invoice_number : "",
+                        formatShortDate(order.issue_date),
+                        `${lines} line${lines === 1 ? "" : "s"}`,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </small>
+                  </span>
+                  <span className={`sales-row-amount ${owed ? "sales-row-owed" : ""}`.trim()}>
+                    <strong>{formatSalesOrderAmount(order, total) || "--"}</strong>
+                    <small>{state}</small>
+                  </span>
                 </Link>
               );
             })}
@@ -320,6 +329,13 @@ export default function SalesPage() {
       </DashboardPageShell>
     </main>
   );
+}
+
+function formatShortDate(value: string | null | undefined) {
+  if (!value) return "No date";
+  const date = new Date(`${value.slice(0, 10)}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
 }
 
 function MoneyFigure({
