@@ -4,12 +4,20 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import {
+  DashboardEmptyState,
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell, DocumentTimeline, HelpLink, Select } from "@/components/ui";
+import {
+  Button,
+  DialogShell,
+  DocumentTimeline,
+  HelpLink,
+  Select,
+  buttonClassName,
+} from "@/components/ui";
 
 function formatShortDate(value: string | null | undefined) {
   if (!value) return null;
@@ -417,15 +425,20 @@ export default function SaleDetailPage() {
     return (
       <main className="operations-workspace">
         <DashboardPageShell>
-          <DashboardNotice tone="danger">
-            {error || "We could not find that invoice."}
-          </DashboardNotice>
-          <Link
-            href="/dashboard/sales"
-            className="mt-4 inline-flex text-sm font-semibold text-theme-accent"
-          >
-            Back to Sales
-          </Link>
+          {/* The same shape as every other empty state, not a red line and a
+              bare text link. */}
+          <DashboardEmptyState
+            icon="receipt"
+            title="Invoice not found"
+            description={
+              error || "This invoice does not exist or you do not have access to it."
+            }
+            action={
+              <Link href="/dashboard/sales" className={buttonClassName()}>
+                Back to Sales
+              </Link>
+            }
+          />
         </DashboardPageShell>
       </main>
     );

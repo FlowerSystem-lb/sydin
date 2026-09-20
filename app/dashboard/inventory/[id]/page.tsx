@@ -17,6 +17,7 @@ import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import StockLevelChart from "@/components/inventory/StockLevelChart";
 import {
   ActionButton,
+  DashboardEmptyState,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import {
@@ -906,22 +907,18 @@ export default function ItemDetailsPage() {
           )}
 
           {!loading && !authMissing && (error || !item) && (
-            <div className="rounded-[32px] border border-theme bg-theme-surface p-8 text-center shadow-[0_14px_42px_rgba(15,23,42,0.12)] backdrop-blur-xl">
-              <h2 className="text-3xl font-bold">
-                Item not found
-              </h2>
-
-              <p className="mx-auto mt-3 max-w-md text-theme-muted">
-                {error || "This item does not exist or you do not have access to it."}
-              </p>
-
-              <Link
-                href="/dashboard/inventory"
-                className={buttonClassName({ className: "mt-6" })}
-              >
-                Back to Inventory
-              </Link>
-            </div>
+            <DashboardEmptyState
+              icon="box"
+              title="Item not found"
+              description={
+                error || "This item does not exist or you do not have access to it."
+              }
+              action={
+                <Link href="/dashboard/inventory" className={buttonClassName()}>
+                  Back to Inventory
+                </Link>
+              }
+            />
           )}
 
 

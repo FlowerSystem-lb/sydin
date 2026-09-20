@@ -44,8 +44,8 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 32. ◐ Interaction polish: toasts, dialogs, unsaved-changes guard exist; page transitions modest.
 33. ◐ Button audit done page by page in the earlier audit; keep checking new surfaces.
 34. ✅ Visual QA by screenshot for every change (standing practice).
-35. ◐ Viewports: 375 and 1130/1440 checked routinely; 768/1024/1920 spot-checked.
-36. ◐ Mobile operations: Home, Items, Item detail, More done per canvas; Scan untouched by instruction.
+35. ✅ Viewports: 375 / 768 / 1024 / 1280 / 1440 / 1920 all measured during the 16–20 Sep redesign; 375 and desktop re-checked after every phone unit on 20 Sep.
+36. ✅ Mobile operations: every phone page in one app language (20 Sep) — Home, Items, Item, Customers, Suppliers, Sales, POs, Categories, Depots, Movements, Activity, Reports, Settings, More, the save bars on the forms, the tile action sheet; installable (manifest + icons). Scan untouched by instruction.
 37. ◐ Design system: shared FieldGroup/FieldRow, Button, DialogShell, Badge, Select, SearchInput, toasts; `globals.css` still carries stacked redesigns.
 38. ◐ Status system: Draft / Ordered / Partially received / Received / Cancelled; Unpaid / Partially paid / Paid; Issued / Paid. Tones consistent on PO and sales.
 39. ✅ Document status timelines: Created → Ordered → Received → Paid on the order dialog, Draft → Issued → Paid on the invoice page; cancelled ends in a stopped step (13 Sep).
@@ -70,7 +70,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 58. ✅ No feature added without a workflow reason.
 59. ◐ Final standard: clear, calm, consistent — continuing.
 60. ◐ Final full-app audit — the earlier page-by-page audit covers it; recheck after these changes.
-61. ◐ Bug hunt: dead buttons, wrong routes, overflow, console errors — ongoing.
+61. ◐ Bug hunt — 20 Sep sweep: every internal link from the main pages fetched (38, all respond); console clean on Overview / Inventory / POs / Sales; missing-item and missing-invoice pages now use the shared empty state (were a hand-rolled card and a red line). Phone overflow sweep clean. Ongoing as surfaces change.
 62. ◐ Screenshot review of every important screen — ongoing.
 63. ◐ Quality gate list — see statuses above.
 64. ◐ Final report — to be written when the ☐ items are settled or scheduled.
