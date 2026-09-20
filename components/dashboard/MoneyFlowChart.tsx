@@ -311,7 +311,7 @@ export default function MoneyFlowChart({
                     key={b.key}
                     x={pad.left + c * cellW + cellW / 2}
                     y={height - 7}
-                    textAnchor="middle"
+                    textAnchor={c === cols - 1 ? "end" : c === 0 ? "start" : "middle"}
                     className={`ov-chart-axis${c === cols - 1 ? " ov-chart-axis-now" : ""}`}
                   >
                     {b.label}
