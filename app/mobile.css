@@ -52,7 +52,7 @@
   }
 
   .mobile-nav-tab:active {
-    background: rgba(56, 189, 248, 0.08);
+    background: rgba(24, 24, 27, 0.05);
   }
 
   .mobile-nav-tab-active {
@@ -66,13 +66,17 @@
   .mobile-nav-tab-icon-wrapper {
     width: 56px;
     height: 56px;
-    border-radius: 14px;
-    background: linear-gradient(135deg, #38bdf8, #2563eb);
+    border-radius: 12px;
+    /* Solid brand blue, no gradient -- the redesign brief's rule, and the
+       last gradient the phone shell had (20 Sep). */
+    background: #2563eb;
     display: flex;
     align-items: center;
     justify-content: center;
     color: white;
-    box-shadow: 0 6px 20px rgba(37, 99, 235, 0.28);
+    box-shadow:
+      0 1px 2px rgba(29, 78, 216, 0.24),
+      0 4px 12px rgba(37, 99, 235, 0.22);
     transition: all 150ms ease;
   }
 
@@ -789,9 +793,13 @@
     box-shadow: none;
   }
 
-  /* The photo becomes its own square block instead of filling the card. */
+  /* The photo becomes its own square block instead of filling the card.
+     `relative`, not `static`: the image inside is a fill image
+     (position: absolute; inset: 0), and with a static box it positioned
+     itself against the whole card and spilled under the name and price --
+     dark ink on a dark photo, unreadable. Found in the phone QA, 20 Sep. */
   .inventory-workspace .inventory-item-card--photo .inventory-card-media {
-    position: static;
+    position: relative;
     aspect-ratio: 1 / 1;
     border-radius: 12px;
     overflow: hidden;
