@@ -4677,3 +4677,35 @@ then the item's own stock-level chart (the slide-over's component, from the
 movements the page already loads), then facts. Desktop: photo and chart in
 the left column, facts on the right — a first version put the chart in the
 grid's second column, caught by looking.
+
+### Same day — every remaining phone page in the app language
+
+"For all pages I want so different from the website laptop." Each phone
+page checked in the browser, desktop verified untouched after each unit,
+all pushed:
+
+- **Customers, Suppliers** — one tappable row per contact (round initial
+  avatar, name, the money line, chevron) opening the account sheet, which
+  now carries Call / WhatsApp / Email / Edit / Delete as chips. Supplier
+  search lost its card and label (label now wired to the field).
+- **Sales** — the reference's "Recent sales" row: customer initial, name,
+  "INV-0002 · Sep 13 · 1 line", amount in mono right, one state word (was
+  two "Paid"s with the amount in the middle).
+- **Purchase Orders** — month as a plain section label; each order a row
+  with round icon, PO and detail, amount right, badges on a second line;
+  toolbar without its card, search pill, filters side by side.
+- **Categories** — bug: the small-screen "every action button 100% wide"
+  rule pushed "Add" over the title. Fixed; page no longer a viewport-tall
+  card; a category's items are the Inventory tab's two-up photo tiles (the
+  grid borrows the `.inventory-workspace` scope on phones only); the
+  List/columns/Table switcher is a laptop control.
+- **Depots** — rows are the cards; repeated heading gone.
+- **Stock Movements, Activity** — feeds: thumb/icon, what happened, signed
+  change in mono on the right, one quiet line (200–250px → 116–143px).
+- **More sheet** — profile block, then each group as one white card of
+  52px rows with round tinted icon chips and chevrons.
+- **Settings** — the five sections as a scrolling row of pill tabs; the
+  panel is the page; the header badge keeps its own width.
+- Also: the Inventory render-window reset moved from an effect to React's
+  adjust-state-during-render pattern (lint asked). The "N" over sheets on
+  localhost is Next's dev badge, not the app.
