@@ -4813,3 +4813,11 @@ Fields on the phone were 11.9–14px (the invoice form 11.9px), so every
 tap into a field zoomed the page and left it zoomed. All text fields,
 textareas, selects and the Select trigger are 16px under 768px now; the
 fields already had the height. Verified on New invoice, Add item, Settings.
+
+### Same day — phone tap targets, and Stock In step 2 checked
+
+Measured every link and button under 768px on Home, Inventory, POs,
+Alerts, Stock In, Help and an invoice: the Home section links and the
+chart period buttons were 24px tall, the PO month header 32px; 36px+ now.
+Stock In step 2 walked on the phone (draft created and cleared on this
+device only): the item picker shows photos there too.
