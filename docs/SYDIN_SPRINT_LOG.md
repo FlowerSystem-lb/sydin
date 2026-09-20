@@ -4611,3 +4611,15 @@ titles, paper cards instead of the old frosted glass, Alerts rows rebuilt
 as thumb + name + reason / state / two small actions (220px → 113px per
 alert). More sheet: no focus ring on the container, panel radius. Desktop
 verified unchanged.
+
+### Same day — "like an app": Pinterest / Canva / Google Photos
+
+Sayed: on iPhone or Android it should be an app in its own right; imagine
+it from Pinterest, Canva and Google Photos. Applied in `mobile.css`: Items
+as photo tiles (no boxed cards, 16px corners, facts under the picture);
+one rounded search pill on a grey field, full width with the chips on a
+row beneath; lists of card links as native grouped rows with hairlines and
+chevrons; 48px primaries. And the literal half: a web app manifest
+(`app/manifest.ts`), three icons generated from the mark (192 / 512 /
+maskable), apple-touch-icon, iOS web-app meta, `viewport-fit: cover` —
+SydIN installs to the home screen and opens full-screen. Desktop unchanged.
