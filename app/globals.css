@@ -24522,3 +24522,10 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ui-sheet.ui-sheet-bottom {
   border-radius: var(--radius-panel) var(--radius-panel) 0 0 !important;
 }
+
+/* Phone Home pieces (greeting row, hero figure): mobile.css shows them
+   under 768px. Off everywhere else so the desktop page is untouched. */
+.ov-phone-head,
+.ov-phone-hero {
+  display: none;
+}

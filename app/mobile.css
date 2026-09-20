@@ -1583,3 +1583,185 @@
     display: none;
   }
 }
+
+/* =========================================================================
+   Phone Home -- from the two most-viewed inventory apps on Dribbble (20 Sep)
+   Ronas IT (91k views) and OnPoint Studio (124k): a greeting row with the
+   avatar, "Welcome back", the business name and a bell; then ONE hero
+   figure in the accent colour -- big number, a +% pill, a sparkline --
+   before the small tiles. Real data only: the hero is Sold this month with
+   its vs-last-month line; the bell carries the low-stock count.
+   ========================================================================= */
+@media (max-width: 767px) {
+  .dashboard-shell-content .ov-head.ov-head.ov-head {
+    display: none !important;
+  }
+
+  .ov-phone-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 20px 0 8px;
+  }
+
+  .ov-phone-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    flex: none;
+    overflow: hidden;
+    border-radius: 999px;
+    border: 1px solid var(--border-default);
+    background: #ffffff;
+    font-weight: 700;
+    color: var(--sydin-blue);
+  }
+
+  .ov-phone-avatar img {
+    width: 100%;
+    height: 100%;
+    padding: 5px;
+    object-fit: contain; /* logos are wide; cropping one to a circle cut it to "wer Pl" */
+  }
+
+  .ov-phone-greeting {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .ov-phone-greeting small {
+    font-size: 12px;
+    color: var(--text-muted);
+  }
+
+  .ov-phone-greeting strong {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .ov-phone-bell {
+    position: relative;
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    flex: none;
+    border-radius: 999px;
+    border: 1px solid var(--border-default);
+    background: #ffffff;
+    color: var(--text-primary);
+  }
+
+  .ov-phone-bell i {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 999px;
+    background: #be123c;
+    color: #ffffff;
+    font-size: 11px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 18px;
+    text-align: center;
+    border: 2px solid #fafafa;
+  }
+
+  .ov-phone-hero {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin: 6px 0 12px;
+    padding: 18px 18px 16px;
+    overflow: hidden;
+    border-radius: 22px;
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow:
+      0 2px 4px rgba(29, 78, 216, 0.2),
+      0 12px 28px rgba(37, 99, 235, 0.28);
+  }
+
+  .ov-phone-hero:active {
+    transform: scale(0.99);
+  }
+
+  .ov-phone-hero-label {
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, 0.78);
+  }
+
+  .ov-phone-hero-value {
+    font-family: var(--font-mono);
+    font-size: 32px;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+  }
+
+  .ov-phone-hero-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.85);
+  }
+
+  .ov-phone-hero-pill {
+    padding: 3px 9px;
+    border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18);
+    font-weight: 600;
+    color: #ffffff;
+  }
+
+  .ov-phone-hero-spark {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    width: 76px;
+  }
+
+  .ov-phone-hero-spark .ov-figure-sparkline {
+    width: 100%;
+    height: 26px;
+  }
+
+  .ov-phone-hero-spark .ov-figure-sparkline rect {
+    fill: rgba(255, 255, 255, 0.5);
+    opacity: 1;
+  }
+
+  .ov-phone-hero-spark .ov-figure-sparkline-today {
+    fill: #ffffff;
+  }
+
+  /* The hero IS the first business figure; do not show it twice. */
+  .ov-figures-business .ov-figure:first-child {
+    display: none;
+  }
+
+  /* Three tiles left in a two-column grid: the last one takes the row. */
+  .ov-figures-business .ov-figure:last-child:nth-child(even) {
+    grid-column: 1 / -1;
+  }
+}

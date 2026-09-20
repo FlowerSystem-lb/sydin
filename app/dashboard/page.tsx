@@ -901,6 +901,64 @@ export default function DashboardPage() {
           its own gutters there. Fighting that with another !important would
           have been the third one on this property. */}
       <div className="ov-inner">
+      {/* Phone Home, from the two most-viewed inventory apps on Dribbble
+          (20 Sep): a greeting row -- avatar, "Welcome back", the business,
+          a bell -- and then ONE hero figure in the accent colour with its
+          delta and sparkline, before the small tiles. Rendered always;
+          mobile.css shows this and hides .ov-head under 768px, and the
+          reverse above it, so the desktop page is untouched. The bell goes
+          to Alerts and carries the real low-stock count. */}
+      <header className="ov-phone-head" aria-label="Welcome">
+        <span className="ov-phone-avatar" aria-hidden="true">
+          {businessSettings.business_logo_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={businessSettings.business_logo_url} alt="" />
+          ) : (
+            (businessSettings.business_name || "S").slice(0, 1).toUpperCase()
+          )}
+        </span>
+        <span className="ov-phone-greeting">
+          <small>Welcome back</small>
+          <strong>{businessSettings.business_name || "Your workspace"}</strong>
+        </span>
+        <Link
+          href="/dashboard/alerts"
+          className="ov-phone-bell"
+          aria-label={`Alerts, ${formatNumber(dashboardData.lowStockCount)} items need attention`}
+        >
+          <UiIcon name="alert" className="h-5 w-5" />
+          {dashboardData.lowStockCount > 0 && (
+            <i aria-hidden="true">{dashboardData.lowStockCount}</i>
+          )}
+        </Link>
+      </header>
+
+      {!hasNoItems && businessCards[0] && (
+        <Link href={businessCards[0].href} className="ov-phone-hero">
+          <span className="ov-phone-hero-label">{businessCards[0].label}</span>
+          <span className="ov-phone-hero-value">
+            {loading ? "--" : businessCards[0].format(businessCards[0].rawValue)}
+          </span>
+          <span className="ov-phone-hero-row">
+            {!loading && businessCards[0].compare && (
+              <span className="ov-phone-hero-pill">
+                {businessCards[0].compare.delta !== null
+                  ? `${businessCards[0].compare.delta >= 0 ? "+" : "−"}${Math.round(
+                      Math.abs(businessCards[0].compare.delta) * 100
+                    )}% ${businessCards[0].compare.label}`
+                  : businessCards[0].compare.label}
+              </span>
+            )}
+            <span className="ov-phone-hero-note">{businessCards[0].detail}</span>
+          </span>
+          {!loading && businessCards[0].trend && (
+            <span className="ov-phone-hero-spark">
+              <Sparkline values={businessCards[0].trend} />
+            </span>
+          )}
+        </Link>
+      )}
+
       <header className="ov-head">
         <div className="ov-head-text">
           <p className="ov-eyebrow">{businessSettings.business_name}</p>
