@@ -24507,3 +24507,18 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   background: var(--bg-inset) !important;
   border-color: var(--border-default) !important;
 }
+
+/* Sheets and dialogs take focus when they open so the screen reader lands
+   inside them. The container is not a target and must not draw a ring --
+   on a phone it read as a blue outline around the whole sheet. Buttons and
+   fields inside keep theirs. Sheet corners on the panel radius. */
+.ui-sheet:focus,
+.ui-sheet:focus-visible,
+[role="dialog"]:focus,
+[role="dialog"]:focus-visible {
+  outline: none !important;
+}
+
+.ui-sheet.ui-sheet-bottom {
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0 !important;
+}
