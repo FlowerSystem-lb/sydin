@@ -9,12 +9,14 @@ import {
   DialogShell,
   SearchInput,
   Select,
+  SheetShell,
 } from "@/components/ui";
 import {
   DashboardEmptyState,
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
+  DashboardTable,
   DashboardToolbar,
   FilterBar,
   FilterChip,
@@ -464,6 +466,11 @@ export default function ReportsPage() {
     useState<ReportCard | null>(null);
   const [movementDialogOpen, setMovementDialogOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
+  // A money report opens on screen first; the PDF and the CSV are one tap
+  // from there. "Generate" used to download a PDF straight away, which on a
+  // phone meant a file you then had to go and find.
+  const [preview, setPreview] = useState<{ report: ReportCard; table: ReportTable } | null>(null);
+  const previewTable = preview?.table ?? null;
   const [exportStatus, setExportStatus] = useState("");
   const [inventoryGroupBy, setInventoryGroupBy] =
     useState<InventoryPdfGroupBy>("none");
@@ -1025,7 +1032,8 @@ export default function ReportsPage() {
     setNotice("");
     setExportStatus("");
     if (report.action === "business") {
-      void runBusinessReport(report, "pdf");
+      const table = buildBusinessReport(report.id);
+      if (table) setPreview({ report, table });
     } else if (report.action === "inventory-pdf") {
       setInventoryDialogReport(report);
     } else if (report.action === "movement-csv") {
@@ -1253,7 +1261,9 @@ export default function ReportsPage() {
                         {report.hrefLabel || "Open"}
                       </Link>
                     ) : (
-                      <Button onClick={() => openReport(report)}>Generate</Button>
+                      <Button onClick={() => openReport(report)}>
+                        {report.action === "business" ? "View report" : "Generate"}
+                      </Button>
                     )}
                     {report.href && report.action !== "route" && (
                       <Link
@@ -1327,6 +1337,102 @@ export default function ReportsPage() {
           </div>
         </section>
       </DashboardPageShell>
+
+      {preview && previewTable && (
+        <SheetShell
+          title={previewTable.title}
+          eyebrow="Report"
+          description={previewTable.subtitle}
+          onClose={() => setPreview(null)}
+          className="report-preview-sheet"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setPreview(null)}>
+                Close
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  downloadCsv(`sydin-${previewTable.filename}.csv`, reportCsvRows(previewTable));
+                  setNotice(`${previewTable.title} exported as CSV.`);
+                }}
+              >
+                Export CSV
+              </Button>
+              <Button
+                onClick={() => void runBusinessReport(preview.report, "pdf")}
+                loading={exporting}
+                loadingLabel="Building..."
+              >
+                Download PDF
+              </Button>
+            </>
+          }
+        >
+          <DashboardTable
+            minWidth="0"
+            className="report-preview-table"
+            empty={
+              previewTable.rows.length === 0 ? (
+                <DashboardEmptyState
+                  icon="reports"
+                  title="Nothing to report yet"
+                  description="No documents fall in this range. Widen the dates, or record a sale or purchase first."
+                />
+              ) : undefined
+            }
+          >
+            <thead>
+              <tr>
+                {previewTable.head.map((label, index) => (
+                  <th
+                    key={label}
+                    className={previewTable.rightAligned.includes(index) ? "text-right" : undefined}
+                  >
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {previewTable.rows.map((row, rowIndex) => (
+                <tr key={rowIndex}>
+                  {row.map((cell, index) => (
+                    <td
+                      key={index}
+                      className={
+                        previewTable.rightAligned.includes(index)
+                          ? "text-right tabular-nums"
+                          : undefined
+                      }
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+            {previewTable.foot && (
+              <tfoot>
+                <tr>
+                  {previewTable.foot.map((cell, index) => (
+                    <td
+                      key={index}
+                      className={
+                        previewTable.rightAligned.includes(index)
+                          ? "text-right tabular-nums font-semibold"
+                          : "font-semibold"
+                      }
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              </tfoot>
+            )}
+          </DashboardTable>
+        </SheetShell>
+      )}
 
       {inventoryDialogReport && (
         <DialogShell

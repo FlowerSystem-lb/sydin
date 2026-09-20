@@ -24529,3 +24529,24 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-phone-hero {
   display: none;
 }
+
+/* ---- REPORT PREVIEW SHEET -------------------------------------------------
+   A money report opens on screen before it is a file. Five to seven
+   columns need more than the 28rem a sheet gets by default. */
+.ui-sheet.report-preview-sheet {
+  width: min(100%, 52rem);
+}
+
+.report-preview-table.dashboard-table-card {
+  border-radius: var(--radius-card);
+}
+
+.report-preview-table .dashboard-table th,
+.report-preview-table .dashboard-table td {
+  white-space: nowrap;
+}
+
+.report-preview-table .dashboard-table tfoot td {
+  border-top: 1px solid var(--border-default);
+  background: var(--bg-inset);
+}
