@@ -4658,3 +4658,14 @@ workspace's containment; the header pill hides). Desktop unchanged.
 Note for the spec: the phone's titles are now bold sans, superseding the
 canvas's serif — Sayed's later instruction ("so different from the
 laptop") wins.
+
+### Same day — "search for the best UI/UX for mobile": phone Home
+
+Pinterest gates search behind a login (not signed in on Sayed's behalf), so
+Dribbble. The two most-viewed inventory-app designs there (Ronas IT 91k,
+OnPoint Studio 124k) share one Home anatomy, now SydIN's phone Home:
+greeting row (logo avatar, "Welcome back", business name, bell → Alerts
+with the low-stock count), one blue hero figure (Sold this month, mono,
+vs-last-month pill, white sparkline, taps to Sales), then the small tiles
+two-up, today line, remaining money tiles, graph, lists. Rendered always,
+shown under 768px only; desktop verified untouched.
