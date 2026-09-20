@@ -60,7 +60,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 48. ✅ Word export for invoice and PO (real DOCX).
 49. ◐ Excel: numeric cells, currency formats; inventory Excel converts to the shown currency.
 50. ◐ Realistic test data: used for PDF rendering; live DB kept clean (no seed set).
-51. ◐ Long-data tests: done for documents; not for every screen.
+51. ◐ Long-data tests: done for documents; 20 Sep — the phone rows (Customers, Sales, Purchase Orders) tried with 70-character names and a 22-character amount in the live DOM: no page overflow, row height unchanged, names truncate with an ellipsis, digits never hidden. Not yet every screen.
 52. ◐ States: loading/empty/error present on all list pages.
 53. ✅ Accessibility: dialogs focus/escape, aria-pressed chips from the earlier audit; 20 Sep sweep of nine pages — no unnamed buttons, no missing alt; FieldRow now wires its label to the control (39 rows were unconnected); Notes/title/file inputs labelled; sub-24px targets brought to 24px.
 54. ✅ Performance: inventory windowed at 60; photos resized to 1600px before upload (19 Sep); 500-item test run 20 Sep on the production build with the list query intercepted in the browser (nothing written): no long tasks, every "Show more" < 50ms, search 32–41ms, 46MB heap fully expanded. Fixed on the way: search-clear re-rendering the whole expanded list, table view rendering both layouts, mobile alert badge capped at 100 rows.
