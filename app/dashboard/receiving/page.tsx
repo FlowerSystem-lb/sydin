@@ -1298,6 +1298,7 @@ export default function ReceivingPage() {
                     description: [item.item_code || item.sku, getDepotLabel(item)]
                       .filter(Boolean)
                       .join(" | "),
+                    image: item.image || null,
                   }))}
                 />
                 <Button variant="secondary" onClick={addInventoryLine}>

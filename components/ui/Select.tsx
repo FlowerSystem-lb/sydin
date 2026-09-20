@@ -19,6 +19,9 @@ export interface SelectOption {
   description?: string;
   keywords?: string;
   disabled?: boolean;
+  /** A product picker shows the photo before the name; null draws the
+   *  "no photo" box so rows stay aligned. Leave undefined for no thumb. */
+  image?: string | null;
 }
 
 interface SelectProps {
@@ -353,6 +356,16 @@ export default function Select({
                         selected && "ui-select-option-selected"
                       )}
                     >
+                      {option.image !== undefined && (
+                        <span className="ui-select-option-thumb" aria-hidden="true">
+                          {option.image ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img src={option.image} alt="" loading="lazy" />
+                          ) : (
+                            <UiIcon name="box" className="h-4 w-4" />
+                          )}
+                        </span>
+                      )}
                       <span className="min-w-0 flex-1">
                         <span className="ui-select-option-label">
                           {option.label}

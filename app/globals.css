@@ -24550,3 +24550,26 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border-top: 1px solid var(--border-default);
   background: var(--bg-inset);
 }
+
+/* ---- PRODUCT PICKER THUMBNAILS -------------------------------------------
+   A Select option with `image` set shows the product photo before the
+   name (invoice and Stock In pickers); null draws the "no photo" box. */
+.ui-select-option-thumb {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  overflow: hidden;
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-control);
+  background: var(--surface-sunken);
+  color: var(--text-subtle);
+}
+
+.ui-select-option-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}

@@ -63,6 +63,7 @@ interface SellableItem {
   selling_price: number | string | null;
   unit_type: string | null;
   custom_unit_label: string | null;
+  image: string | null;
 }
 
 interface DraftLine {
@@ -164,7 +165,7 @@ export default function NewSalePage() {
             supabase
               .from("inventory")
               .select(
-                "id, name, sku, item_code, quantity, selling_price, unit_type, custom_unit_label"
+                "id, name, sku, item_code, quantity, selling_price, unit_type, custom_unit_label, image"
               )
               .eq("user_id", user.id)
               .order("name", { ascending: true }),
@@ -616,6 +617,7 @@ export default function NewSalePage() {
                         label: item.name,
                         description: `${item.quantity} in stock`,
                         keywords: `${item.sku || ""} ${item.item_code || ""}`,
+                        image: item.image || null,
                       }))}
                     />
                   </div>
