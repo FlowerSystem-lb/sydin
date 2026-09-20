@@ -2577,3 +2577,52 @@
     align-self: flex-start;
   }
 }
+
+/* New Purchase Order's Save bar on a phone: the same pin as the invoice's
+   (8px above the scroller's tab-bar reserve; the old 4.5rem offset left it
+   mid-screen) and compact -- number and total on one line, the buttons in
+   one row of pills, 166px → ~110px. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .po-save-bar.po-save-bar {
+    bottom: 8px !important;
+    margin: 8px -4px 0 !important;
+    padding: 10px 12px !important;
+    gap: 8px !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-card) !important;
+    background: #ffffff !important;
+    box-shadow: 0 -4px 20px rgba(24, 24, 27, 0.08) !important;
+  }
+
+  .po-save-bar > .min-w-0 {
+    display: flex;
+    flex: 1 1 100%;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
+
+  .po-save-bar > .min-w-0 p:last-child {
+    margin: 0;
+  }
+
+  .po-save-bar > .flex {
+    flex: 1 1 100%;
+    flex-wrap: nowrap !important;
+  }
+
+  .po-save-bar > .flex > * {
+    flex: 1 1 0;
+    width: auto !important; /* the small-screen "action buttons are 100% wide" rule */
+    min-width: 0;
+    min-height: 44px;
+    padding-inline: 8px;
+    white-space: nowrap;
+    font-size: 13px;
+  }
+
+  /* Cancel is a link away; it needs no equal share of the row. */
+  .po-save-bar > .flex > a:first-child {
+    flex: 0 0 auto;
+  }
+}
