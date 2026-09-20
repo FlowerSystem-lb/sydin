@@ -24573,3 +24573,57 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   height: 100%;
   object-fit: cover;
 }
+
+/* ---- .glass-button ON THE BUTTON SYSTEM ---------------------------------
+   The upgrade panel ("Request Standard"), the request-plan page and the
+   admin plan-requests page still rendered the cyan→violet gradient pill
+   from the glass pass -- the button system above covered .ui-button and
+   the marketing button but never this class. Same four tiers now. */
+.glass-button {
+  min-height: var(--control-h) !important;
+  border-radius: var(--radius-control) !important;
+  padding: 0 1rem !important;
+  font-size: 0.8125rem !important;
+  font-weight: 500 !important;
+  letter-spacing: -0.006em;
+  text-shadow: none !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.glass-button:not(.glass-button-secondary):not(.glass-button-danger) {
+  border: 1px solid #1d4ed8 !important;
+  background: #2563eb !important;
+  background-image: none !important;
+  color: #ffffff !important;
+  box-shadow:
+    0 1px 2px rgba(29, 78, 216, 0.24),
+    0 1px 1px rgba(24, 24, 27, 0.04) !important;
+}
+
+.glass-button-secondary {
+  border: 1px solid var(--border-default) !important;
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-subtle) !important;
+}
+
+.glass-button-danger {
+  border: 1px solid rgba(220, 38, 38, 0.35) !important;
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  color: #b91c1c !important;
+  box-shadow: none !important;
+}
+
+@media (hover: hover) {
+  .glass-button:not(.glass-button-secondary):not(.glass-button-danger):not(:disabled):hover {
+    background: #1d4ed8 !important;
+    transform: translateY(-0.5px);
+  }
+
+  .glass-button-secondary:not(:disabled):hover {
+    background: var(--bg-inset) !important;
+  }
+}

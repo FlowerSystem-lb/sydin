@@ -32,6 +32,14 @@ import {
 import { getDepotsForUser, type Depot } from "@/app/lib/depots";
 import { getInventoryUnitLabel } from "@/app/lib/inventoryItemModel";
 import { getLastDepotId, rememberDepotId } from "@/app/lib/lastUsed";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionCapabilities,
+  getUserSubscription,
+  type UserSubscription,
+} from "@/app/lib/subscription";
 import {
   convertAmount,
   currencyChoicesIncluding,
@@ -129,6 +137,9 @@ export default function NewSalePage() {
   );
 
   const [loading, setLoading] = useState(true);
+  const [subscription, setSubscription] = useState<UserSubscription>(
+    FALLBACK_SUBSCRIPTION
+  );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -156,7 +167,7 @@ export default function NewSalePage() {
           return;
         }
 
-        const [customerRows, depotRows, settings, suggested, itemResult] =
+        const [customerRows, depotRows, settings, suggested, itemResult, plan] =
           await Promise.all([
             getCustomersForUser(user.id),
             getDepotsForUser(user.id),
@@ -169,9 +180,12 @@ export default function NewSalePage() {
               )
               .eq("user_id", user.id)
               .order("name", { ascending: true }),
+            getUserSubscription(user.id),
           ]);
 
         if (!isActive) return;
+
+        setSubscription(plan);
 
         setCustomers(customerRows);
         // A customer id from the URL that is not in the list is dropped, so
@@ -450,6 +464,29 @@ export default function NewSalePage() {
       setSaving(false);
     }
   };
+
+  // Same gate as the Sales list: a Free account reaching this URL directly
+  // gets the padlock, not a form that would fail on save.
+  if (!loading && !getSubscriptionCapabilities(subscription).sales) {
+    return (
+      <main className="operations-workspace">
+        <DashboardPageShell>
+          <DashboardPageHeader
+            eyebrow="Selling"
+            title="New invoice"
+            description="Raise invoices, take payments and see who still owes you."
+          />
+          <LockedFeaturePanel
+            feature="Sales and invoices"
+            benefit="Raise an invoice from your stock, issue it as a PDF with your branding, record part or full payments, and see who still owes you — every sale takes its items out of stock for you."
+            currentPlan={formatPlanName(subscription.plan)}
+            requiredPlan="Standard"
+            source="sales"
+          />
+        </DashboardPageShell>
+      </main>
+    );
+  }
 
   return (
     <main className="operations-workspace">

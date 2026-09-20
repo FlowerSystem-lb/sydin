@@ -4773,3 +4773,19 @@ In pickers did not. The shared Select option takes an optional `image`
 now and draws a 36px thumbnail before the name; both pickers pass it.
 Also confirmed the invoice page's shell grows with content (min-height
 only), so a long invoice cannot clip the way Home did.
+
+### Same day — Sales gated on Free (plan item 1), and the last gradient button
+
+The 4 Sep decision ("Free stops at knowing what you have"; Sales gets a
+capability like Purchase Orders) was only honoured by the Workflows hub
+padlock; the Sales list and New invoice pages opened on Free. Both gate
+now like Purchase Orders, after the plan loads. Proven with the browser
+reading the plan as Free for one load (Response.prototype patched — the
+Supabase client keeps its own fetch reference, so patching window.fetch
+does nothing; worth remembering for the next test like this).
+
+Doing so surfaced the upgrade panel's "Request Standard" button: still the
+cyan→violet gradient pill — the button-system pass covered .ui-button and
+the marketing button but never .glass-button (upgrade panel, request-plan
+page, admin plan requests). On the system now. The request-plan page's
+plan and payment chips were indigo on dark-theme classes; blue tint now.

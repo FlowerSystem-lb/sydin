@@ -349,10 +349,10 @@ function RequestPlanContent() {
                           key={plan}
                           type="button"
                           onClick={() => setSelectedPlan(plan)}
-                          className={`min-h-14 rounded-2xl border px-5 py-4 text-left text-base font-black transition ${
+                          className={`min-h-12 rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
                             selectedPlan === plan
-                              ? "border-indigo-300/50 bg-indigo-500/20 text-white"
-                              : "border-white/10 bg-black/25 text-slate-300 hover:bg-white/[0.06]"
+                              ? "border-[#2563eb] bg-[#e9effc] text-[#1d4ed8]"
+                              : "border-theme bg-theme-surface text-theme-primary hover:bg-theme-inset"
                           }`}
                         >
                           {plan}
@@ -372,10 +372,10 @@ function RequestPlanContent() {
                           key={method}
                           type="button"
                           onClick={() => setPaymentMethod(method)}
-                          className={`min-h-14 rounded-2xl border px-5 py-4 text-left text-base font-black transition ${
+                          className={`min-h-12 rounded-xl border px-4 py-3 text-left text-sm font-semibold transition ${
                             paymentMethod === method
-                              ? "border-indigo-300/50 bg-indigo-500/20 text-white"
-                              : "border-white/10 bg-black/25 text-slate-300 hover:bg-white/[0.06]"
+                              ? "border-[#2563eb] bg-[#e9effc] text-[#1d4ed8]"
+                              : "border-theme bg-theme-surface text-theme-primary hover:bg-theme-inset"
                           }`}
                         >
                           {paymentMethodLabels[method]}

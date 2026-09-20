@@ -678,8 +678,13 @@ and phone — the one QA that cannot be automated.
    test rows removed. From now on SQL phases are applied the same way, not
    pasted by Sayed.
 
-1. **Plan gating for Sales** is written (`sales` capability, Free = false) but
-   has only been seen on a Pro account. Confirm the padlock on a Free account.
+1. ~~**Plan gating for Sales**~~ **Done 20 Sep.** The capability existed but
+   only the Workflows hub honoured it — the Sales list and New invoice pages
+   let a Free account straight in. Both gate now exactly like Purchase Orders
+   (padlock after the plan loads, so a paying account never sees it flash).
+   Proven by making the browser read the plan as Free for one page load
+   (response patched in the browser, nothing written): "Current: Free ·
+   Required: Standard", Request Standard → the request-plan page.
 2. **Mobile screens** — section J's order still stands: Home, Items, Item, More.
    Scan last, and the Scanner is not to be redesigned.
 3. ~~**Pagination**~~ — done 13 Sep as windowing (60 at a time, "Show 60

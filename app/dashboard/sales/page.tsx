@@ -22,6 +22,14 @@ import {
   getOrCreateBusinessSettings,
 } from "@/app/lib/businessSettings";
 import { formatInventoryPrice } from "@/app/lib/inventoryItemModel";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import {
+  FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionCapabilities,
+  getUserSubscription,
+  type UserSubscription,
+} from "@/app/lib/subscription";
 import {
   formatSalesOrderAmount,
   getSalesOrderBalanceInBase,
@@ -59,6 +67,9 @@ export default function SalesPage() {
   );
   const [loading, setLoading] = useState(true);
   const [pageError, setPageError] = useState("");
+  const [subscription, setSubscription] = useState<UserSubscription>(
+    FALLBACK_SUBSCRIPTION
+  );
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
   const [search, setSearch] = useState("");
   const router = useRouter();
@@ -77,13 +88,15 @@ export default function SalesPage() {
           return;
         }
 
-        const [rows, settings] = await Promise.all([
+        const [rows, settings, plan] = await Promise.all([
           getSalesOrdersForUser(user.id),
           getOrCreateBusinessSettings(user.id),
+          getUserSubscription(user.id),
         ]);
 
         if (!isActive) return;
 
+        setSubscription(plan);
         setOrders(rows);
         setCurrencyCode(
           settings?.currency_code || DEFAULT_BUSINESS_SETTINGS.currency_code
@@ -140,6 +153,31 @@ export default function SalesPage() {
       owed: live.reduce((sum, order) => sum + getSalesOrderBalanceInBase(order), 0),
     };
   }, [orders]);
+
+  // Selling is where Free stops, the same line Purchase Orders draws (decision
+  // of 4 Sep: Free is "know what you have"). The Workflows hub already showed
+  // the padlock; the page itself let a Free account straight in. Gated only
+  // once the plan has loaded, so a paying account never sees the lock flash.
+  if (!loading && !pageError && !getSubscriptionCapabilities(subscription).sales) {
+    return (
+      <main className="operations-workspace">
+        <DashboardPageShell>
+          <DashboardPageHeader
+            eyebrow="Selling"
+            title="Sales"
+            description="Raise invoices, take payments and see who still owes you."
+          />
+          <LockedFeaturePanel
+            feature="Sales and invoices"
+            benefit="Raise an invoice from your stock, issue it as a PDF with your branding, record part or full payments, and see who still owes you — every sale takes its items out of stock for you."
+            currentPlan={formatPlanName(subscription.plan)}
+            requiredPlan="Standard"
+            source="sales"
+          />
+        </DashboardPageShell>
+      </main>
+    );
+  }
 
   return (
     <main className="operations-workspace">
