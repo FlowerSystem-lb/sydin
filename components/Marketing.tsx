@@ -4,7 +4,7 @@ import SydINMark from "@/components/brand/SydINMark";
 import PlanCtaLink from "@/components/PlanCtaLink";
 import PricingCardsClient from "@/components/PricingCardsClient";
 import Reveal from "@/components/Reveal";
-import UiIcon from "@/components/UiIcon";
+import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
   PLAN_DEFINITIONS,
   PUBLIC_PLAN_ORDER,
@@ -59,28 +59,34 @@ export const pricingPlans = PUBLIC_PLAN_ORDER.map(
   (planId) => PLAN_DEFINITIONS[planId]
 );
 
-export const featureCards = [
+export const featureCards: { title: string; text: string; icon: UiIconName }[] = [
   {
+    icon: "box",
     title: "Visual inventory",
     text: "Upload product photos so teams can identify items quickly without guessing from a spreadsheet row.",
   },
   {
+    icon: "qr",
     title: "QR item pages",
     text: "Generate public item pages and QR codes that make each product easier to scan, share, and verify.",
   },
   {
+    icon: "clock",
     title: "Item history",
     text: "Keep a clear record of created, edited, and deleted inventory actions for better operational trust.",
   },
   {
+    icon: "alert",
     title: "Low stock tracking",
     text: "Spot items at or below your reorder threshold before stock problems become customer problems.",
   },
   {
+    icon: "scan",
     title: "Mobile workflow",
     text: "Use SydIN comfortably on phone, tablet, and desktop when work happens away from the desk.",
   },
   {
+    icon: "reports",
     title: "Reports and Pick Lists",
     text: "Review stock health and value, then prepare orders or events with active Pick List limits matched to your plan.",
   },

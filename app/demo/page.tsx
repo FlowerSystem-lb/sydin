@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import UiIcon from "@/components/UiIcon";
 import Link from "next/link";
 import {
   DashboardPreview,
@@ -27,21 +28,18 @@ const demoItems = [
     sku: "EVT-018",
     category: "Events",
     quantity: 14,
-    color: "from-indigo-200 via-sky-100 to-cyan-100",
   },
   {
     name: "Ceramic planter",
     sku: "RET-104",
     category: "Retail",
     quantity: 7,
-    color: "from-fuchsia-200 via-violet-100 to-indigo-100",
   },
   {
     name: "Tool case",
     sku: "OPS-032",
     category: "Operations",
     quantity: 28,
-    color: "from-cyan-100 via-slate-100 to-indigo-100",
   },
 ];
 
@@ -103,8 +101,13 @@ export default function DemoPage() {
           {demoItems.map((item, index) => (
             <Reveal key={item.sku} delay={index * 80}>
               <div className="overflow-hidden rounded-[30px] border border-white/10 bg-white/[0.055] shadow-[0_24px_90px_rgba(0,0,0,0.28)] backdrop-blur-2xl">
-                <div className="bg-[#f4f0e8] p-5">
-                  <div className={`h-52 rounded-3xl bg-gradient-to-br ${item.color}`} />
+                {/* The demo has no real photos; the honest stand-in is the
+                    same "no photo" plate the app itself shows, not a pastel
+                    gradient block. */}
+                <div className="p-5">
+                  <div className="flex h-52 items-center justify-center rounded-3xl border border-[var(--border-hairline)] bg-[#f4f4f5] text-[#a1a1aa]">
+                    <UiIcon name="box" className="h-8 w-8" />
+                  </div>
                 </div>
 
                 <div className="p-5">
@@ -118,14 +121,14 @@ export default function DemoPage() {
                       </p>
                     </div>
 
-                    <span className="rounded-2xl border border-indigo-300/25 bg-indigo-500/15 px-3 py-2 text-sm font-black text-indigo-100">
+                    <span className="rounded-lg border border-[var(--border-default)] bg-[#f7f7f8] px-3 py-1.5 text-sm font-semibold text-[#18181b]">
                       Qty {item.quantity}
                     </span>
                   </div>
 
                   {item.quantity <= 10 && (
-                    <span className="mt-5 inline-flex rounded-full border border-red-400/30 bg-red-500/15 px-4 py-2 text-sm font-bold text-red-300">
-                      Low Stock
+                    <span className="mt-5 inline-flex rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-sm font-semibold text-red-700">
+                      Low stock
                     </span>
                   )}
                 </div>
@@ -176,8 +179,10 @@ export default function DemoPage() {
         <Reveal>
           <div className="mx-auto mt-10 max-w-5xl rounded-[32px] border border-white/10 bg-white/[0.045] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-7">
             <div className="grid grid-cols-1 gap-5 md:grid-cols-[0.9fr_1.1fr]">
-              <div className="rounded-3xl bg-[#f4f0e8] p-5">
-                <div className="h-72 rounded-3xl bg-gradient-to-br from-indigo-200 via-fuchsia-100 to-cyan-100" />
+              <div className="p-5">
+                <div className="flex h-72 items-center justify-center rounded-3xl border border-[var(--border-hairline)] bg-[#f4f4f5] text-[#a1a1aa]">
+                  <UiIcon name="box" className="h-10 w-10" />
+                </div>
               </div>
 
               <div>

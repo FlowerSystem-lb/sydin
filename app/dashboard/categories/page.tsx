@@ -120,18 +120,6 @@ const CATEGORY_COPY = {
   addCategory: "Add category",
 } as const;
 
-const markerTones = [
-  "from-cyan-400 to-blue-600",
-  "from-indigo-400 to-violet-600",
-  "from-violet-400 to-fuchsia-600",
-  "from-sky-400 to-indigo-600",
-  "from-teal-400 to-cyan-600",
-];
-
-function getCategoryMarker(categoryId: number) {
-  return markerTones[Math.abs(categoryId) % markerTones.length];
-}
-
 function parseDate(value?: string | null) {
   if (!value) return 0;
   const time = new Date(value).getTime();
@@ -1052,12 +1040,12 @@ export default function CategoriesPage() {
                           }
                           className="flex min-w-0 flex-1 items-center gap-3 rounded-xl px-3 py-2.5 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-indigo-400/15"
                         >
-                          <span
-                            className={`h-8 w-8 shrink-0 rounded-lg bg-gradient-to-br ${getCategoryMarker(
-                              category.id
-                            )} p-[1px] shadow-sm`}
-                          >
-                            <span className="flex h-full w-full items-center justify-center rounded-[7px] bg-white/90 text-indigo-700">
+                          {/* One blue-tinted mark for every category. The
+                              per-category cyan / violet / fuchsia gradient
+                              rings were the old palette; the brief keeps
+                              blue as the only accent. */}
+                          <span className="h-8 w-8 shrink-0 rounded-lg border border-[#c7d7fa] bg-[#e9effc] p-0">
+                            <span className="flex h-full w-full items-center justify-center rounded-[7px] text-[#2563eb]">
                               <UiIcon name="categories" className="h-4 w-4" />
                             </span>
                           </span>
@@ -1147,13 +1135,7 @@ export default function CategoriesPage() {
 
               <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="flex min-w-0 items-center gap-4">
-                  <span
-                    className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${
-                      selectedCategory
-                        ? getCategoryMarker(selectedCategory.id)
-                        : "from-cyan-400 to-indigo-600"
-                    } text-white shadow-[0_10px_24px_rgba(79,70,229,0.2)]`}
-                  >
+                  <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#c7d7fa] bg-[#e9effc] text-[#2563eb]">
                     <UiIcon
                       name={
                         selection.type === "low"

@@ -1159,9 +1159,9 @@ export default function ItemDetailsPage() {
                     Item QR Code
                   </p>
 
-                  <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-indigo-300/25 bg-theme-inset p-5 text-center sm:p-6">
+                  <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-theme bg-theme-inset p-5 text-center sm:p-6">
                     <div className="mb-5 flex flex-col items-center gap-3">
-                      <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-indigo-400 via-violet-500 to-fuchsia-500 text-lg font-black shadow-[0_18px_55px_rgba(99,102,241,0.28)]">
+                      <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-[#c7d7fa] bg-[#e9effc] text-lg font-black text-[#1d4ed8]">
                         {businessSettings.business_logo_url ? (
                           <Image
                             src={businessSettings.business_logo_url}

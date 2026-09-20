@@ -9,6 +9,7 @@ import {
   SectionIntro,
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
+import UiIcon from "@/components/UiIcon";
 
 
 /* Every route shared one title until now, so a tab open on Pricing and
@@ -67,7 +68,11 @@ export default function FeaturesPage() {
           {featureCards.map((feature, index) => (
             <Reveal key={feature.title} delay={index * 70}>
               <div className="h-full rounded-[30px] border border-white/10 bg-white/[0.045] p-6 shadow-[0_24px_90px_rgba(0,0,0,0.25)] backdrop-blur-2xl">
-                <div className="mb-5 h-12 w-12 rounded-2xl bg-gradient-to-br from-indigo-300 via-violet-500 to-fuchsia-500" />
+                {/* Was an empty violet gradient square; now the feature's own
+                    icon on the blue plate the app uses. */}
+                <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl border border-[#c7d7fa] bg-[#e9effc] text-[#2563eb]">
+                  <UiIcon name={feature.icon} className="h-5 w-5" />
+                </div>
 
                 <h2 className="text-2xl font-black">
                   {feature.title}
