@@ -843,11 +843,16 @@ export default function ItemDetailsPage() {
                 </p>
               </div>
 
-              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+              {/* On a phone this was four full-width buttons stacked -- 200px
+                  of buttons before any content, Delete as loud as Edit. Now a
+                  two-column grid: Back as a short link on its own row, Record
+                  and Edit side by side, Delete last. From sm up it is the
+                  same right-aligned row as before. */}
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-end">
                 <ContextBackButton
                   fallbackHref="/dashboard/inventory"
                   label={backLabel}
-                  className="min-h-10 rounded-xl px-3.5 py-2 text-sm"
+                  className="col-span-2 justify-self-start min-h-10 rounded-xl px-3.5 py-2 text-sm"
                 />
 
                 {item && (
@@ -869,6 +874,7 @@ export default function ItemDetailsPage() {
                       disabled={isDeleting}
                       variant="danger"
                       icon="trash"
+                      className="col-span-2"
                     >
                       {isDeleting ? "Deleting..." : "Delete Item"}
                     </ActionButton>
