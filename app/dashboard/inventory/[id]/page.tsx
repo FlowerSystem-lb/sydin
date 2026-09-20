@@ -827,7 +827,7 @@ export default function ItemDetailsPage() {
           is weight doing every job and none of them well. */}
       <main className="item-detail">
         <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-5">
-          <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+          <section className="item-page-header rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">

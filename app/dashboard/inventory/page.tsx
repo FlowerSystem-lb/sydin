@@ -2753,6 +2753,23 @@ export default function InventoryPage() {
                   Add Item
                 </ActionButton>
 
+                {/* The phone's floating "+": same action as Add Item, portalled
+                    to <body> because the workspace's containment traps
+                    position: fixed (see the filter sheet). mobile.css hides
+                    the header pill under 768px. */}
+                {phoneSheet &&
+                  createPortal(
+                    <button
+                      type="button"
+                      onClick={() => openAddModal()}
+                      className="mobile-fab"
+                      aria-label="Add item"
+                    >
+                      <UiIcon name="plus" className="h-6 w-6" />
+                    </button>,
+                    document.body
+                  )}
+
                 <ActionButton
                   onClick={openScanner}
                   disabled={usageLoading}

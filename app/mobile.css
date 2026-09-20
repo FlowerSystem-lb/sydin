@@ -1458,3 +1458,128 @@
     min-height: 0 !important;
   }
 }
+
+/* =========================================================================
+   Phone: the Canva mobile-app language (20 Sep)
+   Sayed asked for the phone to be a different design from the laptop site
+   and pointed at Canva's mobile-app templates. What they share, applied:
+
+   - a soft-coloured HEADER BLOCK with rounded bottom corners, full bleed,
+     holding the title and the page's actions
+   - titles in bold sans, not the laptop's serif
+   - PILL buttons and chips
+   - cards with generous 20px corners on a light ground
+   - one round floating "+" for the page's main creation (Inventory)
+   ========================================================================= */
+@media (max-width: 767px) {
+  /* --- the header block ------------------------------------------------ */
+  /* Triple classes: earlier phone rules reset these headers to
+     background: none at (0,3,0) !important. */
+  .dashboard-shell-content .dashboard-page-header-card.dashboard-page-header-card.dashboard-page-header-card,
+  .dashboard-shell-content .inventory-hero-card.inventory-hero-card.inventory-hero-card,
+  .dashboard-shell-content .ov-head.ov-head.ov-head,
+  .dashboard-shell-content .item-page-header.item-page-header.item-page-header {
+    margin: 0 -13.6px 14px !important;
+    padding: 18px 16px 18px !important;
+    border: 0 !important;
+    border-radius: 0 0 24px 24px !important;
+    background: #e9effc !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell-content .ov-head {
+    padding-top: 22px !important;
+  }
+
+  .dashboard-shell-content .dashboard-page-header-card .dashboard-eyebrow,
+  .dashboard-shell-content .inventory-hero-kicker,
+  .dashboard-shell-content .ov-eyebrow {
+    color: #3b5bb0 !important;
+  }
+
+  /* --- titles: bold sans ---------------------------------------------- */
+  .dashboard-shell-content
+    .dashboard-page-heading.dashboard-page-heading.dashboard-page-heading,
+  .dashboard-shell-content .inventory-hero-title.inventory-hero-title,
+  .ov-title.ov-title,
+  .dashboard-shell-content .ui-page-title {
+    font-family: var(--font-sans, Inter, system-ui, sans-serif) !important;
+    font-size: 28px !important;
+    font-weight: 700 !important;
+    line-height: 1.1 !important;
+    letter-spacing: -0.025em !important;
+    color: var(--text-primary) !important;
+  }
+
+  /* --- pills ------------------------------------------------------------- */
+  .dashboard-shell-content .ui-button,
+  .dashboard-shell-content .dashboard-action-button,
+  .dashboard-shell-content .inventory-page-actions > a,
+  .dashboard-shell-content .inventory-page-actions > button,
+  .dashboard-shell-content .inventory-toolbar-button,
+  .dashboard-shell-content .ui-select-trigger,
+  .dashboard-shell-content .dashboard-top-primary-button,
+  .invoice-save-bar > button,
+  .inventory-filter-panel .ui-button {
+    border-radius: 999px !important;
+  }
+
+  /* --- cards: 20px corners --------------------------------------------- */
+  .dashboard-shell-content .dashboard-card.dashboard-card,
+  .dashboard-shell-content .dashboard-metric-card.dashboard-metric-card,
+  .dashboard-shell-content .dashboard-table-card.dashboard-table-card,
+  .dashboard-shell-content .ov-section,
+  .dashboard-shell-content .ov-figure,
+  .dashboard-shell-content .ov-chart,
+  .dashboard-shell-content .grid:has(> a.dashboard-card),
+  .dashboard-shell-content .inventory-workspace .inventory-stat-grid,
+  .dashboard-shell-content .inventory-item-card--photo .inventory-card-media,
+  .dashboard-shell-content .po-month-group,
+  .dashboard-shell-content .stock-chart {
+    border-radius: 20px !important;
+  }
+
+  /* --- the floating "+" ----------------------------------------------- */
+  .mobile-fab {
+    position: fixed;
+    right: 18px;
+    bottom: calc(92px + env(safe-area-inset-bottom, 0px));
+    z-index: 45;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 56px;
+    height: 56px;
+    border-radius: 999px;
+    background: #2563eb;
+    color: #ffffff;
+    box-shadow:
+      0 2px 4px rgba(29, 78, 216, 0.24),
+      0 10px 24px rgba(37, 99, 235, 0.32);
+    transition: transform 120ms ease;
+  }
+
+  .mobile-fab:active {
+    transform: scale(0.94);
+  }
+
+  .mobile-fab svg {
+    width: 26px;
+    height: 26px;
+  }
+
+  /* With the "+" floating, the header's Add Item pill would say it twice. */
+  .dashboard-shell-content .inventory-hero-actions .inventory-action-primary {
+    display: none !important;
+  }
+
+  .dashboard-shell-content .inventory-hero-actions {
+    grid-template-columns: 1fr auto !important;
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-fab {
+    display: none;
+  }
+}
