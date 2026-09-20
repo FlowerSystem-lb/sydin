@@ -2183,3 +2183,127 @@
     border: 0;
   }
 }
+
+/* Depots on a phone: the list panel is not a card inside the page -- the
+   rows are the cards. The "Saved locations / Depot List" heading repeats
+   the page title and goes; the count stays as a quiet line. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .organize-depots .organize-depot-list-panel.dashboard-card {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .organize-depots .organize-depot-list-panel > div:first-child > div:first-child {
+    display: none;
+  }
+
+  .organize-depots .organize-depot-list-panel > div:first-child > span {
+    border: 0 !important;
+    background: transparent !important;
+    padding: 0 4px !important;
+    color: var(--text-muted) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+  }
+
+  .organize-depots .organize-depot-list-panel .organize-list-grid {
+    margin-top: 12px;
+    gap: 8px;
+  }
+
+  .dashboard-shell-content .organize-depots .organize-depot-row {
+    padding: 14px 14px 14px 16px !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: 20px !important;
+    background: var(--bg-surface) !important;
+  }
+
+  .organize-depots .organize-depot-row h3 {
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  .organize-depots .organize-depot-row p {
+    margin-top: 2px;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+}
+
+/* Stock Movements on a phone: an activity feed. Thumb, item and what
+   happened on the left; the signed change on the right in the figure mono;
+   "before → after" and the date as one quiet line under the item. Replaces
+   the three labelled boxes per movement (globals ~5337). */
+@media (max-width: 767px) {
+  .operations-stock-movements .movement-row {
+    display: grid !important;
+    grid-template-columns: minmax(0, 1fr) auto;
+    /* The second line is one shared cell: the range at its start, the date
+       at its end. A column of its own for the date squeezed the item text. */
+    grid-template-areas:
+      "item change"
+      "range range";
+    column-gap: 12px;
+    row-gap: 2px;
+    align-items: center;
+    padding: 12px 14px !important;
+  }
+
+  .operations-stock-movements .movement-row > div:not(:first-child) {
+    display: block;
+    border-radius: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .operations-stock-movements .movement-row-item {
+    grid-area: item;
+  }
+
+  .operations-stock-movements .movement-row-item > div:first-child {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .operations-stock-movements .movement-row-change {
+    grid-area: change;
+    text-align: right;
+  }
+
+  .operations-stock-movements .movement-row-change p:last-child {
+    margin-top: 0;
+    font-family: var(--font-mono);
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    white-space: nowrap;
+  }
+
+  .operations-stock-movements .movement-row-range {
+    grid-area: range;
+    justify-self: start;
+    padding-left: 56px;
+  }
+
+  .operations-stock-movements .movement-row-date {
+    grid-area: range;
+    justify-self: end;
+    text-align: right;
+  }
+
+  .operations-stock-movements .movement-row-range p:last-child,
+  .operations-stock-movements .movement-row-date p:last-child {
+    margin: 0;
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--text-muted);
+    white-space: nowrap;
+  }
+
+  .operations-stock-movements .movement-row p.sm\:hidden {
+    display: none !important;
+  }
+}

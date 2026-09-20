@@ -308,9 +308,9 @@ export default function StockMovementsPage() {
                 return (
                   <article
                     key={movement.id}
-                    className="grid gap-3 px-4 py-3 sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))] sm:items-center"
+                    className="movement-row grid gap-3 px-4 py-3 sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))] sm:items-center"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
+                    <div className="movement-row-item flex min-w-0 items-center gap-3">
                       <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-theme-inset ring-1 ring-black/5">
                         <ProductThumbnail
                           src={item?.image}
@@ -346,7 +346,7 @@ export default function StockMovementsPage() {
                         )}
                       </div>
                     </div>
-                    <div>
+                    <div className="movement-row-change">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
                         Change
                       </p>
@@ -363,7 +363,7 @@ export default function StockMovementsPage() {
                         {movement.quantity_delta}
                       </p>
                     </div>
-                    <div>
+                    <div className="movement-row-range">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
                         Before → After
                       </p>
@@ -371,7 +371,7 @@ export default function StockMovementsPage() {
                         {movement.quantity_before} → {movement.quantity_after}
                       </p>
                     </div>
-                    <div>
+                    <div className="movement-row-date">
                       <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
                         Date
                       </p>
