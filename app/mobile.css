@@ -1391,3 +1391,26 @@
     animation: none;
   }
 }
+
+/* Toasts on a phone: centred at the bottom, above the tab bar and the
+   home indicator, full width minus the gutters -- where an app puts them. */
+@media (max-width: 767px) {
+  .ui-toast-stack {
+    left: 12px;
+    right: 12px;
+    bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+    width: auto;
+  }
+
+  .ui-toast {
+    box-shadow: 0 8px 24px rgba(24, 24, 27, 0.16);
+  }
+
+  /* Tap feedback on tiles and rows: a slight press, like a native list. */
+  .inventory-workspace .inventory-item-card--photo:active .inventory-card-media,
+  .ov-row:active,
+  .po-history-row:active {
+    transform: scale(0.985);
+    transition: transform 90ms ease;
+  }
+}
