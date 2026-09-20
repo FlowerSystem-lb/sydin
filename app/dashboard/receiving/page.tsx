@@ -1631,7 +1631,7 @@ export default function ReceivingPage() {
               )}
             </section>
 
-            <section className="fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
+            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold text-theme-secondary sm:flex sm:text-left">
                   <span className="rounded-xl bg-cyan-500/10 px-3 py-2 text-theme-accent">
@@ -1644,7 +1644,7 @@ export default function ReceivingPage() {
                     {overReceivedDetails.length} over
                   </span>
                 </div>
-                <div className="flex flex-col gap-2 sm:flex-row">
+                <div className="receiving-step-actions flex flex-col gap-2 sm:flex-row">
                   <Button variant="secondary" onClick={() => setStep("setup")}>
                     Setup
                   </Button>

@@ -2821,3 +2821,46 @@
     padding-inline: 12px !important;
   }
 }
+
+/* Stock In, step 2, on a phone: the laptop's fixed bottom bar is trapped
+   by the workspace's containment and renders in place -- as six stacked
+   full-width buttons. In flow on purpose here, compact: the three counters,
+   then Setup / Receive ordered / Restart in one row of quiet pills, then
+   one primary. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .receiving-step-bar {
+    position: static !important;
+    margin-top: 12px;
+    padding: 12px !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: 20px !important;
+    box-shadow: none !important;
+  }
+
+  .receiving-step-actions {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px !important;
+  }
+
+  .receiving-step-actions > button {
+    width: auto !important;
+    min-height: 40px;
+    padding-inline: 8px !important;
+    font-size: 13px !important;
+    white-space: nowrap;
+  }
+
+  /* Setup | Restart on one row; "Receive ordered quantities" is too long
+     for a third of the width, so it takes a row of its own; then the primary. */
+  .receiving-step-actions > button:nth-child(1) { order: 1; }
+  .receiving-step-actions > button:nth-child(3) { order: 2; }
+  .receiving-step-actions > button:nth-child(2) { order: 3; grid-column: 1 / -1; }
+
+  .receiving-step-actions > button:last-child {
+    order: 4;
+    grid-column: 1 / -1;
+    min-height: 48px;
+    font-size: 15px !important;
+  }
+}
