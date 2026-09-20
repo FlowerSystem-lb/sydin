@@ -4669,3 +4669,11 @@ with the low-stock count), one blue hero figure (Sold this month, mono,
 vs-last-month pill, white sparkline, taps to Sales), then the small tiles
 two-up, today line, remaining money tiles, graph, lists. Rendered always,
 shown under 768px only; desktop verified untouched.
+
+### Same day — item page as the reference product page
+
+Photo hero (full-width on a light plate on the phone, no card-in-a-card),
+then the item's own stock-level chart (the slide-over's component, from the
+movements the page already loads), then facts. Desktop: photo and chart in
+the left column, facts on the right — a first version put the chart in the
+grid's second column, caught by looking.
