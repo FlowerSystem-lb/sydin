@@ -2665,3 +2665,37 @@
     height: 20px;
   }
 }
+
+/* Item panel on a phone, same language as the item page: the photo is a
+   hero on a rounded light plate (not a thin strip), the quantity is in the
+   figure mono like every other number on the phone -- the serif above was
+   the canvas language Sayed's later "so different from the laptop"
+   instruction superseded. */
+@media (max-width: 767px) {
+  .item-details-image-area:not(:has(.item-details-image-placeholder)) {
+    height: clamp(13rem, 34vh, 17rem);
+    margin: 0 0 4px;
+    border: 1px solid var(--border-default);
+    border-radius: 22px;
+    background: var(--surface-sunken);
+    overflow: hidden;
+  }
+
+  .item-details-image-area img {
+    padding: 14px !important;
+  }
+
+  .item-details-quantity-strip > div:first-child strong {
+    font-family: var(--font-mono) !important;
+    font-size: 34px;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+  }
+
+  .item-details-quantity-strip > div:first-child p {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+}
