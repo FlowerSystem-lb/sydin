@@ -24342,3 +24342,85 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   font-family: var(--font-mono);
   font-size: 0.8125rem;
 }
+
+/* ==========================================================================
+   LANDING MOCKUP: THE PRODUCT AS IT IS
+   ==========================================================================
+   The hero's product preview still showed the pre-redesign app -- a cyan
+   gradient on the active nav tile and the Add button, translucent glass
+   cards at 13-22px, gradient dots. Same rule as the sign-in preview:
+   someone reading the landing page should see the thing they will get.
+   ========================================================================== */
+.marketing-site .marketing-product-app {
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-panel);
+  background: var(--surface-page);
+  background-image: none;
+  box-shadow: var(--shadow-elevated);
+}
+
+.marketing-site .marketing-product-rail {
+  background: #fafafa;
+  border-right: 1px solid var(--border-divider);
+  color: var(--text-muted);
+}
+
+.marketing-site .marketing-product-rail-active {
+  background: #ffffff;
+  background-image: none;
+  color: var(--text-primary);
+  border-radius: var(--radius-control);
+  box-shadow:
+    inset 0 0 0 1px var(--border-default),
+    0 1px 2px rgba(24, 24, 27, 0.05);
+}
+
+.marketing-site .marketing-product-rail-active,
+.marketing-site .marketing-product-rail-active * {
+  color: var(--text-primary);
+}
+
+.marketing-site .marketing-product-search {
+  background: #ffffff;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-control);
+  box-shadow: none;
+  color: var(--text-muted);
+}
+
+.marketing-site .marketing-product-add {
+  background: #2563eb;
+  background-image: none;
+  border: 1px solid #1d4ed8;
+  border-radius: var(--radius-control);
+  box-shadow:
+    0 1px 2px rgba(29, 78, 216, 0.24),
+    0 1px 1px rgba(24, 24, 27, 0.04);
+}
+
+.marketing-site .marketing-product-stat,
+.marketing-site .marketing-product-list,
+.marketing-site .marketing-product-card,
+.marketing-site .marketing-product-side-panel {
+  background: #ffffff;
+  background-image: none;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: none;
+}
+
+.marketing-site .marketing-product-dot {
+  background: var(--sydin-blue);
+  background-image: none;
+}
+
+.marketing-site .marketing-product-thumb {
+  background: var(--surface-sunken);
+  background-image: none;
+  border-radius: 8px;
+}
+
+.marketing-site .marketing-product-stock {
+  border-radius: var(--radius-chip);
+}
