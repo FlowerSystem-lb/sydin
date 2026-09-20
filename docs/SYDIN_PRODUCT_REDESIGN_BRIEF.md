@@ -42,7 +42,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 30. ✅ Sidebar expand/collapse: toggle visible in rail, hover-open, one logo, no header wrap.
 31. ✅ Empty space audit on major pages (ongoing).
 32. ◐ Interaction polish: toasts, dialogs, unsaved-changes guard exist; page transitions modest.
-33. ◐ Button audit done page by page in the earlier audit; keep checking new surfaces.
+33. ✅ Button audit — page by page in the earlier audit; 20 Sep: `.glass-button` (upgrade panel, request-plan, admin) was the last class outside the button system and is on it now; the phone surfaces built 20 Sep use pills by design (Canva language).
 34. ✅ Visual QA by screenshot for every change (standing practice).
 35. ✅ Viewports: 375 / 768 / 1024 / 1280 / 1440 / 1920 all measured during the 16–20 Sep redesign; 375 and desktop re-checked after every phone unit on 20 Sep.
 36. ✅ Mobile operations: every phone page in one app language (20 Sep) — Home, Items, Item, Customers, Suppliers, Sales, POs, Categories, Depots, Movements, Activity, Reports, Settings, More, the save bars on the forms, the tile action sheet; installable (manifest + icons). Scan untouched by instruction.

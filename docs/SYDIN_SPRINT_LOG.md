@@ -4805,3 +4805,11 @@ matches when there is a count, and reads soft white on the ink chip.
 Chart axis ticks, the "vs last month" line, the item code beside a name,
 the TODAY label and activity-row dates were --text-subtle (2.6:1); muted
 ink now (4.7:1). Overview, Inventory and Stock Movements pass the probe.
+
+### Same day — no more iPhone zoom on fields
+
+iPhone Safari zooms the page when a focused field's text is under 16px.
+Fields on the phone were 11.9–14px (the invoice form 11.9px), so every
+tap into a field zoomed the page and left it zoomed. All text fields,
+textareas, selects and the Select trigger are 16px under 768px now; the
+fields already had the height. Verified on New invoice, Add item, Settings.

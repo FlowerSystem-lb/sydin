@@ -2789,3 +2789,17 @@
     padding-bottom: 0 !important;
   }
 }
+
+/* iPhone Safari zooms the page when a focused field's text is under 16px.
+   Fields on the phone were 11.9–14px (the invoice form was 11.9px), so
+   every tap into a field zoomed. 16px everywhere a keyboard can open; the
+   fields already have the height for it. Checkboxes and file inputs are
+   not text and keep their size. */
+@media (max-width: 767px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="file"]):not([type="color"]):not([type="submit"]):not([type="button"]),
+  textarea,
+  select,
+  .ui-select-trigger {
+    font-size: 16px !important;
+  }
+}
