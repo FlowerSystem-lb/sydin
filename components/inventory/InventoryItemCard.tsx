@@ -304,7 +304,7 @@ export default function InventoryItemCard({
               style={menuStyle}
               onClick={(event) => event.stopPropagation()}
               onKeyDown={(event) => event.stopPropagation()}
-              className="fixed z-[120] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
+              className="inventory-card-menu fixed z-[120] overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
             >
             <button
               type="button"
