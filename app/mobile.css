@@ -2990,3 +2990,120 @@
     text-align: center;
   }
 }
+
+/* Stock In line rows on a phone: the same compaction as the count rows.
+   Received quantity big on the right; Current / Ordered as chips; unit
+   cost and note side by side; the two row actions as small pills. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .receiving-line-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 88px;
+    grid-template-areas:
+      "head recv"
+      "facts recv"
+      "warn warn"
+      "cost note"
+      "btns btns";
+    gap: 6px 10px;
+    align-items: center;
+    padding: 10px 12px !important;
+    border-radius: 20px !important;
+    background: var(--bg-surface) !important;
+  }
+
+  .receiving-line-row > div:first-child {
+    grid-area: head;
+    min-width: 0;
+  }
+
+  .receiving-line-row > div:nth-child(2) {
+    grid-area: facts;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 0 !important;
+  }
+
+  .receiving-line-row > div:nth-child(2) > div {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    padding: 2px 7px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--surface-sunken) !important;
+    white-space: nowrap;
+  }
+
+  .receiving-line-row > div:nth-child(2) p:first-child {
+    font-size: 9px !important;
+    letter-spacing: 0.04em !important;
+  }
+
+  .receiving-line-row > div:nth-child(2) p:last-child {
+    margin-top: 0 !important;
+    font-size: 12px !important;
+  }
+
+  .receiving-line-row > div:nth-child(3) {
+    display: contents;
+  }
+
+  .receiving-line-row > div:nth-child(3) > label {
+    gap: 2px !important;
+    font-size: 9px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted) !important;
+    white-space: nowrap;
+  }
+
+  .receiving-line-row > div:nth-child(3) > label:nth-of-type(1) {
+    grid-area: recv;
+    text-align: center;
+  }
+
+  .receiving-line-row > div:nth-child(3) > label:nth-of-type(1) input {
+    min-height: 52px !important;
+    padding: 0 6px !important;
+    border-radius: 14px !important;
+    font-family: var(--font-mono);
+    font-size: 20px !important;
+    font-weight: 600;
+    text-align: center;
+  }
+
+  .receiving-line-row > div:nth-child(3) > label:nth-of-type(2) {
+    grid-area: cost;
+  }
+
+  .receiving-line-row > div:nth-child(3) > label:nth-of-type(3) {
+    grid-area: note;
+  }
+
+  .receiving-line-row > div:nth-child(3) > label:nth-of-type(2) input,
+  .receiving-line-row > div:nth-child(3) > label:nth-of-type(3) input {
+    min-height: 36px !important;
+    border-radius: 10px !important;
+    font-size: 14px !important;
+  }
+
+  .receiving-line-row > div:nth-child(3) > p {
+    grid-area: warn;
+    margin: 0;
+    padding: 4px 10px !important;
+    font-size: 11px !important;
+  }
+
+  .receiving-line-row > div:nth-child(3) > div {
+    grid-area: btns;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .receiving-line-row > div:nth-child(3) > div > button {
+    width: auto !important;
+    min-height: 36px;
+    font-size: 12.5px !important;
+  }
+}

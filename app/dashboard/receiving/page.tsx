@@ -1486,7 +1486,7 @@ export default function ReceivingPage() {
                   return (
                     <article
                       key={detail.line.id}
-                      className="rounded-2xl border border-theme bg-theme-inset p-3"
+                      className="receiving-line-row rounded-2xl border border-theme bg-theme-inset p-3"
                     >
                       <div className="flex min-w-0 items-center gap-3">
                         <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-surface ring-1 ring-black/5">
