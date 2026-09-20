@@ -1414,3 +1414,47 @@
     transition: transform 90ms ease;
   }
 }
+
+/* New invoice on a phone: the Save bar is pinned above the tab bar, the
+   way Canva pins "Continue" -- not 400px below the fold. Same idea the
+   New Purchase Order bar already has. */
+@media (max-width: 767px) {
+  .invoice-save-bar {
+    position: sticky;
+    /* The phone scroller already reserves the tab bar's height below its
+       content, so the offset is only the gutter. */
+    bottom: 8px;
+    z-index: 30;
+    margin: 8px -4px 0;
+    padding: 10px 12px calc(10px + 0px);
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    background: #ffffff;
+    box-shadow: 0 -4px 20px rgba(24, 24, 27, 0.08);
+  }
+
+  .invoice-save-bar > p {
+    flex: 1 1 100%;
+    margin: 0 0 4px;
+  }
+
+  .invoice-save-bar > button {
+    flex: 1 1 0;
+    min-height: 48px;
+  }
+}
+
+/* On a phone the page scrolls in .mobile-shell-content. The desktop
+   panel inside it (.dashboard-shell-content) was still declared a scroll
+   container -- overflow-y: auto that never scrolled -- and position:
+   sticky measures against the nearest scroll container, so the pinned
+   Save bars measured against a 1256px box and never showed. Not a
+   scroller on a phone. */
+@media (max-width: 767px) {
+  .mobile-shell .dashboard-shell-content,
+  .mobile-shell .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content {
+    overflow: visible !important;
+    height: auto !important;
+    min-height: 0 !important;
+  }
+}

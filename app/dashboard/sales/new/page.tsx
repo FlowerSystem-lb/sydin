@@ -793,7 +793,9 @@ export default function NewSalePage() {
             />
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-2">
+            {/* invoice-save-bar: pinned above the tab bar on a phone (mobile.css),
+                so Save is never 400px below the fold. Desktop unchanged. */}
+            <div className="invoice-save-bar flex flex-wrap items-center justify-end gap-2">
               {overStock.length > 0 && (
                 <p className="mr-auto text-xs font-semibold text-theme-warning">
                   {overStock.length} line
