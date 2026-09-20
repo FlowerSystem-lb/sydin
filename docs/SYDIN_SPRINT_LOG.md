@@ -4753,3 +4753,14 @@ Vercel: the last six production deploys from `main` are READY. On
 https://sydin.vercel.app the manifest, the three icons, the Apple tags,
 `viewport-fit=cover` and `/dashboard` are all served as built — the
 install-to-home-screen path is live, not just local.
+
+### Same day — phone Home could not scroll (regression, fixed)
+
+Re-walking Home after the rest of the phone was done: it clipped at 900px
+and nothing below the Sales trend could be reached. Cause: the ≤639px
+rule (globals ~6110) that makes the Overview shell a 100svh box with
+overflow hidden, expecting its inner panel to scroll -- and the inner
+panel had been made `overflow: visible` earlier today for the pinned Save
+bars. The shell is ordinary flow on the phone now (mobile.css); the other
+page shells already were. Lesson: after changing which element scrolls,
+re-test every page's bottom, not just the one being fixed.
