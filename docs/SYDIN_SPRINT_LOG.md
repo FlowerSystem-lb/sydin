@@ -4567,3 +4567,14 @@ is nothing to compare. Also added that day: the item panel's stock-level
 step chart on the Activity tab. Not taken from the reference: the "AI
 insight" bar (not a SydIN feature) and the transactions table (Recent
 activity already covers it in list form).
+
+### Same day — more from the reference
+
+Sales list is a table on desktop (Invoice, Customer, Date, Lines, Status,
+Payment, Total; rows open the invoice; phone keeps cards) — the
+reference's transactions table and brief §32; the shared table primitive
+brought onto the card radius/shadow and 11px headers. Figures set in the
+system mono stack (KPI values, graph lead/legend/axis) — the reference's
+numerals. Purchase Orders deliberately left as its month-grouped list:
+receiving progress and owed pills would not survive a seven-column table.
+Graph edge labels anchored inside the plot on phones.
