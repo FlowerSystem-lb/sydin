@@ -847,9 +847,12 @@ export default function InventoryPage() {
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       try {
+        // The remembered "open" is for the desktop's inline panel. On a
+        // phone the panel is a modal sheet, and a sheet must never open by
+        // itself on arrival.
         setFiltersOpen(
           window.localStorage.getItem("sydin:inventory-filters-open") ===
-            "true"
+            "true" && !window.matchMedia("(max-width: 767px)").matches
         );
         const storedPdfSettings = window.localStorage.getItem(
           PDF_SETTINGS_STORAGE_KEY
@@ -942,6 +945,15 @@ export default function InventoryPage() {
 
     return () => window.cancelAnimationFrame(frame);
   }, []);
+
+  const closeFilters = () => {
+    setFiltersOpen(false);
+    try {
+      window.localStorage.setItem("sydin:inventory-filters-open", "false");
+    } catch {
+      // Preference still applies for this session.
+    }
+  };
 
   const toggleFiltersOpen = () => {
     setFiltersOpen((current) => {
@@ -3116,7 +3128,7 @@ export default function InventoryPage() {
                   </button>
                   <button
                     type="button"
-                    onClick={() => setFiltersOpen(false)}
+                    onClick={closeFilters}
                     className="ui-button ui-button-primary flex-1 sm:flex-none"
                   >
                     Apply
