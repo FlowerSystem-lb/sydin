@@ -14,6 +14,7 @@ import BrandMark from "@/components/BrandMark";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
 import ImageLightbox from "@/components/inventory/ImageLightbox";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import StockLevelChart from "@/components/inventory/StockLevelChart";
 import {
   ActionButton,
   LoadingSkeletonGroup,
@@ -927,7 +928,8 @@ export default function ItemDetailsPage() {
           {!loading && item && (
             <>
               <div className="item-detail-split grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-              <section className="rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-4">
+              <div className="item-page-media flex flex-col gap-4">
+              <section className="item-page-photo rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-4">
                 {/* backlog §16E: was a fixed h-240/300px box stretched across
                     the whole ~0.95fr column (~550-580px wide) — a ~1.82:1
                     letterbox shape. Measured with real product photos: a 4:3
@@ -937,7 +939,7 @@ export default function ItemDetailsPage() {
                     Fixed by sizing the frame off `aspect-[4/3]` (matches the
                     common case) capped to a sane width instead of a fixed
                     pixel height stretched to the column's full width. */}
-                <div className="mx-auto flex w-full max-w-[26rem] items-center justify-center rounded-[18px] border border-theme bg-white p-4">
+                <div className="item-page-photo-frame mx-auto flex w-full max-w-[26rem] items-center justify-center rounded-[18px] border border-theme bg-white p-4">
                   {item.image && failedImageSrc !== item.image ? (
                     <button
                       type="button"
@@ -972,6 +974,21 @@ export default function ItemDetailsPage() {
                   )}
                 </div>
               </section>
+
+              {/* The item's own chart under its photo -- the product page of
+                  the reference designs. Same component as the slide-over's
+                  Activity tab; renders nothing until two movements exist. */}
+              <StockLevelChart
+                points={stockMovements.map((movement) => ({
+                  at: movement.created_at,
+                  quantity: movement.quantity_after,
+                }))}
+                threshold={itemLowStockThreshold}
+                unitLabel={(quantity) =>
+                  getInventoryQuantityLabel(quantity, item.unit_type, item.custom_unit_label)
+                }
+              />
+              </div>
 
               <section className="flex flex-col gap-6">
                 <div className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">

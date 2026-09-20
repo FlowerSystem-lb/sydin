@@ -1765,3 +1765,31 @@
     grid-column: 1 / -1;
   }
 }
+
+/* Item page on a phone: the reference's product page -- the photo as a
+   full-width hero on a light plate, then the item's chart, then facts.
+   No card around the photo, no box inside a box. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .item-page-photo.item-page-photo {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell-content .item-page-photo-frame {
+    max-width: none !important;
+    padding: 12px !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: 22px !important;
+    background: var(--surface-sunken) !important;
+  }
+
+  .dashboard-shell-content .item-page-photo .item-photo-empty {
+    padding: 22px 0 !important;
+  }
+
+  .dashboard-shell-content .stock-chart {
+    margin: 0;
+  }
+}
