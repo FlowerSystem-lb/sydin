@@ -4623,3 +4623,12 @@ chevrons; 48px primaries. And the literal half: a web app manifest
 (`app/manifest.ts`), three icons generated from the mark (192 / 512 /
 maskable), apple-touch-icon, iOS web-app meta, `viewport-fit: cover` —
 SydIN installs to the home screen and opens full-screen. Desktop unchanged.
+
+### Same day — more app patterns on the phone
+
+Inventory filters are a bottom sheet (dim backdrop, grab handle, 48px
+Clear/Apply) — needed a portal to `<body>`: the workspace is a query
+container whose layout containment traps `position: fixed`, and the
+toolbar keeps a transform. Apply and Clear became system buttons; the
+selection bar's last cyan border retired. Toasts sit above the tab bar on
+a phone; tiles and rows get a press state. Desktop verified inline.
