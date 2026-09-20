@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 4 September 2026 (Sales & Invoices module · Workflows hub · navigation regrouped · phone navigation unified)
+**Last touched:** 20 September 2026 (visual redesign passes 1–3 · reference-matched graphs · bug hunt · 500-item test · accessibility sweep)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -628,6 +628,46 @@ returns 500 for Supabase-hosted images; production (Vercel) serves them.
 
 ---
 
+## O. Visual redesign — 16–20 September 2026
+
+Sayed: "STOP PATCHING THE CURRENT UI. FULL VISUAL REDESIGN REQUIRED" (51
+sections, 16 Sep), then a reference image (grayscale agency dashboard) with
+"same image, same graph details". Done as three passes, every step
+screenshotted, all on `main`. The sprint log has the detail per commit.
+
+- **Foundation, declared once** at the end of `globals.css`: neutral surfaces
+  (#fafafa page, white cards), ink text scale, hairline borders, 8/12/16px
+  radii, two-layer soft shadows, 36px controls. The blue washes are gone;
+  blue is the one accent ("jewelry"). Every old cyan token remapped.
+- **One button system** (primary blue, secondary white hairline, ghost,
+  restrained danger, icon) — no pills, no gradients. Inputs: hairline, blue
+  focus ring, disabled state. Section eyebrows muted app-wide.
+- **Sidebar** as the reference: grey ground, white lifted active card, 30px
+  rows, grouped with dividers; collapse toggle fixed at the root and verified
+  with real clicks. **Header** quiet and white.
+- **Overview** around the owner's questions: compact KPI tiles with a real
+  "vs last month"; Needs attention as an action centre with inline Restock;
+  Recent activity as a stock feed with deltas and references; and the
+  reference's graphs — Sales trend (pixel bars on a dotted grid, Paid / Still
+  owed, Weekly / Monthly / Yearly) beside a thin-bar Purchases panel. Figures
+  in mono. 1520px ceiling on big monitors.
+- **Landing, sign-in, session gate, Help, Settings, empty states, tables**
+  (Stock Movements and Sales as real tables) all brought onto the system.
+  Item panel gained a stock-level step chart.
+- **Breakpoints** 375 / 768 / 1024 / 1280 / 1440 / 1920 measured; the 1024
+  laptop got its own Inventory header layout.
+- **Found and fixed on the way:** Help could not scroll; photos never
+  compressed on upload (now 1600px / ~8× smaller); mobile alert badge counted
+  100 rows; 39 form labels not wired to their fields; sub-24px targets.
+- **500-product test** run on the production build with the list request
+  intercepted in the browser: no long tasks, every action under 50ms.
+
+**Not from the reference, on purpose:** its "AI insight" bar and "Export
+CSV" header button. **Still Sayed's:** a personal walkthrough on his laptop
+and phone — the one QA that cannot be automated.
+
+---
+
 ## M. What is left
 
 0. ~~Run two SQL files in Supabase~~ **Done 12 Sep 2026** — phases 23 and 24
@@ -642,10 +682,10 @@ returns 500 for Supabase-hosted images; production (Vercel) serves them.
    has only been seen on a Pro account. Confirm the padlock on a Free account.
 2. **Mobile screens** — section J's order still stands: Home, Items, Item, More.
    Scan last, and the Scanner is not to be redesigned.
-3. ~~**Pagination**~~ — done 13 Sep as windowing: Inventory renders 60 items at
-   a time with "Show 60 more"; search, filters and counts still run on the full
-   list, and the window resets when the list changes. The real 500-product
-   test is still to run (the query itself has no limit below Supabase's 1000).
+3. ~~**Pagination**~~ — done 13 Sep as windowing (60 at a time, "Show 60
+   more"). ~~500-product test~~ **Done 20 Sep** on the production build, list
+   request intercepted in the browser, nothing written: no long tasks, every
+   "Show more" under 50ms, search 32–41ms.
 4. **Limits and abuse** — rate limiting needs Supabase settings + Vercel Pro.
 5. ~~`po-attachments` is public-read~~ **Done 12 Sep 2026** — bucket private,
    owner-only read policy, the app opens attachments through one-hour signed
