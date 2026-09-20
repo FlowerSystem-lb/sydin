@@ -4632,3 +4632,15 @@ container whose layout containment traps `position: fixed`, and the
 toolbar keeps a transform. Apply and Clear became system buttons; the
 selection bar's last cyan border retired. Toasts sit above the tab bar on
 a phone; tiles and rows get a press state. Desktop verified inline.
+
+### Same day — pinned Save on the phone, and a sheet that opened itself
+
+New invoice's Save was 400px below the fold on a phone; pinned above the
+tab bar now. Root cause for it not pinning at first: on a phone the page
+scrolls in `.mobile-shell-content`, but the desktop panel inside was still
+declared a scroll container, and sticky measures against that — it is no
+longer a scroller on phones, which also makes the PO bar pin properly.
+Then the filter sheet appeared on arrival: the panel's open state is
+remembered for the desktop's inline panel, Apply closed without updating
+it, and on a phone the memory became a modal sheet. Apply records
+"closed"; the memory is honoured on desktop only.
