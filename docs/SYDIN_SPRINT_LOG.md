@@ -4746,3 +4746,10 @@ phone meant finding a file afterwards. Now "View report": the table opens
 in a sheet (52rem on a laptop, full width on a phone) with Download PDF
 and Export CSV in its footer. Same ReportTable feeds all three, so the
 numbers cannot disagree. Brief point 22 updated.
+
+### Same day — live check
+
+Vercel: the last six production deploys from `main` are READY. On
+https://sydin.vercel.app the manifest, the three icons, the Apple tags,
+`viewport-fit=cover` and `/dashboard` are all served as built — the
+install-to-home-screen path is live, not just local.
