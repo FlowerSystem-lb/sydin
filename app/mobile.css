@@ -2486,3 +2486,94 @@
     min-height: 48px;
   }
 }
+
+/* Settings on a phone: the five sections are a scrolling row of pill tabs
+   under the header (the laptop's sidebar list with descriptions is 300px
+   of the screen before any setting). The panel is the page, not a card,
+   and its own heading row -- which repeats the tab and the page title --
+   is not shown. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .settings-layout {
+    gap: 12px !important;
+  }
+
+  .dashboard-shell-content .settings-sidebar.dashboard-card {
+    margin: 0 -13.6px !important;
+    padding: 0 13.6px !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .dashboard-shell-content .settings-sidebar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dashboard-shell-content .settings-sidebar nav {
+    display: flex !important;
+    flex-wrap: nowrap;
+    gap: 8px !important;
+    width: max-content;
+    min-width: 100%;
+  }
+
+  .dashboard-shell-content .settings-sidebar .settings-nav-item {
+    width: auto !important;
+    min-height: 40px !important;
+    padding: 0 16px !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: 999px !important;
+    background: var(--bg-surface) !important;
+    color: var(--text-primary) !important;
+    white-space: nowrap;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell-content .settings-sidebar .settings-nav-item::before,
+  .dashboard-shell-content .settings-sidebar .settings-nav-item::after {
+    display: none !important;
+  }
+
+  .dashboard-shell-content .settings-sidebar .settings-nav-item-active {
+    border-color: #18181b !important;
+    background: #18181b !important;
+    color: #ffffff !important;
+  }
+
+  .dashboard-shell-content .settings-sidebar .settings-nav-item > svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .dashboard-shell-content .settings-sidebar .settings-nav-item > span > span:first-child {
+    font-size: 14px !important;
+    font-weight: 600 !important;
+  }
+
+  .dashboard-shell-content .settings-sidebar .settings-nav-item > span > span:last-child {
+    display: none !important;
+  }
+
+  .dashboard-shell-content .settings-panel.dashboard-card {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell-content .settings-panel > div:first-child {
+    display: none !important;
+  }
+}
+
+@media (max-width: 767px) {
+  /* A badge in the header's action slot is a label, not a button. */
+  .dashboard-shell-content .dashboard-page-actions > .ui-badge {
+    width: auto !important;
+    justify-self: start;
+    align-self: flex-start;
+  }
+}
