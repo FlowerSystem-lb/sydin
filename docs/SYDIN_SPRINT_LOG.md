@@ -4644,3 +4644,17 @@ Then the filter sheet appeared on arrival: the panel's open state is
 remembered for the desktop's inline panel, Apply closed without updating
 it, and on a phone the memory became a modal sheet. Apply records
 "closed"; the memory is honoured on desktop only.
+
+### Same day — "find the design on Canva": the phone's own language
+
+Sayed: search Canva for mobile UI/UX; every phone page must be different
+from the laptop site. Canva's mobile-app templates share one language,
+now applied on the phone: a soft blue full-bleed header block with 24px
+rounded bottom holding the title and actions (shared page header,
+Inventory hero, Overview head, item page); bold sans titles instead of the
+serif; pill buttons and controls; 20px corners on cards, figures, groups
+and photo tiles; a round floating "+" on Inventory (portalled past the
+workspace's containment; the header pill hides). Desktop unchanged.
+Note for the spec: the phone's titles are now bold sans, superseding the
+canvas's serif — Sayed's later instruction ("so different from the
+laptop") wins.
