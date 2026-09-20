@@ -4836,3 +4836,14 @@ thumb and name, the counted box big in mono on the right, unit and
 expected as chips, the note small, the difference under the box. Counting
 a hundred items is ~40% less scrolling. Drafts created for the check were
 device-local and cleared. Desktop renders its own table, untouched.
+
+### 21 Sep — invoice and purchase-order lines on a phone
+
+The invoice line hid its Qty / Price labels below sm (`sr-only
+sm:not-sr-only`), so a phone showed two unlabelled boxes, one of them
+empty. Labels shown (Tailwind's sr-only also sets clip-path, which had
+to be undone too), Qty | Price side by side, total and remove on one row.
+The purchase-order line, five things stacked in one column, gets the same
+shape (Qty | Unit cost, then Category or Line total | remove), and its
+second row reads as one sentence with the note under it. Desktop's
+five-column row untouched.

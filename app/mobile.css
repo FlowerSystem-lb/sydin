@@ -3107,3 +3107,89 @@
     font-size: 12.5px !important;
   }
 }
+
+/* Invoice and purchase-order lines on a phone. The invoice hid the Qty /
+   Price labels below sm (sr-only), leaving two unlabelled boxes, one of
+   them empty; the PO stacked five things in one column. Both: name on top,
+   the two fields side by side with their labels, total and the remove
+   button on one row. */
+@media (max-width: 767px) {
+  .sale-line {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-areas:
+      "name name"
+      "qty price"
+      "total remove";
+    align-items: end;
+  }
+
+  .sale-line > div:first-child { grid-area: name; }
+  .sale-line > label:nth-of-type(1) { grid-area: qty; }
+  .sale-line > label:nth-of-type(2) { grid-area: price; }
+  .sale-line > p { grid-area: total; align-self: center; }
+  .sale-line > button { grid-area: remove; justify-self: end !important; }
+
+  .sale-line > label > span.sr-only {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    overflow: visible !important;
+    clip: auto !important;
+    clip-path: none !important;
+    padding: 0 !important;
+    white-space: normal !important;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .sale-line .sale-input,
+  li:has(> div:first-child > .po-line-remove) .sale-input {
+    min-height: 44px !important;
+  }
+
+  li:has(> div:first-child > .po-line-remove) > div:first-child {
+    grid-template-columns: 1fr 1fr !important;
+    grid-template-areas:
+      "name name"
+      "qty cost"
+      "total remove";
+    align-items: end;
+  }
+
+  li:has(> div:first-child > .po-line-remove) > div:first-child > div:first-child { grid-area: name; }
+  li:has(> div:first-child > .po-line-remove) > div:first-child > label:nth-of-type(1) { grid-area: qty; }
+  li:has(> div:first-child > .po-line-remove) > div:first-child > label:nth-of-type(2) { grid-area: cost; }
+  li:has(> div:first-child > .po-line-remove) > div:first-child > div:nth-of-type(2),
+  li:has(> div:first-child > .po-line-remove) > div:first-child > .ui-select { grid-area: total; }
+  li:has(> div:first-child > .po-line-remove) > div:first-child > .po-line-remove {
+    grid-area: remove;
+    justify-self: end !important;
+  }
+
+  li:has(> div:first-child > .po-line-remove) > div:first-child > label > span,
+  li:has(> div:first-child > .po-line-remove) > div:first-child > div:nth-of-type(2) > span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* The line's second row: the stock toggle reads as one sentence, the
+     note takes its own line. */
+  li:has(> div:first-child > .po-line-remove) > div:nth-child(2) > label:first-child {
+    align-items: flex-start;
+    font-size: 12.5px;
+    line-height: 1.4;
+  }
+
+  li:has(> div:first-child > .po-line-remove) > div:nth-child(2) input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 1px;
+  }
+}

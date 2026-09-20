@@ -685,7 +685,7 @@ export default function NewSalePage() {
                          about a group of fields. */
                       <li
                         key={line.key}
-                        className="grid gap-2 border-b border-theme px-1 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_5rem_7rem_6rem_auto] sm:items-center"
+                        className="sale-line grid gap-2 border-b border-theme px-1 py-2.5 last:border-b-0 sm:grid-cols-[minmax(0,1fr)_5rem_7rem_6rem_auto] sm:items-center"
                       >
                         <div className="min-w-0">
                           {line.itemId === null ? (
