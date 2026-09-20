@@ -4821,3 +4821,18 @@ Alerts, Stock In, Help and an invoice: the Home section links and the
 chart period buttons were 24px tall, the PO month header 32px; 36px+ now.
 Stock In step 2 walked on the phone (draft created and cleared on this
 device only): the item picker shows photos there too.
+
+### Same day — the step bars and the count rows on a phone
+
+The wizards' fixed bottom bars (Stock In steps 2 and 3, Stock Counts
+steps 2 and 3) are trapped by the workspace's containment on a phone and
+rendered in place as a stack of full-width buttons. All four are in flow
+now, compact: counters or the confirm line, two quiet buttons side by
+side (the long "Receive ordered quantities" on its own row), one primary.
+
+A Stock Counts row on the phone was ~260px: thumb, two fact boxes, a
+full-width counted field, a full-width note, the difference. 147px now:
+thumb and name, the counted box big in mono on the right, unit and
+expected as chips, the note small, the difference under the box. Counting
+a hundred items is ~40% less scrolling. Drafts created for the check were
+device-local and cleared. Desktop renders its own table, untouched.
