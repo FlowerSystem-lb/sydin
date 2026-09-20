@@ -369,6 +369,20 @@ export const HELP_ARTICLES: HelpArticle[] = [
     action: "Open Reports",
     keywords: "excel csv pdf download backup",
   },
+  {
+    id: "money-reports",
+    category: "reports",
+    title: "See what you sold and who still owes",
+    summary: "Sales by month, outstanding invoices, top items, sales by customer, purchases by supplier.",
+    steps: [
+      "Reports > View report on any money report: the table opens on screen first.",
+      "Set From / To above the list to limit every money report to one period; leave blank for all time.",
+      "Download PDF or Export CSV from the bottom of the open report. Drafts and cancelled documents are never counted.",
+    ],
+    href: "/dashboard/reports",
+    action: "Open Reports",
+    keywords: "sales month outstanding owed overdue top selling customer supplier purchases payments",
+  },
 
   /* ---- Settings & plan ---------------------------------------------------- */
   {
