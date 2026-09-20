@@ -4590,3 +4590,13 @@ radial under a white wash, Stock In had tinted tiles and a hint. All retired
 at matching specificity; re-scan: zero hits. Active filter chips are ink on
 white everywhere. Mono figures extended to every page's stat tiles and table
 amounts.
+
+### Same day — phone pass by eye
+
+Colour scan at 375: one hit, the Scan tab's sky-to-blue gradient (now solid
+blue, in `mobile.css`). By eye: Photo grid cards drew the name and price
+over the photo — the phone rule set the photo box `static` while the fill
+image is `absolute`, so it escaped to the card; `relative` fixes it. Item
+page stacked four full-width buttons; now a two-column grid (Back link,
+Record + Edit side by side, Delete). Mono-figures rule had caught h1–h3;
+headings excluded.
