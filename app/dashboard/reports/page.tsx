@@ -1181,7 +1181,7 @@ export default function ReportsPage() {
               return (
                 <article
                   key={report.id}
-                  className={`flex flex-col rounded-[18px] border border-theme bg-theme-surface shadow-[0_10px_30px_rgba(15,23,42,0.06)] ${
+                  className={`report-card flex flex-col rounded-[18px] border border-theme bg-theme-surface shadow-[0_10px_30px_rgba(15,23,42,0.06)] ${
                     isWorkflowShortcut ? "min-h-0 p-3" : "min-h-52 p-4"
                   }`}
                 >
