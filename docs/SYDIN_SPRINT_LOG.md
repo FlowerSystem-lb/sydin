@@ -4724,3 +4724,17 @@ all pushed:
 - Checked and left: Stock In wizard, Stock Counts, Reports, Pick Lists,
   Help, Alerts, Add-item sheet. Home tab exists under the localhost-only
   Next badge.
+
+### Same day — sweep after the phone work
+
+- **Reports on a phone**: compact rows (120–135px, were ~330px cards).
+- **Installed app**: the tab bar grows by the iPhone home-indicator inset
+  instead of squeezing its tabs into it; the scroller reserves the same.
+- **Link and console sweep**: 38 internal links from the main pages, all
+  respond; console clean on Overview / Inventory / POs / Sales.
+- **Not-found pages**: missing invoice (was a red line and a bare link) and
+  missing item (a hand-rolled 32px card) now use the shared empty state.
+- **Status tones**: Sales drew its own rounded pill; it uses the shared
+  Badge and the PO tone map. Brief points 35, 36, 38 ticked; 61 updated.
+- Sayed: "logo of mobile app is good" — the home-screen icon stays.
+- Plan of record and its shared mirror: Phase 6 (mobile) marked done.
