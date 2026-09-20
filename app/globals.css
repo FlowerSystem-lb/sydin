@@ -24424,3 +24424,85 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .marketing-site .marketing-product-stock {
   border-radius: var(--radius-chip);
 }
+
+/* ==========================================================================
+   THE INVENTORY PAGE'S OLD SKIN, RETIRED
+   ==========================================================================
+   A colour scan of every computed style on the Inventory page (20 Sep)
+   found a cluster of `.dashboard-shell:has(.inventory-workspace) ...`
+   rules from an earlier glass pass still winning there: a cyan-to-violet
+   gradient on the header's Add button, a blue-grey canvas, a cyan tint on
+   the active filter chip and on the four stat icons, a cyan gradient on
+   the phone's Scan tile, and a blue radial under the sidebar. Same
+   selectors, declared last, so the system applies on this page too.
+   ========================================================================== */
+.dashboard-shell:has(.inventory-workspace) .dashboard-top-primary-button {
+  background: #2563eb !important;
+  background-image: none !important;
+}
+
+.dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas {
+  background: var(--surface-page) !important;
+}
+
+.dashboard-shell.dashboard-workspace-shell .dashboard-sidebar.glass-navigation,
+.dashboard-shell:has(.inventory-workspace) .dashboard-sidebar {
+  background-image: none !important;
+}
+
+/* Active filter chip: ink on white, everywhere. Pick Lists already read
+   this way; Inventory's quick filters were the last cyan tint. */
+.dashboard-filter-chip-active,
+.dashboard-shell:has(.inventory-workspace) .inventory-quick-filter.dashboard-filter-chip-active,
+.inventory-workspace .inventory-quick-filter.dashboard-filter-chip-active {
+  background: var(--text-primary) !important;
+  background-image: none !important;
+  border-color: var(--text-primary) !important;
+  color: #ffffff !important;
+}
+
+/* Stat icons: a neutral tile. The number beside them is the point. */
+.dashboard-metric-icon,
+.dashboard-shell:has(.inventory-workspace) .inventory-stat-grid .dashboard-metric-icon {
+  background: var(--surface-sunken) !important;
+  background-image: none !important;
+  border-color: var(--border-hairline) !important;
+  color: var(--text-secondary) !important;
+}
+
+/* Phone folder chips: the active one is the sidebar's white lifted card. */
+.inventory-mobile-folder.inventory-mobile-folder-active {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: var(--border-default) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.05) !important;
+}
+
+/* The phone's Scan tile: solid brand blue. */
+.dashboard-mobile-scan-icon {
+  background: var(--sydin-blue) !important;
+  background-image: none !important;
+}
+
+/* The canvas behind every page still carried a blue radial under a white
+   wash (the sidebar's old "light" copied here). Ground colour, no image. */
+.dashboard-main-canvas,
+.dashboard-shell.dashboard-workspace-shell .dashboard-main-canvas,
+.dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas {
+  background-color: var(--surface-page) !important;
+  background-image: none !important;
+}
+
+/* Stock In: the two history stat tiles and the "buying from a supplier?"
+   hint were the last cyan tints on that page. */
+.receiving-history-stat {
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  border-color: var(--border-default) !important;
+}
+
+.receiving-po-hint {
+  background: var(--bg-inset) !important;
+  border-color: var(--border-default) !important;
+}
