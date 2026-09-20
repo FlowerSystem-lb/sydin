@@ -2307,3 +2307,69 @@
     display: none !important;
   }
 }
+
+/* Activity on a phone: a feed, like Stock Movements. Icon, event and one
+   quiet line; the before / change / after figures as one compact row of
+   small mono figures under it, not three cards. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .activity-entry {
+    padding: 12px 14px !important;
+    border: 1px solid var(--border-default) !important;
+    border-radius: 20px !important;
+    background: var(--bg-surface) !important;
+  }
+
+  .activity-entry-inner {
+    gap: 8px !important;
+  }
+
+  .activity-entry-head {
+    gap: 12px !important;
+  }
+
+  .activity-entry-icon {
+    width: 44px !important;
+    height: 44px !important;
+    margin-top: 0 !important;
+    border-radius: 999px !important;
+  }
+
+  .activity-entry-body h3 {
+    font-size: 15px !important;
+    font-weight: 700 !important;
+    line-height: 1.25 !important;
+  }
+
+  .activity-entry-body p {
+    margin-top: 2px !important;
+    font-size: 12.5px !important;
+    line-height: 1.4 !important;
+  }
+
+  .activity-entry-figures {
+    display: flex !important;
+    flex-wrap: wrap;
+    gap: 4px 18px !important;
+    min-width: 0 !important;
+    padding-left: 56px;
+  }
+
+  .activity-figure {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+  }
+
+  .activity-figure p:first-child {
+    font-size: 10px !important;
+    letter-spacing: 0.08em !important;
+  }
+
+  .activity-figure p:last-child {
+    margin-top: 0 !important;
+    font-family: var(--font-mono);
+    font-size: 14px !important;
+    font-weight: 600 !important;
+    letter-spacing: -0.01em;
+  }
+}

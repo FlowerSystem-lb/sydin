@@ -249,12 +249,12 @@ export default function ActivityPage() {
             return (
               <div
                 key={event.id}
-                className="rounded-[18px] border border-theme bg-theme-inset p-4"
+                className="activity-entry rounded-[18px] border border-theme bg-theme-inset p-4"
               >
-                <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                  <div className="flex items-start gap-4">
+                <div className="activity-entry-inner flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                  <div className="activity-entry-head flex items-start gap-4">
                     <div
-                      className={`mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-${toneColor}-300/25 bg-${toneColor}-500/15 text-sm font-black`}
+                      className={`activity-entry-icon mt-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-${toneColor}-300/25 bg-${toneColor}-500/15 text-sm font-black`}
                       style={{
                         borderColor: `rgb(from ${toneColor === "emerald" ? "#10b981" : toneColor === "violet" ? "#8b5cf6" : toneColor === "red" ? "#ef4444" : toneColor === "amber" ? "#f59e0b" : "#64748b"} r g b / 0.25)`,
                         backgroundColor: `rgb(from ${toneColor === "emerald" ? "#10b981" : toneColor === "violet" ? "#8b5cf6" : toneColor === "red" ? "#ef4444" : toneColor === "amber" ? "#f59e0b" : "#64748b"} r g b / 0.15)`,
@@ -273,7 +273,7 @@ export default function ActivityPage() {
                       <UiIcon name={icon as UiIconName} className="h-5 w-5" />
                     </div>
 
-                    <div className="flex-1">
+                    <div className="activity-entry-body flex-1">
                       <h3 className="text-xl font-bold text-theme-primary">
                         {label}
                       </h3>
@@ -316,9 +316,9 @@ export default function ActivityPage() {
 
                   {(event.quantityBefore !== undefined ||
                     event.quantityAfter !== undefined) && (
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[520px]">
+                    <div className="activity-entry-figures grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[520px]">
                       {event.quantityBefore !== undefined && (
-                        <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                        <div className="activity-figure rounded-2xl border border-theme bg-theme-surface p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                             Before
                           </p>
@@ -330,7 +330,7 @@ export default function ActivityPage() {
                       )}
 
                       {event.quantityDelta !== undefined && (
-                        <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                        <div className="activity-figure rounded-2xl border border-theme bg-theme-surface p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                             Change
                           </p>
@@ -350,7 +350,7 @@ export default function ActivityPage() {
                       )}
 
                       {event.quantityAfter !== undefined && (
-                        <div className="rounded-2xl border border-theme bg-theme-surface p-4">
+                        <div className="activity-figure rounded-2xl border border-theme bg-theme-surface p-4">
                           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
                             After
                           </p>
