@@ -24291,3 +24291,32 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     background: var(--bg-inset);
   }
 }
+
+/* ==========================================================================
+   FIGURES IN MONO -- the reference's numerals
+   ==========================================================================
+   Every number on the reference dashboard is set in a monospace face:
+   "$20,320", "10,320", the axis, the table amounts. It is what makes the
+   page read as a ledger rather than a brochure. Applied to the figures
+   only -- KPI values, the graph's lead figure and legend amounts, the
+   axis -- never to running text or labels. System mono stack, no new
+   font file.
+   ========================================================================== */
+.ov-figure-value,
+.ov-chart-lead-figure strong,
+.ov-chart-legend b,
+.ov-chart-tip strong,
+.ov-chart-axis,
+.ov-figure-compare b {
+  font-family: var(--font-mono);
+  letter-spacing: -0.01em;
+}
+
+/* Mono runs a touch wide; the same visual size needs a step down. */
+.ov-figure-value {
+  font-size: 1.375rem;
+}
+
+.ov-chart-lead-figure strong {
+  font-size: 1.125rem;
+}
