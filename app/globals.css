@@ -24320,3 +24320,25 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-chart-lead-figure strong {
   font-size: 1.125rem;
 }
+
+/* The same numerals on every other page's figures: the shared MetricCard
+   (Inventory, Alerts, Purchase Orders, Reports) and the hand-rolled tiles
+   that use Tailwind's text-2xl/3xl with tabular-nums or font-black
+   (Sales, Stock In, Stock Counts, Pick Lists, Suppliers...). font-black
+   figures step to 600 -- mono at 900 is a wall. */
+.dashboard-metric-card strong,
+.dashboard-theme .text-2xl.tabular-nums,
+.dashboard-theme .text-3xl.tabular-nums,
+.dashboard-theme .text-2xl.font-black,
+.dashboard-theme .text-3xl.font-black {
+  font-family: var(--font-mono);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* Table amounts too: the reference's table numbers are mono. Only cells
+   marked tabular-nums -- dates, counts and money -- never the text cells. */
+.dashboard-table td.tabular-nums {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+}
