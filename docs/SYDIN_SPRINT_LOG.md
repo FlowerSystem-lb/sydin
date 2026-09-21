@@ -4981,3 +4981,10 @@ light page: stat numbers invisible, detail blocks unreadable, status
 badges blank. A scoped mapping (`.admin-console`) puts those classes onto
 the light token system without rewriting 1,280 lines; the status badges
 get dark tints of their hues. Contrast probe clean.
+
+### 21 Sep — closing checks on the public and admin surfaces
+
+Admin console on a phone: usable, search text now clears its icon.
+Sign-up, Terms and Privacy checked on a phone: 16px fields, no sideways
+scroll, no gradients, links resolve. Excel exporters read: numeric cells
+and currency formats throughout (brief point 49 closed).
