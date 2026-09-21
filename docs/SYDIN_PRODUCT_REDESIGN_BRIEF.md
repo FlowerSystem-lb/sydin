@@ -58,7 +58,7 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 46. ✅ Report exports (PDF/CSV) per report; a date range above the report grid narrows every sales, purchase and payment report before export (Stock Aging is a snapshot of today and ignores it) — the range is stated in the exported file's own subtitle (14 Sep).
 47. ✅ Branded PDF reports: title, date, table, totals, page numbers. Stress-tested with a synthetic 60-row report forced across 3 pages: repeated header/logo and column headings on every page, correct running total, no clipped rows, no footer overlap (15 Sep).
 48. ✅ Word export for invoice and PO (real DOCX).
-49. ◐ Excel: numeric cells, currency formats; inventory Excel converts to the shown currency.
+49. ✅ Excel: numeric cells with currency number formats on invoice, PO and inventory exports (checked in the exporters 21 Sep: quantities General, prices and totals in the document currency format, the total row a number, not text); inventory Excel converts to the shown currency.
 50. ◐ Realistic test data: used for PDF rendering; live DB kept clean (no seed set).
 51. ◐ Long-data tests: done for documents; 20 Sep — the phone rows (Customers, Sales, Purchase Orders) tried with 70-character names and a 22-character amount in the live DOM: no page overflow, row height unchanged, names truncate with an ellipsis, digits never hidden. Not yet every screen.
 52. ✅ States: loading / empty / error on every list page (audited 20 Sep: every page with a load has a skeleton, a shared empty state and a danger notice or a safe fallback; the only silent paths are the plan lookup on Workflows and the photo-target list on Import, which fall back to "everything shown" by design).
