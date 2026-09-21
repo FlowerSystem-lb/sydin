@@ -4903,3 +4903,12 @@ the file is a stack; only the browser tells the truth). The main
 stylesheet is 83 KB brotli over the wire on the live site. Landscape
 phone (812×375) gets the tablet layout: hamburger header, no tab bar, no
 sideways scroll.
+
+### 21 Sep — confirms, the floating +, reduced motion
+
+Delete customer and Delete draft confirmed with the blue primary and
+Categories hand-rolled a solid red button; every destructive confirm now
+uses the shared Button, variant="danger" (Depots, Items, POs and Pick
+Lists already did). The Inventory list keeps 72px clear under the
+floating "+" so the last tile is never under it. The action sheet and
+the dialog sheets skip their slide-up under prefers-reduced-motion.
