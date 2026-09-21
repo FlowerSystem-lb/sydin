@@ -478,7 +478,7 @@ export default function PickListsPage() {
                   <Link
                     key={list.id}
                     href={`/dashboard/pick-lists/${list.id}`}
-                    className="dashboard-card group flex min-h-72 flex-col transition hover:-translate-y-0.5 hover:border-sydin-blue/25"
+                    className="pick-list-card dashboard-card group flex min-h-72 flex-col transition hover:-translate-y-0.5 hover:border-sydin-blue/25"
                   >
                     <div className="flex items-start justify-between gap-4">
                       <div className="min-w-0">
@@ -505,7 +505,7 @@ export default function PickListsPage() {
                       </div>
                       <div className="mt-2 h-2 overflow-hidden rounded-full bg-theme-surface">
                         <div
-                          className="h-full rounded-full bg-[linear-gradient(90deg,#10c4dc,#2563eb)]"
+                          className="h-full rounded-full bg-[#2563eb]"
                           style={{ width: `${progress}%` }}
                         />
                       </div>

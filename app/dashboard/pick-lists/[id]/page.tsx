@@ -659,7 +659,7 @@ export default function PickListDetailPage() {
               ].join("  ·  ")}
               actions={
                 <span
-                  className={`rounded-full border px-3 py-1.5 text-xs font-black ${statusClasses[detail.status]}`}
+                  className={`ui-badge rounded-full border px-3 py-1.5 text-xs font-black ${statusClasses[detail.status]}`}
                 >
                   {statusLabels[detail.status]}
                 </span>
@@ -781,7 +781,7 @@ export default function PickListDetailPage() {
               aria-valuenow={progress.percent}
             >
               <div
-                className="h-full rounded-full bg-[linear-gradient(90deg,#10c4dc,#2563eb_58%,#7d5cff)]"
+                className="h-full rounded-full bg-[#2563eb]"
                 style={{ width: `${progress.percent}%` }}
               />
             </div>
