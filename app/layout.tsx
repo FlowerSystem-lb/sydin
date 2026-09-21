@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import "./mobile.css";
+import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
 
 export const metadata: Metadata = {
   title: "SydIN - Visual Inventory Management Software",
@@ -58,6 +59,7 @@ export default function RootLayout({
     >
       <body className="sydin-shell flex min-h-full flex-col font-sans">
         {children}
+        <ServiceWorkerRegistration />
       </body>
     </html>
   );
