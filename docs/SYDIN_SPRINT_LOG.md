@@ -4890,3 +4890,16 @@ search pill at the top of the More sheet both open /dashboard/search
 (which already worked on a phone and focuses its field on arrival); its
 field is the app's pill now. Settings also scrolls the active tab into
 view on arrival.
+
+### 21 Sep — rendered-gradient scan, landscape
+
+The two last decorative gradients on the public pages (the Pricing "Most
+popular" badge, the landing's featured feature card) are the blue plate.
+A scan of *rendered* background-image across Overview, Inventory, Alerts,
+Help, Pricing and the landing finds none left except the "Where your
+stock sits" data fill, which is an encoding, not decoration (127
+`linear-gradient` declarations remain in globals.css, all overridden --
+the file is a stack; only the browser tells the truth). The main
+stylesheet is 83 KB brotli over the wire on the live site. Landscape
+phone (812×375) gets the tablet layout: hamburger header, no tab bar, no
+sideways scroll.
