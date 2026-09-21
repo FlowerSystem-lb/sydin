@@ -4860,3 +4860,12 @@ History cards (two quantity boxes each) are feed rows (74px / 62px); the
 QR block (612px: logo tile, name, 220px code, caption, raw URL, stacked
 buttons) is 284px: the code at 150px, buttons side by side, decoration
 and raw URL off. 3132px now, a quarter shorter. Desktop untouched.
+
+### 21 Sep — dialogs are bottom sheets on a phone
+
+Opening a purchase order, Record Movement, a confirm -- every DialogShell
+floated on the phone as a centred card with a gap beneath it (an old
+phone rule aligned it to the end but kept padding and a 16px radius all
+round). Attached to the bottom edge now, full width, 24px top corners,
+grab handle, the app's slide-up, footer clearing the home indicator.
+Checked with the PO detail and Record Movement (cancelled, nothing saved).
