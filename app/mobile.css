@@ -3510,3 +3510,11 @@
     left: 16px;
   }
 }
+
+/* The floating "+" on Inventory sits over the last tile's corner at the
+   end of the list; room beneath the list so nothing hides under it. */
+@media (max-width: 767px) {
+  .mobile-shell .dashboard-shell-content:has(.inventory-workspace) {
+    padding-bottom: 72px !important;
+  }
+}
