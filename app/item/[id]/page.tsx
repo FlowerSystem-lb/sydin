@@ -360,7 +360,9 @@ export default function PublicItemPage() {
               </div>
             </section>
 
-            <section className="rounded-2xl border border-slate-200 bg-white p-5 text-center sm:p-7">
+            {/* Hidden on phones: a phone reaches this page by scanning this
+                very code. On a laptop it is the thing to print. */}
+            <section className="hidden rounded-2xl border border-slate-200 bg-white p-5 text-center sm:block sm:p-7">
               <p className="text-[12px] font-medium uppercase tracking-[0.08em] text-slate-500">
                 Item QR Code
               </p>
