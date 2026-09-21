@@ -4988,3 +4988,25 @@ Admin console on a phone: usable, search text now clears its icon.
 Sign-up, Terms and Privacy checked on a phone: 16px fields, no sideways
 scroll, no gradients, links resolve. Excel exporters read: numeric cells
 and currency formats throughout (brief point 49 closed).
+
+### 21 Sep — sidebar: hover auto-open reverted, toggle button fixed
+
+Sayed: "still auto and buttons of open and close are bugs and not
+perfect place and i want when it is close sidebar like before the
+name appears when mouse on it." The 12 Sep hover-peek (rail swings
+open over the page on mouseenter) is fully removed from
+`DashboardShell.tsx` and `globals.css` -- back to a plain rail that
+only opens via the toggle click, with a single collapsed icon naming
+itself on hover through the existing rail-chip tooltip. Separately,
+the toggle button itself had two bugs: a `@media (min-width:1200px)`
+-only rule was the sole source of its visible background, so below
+1200px wide (measured at 1130px, a common laptop width) it rendered
+fully transparent; and when pinned open it sat ~2px from the wordmark
+logo. Fixed: the base `.dashboard-sidebar-toggle` rule now carries a
+permanent background/border/shadow at every width, and a
+`.dashboard-shell-expanded` rule repositions it to the header's right
+edge when pinned open. Verified live: hover no longer expands the
+rail, the "Inventory" chip appears on a collapsed icon's hover, the
+collapsed toggle has a visible chip at 1130px, and the pinned-open
+toggle sits ~80px clear of the logo. `npm run lint`, `npx tsc
+--noEmit`, `npm run build` all clean.
