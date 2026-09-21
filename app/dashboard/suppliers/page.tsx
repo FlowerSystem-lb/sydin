@@ -102,22 +102,16 @@ function hasSupplierContact(supplier: Supplier) {
 }
 
 function SupplierForm({
-  title,
-  eyebrow,
   values,
   error,
   saving,
   onChange,
-  onCancel,
   onSubmit,
 }: {
-  title: string;
-  eyebrow: string;
   values: SupplierInput;
   error: string;
   saving: boolean;
   onChange: (field: keyof SupplierInput, value: string) => void;
-  onCancel: () => void;
   onSubmit: (event: React.FormEvent) => void;
 }) {
   const [nameTouched, setNameTouched] = useState(false);
@@ -129,29 +123,14 @@ function SupplierForm({
     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email?.trim() || "");
 
   return (
-    <form onSubmit={onSubmit} noValidate>
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.18em] text-theme-accent">
-            {eyebrow}
-          </p>
-          <h2 className="mt-2 text-3xl font-black text-theme-primary">{title}</h2>
-        </div>
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={saving}
-          aria-label="Close supplier form"
-          className="flex h-11 w-11 items-center justify-center rounded-xl border border-theme bg-theme-surface text-xl text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
-        >
-          ×
-        </button>
-      </div>
-
+    /* Rendered inside a DialogShell (same as Add customer); the shell owns
+       the title, the close button and the footer, whose Save button submits
+       this form by id. */
+    <form id="supplier-form" onSubmit={onSubmit} noValidate>
       {/* The same label/value rows Add Item, the invoice and Customers use.
           Was two columns of boxed inputs with the label stacked above each --
           Customers, its own mirror image, did it a third way again. */}
-      <div className="item-form -mx-1 mt-4">
+      <div className="item-form -mx-1">
         <FieldGroup>
           <FieldRow
             label="Name"
@@ -249,28 +228,13 @@ function SupplierForm({
       </div>
 
       {error && (
-        <div className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger">
+        <div
+          role="alert"
+          className="mt-5 rounded-2xl border border-red-400/25 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger"
+        >
           {error}
         </div>
       )}
-
-      <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <button
-          type="button"
-          onClick={onCancel}
-          disabled={saving}
-          className="rounded-xl border border-theme bg-theme-surface px-5 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
-        >
-          Cancel
-        </button>
-        <button
-          type="submit"
-          disabled={saving || !values.name.trim() || emailError}
-          className={buttonClassName()}
-        >
-          {saving ? "Saving..." : "Save Supplier"}
-        </button>
-      </div>
     </form>
   );
 }
@@ -928,22 +892,41 @@ export default function SuppliersPage() {
       </main>
 
       {formOpen && (
-        <div className="organize-modal-overlay fixed inset-0 z-50 flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl">
-          <div className="my-6 max-h-[calc(100vh-2rem)] w-full max-w-3xl overflow-y-auto rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_20px_70px_rgba(15,23,42,0.16)] sm:p-6">
-            <SupplierForm
-              title={editingSupplier ? "Edit Supplier" : "Add Supplier"}
-              eyebrow={editingSupplier ? "Supplier details" : "New supplier"}
-              values={formValues}
-              error={formError}
-              saving={saving}
-              onChange={(field, value) =>
-                setFormValues((current) => ({ ...current, [field]: value }))
-              }
-              onCancel={closeForm}
-              onSubmit={handleSubmit}
-            />
-          </div>
-        </div>
+        /* The same DialogShell as Add customer -- it was a hand-rolled
+           translucent modal with its own title and buttons, the one form in
+           the app that did not open as a sheet on a phone. */
+        <DialogShell
+          title={editingSupplier ? "Edit supplier" : "Add supplier"}
+          eyebrow={editingSupplier ? "Supplier details" : "New supplier"}
+          onClose={closeForm}
+          closeDisabled={saving}
+          footer={
+            <>
+              <Button variant="secondary" onClick={closeForm} disabled={saving}>
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="supplier-form"
+                loading={saving}
+                loadingLabel="Saving..."
+                disabled={!formValues.name.trim()}
+              >
+                {editingSupplier ? "Save changes" : "Add supplier"}
+              </Button>
+            </>
+          }
+        >
+          <SupplierForm
+            values={formValues}
+            error={formError}
+            saving={saving}
+            onChange={(field, value) =>
+              setFormValues((current) => ({ ...current, [field]: value }))
+            }
+            onSubmit={handleSubmit}
+          />
+        </DialogShell>
       )}
 
       {accountSupplier && (() => {
