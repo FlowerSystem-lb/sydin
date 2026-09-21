@@ -276,6 +276,14 @@ export default function SettingsPage() {
   const activeSection = sectionFromQuery
     ? normalizeSectionId(sectionFromQuery)
     : hashSection || "workspace";
+  // On a phone the sections are a scrolling row of tabs; the active one
+  // can arrive off-screen (e.g. Data & reports from the More sheet).
+  useEffect(() => {
+    if (!window.matchMedia("(max-width: 767px)").matches) return;
+    document
+      .querySelector(".settings-nav-item[aria-current=\"page\"]")
+      ?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
+  }, [activeSection]);
   const activeSectionDetails =
     SETTINGS_SECTIONS.find((section) => section.id === activeSection) ||
     SETTINGS_SECTIONS[0];
