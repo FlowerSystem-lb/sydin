@@ -4962,3 +4962,12 @@ site; the principle is in the decision log.
 The last PDF outside the gate: the customer and supplier statement
 downloads. On Free ("no PDF export" on the pricing table) the button
 shows the lock and opens the Upgrade dialog. Pro unchanged, checked.
+
+### 21 Sep — the request-plan page, and the public item page, on a phone
+
+Request a plan: the form comes first on a phone ("what happens next" was
+a screen of scrolling before it), and a signed-in owner arriving from a
+lock in the app finds business name, email and phone already filled --
+only empty fields, once. The public QR item page no longer shows its own
+QR code on a phone (you reached it by scanning that code); it stays on
+the laptop, where it is the thing to print.

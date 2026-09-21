@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
 import { supabase } from "@/app/lib/supabase";
+import { getOrCreateBusinessSettings } from "@/app/lib/businessSettings";
 
 type PlanName = "Standard" | "Pro";
 type PaymentMethod = "WhishMoney" | "OMT" | "Crypto";
@@ -102,6 +103,28 @@ function RequestPlanContent() {
   const [copiedTarget, setCopiedTarget] = useState<CopyTarget | null>(null);
   const [copyError, setCopyError] = useState("");
   const requestSource = searchParams.get("source")?.trim() || "";
+
+  // A signed-in owner arriving from a lock in the app should not retype
+  // what SydIN already knows. Only empty fields are filled, once.
+  useEffect(() => {
+    let isActive = true;
+    supabase.auth
+      .getUser()
+      .then(async ({ data: { user } }) => {
+        if (!isActive || !user) return;
+        if (user.email) setEmail((current) => current || user.email || "");
+        const settings = await getOrCreateBusinessSettings(user.id);
+        if (!isActive || !settings) return;
+        setBusinessName((current) => current || settings.business_name || "");
+        setPhone((current) => current || settings.contact_phone || "");
+      })
+      .catch(() => {
+        /* Not signed in, or nothing stored: the form is simply empty. */
+      });
+    return () => {
+      isActive = false;
+    };
+  }, []);
 
   const whatsappMessage = [
     `Hello SydIN, I am interested in the ${selectedPlan} plan.`,
