@@ -4971,3 +4971,13 @@ lock in the app finds business name, email and phone already filled --
 only empty fields, once. The public QR item page no longer shows its own
 QR code on a phone (you reached it by scanning that code); it stays on
 the laptop, where it is the thing to print.
+
+### 21 Sep — the admin console on the system
+
+`/admin/plan-requests` -- the page Sayed uses to activate paying
+customers -- was still written in the dark glass idiom (white text,
+black/25 blocks, white/10 borders, pale tint badges) on what is now a
+light page: stat numbers invisible, detail blocks unreadable, status
+badges blank. A scoped mapping (`.admin-console`) puts those classes onto
+the light token system without rewriting 1,280 lines; the status badges
+get dark tints of their hues. Contrast probe clean.

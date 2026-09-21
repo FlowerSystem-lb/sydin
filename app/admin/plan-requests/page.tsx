@@ -73,10 +73,10 @@ const planFilters: { value: PlanFilter; label: string }[] = [
 ];
 
 const statusStyles: Record<RequestStatus, string> = {
-  pending: "border-amber-300/25 bg-amber-500/10 text-amber-100",
-  paid: "border-sky-300/25 bg-sky-500/10 text-sky-100",
-  activated: "border-emerald-300/25 bg-emerald-500/10 text-emerald-100",
-  rejected: "border-rose-300/25 bg-rose-500/10 text-rose-100",
+  pending: "border-amber-300/40 bg-amber-50 text-amber-800",
+  paid: "border-sky-300/40 bg-sky-50 text-sky-800",
+  activated: "border-emerald-300/40 bg-emerald-50 text-emerald-800",
+  rejected: "border-rose-300/40 bg-rose-50 text-rose-800",
 };
 
 function formatStatus(status: RequestStatus) {
@@ -605,7 +605,7 @@ export default function AdminPlanRequestsPage() {
 
   if (loading) {
     return (
-      <main className="liquid-bg min-h-screen overflow-x-hidden px-4 py-8 text-white sm:px-6 lg:px-8">
+      <main className="admin-console liquid-bg min-h-screen overflow-x-hidden px-4 py-8 text-white sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="glass-panel h-40 animate-pulse" />
           <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
@@ -623,7 +623,7 @@ export default function AdminPlanRequestsPage() {
 
   if (accessDenied) {
     return (
-      <main className="liquid-bg flex min-h-screen items-center justify-center overflow-x-hidden px-4 py-10 text-white sm:px-6">
+      <main className="admin-console liquid-bg flex min-h-screen items-center justify-center overflow-x-hidden px-4 py-10 text-white sm:px-6">
         <section className="glass-panel w-full max-w-xl p-6 text-center sm:p-9">
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-sky-200/20 bg-sky-400/10 text-sky-100">
             <ShieldIcon />
@@ -658,7 +658,7 @@ export default function AdminPlanRequestsPage() {
   }
 
   return (
-    <main className="liquid-bg min-h-screen overflow-x-hidden px-4 py-6 text-white sm:px-6 lg:px-8 lg:py-9">
+    <main className="admin-console liquid-bg min-h-screen overflow-x-hidden px-4 py-6 text-white sm:px-6 lg:px-8 lg:py-9">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
         <header className="glass-panel overflow-hidden p-5 sm:p-7 lg:p-8">
           <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">

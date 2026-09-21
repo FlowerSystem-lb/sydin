@@ -24684,3 +24684,106 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   background: #e9effc;
   background-image: none;
 }
+
+/* ---- ADMIN CONSOLE (plan requests) ON THE SYSTEM -------------------------
+   The one page still written in the dark glass idiom -- white text,
+   black/25 blocks, white/10 borders -- on what is now a light page, which
+   left its stat numbers and detail blocks unreadable. Sayed uses it to
+   activate paying customers. Scoped mapping of those classes onto the light
+   token system; the markup stays. */
+.admin-console.liquid-bg {
+  background: var(--surface-page) !important;
+  background-image: none !important;
+  color: var(--text-primary) !important;
+}
+
+.admin-console .text-white,
+.admin-console .text-slate-200,
+.admin-console .text-slate-100 {
+  color: var(--text-primary) !important;
+}
+
+.admin-console .text-slate-300 {
+  color: var(--text-secondary) !important;
+}
+
+.admin-console .text-slate-400,
+.admin-console .text-slate-500 {
+  color: var(--text-muted) !important;
+}
+
+.admin-console .glass-panel,
+.admin-console .glass-card {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-card) !important;
+  background: var(--bg-surface) !important;
+  background-image: none !important;
+  box-shadow: var(--shadow-card) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.admin-console [class*="bg-black/25"],
+.admin-console [class*="bg-white/[0.05]"],
+.admin-console [class*="bg-white/[0.1]"] {
+  background: var(--bg-inset) !important;
+}
+
+.admin-console [class*="border-white/10"] {
+  border-color: var(--border-default) !important;
+}
+
+.admin-console .glass-input {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-control) !important;
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  box-shadow: none !important;
+}
+
+.admin-console .glass-input::placeholder {
+  color: var(--text-subtle) !important;
+}
+
+.admin-console .glass-input:focus-visible {
+  border-color: #2563eb !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15) !important;
+  outline: none;
+}
+
+.admin-console .glass-badge {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-chip) !important;
+  background: var(--bg-inset) !important;
+  color: var(--text-secondary) !important;
+  box-shadow: none !important;
+}
+
+.admin-console .glass-modal {
+  border: 1px solid var(--border-default) !important;
+  border-radius: var(--radius-panel) !important;
+  background: var(--bg-surface) !important;
+  color: var(--text-primary) !important;
+  box-shadow: var(--shadow-overlay) !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.admin-console .animate-pulse.glass-panel,
+.admin-console .animate-pulse.glass-card {
+  background: var(--bg-inset) !important;
+  box-shadow: none !important;
+}
+
+/* Admin console: the dark theme's pale tint text (rose-100, emerald-100,
+   amber-100, sky-100/300) on light tinted blocks -- unreadable on a light
+   page. Dark tints of the same hues. */
+.admin-console .text-rose-100,
+.admin-console .text-rose-300 { color: #9f1239 !important; }
+.admin-console .text-emerald-100,
+.admin-console .text-emerald-300,
+.admin-console [class*="text-emerald-100/"] { color: #065f46 !important; }
+.admin-console .text-amber-100,
+.admin-console [class*="text-amber-100/"] { color: #92400e !important; }
+.admin-console .text-sky-100,
+.admin-console .text-sky-300 { color: #1d4ed8 !important; }
