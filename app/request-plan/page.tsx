@@ -199,7 +199,9 @@ function RequestPlanContent() {
         )}
 
         <div className="mx-auto mt-10 grid max-w-7xl grid-cols-1 gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-          <Reveal>
+          {/* On a phone the form comes first; "what happens next" is worth
+              reading after you have asked, not a screen of scrolling before. */}
+          <Reveal className="order-2 lg:order-none">
             <aside className="rounded-[32px] border border-white/10 bg-white/[0.045] p-6 shadow-[0_28px_100px_rgba(0,0,0,0.28)] backdrop-blur-2xl sm:p-8">
               <p className="text-sm font-bold uppercase tracking-[0.2em] text-indigo-300">
                 What happens next
