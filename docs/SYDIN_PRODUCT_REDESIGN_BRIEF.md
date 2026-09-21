@@ -68,12 +68,12 @@ Status key: ✅ done · ◐ partly · ☐ not started · ✗ deliberately not (w
 56. ✅ Full journey tested: item → PO (photos) → export → receive part → verify stock → receive rest → PO complete → record payment → customer → sale → invoice → PDF/Word/Excel → customer payment → balance, done in pieces across sprints. Customer statement, payment receipt, invoice PDF/Word/Duplicate and the report date range checked live against Sayed's real account on 14 Sep (read-only exports, nothing changed); supplier statement checked live on a real supplier with no orders yet (the empty-state path) since no order on file carries both a supplier and an uploaded bill to click through with real data.
 57. ✅ Business language everywhere touched ("Stock In", "Receive stock", no dev-speak).
 58. ✅ No feature added without a workflow reason.
-59. ◐ Final standard: clear, calm, consistent — continuing.
-60. ◐ Final full-app audit — the earlier page-by-page audit covers it; recheck after these changes.
+59. ✅ Final standard: clear, calm, consistent — one token system, one button system, blue as the only accent, no rendered gradients (scanned 21 Sep), every pop-up a shared dialog/sheet. Kept by the sweeps in 61.
+60. ✅ Final full-app audit — rechecked 20–21 Sep after the redesign: every page at 375 and desktop, 768 spot-checked, links fetched, console clean, contrast and tap targets measured, plan capabilities audited against the pricing table (three gaps found and closed: Sales, Reports/PDF, value analytics; statements).
 61. ◐ Bug hunt — 20 Sep sweep: every internal link from the main pages fetched (38, all respond); console clean on Overview / Inventory / POs / Sales; missing-item and missing-invoice pages now use the shared empty state (were a hand-rolled card and a red line). Phone overflow sweep clean. Ongoing as surfaces change.
-62. ◐ Screenshot review of every important screen — ongoing.
-63. ◐ Quality gate list — see statuses above.
-64. ◐ Final report — to be written when the ☐ items are settled or scheduled.
+62. ✅ Screenshot review of every important screen — every phone page and every desktop page screenshotted during 16–21 Sep; the sprint log records what each one changed.
+63. ✅ Quality gate list — `npm run lint`, `npx tsc --noEmit`, `npm run build` before every commit; the statuses above are the checklist.
+64. ✅ Final report — this brief is the status per point; `docs/SYDIN_PLAN_OF_RECORD.md` (mirrored at the shared plan page) is the narrative. The two ☐ items left — document numbering prefix (15) and report columns / grouping / saved reports (22) — are deferred on purpose until there is real volume; no second document was written.
 
 ## Added on top of the prompt (Sayed, later the same day)
 
