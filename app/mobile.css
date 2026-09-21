@@ -3481,3 +3481,32 @@
     background: var(--bg-inset);
   }
 }
+
+/* Search page on a phone: the field is the same pill as everywhere else,
+   not a boxed field inside a card. */
+@media (max-width: 767px) {
+  .dashboard-shell-content .search-page-toolbar.dashboard-toolbar-card.dashboard-toolbar-card {
+    padding: 0 !important;
+    border: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  .dashboard-shell-content .search-page-toolbar input[type="search"] {
+    min-height: 44px !important;
+    border: 0 !important;
+    border-radius: 999px !important;
+    background: var(--surface-sunken) !important;
+    box-shadow: none !important;
+    padding-left: 2.6rem !important;
+  }
+
+  .dashboard-shell-content .search-page-toolbar input[type="search"]:focus-visible {
+    background: #ffffff !important;
+    box-shadow: 0 0 0 2px var(--sydin-blue) !important;
+  }
+
+  .search-page-toolbar label > svg {
+    left: 16px;
+  }
+}

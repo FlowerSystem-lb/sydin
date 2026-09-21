@@ -182,7 +182,7 @@ export default function GlobalSearchPage() {
         />
       </div>
 
-      <DashboardToolbar className="grid gap-2 sm:grid-cols-1">
+      <DashboardToolbar className="search-page-toolbar grid gap-2 sm:grid-cols-1">
         <label className="relative block">
           <UiIcon
             name="search"
