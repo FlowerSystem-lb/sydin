@@ -3406,3 +3406,49 @@
     justify-content: center;
   }
 }
+
+/* Dialogs on a phone are bottom sheets: attached to the bottom edge, full
+   width, 24px top corners, sliding up. The old phone rule aligned the
+   overlay to the end but kept 12px of padding and a 16px radius all
+   round, so a dialog floated as a card with a gap beneath it. */
+@media (max-width: 767px) {
+  .ui-overlay:has(> .ui-dialog) {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .ui-overlay > .ui-dialog {
+    width: 100% !important;
+    max-width: none !important;
+    max-height: calc(100svh - 40px) !important;
+    margin: 0 !important;
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    border: 0 !important;
+    border-radius: 24px 24px 0 0 !important;
+    background: #ffffff !important;
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+    box-shadow: 0 -8px 40px rgba(24, 24, 27, 0.18) !important;
+    animation: mobile-sheet-up 240ms cubic-bezier(0.2, 0.8, 0.2, 1) both !important;
+  }
+
+  /* The grab handle every sheet in the app has. */
+  .ui-overlay > .ui-dialog::before {
+    content: "";
+    display: block;
+    flex: 0 0 auto;
+    width: 40px;
+    height: 4px;
+    margin: 8px auto 0;
+    border-radius: 999px;
+    background: var(--border-strong, #d4d4d8);
+  }
+
+  .ui-overlay > .ui-dialog .ui-dialog-header {
+    padding: 8px 16px 6px !important;
+  }
+
+  .ui-overlay > .ui-dialog .ui-dialog-footer {
+    padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+}
