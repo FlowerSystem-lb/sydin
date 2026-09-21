@@ -1164,8 +1164,9 @@ export default function ItemDetailsSlideOver({
                         )}
                     </dl>
                     <p className="item-details-empty">
-                      Alert settings use the existing low-stock behavior. Open
-                      Edit to change supported item fields.
+                      {item.min_stock_level !== null && item.min_stock_level !== undefined
+                        ? "This item has its own minimum. Change it under Edit → Min stock."
+                        : "This item uses the business default. To give it its own level, open Edit and set Min stock."}
                     </p>
                   </div>
                 )}

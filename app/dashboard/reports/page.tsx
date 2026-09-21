@@ -383,7 +383,7 @@ const OPERATION_REPORTS: ReportCard[] = [
   {
     id: "receiving",
     name: "Stock In",
-    description: "Book arriving stock into a depot and create auditable stock-in movement records.",
+    description: "Book arriving stock into a depot; every delivery is recorded as a stock-in movement.",
     category: "operations",
     source: "Stock In",
     formats: ["Workflow"],
@@ -391,7 +391,7 @@ const OPERATION_REPORTS: ReportCard[] = [
     href: "/dashboard/receiving",
     hrefLabel: "Open Stock In",
     icon: "upload",
-    note: "Receiving history is represented through Stock Movements in v1.",
+    note: "Every delivery also appears in Stock Movements.",
   },
 ];
 
@@ -590,7 +590,7 @@ export default function ReportsPage() {
       setError(
         loadError instanceof Error
           ? loadError.message
-          : "We could not load the Reports Hub."
+          : "We could not load Reports."
       );
       setLoading(false);
     });
@@ -1238,7 +1238,7 @@ export default function ReportsPage() {
                     </span>
                     {report.note && (
                       <span className="inline-flex min-h-6 items-center rounded-full border border-theme bg-theme-inset px-2.5 text-xs font-bold text-theme-subtle">
-                        v1 workflow
+                        Note
                       </span>
                     )}
                   </div>
@@ -1305,37 +1305,6 @@ export default function ReportsPage() {
           </section>
         )}
 
-        <section className="rounded-[18px] border border-theme bg-theme-surface p-3">
-          <div className="grid gap-2 md:grid-cols-2">
-            <div className="flex items-start gap-3 rounded-xl border border-theme bg-theme-inset px-3 py-2.5">
-              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-xs font-black uppercase tracking-[0.12em] text-theme-accent">
-                Future
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-sm font-black text-theme-primary">
-                  Saved reports
-                </h2>
-                <p className="mt-0.5 text-xs leading-5 text-theme-muted">
-                  Saved report templates are planned later. Generate reports
-                  from live data when needed.
-                </p>
-              </div>
-            </div>
-            <div className="flex items-start gap-3 rounded-xl border border-theme bg-theme-inset px-3 py-2.5">
-              <span className="mt-0.5 rounded-full border border-theme bg-theme-surface px-2 py-0.5 text-xs font-black uppercase tracking-[0.12em] text-theme-accent">
-                Future
-              </span>
-              <div className="min-w-0">
-                <h2 className="text-sm font-black text-theme-primary">
-                  Scheduled email reports
-                </h2>
-                <p className="mt-0.5 text-xs leading-5 text-theme-muted">
-                  Scheduled delivery controls are planned for a later update.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
       </DashboardPageShell>
 
       {preview && previewTable && (
@@ -1438,7 +1407,7 @@ export default function ReportsPage() {
         <DialogShell
           title={inventoryDialogReport.name}
           eyebrow="Inventory report"
-          description="Generate a PDF from current inventory data. Reports Hub v1 exports all inventory for this workspace."
+          description="A PDF from your current inventory. It covers every item in the workspace."
           onClose={() => {
             if (!exporting) setInventoryDialogReport(null);
           }}
@@ -1578,7 +1547,7 @@ export default function ReportsPage() {
         <DialogShell
           title="Stock Movements Report"
           eyebrow="Activity report"
-          description="Export a CSV audit trail from the latest stock movements loaded into the Reports Hub."
+          description="A CSV of the latest stock movements, for a spreadsheet or another system."
           onClose={() => setMovementDialogOpen(false)}
           footer={
             <>
