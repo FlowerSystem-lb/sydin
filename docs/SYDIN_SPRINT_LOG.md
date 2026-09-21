@@ -4946,3 +4946,13 @@ Found on the way: the Upgrade dialog was not portalled to <body>, so the
 workspace's containment trapped its position: fixed -- on a phone it sat
 at the bottom of the page under the tab bar. Portalled like DialogShell;
 it and the import page's batch-scan panel are bottom sheets on a phone.
+
+### 21 Sep — Dashboard value analytics gated on Free
+
+The third plan gap of the audit: "Dashboard value analytics" is listed
+as not included on Free and was enforced nowhere. On Free the Overview's
+value tile now says "Value analytics are part of Standard", and the money
+figures, the sales trend and Spending this month are not shown (Free has
+no sales or purchase orders to feed them). Stock tiles, depots, attention
+and activity stay for everyone. Every capability now has an enforcement
+site; the principle is in the decision log.

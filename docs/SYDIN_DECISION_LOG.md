@@ -512,3 +512,18 @@ than a clear "you are offline". **Not chosen:** offline editing or cached
 stock; if that is ever wanted it is a product decision with sync rules,
 not a caching flag. **Status:** Active. Verified on the production build:
 registers, activates, caches `/offline`, normal pages pass through.
+
+### 2026-09-21 — The pricing table is the contract; every capability is enforced where the feature lives
+
+**Decision:** each plan capability in `app/lib/subscription.ts` must be
+enforced on the surface it describes, with the shared lock (LockedFeaturePanel
+for a whole page, UpgradeDialog for an action), and the pricing page's
+comparison table must never promise or withhold something the app does not
+actually gate. **Why:** an audit on 20–21 Sep found three gaps — Sales open
+to Free (decided closed on 4 Sep), Reports and PDF export open to Free, and
+"Dashboard value analytics" enforced nowhere — all while the pricing table
+told customers otherwise. A table that lies is a refund conversation.
+**How it is checked:** the plan is read as Free in the browser for one page
+load (patching `Response.prototype`, since the Supabase client keeps its own
+`fetch`) and each gated surface is opened; nothing is written. **Status:**
+Active. All twelve capabilities now have at least one enforcement site.

@@ -323,6 +323,12 @@ export default function DashboardPage() {
     businessSettings.low_stock_threshold
   );
   const canUseItemThreshold = planCapabilities.customLowStockThreshold;
+  // The pricing table lists "Dashboard value analytics" as not included on
+  // Free, and nothing enforced it. On Free the value tile says where value
+  // analytics live, and the money figures, the sales trend and Spending this
+  // month are not shown -- Free has no sales or purchase orders to feed them
+  // anyway. Stock counts, depots and attention lists are for everyone.
+  const analyticsLocked = !planCapabilities.dashboardAnalytics;
   const currencyCode = normalizeCurrencyCode(
     businessSettings.currency_code,
     "USD"
@@ -591,12 +597,15 @@ export default function DashboardPage() {
     },
     {
       label: "Inventory Value",
-      rawValue: dashboardData.hasValue ? dashboardData.totalValue : null,
+      rawValue:
+        !analyticsLocked && dashboardData.hasValue ? dashboardData.totalValue : null,
       format: (n: number) => formatCurrency(n, currencyCode),
       // Say what the number actually covers. Unpriced items contribute nothing,
       // so with even one item unpriced this is a partial sum — showing only the
       // currency code next to it read as a confident workspace total.
-      detail: !dashboardData.hasValue
+      detail: analyticsLocked
+        ? "Value analytics are part of Standard"
+        : !dashboardData.hasValue
         ? "Add prices to track value"
         : dashboardData.pricedItemCount < dashboardData.totalItems
           ? `${currencyCode} · priced items only (${formatNumber(
@@ -938,7 +947,7 @@ export default function DashboardPage() {
         </Link>
       </header>
 
-      {!hasNoItems && businessCards[0] && (
+      {!hasNoItems && !analyticsLocked && businessCards[0] && (
         <Link href={businessCards[0].href} className="ov-phone-hero">
           <span className="ov-phone-hero-label">{businessCards[0].label}</span>
           <span className="ov-phone-hero-value">
@@ -1047,7 +1056,7 @@ export default function DashboardPage() {
         </p>
       )}
 
-      {!hasNoItems && (
+      {!hasNoItems && !analyticsLocked && (
         <div className="ov-figures ov-figures-business" role="group" aria-label="Business summary">
           {businessCards.map((card) => {
             const rendered = card.format(card.rawValue);
@@ -1113,12 +1122,14 @@ export default function DashboardPage() {
             from the orders already loaded here. Full width, above the two
             columns, because it is the one thing on the page that shows the
             business moving rather than standing still. */}
-        <MoneyFlowChart
-          salesOrders={salesOrders}
-          purchaseOrders={purchaseOrders}
-          formatMoney={(value) => formatCurrency(value, currencyCode)}
-          loading={loading}
-        />
+        {!analyticsLocked && (
+          <MoneyFlowChart
+            salesOrders={salesOrders}
+            purchaseOrders={purchaseOrders}
+            formatMoney={(value) => formatCurrency(value, currencyCode)}
+            loading={loading}
+          />
+        )}
         <div className="ov-columns">
           {/* Needs attention = the old "Items that need restocking" and "Stock
               health" panels, which rendered the same in/low/out split twice,
@@ -1440,6 +1451,7 @@ export default function DashboardPage() {
             </section>
           )}
 
+          {!analyticsLocked && (
           <section className="ov-section" aria-labelledby="ov-spending-title">
             <div className="ov-section-head">
               <h2 id="ov-spending-title" className="ov-section-title">
@@ -1494,6 +1506,7 @@ export default function DashboardPage() {
               </>
             )}
           </section>
+          )}
 
           {/* Where the stock sits. Moved off Inventory's side rail, which was
               spending 22% of that screen's width on a summary. Two breakdowns
