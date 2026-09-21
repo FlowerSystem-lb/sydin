@@ -4912,3 +4912,11 @@ uses the shared Button, variant="danger" (Depots, Items, POs and Pick
 Lists already did). The Inventory list keeps 72px clear under the
 floating "+" so the last tile is never under it. The action sheet and
 the dialog sheets skip their slide-up under prefers-reduced-motion.
+
+### 21 Sep — offline page for the installed app
+
+An installed app opened with no signal showed Safari's raw error. A tiny
+service worker now serves /offline (a calm card with a Try again) for a
+failed navigation; nothing else is intercepted or cached, so it can never
+serve a stale build or stale stock (decision log, 21 Sep). Registered in
+production only, after load. Verified on the production build locally.

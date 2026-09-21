@@ -498,3 +498,17 @@ the founder's own direct instruction, not a unilateral re-litigation.
 verification tools were down all session; correctness reasoned from the CSS
 cascade and the mobile breakpoint's now-removed odd/even divider hack, not
 seen.)
+
+### 2026-09-21 — A service worker, but only for the offline page
+
+**Decision:** SydIN registers a service worker (`public/sw.js`) whose only
+behaviour is: navigations are network-first, and a navigation that fails
+gets the `/offline` page. It intercepts nothing else and caches nothing
+else — no app assets, no data. **Why:** the app is installable from the
+phone since 20 Sep; opened with no signal, an installed app showed
+Safari's raw error page. A conventional PWA cache (assets, API responses)
+would let a depot see stale stock or a stale build after a deploy — worse
+than a clear "you are offline". **Not chosen:** offline editing or cached
+stock; if that is ever wanted it is a product decision with sync rules,
+not a caching flag. **Status:** Active. Verified on the production build:
+registers, activates, caches `/offline`, normal pages pass through.
