@@ -2,7 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import {
+  LockedActionLabel,
+  LockedFeaturePanel,
+  UpgradeDialog,
+} from "@/components/UpgradePrompt";
 import UiIcon from "@/components/UiIcon";
 import {
   ActionButton,
@@ -61,6 +65,7 @@ import { supabase } from "@/app/lib/supabase";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
+  getSubscriptionCapabilities,
   getSubscriptionSupplierLimit,
   getSubscriptionUsage,
   getUpgradePlanForSupplierLimit,
@@ -427,6 +432,10 @@ export default function SuppliersPage() {
   const supplierLimit = getSubscriptionSupplierLimit(usage.subscription);
   const limitReached = suppliers.length >= supplierLimit;
   const currentPlanName = formatPlanName(usage.subscription.plan);
+  // The pricing table: no PDF export on Free. The statement is a PDF.
+  const pdfLocked =
+    getSubscriptionCapabilities(usage.subscription).pdfExport === "none";
+  const [pdfLockOpen, setPdfLockOpen] = useState(false);
   const requiredPlan = getUpgradePlanForSupplierLimit(usage.subscription.plan);
 
   const visibleSuppliers = useMemo(() => {
@@ -956,11 +965,19 @@ export default function SuppliersPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => void downloadSupplierStatement(accountSupplier)}
+                  onClick={() =>
+                    pdfLocked
+                      ? setPdfLockOpen(true)
+                      : void downloadSupplierStatement(accountSupplier)
+                  }
                   loading={statementBusy}
                   loadingLabel="Building..."
                 >
-                  Download statement
+                  {pdfLocked ? (
+                    <LockedActionLabel>Download statement</LockedActionLabel>
+                  ) : (
+                    "Download statement"
+                  )}
                 </Button>
                 <Link
                   href={`/dashboard/purchase-orders/new?supplier=${accountSupplier.id}`}
@@ -1137,6 +1154,15 @@ export default function SuppliersPage() {
           }
         />
       )}
+      <UpgradeDialog
+        open={pdfLockOpen}
+        onClose={() => setPdfLockOpen(false)}
+        feature="Supplier statement PDF"
+        benefit="A branded statement of every order and payment for a supplier, ready to send."
+        currentPlan={currentPlanName}
+        requiredPlan="Standard"
+        source="supplier-statement"
+      />
     </div>
   );
 }

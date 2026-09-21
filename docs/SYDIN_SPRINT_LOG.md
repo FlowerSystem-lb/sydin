@@ -4956,3 +4956,9 @@ figures, the sales trend and Spending this month are not shown (Free has
 no sales or purchase orders to feed them). Stock tiles, depots, attention
 and activity stay for everyone. Every capability now has an enforcement
 site; the principle is in the decision log.
+
+### 21 Sep — statement PDFs gated on Free
+
+The last PDF outside the gate: the customer and supplier statement
+downloads. On Free ("no PDF export" on the pricing table) the button
+shows the lock and opens the Upgrade dialog. Pro unchanged, checked.

@@ -56,10 +56,13 @@ import {
 import { getWhatsAppHref } from "@/app/lib/suppliers";
 import {
   FALLBACK_SUBSCRIPTION,
+  formatPlanName,
+  getSubscriptionCapabilities,
   getSubscriptionCustomerLimit,
   getUserSubscription,
   type UserSubscription,
 } from "@/app/lib/subscription";
+import { LockedActionLabel, UpgradeDialog } from "@/components/UpgradePrompt";
 
 /**
  * Who the depot sells to.
@@ -216,6 +219,9 @@ export default function CustomersPage() {
   }, []);
 
   const customerLimit = getSubscriptionCustomerLimit(subscription);
+  // The pricing table: no PDF export on Free. The statement is a PDF.
+  const pdfLocked = getSubscriptionCapabilities(subscription).pdfExport === "none";
+  const [pdfLockOpen, setPdfLockOpen] = useState(false);
   const limitReached = customers.length >= customerLimit;
 
   const visible = useMemo(() => {
@@ -606,11 +612,17 @@ export default function CustomersPage() {
                 </Button>
                 <Button
                   variant="secondary"
-                  onClick={() => void downloadStatement(accountCustomer)}
+                  onClick={() =>
+                    pdfLocked ? setPdfLockOpen(true) : void downloadStatement(accountCustomer)
+                  }
                   loading={statementBusy}
                   loadingLabel="Building..."
                 >
-                  Download statement
+                  {pdfLocked ? (
+                    <LockedActionLabel>Download statement</LockedActionLabel>
+                  ) : (
+                    "Download statement"
+                  )}
                 </Button>
                 <Link
                   href={`/dashboard/sales/new?customer=${accountCustomer.id}`}
@@ -911,6 +923,15 @@ export default function CustomersPage() {
           }
         />
       )}
+      <UpgradeDialog
+        open={pdfLockOpen}
+        onClose={() => setPdfLockOpen(false)}
+        feature="Customer statement PDF"
+        benefit="A branded statement of every invoice and payment for a customer, ready to send."
+        currentPlan={formatPlanName(subscription.plan)}
+        requiredPlan="Standard"
+        source="customer-statement"
+      />
     </main>
   );
 }
