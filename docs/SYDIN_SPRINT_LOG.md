@@ -4869,3 +4869,15 @@ phone rule aligned it to the end but kept padding and a 16px radius all
 round). Attached to the bottom edge now, full width, 24px top corners,
 grab handle, the app's slide-up, footer clearing the home indicator.
 Checked with the PO detail and Record Movement (cancelled, nothing saved).
+
+### 21 Sep — copy and placeholders
+
+Reports: "v1 workflow" chips, "Reports Hub v1", "represented through
+Stock Movements in v1", two "planned later" notes (one of them stale --
+purchase-order history exists), and a "Future" section announcing Saved
+reports and Scheduled email. Plain words; the placeholder section is
+gone. Settings › Account: a "Theme: Light -- a dark theme is on the list"
+row (one fixed value plus a roadmap note) and the account menu's
+"Workspace style" link to it are gone. Item panel › Alerts: the
+developer-speak note now says whether the item uses the business default
+or its own minimum, and where to change it.

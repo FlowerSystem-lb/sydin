@@ -89,7 +89,7 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "profile",
     label: "Account",
-    description: "Who is signed in, sign out, appearance",
+    description: "Who is signed in, sign out",
     icon: "settings",
   },
   {
@@ -946,16 +946,6 @@ export default function SettingsPage() {
         </FieldRow>
       </FieldGroup>
 
-      <FieldGroup label="Appearance">
-        <FieldRow label="Theme">
-          <span className="text-sm text-theme-primary" id="appearance-heading">
-            Light
-            <span className="block text-xs text-theme-muted">
-              One light look everywhere for now; a dark theme is on the list.
-            </span>
-          </span>
-        </FieldRow>
-      </FieldGroup>
     </div>
   );
 

@@ -1754,14 +1754,6 @@ export default function DashboardShell({
                       Plan &amp; usage
                     </Link>
                     <Link
-                      href="/dashboard/settings#appearance-heading"
-                      role="menuitem"
-                      onClick={() => setAccountMenuOpen(false)}
-                    >
-                      <UiIcon name="appearance" className="h-4 w-4" />
-                      Workspace style
-                    </Link>
-                    <Link
                       href="/dashboard/settings"
                       role="menuitem"
                       onClick={() => setAccountMenuOpen(false)}
