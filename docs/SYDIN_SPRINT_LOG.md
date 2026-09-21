@@ -4920,3 +4920,12 @@ service worker now serves /offline (a calm card with a Try again) for a
 failed navigation; nothing else is intercepted or cached, so it can never
 serve a stale build or stale stock (decision log, 21 Sep). Registered in
 production only, after load. Verified on the production build locally.
+
+### 21 Sep — live health and closing probes
+
+Vercel: no runtime errors on the live project in the last 7 days. Phone
+tiles request 384px images for a 169px tile (retina), not the 1600px
+originals -- the `sizes` attribute is right. Contrast and tap-target
+probes on the pages changed today (Pick Lists, Stock Counts rows and
+bars) are clean; the Inventory filter sheet still renders as a bottom
+sheet with 16px selects after the global field rule.
