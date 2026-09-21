@@ -3518,3 +3518,11 @@
     padding-bottom: 72px !important;
   }
 }
+
+/* Reduced motion: the action sheet and the dialog sheets appear in place. */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .inventory-card-menu,
+  .ui-overlay > .ui-dialog {
+    animation: none !important;
+  }
+}
