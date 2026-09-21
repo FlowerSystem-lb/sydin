@@ -1741,22 +1741,22 @@ export default function CategoriesPage() {
               Uncategorized. Inventory items will not be deleted.
             </p>
             <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-              <button
-                type="button"
+              <Button
+                variant="secondary"
                 onClick={() => setPendingDelete(null)}
                 disabled={deletingId !== null}
-                className="rounded-xl border border-theme px-5 py-3 text-sm font-bold text-theme-primary"
               >
                 Cancel
-              </button>
-              <button
-                type="button"
+              </Button>
+              <Button
+                variant="danger"
                 onClick={() => void handleDelete()}
                 disabled={deletingId !== null}
-                className="rounded-xl bg-red-600 px-5 py-3 text-sm font-bold text-white disabled:opacity-50"
+                loading={deletingId !== null}
+                loadingLabel="Deleting..."
               >
-                {deletingId ? "Deleting..." : "Delete Category"}
-              </button>
+                Delete category
+              </Button>
             </div>
           </>
         )}

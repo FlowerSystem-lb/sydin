@@ -854,6 +854,7 @@ export default function SaleDetailPage() {
                 Keep it
               </Button>
               <Button
+                variant="danger"
                 onClick={() => void removeDraft()}
                 loading={deleting}
                 loadingLabel="Deleting..."

@@ -900,6 +900,7 @@ export default function CustomersPage() {
                 Cancel
               </Button>
               <Button
+                variant="danger"
                 onClick={() => void confirmDelete()}
                 loading={deleting}
                 loadingLabel="Deleting..."
