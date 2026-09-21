@@ -3566,14 +3566,13 @@ select.glass-input option {
     display: none;
   }
 
-  .dashboard-shell-collapsed .dashboard-sidebar-toggle {
-    position: static;
-    display: inline-flex;
-    min-width: 2.125rem;
-    min-height: 2.125rem;
-    background: var(--bg-surface-strong);
-    box-shadow: var(--shadow-elevated);
-  }
+  /* Removed 2026-09-21: a `.dashboard-shell-collapsed .dashboard-sidebar-toggle`
+     rule lived only in this >=1200px block, so the collapsed toggle got a
+     real background and a bigger hit target above 1200px and stayed
+     invisible (transparent border, transparent fill) below it -- a button
+     that looked different, or vanished, depending on the exact window
+     width. The single unconditional `.dashboard-sidebar-toggle` rule now
+     carries a visible background/border/shadow at every width instead. */
 
   .dashboard-shell-collapsed .dashboard-sidebar-scroll {
     padding-top: 0.65rem;
@@ -21358,16 +21357,20 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    hidden on phones, where the sidebar is not the navigation at all.
 
    `position: absolute`, deliberately, so it sits at the exact same spot in
-   the collapsed rail and the expanded/peek header regardless of which of
-   the many stacked flex-direction/justify-content rules on
-   .dashboard-sidebar-header wins on a given page (there are over a dozen).
-   Before this, collapsing stacked the logo above the toggle and centred
-   both; hovering to peek switched the header to a row with the toggle
-   pushed to the far right -- so a real mouse moving toward the visible
-   collapsed-state icon arrived to find the button already gone. Taking it
-   out of the flex flow entirely means no stacked rule can move it again,
-   and it's centred under the logo the same way whether the rail is 5rem
-   or 17.25rem wide. */
+   the collapsed rail regardless of which of the many stacked
+   flex-direction/justify-content rules on .dashboard-sidebar-header wins on
+   a given page (there are over a dozen) -- centred under the logo mark.
+   Pinned open (.dashboard-shell-expanded, below) it moves to the header's
+   right edge instead; there is no longer a hover-triggered state in
+   between (21 Sep: the auto-open-on-hover peek was removed) for the two
+   positions to fight over mid-transition, so each can just be right for
+   its own state.
+
+   21 Sep: it also used to be invisible at rest -- transparent border,
+   transparent fill, nothing until the pointer found it by accident -- so
+   a real background, border and shadow are part of the base rule now,
+   not something bolted on only above one breakpoint (see the removed
+   >=1200px-only rule nearby). It reads as a button because it is one. */
 .dashboard-sidebar-toggle {
   position: absolute;
   top: 3.7rem;
@@ -21380,16 +21383,33 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   height: 1.9rem;
   flex: none;
   border-radius: 9px;
-  border: 1px solid transparent;
-  color: var(--text-subtle);
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  box-shadow: var(--shadow-subtle);
+  color: var(--text-secondary);
   transition:
     background-color var(--motion-fast) var(--motion-ease-standard),
+    border-color var(--motion-fast) var(--motion-ease-standard),
     color var(--motion-fast) var(--motion-ease-standard);
+}
+
+@media (min-width: 900px) {
+  /* Pinned open, the header is a left-aligned wordmark in a row instead of
+     a mark centred in a stack, so the toggle moves to the row's right edge
+     -- centred-under-the-logo left it about 2px from the end of the
+     wordmark, close enough to read as a mistake rather than a control. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle {
+    top: 50%;
+    left: auto;
+    right: 0.6rem;
+    transform: translateY(-50%);
+  }
 }
 
 @media (hover: hover) {
   .dashboard-sidebar-toggle:hover {
     background: var(--sydin-surface-hover, rgba(15, 23, 42, 0.06));
+    border-color: var(--border-strong);
     color: var(--text-primary, var(--ink));
   }
 }
@@ -21918,36 +21938,20 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 
-/* ===[ SIDEBAR: OPENS ON HOVER, ONE LOGO WHEN OPEN (2026-09-12) ]===
-   Sayed: "why don't we make it auto open" and "another logo appears when
-   it opens".
-
-   Peek: the rail carries `.dashboard-shell-expanded` while the pointer is
-   over it, so every expanded rule applies to the sidebar -- but the page
-   must not move, so the canvas keeps the rail's margin and the sidebar
-   (already `position: fixed`) slides over the content with a shadow.
+/* ===[ SIDEBAR: ONE LOGO WHEN OPEN (2026-09-12), HOVER-OPEN REVERTED (2026-09-21) ]===
+   Sayed, 12 Sep: "why don't we make it auto open" and "another logo appears
+   when it opens" -- the rail used to swing fully open (over the page) just
+   from the pointer crossing it. Sayed, 21 Sep: back out the auto-open; the
+   `.dashboard-shell-peek` rules that gave the sliding-over-the-page canvas
+   margin and shadow are gone with it (see DashboardShell.tsx). The toggle
+   is the only way to pin the sidebar open now, and a single collapsed icon
+   names itself on hover instead.
 
    Logo: expanded showed the square mark AND the wordmark, and the wordmark
-   already contains the mark -- two logos side by side. Open, only the
-   wordmark shows, at a size that reads. */
+   already contains the mark -- two logos side by side. Open (pinned), only
+   the wordmark shows, at a size that reads. This half of the fix still
+   applies -- it is not about hover, only about the pinned-open state. */
 @media (min-width: 900px) {
-  .dashboard-shell-peek.dashboard-shell-peek.dashboard-shell-peek .dashboard-main-canvas {
-    width: calc(100% - 4.75rem) !important;
-    margin-left: 4.75rem !important;
-  }
-
-  .dashboard-shell-peek.dashboard-shell-peek.dashboard-workspace-shell .dashboard-main-canvas,
-  .dashboard-shell-peek.dashboard-shell-peek.dashboard-shell-peek:has(.inventory-workspace) .dashboard-main-canvas {
-    width: calc(100% - 4.5rem) !important;
-    margin-left: 4.5rem !important;
-  }
-
-  .dashboard-shell-peek .dashboard-sidebar {
-    box-shadow:
-      inset -1px 0 0 rgba(58, 100, 145, 0.08),
-      28px 0 64px rgba(36, 79, 135, 0.22);
-  }
-
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-brand-mark {
     display: none !important;
   }

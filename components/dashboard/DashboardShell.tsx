@@ -1036,17 +1036,16 @@ export default function DashboardShell({
     }
   });
 
-  /* Sayed, 12 Sep: "why don't we make it auto open". The rail opens itself
-     while the pointer is over it and closes when the pointer leaves -- the
-     Sortly / Notion pattern -- so nobody has to find the chevron to read a
-     label. It opens OVER the page (the content does not move), and the
-     chevron becomes "keep it open", which pins it the way it always did.
-     The short leave delay stops a flicker when the pointer crosses the edge. */
-  const [sidebarPeek, setSidebarPeek] = useState(false);
-  const peekLeaveTimer = useRef<number | null>(null);
-
+  /* Sayed, 12 Sep: "why don't we make it auto open" -- the rail opened
+     itself on hover, the Sortly/Notion pattern. Sayed, 21 Sep: back out.
+     Hovering the collapsed rail swung the whole sidebar open over the page
+     for anyone just passing the mouse across it on the way to something
+     else, and the toggle chevron kept landing in a different spot depending
+     on whether the pointer had triggered a peek. Restored to how it was
+     before 12 Sep: the rail stays a rail until the toggle is clicked, and a
+     single collapsed icon names itself on hover via the rail chip
+     (NavigationGroups' `compact` prop), not the whole sidebar. */
   const toggleSidebarExpanded = useCallback(() => {
-    setSidebarPeek(false);
     setSidebarExpanded((current) => {
       const next = !(current ?? true);
       try {
@@ -1059,35 +1058,7 @@ export default function DashboardShell({
   }, []);
 
   const effectiveCollapsed = sidebarExpanded === false;
-
-  const openPeek = useCallback(() => {
-    if (!effectiveCollapsed) return;
-    if (peekLeaveTimer.current !== null) {
-      window.clearTimeout(peekLeaveTimer.current);
-      peekLeaveTimer.current = null;
-    }
-    setRailChipSuppressed(true);
-    setSidebarPeek(true);
-  }, [effectiveCollapsed]);
-
-  const closePeek = useCallback(() => {
-    if (peekLeaveTimer.current !== null) window.clearTimeout(peekLeaveTimer.current);
-    peekLeaveTimer.current = window.setTimeout(() => {
-      peekLeaveTimer.current = null;
-      setRailChipSuppressed(false);
-      setSidebarPeek(false);
-    }, 160);
-  }, []);
-
-  useEffect(
-    () => () => {
-      if (peekLeaveTimer.current !== null) window.clearTimeout(peekLeaveTimer.current);
-    },
-    []
-  );
-
-  // Pinning it open (or collapsing it) ends the peek either way.
-  const sidebarShowsLabels = !effectiveCollapsed || sidebarPeek;
+  const sidebarShowsLabels = !effectiveCollapsed;
 
 
 
@@ -1170,8 +1141,7 @@ export default function DashboardShell({
       className={cx(
         "dashboard-shell dashboard-workspace-shell liquid-bg min-h-screen text-theme-primary",
         !sidebarShowsLabels && "dashboard-shell-collapsed",
-        sidebarShowsLabels && "dashboard-shell-expanded",
-        effectiveCollapsed && sidebarPeek && "dashboard-shell-peek"
+        sidebarShowsLabels && "dashboard-shell-expanded"
       )}
     >
       {/* Production brief item 57: a printed page must carry SydIN branding, the
@@ -1199,15 +1169,11 @@ export default function DashboardShell({
           !sidebarShowsLabels && "dashboard-sidebar-collapsed",
           sidebarShowsLabels && "dashboard-sidebar-expanded"
         )}
-        onMouseEnter={openPeek}
         // Safety net for the name chip. The per-link handler covers the normal
         // case, but a fast exit, a pointer warped out of the window, or a link
         // unmounting under the cursor can all skip it -- and because the chip
         // lives on <body> it would then hang there with nothing to clear it.
-        onMouseLeave={() => {
-          hideRailChip();
-          closePeek();
-        }}
+        onMouseLeave={hideRailChip}
       >
         <div className="dashboard-sidebar-header">
           <Link
@@ -1261,20 +1227,8 @@ export default function DashboardShell({
             className="dashboard-sidebar-toggle"
             /* One control, one name. The tooltip said "Collapse" while a
                screen reader heard "Hide sidebar labels". */
-            aria-label={
-              effectiveCollapsed
-                ? sidebarPeek
-                  ? "Keep sidebar open"
-                  : "Expand sidebar"
-                : "Collapse sidebar"
-            }
-            title={
-              effectiveCollapsed
-                ? sidebarPeek
-                  ? "Keep sidebar open"
-                  : "Expand sidebar"
-                : "Collapse sidebar"
-            }
+            aria-label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            title={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <UiIcon
               name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
