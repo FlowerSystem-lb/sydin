@@ -4881,3 +4881,12 @@ row (one fixed value plus a roadmap note) and the account menu's
 "Workspace style" link to it are gone. Item panel › Alerts: the
 developer-speak note now says whether the item uses the business default
 or its own minimum, and where to change it.
+
+### 21 Sep — search on the phone
+
+The laptop has Ctrl+K and a header field; the phone had no way into
+global search. A round search button beside the bell on Home and the
+search pill at the top of the More sheet both open /dashboard/search
+(which already worked on a phone and focuses its field on arrival); its
+field is the app's pill now. Settings also scrolls the active tab into
+view on arrival.
