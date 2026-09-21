@@ -24787,3 +24787,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .admin-console [class*="text-amber-100/"] { color: #92400e !important; }
 .admin-console .text-sky-100,
 .admin-console .text-sky-300 { color: #1d4ed8 !important; }
+
+/* Admin console search: the icon sits at the left; keep the text clear of it. */
+.admin-console .glass-input.pl-12 {
+  padding-left: 3rem !important;
+}
