@@ -21360,20 +21360,26 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    the collapsed rail regardless of which of the many stacked
    flex-direction/justify-content rules on .dashboard-sidebar-header wins on
    a given page (there are over a dozen) -- centred under the logo mark.
-   Pinned open (.dashboard-shell-expanded, below) it moves to the header's
-   right edge instead; there is no longer a hover-triggered state in
-   between (21 Sep: the auto-open-on-hover peek was removed) for the two
-   positions to fight over mid-transition, so each can just be right for
-   its own state.
+   Pinned open (.dashboard-shell-expanded, below) it centres in the header's
+   own row instead, near but not on top of the wordmark.
 
-   21 Sep: it also used to be invisible at rest -- transparent border,
-   transparent fill, nothing until the pointer found it by accident -- so
-   a real background, border and shadow are part of the base rule now,
-   not something bolted on only above one breakpoint (see the removed
+   21 Sep: `top: 4.6rem`, not the `3.7rem` this used to be. The mark was
+   separately made taller (3.3rem, `!important`, ~line 20402) to match the
+   nav icons' size -- nobody touched this rule to match, so a 30px-tall
+   button sat starting 10-12px above the mark's own bottom edge, covering
+   the bottom slice of the logo (Sayed: "logo uncomplete") and reading as a
+   button dropped in the wrong spot. 4.6rem clears the mark (bottom ~4.45rem
+   here) with room before the first nav row starts (~6.6rem) -- measured
+   live, not guessed, per this file's own cascade-trap notes.
+
+   It also used to be invisible at rest -- transparent border, transparent
+   fill, nothing until the pointer found it by accident -- so a real
+   background, border and shadow are part of the base rule now, not
+   something bolted on only above one breakpoint (see the removed
    >=1200px-only rule nearby). It reads as a button because it is one. */
 .dashboard-sidebar-toggle {
   position: absolute;
-  top: 3.7rem;
+  top: 4.6rem;
   left: 50%;
   transform: translateX(-50%);
   display: inline-flex;
@@ -21394,15 +21400,17 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 @media (min-width: 900px) {
-  /* Pinned open, the header is a left-aligned wordmark in a row instead of
-     a mark centred in a stack, so the toggle moves to the row's right edge
-     -- centred-under-the-logo left it about 2px from the end of the
-     wordmark, close enough to read as a mistake rather than a control. */
+  /* Sayed, 21 Sep: the right-edge placement tried here first (moved to fix
+     the toggle sitting ~2px from the wordmark) put ~80px of dead space
+     between the logo and the button instead -- "let the buttons in the
+     middle of the sidebar". Pinned open, the header is a left-aligned row
+     rather than a mark centred in a stack, so centring in the row's own
+     width (not the mark's) leaves a small, deliberate gap after the
+     wordmark instead of either extreme. */
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle {
     top: 50%;
-    left: auto;
-    right: 0.6rem;
-    transform: translateY(-50%);
+    left: 50%;
+    transform: translate(-50%, -50%);
   }
 }
 
