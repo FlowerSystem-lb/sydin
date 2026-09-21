@@ -921,6 +921,11 @@ export default function DashboardPage() {
           <small>Welcome back</small>
           <strong>{businessSettings.business_name || "Your workspace"}</strong>
         </span>
+        {/* The laptop has Ctrl+K and a header field; the phone had no way
+            into global search at all. */}
+        <Link href="/dashboard/search" className="ov-phone-bell" aria-label="Search everything">
+          <UiIcon name="search" className="h-5 w-5" />
+        </Link>
         <Link
           href="/dashboard/alerts"
           className="ov-phone-bell"

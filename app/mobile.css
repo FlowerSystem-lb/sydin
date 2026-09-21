@@ -3452,3 +3452,32 @@
     padding: 10px 16px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
   }
 }
+
+/* Two round buttons at the end of the greeting row: search, then the
+   bell. margin-left: auto on the bell pushed both; only the first of the
+   pair should carry it. */
+@media (max-width: 767px) {
+  .ov-phone-bell + .ov-phone-bell {
+    margin-left: 0;
+  }
+
+  /* The More sheet's way into global search: the same pill as every
+     search on the phone, as a link. */
+  .dashboard-more-search {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 44px;
+    margin-top: 10px;
+    padding: 0 16px;
+    border-radius: 999px;
+    background: var(--surface-sunken);
+    color: var(--text-muted);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .dashboard-more-search:active {
+    background: var(--bg-inset);
+  }
+}

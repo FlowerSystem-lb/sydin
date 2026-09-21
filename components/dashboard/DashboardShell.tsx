@@ -1880,6 +1880,15 @@ export default function DashboardShell({
       >
         <div className="dashboard-more-account">{accountSummary}</div>
 
+        <Link
+          href="/dashboard/search"
+          onClick={() => setMoreOpen(false)}
+          className="dashboard-more-search"
+        >
+          <UiIcon name="search" className="h-4 w-4" />
+          Search items, orders, suppliers…
+        </Link>
+
         <div className="mt-5 space-y-5">
           {groupedMoreItems.map((group) => (
             <section
