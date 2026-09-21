@@ -24661,3 +24661,26 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ov-row-end .ov-row-time {
   color: var(--text-muted);
 }
+
+/* ---- PRICING "MOST POPULAR" BADGE ----------------------------------------
+   The last gradient on the public pages: a cyan→violet tint. Blue plate. */
+.marketing-plan-badge {
+  border: 1px solid #c7d7fa;
+  border-radius: var(--radius-chip);
+  background: #e9effc;
+  background-image: none;
+  color: #1d4ed8;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ---- LANDING FEATURED CARD -----------------------------------------------
+   The one highlighted feature card carried a faint cyan→violet wash. The
+   blue plate, like every other accent. */
+.marketing-site .marketing-feature-card-accent {
+  border-color: #c7d7fa;
+  background: #e9effc;
+  background-image: none;
+}
