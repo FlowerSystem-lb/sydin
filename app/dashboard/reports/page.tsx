@@ -4,6 +4,7 @@ import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
+import { LockedActionLabel, UpgradeDialog } from "@/components/UpgradePrompt";
 import {
   Button,
   DialogShell,
@@ -68,6 +69,7 @@ import {
 } from "@/app/lib/stockMovements";
 import {
   FALLBACK_SUBSCRIPTION,
+  formatPlanName,
   getEffectiveLowStockThreshold,
   getSubscriptionCapabilities,
   getSubscriptionUsage,
@@ -488,6 +490,26 @@ export default function ReportsPage() {
   const planCapabilities = getSubscriptionCapabilities(
     subscriptionUsage.subscription
   );
+  // The pricing table says Free has neither advanced reports nor PDF export.
+  // Inventory enforced the PDF half; this page enforced nothing, so a Free
+  // account could open every money report and download PDFs. The money
+  // reports and the inventory PDF reports lock on Free; CSV exports of
+  // movements, suppliers and depots stay -- Free includes CSV export.
+  const reportsLocked = !planCapabilities.advancedReports;
+  const isLockedReport = (report: ReportCard) =>
+    reportsLocked && (report.action === "business" || report.action === "inventory-pdf");
+  const [lockedFeature, setLockedFeature] = useState<{
+    feature: string;
+    benefit: string;
+  } | null>(null);
+  const showLock = (report: ReportCard) =>
+    setLockedFeature({
+      feature: report.name,
+      benefit:
+        report.action === "business"
+          ? "Sales by month, outstanding invoices, top items, purchases by supplier and more — on screen, as PDF and as CSV."
+          : "Branded PDF reports of your stock and its value, grouped the way you choose.",
+    });
   const effectiveLowStockThreshold = getEffectiveLowStockThreshold(
     subscriptionUsage.subscription,
     businessSettings.low_stock_threshold
@@ -1031,6 +1053,10 @@ export default function ReportsPage() {
   const openReport = (report: ReportCard) => {
     setNotice("");
     setExportStatus("");
+    if (isLockedReport(report)) {
+      showLock(report);
+      return;
+    }
     if (report.action === "business") {
       const table = buildBusinessReport(report.id);
       if (table) setPreview({ report, table });
@@ -1262,7 +1288,15 @@ export default function ReportsPage() {
                       </Link>
                     ) : (
                       <Button onClick={() => openReport(report)}>
-                        {report.action === "business" ? "View report" : "Generate"}
+                        {isLockedReport(report) ? (
+                          <LockedActionLabel>
+                            {report.action === "business" ? "View report" : "Generate"}
+                          </LockedActionLabel>
+                        ) : report.action === "business" ? (
+                          "View report"
+                        ) : (
+                          "Generate"
+                        )}
                       </Button>
                     )}
                     {report.href && report.action !== "route" && (
@@ -1284,7 +1318,11 @@ export default function ReportsPage() {
                     {report.action === "business" && (
                       <Button
                         variant="secondary"
-                        onClick={() => void runBusinessReport(report, "csv")}
+                        onClick={() =>
+                          isLockedReport(report)
+                            ? showLock(report)
+                            : void runBusinessReport(report, "csv")
+                        }
                         disabled={exporting}
                       >
                         Export CSV
@@ -1402,6 +1440,16 @@ export default function ReportsPage() {
           </DashboardTable>
         </SheetShell>
       )}
+
+      <UpgradeDialog
+        open={Boolean(lockedFeature)}
+        onClose={() => setLockedFeature(null)}
+        feature={lockedFeature?.feature || ""}
+        benefit={lockedFeature?.benefit || ""}
+        currentPlan={formatPlanName(subscriptionUsage.subscription.plan)}
+        requiredPlan="Standard"
+        source="reports"
+      />
 
       {inventoryDialogReport && (
         <DialogShell

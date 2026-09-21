@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useSyncExternalStore } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Badge } from "@/components/ui";
 import type { UpgradePlan } from "@/app/lib/subscription";
@@ -151,9 +152,18 @@ export function UpgradeDialog({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onClose, open]);
 
-  if (!open) return null;
+  // Rendered into <body>, like DialogShell: the dashboard workspace uses
+  // container queries (layout containment), which traps position: fixed and
+  // left this dialog sitting at the bottom of the page instead of the screen,
+  // under the phone tab bar.
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
+  if (!open || !isClient) return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl"
       onClick={onClose}
@@ -228,7 +238,8 @@ export function UpgradeDialog({
           source={prompt.source}
         />
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 

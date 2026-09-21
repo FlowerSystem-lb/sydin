@@ -4929,3 +4929,20 @@ originals -- the `sizes` attribute is right. Contrast and tap-target
 probes on the pages changed today (Pick Lists, Stock Counts rows and
 bars) are clean; the Inventory filter sheet still renders as a bottom
 sheet with 16px selects after the global field rule.
+
+### 21 Sep — Suppliers form on the shared dialog; Reports gated on Free
+
+Suppliers' add / edit form was the last hand-rolled modal (translucent
+card, own title and buttons), so on a phone it floated above the tab bar
+instead of opening as a sheet like Add customer. It is a DialogShell now.
+
+The pricing table says Free has neither "Advanced reports" nor "PDF
+export"; Inventory enforced the PDF half, Reports enforced nothing -- a
+Free account could open every money report and download PDFs. The money
+reports and inventory PDF reports now show the lock and open the Upgrade
+dialog on Free (CSV exports of movements, suppliers and depots stay --
+Free includes CSV). Proven with the plan read as Free in the browser.
+Found on the way: the Upgrade dialog was not portalled to <body>, so the
+workspace's containment trapped its position: fixed -- on a phone it sat
+at the bottom of the page under the tab bar. Portalled like DialogShell;
+it and the import page's batch-scan panel are bottom sheets on a phone.
