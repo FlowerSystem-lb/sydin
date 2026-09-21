@@ -4847,3 +4847,16 @@ The purchase-order line, five things stacked in one column, gets the same
 shape (Qty | Unit cost, then Category or Line total | remove), and its
 second row reads as one sentence with the note under it. Desktop's
 five-column row untouched.
+
+### 21 Sep — Pick Lists and the item page on a phone
+
+Pick Lists: two cyan→blue(→violet) gradient progress bars (list and
+detail) are solid brand blue; list cards ~330px → ~165px (title and
+status, bar, Due / Items as chips; "Open" gone, the chevron says it);
+the detail header's status badge no longer stretches full width.
+
+Item page on a phone was 4127px. Stock Movements cards (~150px) and Item
+History cards (two quantity boxes each) are feed rows (74px / 62px); the
+QR block (612px: logo tile, name, 220px code, caption, raw URL, stacked
+buttons) is 284px: the code at 150px, buttons side by side, decoration
+and raw URL off. 3132px now, a quarter shorter. Desktop untouched.

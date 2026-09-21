@@ -1159,7 +1159,7 @@ export default function ItemDetailsPage() {
                     Item QR Code
                   </p>
 
-                  <div className="mt-5 flex flex-col items-center justify-center rounded-3xl border border-theme bg-theme-inset p-5 text-center sm:p-6">
+                  <div className="item-qr-block mt-5 flex flex-col items-center justify-center rounded-3xl border border-theme bg-theme-inset p-5 text-center sm:p-6">
                     <div className="mb-5 flex flex-col items-center gap-3">
                       <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-[#c7d7fa] bg-[#e9effc] text-lg font-black text-[#1d4ed8]">
                         {businessSettings.business_logo_url ? (
@@ -1341,10 +1341,10 @@ export default function ItemDetailsPage() {
                     {stockMovements.map((movement) => (
                       <div
                         key={movement.id}
-                        className="rounded-[18px] border border-theme bg-theme-inset p-4"
+                        className="item-movement-card rounded-[18px] border border-theme bg-theme-inset p-4"
                       >
-                        <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                          <div className="flex items-start gap-3">
+                        <div className="item-movement-inner flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
+                          <div className="item-movement-head flex items-start gap-3">
                             <div
                               className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${getActivityToneClasses(
                                 movement.movement_type
@@ -1448,10 +1448,10 @@ export default function ItemDetailsPage() {
                       return (
                       <div
                         key={entry.id}
-                        className="relative rounded-[18px] border border-theme bg-theme-inset p-4"
+                        className="item-history-card relative rounded-[18px] border border-theme bg-theme-inset p-4"
                       >
-                        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                          <div className="flex items-start gap-3">
+                        <div className="item-movement-inner flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                          <div className="item-movement-head flex items-start gap-3">
                             <div
                               className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${getActivityToneClasses(
                                 historyEventType
