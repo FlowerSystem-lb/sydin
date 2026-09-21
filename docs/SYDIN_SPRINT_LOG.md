@@ -5010,3 +5010,19 @@ rail, the "Inventory" chip appears on a collapsed icon's hover, the
 collapsed toggle has a visible chip at 1130px, and the pinned-open
 toggle sits ~80px clear of the logo. `npm run lint`, `npx tsc
 --noEmit`, `npm run build` all clean.
+
+### 21 Sep — sidebar toggle: the logo overlap and the floating gap
+
+Two screenshots from Sayed: the collapsed toggle sitting half over the
+bottom of the logo icon ("logo uncomplete"), and pinned open it
+floating ~80px from the wordmark with empty space between ("let the
+buttons in the middle of the sidebar"). Both came from the same gap:
+the logo mark was made 3.3rem tall in an earlier sprint (to match the
+nav icons) but the toggle's own `top: 3.7rem` was never updated to
+match, so a 1.9rem button started inside the mark's box. Measured live
+-- mark ends ~4.45rem down, the first nav row starts ~6.6rem -- and
+`top: 4.6rem` clears both. Pinned open, the toggle is centred in the
+header's own row again instead of pushed to the right edge. Verified
+at 900, 1130 and 1400px: no overlap either side of the toggle in
+either state. `npm run lint`, `npx tsc --noEmit`, `npm run build` all
+clean; pushed to main.
