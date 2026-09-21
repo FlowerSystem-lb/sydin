@@ -365,12 +365,12 @@ const OPERATION_REPORTS: ReportCard[] = [
     href: "/dashboard/stock-counts",
     hrefLabel: "Open Stock Counts",
     icon: "check",
-    note: "Saved count history is planned later.",
+    note: "A finalized count records its adjustments in Stock Movements.",
   },
   {
     id: "purchase-orders",
     name: "Purchase Orders",
-    description: "Create and export a purchase order draft.",
+    description: "Order from suppliers, receive deliveries and track what is still owed.",
     category: "operations",
     source: "Purchase Orders",
     formats: ["Workflow"],
@@ -378,7 +378,7 @@ const OPERATION_REPORTS: ReportCard[] = [
     href: "/dashboard/purchase-orders",
     hrefLabel: "Open Purchase Orders",
     icon: "file",
-    note: "Saved purchase order history is planned later.",
+    note: "Every order is kept, month by month, on the Purchase Orders page.",
   },
   {
     id: "receiving",
