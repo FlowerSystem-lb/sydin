@@ -5067,3 +5067,28 @@ yesterday. Verified at 900, 1130 and 1400px, both states, scrolled to
 the end of the nav list: centred on the right edge everywhere, no
 overlap with the logo or the nav list. `npm run lint`, `npx tsc
 --noEmit`, `npm run build` all clean; pushed.
+
+### 23 Sep — sidebar toggle: floating on top of nav labels, fixed
+
+Sayed, a screenshot, laughing at it: pinned open, the toggle (centred
+on the sidebar's full height per the earlier fix that day) sat right
+on top of "Pick Lists". Full-height centring only worked in the
+collapsed rail, where icons leave gaps between them; with labels
+showing, the list fills the whole height, so there was no scroll
+position where the middle wasn't some row's text. Split the two states:
+collapsed goes back to sitting under the logo, a fixed distance below
+a header grown tall enough to hold both without overlap (measured live
+again, not reused from a prior number -- the earlier header-height math
+assumed the button was still a flow child of the header, which it no
+longer is since the 22 Sep sidebar-level move). Pinned open keeps the
+full-height centring Sayed asked for, but `.dashboard-sidebar-scroll`
+now reserves a permanent 2.75rem gutter on the right in that state, so
+no row ever extends under where the button floats, at any scroll
+position -- not just "usually clear." That gutter also surfaced a
+pre-existing gap: nothing stopped a nav label from wrapping to a second
+line at a narrow-enough width, which "Purchase Orders" and "Stock
+Movements" then did. Labels now truncate with an ellipsis instead,
+which they should have already, independent of this fix. Verified at
+900, 1130 and 1400px, both states, scrolled to the end of the list: no
+overlap, no wrapped label, anywhere. `npm run lint`, `npx tsc
+--noEmit`, `npm run build` all clean; pushed.
