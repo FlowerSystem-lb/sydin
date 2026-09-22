@@ -21308,17 +21308,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: scale(1.06);
   }
 
-  /* Scoped per state because each centres itself a different way -- the
-     collapsed rail's toggle is a normal flex child now (no transform of
-     its own), pinned-open's is absolute + `translate(-50%, -50%)`.
-     Overwriting `transform` outright here without matching that would
-     silently snap it back to a corner on hover. */
+  /* Compounds with the base rule's `translateY(-50%)`, which centres the
+     button on the sidebar's height -- overwriting `transform` outright here
+     would silently snap it back to the top. */
   .dashboard-sidebar-toggle:hover {
-    transform: scale(1.08);
-  }
-
-  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle:hover {
-    transform: translate(-50%, -50%) scale(1.08);
+    transform: translateY(-50%) scale(1.08);
   }
 }
 
@@ -21327,11 +21321,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .dashboard-sidebar-toggle:active {
-  transform: scale(0.92);
-}
-
-.dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle:active {
-  transform: translate(-50%, -50%) scale(0.92);
+  transform: translateY(-50%) scale(0.92);
 }
 
 /* The group heading's chevron should turn, not jump. */
@@ -21354,49 +21344,50 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: none;
   }
 
-  /* Not `none` here for the pinned-open case -- its `translate(-50%, -50%)`
-     centres itself (not decoration, layout), so reduced motion should keep
-     it centred and only skip the hover/press scale. The collapsed rail's
-     toggle needs nothing here: it is a normal flex child with no transform
-     of its own to preserve. */
-  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle:hover,
-  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle:active {
-    transform: translate(-50%, -50%);
+  /* Not `none` here -- the toggle's base rule uses `translateY(-50%)` to
+     centre itself on the sidebar's height (not decoration, layout), so
+     reduced motion should keep it centred and only skip the hover/press
+     scale. */
+  .dashboard-sidebar-toggle:hover,
+  .dashboard-sidebar-toggle:active {
+    transform: translateY(-50%);
   }
 }
 
 /* The toggle. Present at every width so the rail can be brought back, and
    hidden on phones, where the sidebar is not the navigation at all.
 
-   21 Sep, twice in one day. First pass: a fixed `top: 4.6rem` (absolute,
-   centred under the mark) to clear the logo, which was separately made
-   taller (3.3rem, `!important`, ~line 20402) without this rule being
-   updated to match -- the button used to start inside the mark's own box
-   and cover its bottom slice (Sayed: "logo uncomplete"). That fix measured
-   clean at rest, then broke the moment the rail was scrolled: the gap it
-   was measured against only exists before the FIRST icon, so scrolling
-   slides the next icon into that same fixed screen position and it sits
-   behind/through the button (Sayed: "scroll down the icons interact with
-   the button"). A fixed offset can't account for scroll position -- the
-   scrolling list and the button's offset are measured from two different
-   things and only happened to agree at scrollTop 0.
+   22 Sep: moved in the markup from a child of `.dashboard-sidebar-header`
+   to a direct child of `.dashboard-sidebar` (still `<aside>`, still
+   `position: fixed`, so still a valid containing block). Two same-day fixes
+   before this one both kept it inside the header and re-anchored it to the
+   header's own content: first `top: 4.6rem` to clear the logo mark after
+   the mark was separately made taller elsewhere, then `position: static`
+   in flow after scrolling the rail slid nav icons through that fixed
+   offset (both explained in the sprint log, 21-22 Sep). Both were correct
+   fixes for the header-child version of this problem and both needed
+   another fix days apart, because every property of the header -- its
+   height, its content, its flex-direction per breakpoint -- was something
+   this button's position depended on staying put.
 
-   Second pass, this rule: the collapsed rail's toggle is `position: static`
-   below (a real flex child of the header, stacked under the mark by the
-   header's own `gap`), not absolute at a coordinate. The header's height
-   then includes the button, so `.dashboard-sidebar-scroll` starts after
-   it in document flow -- nothing can ever scroll behind it, because nothing
-   above it is scrollable. Pinned open keeps `position: absolute` (below):
-   the header there is a row with nothing scrolling behind it, so there is
-   nothing for it to collide with, and centring in the row's own width is
-   simpler than adding it to that flex row too.
+   Sayed, 22 Sep: "put the button in the middle of the side bar right
+   side" -- as a sidebar child instead, `top: 50%` centres it on the
+   sidebar's own full height (not the header's ~80px), and `right: 0.5rem`
+   sits it a fixed distance from the sidebar's own right edge, collapsed or
+   pinned open, at every width the rail token or the sidebar-width token
+   is redefined -- nothing left to keep in sync when either changes, and
+   one rule for both states instead of two.
 
    It also used to be invisible at rest -- transparent border, transparent
    fill, nothing until the pointer found it by accident -- so a real
-   background, border and shadow are part of the base rule now, not
-   something bolted on only above one breakpoint (see the removed
-   >=1200px-only rule nearby). It reads as a button because it is one. */
+   background, border and shadow are part of the base rule (see the removed
+   >=1200px-only rule nearby, and the 21 Sep sprint log entry). It reads as
+   a button because it is one. */
 .dashboard-sidebar-toggle {
+  position: absolute;
+  top: 50%;
+  right: 0.5rem;
+  transform: translateY(-50%);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -21412,57 +21403,6 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     background-color var(--motion-fast) var(--motion-ease-standard),
     border-color var(--motion-fast) var(--motion-ease-standard),
     color var(--motion-fast) var(--motion-ease-standard);
-}
-
-@media (min-width: 900px) {
-  /* The 900-1199px tier's own collapsed-header rule (~line 3548) never set
-     `flex-direction: column` -- only the >=1200px one did -- because until
-     now the toggle was `position: absolute` and never cared what direction
-     the header's flexbox ran in. Stacking it in flow (below) does care: row
-     direction put the button beside the mark instead of under it, mostly
-     off the edge of a 61px rail. Column, stated again here rather than
-     patched at its original 1200px-only rule, so this tier does not have to
-     be found again next time someone edits that one. */
-  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-header {
-    flex-direction: column;
-    gap: 0.4rem;
-    /* `!important`, beating `.dashboard-workspace-shell .dashboard-sidebar-header`
-       (~line 12071, also `!important`, and higher specificity here wins the
-       tie): that rule pins this header to exactly `5.6rem` -- reverse-engineered,
-       by its own comment, to fit a logo + gap + an ABSOLUTE-positioned toggle
-       that took "no space in this header's own flow". The toggle now does take
-       up space in flow (above), so 5.6rem is content's own natural height with
-       zero slack -- `justify-content: center`-ing something that tall inside a
-       box exactly that tall overflowed it by about a pixel into the nav list.
-
-       Tried `min-height: 0` first, expecting the header to just hug its
-       content. It did not: `.dashboard-sidebar-header` is itself a flex ITEM
-       of the `<aside>` column, `flex-shrink: 1` by default, and with no floor
-       it got compressed below what its own children need, so the mark and
-       button overflowed symmetrically out of a header shorter than either of
-       them. `min-height` was never only about the old toggle's room -- it was
-       also the shrink floor. 5.8rem keeps that floor, sized for what is
-       actually in the header now instead of the old absolute button's math. */
-    min-height: 5.8rem !important;
-  }
-
-  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle {
-    position: static;
-    margin-top: 0.15rem;
-  }
-
-  /* Sayed, 21 Sep: the right-edge placement tried here first (moved to fix
-     the toggle sitting ~2px from the wordmark) put ~80px of dead space
-     between the logo and the button instead -- "let the buttons in the
-     middle of the sidebar". Centring in the row's own width (not the
-     mark's) leaves a small, deliberate gap after the wordmark instead of
-     either extreme. */
-  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-toggle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
 }
 
 @media (hover: hover) {

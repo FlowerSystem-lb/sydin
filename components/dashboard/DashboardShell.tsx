@@ -1220,22 +1220,32 @@ export default function DashboardShell({
               className="dashboard-brand-logo object-contain"
             />
           </Link>
-
-          <button
-            type="button"
-            onClick={toggleSidebarExpanded}
-            className="dashboard-sidebar-toggle"
-            /* One control, one name. The tooltip said "Collapse" while a
-               screen reader heard "Hide sidebar labels". */
-            aria-label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-            title={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
-          >
-            <UiIcon
-              name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
-              className="h-4 w-4"
-            />
-          </button>
         </div>
+
+        {/* Sayed, 22 Sep: "put the button in the middle of the side bar right
+            side". Moved out of the header on purpose, not just restyled --
+            as a header child it had to be given a fixed vertical offset from
+            the logo, which needed redoing every time the logo's own size
+            changed (twice already: once when the mark grew taller, once
+            when scrolling the rail slid nav icons through that fixed spot).
+            As a direct child of <aside>, `right: 0.5rem` sits it a fixed
+            distance from the sidebar's own edge regardless of whether that
+            edge is the rail's ~4.5rem or the pinned-open ~14.75rem+ width --
+            nothing to keep in sync when either changes. */}
+        <button
+          type="button"
+          onClick={toggleSidebarExpanded}
+          className="dashboard-sidebar-toggle"
+          /* One control, one name. The tooltip said "Collapse" while a
+             screen reader heard "Hide sidebar labels". */
+          aria-label={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+          title={effectiveCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+        >
+          <UiIcon
+            name={effectiveCollapsed ? "chevron-right" : "chevron-left"}
+            className="h-4 w-4"
+          />
+        </button>
 
         <div className="dashboard-sidebar-workspace" aria-label="Current workspace">
           <AccountAvatar
