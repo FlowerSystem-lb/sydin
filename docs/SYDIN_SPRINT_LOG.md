@@ -5048,3 +5048,22 @@ flex-shrink compress the header below its own content). Pinned open is
 untouched -- nothing scrolls behind that header. Verified at 900, 1130
 and 1400px, both states, scrolled to the list's end: clean everywhere.
 `npm run lint`, `npx tsc --noEmit`, `npm run build` all clean; pushed.
+
+### 23 Sep — sidebar toggle: moved to the sidebar's middle, right side
+
+Sayed: "put the button in the middle of the side bar right side." The
+last two fixes (21-22 Sep) both kept the toggle inside
+`.dashboard-sidebar-header` and re-anchored it to the header's own
+content -- a fixed offset to clear the logo, then `position: static`
+in flow to stop nav icons sliding behind it on scroll -- and each one
+needed redoing because the header's height, content and flex-direction
+per breakpoint kept changing under it. Moved it out of the header
+entirely: it is now a direct child of `.dashboard-sidebar` (still
+`position: fixed`), positioned `top: 50%` (centres on the sidebar's
+full height) and `right: 0.5rem` (a fixed inset from the sidebar's own
+right edge, whatever width token is active). One rule now covers both
+collapsed and pinned-open, replacing the two-state split from
+yesterday. Verified at 900, 1130 and 1400px, both states, scrolled to
+the end of the nav list: centred on the right edge everywhere, no
+overlap with the logo or the nav list. `npm run lint`, `npx tsc
+--noEmit`, `npm run build` all clean; pushed.
