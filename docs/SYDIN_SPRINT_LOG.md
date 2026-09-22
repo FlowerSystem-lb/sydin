@@ -5092,3 +5092,21 @@ which they should have already, independent of this fix. Verified at
 900, 1130 and 1400px, both states, scrolled to the end of the list: no
 overlap, no wrapped label, anywhere. `npm run lint`, `npx tsc
 --noEmit`, `npm run build` all clean; pushed.
+
+### 23 Sep — sidebar: section-collapse arrows removed
+
+Sayed: "just remove the arrows." Each nav group heading (Daily work,
+Buying, Selling...) was a button that collapsed its section, with the
+chevron as the only visual sign of that -- so it came out along with
+the whole collapse feature rather than leaving an invisible click
+target behind. Headers are plain labels now, every section always
+shown, same as before per-section collapsing existed. Removed the dead
+state (collapsedSections, its localStorage key, toggleSection) and the
+chevron/button CSS. Checked the tablet drawer, which shares this
+component: same clean result.
+
+Separately answered a question, not a code change: Import & Export's
+sidebar entry was removed 4 Sep at Sayed's own earlier call (still
+reachable from Inventory's ... menu) -- explained in chat with the
+original reasoning, nothing to fix. `npm run lint`, `npx tsc --noEmit`,
+`npm run build` all clean; pushed.
