@@ -480,9 +480,7 @@ function NavigationLink({
   );
 }
 
-const SIDEBAR_COLLAPSED_SECTIONS_KEY = "sydin:sidebar-collapsed-sections";
-/* Whether the sidebar shows its labels. Remembered per browser, like the
-   per-section collapse above it. */
+/* Whether the sidebar shows its labels. Remembered per browser. */
 const SIDEBAR_EXPANDED_KEY = "sydin:sidebar-expanded";
 
 function NavigationGroups({
@@ -494,52 +492,6 @@ function NavigationGroups({
   compact?: boolean;
   onNavigate?: () => void;
 }) {
-  // Nothing is collapsed until the user chooses to -- 18 items across 5
-  // sections were always fully expanded before this, so an empty set here
-  // reproduces that exact behavior for everyone who hasn't touched a toggle.
-  const [collapsedSections, setCollapsedSections] = useState<
-    Set<DashboardNavigationSection>
-  >(() => new Set());
-
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      try {
-        const stored = window.localStorage.getItem(
-          SIDEBAR_COLLAPSED_SECTIONS_KEY
-        );
-        if (!stored) return;
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed)) {
-          setCollapsedSections(new Set(parsed));
-        }
-      } catch {
-        // Keep everything expanded if the stored value is unreadable.
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  const toggleSection = (section: DashboardNavigationSection) => {
-    setCollapsedSections((current) => {
-      const next = new Set(current);
-      if (next.has(section)) {
-        next.delete(section);
-      } else {
-        next.add(section);
-      }
-      try {
-        window.localStorage.setItem(
-          SIDEBAR_COLLAPSED_SECTIONS_KEY,
-          JSON.stringify([...next])
-        );
-      } catch {
-        // Collapse state just won't persist across reloads.
-      }
-      return next;
-    });
-  };
-
   return (
     <nav aria-label="Dashboard navigation" className="dashboard-nav-groups">
       {DASHBOARD_SECTION_ORDER.map((section) => {
@@ -549,51 +501,22 @@ function NavigationGroups({
 
         if (items.length === 0) return null;
 
-        // A section the user is currently inside stays open regardless of
-        // their saved preference -- collapsing your own location out from
-        // under you would hide the only sign of where you are.
-        const hasActiveItem = items.some((item) =>
-          isDashboardRouteActive(pathname, item.href)
-        );
-        // Never collapse in the icon rail. Section headers are display: none
-        // there, so the toggle that reopens a section is unreachable -- yet the
-        // rail reads the same persisted key as the drawer, so one collapse in
-        // the tablet drawer silently deleted those icons from the desktop rail
-        // with no way to bring them back (18 links down to 12, or 6 with three
-        // sections collapsed). Collapsing only makes sense where labels show.
-        const isCollapsed =
-          !compact && collapsedSections.has(section) && !hasActiveItem;
-
         return (
           <div key={section} className="dashboard-nav-group">
-            <button
-              type="button"
-              className="dashboard-nav-group-label"
-              onClick={() => toggleSection(section)}
-              aria-expanded={!isCollapsed}
-            >
+            <div className="dashboard-nav-group-label">
               {DASHBOARD_SECTION_LABELS[section]}
-              <UiIcon
-                name="chevron-down"
-                className={cx(
-                  "dashboard-nav-group-chevron h-3.5 w-3.5",
-                  isCollapsed && "dashboard-nav-group-chevron-collapsed"
-                )}
-              />
-            </button>
-            {!isCollapsed && (
-              <div className="dashboard-nav-group-items">
-                {items.map((item) => (
-                  <NavigationLink
-                    key={item.href}
-                    item={item}
-                    pathname={pathname}
-                    compact={compact}
-                    onNavigate={onNavigate}
-                  />
-                ))}
-              </div>
-            )}
+            </div>
+            <div className="dashboard-nav-group-items">
+              {items.map((item) => (
+                <NavigationLink
+                  key={item.href}
+                  item={item}
+                  pathname={pathname}
+                  compact={compact}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </div>
           </div>
         );
       })}

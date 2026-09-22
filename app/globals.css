@@ -3150,11 +3150,16 @@ select.glass-input option {
   margin-top: auto;
 }
 
+/* 23 Sep: was a <button> that collapsed the section, with a chevron that
+   rotated to show open/closed. Sayed: "remove the arrows" -- the chevron
+   was the only visible sign it was clickable at all, so removing it without
+   also removing the click target would have left an invisible toggle
+   behind. Plain label now, every section always open, matching how the 18
+   items across 5 sections behaved before collapsing existed. */
 .dashboard-nav-group-label {
   display: flex;
   width: 100%;
   align-items: center;
-  justify-content: space-between;
   gap: var(--space-2);
   padding-inline: var(--space-3);
   border: 0;
@@ -3166,28 +3171,6 @@ select.glass-input option {
   line-height: 1.2;
   text-align: left;
   text-transform: uppercase;
-  cursor: pointer;
-  transition: color var(--motion-fast, 150ms) ease;
-}
-
-.dashboard-nav-group-label:hover,
-.dashboard-nav-group-label:focus-visible {
-  color: var(--text-secondary);
-}
-
-.dashboard-nav-group-label:focus-visible {
-  outline: 2px solid var(--focus-ring, #2563eb);
-  outline-offset: 2px;
-  border-radius: var(--radius-sm, 4px);
-}
-
-.dashboard-nav-group-chevron {
-  flex-shrink: 0;
-  transition: transform var(--motion-fast, 150ms) ease;
-}
-
-.dashboard-nav-group-chevron-collapsed {
-  transform: rotate(-90deg);
 }
 
 .dashboard-nav-group-items {
@@ -21349,17 +21332,11 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   transform: translateX(-50%) scale(0.92);
 }
 
-/* The group heading's chevron should turn, not jump. */
-.dashboard-nav-group-chevron {
-  transition: transform var(--motion-control) var(--motion-ease-standard);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .dashboard-shell-expanded .dashboard-nav-link,
   .dashboard-shell-expanded .dashboard-nav-icon,
   .dashboard-shell-expanded .dashboard-nav-label,
-  .dashboard-sidebar-toggle,
-  .dashboard-nav-group-chevron {
+  .dashboard-sidebar-toggle {
     transition: none;
   }
 
