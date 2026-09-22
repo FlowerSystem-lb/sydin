@@ -5026,3 +5026,25 @@ header's own row again instead of pushed to the right edge. Verified
 at 900, 1130 and 1400px: no overlap either side of the toggle in
 either state. `npm run lint`, `npx tsc --noEmit`, `npm run build` all
 clean; pushed to main.
+
+### 22 Sep — sidebar toggle: icons sliding behind it on scroll
+
+Sayed, from a screenshot: scrolling the collapsed rail made the nav
+icons "interact with" the toggle button. The button was `position:
+absolute` at a fixed screen offset from the header -- fine at rest (a
+padding gap sits before the first icon), broken the moment you scroll,
+since later icons have no such gap and slide straight into that same
+fixed spot. Fixed at the root instead of re-tuning the offset again:
+in the collapsed rail the toggle is now a real flex child stacked
+under the logo, so the header's own height includes it and the
+scrollable list starts only after it -- nothing can scroll behind a
+button that isn't floating over the scroll area's own box. Needed two
+follow-on fixes once it became a flow participant: the 900-1199px tier
+never had `flex-direction: column` on the collapsed header (only
+>=1200px did -- moot before, since an absolute button ignores flex
+direction), and a `min-height: 5.6rem !important` reserved for the old
+absolute button had to be recalibrated (removing it outright let
+flex-shrink compress the header below its own content). Pinned open is
+untouched -- nothing scrolls behind that header. Verified at 900, 1130
+and 1400px, both states, scrolled to the list's end: clean everywhere.
+`npm run lint`, `npx tsc --noEmit`, `npm run build` all clean; pushed.
