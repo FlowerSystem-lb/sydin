@@ -21226,6 +21226,23 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     justify-content: flex-start !important;
     gap: 0.7rem;
     padding-inline: var(--space-3) !important;
+    /* A flex item's default `min-width: auto` refuses to shrink below its
+       content's own width, so text-overflow below had nothing to do --
+       the row just widened past its container instead. Needed once the
+       row's available width can be less than its label's natural width,
+       which 23 Sep's toggle gutter (~line 21437) made a real case: without
+       this, "Purchase Orders" wrapped to two lines instead of truncating,
+       rather than merely never being tested at this width before. */
+    min-width: 0;
+  }
+
+  /* Companion to `min-width: 0` above -- a nav label that cannot fit gets
+     cut with an ellipsis instead of wrapping to a second line, which would
+     have thrown every row's height out of rhythm with the one that wrapped. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-nav-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
 
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-trigger {
@@ -21308,11 +21325,15 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: scale(1.06);
   }
 
-  /* Compounds with the base rule's `translateY(-50%)`, which centres the
-     button on the sidebar's height -- overwriting `transform` outright here
-     would silently snap it back to the top. */
+  /* Scoped per state because each centres itself a different way (see the
+     rule itself, below) -- overwriting `transform` outright here without
+     matching that would silently snap the button off-centre on hover. */
   .dashboard-sidebar-toggle:hover {
     transform: translateY(-50%) scale(1.08);
+  }
+
+  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:hover {
+    transform: translateX(-50%) scale(1.08);
   }
 }
 
@@ -21322,6 +21343,10 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .dashboard-sidebar-toggle:active {
   transform: translateY(-50%) scale(0.92);
+}
+
+.dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:active {
+  transform: translateX(-50%) scale(0.92);
 }
 
 /* The group heading's chevron should turn, not jump. */
@@ -21344,39 +21369,48 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: none;
   }
 
-  /* Not `none` here -- the toggle's base rule uses `translateY(-50%)` to
-     centre itself on the sidebar's height (not decoration, layout), so
+  /* Not `none` here -- the toggle centres itself with a transform (not
+     decoration, layout; see the rule below for which one per state), so
      reduced motion should keep it centred and only skip the hover/press
      scale. */
   .dashboard-sidebar-toggle:hover,
   .dashboard-sidebar-toggle:active {
     transform: translateY(-50%);
   }
+
+  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:hover,
+  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:active {
+    transform: translateX(-50%);
+  }
 }
 
 /* The toggle. Present at every width so the rail can be brought back, and
-   hidden on phones, where the sidebar is not the navigation at all.
-
-   22 Sep: moved in the markup from a child of `.dashboard-sidebar-header`
-   to a direct child of `.dashboard-sidebar` (still `<aside>`, still
-   `position: fixed`, so still a valid containing block). Two same-day fixes
-   before this one both kept it inside the header and re-anchored it to the
-   header's own content: first `top: 4.6rem` to clear the logo mark after
-   the mark was separately made taller elsewhere, then `position: static`
-   in flow after scrolling the rail slid nav icons through that fixed
-   offset (both explained in the sprint log, 21-22 Sep). Both were correct
-   fixes for the header-child version of this problem and both needed
-   another fix days apart, because every property of the header -- its
-   height, its content, its flex-direction per breakpoint -- was something
-   this button's position depended on staying put.
+   hidden on phones, where the sidebar is not the navigation at all. A
+   direct child of `.dashboard-sidebar` (22 Sep) -- still `<aside>`, still
+   `position: fixed`, so still a valid containing block regardless of which
+   state repositions it below.
 
    Sayed, 22 Sep: "put the button in the middle of the side bar right
-   side" -- as a sidebar child instead, `top: 50%` centres it on the
-   sidebar's own full height (not the header's ~80px), and `right: 0.5rem`
-   sits it a fixed distance from the sidebar's own right edge, collapsed or
-   pinned open, at every width the rail token or the sidebar-width token
-   is redefined -- nothing left to keep in sync when either changes, and
-   one rule for both states instead of two.
+   side" -- `top: 50%; right: 0.5rem` on the sidebar child centres it on
+   the sidebar's full height. Shipped for both states. Sayed, 23 Sep, a
+   screenshot: pinned open, that put it floating on top of "Pick Lists"
+   -- the middle of the FULL height is the middle of the scrollable nav
+   list once the sidebar has labels wide enough to fill it, and there is
+   no scroll position where that is not on top of some row's text.
+
+   Split per state instead of one rule for both, because the two states
+   fill their height completely differently. Collapsed (below): centred
+   under the mark, a fixed distance below the header -- 5.6rem is that
+   header's own pinned height (`!important`, ~line 12071, unconditional,
+   not this rule's to keep in sync with), so nothing here moves if the
+   header's content ever does. Right-side was tried here too and does not
+   fit: the collapsed rail is ~3.5rem of usable width and the mark alone
+   is ~2.3rem of it, so a 1.9rem button beside it can only ever overlap
+   the logo, not clear it. Pinned open (below): `.dashboard-sidebar-scroll`
+   reserves a permanent gutter on the right in that state, so `top: 50%;
+   right: 0.5rem` -- the full-height centring Sayed asked for -- has empty
+   margin under it at every scroll position instead of row text, because
+   no row's own width ever reaches that column to begin with.
 
    It also used to be invisible at rest -- transparent border, transparent
    fill, nothing until the pointer found it by accident -- so a real
@@ -21403,6 +21437,34 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     background-color var(--motion-fast) var(--motion-ease-standard),
     border-color var(--motion-fast) var(--motion-ease-standard),
     color var(--motion-fast) var(--motion-ease-standard);
+}
+
+@media (min-width: 900px) {
+  /* The header's own pinned `min-height: 5.6rem` (`!important`, ~line
+     12071) centres the lone mark in a box exactly as tall as the mark
+     needs -- fine when nothing else lives in that header, not enough
+     once something has to fit below the mark without overlapping it.
+     Grown here rather than there because this is what needs the room,
+     not the header itself. */
+  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-header {
+    min-height: 7.5rem !important;
+  }
+
+  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle {
+    top: 6.3rem;
+    right: auto;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* Pairs with the collapsed override above: reserves the column the
+     pinned-open toggle floats in, at every scroll position, so nothing
+     with `width: 100%` in here (nav rows, group labels) ever extends
+     under it. Percentage widths inside shrink to match automatically --
+     nothing per-row to keep in sync. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-scroll {
+    padding-right: 2.75rem;
+  }
 }
 
 @media (hover: hover) {
