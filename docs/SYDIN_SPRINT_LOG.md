@@ -5151,3 +5151,20 @@ hidden outright when pinned open, no empty band left behind. Collapsed
 rail keeps its own icon mark; the <900px tablet drawer is a separate
 header, untouched. Verified at 900, 1130 and 1400px. `npm run lint`,
 `npx tsc --noEmit`, `npm run build` all clean; pushed.
+
+### 24 Sep — sidebar reshaped after Sayed's reference
+
+Sayed sent a sidebar design ("just inspire, no color or emoji"). Taken:
+the shapes and layout, in SydIN's palette and icons. Rows are soft pills
+with a faint white fill; the collapsed rail is a column of round buttons,
+now centred under the mark; the selected row is a solid white pill with a
+soft lift. The open/close button moved into a new top row beside the
+business card (under the mark when collapsed) as a plain flex child --
+ending the run of coordinate-based placements (21-23 Sep) that each broke
+on something they could not see -- and the 2.75rem gutter the
+middle-of-sidebar placement needed is gone, so long labels fit again.
+Also fixed a 23 Sep miss: Inventory's own copy of the workspace-card hide
+rule was still unscoped, leaving the open sidebar empty at the top on
+that page. Verified 18/18 by a measured check (Overview, Inventory,
+Sales x open/collapsed x 900/1130/1400px); tablet and phone unchanged.
+`npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.
