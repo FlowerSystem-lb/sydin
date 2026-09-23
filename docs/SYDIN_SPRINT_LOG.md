@@ -5110,3 +5110,25 @@ sidebar entry was removed 4 Sep at Sayed's own earlier call (still
 reachable from Inventory's ... menu) -- explained in chat with the
 original reasoning, nothing to fix. `npm run lint`, `npx tsc --noEmit`,
 `npm run build` all clean; pushed.
+
+### 23 Sep — bulk photos: unmatched photos become new items, not a dead end
+
+Sayed: bulk-importing photos for products not yet in SydIN had no path
+through the existing dialog except assigning each one by hand to an
+item that usually did not exist yet. A photo matching nothing now
+creates a new item instead -- placeholder name built from the business
+name (Settings) plus a running number past the current item count
+("Flower Plus #12"), same numbering convention already used for PO and
+invoice references, not a new one. Row shape matches AddItemForm's own
+minimal insert (quantity 0, default unit, rest at ordinary defaults);
+item_code still comes from the database's own insert trigger,
+untouched. The existing "pick an item by hand" option stays for
+photos that DO already have an item, just filed under a different
+name. Schema confirmed live via Supabase MCP first (name nullable,
+item_code trigger-generated, unit_type defaults to 'piece') rather
+than guessed. Verified end to end through both entry points --
+Inventory's ... menu and Import & Export's "Add photos" (which needed
+its own business-name fetch added) -- a real upload created the item
+with the correct auto item code; test row and photo deleted
+immediately after. `npm run lint`, `npx tsc --noEmit`, `npm run build`
+all clean; pushed.
