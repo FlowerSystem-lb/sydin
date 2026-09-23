@@ -11722,8 +11722,12 @@ body,
   }
 
   /* Scoped to the collapsed rail (2026-09-11) -- Overview and Inventory each
-     restated the whole hide-list for themselves. */
-  .dashboard-shell:has(.inventory-workspace) .dashboard-sidebar-workspace,
+     restated the whole hide-list for themselves. The workspace card was the
+     one unscoped entry; scoped with the rest 24 Sep, the Inventory copy of
+     the same fix made on the 23rd for every other page (it stayed hidden
+     here, pinned open included, leaving the open sidebar with nothing at
+     the top on this one page). */
+  .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-sidebar-workspace,
   .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-brand-logo,
   .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-group-label,
   .dashboard-shell-collapsed:has(.inventory-workspace) .dashboard-nav-label,
@@ -21332,15 +21336,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     transform: scale(1.06);
   }
 
-  /* Scoped per state because each centres itself a different way (see the
-     rule itself, below) -- overwriting `transform` outright here without
-     matching that would silently snap the button off-centre on hover. */
   .dashboard-sidebar-toggle:hover {
-    transform: translateY(-50%) scale(1.08);
-  }
-
-  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:hover {
-    transform: translateX(-50%) scale(1.08);
+    transform: scale(1.08);
   }
 }
 
@@ -21349,11 +21346,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .dashboard-sidebar-toggle:active {
-  transform: translateY(-50%) scale(0.92);
-}
-
-.dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:active {
-  transform: translateX(-50%) scale(0.92);
+  transform: scale(0.92);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -21366,52 +21359,24 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
   .dashboard-shell-expanded .dashboard-nav-link:hover,
   .dashboard-shell-expanded .dashboard-nav-link:active,
-  .dashboard-shell-expanded .dashboard-nav-link:hover .dashboard-nav-icon {
-    transform: none;
-  }
-
-  /* Not `none` here -- the toggle centres itself with a transform (not
-     decoration, layout; see the rule below for which one per state), so
-     reduced motion should keep it centred and only skip the hover/press
-     scale. */
+  .dashboard-shell-expanded .dashboard-nav-link:hover .dashboard-nav-icon,
   .dashboard-sidebar-toggle:hover,
   .dashboard-sidebar-toggle:active {
-    transform: translateY(-50%);
-  }
-
-  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:hover,
-  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle:active {
-    transform: translateX(-50%);
+    transform: none;
   }
 }
 
 /* The toggle. Present at every width so the rail can be brought back, and
-   hidden on phones, where the sidebar is not the navigation at all. A
-   direct child of `.dashboard-sidebar` (22 Sep) -- still `<aside>`, still
-   `position: fixed`, so still a valid containing block regardless of which
-   state repositions it below.
+   hidden on phones, where the sidebar is not the navigation at all.
 
-   Sayed, 22 Sep: "put the button in the middle of the side bar right
-   side" -- `top: 50%; right: 0.5rem` on the sidebar child centres it on
-   the sidebar's full height. Shipped for both states. Sayed, 23 Sep, a
-   screenshot: pinned open, that put it floating on top of "Pick Lists"
-   -- the middle of the FULL height is the middle of the scrollable nav
-   list once the sidebar has labels wide enough to fill it, and there is
-   no scroll position where that is not on top of some row's text.
-
-   Split per state instead of one rule for both, because the two states
-   fill their height completely differently. Collapsed (below): centred
-   under the mark, a fixed distance below the header -- 5.6rem is that
-   header's own pinned height (`!important`, ~line 12071, unconditional,
-   not this rule's to keep in sync with), so nothing here moves if the
-   header's content ever does. Right-side was tried here too and does not
-   fit: the collapsed rail is ~3.5rem of usable width and the mark alone
-   is ~2.3rem of it, so a 1.9rem button beside it can only ever overlap
-   the logo, not clear it. Pinned open (below): `.dashboard-sidebar-scroll`
-   reserves a permanent gutter on the right in that state, so `top: 50%;
-   right: 0.5rem` -- the full-height centring Sayed asked for -- has empty
-   margin under it at every scroll position instead of row text, because
-   no row's own width ever reaches that column to begin with.
+   24 Sep, after Sayed's reference (a sidebar with the logo and a small
+   round chevron sharing the top row): a round button, and a plain flex
+   child of `.dashboard-sidebar-top` (see "Sidebar shape" at the end of
+   this file) instead of `position: absolute` against the sidebar. Every
+   earlier placement (21-23 Sep, in the sprint log) positioned it by
+   coordinate and each one broke on something the coordinate could not
+   see -- the logo growing, the rail scrolling, the labels filling the
+   middle of the sidebar. In flow, the row it sits in makes the room.
 
    It also used to be invisible at rest -- transparent border, transparent
    fill, nothing until the pointer found it by accident -- so a real
@@ -21419,17 +21384,14 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    >=1200px-only rule nearby, and the 21 Sep sprint log entry). It reads as
    a button because it is one. */
 .dashboard-sidebar-toggle {
-  position: absolute;
-  top: 50%;
-  right: 0.5rem;
-  transform: translateY(-50%);
+  position: static;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 1.9rem;
   height: 1.9rem;
   flex: none;
-  border-radius: 9px;
+  border-radius: 999px;
   border: 1px solid var(--border-default);
   background: var(--bg-surface);
   box-shadow: var(--shadow-subtle);
@@ -21437,35 +21399,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   transition:
     background-color var(--motion-fast) var(--motion-ease-standard),
     border-color var(--motion-fast) var(--motion-ease-standard),
-    color var(--motion-fast) var(--motion-ease-standard);
-}
-
-@media (min-width: 900px) {
-  /* The header's own pinned `min-height: 5.6rem` (`!important`, ~line
-     12071) centres the lone mark in a box exactly as tall as the mark
-     needs -- fine when nothing else lives in that header, not enough
-     once something has to fit below the mark without overlapping it.
-     Grown here rather than there because this is what needs the room,
-     not the header itself. */
-  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-header {
-    min-height: 7.5rem !important;
-  }
-
-  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar-toggle {
-    top: 6.3rem;
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-  /* Pairs with the collapsed override above: reserves the column the
-     pinned-open toggle floats in, at every scroll position, so nothing
-     with `width: 100%` in here (nav rows, group labels) ever extends
-     under it. Percentage widths inside shrink to match automatically --
-     nothing per-row to keep in sync. */
-  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-scroll {
-    padding-right: 2.75rem;
-  }
+    color var(--motion-fast) var(--motion-ease-standard),
+    transform var(--motion-fast) var(--motion-ease-standard);
 }
 
 @media (hover: hover) {
@@ -24857,4 +24792,86 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 /* Admin console search: the icon sits at the left; keep the text clear of it. */
 .admin-console .glass-input.pl-12 {
   padding-left: 3rem !important;
+}
+
+/* ---------------------------------------------------------------------------
+   Sidebar shape (2026-09-24)
+   ---------------------------------------------------------------------------
+   Sayed's reference: a sidebar whose rows are soft pills, whose collapsed
+   rail is a column of round buttons, whose selected row is a solid white
+   pill, and whose logo and chevron share the top row. "just inspire, no
+   color or emoji" -- the shapes and the layout, in SydIN's own palette and
+   icons.
+
+   At the end of the file, at (0,4,0) and up, with `!important`, on purpose:
+   the nav row is restyled by page-scoped copies elsewhere at (0,3,0) with
+   `!important` of their own (`:has(.inventory-workspace)`, the
+   `.dashboard-workspace-shell` copies, the "white card" pass near the end).
+   Computed values checked live on Overview and Inventory, both states.
+   -------------------------------------------------------------------------- */
+@media (min-width: 900px) {
+  /* Top row: identity on the left, the open/close button on the right.
+     Collapsed, the same row stands on end: mark, then button. */
+  .dashboard-sidebar-top.dashboard-sidebar-top {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .dashboard-shell-collapsed .dashboard-sidebar-top.dashboard-sidebar-top {
+    flex-direction: column;
+    gap: 0.6rem;
+  }
+
+  .dashboard-shell-expanded .dashboard-sidebar-top .dashboard-sidebar-workspace.dashboard-sidebar-workspace {
+    flex: 1 1 auto;
+    min-width: 0;
+    margin: 0 !important;
+  }
+
+  /* The header only holds the mark now (collapsed; it is hidden open). Its
+     pinned heights -- 5.6rem, 3rem on Inventory -- were room reserved for a
+     toggle that no longer lives inside it. */
+  .dashboard-shell.dashboard-shell .dashboard-sidebar-top .dashboard-sidebar-header.dashboard-sidebar-header {
+    min-height: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* Rows: soft pills. Unselected rows carry a faint white fill so each one
+     reads as its own button on the grey, the way the reference's do on
+     green; collapsed, the same rule makes them circles. */
+  .dashboard-shell.dashboard-shell .dashboard-sidebar .dashboard-nav-link {
+    border: 1px solid transparent !important;
+    border-radius: 999px !important;
+    background: rgba(255, 255, 255, 0.55) !important;
+  }
+
+  .dashboard-shell.dashboard-shell .dashboard-sidebar .dashboard-nav-icon {
+    border-radius: 999px !important;
+  }
+
+  /* The rail's rows were always a fixed 2.75rem square pinned to the left of
+     a slightly wider column -- invisible while they had no fill, 5px off
+     centre under the mark once each became a visible circle. */
+  .dashboard-shell-collapsed.dashboard-shell-collapsed .dashboard-sidebar .dashboard-nav-link {
+    margin-inline: auto !important;
+  }
+
+  /* Selected: a solid white pill lifted off the rail. No border -- the
+     shadow is the edge. */
+  .dashboard-shell.dashboard-shell .dashboard-sidebar .dashboard-nav-link.dashboard-nav-link-active {
+    border-color: transparent !important;
+    background: #ffffff !important;
+    box-shadow:
+      0 1px 2px rgba(24, 24, 27, 0.06),
+      0 6px 16px rgba(24, 24, 27, 0.07) !important;
+  }
+}
+
+@media (min-width: 900px) and (hover: hover) {
+  .dashboard-shell.dashboard-shell .dashboard-sidebar .dashboard-nav-link:not(.dashboard-nav-link-active):hover {
+    background: rgba(255, 255, 255, 0.92) !important;
+  }
 }

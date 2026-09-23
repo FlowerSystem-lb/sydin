@@ -1098,6 +1098,16 @@ export default function DashboardShell({
         // lives on <body> it would then hang there with nothing to clear it.
         onMouseLeave={hideRailChip}
       >
+        {/* 24 Sep: the top row, after Sayed's reference -- identity on the
+            left, the open/close button beside it on the right, the way the
+            logo and chevron share one row there. The button is a normal flex
+            child of this row now instead of absolutely positioned against
+            the sidebar, which is what the last four fixes to its position
+            (21-23 Sep) were each working around. Open: [business card]
+            [button] in a row. Collapsed: [mark] over [button], centred --
+            the card and the mark each hide in the state they do not
+            belong to, so one DOM order serves both. */}
+        <div className="dashboard-sidebar-top">
         <div className="dashboard-sidebar-header">
           <Link
             href="/dashboard"
@@ -1145,16 +1155,21 @@ export default function DashboardShell({
           </Link>
         </div>
 
-        {/* Sayed, 22 Sep: "put the button in the middle of the side bar right
-            side". Moved out of the header on purpose, not just restyled --
-            as a header child it had to be given a fixed vertical offset from
-            the logo, which needed redoing every time the logo's own size
-            changed (twice already: once when the mark grew taller, once
-            when scrolling the rail slid nav icons through that fixed spot).
-            As a direct child of <aside>, `right: 0.5rem` sits it a fixed
-            distance from the sidebar's own edge regardless of whether that
-            edge is the rail's ~4.5rem or the pinned-open ~14.75rem+ width --
-            nothing to keep in sync when either changes. */}
+        <div className="dashboard-sidebar-workspace" aria-label="Current workspace">
+          <AccountAvatar
+            logoUrl={businessSettings.business_logo_url}
+            businessName={businessSettings.business_name}
+            size="sm"
+          />
+          <div className="dashboard-sidebar-workspace-copy">
+            <span>Workspace</span>
+            <strong>{businessSettings.business_name}</strong>
+            <small>
+              {planName} plan - {usagePercent}% used
+            </small>
+          </div>
+        </div>
+
         <button
           type="button"
           onClick={toggleSidebarExpanded}
@@ -1169,20 +1184,6 @@ export default function DashboardShell({
             className="h-4 w-4"
           />
         </button>
-
-        <div className="dashboard-sidebar-workspace" aria-label="Current workspace">
-          <AccountAvatar
-            logoUrl={businessSettings.business_logo_url}
-            businessName={businessSettings.business_name}
-            size="sm"
-          />
-          <div className="dashboard-sidebar-workspace-copy">
-            <span>Workspace</span>
-            <strong>{businessSettings.business_name}</strong>
-            <small>
-              {planName} plan - {usagePercent}% used
-            </small>
-          </div>
         </div>
 
         <div className="dashboard-sidebar-scroll">
