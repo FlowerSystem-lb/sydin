@@ -10560,17 +10560,25 @@ body [class*="tracking-["],
 
   /* Scoped to the collapsed rail (2026-09-11); was unscoped, so it hid these
      in every state and the expanded sidebar had to win with a matching
-     `!important`. `.dashboard-sidebar-workspace` stays unscoped: it is hidden
-     in both states on purpose.
+     `!important`.
      The toggle is NOT in this list (2026-09-12): hiding it in the rail meant
      that once you collapsed the sidebar there was nothing to click to bring
      it back. The rail shape for it is set above. */
-  .dashboard-sidebar-workspace,
   .dashboard-shell-collapsed .dashboard-brand-logo,
   .dashboard-shell-collapsed .dashboard-nav-group-label,
   .dashboard-shell-collapsed .dashboard-nav-label,
   .dashboard-shell-collapsed .dashboard-nav-active-mark,
   .dashboard-shell-collapsed .dashboard-account-copy {
+    display: none;
+  }
+
+  /* Sayed, 23 Sep: "the logo of our company" -- the workspace card (the
+     business's own logo and name, `AccountAvatar` + `business_name`) was
+     unscoped into the list above on 2026-09-11 and so was hidden in BOTH
+     states, expanded included, with no way to see it at all. Narrow enough
+     to make sense collapsed, not wide enough to be the reason it was
+     invisible in the state that has 14+ rem to show it in. */
+  .dashboard-shell-collapsed .dashboard-sidebar-workspace {
     display: none;
   }
 
@@ -12063,12 +12071,16 @@ body,
   }
 
   /* Scoped to the collapsed rail (2026-09-11) -- see the note above. */
-  .dashboard-workspace-shell .dashboard-sidebar-workspace,
   .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-brand-logo,
   .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-nav-group-label,
   .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-nav-label,
   .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-nav-active-mark,
   .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-account-copy {
+    display: none;
+  }
+
+  /* 23 Sep -- see the note above. */
+  .dashboard-workspace-shell.dashboard-shell-collapsed .dashboard-sidebar-workspace {
     display: none;
   }
 
@@ -21251,10 +21263,22 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     color: rgb(71, 85, 105);
   }
 
-  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-header,
   .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-account-trigger {
     flex-direction: row !important;
     justify-content: space-between !important;
+  }
+
+  /* Sayed, 23 Sep: "logo when side bar open the i remove" -- pinned open, the
+     workspace card right below (the business's own logo and name, just
+     brought back onto screen the same day) already carries the identity
+     this header held instead. The header's only content was the SydIN
+     mark/wordmark `<Link>` -- nothing else lived here even before this,
+     the toggle moved out to the sidebar itself on the 22nd -- so hiding it
+     removes the row outright rather than leaving an empty reserved band
+     above the workspace card. Collapsed keeps its own header: there is no
+     workspace card there to carry the mark's place, narrow as the rail is. */
+  .dashboard-shell-expanded.dashboard-shell-expanded .dashboard-sidebar-header {
+    display: none;
   }
 
   /* The rail hides page names behind a hover chip on <body>. With the name
