@@ -17,6 +17,10 @@ import {
   getImportExportHistory,
   type ImportExportRecord,
 } from "@/app/lib/importExportHistory";
+import {
+  getOrCreateBusinessSettings,
+  DEFAULT_BUSINESS_SETTINGS,
+} from "@/app/lib/businessSettings";
 
 export default function ImportExportPage() {
   const [history, setHistory] = useState<ImportExportRecord[]>([]);
@@ -30,6 +34,9 @@ export default function ImportExportPage() {
   const [photoDialogOpen, setPhotoDialogOpen] = useState(false);
   const [photoItems, setPhotoItems] = useState<PhotoTargetItem[]>([]);
   const [photoItemsLoading, setPhotoItemsLoading] = useState(false);
+  const [businessName, setBusinessName] = useState(
+    DEFAULT_BUSINESS_SETTINGS.business_name
+  );
 
   useEffect(() => {
     let isActive = true;
@@ -82,13 +89,19 @@ export default function ImportExportPage() {
 
       if (!user) return;
 
-      const { data } = await supabase
-        .from("inventory")
-        .select("id, name, sku, barcode, item_code, image")
-        .eq("user_id", user.id)
-        .order("name", { ascending: true });
+      const [{ data }, settings] = await Promise.all([
+        supabase
+          .from("inventory")
+          .select("id, name, sku, barcode, item_code, image")
+          .eq("user_id", user.id)
+          .order("name", { ascending: true }),
+        getOrCreateBusinessSettings(user.id),
+      ]);
 
       setPhotoItems((data as PhotoTargetItem[] | null) || []);
+      setBusinessName(
+        settings.business_name || DEFAULT_BUSINESS_SETTINGS.business_name
+      );
     } finally {
       setPhotoItemsLoading(false);
     }
@@ -285,6 +298,7 @@ export default function ImportExportPage() {
       <BulkPhotoDialog
         open={photoDialogOpen}
         items={photoItems}
+        businessName={businessName}
         onClose={() => setPhotoDialogOpen(false)}
         onUploaded={() => {
           /* The attached photos are on the items, not on this page, so there is

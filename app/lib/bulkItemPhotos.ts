@@ -99,6 +99,23 @@ function getBulkPhotoValidationError(file: File) {
   return error;
 }
 
+/**
+ * A name for a brand-new item created straight from a photo that matched
+ * nothing -- there is no product name to read off a photo alone. Sayed,
+ * 23 Sep: generate one from the business name, the way SydIN already
+ * numbers PO and invoice references elsewhere (`getNextPoNumber`,
+ * `suggestNextInvoiceNumber`) rather than inventing a new convention.
+ * It is a normal, editable `name` like any other item's -- Edit Item
+ * renames it once the real product name is known.
+ */
+export function buildPlaceholderItemName(
+  businessName: string | null | undefined,
+  sequence: number
+): string {
+  const label = (businessName || "").trim() || "Item";
+  return `${label} #${sequence}`;
+}
+
 export function matchPhotosToItems(
   files: File[],
   items: PhotoTargetItem[],

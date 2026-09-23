@@ -13,9 +13,11 @@ import {
 } from "@/app/lib/productImage";
 import {
   matchPhotosToItems,
+  buildPlaceholderItemName,
   type PhotoMatchField,
   type PhotoTargetItem,
 } from "@/app/lib/bulkItemPhotos";
+import { DEFAULT_INVENTORY_UNIT_TYPE } from "@/app/lib/inventoryItemModel";
 
 /**
  * Photos for items that already exist, many at once.
@@ -45,6 +47,7 @@ const UPLOAD_CONCURRENCY = 4;
 interface BulkPhotoDialogProps {
   open: boolean;
   items: PhotoTargetItem[];
+  businessName: string;
   onClose: () => void;
   onUploaded: (attached: number) => void;
 }
@@ -52,6 +55,7 @@ interface BulkPhotoDialogProps {
 export default function BulkPhotoDialog({
   open,
   items,
+  businessName,
   onClose,
   onUploaded,
 }: BulkPhotoDialogProps) {
@@ -63,15 +67,34 @@ export default function BulkPhotoDialog({
   const [uploading, setUploading] = useState(false);
   const [uploadedCount, setUploadedCount] = useState(0);
   const [error, setError] = useState("");
-  const [result, setResult] = useState<{ attached: number; failed: number } | null>(
-    null
-  );
+  const [result, setResult] = useState<{
+    attached: number;
+    created: number;
+    failed: number;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   const match = useMemo(
     () => matchPhotosToItems(files, items, manualAssignments),
     [files, items, manualAssignments]
   );
+
+  /**
+   * A photo matching nothing does not need a person to sit and assign it to
+   * an existing item any more -- that item usually does not exist yet, which
+   * was the whole problem. It becomes a brand-new item instead, named from
+   * the business (Settings) plus a running number that continues past the
+   * current inventory count, and the photo attaches to that. The Select
+   * next to it is still there for the case that DOES have a match already
+   * on the shelf, just spelled differently than its file name.
+   */
+  const newItemPlans = useMemo(() => {
+    const startingAt = items.length + 1;
+    return match.unmatched.map((file, index) => ({
+      file,
+      name: buildPlaceholderItemName(businessName, startingAt + index),
+    }));
+  }, [match.unmatched, items.length, businessName]);
 
   /**
    * One object URL per file, revoked when that set of files is replaced.
@@ -154,7 +177,8 @@ export default function BulkPhotoDialog({
   };
 
   const attachPhotos = async () => {
-    if (uploading || match.matches.length === 0) return;
+    const totalTasks = match.matches.length + newItemPlans.length;
+    if (uploading || totalTasks === 0) return;
 
     setUploading(true);
     setError("");
@@ -172,8 +196,19 @@ export default function BulkPhotoDialog({
     }
 
     let attached = 0;
+    let created = 0;
     let failed = 0;
-    const queue = [...match.matches];
+    type Task =
+      | { kind: "update"; file: File; itemId: number }
+      | { kind: "create"; file: File; name: string };
+    const queue: Task[] = [
+      ...match.matches.map(
+        (m): Task => ({ kind: "update", file: m.file, itemId: m.item.id })
+      ),
+      ...newItemPlans.map(
+        (plan): Task => ({ kind: "create", file: plan.file, name: plan.name })
+      ),
+    ];
 
     /**
      * A failed photo does not abort the batch — the same call the import
@@ -196,15 +231,44 @@ export default function BulkPhotoDialog({
 
           const { data } = supabase.storage.from("products").getPublicUrl(path);
 
-          const { error: updateError } = await supabase
-            .from("inventory")
-            .update({ image: data.publicUrl })
-            .eq("id", next.item.id)
-            .eq("user_id", user.id);
+          if (next.kind === "update") {
+            const { error: updateError } = await supabase
+              .from("inventory")
+              .update({ image: data.publicUrl })
+              .eq("id", next.itemId)
+              .eq("user_id", user.id);
 
-          if (updateError) throw updateError;
+            if (updateError) throw updateError;
+            attached += 1;
+          } else {
+            // Same minimal shape AddItemForm inserts with, everything not
+            // derivable from a bare photo left at its ordinary default —
+            // this is a placeholder row, not a shortcut around required
+            // fields, and every one of them stays editable from Inventory.
+            const { error: insertError } = await supabase.from("inventory").insert([
+              {
+                name: next.name,
+                sku: "",
+                barcode: null,
+                category: null,
+                category_id: null,
+                quantity: 0,
+                unit_type: DEFAULT_INVENTORY_UNIT_TYPE,
+                custom_unit_label: null,
+                cost_price: null,
+                selling_price: null,
+                min_stock_level: null,
+                notes: null,
+                image: data.publicUrl,
+                depot_id: null,
+                supplier_id: null,
+                user_id: user.id,
+              },
+            ]);
 
-          attached += 1;
+            if (insertError) throw insertError;
+            created += 1;
+          }
         } catch {
           failed += 1;
         } finally {
@@ -218,11 +282,11 @@ export default function BulkPhotoDialog({
     );
 
     setUploading(false);
-    setResult({ attached, failed });
+    setResult({ attached, created, failed });
     setFiles([]);
     setManualAssignments(new Map());
     if (inputRef.current) inputRef.current.value = "";
-    if (attached > 0) onUploaded(attached);
+    if (attached + created > 0) onUploaded(attached + created);
   };
 
   const closeDialog = () => {
@@ -233,13 +297,13 @@ export default function BulkPhotoDialog({
 
   if (!open) return null;
 
-  const totalToUpload = match.matches.length;
+  const totalToUpload = match.matches.length + newItemPlans.length;
 
   return (
     <DialogShell
       title="Add photos to many items"
       eyebrow="Bulk photos"
-      description="Name each photo after the item's SKU, barcode, item code, or exact name. Anything that does not match, you assign here — never by upload order."
+      description="Name each photo after the item's SKU, barcode, item code, or exact name to attach it there. Anything that matches nothing becomes a new item instead — no details to type, just the photo — ready to fill in from Inventory."
       onClose={closeDialog}
       closeDisabled={uploading}
       className="inventory-bulk-photo-dialog"
@@ -270,9 +334,14 @@ export default function BulkPhotoDialog({
 
         {result && (
           <div className="rounded-xl border border-emerald-400/25 bg-emerald-500/10 px-4 py-3 text-sm font-semibold text-theme-success">
-            {result.attached} photo{result.attached === 1 ? "" : "s"} attached.
+            {result.attached > 0
+              ? `${result.attached} photo${result.attached === 1 ? "" : "s"} attached to existing items. `
+              : ""}
+            {result.created > 0
+              ? `${result.created} new item${result.created === 1 ? "" : "s"} created. `
+              : ""}
             {result.failed > 0
-              ? ` ${result.failed} could not be uploaded — those items kept the photo they had.`
+              ? `${result.failed} could not be uploaded — nothing was changed for those.`
               : ""}
           </div>
         )}
@@ -329,9 +398,9 @@ export default function BulkPhotoDialog({
           <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
             <SummaryTile label="Matched" value={match.matches.length} tone="good" />
             <SummaryTile
-              label="Needs assigning"
-              value={match.unmatched.length}
-              tone={match.unmatched.length > 0 ? "warn" : "quiet"}
+              label="New items"
+              value={newItemPlans.length}
+              tone={newItemPlans.length > 0 ? "warn" : "quiet"}
             />
             <SummaryTile
               label="Duplicate"
@@ -346,13 +415,19 @@ export default function BulkPhotoDialog({
           </div>
         )}
 
-        {match.unmatched.length > 0 && (
+        {newItemPlans.length > 0 && (
           <section className="grid gap-2">
             <h3 className="text-sm font-semibold text-theme-primary">
-              Choose the item for these photos
+              Will become new items
             </h3>
+            <p className="text-xs text-theme-subtle">
+              Nothing on the shelf is named or coded like these files, so each
+              becomes its own new item with a placeholder name — rename it and
+              fill in the rest from Inventory whenever. Already have the item?
+              Pick it below instead and the photo attaches there.
+            </p>
             <ul className="grid max-h-64 gap-2 overflow-y-auto pr-1">
-              {match.unmatched.map((file) => (
+              {newItemPlans.map(({ file, name }) => (
                 <li
                   key={getPhotoFileKey(file)}
                   className="flex items-center gap-3 rounded-xl border border-amber-300/25 bg-amber-500/[0.07] p-2"
@@ -362,13 +437,16 @@ export default function BulkPhotoDialog({
                     <p className="truncate font-mono text-xs text-theme-secondary">
                       {file.name}
                     </p>
+                    <p className="mt-0.5 truncate text-sm font-semibold text-theme-primary">
+                      Will create: {name}
+                    </p>
                     <div className="mt-1.5">
                       <Select
                         value=""
                         options={itemOptions}
                         onChange={(value) => assignFile(file, value)}
                         ariaLabel={`Item for ${file.name}`}
-                        placeholder="Pick an item"
+                        placeholder="Or pick an existing item instead"
                         searchable
                         searchPlaceholder="Search by name, SKU or barcode"
                         disabled={uploading}

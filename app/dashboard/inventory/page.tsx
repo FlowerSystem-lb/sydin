@@ -4140,6 +4140,10 @@ export default function InventoryPage() {
       <BulkPhotoDialog
         open={bulkPhotoOpen}
         items={items}
+        businessName={
+          businessSettings.business_name ||
+          DEFAULT_BUSINESS_SETTINGS.business_name
+        }
         onClose={() => setBulkPhotoOpen(false)}
         onUploaded={() => {
           void fetchItems();
