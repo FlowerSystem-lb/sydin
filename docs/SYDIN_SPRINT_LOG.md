@@ -5132,3 +5132,22 @@ its own business-name fetch added) -- a real upload created the item
 with the correct auto item code; test row and photo deleted
 immediately after. `npm run lint`, `npx tsc --noEmit`, `npm run build`
 all clean; pushed.
+
+### 23 Sep — sidebar: business logo card restored, SydIN logo dropped when open
+
+Sayed, two rounds: "STILL NOT APPEAR" for the business logo/name card,
+then confirming twice that the SydIN logo itself should come out when
+the sidebar is open. First half: `.dashboard-sidebar-workspace` (the
+AccountAvatar + business name + plan/usage card) had been unscoped
+into a >=900px hide-in-both-states list on 11 Sep, deliberately per its
+own comment -- so it was invisible expanded too, which is what he was
+looking at. Rescoped to hide only in the collapsed rail (fixed twice --
+the file carries the same rule duplicated with a
+`.dashboard-workspace-shell` prefix). Second half: once the card was
+visible, the SydIN header logo above it was redundant -- the header
+held nothing else by this point, the toggle having moved out to the
+sidebar itself the day before -- so `.dashboard-sidebar-header` is now
+hidden outright when pinned open, no empty band left behind. Collapsed
+rail keeps its own icon mark; the <900px tablet drawer is a separate
+header, untouched. Verified at 900, 1130 and 1400px. `npm run lint`,
+`npx tsc --noEmit`, `npm run build` all clean; pushed.
