@@ -407,11 +407,12 @@ export default function MoneyFlowChart({
           // 2px surface gap between segments; the top one keeps the rounding.
           const isTop = view.series.slice(i + 1).every((s) => s.values[c] <= 0);
           const bottom = running - value > 0 ? y0 - 2 : y0;
-          const h = Math.max(1, bottom - y1);
+          // A real sale is never invisible: at least 3px, however small beside the peak.
+          const h = Math.max(3, bottom - y1);
           return (
             <path
               key={series.key}
-              d={barPath(x, y1, w, h, isTop ? 4 : 0)}
+              d={barPath(x, bottom - h, w, h, isTop ? 4 : 0)}
               className={toneClass(series.tone)}
             />
           );
@@ -431,7 +432,7 @@ export default function MoneyFlowChart({
           const value = series.values[c];
           if (value <= 0) return null;
           const x = xCenter(c) - groupW / 2 + i * (w + 2);
-          const y = yAt(value);
+          const y = Math.min(yAt(value), baseline - 3);
           return (
             <path
               key={series.key}
