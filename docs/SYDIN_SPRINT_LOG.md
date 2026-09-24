@@ -5168,3 +5168,27 @@ rule was still unscoped, leaving the open sidebar empty at the top on
 that page. Verified 18/18 by a measured check (Overview, Inventory,
 Sales x open/collapsed x 900/1130/1400px); tablet and phone unchanged.
 `npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.
+
+### 24 Sep — Overview chart: three views, bars or line, full crosshair
+
+Sayed asked for the Sales trend chart to read more professionally (font
+sizes), to hold more than one graph (stock flow named) switchable in the
+same place, and for a dotted vertical and horizontal line with a dot under
+the mouse. The wide panel is now one plot with three views -- Sales
+(paid / still owed, stacked), Sales vs purchases, Stock flow (units in /
+out from the movements the page already loads, with a note when the
+250-movement cap cuts the period short) -- each as bars or a line. The SVG
+is drawn at its measured pixel width instead of a stretched viewBox, which
+is what made axis text drift in size; axis 11px, lead figure 1.5rem with
+its label above. The square-cell bars became solid bars with a rounded top
+on round-number gridlines (0/1M/2M/3M, not 1.25M/3.75M). Hover snaps to
+the nearest series: dotted vertical + horizontal lines, a ringed dot,
+value pill on the y axis, date pill on the x axis, a readout that bolds
+the pointed-at series; arrow keys do the same from the keyboard, and a
+screen-reader table carries the numbers. Money out / units out moved from
+ink to orange (#ea580c): blue + ink failed the palette check (ink reads as
+gray), blue + orange passes CVD, normal-vision and contrast. The 30-day
+Purchases panel beside it picks up orange, the real-width drawing and the
+same crosshair. Verified on a throwaway route with fixed data at 1280px
+and 375px (localhost was signed out); route deleted. `npm run lint`,
+`npx tsc --noEmit`, `npm run build` clean; pushed.

@@ -24875,3 +24875,282 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
     background: rgba(255, 255, 255, 0.92) !important;
   }
 }
+
+/* ==========================================================================
+   OVERVIEW CHART, REWORKED (2026-09-24)
+   ==========================================================================
+   Sayed: "more professional by size of fonts", several graphs switchable in
+   the same place, and a dotted vertical + horizontal line with a dot under
+   the mouse. The SVG is now drawn at its real width, so these sizes are the
+   sizes on screen. Blue is money in / units in; orange is money out / units
+   out (validated as a colour-blind-safe pair; ink failed the check).
+   ========================================================================== */
+.ov-chart.ov-chart {
+  gap: 0.875rem;
+  padding: 1rem 1.125rem 0.875rem;
+}
+
+.ov-chart-head-wrap {
+  flex-wrap: wrap;
+  row-gap: 0.625rem;
+}
+
+.ov-chart-metrics {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  min-width: 0;
+}
+
+.ov-chart-metric {
+  position: relative;
+  min-height: 30px;
+  padding: 0 0.625rem;
+  border-radius: var(--radius-control);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  transition:
+    background-color 130ms var(--motion-ease-standard),
+    color 130ms var(--motion-ease-standard);
+}
+
+.ov-chart-metric:hover {
+  color: var(--text-primary);
+  background: var(--bg-inset);
+}
+
+.ov-chart-metric[aria-pressed="true"] {
+  color: var(--text-primary);
+  font-weight: 600;
+  background: var(--bg-inset);
+}
+
+.ov-chart-metric:focus-visible,
+.ov-chart-period:focus-visible,
+.ov-chart-svg:focus-visible {
+  outline: 2px solid var(--sydin-blue);
+  outline-offset: 2px;
+}
+
+.ov-chart-svg:focus:not(:focus-visible) {
+  outline: none;
+}
+
+.ov-chart-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.ov-chart-kind {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  padding: 0;
+}
+
+.ov-chart-period.ov-chart-period {
+  min-height: 26px;
+  font-size: 0.75rem;
+}
+
+/* The lead: label above, figure below, legend at the right. */
+.ov-chart-lead {
+  align-items: flex-end;
+}
+
+.ov-chart-lead-figure.ov-chart-lead-stack {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.125rem;
+}
+
+.ov-chart-lead-stack small {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.ov-chart .ov-chart-lead-figure.ov-chart-lead-stack strong {
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+}
+
+.ov-chart-legend.ov-chart-legend {
+  flex-wrap: wrap;
+  gap: 0.375rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary);
+}
+
+.ov-chart-legend.ov-chart-legend b {
+  margin-left: 0.125rem;
+  font-size: 0.75rem;
+}
+
+/* the key swatch in legends and the readout */
+.ov-key {
+  display: inline-block;
+  flex: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+}
+
+/* series tones: fill for bars, stroke for lines, background for keys */
+.ov-tone-blue {
+  fill: #2563eb;
+  stroke: #2563eb;
+  background: #2563eb;
+}
+
+.ov-tone-blue-soft {
+  fill: #a8c1f7;
+  stroke: #7ea3f2;
+  background: #a8c1f7;
+}
+
+.ov-tone-orange {
+  fill: #ea580c;
+  stroke: #ea580c;
+  background: #ea580c;
+}
+
+.ov-tone-orange.is-hover {
+  fill: #c2410c;
+}
+
+path.ov-tone-blue,
+path.ov-tone-blue-soft,
+path.ov-tone-orange {
+  stroke: none;
+}
+
+.ov-chart-svg {
+  overflow: visible;
+}
+
+.ov-chart .ov-chart-axis {
+  font-size: 11px;
+}
+
+.ov-chart-grid {
+  stroke: rgba(24, 24, 27, 0.07);
+  stroke-width: 1;
+}
+
+.ov-chart-band {
+  fill: rgba(37, 99, 235, 0.05);
+}
+
+.ov-dim {
+  opacity: 0.45;
+  transition: opacity 120ms var(--motion-ease-standard);
+}
+
+path.ov-line {
+  fill: none;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+path.ov-line.ov-tone-blue {
+  stroke: #2563eb;
+}
+
+path.ov-line.ov-tone-orange {
+  stroke: #ea580c;
+}
+
+/* "Still owed" as a line is dashed: a second cue besides the lighter blue. */
+path.ov-line.ov-tone-blue-soft {
+  stroke: #7ea3f2;
+  stroke-dasharray: 5 4;
+}
+
+path.ov-area {
+  stroke: none;
+  opacity: 0.08;
+}
+
+.ov-chart .ov-chart-crosshair {
+  stroke: #71717a;
+  stroke-width: 1;
+  stroke-dasharray: 2 3;
+}
+
+/* the dot where the lines meet: a surface ring so it sits on top of any mark */
+circle.ov-dot {
+  stroke: #ffffff;
+  stroke-width: 2;
+}
+
+circle.ov-dot-main {
+  filter: drop-shadow(0 1px 2px rgba(24, 24, 27, 0.25));
+}
+
+.ov-axis-pill {
+  fill: #18181b;
+}
+
+.ov-axis-pill-text {
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  fill: #ffffff;
+}
+
+.ov-bar-track-fill {
+  fill: rgba(24, 24, 27, 0.05);
+}
+
+/* the readout */
+.ov-chart .ov-chart-tip {
+  min-width: 11rem;
+  padding: 0.625rem 0.75rem;
+  font-size: 0.8125rem;
+  transition:
+    left 90ms linear,
+    top 90ms linear;
+}
+
+.ov-chart .ov-chart-tip-date {
+  margin-bottom: 0.375rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.ov-chart .ov-chart-tip > div.is-target strong {
+  color: var(--text-primary);
+}
+
+.ov-chart .ov-chart-tip > div:not(.is-target):not(.ov-chart-tip-date):not(.ov-chart-tip-total) strong {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.ov-chart .ov-chart-tip > div.ov-chart-tip-total {
+  margin-top: 0.25rem;
+  padding-top: 0.375rem;
+  border-top: 1px solid var(--border-hairline);
+  padding-left: calc(10px + 0.375rem);
+}
+
+.ov-chart-note {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ov-dim,
+  .ov-chart .ov-chart-tip {
+    transition: none;
+  }
+}

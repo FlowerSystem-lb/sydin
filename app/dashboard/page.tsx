@@ -1126,6 +1126,7 @@ export default function DashboardPage() {
           <MoneyFlowChart
             salesOrders={salesOrders}
             purchaseOrders={purchaseOrders}
+            movements={movements}
             formatMoney={(value) => formatCurrency(value, currencyCode)}
             loading={loading}
           />
