@@ -104,6 +104,14 @@ import {
   type ReportTable,
 } from "@/app/lib/businessReportsPdf";
 import { supabase } from "@/app/lib/supabase";
+import {
+  applyReportView,
+  EMPTY_REPORT_VIEW,
+  loadSavedReports,
+  storeSavedReports,
+  type ReportView,
+  type SavedReport,
+} from "@/app/lib/reportView";
 
 type ReportCategory = "all" | "business" | "inventory" | "operations" | "valuation" | "activity";
 type ReportAction = "inventory-pdf" | "movement-csv" | "business" | "route";
@@ -471,8 +479,16 @@ export default function ReportsPage() {
   // A money report opens on screen first; the PDF and the CSV are one tap
   // from there. "Generate" used to download a PDF straight away, which on a
   // phone meant a file you then had to go and find.
-  const [preview, setPreview] = useState<{ report: ReportCard; table: ReportTable } | null>(null);
-  const previewTable = preview?.table ?? null;
+  // The table itself is rebuilt from the report each render rather than
+  // stored, so opening a saved report can set the date range and the
+  // preview follows it.
+  const [preview, setPreview] = useState<{ report: ReportCard } | null>(null);
+  // The report builder (brief 22): columns shown and sort, over the preview,
+  // the CSV and the PDF alike.
+  const [previewView, setPreviewView] = useState<ReportView>(EMPTY_REPORT_VIEW);
+  const [userId, setUserId] = useState("");
+  const [savedReports, setSavedReports] = useState<SavedReport[]>([]);
+  const [saveName, setSaveName] = useState<string | null>(null);
   const [exportStatus, setExportStatus] = useState("");
   const [inventoryGroupBy, setInventoryGroupBy] =
     useState<InventoryPdfGroupBy>("none");
@@ -530,6 +546,11 @@ export default function ReportsPage() {
 
       if (userError || !user) {
         throw new Error("Please sign in again to view reports.");
+      }
+
+      if (active) {
+        setUserId(user.id);
+        setSavedReports(loadSavedReports(user.id));
       }
 
       const [
@@ -1030,8 +1051,12 @@ export default function ReportsPage() {
     return table;
   };
 
-  const runBusinessReport = async (report: ReportCard, format: "pdf" | "csv") => {
-    const table = buildBusinessReport(report.id);
+  const runBusinessReport = async (
+    report: ReportCard,
+    format: "pdf" | "csv",
+    override?: ReportTable | null
+  ) => {
+    const table = override ?? buildBusinessReport(report.id);
     if (!table || exporting) return;
     setNotice("");
     try {
@@ -1058,8 +1083,11 @@ export default function ReportsPage() {
       return;
     }
     if (report.action === "business") {
-      const table = buildBusinessReport(report.id);
-      if (table) setPreview({ report, table });
+      if (buildBusinessReport(report.id)) {
+        setPreviewView(EMPTY_REPORT_VIEW);
+        setSaveName(null);
+        setPreview({ report });
+      }
     } else if (report.action === "inventory-pdf") {
       setInventoryDialogReport(report);
     } else if (report.action === "movement-csv") {
@@ -1069,6 +1097,69 @@ export default function ReportsPage() {
     } else if (report.id === "depot-inventory") {
       setDepotReportOpen(true);
     }
+  };
+
+  const previewBase = preview ? buildBusinessReport(preview.report.id) : null;
+  const previewTable = previewBase ? applyReportView(previewBase, previewView) : null;
+  const reportById = new Map(REPORTS.map((report) => [report.id, report]));
+
+  const toggleColumn = (label: string) =>
+    setPreviewView((view) => ({
+      ...view,
+      hidden: view.hidden.includes(label)
+        ? view.hidden.filter((entry) => entry !== label)
+        : [...view.hidden, label],
+    }));
+
+  const sortByColumn = (label: string, numeric: boolean) =>
+    setPreviewView((view) =>
+      view.sortBy === label
+        ? { ...view, sortDir: view.sortDir === "asc" ? "desc" : "asc" }
+        : // Money and counts: biggest first. Names and dates: A to Z, oldest first.
+          { ...view, sortBy: label, sortDir: numeric ? "desc" : "asc" }
+    );
+
+  const persistSavedReports = (next: SavedReport[]) => {
+    setSavedReports(next);
+    if (!storeSavedReports(userId, next)) {
+      setNotice("This browser would not keep saved reports. Private windows forget them.");
+    }
+  };
+
+  const saveCurrentReport = () => {
+    if (!preview || saveName === null) return;
+    const name = saveName.trim() || preview.report.name;
+    const entry: SavedReport = {
+      id: `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 7)}`,
+      name,
+      reportId: preview.report.id,
+      view: previewView,
+      from: reportDateFrom,
+      to: reportDateTo,
+      createdAt: new Date().toISOString(),
+    };
+    // Same name replaces, so re-saving a tweaked view does not pile up copies.
+    persistSavedReports([
+      entry,
+      ...savedReports.filter((saved) => saved.name.toLocaleLowerCase() !== name.toLocaleLowerCase()),
+    ]);
+    setSaveName(null);
+    setNotice(`Saved "${name}". It is at the top of Reports.`);
+  };
+
+  const openSavedReport = (saved: SavedReport) => {
+    const report = reportById.get(saved.reportId);
+    if (!report) return;
+    if (isLockedReport(report)) {
+      showLock(report);
+      return;
+    }
+    setNotice("");
+    setReportDateFrom(saved.from);
+    setReportDateTo(saved.to);
+    setPreviewView(saved.view);
+    setSaveName(null);
+    setPreview({ report });
   };
 
   return (
@@ -1200,6 +1291,56 @@ export default function ReportsPage() {
             </p>
           </div>
         </DashboardToolbar>
+
+        {!loading && savedReports.length > 0 && (
+          <section className="report-saved" aria-labelledby="report-saved-title">
+            <div className="report-saved-head">
+              <h2 id="report-saved-title">Saved reports</h2>
+              <span>On this device</span>
+            </div>
+            <ul className="report-saved-list">
+              {savedReports.map((saved) => {
+                const report = reportById.get(saved.reportId);
+                if (!report) return null;
+                const range =
+                  saved.from || saved.to
+                    ? `${saved.from ? formatDocumentDate(saved.from) : "Start"} – ${
+                        saved.to ? formatDocumentDate(saved.to) : "today"
+                      }`
+                    : "All time";
+                return (
+                  <li key={saved.id} className="report-saved-item">
+                    <button
+                      type="button"
+                      className="report-saved-open"
+                      onClick={() => openSavedReport(saved)}
+                    >
+                      <UiIcon name={report.icon} className="h-4 w-4 shrink-0 text-theme-accent" />
+                      <span className="min-w-0">
+                        <strong>{saved.name}</strong>
+                        <small>
+                          {report.name} · {range}
+                        </small>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      className="report-saved-remove"
+                      aria-label={`Remove ${saved.name}`}
+                      title="Remove"
+                      onClick={() => {
+                        persistSavedReports(savedReports.filter((entry) => entry.id !== saved.id));
+                        setNotice(`Removed "${saved.name}".`);
+                      }}
+                    >
+                      <UiIcon name="close" className="h-3.5 w-3.5" />
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          </section>
+        )}
 
         {loading ? (
           <LoadingSkeletonGroup
@@ -1345,37 +1486,105 @@ export default function ReportsPage() {
 
       </DashboardPageShell>
 
-      {preview && previewTable && (
+      {preview && previewBase && previewTable && (
         <SheetShell
           title={previewTable.title}
           eyebrow="Report"
           description={previewTable.subtitle}
-          onClose={() => setPreview(null)}
+          onClose={() => {
+            setPreview(null);
+            setSaveName(null);
+          }}
           className="report-preview-sheet"
           footer={
-            <>
-              <Button variant="secondary" onClick={() => setPreview(null)}>
-                Close
-              </Button>
-              <Button
-                variant="secondary"
-                onClick={() => {
-                  downloadCsv(`sydin-${previewTable.filename}.csv`, reportCsvRows(previewTable));
-                  setNotice(`${previewTable.title} exported as CSV.`);
+            saveName !== null ? (
+              <form
+                className="report-save-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  saveCurrentReport();
                 }}
               >
-                Export CSV
-              </Button>
-              <Button
-                onClick={() => void runBusinessReport(preview.report, "pdf")}
-                loading={exporting}
-                loadingLabel="Building..."
-              >
-                Download PDF
-              </Button>
-            </>
+                <label className="report-save-label">
+                  <span>Name this report</span>
+                  <input
+                    autoFocus
+                    value={saveName}
+                    maxLength={60}
+                    placeholder={preview.report.name}
+                    onChange={(event) => setSaveName(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Escape") {
+                        event.stopPropagation();
+                        setSaveName(null);
+                      }
+                    }}
+                  />
+                </label>
+                <Button type="button" variant="secondary" onClick={() => setSaveName(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Save</Button>
+              </form>
+            ) : (
+              <>
+                <Button variant="secondary" onClick={() => setSaveName("")}>
+                  Save report
+                </Button>
+                <Button
+                  variant="secondary"
+                  onClick={() => {
+                    downloadCsv(`sydin-${previewTable.filename}.csv`, reportCsvRows(previewTable));
+                    setNotice(`${previewTable.title} exported as CSV.`);
+                  }}
+                >
+                  Export CSV
+                </Button>
+                <Button
+                  onClick={() => void runBusinessReport(preview.report, "pdf", previewTable)}
+                  loading={exporting}
+                  loadingLabel="Building..."
+                >
+                  Download PDF
+                </Button>
+              </>
+            )
           }
         >
+          {/* The builder: which columns, and the sort. Both carry into the
+              CSV and the PDF, so the file is the table you are looking at. */}
+          {previewBase.head.length > 2 && (
+            <div className="report-builder-columns" role="group" aria-label="Columns">
+              <span className="report-builder-label">Columns</span>
+              {previewBase.head.slice(1).map((label) => {
+                const shown = !previewView.hidden.includes(label);
+                const lastShown = shown && previewBase.head.length - 1 - previewView.hidden.length <= 1;
+                return (
+                  <FilterChip
+                    key={label}
+                    active={shown}
+                    onClick={() => {
+                      if (!lastShown) toggleColumn(label);
+                    }}
+                    aria-disabled={lastShown || undefined}
+                    title={lastShown ? "Keep at least one column of figures" : shown ? `Hide ${label}` : `Show ${label}`}
+                  >
+                    {shown && <UiIcon name="check" className="h-3.5 w-3.5" />}
+                    {label}
+                  </FilterChip>
+                );
+              })}
+              {(previewView.hidden.length > 0 || previewView.sortBy) && (
+                <button
+                  type="button"
+                  className="report-builder-reset"
+                  onClick={() => setPreviewView(EMPTY_REPORT_VIEW)}
+                >
+                  Reset
+                </button>
+              )}
+            </div>
+          )}
           <DashboardTable
             minWidth="0"
             className="report-preview-table"
@@ -1391,14 +1600,30 @@ export default function ReportsPage() {
           >
             <thead>
               <tr>
-                {previewTable.head.map((label, index) => (
-                  <th
-                    key={label}
-                    className={previewTable.rightAligned.includes(index) ? "text-right" : undefined}
-                  >
-                    {label}
-                  </th>
-                ))}
+                {previewTable.head.map((label, index) => {
+                  const numeric = previewTable.rightAligned.includes(index);
+                  const sorted = previewView.sortBy === label;
+                  return (
+                    <th
+                      key={label}
+                      className={numeric ? "text-right" : undefined}
+                      aria-sort={sorted ? (previewView.sortDir === "asc" ? "ascending" : "descending") : "none"}
+                    >
+                      <button
+                        type="button"
+                        className={`report-sort${sorted ? " is-sorted" : ""}${numeric ? " is-numeric" : ""}`}
+                        onClick={() => sortByColumn(label, numeric)}
+                        title={`Sort by ${label}`}
+                      >
+                        {label}
+                        <UiIcon
+                          name={sorted && previewView.sortDir === "asc" ? "arrow-up" : "arrow-down"}
+                          className="report-sort-icon h-3 w-3"
+                        />
+                      </button>
+                    </th>
+                  );
+                })}
               </tr>
             </thead>
             <tbody>
