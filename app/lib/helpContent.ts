@@ -401,7 +401,8 @@ export const HELP_ARTICLES: HelpArticle[] = [
     note: "Nothing is charged automatically. Payment is arranged with you directly.",
     href: "/dashboard/settings?section=billing",
     action: "Open Billing & Plan",
-    keywords: "upgrade price free standard pro limit locked",
+    popular: true,
+    keywords: "upgrade price free standard pro limit locked billing subscription payment cost",
   },
   {
     id: "public-pages",
@@ -469,7 +470,7 @@ export const HELP_ARTICLES: HelpArticle[] = [
     ],
     href: "/dashboard/settings?section=billing",
     action: "Open Billing & Plan",
-    keywords: "upgrade locked plan",
+    keywords: "upgrade locked plan billing subscription",
   },
 ];
 

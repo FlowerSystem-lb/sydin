@@ -5370,3 +5370,24 @@ swaps to a check mark once copied). The tile changed from an `<a>` to a
 another. Email tile is unchanged -- no copy action was ever offered there.
 Checked at desktop and phone width, both stack and fit cleanly.
 `npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.
+
+### 25 Sep — Contact tiles fully clickable; billing/subscription findable
+
+Sayed: "let all space of button to direct to whats and mail and button of
+copy only on the click." The tiles went from "one link with a button
+squeezed inside it" to a wrap holding two plain siblings: the whole tile is
+now the `<a>` (click anywhere on it), and the copy button sits absolutely
+positioned in its corner, on top, so its own click never also fires the
+link underneath. Same treatment on both tiles now -- Email got its own
+copy button too, which it never had before.
+
+Sayed: "where is the help of billing and subscribtion." It was there
+("Plans and limits", Settings & plan) but not findable by either of those
+two words -- its keywords were "upgrade price free standard pro limit
+locked", none of which is "billing" or "subscription". Added both, plus
+"payment" and "cost", to that article and to "A feature is locked"
+(same topic, Troubleshooting). Marked "Plans and limits" popular too, so
+it's one of the fast-lane cards on the landing view without typing
+anything. Verified both search terms now return it; phone width still has
+no overflow. `npm run lint`, `npx tsc --noEmit`, `npm run build` clean;
+pushed.

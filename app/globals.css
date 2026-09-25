@@ -22132,6 +22132,15 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   margin-top: 0.9rem;
 }
 
+/* 25 Sep (Sayed): the whole tile is one link -- click anywhere on it and
+   it opens Email or WhatsApp. The copy button is a normal sibling sitting
+   on top in the corner, not nested inside the link, so its own click
+   never also fires the link underneath (nesting an interactive control
+   inside another is invalid HTML and unreliable to click besides). */
+.help-contact-tile-wrap {
+  position: relative;
+}
+
 .help-contact-tile {
   display: flex;
   align-items: center;
@@ -22139,7 +22148,8 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border: 1px solid var(--border-default);
   border-radius: 12px;
   background: var(--bg-surface);
-  padding: 0.7rem 0.85rem;
+  /* Right padding clears the copy button so long text never runs under it. */
+  padding: 0.7rem 2.75rem 0.7rem 0.85rem;
   transition: border-color 140ms ease, background-color 140ms ease;
 }
 
@@ -22188,22 +22198,12 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   background: rgba(5, 150, 105, 0.05);
 }
 
-/* 25 Sep (Sayed questioned the standalone "Copy WhatsApp number" link
-   floating under the tiles): the copy action now lives inside the WhatsApp
-   tile itself, as its own small button next to the link -- the tile is a
-   <div> here instead of an <a> so the two controls (open WhatsApp, copy the
-   number) don't nest one interactive element inside another. */
-.help-contact-tile-link {
-  display: flex;
-  flex: 1 1 auto;
-  min-width: 0;
-  align-items: center;
-  gap: 0.65rem;
-}
-
 .help-contact-tile-copy {
+  position: absolute;
+  top: 50%;
+  right: 0.55rem;
+  transform: translateY(-50%);
   display: inline-flex;
-  flex: none;
   align-items: center;
   justify-content: center;
   width: 2rem;
@@ -22213,7 +22213,12 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   transition: background-color 140ms ease, color 140ms ease;
 }
 
-.help-contact-tile-copy:hover {
+.help-contact-tile-blue + .help-contact-tile-copy:hover {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--text-accent);
+}
+
+.help-contact-tile-green + .help-contact-tile-copy:hover {
   background: var(--status-success-surface);
   color: var(--status-success-text);
 }

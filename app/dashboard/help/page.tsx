@@ -449,24 +449,34 @@ export default function HelpCenterPage() {
               stock.
             </p>
             <div className="help-contact-grid">
-              <a href={mailtoUrl} className="help-contact-tile help-contact-tile-blue">
-                <span className="help-contact-tile-icon">
-                  <UiIcon name="mail" className="h-4 w-4" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-theme-primary">
-                    Email support
+              <div className="help-contact-tile-wrap">
+                <a href={mailtoUrl} className="help-contact-tile help-contact-tile-blue">
+                  <span className="help-contact-tile-icon">
+                    <UiIcon name="mail" className="h-4 w-4" />
                   </span>
-                  <span className="block text-xs text-theme-muted">{SYDIN_SUPPORT_EMAIL}</span>
-                </span>
-                <UiIcon name="chevron-right" className="help-popular-chevron h-4 w-4 shrink-0" />
-              </a>
-              <div className="help-contact-tile help-contact-tile-green">
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-theme-primary">
+                      Email support
+                    </span>
+                    <span className="block text-xs text-theme-muted">{SYDIN_SUPPORT_EMAIL}</span>
+                  </span>
+                </a>
+                <button
+                  type="button"
+                  className="help-contact-tile-copy"
+                  onClick={() => void copyContact("email", SYDIN_SUPPORT_EMAIL)}
+                  aria-label={copied === "email" ? "Email address copied" : "Copy email address"}
+                  title={copied === "email" ? "Copied" : "Copy address"}
+                >
+                  <UiIcon name={copied === "email" ? "check" : "copy"} className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="help-contact-tile-wrap">
                 <a
                   href={whatsappUrl}
                   target="_blank"
                   rel="noreferrer"
-                  className="help-contact-tile-link"
+                  className="help-contact-tile help-contact-tile-green"
                 >
                   <span className="help-contact-tile-icon">
                     <UiIcon name="chat" className="h-4 w-4" />
