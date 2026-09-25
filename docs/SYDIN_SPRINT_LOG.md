@@ -5192,3 +5192,33 @@ Purchases panel beside it picks up orange, the real-width drawing and the
 same crosshair. Verified on a throwaway route with fixed data at 1280px
 and 375px (localhost was signed out); route deleted. `npm run lint`,
 `npx tsc --noEmit`, `npm run build` clean; pushed.
+
+### 24–25 Sep — Report builder; bug sweep; stale-CSS root cause
+
+**Report builder (brief 22).** The money-report preview gained column chips
+(any column but the first can be hidden), sortable headings (amounts
+biggest first, names/dates A–Z, blanks always last; aria-sort set), and
+"Save report": a name plus the view and date range, listed at the top of
+Reports as "Saved reports · On this device" and reopened in one tap. The
+CSV and PDF are built from the same viewed table. `app/lib/reportView.ts`
+only hides columns and reorders rows of the finished ReportTable -- it
+never recomputes a figure, so totals are always the report's own. Saved
+reports live in localStorage per account (no schema change). Grouping was
+left out on purpose: the reports already are the groupings, and regrouping
+aggregated rows would mean recomputing totals. Verified on the live site
+with real data: hide, sort both ways, save (button and Enter), reopen
+restores the view, remove; test entries removed; phone width no overflow.
+
+**Bug sweep (brief 61).** All 18 sidebar pages opened live: no error
+banners, no horizontal overflow, no failed Supabase request in the log from
+the sweep. Fixed the Scanner pairing lookup's 406 (`maybeSingle`). The
+Overview chart got a 3px minimum so a $400 sale beside $6.84M is visible.
+
+**Stale CSS, root cause.** The report-builder deploy went READY with the
+new JS and the OLD stylesheet: Vercel restored the previous build cache and
+Next 16.3's Turbopack on-disk cache (on by default) reused the old
+globals.css output. The same cache explains the dev server's recurring
+stale-CSS wedge. `next.config.ts` now sets `turbopackFileSystemCacheForBuild`
+and `turbopackFileSystemCacheForDev` to false; the next deploy served the
+new rules. Lesson: READY does not prove the CSS shipped -- check a new
+selector in the served stylesheet.
