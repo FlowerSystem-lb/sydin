@@ -5270,3 +5270,22 @@ stylesheet for the new selectors before screenshotting further.
 Verified live: popular-card click opens and scrolls to the right article,
 chip filter narrows the count correctly, phone width has no overflow.
 `npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.
+
+### 25 Sep — Fonts nudged up, site-wide, as a standing rule
+
+Sayed: "kabir el fonts bl pages shiway as rule" (make the fonts a little
+bigger across pages, as a rule). The app already has a dedicated lever for
+this -- the "TYPE SCALE AT 85%" block in `app/globals.css`, added earlier to
+keep reading text legible while the `html { font-size: 85% }` root packs
+the layout tighter (six cards to a row). That block's shrink was ~8% off
+100%-zoom sizes; nudged to ~4% (`--text-sm` 12.9px -> 13.5px and so on,
+proportionally through `--text-5xl`), one token change that reaches every
+Tailwind `text-*` class in the app -- no per-page edits, nothing to miss.
+`--text-xs` (the floor, 11.6px) is unchanged, it was already close to the
+new ratio. Verified live on Overview, Inventory, Purchase Orders, Stock
+Movements, the sidebar (both states) and phone width: no truncation, no
+overflow. Logged as a standing rule in `SYDIN_UI_RULES.md`, alongside a
+color rule (reuse the existing palette -- accent icon chips, status badges
+-- rather than introducing new colors), since he asked for both as rules
+for future work, not one-off fixes. `npm run lint`, `npx tsc --noEmit`
+clean.

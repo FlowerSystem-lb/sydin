@@ -316,23 +316,26 @@
    "needs zooming in" Sayed reported, and it is why the honest fix is to treat
    density and legibility as two separate dials.
 
-   So: layout shrinks the full 15%, type shrinks about 8%. The values below are
-   expressed in rem against the 13.6px root, with the rendered size in the
-   comment and the old 100% size for comparison.
+   So: layout shrinks the full 15%, type shrinks about 4% (25 Sep — nudged up
+   from ~8%: "kabir el fonts bl pages shiway", make the type a little bigger,
+   site-wide, as a standing rule). The values below are expressed in rem
+   against the 13.6px root, with the rendered size in the comment and the old
+   100% size for comparison.
 
    Raw `font-size` declarations in this file are floored at 0.85rem (11.6px) by
-   the same reasoning — nothing in the product renders smaller than that.
+   the same reasoning — nothing in the product renders smaller than that; that
+   floor did not move, since xs was already at ~97% of its 100% size.
    =========================================================================== */
 @theme {
   --text-xs: 0.85rem;    /* 11.6px  (was 12px at 100%) */
-  --text-sm: 0.95rem;    /* 12.9px  (was 14px) — the app's main body size */
-  --text-base: 1.07rem;  /* 14.6px  (was 16px) */
-  --text-lg: 1.2rem;     /* 16.3px  (was 18px) */
-  --text-xl: 1.35rem;    /* 18.4px  (was 20px) */
-  --text-2xl: 1.62rem;   /* 22.0px  (was 24px) */
-  --text-3xl: 2rem;      /* 27.2px  (was 30px) */
-  --text-4xl: 2.4rem;    /* 32.6px  (was 36px) */
-  --text-5xl: 3.2rem;    /* 43.5px  (was 48px) */
+  --text-sm: 0.99rem;    /* 13.5px  (was 14px) — the app's main body size */
+  --text-base: 1.13rem;  /* 15.4px  (was 16px) */
+  --text-lg: 1.27rem;    /* 17.3px  (was 18px) */
+  --text-xl: 1.41rem;    /* 19.2px  (was 20px) */
+  --text-2xl: 1.69rem;   /* 23.0px  (was 24px) */
+  --text-3xl: 2.12rem;   /* 28.8px  (was 30px) */
+  --text-4xl: 2.54rem;   /* 34.6px  (was 36px) */
+  --text-5xl: 3.39rem;   /* 46.1px  (was 48px) */
 }
 
 @theme inline {

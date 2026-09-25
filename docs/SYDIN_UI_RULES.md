@@ -40,6 +40,19 @@ A page is not "done" until all of loading, empty, and error states are handled.
 - Smooth hover motion
 - Subtle press state
 - Premium SaaS feel
+- **Type size:** read from the `--text-*` tokens in `app/globals.css` (the
+  "TYPE SCALE AT 85%" block) — never a raw `font-size` on a page. Density
+  (the `html { font-size: 85% }` root) and legibility (these tokens) are two
+  separate dials on purpose; if type needs to change, move these, not the
+  root. Sayed asked 25 Sep for a site-wide nudge upward ("kabir el fonts bl
+  pages shiway") — done as a standing rule, not a one-page fix.
+- **Color:** one palette, reused, not invented per page — SydIN blue for
+  the primary accent, the existing status colors (success/warning/danger/
+  info) for state, ink/muted/subtle for text. A page earns visual interest
+  from an accent-tinted icon chip or a status badge (see the Help Center
+  topic chips and article badges, 25 Sep), not a new color. "More colorful"
+  means using the palette that already exists more often, in more places —
+  simple and classic, never flashy.
 
 ---
 
