@@ -390,20 +390,22 @@ export default function HelpCenterPage() {
               description="Try another word for it, or ask us directly below — the answer becomes an article."
             />
           ) : (
-            <section aria-label="Help articles" className="grid gap-2">
-              <p className="text-xs font-semibold text-theme-muted" role="status">
+            <section aria-label="Help articles">
+              <p className="mb-2 text-xs font-semibold text-theme-muted" role="status">
                 {results.length} article{results.length === 1 ? "" : "s"} in {browseLabel}
               </p>
-              {results.map((article) => (
-                <ArticleCard
-                  key={article.id}
-                  article={article}
-                  open={openId === article.id}
-                  onToggle={() =>
-                    setOpenId((current) => (current === article.id ? null : article.id))
-                  }
-                />
-              ))}
+              <div className="help-article-list">
+                {results.map((article) => (
+                  <ArticleCard
+                    key={article.id}
+                    article={article}
+                    open={openId === article.id}
+                    onToggle={() =>
+                      setOpenId((current) => (current === article.id ? null : article.id))
+                    }
+                  />
+                ))}
+              </div>
             </section>
           )}
 

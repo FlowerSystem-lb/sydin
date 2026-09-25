@@ -5313,3 +5313,17 @@ Caught the CSS watcher wedge a second time mid-session -- same fix
 (`preview_stop` -> `rm -rf .next` -> `preview_start`), confirmed this time
 by reading the served stylesheet for the exact new rule before screenshotting.
 `npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.
+
+### 25 Sep — Help article list: one flush card, not gapped cards
+
+Sayed pointed at the article list ("lesh hik fi white between the bars"):
+each answer was its own bordered, rounded card with a gap to the next, so
+white page showed through between every row. Changed to one shared card
+(`.help-article-list`) with hairline dividers between rows -- the same
+shape every real list in the app already uses (Sales, Stock Movements,
+Purchase Orders), not a new pattern. The open row now tints instead of
+gaining its own border/shadow, since it no longer has a border of its own
+to change. Popular-article tiles and topic chips are unchanged -- those are
+distinct clickable buttons, where a gap between them is the norm elsewhere
+in the app too (KPI tiles, the topic chips themselves). `npm run lint`,
+`npx tsc --noEmit`, `npm run build` clean; pushed.

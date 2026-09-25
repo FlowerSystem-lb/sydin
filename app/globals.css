@@ -21968,16 +21968,29 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   gap: 0.35rem;
 }
 
-.help-article {
+/* 25 Sep (Sayed: "lesh hik fi white between the bars"): each row used to be
+   its own bordered, gapped card -- a page of white hairlines with white page
+   showing through the gaps. One shared card, hairline dividers between rows,
+   same shape as every real list in the app (Sales, Stock Movements). */
+.help-article-list {
+  overflow: hidden;
   border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: 14px;
   background: var(--bg-surface);
-  transition: border-color 140ms ease, box-shadow 140ms ease;
+  box-shadow: var(--shadow-subtle);
+}
+
+.help-article {
+  border-bottom: 1px solid var(--border-divider);
+  transition: background-color 140ms ease;
+}
+
+.help-article:last-child {
+  border-bottom: 0;
 }
 
 .help-article-open {
-  border-color: rgba(37, 99, 235, 0.35);
-  box-shadow: var(--shadow-subtle);
+  background: rgba(37, 99, 235, 0.035);
 }
 
 .help-article-toggle {
@@ -21988,7 +22001,6 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   gap: 0.75rem;
   padding: 0.75rem 0.9rem;
   text-align: left;
-  border-radius: 12px;
 }
 
 .help-article-toggle:hover {
