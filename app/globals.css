@@ -21875,10 +21875,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .help-hero {
   text-align: center;
   padding: 1.75rem 1.5rem;
-  /* A soft wash, not a block of color -- matches the reference's hero without
-     introducing a new hue: the same blue every accent on this page already
-     uses, at 4% down to nothing. */
-  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, var(--bg-surface) 60%);
+  /* 25 Sep (Sayed: one flat white, not a gradient wash): every card on the
+     page is the same plain surface now, no exception for the hero. */
+  background: var(--bg-surface);
 }
 
 .help-hero-title {
@@ -21919,7 +21918,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .help-hero-shortcuts > span:first-child {
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 .help-hero-shortcuts button {
@@ -21937,12 +21936,18 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border-radius: 4px;
 }
 
+/* 25 Sep (Sayed: "the title grey is a problem and unclear... small fonts"):
+   --text-subtle is #a1a1aa, 2.6:1 on white -- fine for a hairline, not for
+   a label someone reads (same fix already applied to the chart axis and
+   table meta text elsewhere in this file). --text-muted reads at a real
+   4.7:1. Size was also under this file's own floor for readable text
+   (0.85rem/11.6px, see the TYPE SCALE comment) -- brought up to it. */
 .help-section-title {
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: var(--text-subtle);
+  color: var(--text-muted);
 }
 
 /* the fast lane -- a small preview card per popular article */
@@ -22076,7 +22081,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 
 .help-article-time {
   font-size: 0.75rem;
-  color: var(--text-subtle);
+  color: var(--text-muted);
   white-space: nowrap;
 }
 

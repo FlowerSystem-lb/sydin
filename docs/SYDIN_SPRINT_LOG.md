@@ -5391,3 +5391,25 @@ it's one of the fast-lane cards on the landing view without typing
 anything. Verified both search terms now return it; phone width still has
 no overflow. `npm run lint`, `npx tsc --noEmit`, `npm run build` clean;
 pushed.
+
+### 25 Sep — Help page: flat white, and the grey labels fixed for real
+
+Sayed: "full white one color of background... the title grey is a problem
+and unclear... small fonts why." Two separate, both real:
+
+1. The hero card had a soft blue gradient wash (added to echo the Figma
+   reference). Gone -- every card on the page is now the same flat white
+   surface, no exception.
+2. "POPULAR ARTICLES" / "BROWSE BY TOPIC", "Popular:", and "3 min read"
+   were all set in `--text-subtle` (#a1a1aa, 2.6:1 contrast on white) --
+   the exact same low-contrast token this file already flagged and fixed
+   for the chart axis and table meta text elsewhere ("fine for a
+   decorative hairline; not for words someone reads"). Missed on Help when
+   it was built. Switched to `--text-muted` (4.7:1) throughout, and the
+   section-title font-size was under this file's own 0.85rem/11.6px floor
+   for readable text -- brought up to it. Chevrons and icon colours (truly
+   decorative, not read) were left on `--text-subtle`.
+
+Verified live: hero and every card render as flat white, labels visibly
+darker; phone width still no overflow. `npm run lint`, `npx tsc --noEmit`,
+`npm run build` clean; pushed.
