@@ -5413,3 +5413,22 @@ and unclear... small fonts why." Two separate, both real:
 Verified live: hero and every card render as flat white, labels visibly
 darker; phone width still no overflow. `npm run lint`, `npx tsc --noEmit`,
 `npm run build` clean; pushed.
+
+### 25 Sep — Help: real full white, and title+description on one line
+
+Sayed: "full white background now" -- my previous pass whitened the hero
+card, but the page CANVAS behind every card was still the sitewide
+#fafafa "liquid glass" ground (verified live, then found why it survived:
+`.dashboard-main-canvas` carries `background-color: var(--surface-page)
+!important` twice over, so a plain override without `!important` loses
+regardless of specificity). Fixed with `!important` on a selector scoped to
+`.support-help` only -- every other page keeps its normal ground, checked
+against Overview live.
+
+Sayed also: "title with details on the same bar line, grey, professional
+senior design." The centered, two-line "How can we help? / subtitle"
+banner is gone -- one left-aligned line, bold title immediately followed
+by the muted description, the same shape as a real page header, not a
+marketing banner unlike anything else in the app. Verified live at desktop
+and phone width, no overflow. `npm run lint`, `npx tsc --noEmit`,
+`npm run build` clean; pushed.

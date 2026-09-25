@@ -270,18 +270,20 @@ export default function HelpCenterPage() {
 
           {/* The question. */}
           <DashboardCard className="help-hero">
-            <h1 className="help-hero-title">How can we help?</h1>
-            <p className="help-hero-subtitle">
-              Step-by-step answers for every job in SydIN — and a way to reach
-              us when a page is not enough.
-            </p>
+            <div className="help-hero-titlebar">
+              <h1 className="help-hero-title">How can we help?</h1>
+              <p className="help-hero-subtitle">
+                Step-by-step answers for every job in SydIN, and a way to
+                reach us when a page is not enough.
+              </p>
+            </div>
             <SearchInput
               id="help-search"
               label="Search help"
               value={query}
               onChange={setQuery}
               placeholder="e.g. receive a delivery, record a payment, print labels…"
-              className="help-hero-search mt-3"
+              className="help-hero-search"
               autoFocus
             />
             <p className="help-hero-shortcuts">

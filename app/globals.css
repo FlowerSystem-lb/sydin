@@ -21873,31 +21873,44 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    the same hairline rows as everything else; only the open one gets a
    surface. Rebuilt from a founder-supplied reference design (Figma Make). */
 .help-hero {
-  text-align: center;
-  padding: 1.75rem 1.5rem;
+  text-align: left;
+  padding: 1.5rem 1.5rem 1.75rem;
   /* 25 Sep (Sayed: one flat white, not a gradient wash): every card on the
      page is the same plain surface now, no exception for the hero. */
   background: var(--bg-surface);
 }
 
+/* 25 Sep (Sayed: "title with details on the same bar line, grey, act as
+   professional senior design"): the centered, stacked marketing-page hero
+   is gone -- title and its description sit on one left-aligned line, like
+   the page header on every other page in the app (bold name, muted
+   description, same row), not a big centered banner unlike anything else
+   in the product. */
+.help-hero-titlebar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.6rem;
+  row-gap: 0.15rem;
+}
+
 .help-hero-title {
-  font-size: clamp(1.375rem, 1.1rem + 1vw, 1.75rem);
+  font-size: 1.2rem;
   font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-primary);
 }
 
 .help-hero-subtitle {
-  margin: 0.4rem auto 0;
-  max-width: 32rem;
+  margin: 0;
   font-size: 0.875rem;
-  line-height: 1.4rem;
+  line-height: 1.35rem;
   color: var(--text-muted);
 }
 
 .help-hero-search {
   max-width: 30rem;
-  margin-inline: auto;
+  margin-top: 0.9rem;
 }
 
 .help-hero-search .ui-search-input {
@@ -21910,7 +21923,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   column-gap: 0.6rem;
   row-gap: 0.25rem;
   margin-top: 0.6rem;
@@ -25677,4 +25690,18 @@ circle.ov-dot-main {
   .report-saved-item {
     transition: none;
   }
+}
+
+/* ===[ HELP PAGE — a flat white canvas, not the sitewide off-white ground ]===
+   Sayed, 25 Sep: "full white background now." Verified live: `.dashboard-
+   main-canvas` carries `background-color: var(--surface-page) !important`
+   twice over (rgb(250,250,250), the sitewide "liquid glass" ground colour,
+   used on every dashboard page on purpose -- see the redesign branch), so
+   this needs its own !important to win, not just to be scoped. Scoped to
+   Help only, the way Inventory already scopes its own canvas overrides,
+   rather than changing that ground sitewide, which nobody asked for. */
+.dashboard-shell:has(.support-help) .dashboard-main-canvas,
+.dashboard-shell.liquid-bg:has(.support-help) {
+  background-color: #ffffff !important;
+  background-image: none !important;
 }
