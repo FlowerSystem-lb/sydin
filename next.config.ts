@@ -105,6 +105,18 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  /**
+   * Turbopack's on-disk cache is on by default from Next 16.3, and it goes
+   * stale on app/globals.css. On 24 Sep 2026 Vercel restored the previous
+   * deployment's cache and shipped the report-builder commit with the OLD
+   * stylesheet: new JS, none of the new CSS. Locally the dev server had been
+   * serving stale CSS the same way for weeks (the "rm -rf .next" routine).
+   * A clean compile of this app takes seconds; correctness is worth that.
+   */
+  experimental: {
+    turbopackFileSystemCacheForBuild: false,
+    turbopackFileSystemCacheForDev: false,
+  },
   images: {
     remotePatterns: [
       {
