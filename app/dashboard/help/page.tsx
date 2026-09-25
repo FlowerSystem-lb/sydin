@@ -13,7 +13,7 @@ import {
   FilterBar,
   FilterChip,
 } from "@/components/dashboard/Workspace";
-import { Badge, Button, SearchInput, buttonClassName } from "@/components/ui";
+import { Badge, SearchInput, buttonClassName } from "@/components/ui";
 import {
   HELP_ARTICLES,
   HELP_CATEGORIES,
@@ -461,32 +461,38 @@ export default function HelpCenterPage() {
                 </span>
                 <UiIcon name="chevron-right" className="help-popular-chevron h-4 w-4 shrink-0" />
               </a>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="help-contact-tile help-contact-tile-green"
-              >
-                <span className="help-contact-tile-icon">
-                  <UiIcon name="chat" className="h-4 w-4" />
-                </span>
-                <span className="min-w-0">
-                  <span className="block text-sm font-semibold text-theme-primary">
-                    WhatsApp us
+              <div className="help-contact-tile help-contact-tile-green">
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="help-contact-tile-link"
+                >
+                  <span className="help-contact-tile-icon">
+                    <UiIcon name="chat" className="h-4 w-4" />
                   </span>
-                  <span className="block text-xs text-theme-muted">{SYDIN_WHATSAPP_DISPLAY}</span>
-                </span>
-                <UiIcon name="chevron-right" className="help-popular-chevron h-4 w-4 shrink-0" />
-              </a>
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-theme-primary">
+                      WhatsApp us
+                    </span>
+                    <span className="block text-xs text-theme-muted">
+                      {SYDIN_WHATSAPP_DISPLAY}
+                    </span>
+                  </span>
+                </a>
+                <button
+                  type="button"
+                  className="help-contact-tile-copy"
+                  onClick={() => void copyContact("whatsapp", SYDIN_WHATSAPP_DISPLAY)}
+                  aria-label={
+                    copied === "whatsapp" ? "WhatsApp number copied" : "Copy WhatsApp number"
+                  }
+                  title={copied === "whatsapp" ? "Copied" : "Copy number"}
+                >
+                  <UiIcon name={copied === "whatsapp" ? "check" : "copy"} className="h-4 w-4" />
+                </button>
+              </div>
             </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mt-2"
-              onClick={() => void copyContact("whatsapp", SYDIN_WHATSAPP_DISPLAY)}
-            >
-              {copied === "whatsapp" ? "Number copied" : "Copy WhatsApp number"}
-            </Button>
           </DashboardCard>
         </DashboardPageShell>
       </main>

@@ -5357,3 +5357,16 @@ one line at any reasonable size) and what the reference shows. Checked at
 900px (sidebar open and collapsed) and 1600px -- wraps cleanly, no cutoff,
 no horizontal scroll anywhere. `npm run lint`, `npx tsc --noEmit`,
 `npm run build` clean; pushed.
+
+### 25 Sep — Help contact: copy button moved into the WhatsApp tile
+
+Sayed questioned the "Copy WhatsApp number" text link ("hyda sa7i7 el copy
+number place and text") -- it sat alone under the two tiles, disconnected
+from what it copied. It now lives inside the WhatsApp tile itself, as a
+small icon button next to the link (a new `copy` icon in the shared set,
+swaps to a check mark once copied). The tile changed from an `<a>` to a
+`<div>` with an inner `<a>` for the WhatsApp link, so the two controls
+(open WhatsApp, copy the number) don't nest one interactive element inside
+another. Email tile is unchanged -- no copy action was ever offered there.
+Checked at desktop and phone width, both stack and fit cleanly.
+`npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.
