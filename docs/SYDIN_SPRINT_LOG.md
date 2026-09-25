@@ -5343,3 +5343,17 @@ renamed or removed article drops its link instead of pointing at nothing.
 "Browse by topic" got the same section-title treatment as "Popular
 articles" above it. `npm run lint`, `npx tsc --noEmit`, `npm run build`
 clean; pushed.
+
+### 25 Sep — Help topic chips: wrap instead of scroll (Sayed: "shaklo ghalat")
+
+`.dashboard-filter-bar` scrolls horizontally by design everywhere else it is
+used (Inventory's quick filters, one deliberate row); the Help topic chips
+reused it and inherited that, so on a wide screen the ten chips overflowed
+the row and the last one ("Troubleshooting") sat flush against the edge
+with no sign there was more -- read as broken, not scrollable. Scoped a
+wrap override to `.help-topics-bar` only: every topic is visible at once,
+which is also what ten chips actually need (nowhere near enough width for
+one line at any reasonable size) and what the reference shows. Checked at
+900px (sidebar open and collapsed) and 1600px -- wraps cleanly, no cutoff,
+no horizontal scroll anywhere. `npm run lint`, `npx tsc --noEmit`,
+`npm run build` clean; pushed.

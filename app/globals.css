@@ -21992,6 +21992,19 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 /* topic chips: an icon before the label, same shell as every other filter bar */
+/* 25 Sep (Sayed: "shaklo ghalat"): `.dashboard-filter-bar` scrolls
+   horizontally by design (Inventory's quick filters, one row, deliberately)
+   -- fine when there is a reason to scroll, but here it left the last chip
+   sitting flush against the edge of a wide screen with no sign there was
+   more, which just looks cut off. This bar has ten chips and nowhere near
+   enough width for all of them on one line at any reasonable size, so it
+   wraps instead -- every topic visible at once, matching the reference. */
+.help-topics-bar.help-topics-bar {
+  flex-wrap: wrap;
+  overflow-x: visible;
+  row-gap: 0.5rem;
+}
+
 .help-topics-bar .dashboard-filter-chip > span:first-child {
   display: inline-flex;
   align-items: center;
