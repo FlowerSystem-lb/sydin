@@ -21875,6 +21875,10 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .help-hero {
   text-align: center;
   padding: 1.75rem 1.5rem;
+  /* A soft wash, not a block of color -- matches the reference's hero without
+     introducing a new hue: the same blue every accent on this page already
+     uses, at 4% down to nothing. */
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.05) 0%, var(--bg-surface) 60%);
 }
 
 .help-hero-title {
@@ -21948,7 +21952,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   width: 2rem;
   height: 2rem;
   border-radius: 9px;
-  background: var(--bg-inset);
+  background: rgba(37, 99, 235, 0.1);
   color: var(--text-accent);
 }
 
@@ -22104,6 +22108,29 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border-radius: 9px;
   background: var(--bg-inset);
   color: var(--text-accent);
+}
+
+/* Two accents, not one repeated: email reads as the app's own blue,
+   WhatsApp reads as itself (the existing success/green token), so the two
+   ways to reach a person are told apart at a glance. */
+.help-contact-tile-blue .help-contact-tile-icon {
+  background: rgba(37, 99, 235, 0.12);
+  color: var(--text-accent);
+}
+
+.help-contact-tile-blue:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.help-contact-tile-green .help-contact-tile-icon {
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.help-contact-tile-green:hover {
+  border-color: var(--status-success-border);
+  background: rgba(5, 150, 105, 0.05);
 }
 
 

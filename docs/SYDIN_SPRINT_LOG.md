@@ -5289,3 +5289,27 @@ color rule (reuse the existing palette -- accent icon chips, status badges
 -- rather than introducing new colors), since he asked for both as rules
 for future work, not one-off fixes. `npm run lint`, `npx tsc --noEmit`
 clean.
+
+### 25 Sep — Help Center: matched against the real Figma Make source
+
+Sayed sent the actual exported code this time (a Figma Make project folder,
+`src/App.tsx`), not just a screenshot. Read it and closed the remaining gaps
+against yesterday's rebuild:
+- "Popular" tag: was accent blue, reference is amber -- switched to the
+  existing `warning` Badge tone, so it reads as a distinct tag rather than
+  another blue element.
+- Contact tiles: WhatsApp now tints green (the existing success token),
+  Email stays blue -- two answers, one glance, matching the reference's
+  actual use of colour rather than repeating the same accent everywhere.
+- Hero and the popular-article icon chips got the same restrained blue
+  wash the reference uses (a gradient at 5% opacity, an icon chip at 10%),
+  in place of flat grey.
+Deliberately not carried over: the reference's emoji icons (superseded by
+SydIN's own SVG set, standing instruction) and its DM Sans Google Font
+import (SydIN's CSP only allows self-hosted fonts; self-hosting a second
+family for one page's headings was not worth it against the app's existing
+type scale).
+Caught the CSS watcher wedge a second time mid-session -- same fix
+(`preview_stop` -> `rm -rf .next` -> `preview_start`), confirmed this time
+by reading the served stylesheet for the exact new rule before screenshotting.
+`npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.

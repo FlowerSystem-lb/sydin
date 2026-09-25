@@ -91,7 +91,7 @@ function ArticleCard({
               {article.title}
             </span>
             {article.popular && (
-              <Badge tone="accent" className="help-popular-badge">
+              <Badge tone="warning" className="help-popular-badge">
                 Popular
               </Badge>
             )}
@@ -418,7 +418,7 @@ export default function HelpCenterPage() {
               stock.
             </p>
             <div className="help-contact-grid">
-              <a href={mailtoUrl} className="help-contact-tile">
+              <a href={mailtoUrl} className="help-contact-tile help-contact-tile-blue">
                 <span className="help-contact-tile-icon">
                   <UiIcon name="mail" className="h-4 w-4" />
                 </span>
@@ -430,7 +430,12 @@ export default function HelpCenterPage() {
                 </span>
                 <UiIcon name="chevron-right" className="help-popular-chevron h-4 w-4 shrink-0" />
               </a>
-              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="help-contact-tile">
+              <a
+                href={whatsappUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="help-contact-tile help-contact-tile-green"
+              >
                 <span className="help-contact-tile-icon">
                   <UiIcon name="chat" className="h-4 w-4" />
                 </span>
