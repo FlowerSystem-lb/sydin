@@ -5327,3 +5327,19 @@ to change. Popular-article tiles and topic chips are unchanged -- those are
 distinct clickable buttons, where a gap between them is the norm elsewhere
 in the app too (KPI tiles, the topic chips themselves). `npm run lint`,
 `npx tsc --noEmit`, `npm run build` clean; pushed.
+
+### 25 Sep — Help Center: the two pieces still missing from the reference
+
+Sayed sent two more crops of the Figma Make reference, no text -- the
+"Popular:" quick-link row under the search box, and a visible "Browse by
+topic" label above the chips. Both were left out on purpose in the first
+pass (the quick links looked redundant next to the Popular Articles grid);
+added now that he's pointed at them twice. The quick links jump straight to
+a real article (`openArticle`, already built for the Popular Articles
+grid) rather than just filling the search box the way the reference does --
+a guaranteed single answer beats a free-text search that might return
+nothing. The four are checked against `HELP_ARTICLES` at render, so a
+renamed or removed article drops its link instead of pointing at nothing.
+"Browse by topic" got the same section-title treatment as "Popular
+articles" above it. `npm run lint`, `npx tsc --noEmit`, `npm run build`
+clean; pushed.

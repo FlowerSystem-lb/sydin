@@ -66,6 +66,16 @@ function readMinutes(article: HelpArticle) {
   return Math.max(1, Math.ceil(article.steps.length / 2));
 }
 
+/** The "Popular:" row under the search box -- four short, common jumps, each
+    to a real article id (checked against HELP_ARTICLES at the call site, so
+    a renamed or removed article can't silently point at nothing). */
+const HERO_SHORTCUTS: { label: string; articleId: string }[] = [
+  { label: "Low stock alerts", articleId: "low-stock-to-order" },
+  { label: "Purchase order", articleId: "create-purchase-order" },
+  { label: "Export report", articleId: "export-inventory" },
+  { label: "Barcode labels", articleId: "qr-labels" },
+];
+
 function ArticleCard({
   article,
   open,
@@ -274,6 +284,20 @@ export default function HelpCenterPage() {
               className="help-hero-search mt-3"
               autoFocus
             />
+            <p className="help-hero-shortcuts">
+              <span>Popular:</span>
+              {HERO_SHORTCUTS.filter((shortcut) =>
+                HELP_ARTICLES.some((article) => article.id === shortcut.articleId)
+              ).map((shortcut) => (
+                <button
+                  key={shortcut.articleId}
+                  type="button"
+                  onClick={() => openArticle(shortcut.articleId)}
+                >
+                  {shortcut.label}
+                </button>
+              ))}
+            </p>
           </DashboardCard>
 
           {/* Setup progress, only while there is something left to do. */}
@@ -355,31 +379,36 @@ export default function HelpCenterPage() {
 
           {/* Browse by topic: the one way to narrow the list below, an icon
               and a live count on every chip. */}
-          <FilterBar label="Help topics" className="help-topics-bar">
-            <FilterChip
-              active={category === "all"}
-              count={HELP_ARTICLES.length}
-              onClick={() => setCategory("all")}
-            >
-              All
-            </FilterChip>
-            {HELP_CATEGORIES.map((entry) => {
-              const count = HELP_ARTICLES.filter(
-                (article) => article.category === entry.id
-              ).length;
-              return (
-                <FilterChip
-                  key={entry.id}
-                  active={category === entry.id}
-                  count={count}
-                  onClick={() => setCategory(entry.id)}
-                >
-                  <UiIcon name={entry.icon} className="h-3.5 w-3.5" />
-                  {entry.label}
-                </FilterChip>
-              );
-            })}
-          </FilterBar>
+          <section aria-labelledby="help-browse-title">
+            <h2 id="help-browse-title" className="help-section-title">
+              Browse by topic
+            </h2>
+            <FilterBar label="Help topics" className="help-topics-bar mt-2">
+              <FilterChip
+                active={category === "all"}
+                count={HELP_ARTICLES.length}
+                onClick={() => setCategory("all")}
+              >
+                All
+              </FilterChip>
+              {HELP_CATEGORIES.map((entry) => {
+                const count = HELP_ARTICLES.filter(
+                  (article) => article.category === entry.id
+                ).length;
+                return (
+                  <FilterChip
+                    key={entry.id}
+                    active={category === entry.id}
+                    count={count}
+                    onClick={() => setCategory(entry.id)}
+                  >
+                    <UiIcon name={entry.icon} className="h-3.5 w-3.5" />
+                    {entry.label}
+                  </FilterChip>
+                );
+              })}
+            </FilterBar>
+          </section>
 
           {/* The answers -- always the full (filtered) list, never a
               separate empty-state layout to relearn once you search. */}
