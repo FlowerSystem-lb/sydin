@@ -15001,6 +15001,40 @@ body,
   .dashboard-page-header-card .dashboard-page-header-content {
     min-height: 2.25rem;
   }
+
+  /* 25 Sep (Sayed): the description was the last thing left standing after
+     the eyebrow and heading above went — a line of small grey caption text
+     sitting alone at the top of every page, still repeating what the sidebar
+     and the card below it already say. Same treatment as the heading:
+     visually gone, kept for a screen reader. Record pages keep theirs — on
+     an invoice or a pick list this line is the customer, date and status,
+     not marketing copy, and there is nowhere else on screen it is said. */
+  .dashboard-page-header-card:not(.dashboard-page-header-record) .dashboard-page-copy {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* With the heading and description both hidden, a header that also has no
+     action buttons (Activity, Help) has nothing left to show. Drop its
+     chrome rather than leave an empty bordered bar floating above the page. */
+  .dashboard-page-header-card:not(.dashboard-page-header-record):not(:has(.dashboard-page-actions)) {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+    min-height: 0;
+  }
+
+  .dashboard-page-header-card:not(.dashboard-page-header-record):not(:has(.dashboard-page-actions))
+    .dashboard-page-header-content {
+    min-height: 0;
+  }
 }
 
 /* ===[ INVENTORY HERO — same de-duplication as the shared page header ]=== */
@@ -21830,14 +21864,40 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   color: var(--text-danger, #b91c1c);
 }
 
-/* ===[ HELP CENTER (2026-09-12) ]===
-   One question, articles by workflow, a person at the end. Articles are the
-   same hairline rows as everything else; only the open one gets a surface. */
-.help-ask-label {
-  display: block;
-  font-size: 1.05rem;
-  font-weight: 600;
+/* ===[ HELP CENTER (2026-09-12, rebuilt 2026-09-25) ]===
+   A big question, a fast lane to the six most-asked jobs, one row of topic
+   chips filtering one always-visible list, a person at the end. Articles are
+   the same hairline rows as everything else; only the open one gets a
+   surface. Rebuilt from a founder-supplied reference design (Figma Make). */
+.help-hero {
+  text-align: center;
+  padding: 1.75rem 1.5rem;
+}
+
+.help-hero-title {
+  font-size: clamp(1.375rem, 1.1rem + 1vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
   color: var(--text-primary);
+}
+
+.help-hero-subtitle {
+  margin: 0.4rem auto 0;
+  max-width: 32rem;
+  font-size: 0.875rem;
+  line-height: 1.4rem;
+  color: var(--text-muted);
+}
+
+.help-hero-search {
+  max-width: 30rem;
+  margin-inline: auto;
+}
+
+.help-hero-search .ui-search-input {
+  min-height: 3rem;
+  border-radius: 14px;
+  font-size: 0.9rem;
 }
 
 .help-section-title {
@@ -21846,6 +21906,59 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--text-subtle);
+}
+
+/* the fast lane -- a small preview card per popular article */
+.help-popular-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.6rem;
+}
+
+.help-popular-card {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  padding: 0.7rem 0.85rem;
+  text-align: left;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.help-popular-card:hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.help-popular-card:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 2px;
+}
+
+.help-popular-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9px;
+  background: var(--bg-inset);
+  color: var(--text-accent);
+}
+
+.help-popular-chevron {
+  margin-left: auto;
+  color: var(--text-subtle);
+}
+
+/* topic chips: an icon before the label, same shell as every other filter bar */
+.help-topics-bar .dashboard-filter-chip > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
 }
 
 .help-article {
@@ -21880,6 +21993,31 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   outline-offset: -2px;
 }
 
+.help-article-title-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.help-popular-badge.help-popular-badge {
+  font-size: 0.625rem;
+  padding: 0.05rem 0.45rem;
+}
+
+.help-article-meta {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.help-article-time {
+  font-size: 0.75rem;
+  color: var(--text-subtle);
+  white-space: nowrap;
+}
+
 .help-article-body {
   padding: 0 0.9rem 0.9rem 0.9rem;
 }
@@ -21909,29 +22047,60 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   color: var(--text-muted);
 }
 
-.help-topic-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(12rem, 1fr));
-  gap: 0.6rem;
+/* the contact card: eyebrow + heading, then two link tiles */
+.help-contact-title {
+  margin-top: 0.15rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
 }
 
-.help-topic {
+.help-contact-copy {
+  margin-top: 0.35rem;
+  max-width: 34rem;
+  font-size: 0.85rem;
+  line-height: 1.35rem;
+  color: var(--text-muted);
+}
+
+.help-contact-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.6rem;
+  margin-top: 0.9rem;
+}
+
+.help-contact-tile {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
   border: 1px solid var(--border-default);
   border-radius: 12px;
   background: var(--bg-surface);
-  padding: 0.75rem 0.9rem;
-  text-align: left;
+  padding: 0.7rem 0.85rem;
   transition: border-color 140ms ease, background-color 140ms ease;
 }
 
-.help-topic:hover {
+.help-contact-tile:hover {
   border-color: rgba(37, 99, 235, 0.35);
   background: rgba(37, 99, 235, 0.04);
 }
 
-.help-topic:focus-visible {
+.help-contact-tile:focus-visible {
   outline: 2px solid rgba(37, 99, 235, 0.55);
   outline-offset: 2px;
+}
+
+.help-contact-tile-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 9px;
+  background: var(--bg-inset);
+  color: var(--text-accent);
 }
 
 

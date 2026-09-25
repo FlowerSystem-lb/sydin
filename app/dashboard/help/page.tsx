@@ -13,7 +13,7 @@ import {
   FilterBar,
   FilterChip,
 } from "@/components/dashboard/Workspace";
-import { Button, SearchInput, buttonClassName } from "@/components/ui";
+import { Badge, Button, SearchInput, buttonClassName } from "@/components/ui";
 import {
   HELP_ARTICLES,
   HELP_CATEGORIES,
@@ -47,18 +47,24 @@ import { supabase } from "@/app/lib/supabase";
 /**
  * The Help Center teaches SydIN by the job in hand.
  *
- * Was: a five-card setup checklist, nine "quick guides" that were sidebar
- * links with a sentence each, two accordions, and a support panel -- a page
- * you scrolled, not one you asked. Now it opens with one question ("What are
- * you trying to do?"), answers it from a set of step-by-step articles grouped
- * the way the sidebar is grouped, and every article ends on the button that
- * does the thing. The setup checklist stays, folded into Getting started.
+ * Rebuilt 25 Sep after a founder-supplied reference design: a big friendly
+ * question, a "Popular articles" shortcut grid for the six most-asked jobs,
+ * one always-visible row of topic chips (icon + count) that filters one
+ * always-visible list -- not two different ways to get to the same
+ * articles, which is what a separate "browse by topic" tile grid used to be
+ * next to these same chips. Every row still ends on the button that does
+ * the thing, and answers stay grouped the way the sidebar is grouped.
  */
 
 const DEFAULT_USAGE: SubscriptionUsage = {
   subscription: FALLBACK_SUBSCRIPTION,
   usedItems: 0,
 };
+
+/** A rough, honest estimate -- not tracked reading data, just "how long is this". */
+function readMinutes(article: HelpArticle) {
+  return Math.max(1, Math.ceil(article.steps.length / 2));
+}
 
 function ArticleCard({
   article,
@@ -80,8 +86,15 @@ function ArticleCard({
         onClick={onToggle}
       >
         <span className="min-w-0">
-          <span className="block text-sm font-semibold text-theme-primary">
-            {article.title}
+          <span className="help-article-title-row">
+            <span className="block text-sm font-semibold text-theme-primary">
+              {article.title}
+            </span>
+            {article.popular && (
+              <Badge tone="accent" className="help-popular-badge">
+                Popular
+              </Badge>
+            )}
           </span>
           <span className="mt-0.5 block text-xs text-theme-muted">
             {category?.label}
@@ -89,12 +102,15 @@ function ArticleCard({
             {article.summary}
           </span>
         </span>
-        <UiIcon
-          name="chevron-down"
-          className={`h-4 w-4 shrink-0 text-theme-subtle transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
+        <span className="help-article-meta">
+          <span className="help-article-time">{readMinutes(article)} min read</span>
+          <UiIcon
+            name="chevron-down"
+            className={`h-4 w-4 shrink-0 text-theme-subtle transition-transform ${
+              open ? "rotate-180" : ""
+            }`}
+          />
+        </span>
       </button>
       {open && (
         <div id={`help-${article.id}-body`} className="help-article-body">
@@ -190,6 +206,20 @@ export default function HelpCenterPage() {
       : matched.filter((article) => article.category === category);
   }, [query, category]);
   const popular = HELP_ARTICLES.filter((article) => article.popular);
+  const browseLabel =
+    category === "all"
+      ? "All"
+      : HELP_CATEGORIES.find((entry) => entry.id === category)?.label ?? "All";
+
+  // Used by the popular-articles shortcuts: always open (never toggle closed)
+  // and jump to it. Only reachable from the unfiltered landing view, where
+  // the list below is every article, so the target is always on screen.
+  const openArticle = (id: string) => {
+    setOpenId(id);
+    window.requestAnimationFrame(() => {
+      document.getElementById(`help-${id}`)?.scrollIntoView({ block: "center" });
+    });
+  };
 
   const currentPlanName = formatPlanName(usage.subscription.plan);
   const mailtoUrl = buildSupportMailtoUrl({
@@ -229,33 +259,21 @@ export default function HelpCenterPage() {
           {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
 
           {/* The question. */}
-          <DashboardCard className="help-ask">
-            <label htmlFor="help-search" className="help-ask-label">
-              What are you trying to do?
-            </label>
+          <DashboardCard className="help-hero">
+            <h1 className="help-hero-title">How can we help?</h1>
+            <p className="help-hero-subtitle">
+              Step-by-step answers for every job in SydIN — and a way to reach
+              us when a page is not enough.
+            </p>
             <SearchInput
               id="help-search"
               label="Search help"
               value={query}
               onChange={setQuery}
-              placeholder="receive a delivery, record a payment, print labels…"
-              className="mt-2 w-full"
+              placeholder="e.g. receive a delivery, record a payment, print labels…"
+              className="help-hero-search mt-3"
               autoFocus
             />
-            <FilterBar label="Help topics" className="mt-3">
-              <FilterChip active={category === "all"} onClick={() => setCategory("all")}>
-                All
-              </FilterChip>
-              {HELP_CATEGORIES.map((entry) => (
-                <FilterChip
-                  key={entry.id}
-                  active={category === entry.id}
-                  onClick={() => setCategory(entry.id)}
-                >
-                  {entry.label}
-                </FilterChip>
-              ))}
-            </FilterBar>
           </DashboardCard>
 
           {/* Setup progress, only while there is something left to do. */}
@@ -291,115 +309,148 @@ export default function HelpCenterPage() {
             </DashboardCard>
           )}
 
-          {/* Answers. */}
-          {searching || category !== "all" ? (
-            results.length === 0 ? (
-              <DashboardEmptyState
-                icon="search"
-                title="Nothing matches that yet"
-                description="Try another word for it, or ask us directly below — the answer becomes an article."
-              />
-            ) : (
-              <section aria-label="Help articles" className="grid gap-2">
-                <p className="text-xs font-semibold text-theme-muted" role="status">
-                  {results.length} article{results.length === 1 ? "" : "s"}
-                </p>
-                {results.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    open={openId === article.id}
-                    onToggle={() =>
-                      setOpenId((current) => (current === article.id ? null : article.id))
-                    }
-                  />
-                ))}
-              </section>
-            )
-          ) : (
-            <>
-              <section aria-labelledby="help-popular-title" className="grid gap-2">
-                <h2 id="help-popular-title" className="help-section-title">
-                  Most asked
-                </h2>
-                {popular.map((article) => (
-                  <ArticleCard
-                    key={article.id}
-                    article={article}
-                    open={openId === article.id}
-                    onToggle={() =>
-                      setOpenId((current) => (current === article.id ? null : article.id))
-                    }
-                  />
-                ))}
-              </section>
-
-              <section aria-labelledby="help-browse-title">
-                <h2 id="help-browse-title" className="help-section-title">
-                  Browse by what you are doing
-                </h2>
-                <div className="help-topic-grid mt-2">
-                  {HELP_CATEGORIES.map((entry) => {
-                    const count = HELP_ARTICLES.filter(
-                      (article) => article.category === entry.id
-                    ).length;
-                    return (
-                      <button
-                        key={entry.id}
-                        type="button"
-                        className="help-topic"
-                        onClick={() => setCategory(entry.id)}
-                      >
+          {/* A fast lane to the six most-asked jobs -- only on the plain
+              landing view; once you are searching or already on a topic, the
+              full list right below is doing that job. */}
+          {!searching && category === "all" && (
+            <section aria-labelledby="help-popular-title">
+              <h2 id="help-popular-title" className="help-section-title">
+                Popular articles
+              </h2>
+              <div className="help-popular-grid mt-2">
+                {popular.map((article) => {
+                  const articleCategory = HELP_CATEGORIES.find(
+                    (entry) => entry.id === article.category
+                  );
+                  return (
+                    <button
+                      key={article.id}
+                      type="button"
+                      className="help-popular-card"
+                      onClick={() => openArticle(article.id)}
+                    >
+                      <span className="help-popular-icon">
+                        {articleCategory && (
+                          <UiIcon name={articleCategory.icon} className="h-4 w-4" />
+                        )}
+                      </span>
+                      <span className="min-w-0">
                         <span className="block text-sm font-semibold text-theme-primary">
-                          {entry.label}
+                          {article.title}
                         </span>
                         <span className="mt-0.5 block text-xs text-theme-muted">
-                          {entry.blurb}
+                          {articleCategory?.label}
                         </span>
-                        <span className="mt-2 block text-xs font-semibold text-theme-accent">
-                          {count} article{count === 1 ? "" : "s"}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </section>
-            </>
+                      </span>
+                      <UiIcon
+                        name="chevron-right"
+                        className="help-popular-chevron h-4 w-4 shrink-0"
+                      />
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Browse by topic: the one way to narrow the list below, an icon
+              and a live count on every chip. */}
+          <FilterBar label="Help topics" className="help-topics-bar">
+            <FilterChip
+              active={category === "all"}
+              count={HELP_ARTICLES.length}
+              onClick={() => setCategory("all")}
+            >
+              All
+            </FilterChip>
+            {HELP_CATEGORIES.map((entry) => {
+              const count = HELP_ARTICLES.filter(
+                (article) => article.category === entry.id
+              ).length;
+              return (
+                <FilterChip
+                  key={entry.id}
+                  active={category === entry.id}
+                  count={count}
+                  onClick={() => setCategory(entry.id)}
+                >
+                  <UiIcon name={entry.icon} className="h-3.5 w-3.5" />
+                  {entry.label}
+                </FilterChip>
+              );
+            })}
+          </FilterBar>
+
+          {/* The answers -- always the full (filtered) list, never a
+              separate empty-state layout to relearn once you search. */}
+          {results.length === 0 ? (
+            <DashboardEmptyState
+              icon="search"
+              title="Nothing matches that yet"
+              description="Try another word for it, or ask us directly below — the answer becomes an article."
+            />
+          ) : (
+            <section aria-label="Help articles" className="grid gap-2">
+              <p className="text-xs font-semibold text-theme-muted" role="status">
+                {results.length} article{results.length === 1 ? "" : "s"} in {browseLabel}
+              </p>
+              {results.map((article) => (
+                <ArticleCard
+                  key={article.id}
+                  article={article}
+                  open={openId === article.id}
+                  onToggle={() =>
+                    setOpenId((current) => (current === article.id ? null : article.id))
+                  }
+                />
+              ))}
+            </section>
           )}
 
           {/* A person. */}
           <DashboardCard className="help-contact">
-            <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="min-w-0">
-                <h2 className="help-section-title">Still stuck? Ask us</h2>
-                <p className="mt-1 max-w-prose text-sm text-theme-muted">
-                  Email or WhatsApp and a person replies — usually the same day
-                  during early access, though not instantly. The message is
-                  pre-filled with your business name and plan only, never your
-                  stock.
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                <a href={mailtoUrl} className={buttonClassName({ size: "sm" })}>
-                  Email {SYDIN_SUPPORT_EMAIL}
-                </a>
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  className={buttonClassName({ variant: "secondary", size: "sm" })}
-                >
-                  WhatsApp {SYDIN_WHATSAPP_DISPLAY}
-                </a>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => void copyContact("whatsapp", SYDIN_WHATSAPP_DISPLAY)}
-                >
-                  {copied === "whatsapp" ? "Number copied" : "Copy number"}
-                </Button>
-              </div>
+            <p className="help-section-title">Still stuck?</p>
+            <h2 className="help-contact-title">Talk to a real person</h2>
+            <p className="help-contact-copy">
+              Email or WhatsApp and a person replies — usually the same day
+              during early access, though not instantly. The message is
+              pre-filled with your business name and plan only, never your
+              stock.
+            </p>
+            <div className="help-contact-grid">
+              <a href={mailtoUrl} className="help-contact-tile">
+                <span className="help-contact-tile-icon">
+                  <UiIcon name="mail" className="h-4 w-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-theme-primary">
+                    Email support
+                  </span>
+                  <span className="block text-xs text-theme-muted">{SYDIN_SUPPORT_EMAIL}</span>
+                </span>
+                <UiIcon name="chevron-right" className="help-popular-chevron h-4 w-4 shrink-0" />
+              </a>
+              <a href={whatsappUrl} target="_blank" rel="noreferrer" className="help-contact-tile">
+                <span className="help-contact-tile-icon">
+                  <UiIcon name="chat" className="h-4 w-4" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold text-theme-primary">
+                    WhatsApp us
+                  </span>
+                  <span className="block text-xs text-theme-muted">{SYDIN_WHATSAPP_DISPLAY}</span>
+                </span>
+                <UiIcon name="chevron-right" className="help-popular-chevron h-4 w-4 shrink-0" />
+              </a>
             </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-2"
+              onClick={() => void copyContact("whatsapp", SYDIN_WHATSAPP_DISPLAY)}
+            >
+              {copied === "whatsapp" ? "Number copied" : "Copy WhatsApp number"}
+            </Button>
           </DashboardCard>
         </DashboardPageShell>
       </main>

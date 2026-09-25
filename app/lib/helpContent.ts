@@ -1,3 +1,5 @@
+import type { UiIconName } from "@/components/UiIcon";
+
 /**
  * The Help Center's content, written from the product as it is -- every
  * step here is a button or page that exists. When a workflow changes, its
@@ -24,6 +26,8 @@ export interface HelpCategory {
   id: HelpCategoryId;
   label: string;
   blurb: string;
+  /** The same icon its sidebar section uses, so a topic tile reads at a glance. */
+  icon: UiIconName;
 }
 
 export interface HelpArticle {
@@ -44,15 +48,15 @@ export interface HelpArticle {
 }
 
 export const HELP_CATEGORIES: HelpCategory[] = [
-  { id: "start", label: "Getting started", blurb: "The first hour with SydIN." },
-  { id: "inventory", label: "Inventory", blurb: "Items, photos, codes, labels." },
-  { id: "buying", label: "Buying & receiving", blurb: "Purchase orders and deliveries." },
-  { id: "selling", label: "Selling", blurb: "Invoices, customers, pick lists." },
-  { id: "payments", label: "Payments", blurb: "Money in, money out, what is owed." },
-  { id: "stock", label: "Stock control", blurb: "Counts, movements, depots." },
-  { id: "reports", label: "Reports & exports", blurb: "PDF, Excel, CSV." },
-  { id: "settings", label: "Settings & plan", blurb: "Company, documents, limits." },
-  { id: "trouble", label: "Troubleshooting", blurb: "When something looks wrong." },
+  { id: "start", label: "Getting started", blurb: "The first hour with SydIN.", icon: "dashboard" },
+  { id: "inventory", label: "Inventory", blurb: "Items, photos, codes, labels.", icon: "box" },
+  { id: "buying", label: "Buying & receiving", blurb: "Purchase orders and deliveries.", icon: "cart" },
+  { id: "selling", label: "Selling", blurb: "Invoices, customers, pick lists.", icon: "receipt" },
+  { id: "payments", label: "Payments", blurb: "Money in, money out, what is owed.", icon: "usage" },
+  { id: "stock", label: "Stock control", blurb: "Counts, movements, depots.", icon: "movement" },
+  { id: "reports", label: "Reports & exports", blurb: "PDF, Excel, CSV.", icon: "reports" },
+  { id: "settings", label: "Settings & plan", blurb: "Company, documents, limits.", icon: "settings" },
+  { id: "trouble", label: "Troubleshooting", blurb: "When something looks wrong.", icon: "alert" },
 ];
 
 export const HELP_ARTICLES: HelpArticle[] = [

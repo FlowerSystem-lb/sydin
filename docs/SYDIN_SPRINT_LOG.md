@@ -5222,3 +5222,51 @@ stale-CSS wedge. `next.config.ts` now sets `turbopackFileSystemCacheForBuild`
 and `turbopackFileSystemCacheForDev` to false; the next deploy served the
 new rules. Lesson: READY does not prove the CSS shipped -- check a new
 selector in the served stylesheet.
+
+### 25 Sep — Page headers: the grey description line dropped too; Help simplified
+
+Sayed: every page still opened on one line of small grey caption text above
+the real content, even after the eyebrow and `<h1>` were hidden on desktop
+(24 Aug). That was `DashboardPageHeader`'s `description` -- kept for screen
+readers, now visually hidden on desktop the same way, on every page except
+a record's own meta line (an invoice's customer/date/status has nowhere
+else on screen it is said). A header left with neither text nor action
+buttons (Activity, Help) collapses to nothing instead of an empty bordered
+bar -- verified: Activity's content now starts right at the search bar.
+Record pages (an invoice, a pick list) and phone width (<640px, where the
+chrome does not repeat the name) are unchanged.
+
+**Help Center, simplified** (the live click-by-click tutorial he described
+is logged as a new backlog item, `SYDIN_FEATURE_BACKLOG.md` §10b -- a real
+subsystem, not built this sprint): the category chips under the search box
+were a second way to do exactly what the "Browse by what you are doing"
+grid below already does, so they only show once you are searching or have
+picked a topic, when they help you narrow or switch rather than duplicate.
+The topic tiles each got the same icon their sidebar section already uses
+(`HELP_CATEGORIES` gained an `icon: UiIconName`), so the grid reads at a
+glance instead of by its two lines of text. `npm run lint`, `npx tsc
+--noEmit`, `npm run build` clean; pushed.
+
+### 25 Sep — Help Center rebuilt from a founder-supplied reference design
+
+Sayed pasted a Figma Make reference and asked for the Help page to look like
+it. Rebuilt on the reference's shape, not its pixels: a big "How can we
+help?" hero with a large search bar; a "Popular articles" fast-lane grid of
+the six most-asked jobs (icon, title, category, chevron -- click opens and
+scrolls to it in the list, never a dead link); one always-visible row of
+topic chips, each with the icon its sidebar section already uses and a live
+count, that filters one always-visible article list (replacing the earlier
+"chips only while filtering" pass from earlier today, itself replacing a
+separate topic-tile grid -- one way to narrow, not three); every row in the
+list now shows an estimated read time and a "Popular" tag; the contact card
+became two tiles (Email / WhatsApp), each with an icon, matching the
+popular-article and topic-chip tiles rather than three plain buttons.
+Two icons added to the shared set (`mail`, `chat`) for the contact tiles.
+No emoji anywhere -- SydIN's own icon set throughout, not the reference's.
+Caught mid-build: the dev server's CSS watcher had wedged again (the
+`app/globals.css` cache trap logged 21/24 Sep) -- `preview_stop` -> `rm -rf
+.next` -> `preview_start` cleared it, confirmed by reading the served
+stylesheet for the new selectors before screenshotting further.
+Verified live: popular-card click opens and scrolls to the right article,
+chip filter narrows the count correctly, phone width has no overflow.
+`npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.

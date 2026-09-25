@@ -154,6 +154,28 @@ Examples — Electronics: serial, warranty, CPU, RAM, storage · Food: expiry, b
 calories · Vehicles: plate, VIN, engine, color.  **Priority: P2.** Requires careful data-model
 work (do not touch schema without an explicit, approved sprint).
 
+## 10b. Guided Help — live, in-product tutorials  *(Sayed, 25 Sep 2026)*
+
+The Help Center (item 28, rebuilt 12 Sep) is reference articles: open a step list, read it,
+go do the thing yourself. Sayed's ask is a second mode inside the same page: pick a lesson
+("Sell and invoice a customer"), it drops you onto the *real* page — Sales, a fresh invoice —
+and coaches you through it live: a spotlight on the exact button, "click here," then the next
+one, "now type the quantity here," until the task is actually done, not just read about.
+
+This is a new subsystem, not a Help-page tweak — it needs a small step-definition format per
+tutorial (target element, instruction text, an optional "wait for this to happen" advance
+condition), an overlay component that can spotlight/point at a live element from outside its
+page, and a per-step way to tell a real action apart from a demo click (a tutorial should not
+silently create a real invoice unless the person means to). Nearest prior art in the codebase:
+`HelpLink` (opens an article from any page) and the onboarding checklist's step-tracking in
+`app/lib/onboarding.ts` — both worth reading before building this, not a reason to start from
+those data shapes.
+
+**Priority: P2** — genuinely useful, not needed before other customers exist. **Scope for a
+first version:** 3–4 of the most-asked tutorials (first item, a purchase order + receiving,
+an invoice + payment) rather than one for every Help article; expand once the pattern is
+proven. Do not build until this is turned into its own sprint.
+
 ## 11. AI Assistant
 
 What needs restocking · find duplicate items / SKUs · monthly report · inventory value by

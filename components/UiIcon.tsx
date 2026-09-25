@@ -42,7 +42,9 @@ export type UiIconName =
   | "cart"
   | "receipt"
   | "stock-in"
-  | "clipboard";
+  | "clipboard"
+  | "mail"
+  | "chat";
 
 export default function UiIcon({
   name,
@@ -307,6 +309,19 @@ export default function UiIcon({
         <>
           <rect x="5" y="4.5" width="14" height="16.5" rx="2" />
           <path d="M9 4.5V3.5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v1M9 13l2 2 4-4.5" />
+        </>
+      )}
+      {/* Email support: an envelope. */}
+      {name === "mail" && (
+        <>
+          <rect x="3" y="5" width="18" height="14" rx="2" />
+          <path d="m4 6.5 8 6 8-6" />
+        </>
+      )}
+      {/* WhatsApp / chat support: a speech bubble. */}
+      {name === "chat" && (
+        <>
+          <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5Z" />
         </>
       )}
     </svg>
