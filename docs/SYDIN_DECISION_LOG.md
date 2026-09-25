@@ -527,3 +527,26 @@ told customers otherwise. A table that lies is a refund conversation.
 load (patching `Response.prototype`, since the Supabase client keeps its own
 `fetch`) and each gated surface is opened; nothing is written. **Status:**
 Active. All twelve capabilities now have at least one enforcement site.
+
+### 24 Sep 2026 — Saved reports live in the browser; the builder never recomputes
+
+**Decision:** The report builder hides columns and sorts rows of a finished
+report table; it never recomputes a figure, and it does not offer
+"group by" (the money reports already are the groupings). Saved reports are
+kept in `localStorage` per account and labelled "On this device".
+**Why:** totals that only the report functions compute cannot drift; a
+saved-reports table would be a schema change nobody asked for yet, and a
+solo owner mostly reports from one computer. **Revisit if:** Sayed wants
+saved reports on his phone too -- then a `saved_reports` table (owner-only
+RLS) replaces the storage functions in `app/lib/reportView.ts`, nothing else.
+**Status:** Active.
+
+### 24 Sep 2026 — Turbopack's on-disk cache is off
+
+**Decision:** `turbopackFileSystemCacheForBuild` and
+`turbopackFileSystemCacheForDev` are `false` in `next.config.ts`.
+**Why:** on by default since Next 16.3, it shipped a production deploy with
+the previous stylesheet (new JS, old CSS) and is the cause of the dev
+server's recurring stale-CSS wedge. Builds take seconds longer.
+**Revisit if:** a Next release notes a fix for CSS invalidation in the
+persistent cache. **Status:** Active.
