@@ -26019,3 +26019,26 @@ circle.ov-dot-main {
     box-shadow: inset 18px 18px 36px -28px rgba(24, 24, 27, 0.22) !important;
   }
 }
+
+/* ===[ NO HAIRLINES IN THE CHROME (Sayed, 26 Sep) ]===
+   "Remove these lines in every header and bar and page -- unprofessional."
+   Found by measuring every border in the frame: the header's bottom line,
+   the page panel's top and left edge, and the dividers between sidebar menu
+   groups. None of them is needed any more -- the grey chrome against the
+   white page, and the soft shade along the curved corner, already separate
+   the areas; spacing separates the menu groups. Cards inside pages keep
+   their borders: a white card on a white page with no edge would vanish. */
+.dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-desktop-toolbar.dashboard-desktop-toolbar {
+  border-bottom: 0 !important;
+  box-shadow: none !important;
+}
+
+.dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content.dashboard-shell-content {
+  border-top: 0 !important;
+  border-left: 0 !important;
+}
+
+.dashboard-sidebar .dashboard-nav-group + .dashboard-nav-group {
+  border-top: 0;
+  padding-top: 0.35rem;
+}

@@ -5471,3 +5471,18 @@ cross. His own PDF export from the live site already appears in History
 (Sep 26, 07:50 PM), so that path is confirmed working. Desktop and phone
 checked, no overflow. `npm run lint`, `npx tsc --noEmit`, `npm run build`
 clean; pushed.
+
+### 26 Sep — The frame, three passes: no blue, curve kept, no hairlines
+
+Sayed, in sequence: remove the blue shade and fix the corner (square corner,
+no blue) -> "curvy corner it is nice... shade grey not full grey" (curve back;
+sidebar, header and the canvas behind the curve share #f7f7f8 with a light
+shade at the logo; the header had been white against a #f4f4f5 rail) ->
+"remove these lines in every header and bar and page, unprofessional"
+(measured every border in the frame: the header's bottom line, the page
+panel's top/left edge, and the dividers between sidebar menu groups --
+all removed; the grey/white contrast and the soft shade along the curve
+separate the areas, spacing separates the menu groups). Cards inside pages
+keep their borders. Checked Overview, Inventory, Import & Export, sidebar
+open and collapsed. `npm run lint`, `npx tsc --noEmit`, `npm run build`
+clean; pushed.
