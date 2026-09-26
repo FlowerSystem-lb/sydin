@@ -25893,3 +25893,93 @@ circle.ov-dot-main {
     display: none;
   }
 }
+
+/* ===[ IMPORT & EXPORT — matched to Sayed's Figma Make design (26 Sep) ]===
+   Title on the page, not in a card; action links pinned to the bottom of
+   equal-height cards; compact two-up export tiles; icon'd status pills. */
+.ie-page .help-hero.help-hero {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  padding: 0.25rem 0 0;
+}
+
+.ie-page .help-hero-title {
+  font-size: 1.45rem;
+}
+
+.ie-page .help-hero-titlebar {
+  column-gap: 0.85rem;
+}
+
+.ie-tile {
+  height: 100%;
+}
+
+.ie-tile-copy {
+  align-self: stretch;
+}
+
+.ie-tile-action {
+  margin-top: auto;
+  padding-top: 0.55rem;
+}
+
+.ie-grid-2 {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr));
+}
+
+.ie-tile-compact {
+  align-items: center;
+  padding: 0.8rem 0.95rem;
+}
+
+.ie-tile-sub {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.ie-tile-link:not(:disabled):hover .ie-tile-sub {
+  color: var(--text-accent);
+}
+
+.ie-mini-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.ie-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.ie-history-row {
+  padding: 0.8rem 1rem;
+}
+
+.ie-tile-buttons.ie-tile-buttons {
+  margin-top: auto;
+  padding-top: 0.55rem;
+}
+
+.ie-grid.ie-grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+@media (max-width: 639px) {
+  .ie-grid.ie-grid-2 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (min-width: 900px) {
+  .ie-grid:not(.ie-grid-2) {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}

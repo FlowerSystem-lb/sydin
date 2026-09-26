@@ -5457,3 +5457,17 @@ Not clicked in testing: the export buttons (would download files and write
 history rows to live data). Verified: sidebar item active, canvas white,
 photos dialog opens, phone width has no overflow and shows the title once.
 `npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.
+
+### 26 Sep — Import & Export matched to a Figma Make design
+
+Sayed signed in to Figma in the built-in browser. Opened his "User
+dashboard" Figma Make file and asked it for an Import & Export page next to
+his Help design (flat white, no emoji, line icons, one-line title). Brought
+its differences over: title on the page instead of in a card; three import
+cards with their action pinned to the bottom so they line up; download
+icons on the template buttons; export tiles compact and two-up ("Export
+now" under each title); "Standard" badge amber; status pills with a tick or
+cross. His own PDF export from the live site already appears in History
+(Sep 26, 07:50 PM), so that path is confirmed working. Desktop and phone
+checked, no overflow. `npm run lint`, `npx tsc --noEmit`, `npm run build`
+clean; pushed.

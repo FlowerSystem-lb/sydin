@@ -120,12 +120,15 @@ function Tile({
   actionLabel,
   disabled,
   locked,
+  compact,
   children,
 }: {
   icon: UiIconName;
   tone?: "blue" | "green" | "amber";
   title: string;
-  description: string;
+  description?: string;
+  /** Title and a one-line action only -- the export tiles (Figma Make, 26 Sep). */
+  compact?: boolean;
   href?: string;
   onClick?: () => void;
   actionLabel?: string;
@@ -142,37 +145,45 @@ function Tile({
         <span className="ie-tile-title">
           {title}
           {locked && (
-            <Badge tone="neutral" className="ie-tile-lock">
+            <Badge tone="warning" className="ie-tile-lock">
               Standard
             </Badge>
           )}
         </span>
-        <span className="ie-tile-text">{description}</span>
-        {actionLabel && (
-          <span className="ie-tile-action">
-            {actionLabel}
-            <UiIcon name="chevron-right" className="h-3.5 w-3.5" />
-          </span>
-        )}
+        {description && !compact && <span className="ie-tile-text">{description}</span>}
+        {actionLabel &&
+          (compact ? (
+            <span className="ie-tile-sub">
+              <UiIcon name={href ? "chevron-right" : "download"} className="h-3.5 w-3.5" />
+              {actionLabel}
+            </span>
+          ) : (
+            <span className="ie-tile-action">
+              {actionLabel}
+              <UiIcon name="chevron-right" className="h-3.5 w-3.5" />
+            </span>
+          ))}
         {children && <span className="ie-tile-buttons">{children}</span>}
       </span>
     </>
   );
 
+  const tileClass = compact ? "ie-tile ie-tile-compact" : "ie-tile";
+
   if (children) {
-    return <div className="ie-tile">{body}</div>;
+    return <div className={tileClass}>{body}</div>;
   }
 
   if (href) {
     return (
-      <Link href={href} className="ie-tile ie-tile-link">
+      <Link href={href} className={`${tileClass} ie-tile-link`}>
         {body}
       </Link>
     );
   }
 
   return (
-    <button type="button" className="ie-tile ie-tile-link" onClick={onClick} disabled={disabled}>
+    <button type="button" className={`${tileClass} ie-tile-link`} onClick={onClick} disabled={disabled}>
       {body}
     </button>
   );
@@ -506,6 +517,7 @@ export default function ImportExportPage() {
               description="The exact columns the importer reads, ready to fill in."
             >
               <button type="button" className="ie-mini-button" onClick={() => void downloadTemplate("csv")}>
+                <UiIcon name="download" className="h-3.5 w-3.5" />
                 CSV
               </button>
               <button
@@ -514,6 +526,7 @@ export default function ImportExportPage() {
                 onClick={() => void downloadTemplate("excel")}
                 disabled={busy === "template"}
               >
+                <UiIcon name="download" className="h-3.5 w-3.5" />
                 {busy === "template" ? "Creating…" : "Excel"}
               </button>
             </Tile>
@@ -525,38 +538,42 @@ export default function ImportExportPage() {
           <h2 id="ie-out-title" className="help-section-title">
             Take data out
           </h2>
-          <div className="ie-grid mt-2">
+          <div className="ie-grid ie-grid-2 mt-2">
             <Tile
+              compact
               icon="file"
               title="Inventory as CSV"
               description="Every item, every column. Opens in Excel, Google Sheets or another system."
               onClick={() => void runExport("csv")}
-              actionLabel={busy === "csv" ? "Exporting…" : "Download CSV"}
+              actionLabel={busy === "csv" ? "Exporting…" : "Export now"}
               disabled={loading || busy !== null}
             />
             <Tile
+              compact
               icon="sheet"
               tone="green"
               title="Inventory as Excel"
               description="A formatted workbook with photos, depots, prices and public links."
               onClick={() => void runExport("excel")}
-              actionLabel={busy === "excel" ? "Exporting…" : "Download Excel"}
+              actionLabel={busy === "excel" ? "Exporting…" : "Export now"}
               disabled={loading || busy !== null}
               locked={!loading && !canExportExcel}
             />
             <Tile
+              compact
               icon="reports"
               tone="amber"
               title="Inventory as PDF"
               description="A branded summary of the whole catalogue, ready to print or send."
               onClick={() => void runExport("pdf")}
-              actionLabel={busy === "pdf" ? "Building…" : "Download PDF"}
+              actionLabel={busy === "pdf" ? "Building…" : "Export now"}
               disabled={loading || busy !== null}
               locked={!loading && !canExportPdf}
             />
             <Tile
+              compact
               icon="receipt"
-              title="Sales, purchases and movements"
+              title="Sales, purchases & movements"
               description="Money and stock reports with a date range, as PDF or CSV."
               href="/dashboard/reports"
               actionLabel="Open Reports"
@@ -639,11 +656,23 @@ export default function ImportExportPage() {
                               : "info"
                         }
                       >
-                        {record.status === "success"
-                          ? "Done"
-                          : record.status === "error"
-                            ? "Failed"
-                            : "Running"}
+                        <span className="ie-status">
+                          <UiIcon
+                            name={
+                              record.status === "success"
+                                ? "check"
+                                : record.status === "error"
+                                  ? "close"
+                                  : "clock"
+                            }
+                            className="h-3 w-3"
+                          />
+                          {record.status === "success"
+                            ? "Done"
+                            : record.status === "error"
+                              ? "Failed"
+                              : "Running"}
+                        </span>
                       </Badge>
                     </div>
                   );
