@@ -25983,3 +25983,23 @@ circle.ov-dot-main {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
+
+/* ===[ CHROME / PAGE CORNER — clean, no blue (Sayed, 26 Sep) ]===
+   "Remove the blue in the background, the shade, and correct the corner
+   between sidebar and header." Replaces the 20-Sep "lit by the shell" look:
+   the page panel loses its inset blue shadow, its blue radial glow and its
+   22px rounded corner. What is left is one thin hairline up the rail's edge
+   and along the underside of the header, meeting in a square corner. All
+   pages, since the chrome is shared. */
+@media (min-width: 900px) {
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border-top-left-radius: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  .dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas {
+    background: transparent !important;
+  }
+}

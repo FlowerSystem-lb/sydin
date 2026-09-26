@@ -561,3 +561,13 @@ Inventory. **Why:** Sayed asked for it back; three weeks behind Inventory's
 ⋯ menu meant it was not found. Inventory's own export menu stays -- it
 exports what is filtered there; this page exports everything.
 **Status:** Active.
+
+### 26 Sep 2026 — No blue glow or rounded corner where the rail meets the header
+
+**Decision:** The page panel meets the sidebar and header in a square corner
+with a thin hairline, flat white, no blue inset shadow or glow. Reverses
+the 20 Sep "page lit by the shell" treatment (rounded 22px corner, blue
+inset shadow, and Inventory's blue canvas behind the curve -- itself added
+after "it is white should be blue"). **Why:** Sayed, 26 Sep: "remove the blue
+in the background, the shade, and correct the corner between sidebar and
+header." **Status:** Active; all pages.
