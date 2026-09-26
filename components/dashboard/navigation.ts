@@ -183,6 +183,18 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
     section: "stock",
     mobilePlacement: "more",
   },
+  {
+    /* Back in the sidebar, 26 Sep (Sayed). For three weeks it was an inner
+       page of Inventory, reachable only from its ... menu -- and nobody found
+       it. It now holds every way data moves: spreadsheet and photo imports,
+       templates, whole-catalogue CSV/Excel/PDF, and the history. */
+    label: "Import & Export",
+    shortLabel: "Import",
+    href: "/dashboard/import-export",
+    icon: "sheet",
+    section: "stock",
+    mobilePlacement: "more",
+  },
 
   /* ---- Insight --------------------------------------------------------- */
   {
@@ -195,11 +207,9 @@ export const DASHBOARD_NAVIGATION: DashboardNavigationItem[] = [
 
   /* ---- Settings & help ------------------------------------------------- */
   {
-    /* QR Center and Import & Export are deliberately not here. Sayed: open
-       import from Inventory, like an internal page of it. Both already had a
-       doorway from Inventory itself -- Import & Export from the ... menu, QR
-       Center from bulk-select -- so a second, parallel entry in the sidebar was
-       what made Inventory feel split across two places instead of one. */
+    /* QR Center is deliberately not here: it is reached from Inventory's
+       bulk-select. Import & Export was kept out the same way until 26 Sep,
+       when Sayed asked for it back -- see Stock control above. */
     label: "Settings",
     href: "/dashboard/settings",
     icon: "settings",
@@ -222,7 +232,7 @@ export function isDashboardRouteActive(pathname: string, href: string) {
 
 /**
  * Undefined when the route isn't in the sidebar (Workflows, Activity, QR
- * Center, Import & Export, Add Item, Search). This used to fall back to
+ * Center, Add Item, Search). This used to fall back to
  * `DASHBOARD_NAVIGATION[0]`, so every such page told you it was "Overview"
  * in the top bar while you were standing on it. The honest answer is to say
  * "no match" and let the caller name the page from its own route.

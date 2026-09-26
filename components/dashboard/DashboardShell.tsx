@@ -178,19 +178,10 @@ function getDashboardPageContext(
     };
   }
 
-  /* Import & Export and QR Center left DASHBOARD_NAVIGATION tonight -- opened
-     from inside Inventory now, not from the sidebar -- so the generic lookup
-     below no longer finds them and was silently falling back to its very
-     first entry, Overview. That is the same "one list drifts, nobody notices"
-     shape the mobile-nav bug was, just smaller: caught here by looking at the
-     rendered page rather than trusting the diff. */
-  if (pathname === "/dashboard/import-export") {
-    return {
-      label: "Inventory / Import & Export",
-      shortLabel: "Import & Export",
-    };
-  }
-
+  /* QR Center left DASHBOARD_NAVIGATION (opened from inside Inventory), so the
+     generic lookup below does not find it and would fall back to Overview.
+     Import & Export had the same special case until 26 Sep, when it went
+     back into the sidebar and the generic lookup names it again. */
   if (pathname === "/dashboard/qr-center") {
     return {
       label: "Inventory / QR Center",

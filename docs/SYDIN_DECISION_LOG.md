@@ -550,3 +550,14 @@ the previous stylesheet (new JS, old CSS) and is the cause of the dev
 server's recurring stale-CSS wedge. Builds take seconds longer.
 **Revisit if:** a Next release notes a fix for CSS invalidation in the
 persistent cache. **Status:** Active.
+
+### 26 Sep 2026 — Import & Export is back in the sidebar
+
+**Decision:** Import & Export returns to the sidebar (Stock control), and
+its page holds every way data moves: spreadsheet import, bulk photos,
+templates, whole-catalogue CSV / Excel / PDF, a link to money reports, and
+the history. Reverses the 4 Sep call that made it an inner page of
+Inventory. **Why:** Sayed asked for it back; three weeks behind Inventory's
+⋯ menu meant it was not found. Inventory's own export menu stays -- it
+exports what is filtered there; this page exports everything.
+**Status:** Active.

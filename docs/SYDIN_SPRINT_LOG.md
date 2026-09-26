@@ -5432,3 +5432,28 @@ by the muted description, the same shape as a real page header, not a
 marketing banner unlike anything else in the app. Verified live at desktop
 and phone width, no overflow. `npm run lint`, `npx tsc --noEmit`,
 `npm run build` clean; pushed.
+
+### 26 Sep — Import & Export: back in the sidebar, every way in and out on one page
+
+Sayed: find the import page, put it in the sidebar, the full system on that
+page, UI like Help. Now under Stock control in the sidebar (top bar reads
+"Stock control / Import & Export"). The page, in Help's language (title
+line, section labels, tinted-icon tiles, flush history list, flat white):
+- Bring data in: spreadsheet import (the existing wizard), bulk photos (the
+  existing dialog, which now also creates items for unmatched photos),
+  CSV/Excel templates.
+- Take data out: the WHOLE catalogue as CSV, Excel or PDF straight from
+  here (Excel/PDF gated on Standard with the usual upgrade dialog), plus a
+  tile to Reports for money and movement reports. Inventory's ⋯ menu still
+  exports what is filtered there.
+- History with All / Imports / Exports chips and counts. Excel and PDF
+  exports from this page are now logged too (Inventory only ever logged CSV).
+The inventory CSV format moved into `app/lib/inventoryCsvExport.ts` so both
+pages write the same file; Inventory's export now uses it.
+Figma Make was asked for but not reachable: the built-in browser isn't
+signed in to Figma and the Chrome extension wasn't connected; built from
+the Help page's design, which came from his Figma Make reference.
+Not clicked in testing: the export buttons (would download files and write
+history rows to live data). Verified: sidebar item active, canvas white,
+photos dialog opens, phone width has no overflow and shows the title once.
+`npm run lint`, `npx tsc --noEmit`, `npm run build` clean; pushed.

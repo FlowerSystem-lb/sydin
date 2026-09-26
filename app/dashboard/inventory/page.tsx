@@ -2,7 +2,6 @@
 
 import Image from "next/image";
 import { convertFromBase, formatExactPrice } from "@/app/lib/currency";
-import { neutralizeSpreadsheetFormula } from "@/app/lib/exportSafety";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import {
   createProductImagePath,
@@ -99,6 +98,12 @@ import {
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
 import { exportInventoryExcel } from "@/app/lib/inventoryExcelExport";
+import {
+  buildInventoryCsv,
+  downloadTextFile,
+  formatDateForFilename,
+  slugifyFilename,
+} from "@/app/lib/inventoryCsvExport";
 import {
   exportInventoryPdf,
   type InventoryPdfBrandingMode,
@@ -241,27 +246,6 @@ const DEFAULT_PDF_SETTINGS: PdfSettings = {
   },
 };
 
-const CSV_HEADERS = [
-  "Name",
-  "SKU",
-  "Category",
-  "Depot",
-  "Quantity",
-  "Low Stock",
-  "Notes",
-  "Image URL",
-  "Public Item URL",
-  "Item Code",
-  "Unit Type",
-  "Custom Unit Label",
-  "Cost Price",
-  "Selling Price",
-  "Stock Cost Value",
-  "Stock Retail Value",
-  "Min Stock Level",
-  "Barcode",
-  "Supplier Name",
-];
 
 function InventoryActionMenu({
   label,
@@ -432,36 +416,8 @@ function InventoryThumbnail({
   );
 }
 
-function escapeCsvValue(value: string | number | null | undefined) {
-  // Two jobs, both required. neutralizeSpreadsheetFormula stops Excel executing
-  // a cell that begins with = + - @; the quoting below keeps the file
-  // parseable. This function previously did only the second.
-  const stringValue = String(neutralizeSpreadsheetFormula(value) ?? "");
 
-  if (/[",\r\n]/.test(stringValue)) {
-    return `"${stringValue.replace(/"/g, '""')}"`;
-  }
 
-  return stringValue;
-}
-
-function formatDateForFilename(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-function slugifyFilename(value: string) {
-  return (
-    value
-      .trim()
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/(^-|-$)/g, "") || "sydin"
-  );
-}
 
 
 /* The value chip on a card. Sayed, 12 Sep: "why are the numbers rounded" --
@@ -1391,31 +1347,18 @@ export default function InventoryPage() {
         item.barcode || "",
         suppliers.find((supplier) => supplier.id === item.supplier_id)?.name || "",
       ]);
-      const csv = [CSV_HEADERS, ...rows]
-        .map((row) => row.map(escapeCsvValue).join(","))
-        .join("\r\n");
-      const blob = new Blob([csv], {
-        type: "text/csv;charset=utf-8",
-      });
-      const downloadUrl = URL.createObjectURL(blob);
-      const link = document.createElement("a");
       const businessSlug = slugifyFilename(
         businessSettings.business_name || DEFAULT_BUSINESS_SETTINGS.business_name
       );
       const dateStamp = formatDateForFilename(new Date());
-
-      link.href = downloadUrl;
-      link.download = `${businessSlug}-inventory-${dateStamp}.csv`;
-      link.style.display = "none";
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      URL.revokeObjectURL(downloadUrl);
+      const exportedFileName = downloadTextFile(
+        `${businessSlug}-inventory-${dateStamp}.csv`,
+        buildInventoryCsv(rows)
+      );
 
       // Record the export so it shows up on the Import & Export history page.
       // Fire-and-forget: the file already downloaded, so a logging failure must
       // never surface as an export failure.
-      const exportedFileName = link.download;
       const exportedCount = itemsToExport.length;
       void supabase.auth.getUser().then(({ data: { user } }) => {
         if (!user) return;

@@ -25700,8 +25700,196 @@ circle.ov-dot-main {
    this needs its own !important to win, not just to be scoped. Scoped to
    Help only, the way Inventory already scopes its own canvas overrides,
    rather than changing that ground sitewide, which nobody asked for. */
-.dashboard-shell:has(.support-help) .dashboard-main-canvas,
-.dashboard-shell.liquid-bg:has(.support-help) {
+.dashboard-shell:has(:is(.support-help, .ie-page)) .dashboard-main-canvas,
+.dashboard-shell.liquid-bg:has(:is(.support-help, .ie-page)) {
   background-color: #ffffff !important;
   background-image: none !important;
+}
+
+/* ===[ IMPORT & EXPORT (2026-09-26) ]===
+   Same language as the Help Center: one title line, section labels, tiles
+   that say what they do, a flush history list. Tiles carry a tinted icon
+   chip in one of three palette tones (blue / green / amber) -- the same
+   accents Help uses -- so the two pages read as one product. */
+.ie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.6rem;
+}
+
+.ie-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: var(--bg-surface);
+  padding: 0.85rem 0.95rem;
+  text-align: left;
+  color: inherit;
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.ie-tile-link:not(:disabled):hover {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.03);
+}
+
+.ie-tile-link:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 2px;
+}
+
+.ie-tile-link:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.ie-tile-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 10px;
+}
+
+.ie-tone-blue {
+  background: rgba(37, 99, 235, 0.1);
+  color: var(--text-accent);
+}
+
+.ie-tone-green {
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.ie-tone-amber {
+  background: var(--status-warning-surface);
+  color: var(--status-warning-text);
+}
+
+.ie-tile-copy {
+  display: flex;
+  min-width: 0;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.ie-tile-title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ie-tile-lock.ie-tile-lock {
+  font-size: 0.625rem;
+  padding: 0.05rem 0.45rem;
+}
+
+.ie-tile-text {
+  font-size: 0.85rem;
+  line-height: 1.3rem;
+  color: var(--text-muted);
+}
+
+.ie-tile-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  margin-top: 0.3rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+/* The template tile holds two buttons instead of being one link. */
+.ie-tile-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.4rem;
+}
+
+.ie-mini-button {
+  min-width: 4.25rem;
+  min-height: 2rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  background: var(--bg-surface);
+  padding: 0 0.7rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  transition: border-color 140ms ease, background-color 140ms ease;
+}
+
+.ie-mini-button:hover:not(:disabled) {
+  border-color: rgba(37, 99, 235, 0.35);
+  background: rgba(37, 99, 235, 0.04);
+}
+
+.ie-mini-button:disabled {
+  opacity: 0.6;
+}
+
+.ie-footnote {
+  margin-top: 0.6rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.ie-footnote a {
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+.ie-footnote a:hover {
+  text-decoration: underline;
+}
+
+.ie-history-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-divider);
+  padding: 0.7rem 0.9rem;
+}
+
+.ie-history-row:last-child {
+  border-bottom: 0;
+}
+
+.ie-history-name {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.ie-history-meta {
+  display: block;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+/* On a phone the page header already prints "Import & Export" and its
+   description (the desktop chrome hides it, the phone shows it) -- the title
+   card would say it a second time directly underneath. */
+@media (max-width: 639px) {
+  .ie-page .help-hero {
+    display: none;
+  }
 }
