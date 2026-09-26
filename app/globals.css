@@ -25700,8 +25700,7 @@ circle.ov-dot-main {
    this needs its own !important to win, not just to be scoped. Scoped to
    Help only, the way Inventory already scopes its own canvas overrides,
    rather than changing that ground sitewide, which nobody asked for. */
-.dashboard-shell:has(:is(.support-help, .ie-page)) .dashboard-main-canvas,
-.dashboard-shell.liquid-bg:has(:is(.support-help, .ie-page)) {
+.dashboard-shell:has(:is(.support-help, .ie-page)) .dashboard-shell-content {
   background-color: #ffffff !important;
   background-image: none !important;
 }
@@ -25984,22 +25983,39 @@ circle.ov-dot-main {
   }
 }
 
-/* ===[ CHROME / PAGE CORNER — clean, no blue (Sayed, 26 Sep) ]===
-   "Remove the blue in the background, the shade, and correct the corner
-   between sidebar and header." Replaces the 20-Sep "lit by the shell" look:
-   the page panel loses its inset blue shadow, its blue radial glow and its
-   22px rounded corner. What is left is one thin hairline up the rail's edge
-   and along the underside of the header, meeting in a square corner. All
-   pages, since the chrome is shared. */
+/* ===[ CHROME / PAGE CORNER — curved, soft grey (Sayed, 26 Sep) ]===
+   Same day, two steps. First: "remove the blue in the background, the shade"
+   -- the blue inset shadow and glow went. Then: "curvy corner it is nice, and
+   from the logo of SydIN to header and to side bar shade grey, not full
+   grey." So the curve is back, and the chrome is one piece again in a light
+   grey: the rail and the header share the same fill (the header was white,
+   the rail #f4f4f5 -- they never matched), shaded a little darker at the
+   logo and fading out, fixed to the viewport so the shade runs across both
+   as one surface. The canvas behind the curve carries the same grey so the
+   corner reads; the page panel stays white with a soft grey shadow along
+   the curve instead of the blue one. All pages, since the chrome is shared. */
 @media (min-width: 900px) {
-  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content {
-    background: #ffffff !important;
-    box-shadow: none !important;
-    border-top-left-radius: 0 !important;
-    border-radius: 0 !important;
+  /* Selector weight is deliberate: .dashboard-theme .dashboard-shell... rules
+     at (0,4,0) !important already paint the rail and header; this has to
+     out-rank them, not just come later. */
+  .dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-sidebar.dashboard-sidebar,
+  .dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-desktop-toolbar.dashboard-desktop-toolbar,
+  .dashboard-theme .dashboard-shell.dashboard-workspace-shell .dashboard-main-canvas.dashboard-main-canvas {
+    background:
+      radial-gradient(
+        900px 420px at 0 0,
+        rgba(24, 24, 27, 0.05),
+        rgba(24, 24, 27, 0) 70%
+      ),
+      #f7f7f8 !important;
+    background-attachment: fixed !important;
   }
 
-  .dashboard-shell:has(.inventory-workspace) .dashboard-main-canvas {
-    background: transparent !important;
+  .dashboard-shell.dashboard-workspace-shell .dashboard-shell-content {
+    background: #ffffff !important;
+    border-left: 1px solid rgba(24, 24, 27, 0.08) !important;
+    border-top: 1px solid rgba(24, 24, 27, 0.08) !important;
+    border-top-left-radius: 22px !important;
+    box-shadow: inset 18px 18px 36px -28px rgba(24, 24, 27, 0.22) !important;
   }
 }

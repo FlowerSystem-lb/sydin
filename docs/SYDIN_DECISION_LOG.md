@@ -570,4 +570,15 @@ the 20 Sep "page lit by the shell" treatment (rounded 22px corner, blue
 inset shadow, and Inventory's blue canvas behind the curve -- itself added
 after "it is white should be blue"). **Why:** Sayed, 26 Sep: "remove the blue
 in the background, the shade, and correct the corner between sidebar and
-header." **Status:** Active; all pages.
+header." **Status:** Superseded the same day -- see below.
+
+### 26 Sep 2026 — Curved corner kept; the chrome is one soft grey
+
+**Decision:** The page panel keeps its 22px curved corner where the sidebar
+meets the header, with a soft grey (not blue) shadow along the curve. The
+sidebar, the header and the canvas behind the curve share one light grey
+(#f7f7f8), a little darker at the logo and fading out, fixed to the
+viewport so it reads as one surface. **Why:** Sayed, right after the square
+corner: "curvy corner it is nice, and from the logo of SydIN to header and
+to side bar shade grey, not full grey." The header had been white and the
+rail #f4f4f5 -- they never matched. **Status:** Active; all pages (desktop).
