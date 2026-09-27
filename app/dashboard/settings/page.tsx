@@ -82,6 +82,13 @@ interface SettingsSection {
   icon: UiIconName;
 }
 
+// Supabase names Microsoft sign-in "azure".
+const SIGN_IN_LABELS = {
+  email: "Email code",
+  google: "Google",
+  azure: "Microsoft",
+} as const;
+
 /* Rebuilt 26 Sep from Sayed's Figma Make design: grouped the way a business
    owner thinks about it (the business, how the app behaves, their account),
    and the long single Company form split into the three things it actually
@@ -230,6 +237,7 @@ export default function SettingsPage() {
   const [subscription, setSubscription] =
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [userEmail, setUserEmail] = useState("");
+  const [signInMethods, setSignInMethods] = useState<string[]>([]);
   const [usedItems, setUsedItems] = useState<number | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [refreshingRates, setRefreshingRates] = useState(false);
@@ -278,6 +286,9 @@ export default function SettingsPage() {
         }
 
         setUserEmail(user.email || "");
+        setSignInMethods(
+          (user.identities ?? []).map((identity) => identity.provider)
+        );
 
         Promise.all([
           getOrCreateBusinessSettings(user.id),
@@ -933,7 +944,22 @@ export default function SettingsPage() {
       <Row label="Signed in as">
         <span className="st-strong">{userEmail || "—"}</span>
       </Row>
-      <Row label="Password" hint="Handled by the way you sign in: email link, Google or Microsoft.">
+      <Row label="Sign-in methods" hint="The ways you can get into this account.">
+        <ul className="st-signins">
+          {(["email", "google", "azure"] as const).map((provider) => {
+            const linked = signInMethods.includes(provider);
+            return (
+              <li key={provider}>
+                <span>{SIGN_IN_LABELS[provider]}</span>
+                <span className={`st-pill ${linked ? "st-pill-green" : "st-pill-grey"}`}>
+                  {linked ? "Connected" : "Not connected"}
+                </span>
+              </li>
+            );
+          })}
+        </ul>
+      </Row>
+      <Row label="Password" hint="Handled by the way you sign in: email code, Google or Microsoft.">
         <span className="st-hint">Nothing to set here.</span>
       </Row>
       <Row label="Help and support">

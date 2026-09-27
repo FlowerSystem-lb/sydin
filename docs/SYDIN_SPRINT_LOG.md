@@ -5514,3 +5514,17 @@ globals.css.
 Discard was checked: nothing was saved. Desktop and phone were checked, with no
 overflow (on phone the menu becomes a row of pills). `npm run lint`,
 `npx tsc --noEmit` and `npm run build` are clean; pushed.
+
+### 27 Sep — Settings > Account shows linked sign-in methods
+
+Sayed sent seven screenshots of Sortly's Settings (User Profile, Company Details, Linked
+Accounts, User Access Control, and a feature-request/roadmap panel).
+
+- **Added:** Account & security now lists Email code, Google and Microsoft, each marked
+  Connected or Not connected. The data is read only from the signed-in user's identities,
+  so nothing about sign-in changed.
+- **Not built:** team access (inviting employees with roles, customer access). It needs
+  shared ownership in the database and new security rules on every table, which is the
+  Phase 5 RBAC work. It waits for Sayed's go-ahead as its own sprint.
+
+`npm run lint`, `npx tsc --noEmit` and `npm run build` are clean; pushed.

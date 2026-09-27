@@ -26531,3 +26531,26 @@ circle.ov-dot-main {
   width: 100%;
   max-width: 28rem;
 }
+
+/* Settings > Account: which sign-in methods are linked (27 Sep, from Sortly's "Linked accounts") */
+.st-signins {
+  display: grid;
+  max-width: 28rem;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+}
+
+.st-signins li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-divider);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.st-signins li:last-child {
+  border-bottom: 0;
+}
