@@ -26042,3 +26042,492 @@ circle.ov-dot-main {
   border-top: 0;
   padding-top: 0.35rem;
 }
+
+/* ===[ SETTINGS (2026-09-26) — rebuilt from Sayed's Figma Make design ]===
+   Grouped menu on the left (Business / Workspace / Account), one white card
+   on the right: section title, one grey line, label-left rows divided by
+   hairlines, and a save bar that only appears once something changed.
+   New `st-*` classes rather than the old `.settings-*` ones, which carry
+   six layers of earlier redesigns. */
+.st-layout {
+  display: grid;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (min-width: 900px) {
+  .st-layout {
+    grid-template-columns: 15rem minmax(0, 1fr);
+  }
+
+  .st-nav {
+    position: sticky;
+    top: 1rem;
+  }
+}
+
+.st-nav {
+  display: grid;
+  gap: 1rem;
+}
+
+.st-nav-group {
+  display: grid;
+  gap: 0.15rem;
+}
+
+.st-nav-label {
+  margin: 0 0 0.25rem;
+  padding-inline: 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.st-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  min-height: 2.5rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  padding: 0 0.75rem;
+  text-align: left;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  transition: background-color 140ms ease, color 140ms ease;
+}
+
+.st-nav-item:hover {
+  background: rgba(24, 24, 27, 0.04);
+  color: var(--text-primary);
+}
+
+.st-nav-item-active,
+.st-nav-item-active:hover {
+  border-color: var(--border-default);
+  background: #ffffff;
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.06), 0 4px 12px rgba(24, 24, 27, 0.05);
+}
+
+.st-nav-item:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 2px;
+}
+
+/* On phones and tablets the menu is one scrolling row of pills above the card. */
+@media (max-width: 899px) {
+  .st-nav {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    padding-bottom: 0.2rem;
+    scrollbar-width: none;
+  }
+
+  .st-nav-group {
+    display: contents;
+  }
+
+  .st-nav-label {
+    display: none;
+  }
+
+  .st-nav-item {
+    width: auto;
+    flex: none;
+    white-space: nowrap;
+  }
+}
+
+.st-panel.st-panel {
+  padding: 0;
+  overflow: visible;
+}
+
+.st-panel-head {
+  border-bottom: 1px solid var(--border-divider);
+  padding: 1.1rem 1.35rem 1rem;
+}
+
+.st-panel-head h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.st-panel-head p {
+  margin-top: 0.2rem;
+  font-size: 0.875rem;
+  color: var(--text-muted);
+}
+
+.st-panel-body {
+  padding: 0 1.35rem;
+}
+
+.st-row {
+  display: grid;
+  gap: 0.5rem 1.5rem;
+  border-bottom: 1px solid var(--border-divider);
+  padding: 1rem 0;
+}
+
+.st-row:last-child {
+  border-bottom: 0;
+}
+
+@media (min-width: 640px) {
+  .st-row {
+    grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
+.st-row-label label,
+.st-row-label span {
+  display: block;
+  padding-top: 0.55rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.st-row-label p {
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  line-height: 1.25rem;
+  color: var(--text-muted);
+}
+
+.st-row-control {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 0;
+}
+
+.st-input {
+  width: 100%;
+  max-width: 28rem;
+  min-height: 2.6rem;
+  border: 1px solid var(--border-default);
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 0.5rem 0.8rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease;
+}
+
+.st-input:focus {
+  border-color: rgba(37, 99, 235, 0.5);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.st-input:disabled {
+  background: var(--bg-inset);
+  color: var(--text-muted);
+}
+
+.st-textarea {
+  min-height: 5.5rem;
+  resize: vertical;
+}
+
+.st-input.st-input-narrow {
+  width: 9rem;
+}
+
+.st-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem 0.75rem;
+}
+
+.st-hint {
+  font-size: 0.8rem;
+  line-height: 1.25rem;
+  color: var(--text-muted);
+}
+
+.st-strong {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.st-mono {
+  min-width: 6rem;
+  border: 1px solid var(--border-default);
+  border-radius: 8px;
+  padding: 0.35rem 0.6rem;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+
+.st-link,
+.st-text-button {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-accent);
+}
+
+.st-link:hover,
+.st-text-button:hover {
+  text-decoration: underline;
+}
+
+/* toggle switch */
+.st-switch {
+  position: relative;
+  display: inline-flex;
+  width: 2.6rem;
+  height: 1.5rem;
+  margin-top: 0.4rem;
+  cursor: pointer;
+}
+
+.st-switch input {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.st-switch span {
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  background: #d4d4d8;
+  transition: background-color 160ms ease;
+}
+
+.st-switch span::after {
+  content: "";
+  position: absolute;
+  top: 0.19rem;
+  left: 0.19rem;
+  width: 1.12rem;
+  height: 1.12rem;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(24, 24, 27, 0.2);
+  transition: transform 160ms ease;
+}
+
+.st-switch input:checked + span {
+  background: #2563eb;
+}
+
+.st-switch input:checked + span::after {
+  transform: translateX(1.1rem);
+}
+
+.st-switch input:focus-visible + span {
+  outline: 2px solid rgba(37, 99, 235, 0.55);
+  outline-offset: 2px;
+}
+
+/* save bar: sticky to the bottom of the viewport while the card scrolls */
+.st-savebar {
+  position: sticky;
+  bottom: 0.75rem;
+  z-index: 5;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0.5rem 0.75rem 0.75rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+  background: #ffffff;
+  padding: 0.6rem 0.75rem 0.6rem 1rem;
+  box-shadow: 0 8px 24px rgba(24, 24, 27, 0.1);
+}
+
+.st-savebar-text {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.st-savebar-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.st-error {
+  margin: 0 1.35rem 1rem;
+  border: 1px solid var(--status-danger-border);
+  border-radius: 10px;
+  background: var(--status-danger-surface);
+  padding: 0.6rem 0.8rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--status-danger-text);
+}
+
+/* plan & billing */
+.st-plan {
+  margin: 1.1rem 0 1.35rem;
+  overflow: hidden;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.st-plan-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 1rem 1.1rem;
+}
+
+.st-plan-name {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.st-pill {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.st-pill-green {
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.st-pill-amber {
+  background: var(--status-warning-surface);
+  color: var(--status-warning-text);
+  text-transform: capitalize;
+}
+
+.st-pill-grey {
+  background: var(--bg-inset);
+  color: var(--text-muted);
+}
+
+.st-usage {
+  display: grid;
+  gap: 0.45rem;
+  border-top: 1px solid var(--border-divider);
+  padding: 0.9rem 1.1rem;
+}
+
+.st-usage-line {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+}
+
+.st-usage-line strong {
+  color: var(--text-primary);
+}
+
+.st-usage-track {
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--bg-inset);
+}
+
+.st-usage-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: #2563eb;
+}
+
+.st-usage-fill-warn {
+  background: #d97706;
+}
+
+.st-features {
+  display: grid;
+  border-top: 1px solid var(--border-divider);
+}
+
+.st-features li {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  border-bottom: 1px solid var(--border-divider);
+  padding: 0.7rem 1.1rem;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+}
+
+.st-features li:last-child {
+  border-bottom: 0;
+}
+
+.st-features li.st-feature-off {
+  color: var(--text-muted);
+}
+
+.st-feature-mark {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  color: var(--text-muted);
+}
+
+.st-feature-yes {
+  background: var(--status-success-surface);
+  color: var(--status-success-text);
+}
+
+.st-dash {
+  width: 0.5rem;
+  height: 1.5px;
+  border-radius: 1px;
+  background: currentColor;
+}
+
+/* The title line sits on the page, not in a card: an older `.dashboard-card`
+   shadow rule outranked the plain override above. */
+.ie-page .help-hero.help-hero {
+  border: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Buttons and links in a settings row keep their own width; only text
+   inputs stretch (to their 28rem cap). The currency picker matches them. */
+.st-row-control > :is(a, button) {
+  justify-self: start;
+}
+
+.st-select {
+  width: 100%;
+  max-width: 28rem;
+}

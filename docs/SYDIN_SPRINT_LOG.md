@@ -5486,3 +5486,31 @@ separate the areas, spacing separates the menu groups). Cards inside pages
 keep their borders. Checked Overview, Inventory, Import & Export, sidebar
 open and collapsed. `npm run lint`, `npx tsc --noEmit`, `npm run build`
 clean; pushed.
+
+### 27 Sep — Settings rebuilt from a Figma Make design
+
+Sayed asked for a professional Settings page for customers, and for Claude to decide
+what to add and what to remove. It was designed in his "User dashboard" Figma Make file
+and rebuilt in `app/dashboard/settings/page.tsx`, with new `st-*` CSS appended to
+globals.css.
+
+- **Menu:** grouped under Business (Company profile, Documents, Currency), Workspace
+  (Inventory) and Account (Account & security, Plan & billing).
+- **Card:** one white card per section, with label-left rows divided by hairlines.
+- **Save bar:** appears only when something has changed ("You have unsaved changes",
+  with Discard / Save changes).
+- **Company:** the old tab is split into Company profile, Documents and Currency. The
+  public-contact checkbox is now an on/off switch.
+- **Plan & billing:** now shows an Active pill, a usage bar (items used of the limit)
+  and a ticked features list.
+- **Account:** gains an Open Help link.
+- **Removed:**
+  - The Data & reports tab. Its links now live in the sidebar (Import & Export,
+    Reports), and old `?section=data` / `?section=reports` links land on Company
+    profile.
+  - The "Back to Dashboard" button.
+  - The repeated big heading.
+
+Discard was checked: nothing was saved. Desktop and phone were checked, with no
+overflow (on phone the menu becomes a row of pills). `npm run lint`,
+`npx tsc --noEmit` and `npm run build` are clean; pushed.

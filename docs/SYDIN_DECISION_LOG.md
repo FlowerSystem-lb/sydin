@@ -582,3 +582,18 @@ viewport so it reads as one surface. **Why:** Sayed, right after the square
 corner: "curvy corner it is nice, and from the logo of SydIN to header and
 to side bar shade grey, not full grey." The header had been white and the
 rail #f4f4f5 -- they never matched. **Status:** Active; all pages (desktop).
+
+### 27 Sep 2026 — Settings: grouped sections, save bar only when dirty
+
+**Decision:**
+- Settings has six sections in three groups: Business, Workspace and Account.
+- Each section is one card of label-left rows.
+- The save bar appears only when a field has changed.
+- The Data & reports tab is removed, because Import & Export and Reports each have their
+  own sidebar entry.
+
+**Why:** Sayed asked for a professional, customer-facing Settings page designed with
+Figma Make, and left what to add or remove to Claude. An always-visible Save button and
+a tab of links that duplicate the sidebar are clutter.
+
+**Status:** Active.
