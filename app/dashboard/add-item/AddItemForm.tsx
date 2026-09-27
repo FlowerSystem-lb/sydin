@@ -49,6 +49,7 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { resolveScannedCode, type ScannableItem } from "@/app/lib/scannerResolve";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -302,8 +303,7 @@ export default function AddItemForm({
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(({ data: { user } }) => {
         if (!isActive) return;
 
@@ -570,7 +570,7 @@ export default function AddItemForm({
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setFormError("Please sign in again before adding inventory.");
@@ -721,7 +721,7 @@ export default function AddItemForm({
   const lookupBarcodeOwner = async (code: string) => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) return null;
 

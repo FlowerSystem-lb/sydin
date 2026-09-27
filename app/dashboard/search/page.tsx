@@ -28,7 +28,7 @@ import {
   type SearchGroup,
   type SearchResult,
 } from "@/app/lib/globalSearch";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import { cx } from "@/components/ui/utils";
 
 const SEARCH_PAGE_MAX_RESULTS_PER_GROUP = 40;
@@ -59,7 +59,7 @@ export default function GlobalSearchPage() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth.getUser().then(({ data }) => {
+    getBusinessUser().then(({ data }) => {
       if (!active) return;
       if (!data.user) {
         setAuthError("Please sign in again to search your workspace.");

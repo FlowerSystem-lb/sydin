@@ -43,6 +43,7 @@ import {
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 interface CountInventoryItem {
   id: number;
@@ -372,7 +373,7 @@ export default function StockCountsPage() {
     async function loadData() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) throw new Error("Please sign in again to use stock counts.");
 
@@ -542,7 +543,7 @@ export default function StockCountsPage() {
   const refreshItems = async () => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
     if (!user) throw new Error("Please sign in again to refresh inventory.");
     const { data, error } = await supabase
       .from("inventory")

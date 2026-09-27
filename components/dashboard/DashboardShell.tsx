@@ -55,6 +55,7 @@ import {
 import { SCANNER_REQUEST_EVENT } from "@/app/lib/scannerNavigation";
 import { requestAddItem } from "@/app/lib/addItemNavigation";
 import { supabase } from "@/app/lib/supabase";
+import { useBusiness } from "@/components/dashboard/BusinessContext";
 import {
   DASHBOARD_NAVIGATION,
   DASHBOARD_SECTION_LABELS,
@@ -523,6 +524,7 @@ export default function DashboardShell({
   const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const business = useBusiness();
   // The page area is its own scroll container from 900px up, so the chrome and
   // the curved seam stay put while content moves. Next scrolls `window` on
   // navigation, which is a no-op once the document itself no longer scrolls --
@@ -906,7 +908,11 @@ export default function DashboardShell({
     usage.subscription.plan,
     "account-menu"
   );
+  // View-only team members can't create anything (the database refuses it),
+  // so the Add buttons give way to a plain "View only" label.
+  const viewOnly = business?.role === "viewer";
   const quickAddVisible =
+    !viewOnly &&
     pathname !== "/dashboard" &&
     pathname !== "/dashboard/inventory" &&
     pathname !== "/dashboard/add-item";
@@ -1335,6 +1341,9 @@ export default function DashboardShell({
           </div>
 
           <div className="dashboard-top-tools">
+            {viewOnly ? (
+              <span className="role-pill-viewonly">View only</span>
+            ) : (
             <div ref={addMenuRef} className="dashboard-top-add">
               <button
                 ref={addTriggerRef}
@@ -1401,6 +1410,7 @@ export default function DashboardShell({
                 </MenuSurface>
               )}
             </div>
+            )}
             <button
               type="button"
               onClick={requestScanner}

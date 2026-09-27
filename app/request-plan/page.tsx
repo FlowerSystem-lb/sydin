@@ -9,6 +9,7 @@ import {
 } from "@/components/Marketing";
 import Reveal from "@/components/Reveal";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import { getOrCreateBusinessSettings } from "@/app/lib/businessSettings";
 
 type PlanName = "Standard" | "Pro";
@@ -108,8 +109,7 @@ function RequestPlanContent() {
   // what SydIN already knows. Only empty fields are filled, once.
   useEffect(() => {
     let isActive = true;
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive || !user) return;
         if (user.email) setEmail((current) => current || user.email || "");

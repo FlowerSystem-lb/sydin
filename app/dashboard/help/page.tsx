@@ -42,7 +42,7 @@ import {
   getSubscriptionUsage,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 /**
  * The Help Center teaches SydIN by the job in hand.
@@ -168,8 +168,7 @@ export default function HelpCenterPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user }, error: userError }) => {
         if (!isActive) return;
         if (userError || !user) {

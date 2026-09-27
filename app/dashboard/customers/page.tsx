@@ -43,7 +43,7 @@ import {
   getSalesOrdersForUser,
   type SalesOrder,
 } from "@/app/lib/salesOrders";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   createCustomer,
   deleteCustomer,
@@ -154,7 +154,7 @@ export default function CustomersPage() {
   const reload = useCallback(async () => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) return;
 
@@ -181,8 +181,7 @@ export default function CustomersPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive) return;
 
@@ -286,7 +285,7 @@ export default function CustomersPage() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) {
       setFormError("Your session expired. Sign in again and retry.");
@@ -369,7 +368,7 @@ export default function CustomersPage() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) return;
 

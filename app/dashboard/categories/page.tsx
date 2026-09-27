@@ -60,6 +60,7 @@ import {
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import ItemPanel from "@/components/inventory/ItemPanel";
 import AddItemForm from "@/app/dashboard/add-item/AddItemForm";
 
@@ -329,8 +330,7 @@ export default function CategoriesPage() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!user) throw new Error("Please sign in again to manage categories.");
         if (!active) return;

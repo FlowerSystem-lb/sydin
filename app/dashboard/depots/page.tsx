@@ -22,7 +22,7 @@ import {
   updateDepot,
   type Depot,
 } from "@/app/lib/depots";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -64,7 +64,7 @@ export default function DepotsPage() {
   const loadDepots = async () => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) {
       setPageError("Please sign in again to manage depots.");
@@ -91,8 +91,7 @@ export default function DepotsPage() {
   useEffect(() => {
     let isActiveRequest = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(({ data: { user } }) => {
         if (!isActiveRequest) return;
 
@@ -199,7 +198,7 @@ export default function DepotsPage() {
       const currentUserId =
         userId ||
         (
-          await supabase.auth.getUser()
+          await getBusinessUser()
         ).data.user?.id;
 
       if (!currentUserId) {

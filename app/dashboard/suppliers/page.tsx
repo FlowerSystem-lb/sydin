@@ -61,7 +61,7 @@ import {
   type Supplier,
   type SupplierInput,
 } from "@/app/lib/suppliers";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -280,7 +280,7 @@ export default function SuppliersPage() {
 
   const loadSuppliers = async (knownUserId?: string) => {
     const currentUserId =
-      knownUserId || (await supabase.auth.getUser()).data.user?.id;
+      knownUserId || (await getBusinessUser()).data.user?.id;
 
     if (!currentUserId) {
       setPageError("Please sign in again to manage suppliers.");
@@ -307,8 +307,7 @@ export default function SuppliersPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(({ data: { user } }) => {
         if (!isActive) return;
 

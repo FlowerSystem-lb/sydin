@@ -19,6 +19,7 @@ import {
   type DocumentPreviewLine,
 } from "@/components/ui";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -157,8 +158,7 @@ export default function NewSalePage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive) return;
 
@@ -409,7 +409,7 @@ export default function NewSalePage() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) {
       setError("Your session expired. Sign in again and retry.");

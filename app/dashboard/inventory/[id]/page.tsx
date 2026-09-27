@@ -65,6 +65,7 @@ import { rememberRecentItem } from "@/app/lib/globalSearch";
 import { getDocumentsForItem, type ItemDocument } from "@/app/lib/itemDocuments";
 import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -388,7 +389,7 @@ export default function ItemDetailsPage() {
         const {
           data: { user },
           error: userError,
-        } = await supabase.auth.getUser();
+        } = await getBusinessUser();
 
         if (!isActive) return;
 
@@ -588,7 +589,7 @@ export default function ItemDetailsPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setEditError("Please sign in again before updating inventory.");
@@ -687,7 +688,7 @@ export default function ItemDetailsPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setError("Please sign in again before deleting inventory.");
@@ -1537,7 +1538,7 @@ export default function ItemDetailsPage() {
           if (!item) return;
           const {
             data: { user },
-          } = await supabase.auth.getUser();
+          } = await getBusinessUser();
           if (!user) return;
 
           const { data: refreshedItem, error: refreshError } = await supabase

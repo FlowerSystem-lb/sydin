@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button, DialogShell, Select } from "@/components/ui";
 import UiIcon from "@/components/UiIcon";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   ALLOWED_IMAGE_TYPES,
   createProductImagePath,
@@ -187,7 +188,7 @@ export default function BulkPhotoDialog({
     const {
       data: { user },
       error: userError,
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (userError || !user) {
       setError("Your session expired. Sign in again and retry.");

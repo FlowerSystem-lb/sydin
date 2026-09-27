@@ -71,6 +71,7 @@ import {
 } from "@/app/lib/purchaseOrders";
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 interface PickerItem {
   id: number;
@@ -237,7 +238,7 @@ export default function NewPurchaseOrderPage() {
     let active = true;
 
     async function loadInitialData() {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await getBusinessUser();
       const user = data.user;
       if (!user) {
         router.replace("/login");

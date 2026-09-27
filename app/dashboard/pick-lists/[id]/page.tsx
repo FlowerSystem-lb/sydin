@@ -48,7 +48,7 @@ import {
   getSuppliersForUser,
   type Supplier,
 } from "@/app/lib/suppliers";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 interface LineDraft {
   required: string;
@@ -161,8 +161,7 @@ export default function PickListDetailPage() {
 
     if (!validPickListId) return;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive) return;
 

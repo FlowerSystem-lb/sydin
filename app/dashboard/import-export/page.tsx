@@ -18,6 +18,7 @@ import { UpgradeDialog } from "@/components/UpgradePrompt";
 import BulkPhotoDialog from "@/components/inventory/BulkPhotoDialog";
 import type { PhotoTargetItem } from "@/app/lib/bulkItemPhotos";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   getImportExportHistory,
   logImportExport,
@@ -217,8 +218,7 @@ export default function ImportExportPage() {
 
   useEffect(() => {
     let active = true;
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!active) return;
         if (!user) {

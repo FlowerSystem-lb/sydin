@@ -47,6 +47,7 @@ import {
   type UserSubscription,
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 interface QrInventoryItem {
   id: number;
@@ -176,8 +177,7 @@ export default function QrCenterPage() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!user) throw new Error("Please sign in again to use QR Center.");
 

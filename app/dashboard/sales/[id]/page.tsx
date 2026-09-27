@@ -26,6 +26,7 @@ function formatShortDate(value: string | null | undefined) {
   return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
 }
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -109,8 +110,7 @@ export default function SaleDetailPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive) return;
 
@@ -225,7 +225,7 @@ export default function SaleDetailPage() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) return;
 
@@ -245,7 +245,7 @@ export default function SaleDetailPage() {
   const removePayment = async (paymentId: number) => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) return;
 
@@ -389,7 +389,7 @@ export default function SaleDetailPage() {
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) return;
 

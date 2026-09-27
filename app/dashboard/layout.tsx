@@ -3,6 +3,12 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/app/lib/supabase";
+import {
+  getBusinessContext,
+  type BusinessContext as BusinessContextValue,
+} from "@/app/lib/business";
+import { BusinessProvider } from "@/components/dashboard/BusinessContext";
+import TeamInviteBanner from "@/components/dashboard/TeamInviteBanner";
 import DashboardShell from "@/components/dashboard/DashboardShell";
 import MobileShellWrapper from "@/components/mobile/MobileShellWrapper";
 import ThemeProvider from "@/components/ThemeProvider";
@@ -20,6 +26,7 @@ export default function DashboardLayout({
     id: string;
     email?: string | null;
   } | null>(null);
+  const [business, setBusiness] = useState<BusinessContextValue | null>(null);
 
   useEffect(() => {
     let isActive = true;
@@ -34,11 +41,18 @@ export default function DashboardLayout({
           return;
         }
 
-        setUser({
-          id: session.user.id,
-          email: session.user.email,
+        return getBusinessContext(session.user).then((context) => {
+          if (!isActive) return;
+
+          setBusiness(context);
+          // The shell scopes notifications and plan usage by this id, so it
+          // is the business, not the login (they differ for team members).
+          setUser({
+            id: context?.businessId ?? session.user.id,
+            email: session.user.email,
+          });
+          setLoading(false);
         });
-        setLoading(false);
       })
       .catch(() => {
         if (!isActive) return;
@@ -78,11 +92,14 @@ export default function DashboardLayout({
       {/* Outside the shell so a toast survives the page under it unmounting
           -- "Item saved" must not disappear with the form that saved it. */}
       <ToastProvider>
-        <MobileShellWrapper userId={user.id}>
-          <DashboardShell userId={user.id} email={user.email}>
-            {children}
-          </DashboardShell>
-        </MobileShellWrapper>
+        <BusinessProvider value={business}>
+          <MobileShellWrapper userId={user.id}>
+            <DashboardShell userId={user.id} email={user.email}>
+              <TeamInviteBanner />
+              {children}
+            </DashboardShell>
+          </MobileShellWrapper>
+        </BusinessProvider>
       </ToastProvider>
     </ThemeProvider>
   );

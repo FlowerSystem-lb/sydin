@@ -26554,3 +26554,141 @@ circle.ov-dot-main {
 .st-signins li:last-child {
   border-bottom: 0;
 }
+
+/* Settings > Team (27 Sep 2026, team access) */
+.st-team-invite {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 36rem;
+}
+
+.st-team-invite .st-input {
+  flex: 1 1 14rem;
+  width: auto;
+}
+
+.st-team-role {
+  width: 10rem;
+  flex: none;
+}
+
+.st-team-error {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--status-danger-text);
+}
+
+.st-team-list {
+  display: grid;
+  margin: 0.25rem 0 1.35rem;
+  border: 1px solid var(--border-default);
+  border-radius: 12px;
+}
+
+.st-team-list > .st-hint,
+.st-team-list > .st-team-error {
+  padding: 0.9rem 1rem;
+}
+
+.st-team-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-bottom: 1px solid var(--border-divider);
+  padding: 0.7rem 0.9rem;
+}
+
+.st-team-row:last-child {
+  border-bottom: 0;
+}
+
+.st-team-avatar {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  background: var(--bg-inset);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+}
+
+.st-team-who {
+  min-width: 0;
+  flex: 1;
+}
+
+.st-team-email {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.st-team-you {
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.st-team-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+@media (max-width: 639px) {
+  .st-team-row {
+    flex-wrap: wrap;
+  }
+
+  .st-team-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+/* "You're invited" banner at the top of the dashboard */
+.team-invite-banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin: 0 auto 1rem;
+  border: 1px solid rgba(37, 99, 235, 0.25);
+  border-radius: 12px;
+  background: #eff6ff;
+  padding: 0.75rem 1rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.team-invite-banner p span {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.team-invite-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.role-pill-viewonly {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  background: var(--status-warning-surface);
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--status-warning-text);
+}

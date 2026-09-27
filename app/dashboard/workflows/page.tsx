@@ -7,7 +7,7 @@ import {
   DashboardPageHeader,
   DashboardPageShell,
 } from "@/components/dashboard/Workspace";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -98,8 +98,7 @@ export default function WorkflowsPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive || !user) return;
 

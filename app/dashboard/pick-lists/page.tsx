@@ -41,7 +41,7 @@ import {
   getUpgradePlanForPickListLimit,
   type SubscriptionUsage,
 } from "@/app/lib/subscription";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 type PickListFilter = "active" | "completed" | "cancelled" | "all";
 
@@ -255,8 +255,7 @@ export default function PickListsPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive) return;
 

@@ -52,6 +52,7 @@ import {
 import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
 import { getLastDepotId, rememberDepotId } from "@/app/lib/lastUsed";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -464,7 +465,7 @@ export default function ReceivingPage() {
     async function loadData() {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) throw new Error("Please sign in again to use receiving.");
 
@@ -687,7 +688,7 @@ export default function ReceivingPage() {
   const refreshItems = async () => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) throw new Error("Please sign in again to refresh inventory.");
 
@@ -901,7 +902,7 @@ export default function ReceivingPage() {
       try {
         const {
           data: { user },
-        } = await supabase.auth.getUser();
+        } = await getBusinessUser();
         if (user) {
           const refreshedMovements = await getRecentStockMovements(user.id, 150);
           setRecentStockIn(

@@ -1,5 +1,6 @@
 import { notifyIfCrossedIntoLowStock } from "@/app/lib/notifications";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 export type StockMovementType =
   | "stock_in"
@@ -133,8 +134,7 @@ export async function recordStockMovement({
   // a low/out-of-stock notification — not each of those 6 call sites
   // individually. Best-effort: a notification failure must never surface
   // here or undo a movement that already succeeded.
-  supabase.auth
-    .getUser()
+  getBusinessUser()
     .then(({ data: { user } }) => {
       if (!user) return;
 

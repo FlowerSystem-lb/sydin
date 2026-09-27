@@ -32,6 +32,7 @@ import {
   type InventoryAsset,
 } from "@/app/lib/assetTracking";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   FALLBACK_SUBSCRIPTION,
   getSubscriptionCapabilities,
@@ -224,8 +225,7 @@ function ScannerWorkspace() {
   useEffect(() => {
     let active = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!user) throw new Error("Please sign in again to use the scanner.");
 

@@ -68,6 +68,7 @@ import {
   type UserSubscription,
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import type { Supplier } from "@/app/lib/suppliers";
 import { getSuppliersForUser } from "@/app/lib/suppliers";
 
@@ -274,7 +275,7 @@ export default function ItemDetailsSlideOver({
         const {
           data: { user },
           error: userError,
-        } = await supabase.auth.getUser();
+        } = await getBusinessUser();
 
         if (userError || !user) {
           throw new Error("Please sign in again to view this item.");

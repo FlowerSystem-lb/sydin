@@ -16,7 +16,7 @@ import {
 import { Badge, ResultsAnnouncer, SearchInput } from "@/components/ui";
 import { useMediaQuery } from "@/app/lib/useMediaQuery";
 import { useRouter } from "next/navigation";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -78,8 +78,7 @@ export default function SalesPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive) return;
 

@@ -37,6 +37,13 @@ import {
 } from "@/app/lib/currency";
 import { supabase } from "@/app/lib/supabase";
 import {
+  ROLE_LABELS,
+  clearBusinessContext,
+  getBusinessUser,
+} from "@/app/lib/business";
+import { useBusiness } from "@/components/dashboard/BusinessContext";
+import TeamPanel from "@/components/settings/TeamPanel";
+import {
   FALLBACK_SUBSCRIPTION,
   FREE_LOW_STOCK_THRESHOLD,
   formatPlanName,
@@ -54,6 +61,7 @@ type SettingsSectionId =
   | "currency"
   | "inventory"
   | "profile"
+  | "team"
   | "billing";
 
 /**
@@ -127,6 +135,13 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     group: "Account",
     label: "Account & security",
     description: "Who is signed in, and signing out.",
+    icon: "settings",
+  },
+  {
+    id: "team",
+    group: "Account",
+    label: "Team",
+    description: "Invite people to this business and choose what they can do.",
     icon: "customers",
   },
   {
@@ -274,8 +289,7 @@ export default function SettingsPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(({ data: { user }, error: userError }) => {
         if (!isActive) return;
 
@@ -331,9 +345,23 @@ export default function SettingsPage() {
   const upgradeLabel = getUpgradeActionLabel(subscription.plan);
   const currencyCode = normalizeCurrencyCode(settings.currency_code, "USD");
   const sectionFromQuery = searchParams.get("section");
-  const activeSection = sectionFromQuery
+  const business = useBusiness();
+  const myRole = business?.role ?? "owner";
+  // Staff and view-only members manage only their own account; plan and
+  // billing stay with the owner (the database refuses the rest anyway).
+  const visibleSections = SETTINGS_SECTIONS.filter((section) =>
+    myRole === "owner"
+      ? true
+      : myRole === "admin"
+        ? section.id !== "billing"
+        : section.id === "profile"
+  );
+  const requestedSection = sectionFromQuery
     ? normalizeSectionId(sectionFromQuery)
-    : hashSection || "workspace";
+    : hashSection || (myRole === "staff" || myRole === "viewer" ? "profile" : "workspace");
+  const activeSection = visibleSections.some((section) => section.id === requestedSection)
+    ? requestedSection
+    : visibleSections[0].id;
   // On a phone the sections are a scrolling row of tabs; the active one
   // can arrive off-screen (e.g. Data & reports from the More sheet).
   useEffect(() => {
@@ -399,7 +427,7 @@ export default function SettingsPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setError("Please sign in again before saving settings.");
@@ -939,11 +967,47 @@ export default function SettingsPage() {
     router.replace("/login");
   };
 
+  const leaveBusiness = async () => {
+    const name = business?.businessName || "this business";
+    if (!window.confirm(`Leave ${name}? You will lose access straight away.`)) return;
+    const { error: leaveError } = await supabase.rpc("leave_business");
+    if (leaveError) {
+      showToast({ tone: "danger", message: "Couldn't leave the business. Please try again." });
+      return;
+    }
+    clearBusinessContext();
+    // Full reload: every page and the shell were scoped to that business.
+    window.location.assign("/dashboard");
+  };
+
   const renderProfilePanel = () => (
     <>
       <Row label="Signed in as">
         <span className="st-strong">{userEmail || "—"}</span>
       </Row>
+      {myRole !== "owner" && (
+        <Row
+          label="Business"
+          hint="You work inside this business with the role shown."
+        >
+          <div className="st-inline">
+            <span className="st-strong">
+              {business?.businessName || settings.business_name || "This business"}
+            </span>
+            <span className="st-pill st-pill-grey">{ROLE_LABELS[myRole]}</span>
+          </div>
+        </Row>
+      )}
+      {myRole !== "owner" && (
+        <Row
+          label="Leave business"
+          hint="You lose access straight away. The owner can invite you again."
+        >
+          <Button variant="secondary" size="sm" onClick={() => void leaveBusiness()}>
+            Leave this business
+          </Button>
+        </Row>
+      )}
       <Row label="Sign-in methods" hint="The ways you can get into this account.">
         <ul className="st-signins">
           {(["email", "google", "azure"] as const).map((provider) => {
@@ -1067,6 +1131,15 @@ export default function SettingsPage() {
         return renderProfilePanel();
       case "billing":
         return renderBillingPanel();
+      case "team":
+        return (
+          <TeamPanel
+            myRole={myRole}
+            seatLimit={business?.seatLimit ?? 1}
+            businessName={settings.business_name?.trim() || business?.businessName || "your business"}
+            upgradeHref={upgradeHref}
+          />
+        );
       case "workspace":
       default:
         return renderCompanyPanel();
@@ -1116,10 +1189,12 @@ export default function SettingsPage() {
 
           <div className="st-layout">
             <nav aria-label="Settings sections" className="st-nav">
-              {SECTION_GROUPS.map((group) => (
+              {SECTION_GROUPS.filter((group) =>
+                visibleSections.some((section) => section.group === group)
+              ).map((group) => (
                 <div key={group} className="st-nav-group">
                   <p className="st-nav-label">{group}</p>
-                  {SETTINGS_SECTIONS.filter((section) => section.group === group).map((section) => (
+                  {visibleSections.filter((section) => section.group === group).map((section) => (
                     <button
                       key={section.id}
                       type="button"

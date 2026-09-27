@@ -6,6 +6,7 @@ import { DialogShell } from "@/components/ui/Overlay";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import type { UpgradePlan } from "@/app/lib/subscription";
 
 export interface AlertLevelItem {
@@ -63,7 +64,7 @@ function SetAlertLevelDialogContent({
 
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) {
       setError("Please sign in again to update this alert level.");

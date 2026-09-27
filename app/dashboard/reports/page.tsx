@@ -104,6 +104,7 @@ import {
   type ReportTable,
 } from "@/app/lib/businessReportsPdf";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   applyReportView,
   EMPTY_REPORT_VIEW,
@@ -542,7 +543,7 @@ export default function ReportsPage() {
       const {
         data: { user },
         error: userError,
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (userError || !user) {
         throw new Error("Please sign in again to view reports.");

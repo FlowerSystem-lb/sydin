@@ -597,3 +597,25 @@ Figma Make, and left what to add or remove to Claude. An always-visible Save but
 a tab of links that duplicate the sidebar are clutter.
 
 **Status:** Active.
+
+### 27 Sep 2026 — Team access: the business is the owner's user id
+
+**Decision:** Team members work on the owner's rows. `current_business_id()` maps a
+member's login to the owner, and for everyone else it returns their own id.
+
+**Why this design:** there is no data migration and no second id column on 27 tables.
+Solo accounts are provably unchanged.
+
+**Rules:**
+- One business per person at a time.
+- Invitations are not emailed. The invited person sees a banner the next time they
+  sign in with that email, and the owner can copy a message to send on WhatsApp.
+- Customers never get logins. A private "your invoices" link is a later sprint.
+
+**Seats:** Free 1, Standard 3, Pro 10, set in `team_seat_limit()`.
+
+**Process:** Database changes are written as a file, tested with a script that throws
+everything away, and run by Sayed in the SQL Editor. Claude's tools block it from
+applying security changes itself.
+
+**Status:** Active.

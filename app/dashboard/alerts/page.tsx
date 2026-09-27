@@ -41,6 +41,7 @@ import {
   type UserSubscription,
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 interface AlertInventoryItem {
   id: number;
@@ -81,7 +82,7 @@ export default function StockAlertsPage() {
     const loadData = async () => {
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         throw new Error("Please sign in again to view stock alerts.");

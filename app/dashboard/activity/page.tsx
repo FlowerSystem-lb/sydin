@@ -28,7 +28,7 @@ import {
   type ActivityEventType,
 } from "@/app/lib/activityFeed";
 import { formatStockMovementNotes } from "@/app/lib/stockMovements";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 type EventFilter = "all" | ActivityEventType;
 type DateSort = "newest" | "oldest";
@@ -60,7 +60,7 @@ export default function ActivityPage() {
   const loadData = async () => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) {
       throw new Error("Please sign in again to view activity.");

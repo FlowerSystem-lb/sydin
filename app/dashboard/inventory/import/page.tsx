@@ -49,6 +49,7 @@ import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { logImportExport } from "@/app/lib/importExportHistory";
 import { resolveScannedCode, type ScannableItem } from "@/app/lib/scannerResolve";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -179,8 +180,7 @@ export default function InventoryImportPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(async ({ data: { user } }) => {
         if (!isActive) return;
 
@@ -343,7 +343,7 @@ export default function InventoryImportPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setPageError("Please sign in again before scanning items.");
@@ -559,7 +559,7 @@ export default function InventoryImportPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setPageError("Please sign in again before importing inventory.");

@@ -56,6 +56,7 @@ import {
   type SalesOrder,
 } from "@/app/lib/salesOrders";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -337,8 +338,7 @@ export default function DashboardPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth
-      .getUser()
+    getBusinessUser()
       .then(({ data: { user }, error: userError }) => {
         if (!isActive) return;
 

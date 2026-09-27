@@ -9,7 +9,7 @@ import {
   DashboardPageHeader,
   DashboardPageShell,
 } from "@/components/dashboard/Workspace";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   joinDevicePairing,
   sendBarcodeToLaptop,
@@ -56,7 +56,7 @@ function PhoneScannerInner() {
     // Resolve the session first, so nothing here writes state synchronously.
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     setJoining(true);
     setError("");

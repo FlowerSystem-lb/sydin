@@ -88,6 +88,7 @@ import {
   type InventoryUnitType,
 } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -646,7 +647,7 @@ export default function InventoryPage() {
     const {
       data: { user },
     } =
-      await supabase.auth.getUser();
+      await getBusinessUser();
 
     if (!user) {
       setPageError("Please sign in again to view your inventory.");
@@ -698,7 +699,7 @@ export default function InventoryPage() {
   useEffect(() => {
     let isActive = true;
 
-    supabase.auth.getUser().then(({ data: { user }, error: userError }) => {
+    getBusinessUser().then(({ data: { user }, error: userError }) => {
       if (!isActive) return;
 
       if (userError) {
@@ -1146,7 +1147,7 @@ export default function InventoryPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setEditError("Please sign in again before updating inventory.");
@@ -1263,7 +1264,7 @@ export default function InventoryPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setPageError("Please sign in again before deleting inventory.");
@@ -1360,7 +1361,7 @@ export default function InventoryPage() {
       // Fire-and-forget: the file already downloaded, so a logging failure must
       // never surface as an export failure.
       const exportedCount = itemsToExport.length;
-      void supabase.auth.getUser().then(({ data: { user } }) => {
+      void getBusinessUser().then(({ data: { user } }) => {
         if (!user) return;
         return logImportExport({
           userId: user.id,
@@ -1752,7 +1753,7 @@ export default function InventoryPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setBulkError("Please sign in again before updating inventory.");
@@ -1832,7 +1833,7 @@ export default function InventoryPage() {
 
       const {
         data: { user },
-      } = await supabase.auth.getUser();
+      } = await getBusinessUser();
 
       if (!user) {
         setBulkError("Please sign in again before deleting inventory.");

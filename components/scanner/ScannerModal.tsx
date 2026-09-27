@@ -6,7 +6,7 @@ import BarcodeScannerView, {
   type ScannerViewStatus,
 } from "@/components/scanner/BarcodeScannerView";
 import PhonePairingPanel from "@/components/scanner/PhonePairingPanel";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 const INITIAL_STATUS: ScannerViewStatus = {
   starting: false,
@@ -88,7 +88,7 @@ export default function ScannerModal({
 
     let cancelled = false;
 
-    void supabase.auth.getUser().then(({ data }) => {
+    void getBusinessUser().then(({ data }) => {
       if (!cancelled) setUserId(data.user?.id ?? null);
     });
 

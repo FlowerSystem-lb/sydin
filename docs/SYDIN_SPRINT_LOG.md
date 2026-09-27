@@ -5528,3 +5528,52 @@ Accounts, User Access Control, and a feature-request/roadmap panel).
   Phase 5 RBAC work. It waits for Sayed's go-ahead as its own sprint.
 
 `npm run lint`, `npx tsc --noEmit` and `npm run build` are clean; pushed.
+
+### 27 Sep — Team access: employees work inside one business (Phase 5 RBAC, first cut)
+
+Sayed said "go team access" after comparing SydIN with Sortly's User Access Control.
+
+**Model.** A business is its owner's user id. No data moved: every row already carried
+user_id = owner. Roles are Owner, Admin, Staff and View only.
+
+**Database** (`sql/phase-28-team-access.sql`, run by Sayed in the Supabase SQL Editor):
+- New `business_members` table.
+- New helpers: `current_business_id()`, `current_business_role()`, `can_write()`,
+  `can_delete()` and `can_manage_business()`.
+- All 80 RLS policies and all 9 storage policies rewritten to use them.
+- The 17 functions that compared against `auth.uid()` now compare against the
+  business. The five SECURITY DEFINER write RPCs also refuse view-only members.
+- New `actor_id` column ("done by") on history, movements and orders.
+- New invite, role, remove, accept, decline and leave RPCs.
+- Seats: Free 1, Standard 3, Pro 10.
+
+**Testing.** Before going live the change was tested with five impersonated users
+(owner, admin, staff, viewer, stranger) using a script that throws everything away
+(`sql/phase-28-team-access-TEST.sql`).
+- All five roles behaved as designed.
+- Nobody saw another business.
+- After it was applied: 0 old-style policies or functions left, and no test rows left.
+
+**App.**
+- `app/lib/business.ts`: `getBusinessUser()` is a drop-in for `supabase.auth.getUser()`
+  that returns the business id as `user.id`. It was swapped in across 39 files.
+- The dashboard layout loads the business once and shares it through
+  `useBusiness()` (`components/dashboard/BusinessContext.tsx`).
+- Settings has a new Team section (`components/settings/TeamPanel.tsx`):
+  - invite by email with a role and a seat counter
+  - change role, remove (with a confirm step) and copy the invite message
+- Staff and View only see only Account in Settings. Account shows their business
+  and role, plus a "Leave business" option.
+- A "You're invited" banner appears on the dashboard.
+- View only members see a "View only" label instead of the Add buttons.
+
+Checked as the owner (solo): Overview, Inventory and Settings > Team all load
+Sayed's data unchanged. `npm run lint`, `npx tsc --noEmit` and `npm run build` are
+clean. The two-person test with Sayed's second email is still to do.
+
+**Follow-ups:**
+- Hide per-page Delete buttons for Staff. The database already refuses those
+  deletes, but the error is generic today.
+- Show "done by" in Activity.
+- Revoke execute on `team_seat_limit` from signed-in users. It only reveals a plan's
+  seat count.

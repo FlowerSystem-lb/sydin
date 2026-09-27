@@ -31,6 +31,7 @@ import {
   type StockMovementType,
 } from "@/app/lib/stockMovements";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 interface InventoryItem extends MovementInventoryItem {
   image: string;
@@ -71,7 +72,7 @@ export default function StockMovementsPage() {
   const loadData = async () => {
     const {
       data: { user },
-    } = await supabase.auth.getUser();
+    } = await getBusinessUser();
 
     if (!user) {
       throw new Error("Please sign in again to view stock movements.");

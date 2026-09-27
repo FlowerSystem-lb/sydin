@@ -75,6 +75,7 @@ import {
   type PurchaseOrderStatus,
 } from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -219,7 +220,7 @@ export default function PurchaseOrdersPage() {
     let active = true;
 
     async function loadData() {
-      const { data } = await supabase.auth.getUser();
+      const { data } = await getBusinessUser();
       const user = data.user;
       if (!user) {
         router.replace("/login");

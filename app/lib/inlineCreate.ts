@@ -2,7 +2,7 @@ import { createCategory, type Category } from "@/app/lib/categories";
 import { createCustomer, type Customer } from "@/app/lib/customers";
 import { createDepot, type Depot } from "@/app/lib/depots";
 import { createSupplier, type Supplier } from "@/app/lib/suppliers";
-import { supabase } from "@/app/lib/supabase";
+import { getBusinessUser } from "@/app/lib/business";
 
 /**
  * "If it is not in the list, add it here and carry on."
@@ -23,7 +23,7 @@ import { supabase } from "@/app/lib/supabase";
 async function requireUserId() {
   const {
     data: { user },
-  } = await supabase.auth.getUser();
+  } = await getBusinessUser();
 
   if (!user) throw new Error("Please sign in again.");
 
