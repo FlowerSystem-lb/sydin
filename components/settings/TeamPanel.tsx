@@ -7,13 +7,19 @@ import { ROLE_LABELS, type BusinessRole } from "@/app/lib/business";
 import { Button, DialogShell, Select, buttonClassName, useToast } from "@/components/ui";
 import UiIcon from "@/components/UiIcon";
 
-/* Settings > Team (27 Sep 2026). Owner and admins invite people by email and
-   pick a role. Nothing is emailed: when the invited person signs in to SydIN
-   with that address, the dashboard offers them the invitation. Every action
-   goes through a database function that re-checks the caller's role
-   (sql/phase-28-team-access.sql), so this screen only has to be clear. */
+/* Settings > Team.
+ *
+ * Two ways in (28 Sep 2026):
+ *  - Create a login (default): type a name and a role; SydIN makes
+ *    name.role@business.sydin.site and a password and shows them once. For
+ *    workers without an email they use. Server routes in app/api/team/.
+ *  - Invite by email: for people who want their own address. Nothing is
+ *    emailed; they see a "you're invited" bar when they sign in.
+ * Every action is re-checked by the database (sql/phase-28-team-access.sql),
+ * so this screen only has to be clear. */
 
 type MemberRole = Exclude<BusinessRole, "owner">;
+type AddMode = "create" | "invite";
 
 type TeamRow = {
   id: number | null;
@@ -24,6 +30,8 @@ type TeamRow = {
   is_you: boolean;
 };
 
+type Credentials = { email: string; password: string; name?: string; reset?: boolean };
+
 const ROLE_HELP: Record<MemberRole, string> = {
   admin: "Everything except plan and billing, including the team.",
   staff: "Adds and edits stock, orders and invoices. Can't delete or change settings.",
@@ -32,9 +40,28 @@ const ROLE_HELP: Record<MemberRole, string> = {
 
 const SIGN_IN_URL = "https://www.sydin.site/login";
 
+function isManaged(email: string) {
+  return /@[a-z0-9]+\.sydin\.site$/.test(email);
+}
+
 function friendlyError(message: string | undefined) {
   if (!message) return "Something went wrong. Please try again.";
   return message.replace(/^.*?: /, "");
+}
+
+async function teamApi<T>(path: string, body: unknown): Promise<T> {
+  const { data } = await supabase.auth.getSession();
+  const response = await fetch(`/api/team/${path}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${data.session?.access_token ?? ""}`,
+    },
+    body: JSON.stringify(body),
+  });
+  const json = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(json.message || "Something went wrong. Please try again.");
+  return json as T;
 }
 
 export default function TeamPanel({
@@ -51,12 +78,15 @@ export default function TeamPanel({
   const { showToast } = useToast();
   const [rows, setRows] = useState<TeamRow[] | null>(null);
   const [loadError, setLoadError] = useState("");
+  const [mode, setMode] = useState<AddMode>("create");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [newRole, setNewRole] = useState<MemberRole>("staff");
-  const [inviting, setInviting] = useState(false);
-  const [inviteError, setInviteError] = useState("");
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
   const [removing, setRemoving] = useState<TeamRow | null>(null);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
 
   const isOwner = myRole === "owner";
 
@@ -83,33 +113,53 @@ export default function TeamPanel({
     .filter((role) => role !== "admin" || isOwner)
     .map((role) => ({ value: role, label: ROLE_LABELS[role], description: ROLE_HELP[role] }));
 
-  const inviteMessage = (to: string) =>
-    `You're invited to join ${businessName} on SydIN. Sign in at ${SIGN_IN_URL} with ${to} and accept the invitation.`;
-
-  const copyInvite = async (to: string) => {
+  const copyText = async (text: string, done: string) => {
     try {
-      await navigator.clipboard.writeText(inviteMessage(to));
-      showToast({ tone: "success", message: "Invitation message copied. Send it on WhatsApp or email." });
+      await navigator.clipboard.writeText(text);
+      showToast({ tone: "success", message: done });
     } catch {
-      showToast({ tone: "danger", message: "Couldn't copy. Tell them to sign in with " + to + "." });
+      showToast({ tone: "danger", message: "Couldn't copy. Select the text and copy it by hand." });
     }
   };
 
-  const invite = async (event: React.FormEvent) => {
+  const loginMessage = (login: Credentials) =>
+    `Your SydIN login for ${businessName}\nEmail: ${login.email}\nPassword: ${login.password}\nSign in at ${SIGN_IN_URL}`;
+
+  const inviteMessage = (to: string) =>
+    `You're invited to join ${businessName} on SydIN. Sign in at ${SIGN_IN_URL} with ${to} and accept the invitation.`;
+
+  const add = async (event: React.FormEvent) => {
     event.preventDefault();
+    setAddError("");
+
+    if (mode === "create") {
+      if (!name.trim()) return;
+      setAdding(true);
+      try {
+        const login = await teamApi<Credentials>("create-login", { name: name.trim(), role: newRole });
+        setName("");
+        setCredentials(login);
+        void load();
+      } catch (error) {
+        setAddError(error instanceof Error ? error.message : "Could not create the login.");
+      } finally {
+        setAdding(false);
+      }
+      return;
+    }
+
     const address = email.trim().toLowerCase();
     if (!address) return;
-    setInviting(true);
-    setInviteError("");
+    setAdding(true);
     const { error } = await supabase.rpc("invite_member", { p_email: address, p_role: newRole });
-    setInviting(false);
+    setAdding(false);
     if (error) {
-      setInviteError(friendlyError(error.message));
+      setAddError(friendlyError(error.message));
       return;
     }
     setEmail("");
     showToast({ tone: "success", message: `${address} is invited as ${ROLE_LABELS[newRole]}.` });
-    void copyInvite(address);
+    void copyText(inviteMessage(address), "Invitation message copied. Send it on WhatsApp or email.");
     void load();
   };
 
@@ -126,39 +176,93 @@ export default function TeamPanel({
     void load();
   };
 
+  const resetPassword = async (row: TeamRow) => {
+    if (row.id === null) return;
+    setBusyId(row.id);
+    try {
+      const login = await teamApi<Credentials>("reset-password", { memberRow: row.id });
+      setCredentials({ ...login, reset: true });
+    } catch (error) {
+      showToast({ tone: "danger", message: error instanceof Error ? error.message : "Could not reset." });
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   const confirmRemove = async () => {
     if (!removing || removing.id === null) return;
     setBusyId(removing.id);
-    const { error } = await supabase.rpc("remove_member", { p_member_row: removing.id });
-    setBusyId(null);
-    if (error) {
-      showToast({ tone: "danger", message: friendlyError(error.message) });
-      return;
+    try {
+      await teamApi("remove", { memberRow: removing.id });
+      showToast({ tone: "success", message: `${removing.email} no longer has access.` });
+      setRemoving(null);
+      void load();
+    } catch (error) {
+      showToast({ tone: "danger", message: error instanceof Error ? error.message : "Could not remove." });
+    } finally {
+      setBusyId(null);
     }
-    showToast({ tone: "success", message: `${removing.email} no longer has access.` });
-    setRemoving(null);
-    void load();
   };
 
   return (
     <>
       <div className="st-row">
         <div className="st-row-label">
-          <label htmlFor="team-invite-email">Invite someone</label>
-          <p>They sign in to SydIN with this email and accept. No password is shared.</p>
+          <span>Add someone</span>
+          <p>
+            {mode === "create"
+              ? "SydIN makes a login for them. You get the email and password once, to pass on."
+              : "They sign in to SydIN with their own email and accept."}
+          </p>
         </div>
-        <form className="st-row-control" onSubmit={invite}>
+        <form className="st-row-control" onSubmit={add}>
+          <div className="st-team-mode" role="tablist" aria-label="How to add them">
+            {(
+              [
+                ["create", "Create a login"],
+                ["invite", "Invite by email"],
+              ] as [AddMode, string][]
+            ).map(([value, label]) => (
+              <button
+                key={value}
+                type="button"
+                role="tab"
+                aria-selected={mode === value}
+                className={mode === value ? "st-team-mode-active" : undefined}
+                onClick={() => {
+                  setMode(value);
+                  setAddError("");
+                }}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
           <div className="st-team-invite">
-            <input
-              id="team-invite-email"
-              type="email"
-              className="st-input"
-              placeholder="name@company.com"
-              autoComplete="off"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              disabled={atLimit}
-            />
+            {mode === "create" ? (
+              <input
+                aria-label="Name"
+                type="text"
+                className="st-input"
+                placeholder="Their name, e.g. Ahmed"
+                autoComplete="off"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                disabled={atLimit}
+                maxLength={60}
+              />
+            ) : (
+              <input
+                aria-label="Email"
+                type="email"
+                className="st-input"
+                placeholder="name@company.com"
+                autoComplete="off"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                disabled={atLimit}
+              />
+            )}
             <div className="st-team-role">
               <Select
                 ariaLabel="Role"
@@ -168,13 +272,18 @@ export default function TeamPanel({
                 disabled={atLimit}
               />
             </div>
-            <Button type="submit" loading={inviting} loadingLabel="Inviting…" disabled={atLimit || !email.trim()}>
-              Invite
+            <Button
+              type="submit"
+              loading={adding}
+              loadingLabel={mode === "create" ? "Creating…" : "Inviting…"}
+              disabled={atLimit || !(mode === "create" ? name.trim() : email.trim())}
+            >
+              {mode === "create" ? "Create login" : "Invite"}
             </Button>
           </div>
-          {inviteError && (
+          {addError && (
             <p role="alert" className="st-team-error">
-              {inviteError}
+              {addError}
             </p>
           )}
           <p className="st-hint">
@@ -200,6 +309,7 @@ export default function TeamPanel({
         {!rows && !loadError && <p className="st-hint">Loading the team…</p>}
         {rows?.map((row) => {
           const locked = row.is_owner || row.is_you || (row.role === "admin" && !isOwner);
+          const managed = !row.is_owner && isManaged(row.email);
           return (
             <div key={row.id ?? "owner"} className="st-team-row">
               <span className="st-team-avatar" aria-hidden="true">
@@ -211,7 +321,13 @@ export default function TeamPanel({
                   {row.is_you && <span className="st-team-you"> (you)</span>}
                 </p>
                 <p className="st-hint">
-                  {row.status === "invited" ? "Invited · hasn't signed in yet" : row.is_owner ? "Owner" : "Active"}
+                  {row.is_owner
+                    ? "Owner"
+                    : managed
+                      ? "SydIN login · signs in with the password you gave them"
+                      : row.status === "invited"
+                        ? "Invited · hasn't signed in yet"
+                        : "Active · own email"}
                 </p>
               </div>
               <div className="st-team-actions">
@@ -230,11 +346,24 @@ export default function TeamPanel({
                     />
                   </div>
                 )}
-                {!row.is_owner && row.status === "invited" && (
+                {managed && !locked && (
                   <button
                     type="button"
                     className={buttonClassName({ variant: "ghost", size: "sm" })}
-                    onClick={() => void copyInvite(row.email)}
+                    onClick={() => void resetPassword(row)}
+                    disabled={busyId === row.id}
+                    title="Make a new password"
+                  >
+                    Reset password
+                  </button>
+                )}
+                {!managed && !row.is_owner && row.status === "invited" && (
+                  <button
+                    type="button"
+                    className={buttonClassName({ variant: "ghost", size: "sm" })}
+                    onClick={() =>
+                      void copyText(inviteMessage(row.email), "Invitation message copied.")
+                    }
                     aria-label={`Copy invitation for ${row.email}`}
                   >
                     <UiIcon name="copy" className="h-4 w-4" />
@@ -257,13 +386,55 @@ export default function TeamPanel({
       </div>
 
       <DialogShell
+        open={Boolean(credentials)}
+        eyebrow="Team"
+        title={credentials?.reset ? "New password ready" : `Login ready${credentials?.name ? ` for ${credentials.name}` : ""}`}
+        description="Give these to them now. For safety the password is shown only this once — if it's lost, press Reset password."
+        onClose={() => setCredentials(null)}
+        footer={
+          <>
+            <Button variant="secondary" onClick={() => setCredentials(null)}>
+              Done
+            </Button>
+            <Button
+              onClick={() =>
+                credentials &&
+                void copyText(loginMessage(credentials), "Login copied. Send it on WhatsApp.")
+              }
+            >
+              Copy login
+            </Button>
+          </>
+        }
+      >
+        {credentials && (
+          <dl className="st-login-card">
+            <div>
+              <dt>Email</dt>
+              <dd>{credentials.email}</dd>
+            </div>
+            <div>
+              <dt>Password</dt>
+              <dd className="st-login-password">{credentials.password}</dd>
+            </div>
+            <div>
+              <dt>Sign in at</dt>
+              <dd>www.sydin.site/login</dd>
+            </div>
+          </dl>
+        )}
+      </DialogShell>
+
+      <DialogShell
         open={Boolean(removing)}
         tone="danger"
         eyebrow="Team"
         title="Remove this person?"
         description={
           removing
-            ? `${removing.email} will lose access to ${businessName} straight away. Nothing they added is deleted.`
+            ? isManaged(removing.email)
+              ? `The login ${removing.email} is deleted and stops working straight away. Nothing they added is deleted.`
+              : `${removing.email} will lose access to ${businessName} straight away. Nothing they added is deleted.`
             : undefined
         }
         onClose={() => setRemoving(null)}

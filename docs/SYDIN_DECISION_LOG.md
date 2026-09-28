@@ -619,3 +619,15 @@ everything away, and run by Sayed in the SQL Editor. Claude's tools block it fro
 applying security changes itself.
 
 **Status:** Active.
+
+### 28 Sep 2026 — Team members can get a SydIN-made login
+
+**Decision:** Owners and admins can create a login from a name and a role:
+`name.role@business.sydin.site` plus a generated password, shown once. Reset and remove
+go through the owner or an admin, and removing a login deletes it. Invite by email
+stays as the alternative.
+
+**Why:** Sayed asked for it, and many shop workers have no email they use.
+`sydin.site` is ours, so the addresses can't be received or claimed by anyone else.
+
+**Status:** Active.

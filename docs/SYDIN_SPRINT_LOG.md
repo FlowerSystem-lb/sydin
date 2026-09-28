@@ -5597,3 +5597,41 @@ a visible Delete button would have reported success for something that never hap
 - **Pick lists:** unchanged. Cancelling a pick list is an update, which staff may do.
 - **Checked:** the owner still sees Delete. `npm run lint`, `npx tsc --noEmit` and
   `npm run build` are clean.
+
+### 28 Sep — Team: "Create a login" (name + role, SydIN makes the email and password)
+
+Sayed asked for this: when you add someone, SydIN generates an email made of name, role
+and business name, plus a password, so workers can sign in without an email of their own.
+
+**Settings > Team** now opens on "Create a login". "Invite by email" is still there as a
+second tab.
+
+**Login format.** Typing "Ahmed" as Staff gives `ahmed.staff@flowerplus.sydin.site`
+plus a password like `Kd7p-M3xq-9Rtz`.
+- The password leaves out look-alike characters (0/O, 1/l/I).
+- A one-time card shows the login, with a "Copy login" button that copies a
+  WhatsApp-ready message.
+- `sydin.site` is Sayed's domain, so nobody else can receive mail at these addresses
+  or claim them.
+
+**Server routes** (`app/api/team/`, service-role key, server-only helper
+`app/lib/teamServer.ts`):
+- `create-login`
+  - Calls `invite_member` with the caller's own token, so the database still checks
+    the caller's role and the seat limit.
+  - Creates a confirmed auth user and links it to the membership as active.
+  - If a step fails, it rolls back.
+  - If a name is taken it tries ahmed2, ahmed3 and so on.
+- `reset-password`: SydIN-made logins only. Their addresses can't receive a reset email.
+- `remove`: a SydIN-made login is deleted outright. Otherwise it would still sign in,
+  as an empty workspace of its own. People who joined with their own email just lose
+  the membership.
+
+**Account.** SydIN-made logins don't see "Leave business".
+
+**Checked.** The panel is checked in the browser. `npm run lint`, `npx tsc --noEmit`
+and `npm run build` are clean. Claude did not press Create login, because it creates a
+real account on the live project. That test is Sayed's.
+
+**Known trade-off:** the role stays in the email even if the role changes later. It's a
+label, not a permission.

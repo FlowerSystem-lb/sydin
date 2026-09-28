@@ -998,7 +998,9 @@ export default function SettingsPage() {
           </div>
         </Row>
       )}
-      {myRole !== "owner" && (
+      {/* A login SydIN made for this business (name.role@business.sydin.site)
+          exists only for it; the owner removes it instead. */}
+      {myRole !== "owner" && !/@[a-z0-9]+\.sydin\.site$/.test(userEmail) && (
         <Row
           label="Leave business"
           hint="You lose access straight away. The owner can invite you again."
