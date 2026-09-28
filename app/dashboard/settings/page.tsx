@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -367,8 +367,15 @@ export default function SettingsPage() {
   // The pinned title bar gets a soft shadow once the page has scrolled under
   // it, like Sortly's settings. The page scrolls inside the shell from 900px.
   const [scrolled, setScrolled] = useState(false);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
-    const scroller = document.querySelector<HTMLElement>(".dashboard-shell-content");
+    // Desktop: only the area under the title scrolls (.st-scroll), Sortly
+    // style. Phones: the whole page scrolls as before.
+    const area = scrollAreaRef.current;
+    const scroller =
+      area && getComputedStyle(area).overflowY === "auto"
+        ? area
+        : document.querySelector<HTMLElement>(".dashboard-shell-content");
     if (!scroller) return;
     const onScroll = () => setScrolled(scroller.scrollTop > 8);
     onScroll();
@@ -1301,13 +1308,15 @@ export default function SettingsPage() {
               <header className={`st-head${scrolled ? " st-head-scrolled" : ""}`}>
                 <h1 id="settings-panel-heading">{activeSectionDetails.label}</h1>
               </header>
-              {editable ? (
-                <form onSubmit={handleSave} aria-busy={saving} className="min-w-0">
-                  {panel}
-                </form>
-              ) : (
-                <div className="min-w-0">{panel}</div>
-              )}
+              <div className="st-scroll" ref={scrollAreaRef}>
+                {editable ? (
+                  <form onSubmit={handleSave} aria-busy={saving} className="min-w-0">
+                    {panel}
+                  </form>
+                ) : (
+                  <div className="min-w-0">{panel}</div>
+                )}
+              </div>
             </div>
           </div>
       </main>

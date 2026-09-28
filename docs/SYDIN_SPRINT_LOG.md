@@ -5776,3 +5776,24 @@ top padding of the scroll area moves inside `.st-page` on this page only
 first, the cascade trap again), so the title pins flush at the top with nothing peeking above it. It
 is transparent at rest (the shade shows through), and solid white with a soft shadow once scrolled.
 Checked at rest and scrolled: padding 0, header at 0, menu at 17px. Lint and build clean.
+
+### 28 Sep — Settings: the Sortly layout for real (title and menu still, only the content scrolls)
+
+Sayed caught the pinned title turning into a floating white box with square corners over the
+curved panel edge when scrolled. Pinning a title over scrolling content always leaves an edge, so
+it was replaced with the layout Sortly actually uses.
+
+- **What scrolls:** on Settings (desktop), the shell no longer scrolls. The menu and the section
+  title stand still, and only `.st-scroll` (the area under the title) scrolls.
+- **Title:** transparent at all times, with a soft shadow below it once the area has scrolled.
+  Nothing passes under it, so no white box.
+- **Heights:** `.dashboard-route-transition:has(.st-page)`, `.st-page`, the layout, the menu and
+  `.st-main` are all 100%. The shell overflow and padding are overridden with !important at
+  higher specificity.
+- **Save bar:** still sticks to the bottom of the scroll area.
+- **Phones:** unchanged (the page scrolls as before).
+
+**Checked:** the shell does not scroll, the area scrolls, and the title and menu stay put. Typed in
+Website, the save bar showed at the bottom, then Discard left the field empty and the bar gone (nothing
+saved). Phone at 375: no overflow, page scrolls. `npm run lint`, `npx tsc --noEmit` and
+`npm run build` are clean.
