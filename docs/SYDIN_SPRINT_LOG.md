@@ -5957,3 +5957,19 @@ redirect_to, and reads identities from the raw answer.
 
 **Checked on localhost:** Sayed's existing email with a made-up wrong password shows the message and
 no code screen. Lint and build are clean.
+
+### 29 Sep — Auth pages: no scrollbar, ever
+
+Sayed: "should never ever be a scroll bar" on sign-in / sign-up / verify / reset.
+
+- **Desktop (from 768px):** html and body are locked to the window and `.login-page` is 100dvh, so
+  the picture never moves. Only the form column may move, with its scrollbar hidden
+  (scrollbar-width none plus ::-webkit-scrollbar), and only on a screen too short to fit.
+- **Compact spacing** at heights up to 1000px and 820px: smaller headings and gaps, 3rem boxes,
+  and the badge hidden below 820px. The tallest screen (reset: code + two passwords + button)
+  fits at 1280x720.
+- **Phones:** the bar is hidden too.
+
+**Measured on the reset code step:** 0px overflow at 1920x985, 1366x768 and 1280x720, and no
+sideways scroll at 375px. Reaching the step used an address with no account, so nothing was
+sent. Lint and build are clean.

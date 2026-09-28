@@ -27527,3 +27527,108 @@ circle.ov-dot-main {
   background: #ffffff !important;
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
 }
+
+/* ===[ Auth pages: never a visible scrollbar (29 Sep 2026, Sayed) ]===
+   Sign-in, sign-up, verify and reset should fit the screen. From 768px (where
+   the picture shows) the page is locked to the window: the picture never
+   moves, and only the form column can move -- and only if a very short
+   screen truly can't fit it -- with its scrollbar hidden. Shorter screens get
+   tighter spacing so that almost never happens. Phones scroll normally, with
+   the bar hidden too. */
+html:has(.login-page),
+body:has(.login-page) {
+  scrollbar-width: none;
+}
+
+html:has(.login-page)::-webkit-scrollbar,
+body:has(.login-page)::-webkit-scrollbar,
+.login-auth-panel::-webkit-scrollbar {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  html:has(.login-page),
+  body:has(.login-page) {
+    height: 100%;
+    overflow: hidden;
+  }
+
+  .login-page {
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .login-auth-panel {
+    height: 100dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
+  }
+
+  .login-page .login-visual {
+    height: 100dvh;
+    min-height: 0;
+  }
+}
+
+/* Laptop heights: pull everything closer so the tallest screen (reset:
+   code + two passwords) fits. */
+@media (min-width: 768px) and (max-height: 1000px) {
+  .login-auth-inner {
+    padding-top: 1.25rem;
+    padding-bottom: 1rem;
+  }
+
+  .login-form-wrap {
+    margin-top: clamp(1rem, 3vh, 2rem);
+    margin-bottom: 0.75rem;
+  }
+
+  .login-heading h1 {
+    font-size: clamp(2.2rem, 3.4vw, 3.2rem);
+  }
+
+  .auth-verification {
+    padding-top: 0;
+  }
+
+  .auth-verification-badge {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+
+  .auth-verification h1 {
+    font-size: clamp(2rem, 3.2vw, 2.8rem);
+  }
+
+  .login-page .login-input-wrap.login-input-wrap input {
+    min-height: 3rem !important;
+  }
+
+  .login-page .login-submit {
+    min-height: 3rem;
+  }
+
+  .auth-reset-field {
+    margin-top: 0.6rem;
+  }
+}
+
+@media (min-width: 768px) and (max-height: 820px) {
+  .login-form-wrap {
+    margin-top: 0.75rem;
+  }
+
+  .login-heading h1,
+  .auth-verification h1 {
+    font-size: clamp(1.9rem, 3vw, 2.5rem);
+  }
+
+  .auth-verification-badge {
+    display: none;
+  }
+
+  .login-oauth-stack {
+    gap: 0.5rem;
+  }
+}
