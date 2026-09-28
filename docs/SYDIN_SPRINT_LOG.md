@@ -5635,3 +5635,30 @@ real account on the live project. That test is Sayed's.
 
 **Known trade-off:** the role stays in the email even if the role changes later. It's a
 label, not a permission.
+
+### 28 Sep — Team: messages that explain themselves, simpler passwords, "Login details"
+
+Sayed didn't see how "Invite by email" works for someone who has never used SydIN, and
+asked for the copied messages to carry steps, links, the role and what the role can do.
+
+- **Invite by email.** The copied message now covers:
+  - the role, in plain words
+  - sign up at /signup with this exact email (or Continue with Google)
+  - already have an account? sign in at /login
+  - then press Join on the blue bar
+
+  The tab's hint says the same.
+- **Create a login.** "Copy login and steps" gives:
+  - a greeting with the person's name
+  - the role and what it can do
+  - the link, email and password as numbered steps
+  - who to ask if the password is forgotten
+- **Simpler passwords.** Passwords are now word-digits-word, e.g. `Cedar-4827-Mint`
+  (~37M combinations; Supabase rate-limits sign-in).
+- **"Login details" on each SydIN-made login** shows the email, the role and its
+  description, with "Hidden for safety" in place of the password, plus "Make a new
+  password".
+  - **Declined:** re-showing an old password. That would mean storing it readably, and
+    Supabase itself keeps only a hash.
+
+`npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.

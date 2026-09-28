@@ -97,13 +97,28 @@ export function isManagedLogin(email: string | null | undefined) {
   return Boolean(email && new RegExp(`@[a-z0-9]+\\.${MANAGED_LOGIN_DOMAIN.replace(".", "\\.")}$`).test(email));
 }
 
-// No 0/O, 1/l/I -- this gets read aloud or typed from a phone screen.
-const PASSWORD_ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+/* Word-digits-word ("Cedar-4827-Mint"): Sayed asked for passwords a worker
+   can read off WhatsApp and type on a phone. 64 x 9000 x 64 = ~37 million
+   combinations, and Supabase rate-limits sign-in attempts, so guessing one
+   online is not practical. Short, distinct, unambiguous English words. */
+const PASSWORD_WORDS = [
+  "Cedar", "Mint", "Olive", "River", "Stone", "Maple", "Lemon", "Tiger",
+  "Cloud", "Pearl", "Amber", "Coral", "Delta", "Eagle", "Frost", "Grape",
+  "Honey", "Ivory", "Jade", "Karma", "Lotus", "Mango", "Noble", "Ocean",
+  "Pilot", "Quartz", "Robin", "Solar", "Tulip", "Unity", "Velvet", "Willow",
+  "Yacht", "Zebra", "Apple", "Bloom", "Candle", "Dune", "Ember", "Falcon",
+  "Garden", "Harbor", "Island", "Jasmine", "Kite", "Lily", "Meadow", "Nectar",
+  "Orbit", "Palm", "Rain", "Sage", "Thyme", "Violet", "Wave", "Basil",
+  "Comet", "Daisy", "Fern", "Hazel", "Iris", "Juniper", "Lark", "Moss",
+];
 
 export function generatePassword() {
-  const group = () =>
-    Array.from({ length: 4 }, () => PASSWORD_ALPHABET[randomInt(PASSWORD_ALPHABET.length)]).join("");
-  return `${group()}-${group()}-${group()}`;
+  const word = () => PASSWORD_WORDS[randomInt(PASSWORD_WORDS.length)];
+  const digits = String(randomInt(1000, 10000));
+  let second = word();
+  const first = word();
+  while (second === first) second = word();
+  return `${first}-${digits}-${second}`;
 }
 
 type TeamRow = { id: number | null; email: string; role: string; is_owner: boolean };

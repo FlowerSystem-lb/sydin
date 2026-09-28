@@ -30,7 +30,16 @@ type TeamRow = {
   is_you: boolean;
 };
 
-type Credentials = { email: string; password: string; name?: string; reset?: boolean };
+/* password is absent when "Login details" is opened for an existing login:
+   SydIN never keeps a readable copy, so the owner makes a new one instead. */
+type Credentials = {
+  memberRow?: number | null;
+  email: string;
+  role: MemberRole;
+  password?: string;
+  name?: string;
+  reset?: boolean;
+};
 
 const ROLE_HELP: Record<MemberRole, string> = {
   admin: "Everything except plan and billing, including the team.",
@@ -39,6 +48,18 @@ const ROLE_HELP: Record<MemberRole, string> = {
 };
 
 const SIGN_IN_URL = "https://www.sydin.site/login";
+const SIGN_UP_URL = "https://www.sydin.site/signup";
+
+// Plain words for the message the owner sends -- the person reading it has
+// never seen SydIN.
+const ROLE_DETAIL: Record<MemberRole, string> = {
+  admin:
+    "You can do everything: items and stock, orders, invoices, customers and suppliers, delete records, change the business settings and manage the team. Only the plan and billing stay with the owner.",
+  staff:
+    "You can add and edit items, record stock in and out, scan barcodes, receive deliveries, and make invoices and purchase orders. You can't delete anything or change the business settings.",
+  viewer:
+    "You can see everything (stock, orders, invoices and reports) but you can't change anything.",
+};
 
 function isManaged(email: string) {
   return /@[a-z0-9]+\.sydin\.site$/.test(email);
@@ -123,10 +144,36 @@ export default function TeamPanel({
   };
 
   const loginMessage = (login: Credentials) =>
-    `Your SydIN login for ${businessName}\nEmail: ${login.email}\nPassword: ${login.password}\nSign in at ${SIGN_IN_URL}`;
+    [
+      `Hi${login.name ? ` ${login.name}` : ""}! Here is your SydIN login for ${businessName}.`,
+      "",
+      `Your role: ${ROLE_LABELS[login.role]}`,
+      ROLE_DETAIL[login.role],
+      "",
+      "How to sign in:",
+      `1. Open ${SIGN_IN_URL}`,
+      `2. Email: ${login.email}`,
+      `3. Password: ${login.password ?? "(the password you were given)"}`,
+      `4. Press Sign in. You go straight to ${businessName}.`,
+      "",
+      "Forgot your password? Ask the owner for a new one (Settings > Team).",
+    ].join("\n");
 
-  const inviteMessage = (to: string) =>
-    `You're invited to join ${businessName} on SydIN. Sign in at ${SIGN_IN_URL} with ${to} and accept the invitation.`;
+  const inviteMessage = (to: string, role: MemberRole) =>
+    [
+      `Hi! ${businessName} has invited you to their team on SydIN.`,
+      "",
+      `Your role: ${ROLE_LABELS[role]}`,
+      ROLE_DETAIL[role],
+      "",
+      "How to join:",
+      `1. Open ${SIGN_UP_URL}`,
+      `2. Create your account with this exact email: ${to}`,
+      "   (A Gmail address? You can press Continue with Google instead.)",
+      `   Already have a SydIN account with this email? Sign in at ${SIGN_IN_URL}`,
+      `3. After you sign in, a blue bar at the top says "${businessName} invited you". Press Join.`,
+      `4. Done. You now see ${businessName}'s stock.`,
+    ].join("\n");
 
   const add = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -136,9 +183,12 @@ export default function TeamPanel({
       if (!name.trim()) return;
       setAdding(true);
       try {
-        const login = await teamApi<Credentials>("create-login", { name: name.trim(), role: newRole });
+        const login = await teamApi<{ email: string; password: string; name: string }>("create-login", {
+          name: name.trim(),
+          role: newRole,
+        });
         setName("");
-        setCredentials(login);
+        setCredentials({ ...login, role: newRole });
         void load();
       } catch (error) {
         setAddError(error instanceof Error ? error.message : "Could not create the login.");
@@ -159,7 +209,10 @@ export default function TeamPanel({
     }
     setEmail("");
     showToast({ tone: "success", message: `${address} is invited as ${ROLE_LABELS[newRole]}.` });
-    void copyText(inviteMessage(address), "Invitation message copied. Send it on WhatsApp or email.");
+    void copyText(
+      inviteMessage(address, newRole),
+      "Invitation with the steps copied. Send it on WhatsApp or email."
+    );
     void load();
   };
 
@@ -176,12 +229,12 @@ export default function TeamPanel({
     void load();
   };
 
-  const resetPassword = async (row: TeamRow) => {
-    if (row.id === null) return;
-    setBusyId(row.id);
+  const resetPassword = async (memberRow: number | null | undefined, role: MemberRole) => {
+    if (memberRow == null) return;
+    setBusyId(memberRow);
     try {
-      const login = await teamApi<Credentials>("reset-password", { memberRow: row.id });
-      setCredentials({ ...login, reset: true });
+      const login = await teamApi<{ email: string; password: string }>("reset-password", { memberRow });
+      setCredentials({ ...login, memberRow, role, reset: true });
     } catch (error) {
       showToast({ tone: "danger", message: error instanceof Error ? error.message : "Could not reset." });
     } finally {
@@ -211,8 +264,8 @@ export default function TeamPanel({
           <span>Add someone</span>
           <p>
             {mode === "create"
-              ? "SydIN makes a login for them. You get the email and password once, to pass on."
-              : "They sign in to SydIN with their own email and accept."}
+              ? "SydIN makes a login for them. You get the email and password to send them."
+              : "For people with their own email. New to SydIN? They sign up with this exact email first; the message you copy explains the steps."}
           </p>
         </div>
         <form className="st-row-control" onSubmit={add}>
@@ -350,11 +403,11 @@ export default function TeamPanel({
                   <button
                     type="button"
                     className={buttonClassName({ variant: "ghost", size: "sm" })}
-                    onClick={() => void resetPassword(row)}
-                    disabled={busyId === row.id}
-                    title="Make a new password"
+                    onClick={() =>
+                      setCredentials({ memberRow: row.id, email: row.email, role: row.role as MemberRole })
+                    }
                   >
-                    Reset password
+                    Login details
                   </button>
                 )}
                 {!managed && !row.is_owner && row.status === "invited" && (
@@ -362,7 +415,10 @@ export default function TeamPanel({
                     type="button"
                     className={buttonClassName({ variant: "ghost", size: "sm" })}
                     onClick={() =>
-                      void copyText(inviteMessage(row.email), "Invitation message copied.")
+                      void copyText(
+                        inviteMessage(row.email, row.role as MemberRole),
+                        "Invitation with the steps copied."
+                      )
                     }
                     aria-label={`Copy invitation for ${row.email}`}
                   >
@@ -388,23 +444,47 @@ export default function TeamPanel({
       <DialogShell
         open={Boolean(credentials)}
         eyebrow="Team"
-        title={credentials?.reset ? "New password ready" : `Login ready${credentials?.name ? ` for ${credentials.name}` : ""}`}
-        description="Give these to them now. For safety the password is shown only this once — if it's lost, press Reset password."
+        title={
+          credentials?.password
+            ? credentials.reset
+              ? "New password ready"
+              : `Login ready${credentials.name ? ` for ${credentials.name}` : ""}`
+            : "Login details"
+        }
+        description={
+          credentials?.password
+            ? "Copy the login and send it to them now. The password is shown only this once, but you can always make a new one here."
+            : "For safety SydIN never keeps a readable copy of a password. Make a new one to send them; the old one stops working."
+        }
         onClose={() => setCredentials(null)}
         footer={
-          <>
-            <Button variant="secondary" onClick={() => setCredentials(null)}>
-              Done
-            </Button>
-            <Button
-              onClick={() =>
-                credentials &&
-                void copyText(loginMessage(credentials), "Login copied. Send it on WhatsApp.")
-              }
-            >
-              Copy login
-            </Button>
-          </>
+          credentials?.password ? (
+            <>
+              <Button variant="secondary" onClick={() => setCredentials(null)}>
+                Done
+              </Button>
+              <Button
+                onClick={() =>
+                  void copyText(loginMessage(credentials), "Login and steps copied. Send it on WhatsApp.")
+                }
+              >
+                Copy login and steps
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button variant="secondary" onClick={() => setCredentials(null)}>
+                Close
+              </Button>
+              <Button
+                onClick={() => credentials && void resetPassword(credentials.memberRow, credentials.role)}
+                loading={busyId !== null}
+                loadingLabel="Making…"
+              >
+                Make a new password
+              </Button>
+            </>
+          )
         }
       >
         {credentials && (
@@ -415,7 +495,18 @@ export default function TeamPanel({
             </div>
             <div>
               <dt>Password</dt>
-              <dd className="st-login-password">{credentials.password}</dd>
+              {credentials.password ? (
+                <dd className="st-login-password">{credentials.password}</dd>
+              ) : (
+                <dd className="st-login-hidden">Hidden for safety</dd>
+              )}
+            </div>
+            <div>
+              <dt>Role</dt>
+              <dd>
+                {ROLE_LABELS[credentials.role]}
+                <span className="st-login-role-help">{ROLE_DETAIL[credentials.role]}</span>
+              </dd>
             </div>
             <div>
               <dt>Sign in at</dt>

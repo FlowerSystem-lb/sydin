@@ -26757,3 +26757,17 @@ circle.ov-dot-main {
   font-size: 1.05rem;
   letter-spacing: 0.04em;
 }
+
+.st-login-hidden {
+  font-weight: 500 !important;
+  color: var(--text-muted) !important;
+}
+
+.st-login-role-help {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.25rem;
+  color: var(--text-muted);
+}
