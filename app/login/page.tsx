@@ -122,7 +122,14 @@ export default function LoginPage() {
       });
 
       if (error) {
-        setLoginError(error.message);
+        const text = error.message.toLowerCase();
+        setLoginError(
+          text.includes("invalid login credentials")
+            ? "That email and password don't match. Check them, or reset your password."
+            : text.includes("email not confirmed")
+              ? "This email isn't verified yet. Sign up again with it to get a new code."
+              : error.message
+        );
         return;
       }
 
@@ -250,7 +257,11 @@ export default function LoginPage() {
               Remember me
             </label>
 
-            <Link href="/contact?topic=password-help">Forgot password?</Link>
+            <Link
+              href={`/forgot-password${email.trim() ? `?email=${encodeURIComponent(email.trim())}` : ""}`}
+            >
+              Forgot password?
+            </Link>
           </div>
 
           {loginError && (

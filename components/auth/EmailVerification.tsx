@@ -2,18 +2,14 @@
 
 import { useEffect, useState } from "react";
 import UiIcon from "@/components/UiIcon";
+import CodeInput, { CODE_LENGTH } from "@/components/auth/CodeInput";
 import { supabase } from "@/app/lib/supabase";
 
 const RESEND_COOLDOWN_SECONDS = 60;
-const MIN_CODE_LENGTH = 6;
-const MAX_CODE_LENGTH = 10;
-
+// Six digits: Supabase > Authentication > Providers > Email > "Email OTP
+// Length" must be 6 to match (28 Sep 2026).
 function isValidVerificationCode(value: string) {
-  return (
-    /^\d+$/.test(value) &&
-    value.length >= MIN_CODE_LENGTH &&
-    value.length <= MAX_CODE_LENGTH
-  );
+  return value.length === CODE_LENGTH && /^\d+$/.test(value);
 }
 
 function getVerificationError(message: string) {
@@ -73,13 +69,15 @@ export default function EmailVerification({
   }, [lastSentAt]);
 
   const handleCodeChange = (value: string) => {
-    setCode(value.replace(/\D/g, "").slice(0, MAX_CODE_LENGTH));
+    setCode(value);
     if (error) setError("");
   };
 
-  const handleVerify = async (event: React.FormEvent) => {
-    event.preventDefault();
-    if (verifying || resending || !codeIsValid) return;
+  // Called by the form (Verify button) or by the boxes once all six digits
+  // are in -- then with the fresh code, before state has caught up.
+  const handleVerify = async (event?: React.FormEvent, typedCode = code) => {
+    event?.preventDefault();
+    if (verifying || resending || !isValidVerificationCode(typedCode)) return;
 
     try {
       setVerifying(true);
@@ -87,12 +85,13 @@ export default function EmailVerification({
 
       const { error: verifyError } = await supabase.auth.verifyOtp({
         email,
-        token: code,
+        token: typedCode,
         type: "email",
       });
 
       if (verifyError) {
         setError(getVerificationError(verifyError.message));
+        setCode("");
         return;
       }
 
@@ -160,7 +159,7 @@ export default function EmailVerification({
   return (
     <div className="auth-verification">
       <span className="auth-verification-badge">
-        <UiIcon name="file" className="h-6 w-6" />
+        <UiIcon name="mail" className="h-6 w-6" />
       </span>
       <p className="auth-verification-eyebrow">Verify your email</p>
       <h1>Check your inbox.</h1>
@@ -169,37 +168,19 @@ export default function EmailVerification({
       </p>
 
       <form onSubmit={handleVerify} className="auth-verification-form">
-        <label htmlFor="signup-verification-code">Verification code</label>
-        <input
-          id="signup-verification-code"
-          type="text"
-          inputMode="numeric"
-          autoComplete="one-time-code"
-          pattern="[0-9]{6,10}"
-          minLength={MIN_CODE_LENGTH}
-          maxLength={MAX_CODE_LENGTH}
-          required
-          autoFocus
+        <label htmlFor="signup-verification-code-0">Verification code</label>
+        <CodeInput
+          idPrefix="signup-verification-code"
           value={code}
+          onChange={handleCodeChange}
+          onComplete={(complete) => void handleVerify(undefined, complete)}
           disabled={verifying || resending}
-          onChange={(event) => handleCodeChange(event.target.value)}
-          onPaste={(event) => {
-            const pastedCode = event.clipboardData
-              .getData("text")
-              .replace(/\D/g, "")
-              .slice(0, MAX_CODE_LENGTH);
-
-            if (pastedCode) {
-              event.preventDefault();
-              handleCodeChange(pastedCode);
-            }
-          }}
-          aria-describedby="signup-verification-help"
-          aria-invalid={Boolean(error)}
-          className="auth-code-input"
+          invalid={Boolean(error)}
+          autoFocus
+          describedBy="signup-verification-help"
         />
         <p id="signup-verification-help" className="auth-verification-help">
-          Enter the complete verification code from the SydIN email.
+          Enter the {CODE_LENGTH}-digit code from the SydIN email. It works for 10 minutes.
         </p>
 
         {error && (

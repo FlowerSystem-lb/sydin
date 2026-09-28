@@ -27031,3 +27031,62 @@ circle.ov-dot-main {
   white-space: nowrap;
   border: 0;
 }
+
+/* Six-box code entry (components/auth/CodeInput.tsx, 28 Sep 2026) */
+.auth-code-boxes {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.5rem;
+  width: 100%;
+  max-width: 22rem;
+}
+
+.auth-code-box {
+  width: 100%;
+  aspect-ratio: 5 / 6;
+  min-height: 3rem;
+  border: 1px solid var(--border-default, #e4e4e7);
+  border-radius: 12px;
+  background: #ffffff;
+  text-align: center;
+  font-size: 1.45rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-primary, #18181b);
+  caret-color: #2563eb;
+  outline: none;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 140ms ease;
+}
+
+.auth-code-box:focus {
+  border-color: rgba(37, 99, 235, 0.6);
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.auth-code-box:disabled {
+  background: #f4f4f5;
+  color: #71717a;
+}
+
+.auth-code-boxes-invalid .auth-code-box {
+  border-color: rgba(220, 38, 38, 0.55);
+  animation: auth-code-shake 320ms ease;
+}
+
+@keyframes auth-code-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-code-boxes-invalid .auth-code-box {
+    animation: none;
+  }
+}
+
+.auth-reset-field {
+  width: 100%;
+  margin-top: 0.9rem;
+  text-align: left;
+}

@@ -157,7 +157,7 @@ export default function SignupPage() {
       // be used to find out who has an account. Without this the person
       // waits for a code that will never come (28 Sep, Sayed hit exactly that).
       if (data.user && (data.user.identities ?? []).length === 0) {
-        setSignupError("This email already has a SydIN account. Sign in instead.");
+        setSignupError("This email is already registered with SydIN.");
         setAlreadyRegistered(true);
         return;
       }
@@ -322,8 +322,16 @@ export default function SignupPage() {
                           href={buildAuthHref("/login", planIntent, returnTo)}
                           className="font-semibold underline"
                         >
-                          Go to sign in
+                          Sign in
                         </Link>
+                        {" or "}
+                        <Link
+                          href={`/forgot-password?email=${encodeURIComponent(email.trim().toLowerCase())}`}
+                          className="font-semibold underline"
+                        >
+                          reset your password
+                        </Link>
+                        .
                       </>
                     )}
                   </span>
