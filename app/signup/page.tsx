@@ -72,6 +72,7 @@ export default function SignupPage() {
     useState<OAuthProvider | null>(null);
   const [oauthError, setOauthError] = useState("");
   const [signupError, setSignupError] = useState("");
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
   const [pendingVerification, setPendingVerification] =
     useState<PendingVerification | null>(null);
   const oauthStartingRef = useRef(false);
@@ -130,10 +131,11 @@ export default function SignupPage() {
     try {
       setLoading(true);
       setSignupError("");
+      setAlreadyRegistered(false);
       setOauthError("");
 
       const normalizedEmail = email.trim().toLowerCase();
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
         options: {
@@ -147,6 +149,16 @@ export default function SignupPage() {
 
       if (error) {
         setSignupError(error.message);
+        return;
+      }
+
+      // An email that already has an account gets no code: Supabase answers
+      // "ok" with a user that has no identities, on purpose, so the form can't
+      // be used to find out who has an account. Without this the person
+      // waits for a code that will never come (28 Sep, Sayed hit exactly that).
+      if (data.user && (data.user.identities ?? []).length === 0) {
+        setSignupError("This email already has a SydIN account. Sign in instead.");
+        setAlreadyRegistered(true);
         return;
       }
 
@@ -301,7 +313,20 @@ export default function SignupPage() {
               {signupError && (
                 <div role="alert" className="login-alert">
                   <UiIcon name="alert" className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>{signupError}</span>
+                  <span>
+                    {signupError}
+                    {alreadyRegistered && (
+                      <>
+                        {" "}
+                        <Link
+                          href={buildAuthHref("/login", planIntent, returnTo)}
+                          className="font-semibold underline"
+                        >
+                          Go to sign in
+                        </Link>
+                      </>
+                    )}
+                  </span>
                 </div>
               )}
 

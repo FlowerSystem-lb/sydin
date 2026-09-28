@@ -5816,3 +5816,17 @@ list since the move to www.sydin.site, so Supabase falls back to the Site URL (t
 
 **28 Sep, later:** Sayed updated Supabase URL Configuration (Site URL https://www.sydin.site; redirect
 URLs https://www.sydin.site/** and https://sydin.site/**). Google sign-in now opens the dashboard.
+
+### 28 Sep — Sign-up: say so when the email already has an account
+
+Sayed requested a sign-up code and got nothing. The auth log showed `user_repeated_signup` for that
+address (it already had an account from the team test). Supabase deliberately sends no code and
+answers "ok" with a user that has no identities, so the form can't be used to find out who has an
+account. The sign-up page now detects that and says "This email already has a SydIN account. Sign in
+instead." with a link to sign in (keeping plan and returnTo) instead of waiting for a code that never
+comes. Not exercised live (it would send a real sign-up request for a real address). Lint and build
+clean.
+
+**Launch risk logged:** whether Supabase has custom SMTP set up. The built-in sender only mails the
+project's team members and allows a handful of emails per hour, so real customers may never get codes.
+Sayed to check Authentication > Emails > SMTP.
