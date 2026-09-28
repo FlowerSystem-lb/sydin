@@ -668,6 +668,46 @@ and phone — the one QA that cannot be automated.
 
 ---
 
+## P. Settings rebuild and team access — 26–28 September 2026
+
+Section N listed team roles as "not done, deliberately". They are now built, at
+Sayed's "go team access", after he compared SydIN with Sortly's User Access
+Control. The sprint and decision logs have the detail.
+
+- **Settings rebuilt** from his Figma Make design:
+  - the menu is grouped into Business, Workspace and Account, and folds to icons
+  - rows have the label on the left
+  - the save bar appears only when something has changed
+  - Account lists the ways you can sign in
+- **Team access** (`sql/phase-28-team-access.sql`): a business is its owner's user
+  id.
+  - Roles: Owner, Admin, Staff and View only.
+  - Every security rule (RLS), storage rule and database function is scoped to the
+    business.
+  - Seats: Free 1, Standard 3, Pro 10.
+  - Tested before it went live, with pretend users in a transaction that throws
+    everything away.
+- **Two ways to add someone** (Settings > Team):
+  - *Create a login*: name and role give `name.role@business.sydin.site` plus a
+    password like `Cedar-4827-Mint`, with a message to copy that has the steps.
+    Reset password and remove go through the owner.
+  - *Invite by email*: they sign up with that email and press Join on a banner.
+- **Role-aware app:**
+  - Staff and View only see only Account in Settings.
+  - Delete buttons are hidden for them (the database refuses those deletes
+    silently).
+  - View only members see a "View only" label instead of Add.
+- **"Done by"** (`sql/phase-29-done-by.sql`): Activity, Stock movements, item
+  history, invoices, purchase orders, deliveries and payments show "by <name>" when
+  the business has 2+ people.
+- **Process change:** SQL is again pasted by Sayed in the SQL Editor. Claude's tools
+  block it from applying security changes itself. Claude writes the file and a test
+  script that throws everything away, then checks the live database read-only
+  afterwards.
+- **Customers never get logins.** A private "your invoices" link is a later sprint.
+
+---
+
 ## M. What is left
 
 0. ~~Run two SQL files in Supabase~~ **Done 12 Sep 2026** — phases 23 and 24
@@ -697,3 +737,8 @@ and phone — the one QA that cannot be automated.
    URLs (`sql/phase-26-private-po-attachments.sql`, applied live).
 6. **Still needs Sayed:** leaked-password checkbox in Supabase · test Google and
    Microsoft sign-in · confirm prices, contact email and WhatsApp are real.
+7. **Team follow-ups** (section P):
+   - customer "your invoices" link
+   - per-location permissions
+   - an audit-log page
+   - revoke `team_seat_limit` from signed-in users (it only reveals a seat count)
