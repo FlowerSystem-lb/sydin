@@ -157,7 +157,18 @@ export default function SignupPage() {
       // be used to find out who has an account. Without this the person
       // waits for a code that will never come (28 Sep, Sayed hit exactly that).
       if (data.user && (data.user.identities ?? []).length === 0) {
-        setSignupError("This email is already registered with SydIN.");
+        // It's their own account and they typed its password: just sign them
+        // in -- no message, no reset code (28 Sep, Sayed: "skip"). Only a
+        // wrong password gets the "already registered" note.
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: normalizedEmail,
+          password,
+        });
+        if (!signInError) {
+          window.location.href = returnTo;
+          return;
+        }
+        setSignupError("This email is already registered with SydIN, and that password doesn't match.");
         setAlreadyRegistered(true);
         return;
       }

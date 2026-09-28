@@ -27431,3 +27431,99 @@ circle.ov-dot-main {
   right: -6%;
   height: 100%;
 }
+
+/* ===[ Sign-in fields, redesign (28 Sep 2026, Sayed: "redesign the bar of
+   enter mail and password") ]===
+   Soft filled boxes that turn white with a blue ring when you type in them;
+   the icon turns blue with the focus. Scoped to the auth pages. */
+.login-page .login-field > label {
+  margin-bottom: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: #3f3f46;
+}
+
+.login-page .login-input-wrap input {
+  min-height: 3.3rem;
+  border: 1px solid #e6e9ef;
+  border-radius: 14px;
+  background: #f7f8fb;
+  padding-top: 0.8rem;
+  padding-bottom: 0.8rem;
+  font-size: 0.95rem;
+  color: #0f172a;
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.login-page .login-input-wrap input:hover:not(:focus):not(:disabled) {
+  border-color: #d6dbe4;
+}
+
+.login-page .login-input-wrap input:focus {
+  border-color: rgba(37, 99, 235, 0.55);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.login-page .login-input-wrap input::placeholder {
+  color: #9aa3b5;
+}
+
+/* Chrome paints saved emails/passwords pale blue; keep the box design. */
+.login-page .login-input-wrap input:-webkit-autofill,
+.login-page .login-input-wrap input:-webkit-autofill:hover {
+  -webkit-text-fill-color: #0f172a;
+  -webkit-box-shadow: 0 0 0 100px #f7f8fb inset;
+  box-shadow: 0 0 0 100px #f7f8fb inset;
+  transition: background-color 9999s ease-out;
+}
+
+.login-page .login-input-wrap input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 100px #ffffff inset, 0 0 0 4px rgba(37, 99, 235, 0.12);
+}
+
+.login-page .login-password-toggle:has(svg) {
+  display: inline-flex;
+  width: 2.2rem;
+  height: 2.2rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+}
+
+.login-page .login-password-toggle:has(svg):hover {
+  background: rgba(15, 23, 42, 0.06);
+}
+
+.login-page .login-submit {
+  min-height: 3.3rem;
+  border-radius: 14px;
+  box-shadow: 0 8px 20px -10px rgba(37, 99, 235, 0.7);
+}
+
+/* The redesign above loses to `.login-provider-button, .login-input-wrap
+   input` (white !important) and a translucent glass rule -- the cascade trap.
+   Same values, forced. */
+.login-page .login-input-wrap.login-input-wrap input {
+  border: 1px solid #e6e9ef !important;
+  background: #f7f8fb !important;
+  border-radius: 14px !important;
+  min-height: 3.3rem !important;
+  box-shadow: none !important;
+}
+
+.login-page .login-input-wrap.login-input-wrap input:hover:not(:focus):not(:disabled) {
+  border-color: #d6dbe4 !important;
+}
+
+.login-page .login-input-wrap.login-input-wrap input:focus {
+  border-color: rgba(37, 99, 235, 0.55) !important;
+  background: #ffffff !important;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.12) !important;
+}

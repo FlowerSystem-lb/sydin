@@ -5919,3 +5919,20 @@ mark. Fixed like this:
 strict DMARC plus a paid certificate. Logged for later.
 
 `npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.
+
+### 29 Sep — Sign-up with an existing account signs you in; field redesign
+
+- **Existing account on sign-up:** when the email already has an account (`identities` empty) and
+  the typed password is right, `signInWithPassword` runs and the person goes straight in, with no
+  message and no reset code (Sayed: "skip"). With a wrong password: "This email is already
+  registered with SydIN, and that password doesn't match. Sign in or reset your password."
+- **Field redesign** (sign-in, sign-up, reset):
+  - soft filled boxes (#f7f8fb), 14px radius, 3.3rem tall
+  - white with a blue ring on focus, and the icon turns blue
+  - a round eye button
+  - Chrome's blue autofill neutralised
+  - Sign In with a soft shadow
+  - Needed !important over the old white !important rule (the cascade trap). Computed values
+    were checked in the browser.
+
+`npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.
