@@ -480,9 +480,6 @@ export default function ImportExportPage() {
         <DashboardCard className="help-hero">
           <div className="help-hero-titlebar">
             <h1 className="help-hero-title">Import &amp; Export</h1>
-            <p className="help-hero-subtitle">
-              Every way your products come into SydIN and go out of it, in one place.
-            </p>
           </div>
         </DashboardCard>
 

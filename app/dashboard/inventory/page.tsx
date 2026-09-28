@@ -2687,13 +2687,6 @@ export default function InventoryPage() {
                   Inventory
                 </h1>
 
-                <p className="inventory-mobile-description inventory-hero-description">
-                  {loadingItems
-                    ? "Loading inventory..."
-                    : `Manage ${items.length.toLocaleString()} item${
-                        items.length === 1 ? "" : "s"
-                      }, stock levels, and locations from one clean workspace.`}
-                </p>
                 <div className="inventory-hero-badges" aria-label="Current inventory view">
                   <span>{visibleItems.length.toLocaleString()} visible</span>
                   <span>{currentPlanName} plan</span>

@@ -271,10 +271,6 @@ export default function HelpCenterPage() {
           <DashboardCard className="help-hero">
             <div className="help-hero-titlebar">
               <h1 className="help-hero-title">How can we help?</h1>
-              <p className="help-hero-subtitle">
-                Step-by-step answers for every job in SydIN, and a way to
-                reach us when a page is not enough.
-              </p>
             </div>
             <SearchInput
               id="help-search"

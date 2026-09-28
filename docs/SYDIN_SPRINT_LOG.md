@@ -5731,3 +5731,31 @@ left the menu floating. Now, on desktop (page scrolls inside .dashboard-shell-co
 
 Checked by scrolling: the title stays at 0 with the shadow on, and the menu stays at about 75px.
 `npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.
+
+### 28 Sep — Settings laid out like Sortly's; page explanations removed everywhere
+
+Sayed sent Sortly's User Profile screen and asked for the same settings layout, for the
+header to name the page, and for the grey explanations to go "for all pages,
+unprofessional".
+
+- **Settings layout:**
+  - **Menu:** a full-height grey panel titled "Settings", with the fold arrow beside the
+    title. It collapses to icons, is pinned while scrolling, and scrolls on its own if
+    it is long.
+  - **Header:** a pinned header with the name of the current section ("Company
+    profile", "Team"...), and a soft shadow once content scrolls under it.
+  - **Removed:** the "Settings + description" title card and the section title and
+    description inside the card.
+  - **Sticky details:** both pin at -17px to cover the scroll area's top padding. The
+    menu height is 100dvh - 7.5rem, so the end of the page never pushes it up.
+- **Page explanations removed:**
+  - Help ("Step-by-step answers…")
+  - Import & Export ("Every way your products…")
+  - Inventory ("Manage N items, stock levels…")
+  - page-header descriptions on phones too (desktop was already hidden from 640px).
+    Record pages keep their line, which is the customer, date and status.
+  - **Kept:** short hints beside individual fields (e.g. what "Accent colour" is used
+    for), which explain a consequence rather than the page.
+- **Checked:** scroll to the bottom (header and menu both at 0), fold and unfold, phone
+  at 375 (pills and title, no overflow), Inventory without the line. `npm run lint`,
+  `npx tsc --noEmit` and `npm run build` are clean.

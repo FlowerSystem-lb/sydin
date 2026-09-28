@@ -1240,10 +1240,6 @@ export default function SettingsPage() {
 
   const panel = (
     <DashboardCard aria-labelledby="settings-panel-heading" className="st-panel">
-      <div className="st-panel-head">
-        <h2 id="settings-panel-heading">{activeSectionDetails.label}</h2>
-        <p>{activeSectionDetails.description}</p>
-      </div>
       <div className="st-panel-body">{renderActivePanel()}</div>
       {editable && error && (
         <div role="alert" className="st-error">
@@ -1260,35 +1256,25 @@ export default function SettingsPage() {
     <div className="contents">
       <UnsavedChangesGuard when={hasUnsavedWork} what="your settings" />
 
-      <main className="ie-page st-page">
-        <DashboardPageShell width="compact">
-          <DashboardPageHeader
-            eyebrow="Settings"
-            title="Settings"
-            description="Your business profile, documents, currency, inventory defaults, account and plan."
-          />
-
-          <DashboardCard className={`help-hero st-head${scrolled ? " st-head-scrolled" : ""}`}>
-            <div className="help-hero-titlebar">
-              <h1 className="help-hero-title">Settings</h1>
-              <p className="help-hero-subtitle">
-                Your business profile, documents, currency, inventory defaults, account and plan.
-              </p>
-            </div>
-          </DashboardCard>
-
+      {/* Laid out like Sortly's settings (28 Sep, Sayed): a full-height menu
+          titled "Settings" that folds to icons, and a pinned header that names
+          the section you are in. No descriptions -- the name says it. */}
+      <main className="st-page">
           <div className={`st-layout${navCollapsed ? " st-layout-collapsed" : ""}`}>
             <nav aria-label="Settings sections" className="st-nav">
-              <button
-                type="button"
-                className="st-nav-toggle"
-                onClick={toggleNav}
-                aria-expanded={!navCollapsed}
-                aria-label={navCollapsed ? "Show settings menu" : "Hide settings menu"}
-                title={navCollapsed ? "Show menu" : "Hide menu"}
-              >
-                <UiIcon name={navCollapsed ? "chevron-right" : "chevron-left"} className="h-4 w-4" />
-              </button>
+              <div className="st-nav-top">
+                <p className="st-nav-title">Settings</p>
+                <button
+                  type="button"
+                  className="st-nav-toggle"
+                  onClick={toggleNav}
+                  aria-expanded={!navCollapsed}
+                  aria-label={navCollapsed ? "Show settings menu" : "Hide settings menu"}
+                  title={navCollapsed ? "Show menu" : "Hide menu"}
+                >
+                  <UiIcon name={navCollapsed ? "chevron-right" : "chevron-left"} className="h-4 w-4" />
+                </button>
+              </div>
               {SECTION_GROUPS.filter((group) =>
                 visibleSections.some((section) => section.group === group)
               ).map((group) => (
@@ -1311,15 +1297,19 @@ export default function SettingsPage() {
               ))}
             </nav>
 
-            {editable ? (
-              <form onSubmit={handleSave} aria-busy={saving} className="min-w-0">
-                {panel}
-              </form>
-            ) : (
-              <div className="min-w-0">{panel}</div>
-            )}
+            <div className="st-main">
+              <header className={`st-head${scrolled ? " st-head-scrolled" : ""}`}>
+                <h1 id="settings-panel-heading">{activeSectionDetails.label}</h1>
+              </header>
+              {editable ? (
+                <form onSubmit={handleSave} aria-busy={saving} className="min-w-0">
+                  {panel}
+                </form>
+              ) : (
+                <div className="min-w-0">{panel}</div>
+              )}
+            </div>
           </div>
-        </DashboardPageShell>
       </main>
     </div>
   );
