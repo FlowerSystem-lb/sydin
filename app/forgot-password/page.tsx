@@ -185,9 +185,7 @@ export default function ForgotPasswordPage() {
                     disabled={busy}
                     onChange={(event) => setEmail(event.target.value)}
                   />
-                  <span aria-hidden="true" className="login-field-icon">
-                    @
-                  </span>
+                  <UiIcon name="mail" className="login-lead-icon" />
                 </div>
               </div>
 
@@ -234,6 +232,7 @@ export default function ForgotPasswordPage() {
               <div className="login-field auth-reset-field">
                 <label htmlFor="reset-password">New password</label>
                 <div className="login-input-wrap">
+                  <UiIcon name="lock" className="login-lead-icon" />
                   <input
                     id="reset-password"
                     type={showPassword ? "text" : "password"}
@@ -252,7 +251,7 @@ export default function ForgotPasswordPage() {
                     aria-pressed={showPassword}
                     onClick={() => setShowPassword((visible) => !visible)}
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    <UiIcon name={showPassword ? "eye-off" : "eye"} className="h-[1.1rem] w-[1.1rem]" />
                   </button>
                 </div>
               </div>
@@ -260,6 +259,7 @@ export default function ForgotPasswordPage() {
               <div className="login-field auth-reset-field">
                 <label htmlFor="reset-confirm">Confirm new password</label>
                 <div className="login-input-wrap">
+                  <UiIcon name="lock" className="login-lead-icon" />
                   <input
                     id="reset-confirm"
                     type={showPassword ? "text" : "password"}

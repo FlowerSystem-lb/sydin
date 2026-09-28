@@ -27090,3 +27090,344 @@ circle.ov-dot-main {
   margin-top: 0.9rem;
   text-align: left;
 }
+
+/* ===[ Sign-in visual, "Everything in sync." (28 Sep 2026) ]===
+   components/auth/SydINLoginVisual.tsx. Replaces the mock-dashboard card.
+   A calm light stage, serif headline, SVG glass ribbon that sways, three
+   glass readouts joined by thin curves with travelling dots. */
+.login-visual.lv {
+  place-items: stretch;
+  background:
+    radial-gradient(circle at 82% 30%, rgba(47, 107, 255, 0.12), transparent 26rem),
+    radial-gradient(circle at 20% 85%, rgba(125, 211, 252, 0.14), transparent 24rem),
+    linear-gradient(165deg, #f8fafc 0%, #f1f4f9 55%, #e9eef6 100%);
+}
+
+.login-visual.lv::before {
+  display: none;
+}
+
+.lv-live {
+  position: absolute;
+  top: 2rem;
+  right: 2.25rem;
+  z-index: 4;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  padding: 0.35rem 0.75rem;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #15803d;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+}
+
+.lv-live i {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: 999px;
+  background: #22c55e;
+  box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5);
+  animation: lv-pulse 2s ease-out infinite;
+}
+
+.lv-copy {
+  position: absolute;
+  top: 17%;
+  left: 9%;
+  z-index: 3;
+  max-width: 30rem;
+  animation: lv-rise 700ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.lv-title {
+  font-family: var(--font-serif-display), ui-serif, Georgia, serif;
+  font-size: clamp(3rem, 5.4vw, 5.4rem);
+  font-weight: 500;
+  line-height: 0.98;
+  letter-spacing: -0.02em;
+  color: #0b1220;
+}
+
+.lv-title span {
+  color: #2563eb;
+}
+
+.lv-copy p {
+  max-width: 21rem;
+  margin-top: 1.4rem;
+  font-size: 1rem;
+  line-height: 1.6rem;
+  color: #52525b;
+}
+
+.lv-stage {
+  position: absolute;
+  right: -8%;
+  bottom: 0;
+  z-index: 1;
+  height: 100%;
+  aspect-ratio: 3 / 4;
+}
+
+.lv-ribbon {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.lv-ribbon-sway {
+  transform-box: fill-box;
+  transform-origin: 60% 50%;
+  animation: lv-sway 14s ease-in-out infinite alternate;
+}
+
+.lv-band {
+  animation: lv-breathe 7s ease-in-out infinite;
+}
+
+.lv-band-2 {
+  animation-delay: -3.5s;
+}
+
+.lv-shine {
+  stroke-dasharray: 0.16 0.84;
+  animation: lv-shine 5.5s linear infinite;
+}
+
+.lv-chip {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.75rem 1.1rem 0.75rem 0.8rem;
+  box-shadow: 0 10px 30px -12px rgba(15, 23, 42, 0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  animation: lv-float 6s ease-in-out infinite;
+}
+
+.lv-chip strong {
+  display: block;
+  font-size: 1.3rem;
+  font-weight: 600;
+  line-height: 1.5rem;
+  font-variant-numeric: tabular-nums;
+  color: #0b1220;
+}
+
+.lv-chip small {
+  display: block;
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #71717a;
+}
+
+.lv-chip-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: 999px;
+  background: #eef3ff;
+  color: #1d4ed8;
+}
+
+/* Anchored to where each link starts in the 600 x 800 stage. */
+.lv-chip-items {
+  top: 27.3%;
+  left: 19.7%;
+  transform: translate(-18%, -118%);
+}
+
+.lv-chip-accuracy {
+  top: 68.5%;
+  left: 43.7%;
+  transform: translate(-50%, -125%);
+  animation-delay: -2s;
+}
+
+.lv-chip-moves {
+  top: 75%;
+  left: 86.7%;
+  transform: translate(-50%, -128%);
+  animation-delay: -4s;
+}
+
+@keyframes lv-rise {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes lv-sway {
+  from { transform: rotate(-2.5deg) translateY(-6px); }
+  to { transform: rotate(2.5deg) translateY(8px); }
+}
+
+@keyframes lv-breathe {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+@keyframes lv-shine {
+  from { stroke-dashoffset: 1; }
+  to { stroke-dashoffset: 0; }
+}
+
+@keyframes lv-float {
+  0%, 100% { translate: 0 0; }
+  50% { translate: 0 -8px; }
+}
+
+@keyframes lv-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.5); }
+  100% { box-shadow: 0 0 0 8px rgba(34, 197, 94, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lv-copy,
+  .lv-ribbon-sway,
+  .lv-band,
+  .lv-shine,
+  .lv-chip,
+  .lv-live i {
+    animation: none;
+  }
+
+  .lv-link circle {
+    display: none;
+  }
+}
+
+/* Sign-in fields, 28 Sep 2026 (Sayed's design): envelope / padlock at the
+   left of the box, an eye to show the password, an arrow on Sign In. */
+.login-input-wrap .login-lead-icon {
+  position: absolute;
+  top: 50%;
+  left: 1rem;
+  z-index: 1;
+  width: 1.1rem;
+  height: 1.1rem;
+  transform: translateY(-50%);
+  color: #8b93a7;
+  pointer-events: none;
+}
+
+.login-input-wrap:has(.login-lead-icon) input {
+  padding-left: 2.8rem;
+}
+
+.login-input-wrap:focus-within .login-lead-icon {
+  color: #2563eb;
+}
+
+.login-password-toggle:has(svg) {
+  color: #8b93a7;
+}
+
+.login-password-toggle:has(svg):hover {
+  color: #3f3f46;
+}
+
+.login-submit .login-submit-arrow {
+  margin-left: 0.4rem;
+  transition: transform 160ms ease;
+}
+
+.login-submit:hover .login-submit-arrow {
+  transform: translateX(3px);
+}
+
+/* Sign-in visual, layout pass 2: ribbon anchored bottom-right with its own
+   shape; links and chips placed on the whole panel (see the component). */
+.lv-stage {
+  right: -14%;
+  height: 92%;
+}
+
+.lv-links {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.lv-chip {
+  z-index: 3;
+  white-space: nowrap;
+}
+
+.lv-chip-items {
+  top: 22%;
+  left: auto;
+  right: 12%;
+  transform: none;
+}
+
+.lv-chip-accuracy {
+  top: 55%;
+  left: 18%;
+  transform: none;
+}
+
+.lv-chip-moves {
+  top: 66%;
+  left: auto;
+  right: 6%;
+  transform: none;
+}
+
+/* Narrow panels (laptop split): tuck the headline up and shrink the chips. */
+@media (max-width: 1280px) {
+  .lv-copy {
+    top: 13%;
+    left: 8%;
+  }
+
+  .lv-title {
+    font-size: clamp(2.6rem, 4.8vw, 4.2rem);
+  }
+
+  .lv-chip {
+    padding: 0.55rem 0.8rem 0.55rem 0.6rem;
+  }
+
+  .lv-chip strong {
+    font-size: 1.1rem;
+  }
+
+  .lv-chip-items {
+    top: 44%;
+    right: 8%;
+  }
+
+  .lv-chip-accuracy {
+    top: 60%;
+    left: 8%;
+  }
+
+  .lv-chip-moves {
+    top: 76%;
+    right: 5%;
+  }
+}
+
+.lv-stage {
+  right: -6%;
+  height: 100%;
+}

@@ -45,7 +45,12 @@ export type UiIconName =
   | "clipboard"
   | "mail"
   | "chat"
-  | "copy";
+  | "copy"
+  | "lock"
+  | "eye"
+  | "eye-off"
+  | "shield"
+  | "arrow-right";
 
 export default function UiIcon({
   name,
@@ -332,6 +337,35 @@ export default function UiIcon({
           <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
         </>
       )}
+      {/* Password field: a padlock. */}
+      {name === "lock" && (
+        <>
+          <rect x="5" y="10.5" width="14" height="10" rx="2" />
+          <path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" />
+        </>
+      )}
+      {/* Show password. */}
+      {name === "eye" && (
+        <>
+          <path d="M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12Z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      )}
+      {/* Hide password. */}
+      {name === "eye-off" && (
+        <>
+          <path d="M10.6 5.6A9.7 9.7 0 0 1 12 5.5c6 0 9.5 6.5 9.5 6.5a17 17 0 0 1-2.6 3.4M6.6 6.6A16.6 16.6 0 0 0 2.5 12S6 18.5 12 18.5a9.2 9.2 0 0 0 4.9-1.4" />
+          <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2M3 3l18 18" />
+        </>
+      )}
+      {/* Protection / accuracy: a shield with a tick. */}
+      {name === "shield" && (
+        <>
+          <path d="M12 3 5 6v5.5c0 4.3 3 7.9 7 9.5 4-1.6 7-5.2 7-9.5V6l-7-3Z" />
+          <path d="m9 12 2 2 4-4" />
+        </>
+      )}
+      {name === "arrow-right" && <path d="M5 12h14m-6-6 6 6-6 6" />}
     </svg>
   );
 }

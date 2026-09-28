@@ -5885,3 +5885,37 @@ switched on.
 
 **Final live test pending:** a new sign-up (e.g. `+test2`) to see the new email and the 6 boxes
 end to end.
+
+### 28 Sep — One clean logo everywhere; new sign-in design ("Everything in sync.")
+
+**Logo.** SydIN shipped two logos: the old "S" wordmark (landing, sign-in, dashboard header) and the
+"SI" mark with a fake checkerboard painted into the pixels (workspace). Sayed sent the clean "SI"
+mark. Fixed like this:
+
+- Removed the checkerboard from the high-resolution mark with sharp: low-saturation light pixels
+  were made transparent, with a soft edge band.
+- Regenerated `public/brand/sydin-mark.png` / `.svg` (512 tall) and `sydin-logo.png` / `.svg`. The
+  logo is the clean mark plus "Syd" in navy and "IN" in a cyan-to-purple gradient, on the same
+  1213x545 canvas, so no layout moved.
+- `public/email/sydin-logo.png` is now 12 KB and is the correct logo in every email and QR label.
+- Earlier today it had been overwritten with an old-logo version. Caught, and replaced by the
+  new one.
+- App icons were already the clean mark.
+
+**Sign-in design** (Sayed's mockup; it covers sign-in, sign-up and reset because they share
+`AuthPageShell`):
+
+- **Right side:** `SydINLoginVisual` rewritten. A serif "Everything in sync.", a pulsing LIVE badge,
+  and a glass ribbon in SVG that sways, with a light running along its edge.
+- **Readout cards:** three glass cards (12,480 items / 98.4% accuracy / 24 movements, labelled in
+  code as example figures) that float, joined by thin curves with dots travelling along them. They
+  are laid out for wide screens and laptops so nothing overlaps the headline or runs off the edge.
+- **Motion:** stops under reduced-motion.
+- **Left side:** envelope and padlock icons at the left of the fields, an eye button to show the
+  password, and an arrow on Sign In.
+- **New icons:** lock, eye, eye-off, shield and arrow-right.
+
+**Gmail sender picture:** not fixable in code. Gmail shows a brand logo only via BIMI, which needs
+strict DMARC plus a paid certificate. Logged for later.
+
+`npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.

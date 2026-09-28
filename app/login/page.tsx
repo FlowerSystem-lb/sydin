@@ -212,15 +212,14 @@ export default function LoginPage() {
                 disabled={busy}
                 onChange={(event) => setEmail(event.target.value)}
               />
-              <span aria-hidden="true" className="login-field-icon">
-                @
-              </span>
+              <UiIcon name="mail" className="login-lead-icon" />
             </div>
           </div>
 
           <div className="login-field">
             <label htmlFor="login-password">Password</label>
             <div className="login-input-wrap">
+              <UiIcon name="lock" className="login-lead-icon" />
               <input
                 id="login-password"
                 type={showPassword ? "text" : "password"}
@@ -238,7 +237,7 @@ export default function LoginPage() {
                 aria-pressed={showPassword}
                 onClick={() => setShowPassword((visible) => !visible)}
               >
-                {showPassword ? "Hide" : "Show"}
+                <UiIcon name={showPassword ? "eye-off" : "eye"} className="h-[1.1rem] w-[1.1rem]" />
               </button>
             </div>
           </div>
@@ -283,7 +282,10 @@ export default function LoginPage() {
                 Signing in...
               </>
             ) : (
-              "Sign In"
+              <>
+                Sign In
+                <UiIcon name="arrow-right" className="login-submit-arrow h-4 w-4" />
+              </>
             )}
           </button>
         </form>

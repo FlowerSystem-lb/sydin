@@ -274,15 +274,14 @@ export default function SignupPage() {
                     disabled={busy}
                     onChange={(event) => setEmail(event.target.value)}
                   />
-                  <span aria-hidden="true" className="login-field-icon">
-                    @
-                  </span>
+                  <UiIcon name="mail" className="login-lead-icon" />
                 </div>
               </div>
 
               <div className="login-field">
                 <label htmlFor="signup-password">Password</label>
                 <div className="login-input-wrap">
+                  <UiIcon name="lock" className="login-lead-icon" />
                   <input
                     id="signup-password"
                     type={showPassword ? "text" : "password"}
@@ -302,7 +301,7 @@ export default function SignupPage() {
                     aria-pressed={showPassword}
                     onClick={() => setShowPassword((visible) => !visible)}
                   >
-                    {showPassword ? "Hide" : "Show"}
+                    <UiIcon name={showPassword ? "eye-off" : "eye"} className="h-[1.1rem] w-[1.1rem]" />
                   </button>
                 </div>
                 <p id="signup-password-help" className="signup-password-help">
