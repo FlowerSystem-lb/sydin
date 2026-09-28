@@ -66,6 +66,7 @@ import { getDocumentsForItem, type ItemDocument } from "@/app/lib/itemDocuments"
 import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -231,6 +232,7 @@ async function getBusinessCurrency(userId: string) {
 }
 
 export default function ItemDetailsPage() {
+  const canDeleteRecords = useCanDelete();
   const params = useParams();
   const router = useRouter();
   const qrCodeRef = useRef<HTMLDivElement>(null);
@@ -872,15 +874,17 @@ export default function ItemDetailsPage() {
                       Edit Item
                     </ActionButton>
 
-                    <ActionButton
-                      onClick={() => setIsDeleteDialogOpen(true)}
-                      disabled={isDeleting}
-                      variant="danger"
-                      icon="trash"
-                      className="col-span-2"
-                    >
-                      {isDeleting ? "Deleting..." : "Delete Item"}
-                    </ActionButton>
+                    {canDeleteRecords && (
+                      <ActionButton
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                        disabled={isDeleting}
+                        variant="danger"
+                        icon="trash"
+                        className="col-span-2"
+                      >
+                        {isDeleting ? "Deleting..." : "Delete Item"}
+                      </ActionButton>
+                    )}
                   </>
                 )}
               </div>

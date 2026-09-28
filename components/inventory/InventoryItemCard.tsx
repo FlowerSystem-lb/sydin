@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   useCallback,
   useEffect,
@@ -80,6 +81,7 @@ export default function InventoryItemCard({
    */
   variant?: "detail" | "photo";
 }) {
+  const canDeleteItems = useCanDelete();
   const router = useRouter();
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
@@ -369,17 +371,21 @@ export default function InventoryItemCard({
                 Create QR / Label
               </button>
             )}
-            <div className="my-1 border-t border-slate-200" />
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => runMenuAction(onDelete)}
-              disabled={deleting}
-              className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <UiIcon name="trash" className="h-4 w-4" />
-              {deleting ? "Deleting..." : "Delete"}
-            </button>
+            {canDeleteItems && (
+              <>
+                <div className="my-1 border-t border-slate-200" />
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={() => runMenuAction(onDelete)}
+                  disabled={deleting}
+                  className="flex min-h-11 w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-semibold text-red-600 transition hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <UiIcon name="trash" className="h-4 w-4" />
+                  {deleting ? "Deleting..." : "Delete"}
+                </button>
+              </>
+            )}
             </div>,
             document.body
           )}

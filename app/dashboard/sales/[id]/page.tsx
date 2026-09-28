@@ -27,6 +27,7 @@ function formatShortDate(value: string | null | undefined) {
 }
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -75,6 +76,7 @@ import {
  * 3" is the whole answer and "could not issue" is not.
  */
 export default function SaleDetailPage() {
+  const canDeleteRecords = useCanDelete();
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const orderId = Number(params?.id);
@@ -497,12 +499,14 @@ export default function SaleDetailPage() {
               </Button>
               {order.status === "draft" && (
                 <>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setConfirmDelete(true)}
-                  >
-                    Delete draft
-                  </Button>
+                  {canDeleteRecords && (
+                    <Button
+                      variant="secondary"
+                      onClick={() => setConfirmDelete(true)}
+                    >
+                      Delete draft
+                    </Button>
+                  )}
                   <Button onClick={() => setConfirmIssue(true)}>
                     Issue invoice
                   </Button>
@@ -692,13 +696,15 @@ export default function SaleDetailPage() {
                         >
                           Receipt
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => void removePayment(payment.id)}
-                          className="text-xs font-semibold text-theme-muted transition hover:text-theme-danger"
-                        >
-                          Remove
-                        </button>
+                        {canDeleteRecords && (
+                          <button
+                            type="button"
+                            onClick={() => void removePayment(payment.id)}
+                            className="text-xs font-semibold text-theme-muted transition hover:text-theme-danger"
+                          >
+                            Remove
+                          </button>
+                        )}
                       </span>
                     </li>
                   ))}

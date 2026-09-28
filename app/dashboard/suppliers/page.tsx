@@ -62,6 +62,7 @@ import {
   type SupplierInput,
 } from "@/app/lib/suppliers";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -245,6 +246,7 @@ function SupplierForm({
 }
 
 export default function SuppliersPage() {
+  const canDeleteRecords = useCanDelete();
   const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   // Every purchase order, once: a supplier's balance and history come from
   // the same list the Purchase Orders page shows.
@@ -842,12 +844,14 @@ export default function SuppliersPage() {
                         >
                           Edit
                         </ActionButton>
-                        <ActionButton
-                          variant="danger"
-                          onClick={() => setPendingDelete(supplier)}
-                        >
-                          Delete
-                        </ActionButton>
+                        {canDeleteRecords && (
+                          <ActionButton
+                            variant="danger"
+                            onClick={() => setPendingDelete(supplier)}
+                          >
+                            Delete
+                          </ActionButton>
+                        )}
                       </div>
                       <details className="organize-action-menu organize-mobile-actions mt-2">
                         <summary aria-label={`More actions for ${supplier.name}`}>
@@ -860,13 +864,15 @@ export default function SuppliersPage() {
                           >
                             Edit
                           </button>
-                          <button
-                            type="button"
-                            onClick={() => setPendingDelete(supplier)}
-                            className="organize-danger-action"
-                          >
-                            Delete
-                          </button>
+                          {canDeleteRecords && (
+                            <button
+                              type="button"
+                              onClick={() => setPendingDelete(supplier)}
+                              className="organize-danger-action"
+                            >
+                              Delete
+                            </button>
+                          )}
                         </div>
                       </details>
                     </div>
@@ -1015,17 +1021,19 @@ export default function SuppliersPage() {
                 >
                   Edit
                 </button>
-                <button
-                  type="button"
-                  className="customer-sheet-action-danger"
-                  onClick={() => {
-                    const supplier = accountSupplier;
-                    setAccountSupplier(null);
-                    setPendingDelete(supplier);
-                  }}
-                >
-                  Delete
-                </button>
+                {canDeleteRecords && (
+                  <button
+                    type="button"
+                    className="customer-sheet-action-danger"
+                    onClick={() => {
+                      const supplier = accountSupplier;
+                      setAccountSupplier(null);
+                      setPendingDelete(supplier);
+                    }}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
 
               {account.orders.length > 0 && (

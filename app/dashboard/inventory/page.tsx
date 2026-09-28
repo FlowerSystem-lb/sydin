@@ -89,6 +89,7 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -460,6 +461,7 @@ async function getBusinessCurrency(userId: string) {
 }
 
 export default function InventoryPage() {
+  const canDeleteRecords = useCanDelete();
   const router = useRouter();
 
   const [items, setItems] = useState<Item[]>([]);
@@ -2634,17 +2636,21 @@ export default function InventoryPage() {
           <UiIcon name="file" className="h-4 w-4" />
           Create purchase order
         </button>
-        <div className="my-1 border-t border-slate-200" />
-        <button
-          type="button"
-          role="menuitem"
-          onClick={() => setPendingDeleteItem(item)}
-          disabled={deletingId === item.id}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          <UiIcon name="trash" className="h-4 w-4" />
-          {deletingId === item.id ? "Deleting..." : "Delete"}
-        </button>
+        {canDeleteRecords && (
+          <>
+            <div className="my-1 border-t border-slate-200" />
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => setPendingDeleteItem(item)}
+              disabled={deletingId === item.id}
+              className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 focus-visible:bg-red-50 focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <UiIcon name="trash" className="h-4 w-4" />
+              {deletingId === item.id ? "Deleting..." : "Delete"}
+            </button>
+          </>
+        )}
       </InventoryActionMenu>
     </div>
   );
@@ -3257,15 +3263,17 @@ export default function InventoryPage() {
                       >
                         Clear selection
                       </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => openBulkDialog("delete")}
-                        disabled={selectedItems.length === 0}
-                        className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
-                      >
-                          Delete selected
-                      </button>
+                      {canDeleteRecords && (
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => openBulkDialog("delete")}
+                          disabled={selectedItems.length === 0}
+                          className="flex min-h-10 w-full items-center rounded-lg px-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50 disabled:opacity-50"
+                        >
+                            Delete selected
+                        </button>
+                      )}
                   </InventoryActionMenu>
                 </div>
               </div>

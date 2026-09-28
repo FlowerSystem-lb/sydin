@@ -5577,3 +5577,23 @@ clean. The two-person test with Sayed's second email is still to do.
 - Show "done by" in Activity.
 - Revoke execute on `team_seat_limit` from signed-in users. It only reveals a plan's
   seat count.
+
+### 28 Sep — Team access: Delete buttons hidden for Staff and View only
+
+When the database refuses a delete it matches zero rows and returns no error. For Staff,
+a visible Delete button would have reported success for something that never happened.
+
+- **New hook:** `useCanDelete()` in `components/dashboard/BusinessContext.tsx`. It returns
+  true for the owner, for admins, and when no team context is loaded.
+- **Where it applies:** it hides these Delete controls:
+  - the item card menu (shared)
+  - Inventory row menu and bulk "Delete selected"
+  - Item details
+  - Categories, Customers, Suppliers and Depots (row buttons, mobile menus, account
+    sheets)
+  - draft invoices
+  - purchase orders
+  - invoice and PO payment "Remove"
+- **Pick lists:** unchanged. Cancelling a pick list is an update, which staff may do.
+- **Checked:** the owner still sees Delete. `npm run lint`, `npx tsc --noEmit` and
+  `npm run build` are clean.

@@ -23,6 +23,7 @@ import {
   type Depot,
 } from "@/app/lib/depots";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -40,6 +41,7 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
 type DepotFilter = "all" | "active" | "inactive" | "missing-code";
 
 export default function DepotsPage() {
+  const canDeleteRecords = useCanDelete();
   const [depots, setDepots] = useState<Depot[]>([]);
   const [depotFilter, setDepotFilter] = useState<DepotFilter>("all");
   const [userId, setUserId] = useState("");
@@ -619,13 +621,15 @@ export default function DepotsPage() {
                               Edit
                             </ActionButton>
 
-                            <ActionButton
-                              variant="danger"
-                              onClick={() => setPendingDeleteDepot(depot)}
-                              disabled={deletingId === depot.id}
-                            >
-                              {deletingId === depot.id ? "Deleting..." : "Delete"}
-                            </ActionButton>
+                            {canDeleteRecords && (
+                              <ActionButton
+                                variant="danger"
+                                onClick={() => setPendingDeleteDepot(depot)}
+                                disabled={deletingId === depot.id}
+                              >
+                                {deletingId === depot.id ? "Deleting..." : "Delete"}
+                              </ActionButton>
+                            )}
                           </div>
                           <details className="organize-action-menu organize-mobile-actions">
                             <summary aria-label={`More actions for ${formatDepotLabel(depot)}`}>
@@ -638,14 +642,16 @@ export default function DepotsPage() {
                               >
                                 Edit
                               </button>
-                              <button
-                                type="button"
-                                onClick={() => setPendingDeleteDepot(depot)}
-                                disabled={deletingId === depot.id}
-                                className="organize-danger-action"
-                              >
-                                {deletingId === depot.id ? "Deleting..." : "Delete"}
-                              </button>
+                              {canDeleteRecords && (
+                                <button
+                                  type="button"
+                                  onClick={() => setPendingDeleteDepot(depot)}
+                                  disabled={deletingId === depot.id}
+                                  className="organize-danger-action"
+                                >
+                                  {deletingId === depot.id ? "Deleting..." : "Delete"}
+                                </button>
+                              )}
                             </div>
                           </details>
                         </div>

@@ -44,6 +44,7 @@ import {
   type SalesOrder,
 } from "@/app/lib/salesOrders";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   createCustomer,
   deleteCustomer,
@@ -89,6 +90,7 @@ const EMPTY_FORM: CustomerInput = {
 };
 
 export default function CustomersPage() {
+  const canDeleteRecords = useCanDelete();
   const [customers, setCustomers] = useState<Customer[]>([]);
   // Every invoice, once, so each customer's balance and history come from
   // the same list the Sales page shows -- no second source of truth.
@@ -570,13 +572,15 @@ export default function CustomersPage() {
                   >
                     Edit
                   </button>
-                  <button
-                    type="button"
-                    onClick={() => setPendingDelete(customer)}
-                    className="min-h-11 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-theme-danger transition hover:bg-red-500/20"
-                  >
-                    Delete
-                  </button>
+                  {canDeleteRecords && (
+                    <button
+                      type="button"
+                      onClick={() => setPendingDelete(customer)}
+                      className="min-h-11 rounded-xl border border-red-400/25 bg-red-500/10 px-3 py-2 text-xs font-semibold text-theme-danger transition hover:bg-red-500/20"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </article>
                 ))}
@@ -664,17 +668,19 @@ export default function CustomersPage() {
                 >
                   Edit
                 </button>
-                <button
-                  type="button"
-                  className="customer-sheet-action-danger"
-                  onClick={() => {
-                    const customer = accountCustomer;
-                    setAccountCustomer(null);
-                    setPendingDelete(customer);
-                  }}
-                >
-                  Delete
-                </button>
+                {canDeleteRecords && (
+                  <button
+                    type="button"
+                    className="customer-sheet-action-danger"
+                    onClick={() => {
+                      const customer = accountCustomer;
+                      setAccountCustomer(null);
+                      setPendingDelete(customer);
+                    }}
+                  >
+                    Delete
+                  </button>
+                )}
               </div>
 
               {/* The three numbers a customer conversation turns on. */}

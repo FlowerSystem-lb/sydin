@@ -76,6 +76,7 @@ import {
 } from "@/app/lib/purchaseOrders";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -148,6 +149,7 @@ function isInCurrentMonth(order: PurchaseOrder) {
 }
 
 export default function PurchaseOrdersPage() {
+  const canDeleteRecords = useCanDelete();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [userId, setUserId] = useState("");
@@ -681,6 +683,7 @@ export default function PurchaseOrdersPage() {
   };
 
   const canDeleteOrder =
+    canDeleteRecords &&
     selectedOrder !== null &&
     (selectedOrder.status === "draft" || selectedOrder.status === "ordered") &&
     selectedPayments.length === 0 &&
@@ -1935,16 +1938,18 @@ export default function PurchaseOrdersPage() {
                     >
                       <UiIcon name="download" className="h-4 w-4" />
                     </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDeletePayment(payment.id)}
-                      disabled={actionBusy}
-                      className="po-line-remove"
-                      aria-label="Remove this payment"
-                      title="Remove payment"
-                    >
-                      <UiIcon name="trash" className="h-4 w-4" />
-                    </button>
+                    {canDeleteRecords && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeletePayment(payment.id)}
+                        disabled={actionBusy}
+                        className="po-line-remove"
+                        aria-label="Remove this payment"
+                        title="Remove payment"
+                      >
+                        <UiIcon name="trash" className="h-4 w-4" />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>

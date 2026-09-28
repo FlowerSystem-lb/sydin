@@ -61,6 +61,7 @@ import {
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import ItemPanel from "@/components/inventory/ItemPanel";
 import AddItemForm from "@/app/dashboard/add-item/AddItemForm";
 
@@ -189,6 +190,7 @@ function CategoryForm({
 }
 
 export default function CategoriesPage() {
+  const canDeleteRecords = useCanDelete();
   const router = useRouter();
   const [categories, setCategories] = useState<Category[]>([]);
   const [items, setItems] = useState<CategoryInventoryItem[]>([]);
@@ -1074,13 +1076,15 @@ export default function CategoriesPage() {
                             >
                               Edit
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setPendingDelete(category)}
-                              className="w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50"
-                            >
-                              Delete
-                            </button>
+                            {canDeleteRecords && (
+                              <button
+                                type="button"
+                                onClick={() => setPendingDelete(category)}
+                                className="w-full rounded-lg px-3 py-2 text-left text-xs font-bold text-red-600 hover:bg-red-50"
+                              >
+                                Delete
+                              </button>
+                            )}
                           </div>
                         </details>
                       </div>
@@ -1187,12 +1191,14 @@ export default function CategoriesPage() {
                       >
                         Edit Category
                       </ActionButton>
-                      <ActionButton
-                        onClick={() => setPendingDelete(selectedCategory)}
-                        variant="danger"
-                      >
-                        Delete
-                      </ActionButton>
+                      {canDeleteRecords && (
+                        <ActionButton
+                          onClick={() => setPendingDelete(selectedCategory)}
+                          variant="danger"
+                        >
+                          Delete
+                        </ActionButton>
+                      )}
                     </>
                   )}
                 </div>
