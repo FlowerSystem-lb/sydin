@@ -5686,3 +5686,11 @@ added, on the whole site".
     payments
 - **Order of release:** the app selects `actor_id` on payments and receipts, so the
   commit is pushed only after Sayed runs phase-29.
+
+### 28 Sep — Settings menu folds to icons
+
+Sayed pointed at the "<" arrow on Sortly's settings menu. The Settings menu now has a round arrow at its
+top (desktop only; on phones it is already a row of pills). Collapsed, it shows icons only in a
+narrow column, with the section name on hover, and the panel gets the width. The choice is
+remembered per browser (localStorage, read after mount so the server render never mismatches).
+Checked: fold, reload keeps it folded, unfold. `npm run lint`, `npx tsc --noEmit`, `npm run build` clean.

@@ -26790,3 +26790,52 @@ circle.ov-dot-main {
 .done-by-inline::before {
   content: " \00b7 ";
 }
+
+/* Settings menu fold (28 Sep 2026): desktop only. Collapsed = icons only,
+   narrow column; the arrow sits at the top of the menu. */
+.st-nav-toggle {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .st-layout {
+    transition: grid-template-columns 180ms ease;
+  }
+
+  .st-nav-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: end;
+    width: 1.9rem;
+    height: 1.9rem;
+    margin-bottom: -0.5rem;
+    border: 1px solid var(--border-default);
+    border-radius: 999px;
+    background: #ffffff;
+    color: var(--text-secondary);
+    box-shadow: 0 1px 2px rgba(24, 24, 27, 0.06);
+  }
+
+  .st-nav-toggle:hover {
+    color: var(--text-primary);
+  }
+
+  .st-layout.st-layout-collapsed {
+    grid-template-columns: 3.25rem minmax(0, 1fr);
+  }
+
+  .st-layout-collapsed .st-nav-toggle {
+    justify-self: center;
+  }
+
+  .st-layout-collapsed .st-nav-label,
+  .st-layout-collapsed .st-nav-item span {
+    display: none;
+  }
+
+  .st-layout-collapsed .st-nav-item {
+    justify-content: center;
+    padding: 0;
+  }
+}

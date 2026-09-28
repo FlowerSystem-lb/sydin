@@ -345,6 +345,30 @@ export default function SettingsPage() {
   const upgradeLabel = getUpgradeActionLabel(subscription.plan);
   const currencyCode = normalizeCurrencyCode(settings.currency_code, "USD");
   const sectionFromQuery = searchParams.get("section");
+  // Folds the settings menu to icons (Sayed, from Sortly's settings, 28 Sep).
+  // Remembered per browser; a desktop-only control -- on phones the menu is
+  // already a single row of pills.
+  const [navCollapsed, setNavCollapsed] = useState(false);
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("sydin:settings-nav") === "collapsed") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of a stored preference after mount (server render has no localStorage)
+        setNavCollapsed(true);
+      }
+    } catch {
+      // Storage blocked: start open.
+    }
+  }, []);
+  const toggleNav = () => {
+    setNavCollapsed((current) => {
+      try {
+        localStorage.setItem("sydin:settings-nav", current ? "open" : "collapsed");
+      } catch {
+        // Private mode: just don't remember it.
+      }
+      return !current;
+    });
+  };
   const business = useBusiness();
   const myRole = business?.role ?? "owner";
   // Staff and view-only members manage only their own account; plan and
@@ -1189,8 +1213,18 @@ export default function SettingsPage() {
             </div>
           </DashboardCard>
 
-          <div className="st-layout">
+          <div className={`st-layout${navCollapsed ? " st-layout-collapsed" : ""}`}>
             <nav aria-label="Settings sections" className="st-nav">
+              <button
+                type="button"
+                className="st-nav-toggle"
+                onClick={toggleNav}
+                aria-expanded={!navCollapsed}
+                aria-label={navCollapsed ? "Show settings menu" : "Hide settings menu"}
+                title={navCollapsed ? "Show menu" : "Hide menu"}
+              >
+                <UiIcon name={navCollapsed ? "chevron-right" : "chevron-left"} className="h-4 w-4" />
+              </button>
               {SECTION_GROUPS.filter((group) =>
                 visibleSections.some((section) => section.group === group)
               ).map((group) => (
@@ -1203,6 +1237,7 @@ export default function SettingsPage() {
                       onClick={() => switchSection(section.id)}
                       aria-current={section.id === activeSection ? "page" : undefined}
                       className={`st-nav-item${section.id === activeSection ? " st-nav-item-active" : ""}`}
+                      title={navCollapsed ? section.label : undefined}
                     >
                       <UiIcon name={section.icon} className="h-4 w-4 shrink-0" />
                       <span>{section.label}</span>
