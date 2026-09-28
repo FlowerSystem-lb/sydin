@@ -5813,3 +5813,6 @@ list since the move to www.sydin.site, so Supabase falls back to the Site URL (t
 - **Real fix, Sayed's:** Supabase > Authentication > URL Configuration. Set Site URL to
   https://www.sydin.site and add https://www.sydin.site/** and https://sydin.site/** to the
   Redirect URLs. Claude has no tool for Supabase Auth settings.
+
+**28 Sep, later:** Sayed updated Supabase URL Configuration (Site URL https://www.sydin.site; redirect
+URLs https://www.sydin.site/** and https://sydin.site/**). Google sign-in now opens the dashboard.
