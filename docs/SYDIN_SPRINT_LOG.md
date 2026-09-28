@@ -5830,3 +5830,22 @@ clean.
 **Launch risk logged:** whether Supabase has custom SMTP set up. The built-in sender only mails the
 project's team members and allows a handful of emails per hour, so real customers may never get codes.
 Sayed to check Authentication > Emails > SMTP.
+
+### 28 Sep — Sign-up emails go through Resend (custom SMTP); verified
+
+Supabase was on its built-in sender (only mails team members, a handful per hour). Sayed set up:
+
+- **Resend:** domain `sydin.site` verified (Tokyo region, DNS auto-configured in Vercel, click
+  tracking off).
+- **Supabase custom SMTP:** `smtp.resend.com:465`, user `resend`, sender `no-reply@sydin.site` /
+  "SydIN". The key went from Resend straight into Supabase and never passed through Claude.
+- **Supabase email rate limit:** 100/h.
+- **Proof:** a new sign-up with `sayed100007+test1@gmail.com` got the 8-digit code in his inbox.
+  Earlier "no code" reports were all `user_repeated_signup` (addresses that already had accounts).
+
+Open items:
+
+- **Broken logo:** the Supabase email template's logo is broken. Point it at
+  https://www.sydin.site/icons/icon-192.png (Gmail does not show SVG).
+- **Domain auto-renew:** `sydin.site` has auto-renew OFF in Vercel (it expires about 25 Sep 2027).
+  Sayed to turn it on.
