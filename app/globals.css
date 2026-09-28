@@ -26839,3 +26839,37 @@ circle.ov-dot-main {
     padding: 0;
   }
 }
+
+/* Settings: title pinned at the top, menu pinned under it, only the content
+   scrolls -- as Sortly's settings (28 Sep 2026). Desktop, where the page
+   scrolls inside .dashboard-shell-content. The title card is transparent
+   elsewhere (.ie-page rule), so it gets the canvas white here, and a soft
+   shadow only once something has scrolled under it -- no hairline. */
+@media (min-width: 900px) {
+  /* The scroll area has ~17px top padding; sticking at -17px and painting
+     that strip white stops content showing through above the title. */
+  .ie-page.st-page .help-hero.st-head {
+    position: sticky !important;
+    top: -17px;
+    z-index: 8;
+    margin-block: -0.75rem 0 !important;
+    padding-block: 0.75rem !important;
+    background: #ffffff !important;
+    box-shadow: 0 -17px 0 0 #ffffff !important;
+    transition: box-shadow 160ms ease;
+  }
+
+  .ie-page.st-page .help-hero.st-head.st-head-scrolled {
+    box-shadow:
+      0 -17px 0 0 #ffffff,
+      0 10px 18px -14px rgba(24, 24, 27, 0.35) !important;
+  }
+
+  .st-page .st-nav {
+    top: 4.25rem;
+    max-height: calc(100dvh - 10rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+  }
+}

@@ -364,6 +364,17 @@ export default function SettingsPage() {
   // Remembered per browser; a desktop-only control -- on phones the menu is
   // already a single row of pills.
   const [navCollapsed, setNavCollapsed] = useState(false);
+  // The pinned title bar gets a soft shadow once the page has scrolled under
+  // it, like Sortly's settings. The page scrolls inside the shell from 900px.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const scroller = document.querySelector<HTMLElement>(".dashboard-shell-content");
+    if (!scroller) return;
+    const onScroll = () => setScrolled(scroller.scrollTop > 8);
+    onScroll();
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => scroller.removeEventListener("scroll", onScroll);
+  }, []);
   const [inventorySort, setInventorySort] = useState<InventorySort>("newest");
   const [timeZoneLabel, setTimeZoneLabel] = useState("");
   useEffect(() => {
@@ -1257,7 +1268,7 @@ export default function SettingsPage() {
             description="Your business profile, documents, currency, inventory defaults, account and plan."
           />
 
-          <DashboardCard className="help-hero">
+          <DashboardCard className={`help-hero st-head${scrolled ? " st-head-scrolled" : ""}`}>
             <div className="help-hero-titlebar">
               <h1 className="help-hero-title">Settings</h1>
               <p className="help-hero-subtitle">

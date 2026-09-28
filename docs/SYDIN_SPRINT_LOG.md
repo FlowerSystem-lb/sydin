@@ -5716,3 +5716,18 @@ call on each option:
 **Checked:** choosing Name A–Z in Preferences makes Inventory open "Name A–Z" with the
 items in that order. The test choice was cleared afterwards. `npm run lint`,
 `npx tsc --noEmit` and `npm run build` are clean.
+
+### 28 Sep — Settings: pinned title and menu, only the content scrolls (as Sortly)
+
+Measured first: the Settings menu was already sticky, but the "Settings" title scrolled away and
+left the menu floating. Now, on desktop (page scrolls inside .dashboard-shell-content):
+
+- **Title bar:** sticky at the top, on white, with a soft shadow only once content has scrolled
+  under it (scroll listener). There is no hairline.
+- **The 17px strip:** the scroll area has 17px of top padding, which let content show through
+  above the title. The title now sticks at -17px and paints that strip white.
+- **Menu:** pinned under the title, with its own scroll if it is ever taller than the screen.
+- **Phone layout:** unchanged.
+
+Checked by scrolling: the title stays at 0 with the shadow on, and the menu stays at about 75px.
+`npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.
