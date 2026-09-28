@@ -260,13 +260,16 @@ export default function TeamPanel({
   return (
     <>
       <div className="st-row">
-        <div className="st-row-label">
-          <span>Add someone</span>
-          <p>
-            {mode === "create"
+        {/* Explanation as a tooltip only (28 Sep, Sayed: no grey hints). */}
+        <div
+          className="st-row-label"
+          title={
+            mode === "create"
               ? "SydIN makes a login for them. You get the email and password to send them."
-              : "For people with their own email. New to SydIN? They sign up with this exact email first; the message you copy explains the steps."}
-          </p>
+              : "For people with their own email. New to SydIN? They sign up with this exact email first; the message you copy explains the steps."
+          }
+        >
+          <span>Add someone</span>
         </div>
         <form className="st-row-control" onSubmit={add}>
           <div className="st-team-mode" role="tablist" aria-label="How to add them">

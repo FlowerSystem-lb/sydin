@@ -209,11 +209,13 @@ function Row({
   htmlFor?: string;
   children: React.ReactNode;
 }) {
+  // 28 Sep (Sayed): no grey explanation under each label. The hint stays
+  // available as a hover tooltip and for screen readers, not on the page.
   return (
     <div className="st-row">
-      <div className="st-row-label">
+      <div className="st-row-label" title={hint}>
         {htmlFor ? <label htmlFor={htmlFor}>{label}</label> : <span>{label}</span>}
-        {hint && <p>{hint}</p>}
+        {hint && <p className="sr-only">{hint}</p>}
       </div>
       <div className="st-row-control">{children}</div>
     </div>

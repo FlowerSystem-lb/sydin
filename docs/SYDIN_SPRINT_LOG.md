@@ -5759,3 +5759,10 @@ unprofessional".
 - **Checked:** scroll to the bottom (header and menu both at 0), fold and unfold, phone
   at 375 (pills and title, no overflow), Inventory without the line. `npm run lint`,
   `npx tsc --noEmit` and `npm run build` are clean.
+
+### 28 Sep — Settings field hints off the page
+
+Sayed: yes, remove the grey hints too. Every Settings row label (and Team's "Add someone") now shows only
+the name; the hint moved to a hover tooltip on the label and stays for screen readers (sr-only).
+Status lines inside controls (seat count, plan notes, errors) stay. Checked on Company profile.
+`npm run lint`, `npx tsc --noEmit`, `npm run build` clean.
