@@ -8,6 +8,7 @@ import {
   PricingCards,
   SectionIntro,
 } from "@/components/Marketing";
+import AuthReturnRedirect from "@/components/AuthReturnRedirect";
 import Reveal from "@/components/Reveal";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 
@@ -92,6 +93,7 @@ const workflow = [
 export default function Home() {
   return (
     <MarketingPage active="home">
+      <AuthReturnRedirect />
       <section className="marketing-hero px-4 pb-10 pt-10 sm:px-6 sm:pb-14 sm:pt-16 lg:px-8">
         <div className="marketing-hero-shell mx-auto w-full max-w-7xl">
           {/* Sits behind the copy block, not inside it -- the artifacts have to

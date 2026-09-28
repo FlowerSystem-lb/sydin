@@ -5797,3 +5797,19 @@ it was replaced with the layout Sortly actually uses.
 Website, the save bar showed at the bottom, then Discard left the field empty and the bar gone (nothing
 saved). Phone at 375: no overflow, page scrolls. `npm run lint`, `npx tsc --noEmit` and
 `npm run build` are clean.
+
+### 28 Sep — Google/Microsoft sign-in landed on the landing page after the domain move
+
+Sayed: signing in with Google or Microsoft returns to www.sydin.site/# (the landing page). The cause:
+sign-in asks Supabase to return to /dashboard, and that address is not on Supabase's allowed redirect
+list since the move to www.sydin.site, so Supabase falls back to the Site URL (the landing page).
+
+- **Code safety net:** `components/AuthReturnRedirect.tsx` on the landing page. It reads the
+  address at module load, before the Supabase client strips the tokens. On an arrival carrying
+  sign-in data (`#access_token` or `?code=`) with a session, it sends the person to /dashboard. A
+  plain visit to the landing page is untouched.
+- **Checked:** "/" stays on the landing page, and "/?code=test-arrival" redirects to /dashboard.
+  Lint and build are clean.
+- **Real fix, Sayed's:** Supabase > Authentication > URL Configuration. Set Site URL to
+  https://www.sydin.site and add https://www.sydin.site/** and https://sydin.site/** to the
+  Redirect URLs. Claude has no tool for Supabase Auth settings.
