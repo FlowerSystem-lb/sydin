@@ -5936,3 +5936,24 @@ strict DMARC plus a paid certificate. Logged for later.
     were checked in the browser.
 
 `npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.
+
+### 29 Sep — Real fix: sign-up could never tell an existing email from a new one
+
+Sayed signed up with an existing email and still got the code screen. Reproduced locally with the new
+code, so it was not deploy timing.
+
+**Cause:** auth-js 2.106 builds `{ user: data.user ?? null }` from the /signup response, but with
+email confirmation on, Supabase returns the user object at the top level. So `supabase.auth.signUp`
+gave `user: null` for every sign-up, and the identities check never ran. Confirmed with a direct
+/signup call: an existing email returns `identities: []`.
+
+**Fix:** the sign-up page now calls /auth/v1/signup directly, with the same public key and
+redirect_to, and reads identities from the raw answer.
+
+- **Existing email, right password:** `signInWithPassword`, then straight in.
+- **Existing email, wrong password:** "already registered ... Sign in or reset your password".
+- **New email:** code screen.
+- **Confirmation turned off (not our setup):** if the answer ever has tokens, `setSession`.
+
+**Checked on localhost:** Sayed's existing email with a made-up wrong password shows the message and
+no code screen. Lint and build are clean.

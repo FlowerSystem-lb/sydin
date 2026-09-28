@@ -135,28 +135,56 @@ export default function SignupPage() {
       setOauthError("");
 
       const normalizedEmail = email.trim().toLowerCase();
-      const { data, error } = await supabase.auth.signUp({
-        email: normalizedEmail,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}${buildAuthHref(
-            "/login",
-            planIntent,
-            returnTo
-          )}`,
-        },
-      });
+      const redirectTo = `${window.location.origin}${buildAuthHref("/login", planIntent, returnTo)}`;
 
-      if (error) {
-        setSignupError(error.message);
+      // Called directly rather than through supabase.auth.signUp: the client
+      // library (auth-js 2.106) reads `data.user` from the response, but with
+      // email confirmation on, Supabase returns the user at the top level --
+      // so the library hands back user: null for EVERY sign-up and there is no
+      // way to tell a new email from an existing one. The raw answer has it:
+      // an email that already has an account comes back with no identities
+      // (and no email is sent). Same endpoint, same public key the library uses.
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_SUPABASE_URL}/auth/v1/signup?redirect_to=${encodeURIComponent(redirectTo)}`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            apikey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+            Authorization: `Bearer ${process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY}`,
+          },
+          body: JSON.stringify({ email: normalizedEmail, password }),
+        }
+      );
+      const answer = (await response.json().catch(() => ({}))) as {
+        identities?: unknown[];
+        user?: { identities?: unknown[] };
+        access_token?: string;
+        refresh_token?: string;
+        msg?: string;
+        message?: string;
+        error_description?: string;
+      };
+
+      if (!response.ok) {
+        setSignupError(
+          answer.msg || answer.message || answer.error_description || "Account creation failed. Please try again."
+        );
         return;
       }
 
-      // An email that already has an account gets no code: Supabase answers
-      // "ok" with a user that has no identities, on purpose, so the form can't
-      // be used to find out who has an account. Without this the person
-      // waits for a code that will never come (28 Sep, Sayed hit exactly that).
-      if (data.user && (data.user.identities ?? []).length === 0) {
+      // Only if email confirmation were ever turned off: signed straight in.
+      if (answer.access_token && answer.refresh_token) {
+        await supabase.auth.setSession({
+          access_token: answer.access_token,
+          refresh_token: answer.refresh_token,
+        });
+        window.location.href = returnTo;
+        return;
+      }
+
+      const identities = answer.identities ?? answer.user?.identities ?? [];
+      if (identities.length === 0) {
         // It's their own account and they typed its password: just sign them
         // in -- no message, no reset code (28 Sep, Sayed: "skip"). Only a
         // wrong password gets the "already registered" note.
