@@ -5766,3 +5766,13 @@ Sayed: yes, remove the grey hints too. Every Settings row label (and Team's "Add
 the name; the hint moved to a hover tooltip on the label and stays for screen readers (sr-only).
 Status lines inside controls (seat count, plan notes, errors) stay. Checked on Company profile.
 `npm run lint`, `npx tsc --noEmit`, `npm run build` clean.
+
+### 28 Sep — Settings: the white bar over the curved top edge, fixed
+
+Sayed saw a hard white band at the top of Settings. The cause was the pinned header's painted white
+strip (box-shadow 0 -17px), which at rest covered the curved panel's soft inset shade. Now the 17px
+top padding of the scroll area moves inside `.st-page` on this page only
+(`:has(.st-page)`, with `!important` at higher specificity; the older 1.25rem !important rule won at
+first, the cascade trap again), so the title pins flush at the top with nothing peeking above it. It
+is transparent at rest (the shade shows through), and solid white with a soft shadow once scrolled.
+Checked at rest and scrolled: padding 0, header at 0, menu at 17px. Lint and build clean.
