@@ -5694,3 +5694,25 @@ top (desktop only; on phones it is already a row of pills). Collapsed, it shows 
 narrow column, with the section name on hover, and the panel gets the width. The choice is
 remembered per browser (localStorage, read after mount so the server render never mismatches).
 Checked: fold, reload keeps it folded, unfold. `npm run lint`, `npx tsc --noEmit`, `npm run build` clean.
+
+### 28 Sep — Settings > Preferences (from Sortly's Preferences page)
+
+Sayed sent Sortly's Preferences page and said to build it if it's a good idea. Claude's
+call on each option:
+
+- **Time zone "Set automatically": not built.** SydIN already shows every date in the
+  device's own time zone. Preferences now just states which zone that is
+  (e.g. Asia/Beirut).
+- **Sort by, ascending or descending: built** as "Inventory opens sorted by". Inventory
+  gained Oldest first and Name Z–A (six orders in all), from a shared list in
+  `app/lib/preferences.ts`.
+  - Stored per browser. A link with `?sort=` still wins.
+  - Resetting the filters returns to your chosen sort.
+- **Email alerts and Threads: not built.** SydIN sends no email and has no threads, so a
+  switch would do nothing. They are logged for when email alerts exist.
+
+**Where it sits:** Preferences is in the Account group and is visible to every role.
+
+**Checked:** choosing Name A–Z in Preferences makes Inventory open "Name A–Z" with the
+items in that order. The test choice was cleared afterwards. `npm run lint`,
+`npx tsc --noEmit` and `npm run build` are clean.

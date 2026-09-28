@@ -44,6 +44,13 @@ import {
 import { useBusiness } from "@/components/dashboard/BusinessContext";
 import TeamPanel from "@/components/settings/TeamPanel";
 import {
+  INVENTORY_SORT_OPTIONS,
+  getDefaultInventorySort,
+  isInventorySort,
+  setDefaultInventorySort,
+  type InventorySort,
+} from "@/app/lib/preferences";
+import {
   FALLBACK_SUBSCRIPTION,
   FREE_LOW_STOCK_THRESHOLD,
   formatPlanName,
@@ -61,6 +68,7 @@ type SettingsSectionId =
   | "currency"
   | "inventory"
   | "profile"
+  | "preferences"
   | "team"
   | "billing";
 
@@ -136,6 +144,13 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     label: "Account & security",
     description: "Who is signed in, and signing out.",
     icon: "settings",
+  },
+  {
+    id: "preferences",
+    group: "Account",
+    label: "Preferences",
+    description: "How SydIN opens for you, on this device.",
+    icon: "sliders",
   },
   {
     id: "team",
@@ -349,10 +364,16 @@ export default function SettingsPage() {
   // Remembered per browser; a desktop-only control -- on phones the menu is
   // already a single row of pills.
   const [navCollapsed, setNavCollapsed] = useState(false);
+  const [inventorySort, setInventorySort] = useState<InventorySort>("newest");
+  const [timeZoneLabel, setTimeZoneLabel] = useState("");
   useEffect(() => {
+    // One-time read of this browser's stored preferences and time zone after
+    // mount; the server render has neither.
     try {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- see above
+      setInventorySort(getDefaultInventorySort());
+      setTimeZoneLabel(Intl.DateTimeFormat().resolvedOptions().timeZone.replace(/_/g, " "));
       if (localStorage.getItem("sydin:settings-nav") === "collapsed") {
-        // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time read of a stored preference after mount (server render has no localStorage)
         setNavCollapsed(true);
       }
     } catch {
@@ -378,7 +399,7 @@ export default function SettingsPage() {
       ? true
       : myRole === "admin"
         ? section.id !== "billing"
-        : section.id === "profile"
+        : section.id === "profile" || section.id === "preferences"
   );
   const requestedSection = sectionFromQuery
     ? normalizeSectionId(sectionFromQuery)
@@ -1004,6 +1025,36 @@ export default function SettingsPage() {
     window.location.assign("/dashboard");
   };
 
+  /* ---- Preferences (per person, per browser) ---------------------------- */
+  const renderPreferencesPanel = () => (
+    <>
+      <Row
+        label="Inventory opens sorted by"
+        hint="You can still change the order on the Inventory page any time."
+      >
+        <div className="st-select">
+          <Select
+            ariaLabel="Inventory opens sorted by"
+            value={inventorySort}
+            options={INVENTORY_SORT_OPTIONS}
+            onChange={(value) => {
+              if (!isInventorySort(value)) return;
+              setInventorySort(value);
+              setDefaultInventorySort(value);
+              showToast({ tone: "success", message: "Saved. Inventory will open this way." });
+            }}
+          />
+        </div>
+      </Row>
+      <Row
+        label="Dates and times"
+        hint="Set automatically from this device, so a team in different places each sees their own time."
+      >
+        <span className="st-strong">{timeZoneLabel || "Your device time zone"}</span>
+      </Row>
+    </>
+  );
+
   const renderProfilePanel = () => (
     <>
       <Row label="Signed in as">
@@ -1157,6 +1208,8 @@ export default function SettingsPage() {
         return renderProfilePanel();
       case "billing":
         return renderBillingPanel();
+      case "preferences":
+        return renderPreferencesPanel();
       case "team":
         return (
           <TeamPanel

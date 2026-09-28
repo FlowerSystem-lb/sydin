@@ -89,6 +89,12 @@ import {
 } from "@/app/lib/inventoryItemModel";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import {
+  INVENTORY_SORT_OPTIONS,
+  getDefaultInventorySort,
+  isInventorySort,
+  type InventorySort,
+} from "@/app/lib/preferences";
 import { useCanDelete } from "@/components/dashboard/BusinessContext";
 import {
   getSuppliersForUser,
@@ -172,7 +178,7 @@ type QuickFilter =
   | "no-price"
   | "no-activity"
   | "unassigned";
-type SortOption = "newest" | "name-az" | "quantity-asc" | "quantity-desc";
+type SortOption = InventorySort;
 /** Items rendered per "Show more" step. */
 const RENDER_WINDOW = 60;
 
@@ -472,6 +478,8 @@ export default function InventoryPage() {
   const [stockFilter, setStockFilter] = useState<StockFilter>("all");
   const [quickFilter, setQuickFilter] = useState<QuickFilter>("all");
   const [sortBy, setSortBy] = useState<SortOption>("newest");
+  // The sort chosen in Settings > Preferences; read after mount (per browser).
+  const [defaultSort, setDefaultSort] = useState<SortOption>("newest");
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
   // Table view has a phone layout and a desktop layout; only the one that
   // is visible gets rendered (see useMediaQuery for the numbers).
@@ -867,14 +875,9 @@ export default function InventoryPage() {
       }
 
       const requestedSort = params.get("sort");
-      if (
-        requestedSort === "newest" ||
-        requestedSort === "name-az" ||
-        requestedSort === "quantity-asc" ||
-        requestedSort === "quantity-desc"
-      ) {
-        setSortBy(requestedSort);
-      }
+      const preferredSort = getDefaultInventorySort();
+      setDefaultSort(preferredSort);
+      setSortBy(isInventorySort(requestedSort) ? requestedSort : preferredSort);
 
       const requestedView = params.get("view");
       if (
@@ -2162,7 +2165,7 @@ export default function InventoryPage() {
     setCategoryFilter("all");
     setStockFilter("all");
     setQuickFilter("all");
-    setSortBy("newest");
+    setSortBy(defaultSort);
   };
 
   const clearInventoryFilters = () => {
@@ -2333,6 +2336,14 @@ export default function InventoryPage() {
       return firstItem.name.localeCompare(secondItem.name);
     }
 
+    if (sortBy === "name-za") {
+      return secondItem.name.localeCompare(firstItem.name);
+    }
+
+    if (sortBy === "oldest") {
+      return firstItem.id - secondItem.id;
+    }
+
     if (sortBy === "quantity-asc") {
       return firstItem.quantity - secondItem.quantity;
     }
@@ -2381,11 +2392,11 @@ export default function InventoryPage() {
     if (depotFilter !== "all") params.set("depot", depotFilter);
     if (categoryFilter !== "all") params.set("category", categoryFilter);
     if (stockFilter !== "all") params.set("stock", stockFilter);
-    if (sortBy !== "newest") params.set("sort", sortBy);
+    if (sortBy !== defaultSort) params.set("sort", sortBy);
     if (viewMode !== "grid") params.set("view", viewMode);
     const query = params.toString();
     return `/dashboard/inventory${query ? `?${query}` : ""}`;
-  }, [categoryFilter, depotFilter, search, sortBy, stockFilter, viewMode]);
+  }, [categoryFilter, defaultSort, depotFilter, search, sortBy, stockFilter, viewMode]);
 
   useEffect(() => {
     if (!inventoryContextReady) return;
@@ -2944,18 +2955,7 @@ export default function InventoryPage() {
                     value={sortBy}
                     onChange={(value) => setSortBy(value as SortOption)}
                     buttonClassName={SORT_SELECT_BUTTON_CLASS}
-                    options={[
-                      { value: "newest", label: "Newest" },
-                      { value: "name-az", label: "Name A-Z" },
-                      {
-                        value: "quantity-asc",
-                        label: "Quantity: low to high",
-                      },
-                      {
-                        value: "quantity-desc",
-                        label: "Quantity: high to low",
-                      },
-                    ]}
+                    options={INVENTORY_SORT_OPTIONS}
                   />
                   <Select
                     ariaLabel="View"
