@@ -5849,3 +5849,39 @@ Open items:
   https://www.sydin.site/icons/icon-192.png (Gmail does not show SVG).
 - **Domain auto-renew:** `sydin.site` has auto-renew OFF in Vercel (it expires about 25 Sep 2027).
   Sayed to turn it on.
+
+### 28 Sep — Verification system rebuilt: 6-digit code boxes, Forgot password, 9 branded emails
+
+Sayed asked for the full system, done professionally: short codes, a clear logo, motion, security
+notes and policy links, and an "already registered" message.
+
+**App:**
+
+- `components/auth/CodeInput.tsx`: 6 boxes that auto-advance, fill on paste or one-time-code
+  autofill, support Backspace and arrow keys, shake red on a wrong code, and fire onComplete.
+- `EmailVerification` verifies as soon as all 6 digits are in.
+- New `/forgot-password`: email -> resetPasswordForEmail -> 6-digit code + new password twice
+  -> verifyOtp(recovery) + updateUser. It never says whether an email has an account.
+- Login: "Forgot password?" goes there (with the typed email) instead of /contact, and a wrong
+  password gets a clear message.
+- Sign-up: "already registered" now links to both Sign in and reset your password.
+- Pushed only after Sayed set Supabase Email OTP Length to 6 (expiry 600 s).
+
+**Emails:** `emails/build.mjs` generates 9 table-based templates plus `emails/preview.html` and
+`emails/README.md`: sign-up, reset password, magic link, change email, reauthentication, and 4
+security alerts (password changed, email changed, sign-in method linked, sign-in method unlinked).
+
+- **Design:** the logo (`public/email/sydin-logo.png`, 480px), a gradient bar, the code in a box,
+  a "never share" warning, "Was this you / Wasn't you" with a reset button on alerts, and a
+  footer with Help / Contact / Terms / Privacy.
+- **Motion:** in a `<style>` block (Apple Mail and iOS play it; Gmail shows the still design),
+  with reduced-motion respected.
+- **Why a new logo file:** the old template pointed at sydin.vercel.app (gone), which is why the
+  logo was broken, and `sydin-mark.png` has a fake checkerboard baked in.
+
+**Installing them:** Claude put each template on Sayed's clipboard in turn (Set-Clipboard), and he
+pasted it into Supabase with the subject from the README. All 9 are in, and the 4 alerts are
+switched on.
+
+**Final live test pending:** a new sign-up (e.g. `+test2`) to see the new email and the 6 boxes
+end to end.
