@@ -15,8 +15,6 @@ import {
 } from "@/components/ui";
 import {
   DashboardCard,
-  DashboardPageHeader,
-  DashboardPageShell,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import {
