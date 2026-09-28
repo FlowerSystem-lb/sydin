@@ -5662,3 +5662,27 @@ asked for the copied messages to carry steps, links, the role and what the role 
     Supabase itself keeps only a hash.
 
 `npm run lint`, `npx tsc --noEmit` and `npm run build` are clean.
+
+### 28 Sep — "Done by": every change shows which team member made it
+
+Sayed asked for this: "if he edits activity, restocks, a small note of who changed or
+added, on the whole site".
+
+- **Database** (`sql/phase-29-done-by.sql`, additive only):
+  - `actor_id` on purchase-order receipts, invoice and PO payments, and pick lists.
+    Phase 28 already put it on history, movements, invoices and POs.
+  - `business_people()` returns names for the people of the caller's own business
+    only.
+- **Shared UI:** `components/dashboard/DoneBy.tsx` provides `useActorName()` and
+  `<DoneBy>`. Names are loaded once per business. They are shown only when the business
+  has 2+ people, so solo owners see no "by You" noise.
+- **Where it shows:**
+  - Activity feed
+  - Stock movements
+  - item page history and movements
+  - item side panel activity
+  - invoice timeline ("Draft · 28 Sep · by Ahmed") and "recorded by" on payments
+  - purchase order "Created" step, each delivery received, and "recorded by" on
+    payments
+- **Order of release:** the app selects `actor_id` on payments and receipts, so the
+  commit is pushed only after Sayed runs phase-29.

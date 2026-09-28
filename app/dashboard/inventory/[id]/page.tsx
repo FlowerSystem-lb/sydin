@@ -67,6 +67,7 @@ import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
 import { useCanDelete } from "@/components/dashboard/BusinessContext";
+import DoneBy from "@/components/dashboard/DoneBy";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -122,6 +123,7 @@ interface InventoryHistory {
   action: string;
   old_quantity: number | null;
   new_quantity: number | null;
+  actor_id?: string | null;
   created_at: string;
 }
 
@@ -283,7 +285,7 @@ export default function ItemDetailsPage() {
   const fetchHistory = async (userId: string, historyItemId: number) => {
     const { data, error: historyError } = await supabase
       .from("inventory_history")
-      .select("id, action, old_quantity, new_quantity, created_at")
+      .select("id, action, old_quantity, new_quantity, created_at, actor_id")
       .eq("item_id", historyItemId)
       .eq("user_id", userId)
       .order("created_at", {
@@ -1376,6 +1378,7 @@ export default function ItemDetailsPage() {
 
                               <p className="mt-1 text-sm font-medium text-theme-muted">
                                 {formatCreatedDate(movement.created_at)}
+                                <DoneBy actorId={movement.actor_id} className="done-by done-by-inline" />
                               </p>
 
                               {movement.notes && (
@@ -1479,6 +1482,7 @@ export default function ItemDetailsPage() {
 
                               <p className="mt-1 text-sm font-medium text-theme-muted">
                                 {formatCreatedDate(entry.created_at)}
+                                <DoneBy actorId={entry.actor_id} className="done-by done-by-inline" />
                               </p>
                             </div>
                           </div>

@@ -26771,3 +26771,22 @@ circle.ov-dot-main {
   line-height: 1.25rem;
   color: var(--text-muted);
 }
+
+/* "by Ahmed" under a change (team access, 28 Sep 2026) */
+.done-by {
+  display: block;
+  margin-top: 0.15rem;
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: var(--text-muted);
+}
+
+.done-by-inline {
+  display: inline;
+  margin-top: 0;
+  font-size: inherit;
+}
+
+.done-by-inline::before {
+  content: " \00b7 ";
+}

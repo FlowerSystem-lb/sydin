@@ -20,6 +20,8 @@ export interface ActivityEvent {
   quantityAfter?: number;
   quantityDelta?: number;
   notes?: string | null;
+  /** Login that made the change (team access); null before phase 28. */
+  actorId?: string | null;
   createdAt: string;
   details?: unknown;
 }
@@ -89,7 +91,7 @@ export async function getActivityFeed(userId: string, limit = 150) {
   const { data: movements, error: movementsError } = await supabase
     .from("stock_movements")
     .select(
-      "id, item_id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at"
+      "id, item_id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at, actor_id"
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -114,6 +116,7 @@ export async function getActivityFeed(userId: string, limit = 150) {
         quantityAfter: m.quantity_after,
         quantityDelta: m.quantity_delta,
         notes: m.notes,
+        actorId: m.actor_id,
         createdAt: m.created_at,
       });
     }
@@ -122,7 +125,7 @@ export async function getActivityFeed(userId: string, limit = 150) {
   /* Inventory history */
   const { data: history, error: historyError } = await supabase
     .from("inventory_history")
-    .select("id, item_id, action, old_quantity, new_quantity, created_at")
+    .select("id, item_id, action, old_quantity, new_quantity, created_at, actor_id")
     .eq("user_id", userId)
     .in("action", ["created", "edited"])
     .order("created_at", { ascending: false })
@@ -151,6 +154,7 @@ export async function getActivityFeed(userId: string, limit = 150) {
         itemName: h.item_id ? itemMap.get(h.item_id) : undefined,
         quantityBefore: h.old_quantity,
         quantityAfter: h.new_quantity,
+        actorId: h.actor_id,
         createdAt: h.created_at,
       });
     }

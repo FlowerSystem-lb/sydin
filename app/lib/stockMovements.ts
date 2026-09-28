@@ -16,6 +16,8 @@ export interface StockMovement {
   quantity_before: number;
   quantity_after: number;
   notes: string | null;
+  /** Login that made the change (team access); null before phase 28. */
+  actor_id?: string | null;
   created_at: string;
 }
 
@@ -56,6 +58,7 @@ function normalizeMovement(data: Partial<StockMovement>): StockMovement {
     quantity_before: Number(data.quantity_before || 0),
     quantity_after: Number(data.quantity_after || 0),
     notes: data.notes || null,
+    actor_id: data.actor_id ?? null,
     created_at: data.created_at || "",
   };
 }
@@ -67,7 +70,7 @@ export async function getRecentStockMovements(
   const { data, error } = await supabase
     .from("stock_movements")
     .select(
-      "id, item_id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at"
+      "id, item_id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at, actor_id"
     )
     .eq("user_id", userId)
     .order("created_at", {
@@ -89,7 +92,7 @@ export async function getStockMovementsForItem(
   const { data, error } = await supabase
     .from("stock_movements")
     .select(
-      "id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at"
+      "id, movement_type, quantity_delta, quantity_before, quantity_after, notes, created_at, actor_id"
     )
     .eq("user_id", userId)
     .eq("item_id", itemId)

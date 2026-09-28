@@ -77,6 +77,7 @@ import {
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
 import { useCanDelete } from "@/components/dashboard/BusinessContext";
+import { useActorName } from "@/components/dashboard/DoneBy";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
   FALLBACK_SUBSCRIPTION,
@@ -150,6 +151,12 @@ function isInCurrentMonth(order: PurchaseOrder) {
 
 export default function PurchaseOrdersPage() {
   const canDeleteRecords = useCanDelete();
+  // "by Ahmed" on records made by a team member (team access).
+  const nameOf = useActorName();
+  const recordedBy = (actorId?: string | null) => {
+    const name = nameOf(actorId);
+    return name ? `by ${name}` : "";
+  };
   const router = useRouter();
   const searchParams = useSearchParams();
   const [userId, setUserId] = useState("");
@@ -1741,7 +1748,9 @@ export default function PurchaseOrdersPage() {
                     ? [
                         {
                           label: "Created",
-                          detail: formatDate(selectedOrder.created_at),
+                          detail: [formatDate(selectedOrder.created_at), recordedBy(selectedOrder.actor_id)]
+                            .filter(Boolean)
+                            .join(" · "),
                           state: "done",
                         },
                         {
@@ -1753,7 +1762,9 @@ export default function PurchaseOrdersPage() {
                     : [
                         {
                           label: "Created",
-                          detail: formatDate(selectedOrder.created_at),
+                          detail: [formatDate(selectedOrder.created_at), recordedBy(selectedOrder.actor_id)]
+                            .filter(Boolean)
+                            .join(" · "),
                           state:
                             selectedOrder.status === "draft"
                               ? "current"
@@ -1877,7 +1888,7 @@ export default function PurchaseOrdersPage() {
                           {unitsLabel(units)} · {receipt.receipt_number}
                         </span>
                         <span className="block truncate text-xs font-semibold text-theme-muted">
-                          {[formatDate(receipt.received_at), receipt.notes]
+                          {[formatDate(receipt.received_at), recordedBy(receipt.actor_id), receipt.notes]
                             .filter(Boolean)
                             .join(" · ")}
                         </span>
@@ -1922,6 +1933,7 @@ export default function PurchaseOrdersPage() {
                               ]
                             : "",
                           payment.paid_by ? `by ${payment.paid_by}` : "",
+                          recordedBy(payment.actor_id) ? `recorded ${recordedBy(payment.actor_id)}` : "",
                           payment.note,
                         ]
                           .filter(Boolean)

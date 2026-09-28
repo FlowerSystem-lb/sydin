@@ -44,6 +44,8 @@ export interface PurchaseOrderReceipt {
   receipt_number: string;
   received_at: string;
   notes: string | null;
+  /** Login that made it (team access); null for older rows. */
+  actor_id?: string | null;
   lines: Array<{
     id: number;
     purchase_order_line_id: number;
@@ -61,6 +63,8 @@ export interface PurchaseOrderPayment {
   note: string | null;
   paid_at: string;
   created_at: string;
+  /** Login that made it (team access); null for older rows. */
+  actor_id?: string | null;
 }
 
 export interface PurchaseOrder {
@@ -88,6 +92,8 @@ export interface PurchaseOrder {
   attachment_url: string | null;
   attachment_label: string | null;
   created_at: string;
+  /** Login that made it (team access); null for older rows. */
+  actor_id?: string | null;
   received_at: string | null;
   cancelled_at: string | null;
   /** True when the order was marked received with quantities still outstanding. */
@@ -176,7 +182,7 @@ const PURCHASE_ORDER_SELECT_BASE = `id, po_number, title, supplier_id, supplier_
 supplier_contact_snapshot, depot_id, depot_name_snapshot, purchase_date,
 expected_delivery_date, status, payment_method, paid_by, payment_status, amount_paid,
 currency_code, exchange_rate, notes, internal_reference, attachment_url, attachment_label, created_at,
-received_at, cancelled_at`;
+received_at, cancelled_at, actor_id`;
 
 const PURCHASE_ORDER_LINE_SELECT_BASE = `id, purchase_order_id, line_type, inventory_item_id,
 affects_stock, expense_category, name_snapshot, sku_snapshot, item_code_snapshot,
@@ -291,6 +297,7 @@ function normalizeOrder(data: Record<string, unknown>): PurchaseOrder {
     attachment_url: (data.attachment_url as string | null) ?? null,
     attachment_label: (data.attachment_label as string | null) ?? null,
     created_at: String(data.created_at || ""),
+    actor_id: (data.actor_id as string | null) ?? null,
     received_at: (data.received_at as string | null) ?? null,
     cancelled_at: (data.cancelled_at as string | null) ?? null,
     closed_short: Boolean(data.closed_short),
@@ -313,6 +320,7 @@ function normalizePayment(data: Record<string, unknown>): PurchaseOrderPayment {
     note: (data.note as string | null) ?? null,
     paid_at: String(data.paid_at || ""),
     created_at: String(data.created_at || ""),
+    actor_id: (data.actor_id as string | null) ?? null,
   };
 }
 
@@ -482,6 +490,7 @@ function normalizeReceipt(data: Record<string, unknown>): PurchaseOrderReceipt {
     receipt_number: String(data.receipt_number || ""),
     received_at: String(data.received_at || ""),
     notes: (data.notes as string | null) ?? null,
+    actor_id: (data.actor_id as string | null) ?? null,
     lines: rawLines.map((line) => ({
       id: Number(line.id),
       purchase_order_line_id: Number(line.purchase_order_line_id),
@@ -499,7 +508,7 @@ export async function getPurchaseOrderReceipts(orderId: number) {
   const { data, error } = await supabase
     .from("purchase_order_receipts")
     .select(
-      "id, purchase_order_id, receipt_number, received_at, notes, purchase_order_receipt_lines (id, purchase_order_line_id, inventory_item_id, quantity)"
+      "id, purchase_order_id, receipt_number, received_at, notes, actor_id, purchase_order_receipt_lines (id, purchase_order_line_id, inventory_item_id, quantity)"
     )
     .eq("purchase_order_id", orderId)
     .order("received_at", { ascending: false });
@@ -683,7 +692,7 @@ export function isPaymentsSchemaMissing(error: unknown) {
 export async function getPurchaseOrderPayments(orderId: number) {
   const { data, error } = await supabase
     .from("purchase_order_payments")
-    .select("id, purchase_order_id, amount, method, paid_by, note, paid_at, created_at")
+    .select("id, purchase_order_id, amount, method, paid_by, note, paid_at, created_at, actor_id")
     .eq("purchase_order_id", orderId)
     .order("paid_at", { ascending: false })
     .order("id", { ascending: false });

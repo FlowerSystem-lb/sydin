@@ -28,6 +28,7 @@ function formatShortDate(value: string | null | undefined) {
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
 import { useCanDelete } from "@/components/dashboard/BusinessContext";
+import { useActorName } from "@/components/dashboard/DoneBy";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
@@ -77,6 +78,12 @@ import {
  */
 export default function SaleDetailPage() {
   const canDeleteRecords = useCanDelete();
+  // "by Ahmed" on records made by a team member (team access).
+  const nameOf = useActorName();
+  const recordedBy = (actorId?: string | null) => {
+    const name = nameOf(actorId);
+    return name ? `by ${name}` : "";
+  };
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const orderId = Number(params?.id);
@@ -525,13 +532,13 @@ export default function SaleDetailPage() {
               steps={
                 order.status === "cancelled"
                   ? [
-                      { label: "Draft", detail: formatShortDate(order.created_at), state: "done" },
+                      { label: "Draft", detail: [formatShortDate(order.created_at), recordedBy(order.actor_id)].filter(Boolean).join(" · "), state: "done" },
                       { label: "Cancelled", detail: formatShortDate(order.cancelled_at), state: "stopped" },
                     ]
                   : [
                       {
                         label: "Draft",
-                        detail: formatShortDate(order.created_at),
+                        detail: [formatShortDate(order.created_at), recordedBy(order.actor_id)].filter(Boolean).join(" · "),
                         state: order.status === "draft" ? "current" : "done",
                       },
                       {
@@ -684,6 +691,7 @@ export default function SaleDetailPage() {
                         {payment.method
                           ? ` · ${SALES_ORDER_PAYMENT_METHOD_LABELS[payment.method]}`
                           : ""}
+                        {recordedBy(payment.actor_id) ? ` · recorded ${recordedBy(payment.actor_id)}` : ""}
                       </span>
                       <span className="flex shrink-0 items-center gap-3">
                         <span className="font-semibold text-theme-primary tabular-nums">

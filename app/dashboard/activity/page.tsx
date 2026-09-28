@@ -29,6 +29,7 @@ import {
 } from "@/app/lib/activityFeed";
 import { formatStockMovementNotes } from "@/app/lib/stockMovements";
 import { getBusinessUser } from "@/app/lib/business";
+import DoneBy from "@/components/dashboard/DoneBy";
 
 type EventFilter = "all" | ActivityEventType;
 type DateSort = "newest" | "oldest";
@@ -280,6 +281,7 @@ export default function ActivityPage() {
 
                       <p className="mt-1 text-sm font-medium text-theme-muted">
                         {formatEventDate(event.createdAt)}
+                        <DoneBy actorId={event.actorId} className="done-by done-by-inline" />
                       </p>
 
                       {event.itemName && (

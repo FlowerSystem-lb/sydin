@@ -32,6 +32,7 @@ import {
 } from "@/app/lib/stockMovements";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import DoneBy from "@/components/dashboard/DoneBy";
 
 interface InventoryItem extends MovementInventoryItem {
   image: string;
@@ -379,6 +380,7 @@ export default function StockMovementsPage() {
                       <p className="mt-1 text-xs tabular-nums text-theme-secondary sm:mt-0">
                         {formatMovementDate(movement.created_at)}
                       </p>
+                      <DoneBy actorId={movement.actor_id} />
                     </div>
                   </article>
                 );

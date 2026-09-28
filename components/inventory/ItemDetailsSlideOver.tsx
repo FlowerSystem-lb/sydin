@@ -69,6 +69,7 @@ import {
 } from "@/app/lib/subscription";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
+import DoneBy from "@/components/dashboard/DoneBy";
 import type { Supplier } from "@/app/lib/suppliers";
 import { getSuppliersForUser } from "@/app/lib/suppliers";
 
@@ -99,6 +100,7 @@ interface InventoryHistoryEntry {
   action: string;
   old_quantity: number | null;
   new_quantity: number | null;
+  actor_id?: string | null;
   created_at: string;
 }
 
@@ -188,6 +190,7 @@ interface SlideOverActivityEvent {
   quantityBefore?: number | null;
   quantityAfter?: number | null;
   quantityDelta?: number;
+  actorId?: string | null;
 }
 
 const HISTORY_ACTION_TO_EVENT_TYPE: Record<string, ActivityEventType> = {
@@ -299,7 +302,7 @@ export default function ItemDetailsSlideOver({
             .limit(1),
           supabase
             .from("inventory_history")
-            .select("id, action, old_quantity, new_quantity, created_at")
+            .select("id, action, old_quantity, new_quantity, created_at, actor_id")
             .eq("item_id", itemId)
             .eq("user_id", user.id)
             .order("created_at", { ascending: false }),
@@ -534,6 +537,7 @@ export default function ItemDetailsSlideOver({
       quantityBefore: movement.quantity_before,
       quantityAfter: movement.quantity_after,
       quantityDelta: movement.quantity_delta,
+      actorId: movement.actor_id,
     }));
 
     const historyEvents: SlideOverActivityEvent[] = history.map((entry) => ({
@@ -542,6 +546,7 @@ export default function ItemDetailsSlideOver({
       createdAt: entry.created_at,
       quantityBefore: entry.old_quantity,
       quantityAfter: entry.new_quantity,
+      actorId: entry.actor_id,
     }));
 
     return [...movementEvents, ...historyEvents].sort(
@@ -1079,7 +1084,10 @@ export default function ItemDetailsSlideOver({
                             </div>
                             <div>
                               <strong>{getActivityEventLabel(event.type)}</strong>
-                              <span>{formatDateTime(event.createdAt)}</span>
+                              <span>
+                                {formatDateTime(event.createdAt)}
+                                <DoneBy actorId={event.actorId} className="done-by done-by-inline" />
+                              </span>
                               {event.notes && (
                                 <p>{formatStockMovementNotes(event.notes)}</p>
                               )}

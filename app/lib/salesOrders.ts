@@ -60,6 +60,8 @@ export interface SalesOrder {
   updated_at: string;
   issued_at: string | null;
   cancelled_at: string | null;
+  /** Login that made it (team access); null for older rows. */
+  actor_id?: string | null;
   lines?: SalesOrderLine[];
 }
 
@@ -110,7 +112,7 @@ export const SALES_ORDER_PAYMENT_STATUS_LABELS: Record<
 };
 
 const ORDER_SELECT =
-  "id, user_id, invoice_number, title, customer_id, customer_name_snapshot, customer_contact_snapshot, depot_id, depot_name_snapshot, issue_date, due_date, status, payment_status, amount_paid, currency_code, exchange_rate, notes, internal_reference, created_at, updated_at, issued_at, cancelled_at";
+  "id, user_id, invoice_number, title, customer_id, customer_name_snapshot, customer_contact_snapshot, depot_id, depot_name_snapshot, issue_date, due_date, status, payment_status, amount_paid, currency_code, exchange_rate, notes, internal_reference, created_at, updated_at, issued_at, cancelled_at, actor_id";
 
 const LINE_SELECT =
   "id, sales_order_id, line_type, inventory_item_id, affects_stock, name_snapshot, sku_snapshot, item_code_snapshot, unit_label_snapshot, quantity, unit_price, notes";
@@ -384,6 +386,8 @@ export interface SalesOrderPayment {
   note: string | null;
   paid_at: string;
   created_at: string;
+  /** Login that made it (team access); null for older rows. */
+  actor_id?: string | null;
 }
 
 export interface SalesOrderPaymentInput {
@@ -397,7 +401,7 @@ export interface SalesOrderPaymentInput {
 export async function getSalesOrderPayments(orderId: number) {
   const { data, error } = await supabase
     .from("sales_order_payments")
-    .select("id, sales_order_id, amount, method, received_by, note, paid_at, created_at")
+    .select("id, sales_order_id, amount, method, received_by, note, paid_at, created_at, actor_id")
     .eq("sales_order_id", orderId)
     .order("paid_at", { ascending: false })
     .order("id", { ascending: false });
