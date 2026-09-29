@@ -6157,3 +6157,26 @@ and no data loss.
 - **Checks:**
   - Lint, type-check and build pass.
   - The billing layout and pay dialog were checked on a local-only mock page with a plan in grace.
+
+### 30 Sep — Admin part 1: authenticator-code lock on /admin
+
+Sayed asked for the admin area to be locked with a password and strict privacy.
+- **Server** (`app/lib/adminAuth.ts`):
+  - Every /api/admin data route now needs a verified session, an account in SYDIN_ADMIN_USER_IDS,
+    and a session that passed the authenticator-app code (the `aal2` claim, read after `getUser`
+    verifies the token). A stolen password alone opens nothing.
+  - `/api/admin/me` answers only whether the account is an admin (true or false), without needing
+    the code.
+- **Client** (`components/admin/AdminGate.tsx` via `app/admin/layout.tsx`):
+  - A signed-out visitor is asked to sign in. A non-admin gets the same 404 as any unknown page.
+  - An admin sees a one-time QR setup (Google or Microsoft Authenticator); after that, a 6-digit
+    code each session.
+  - The setup runs once per visit: a double run in development created two setups and removed each
+    other's.
+  - The page is not indexed by search engines.
+- `/admin` forwards to /admin/plan-requests. The account menu shows "SydIN admin" only for admin
+  logins.
+- The test Pro payment on Flower Plus was deleted and its `paid_until` cleared, at Sayed's request.
+- **Checks:** lint, type-check and build pass. Locally: `/api/admin/me` returns false for no token
+  or a bad token, the billing API refuses a bad token, and the QR setup screen renders. The code
+  step itself needs Sayed's phone.

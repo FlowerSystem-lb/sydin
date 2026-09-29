@@ -12,6 +12,9 @@ export type AdminAuthorization =
       authorized: false;
       status: 401 | 403 | 500;
       message: string;
+      /** "mfa_required": an admin whose session has not passed the
+       *  authenticator-app code yet (the client shows the code screen). */
+      code?: "mfa_required";
     };
 
 function getAdminUserIds() {
@@ -32,8 +35,28 @@ function getBearerToken(request: Request) {
   return token;
 }
 
+/* The assurance level Supabase put in the session token: "aal2" once the
+   authenticator-app code has been entered in this session. Read only AFTER
+   getUser() has verified the token with Supabase, so the claim is trusted. */
+function sessionAssuranceLevel(token: string) {
+  try {
+    const payload = token.split(".")[1];
+    const json = Buffer.from(payload.replace(/-/g, "+").replace(/_/g, "/"), "base64").toString("utf8");
+    return (JSON.parse(json) as { aal?: string }).aal ?? "aal1";
+  } catch {
+    return "aal1";
+  }
+}
+
+/**
+ * Admin requests need three things (30 Sep 2026, Sayed: "strict privacy"):
+ * a verified SydIN session, an account listed in SYDIN_ADMIN_USER_IDS, and --
+ * unless `requireMfa: false` -- a session that passed the authenticator-app
+ * code (aal2). A stolen password alone opens nothing here.
+ */
 export async function authorizeAdminRequest(
-  request: Request
+  request: Request,
+  { requireMfa = true }: { requireMfa?: boolean } = {}
 ): Promise<AdminAuthorization> {
   const token = getBearerToken(request);
 
@@ -74,6 +97,15 @@ export async function authorizeAdminRequest(
         authorized: false,
         status: 403,
         message: "This account does not have SydIN admin access.",
+      };
+    }
+
+    if (requireMfa && sessionAssuranceLevel(token) !== "aal2") {
+      return {
+        authorized: false,
+        status: 403,
+        message: "Enter the code from your authenticator app to continue.",
+        code: "mfa_required",
       };
     }
 

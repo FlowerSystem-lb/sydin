@@ -557,6 +557,23 @@ export default function DashboardShell({
   const [tabletDrawerOpen, setTabletDrawerOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
   const [accountMenuOpen, setAccountMenuOpen] = useState(false);
+  /* SydIN admin link: only when the server says this login is an admin
+     (app/api/admin/me). Everyone else never sees it. */
+  const [isSydinAdmin, setIsSydinAdmin] = useState(false);
+  useEffect(() => {
+    let live = true;
+    void supabase.auth.getSession().then(async ({ data }) => {
+      const token = data.session?.access_token;
+      if (!token) return;
+      const answer = await fetch("/api/admin/me", { headers: { Authorization: `Bearer ${token}` } })
+        .then((response) => response.json())
+        .catch(() => ({ admin: false }));
+      if (live) setIsSydinAdmin(Boolean((answer as { admin?: boolean }).admin));
+    });
+    return () => {
+      live = false;
+    };
+  }, []);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   // Notification Center, light v1 (backlog §6): computed live from existing
   // data (Stock Alerts' own low-stock logic + the Activity feed), no new
@@ -1662,6 +1679,16 @@ export default function DashboardShell({
                       <UiIcon name="settings" className="h-4 w-4" />
                       Settings
                     </Link>
+                    {isSydinAdmin && (
+                      <Link
+                        href="/admin/plan-requests"
+                        role="menuitem"
+                        onClick={() => setAccountMenuOpen(false)}
+                      >
+                        <UiIcon name="shield" className="h-4 w-4" />
+                        SydIN admin
+                      </Link>
+                    )}
                   </div>
                   <div className="dashboard-account-menu-signout">
                     <button type="button" role="menuitem" onClick={handleSignOut}>
