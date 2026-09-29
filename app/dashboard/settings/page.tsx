@@ -274,6 +274,7 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  const [exportingAll, setExportingAll] = useState(false);
   // Show the picked logo straight away, before it is saved.
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   useEffect(() => {
@@ -1350,6 +1351,37 @@ export default function SettingsPage() {
           })}
         </ul>
       </Row>
+      {(myRole === "owner" || myRole === "admin") && (
+        <Row
+          label="Your data"
+          hint="One Excel file with every item, movement, invoice, customer, supplier and order."
+        >
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={exportingAll}
+              onClick={async () => {
+                const businessId = business?.businessId;
+                if (!businessId) return;
+                setExportingAll(true);
+                try {
+                  const { exportAllBusinessData } = await import("@/app/lib/fullDataExport");
+                  await exportAllBusinessData(
+                    businessId,
+                    business?.businessName || settings.business_name || "SydIN"
+                  );
+                  showToast({ tone: "success", message: "Downloaded. Everything is in one Excel file." });
+                } catch {
+                  showToast({ tone: "danger", message: "Couldn't build the file. Please try again." });
+                } finally {
+                  setExportingAll(false);
+                }
+              }}
+            >
+              {exportingAll ? "Preparing file..." : "Download all my data"}
+            </Button>
+        </Row>
+      )}
       <Row label="Password" hint="Used with your email on the sign-in page. Google and Microsoft sign-in keep working either way.">
         {/* A separate small form: Account is not part of the business form. */}
         <form
