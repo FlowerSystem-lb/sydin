@@ -28573,3 +28573,40 @@ body:has(.login-page)::-webkit-scrollbar,
 .st-logo-pencil.st-logo-pencil:hover { border-color: #93c5fd; color: #1d4ed8; }
 .st-logo-update.st-logo-update { display: inline-flex; flex: 1 1 auto; align-items: center; justify-content: center; min-height: 2.4rem; border: 1px solid var(--border-default); border-radius: 10px; background: #ffffff; font-size: 0.78rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-secondary); cursor: pointer; transition: background-color 150ms ease, color 150ms ease; }
 .st-logo-update.st-logo-update:hover { background: var(--bg-inset); color: var(--text-primary); }
+
+/* ---------------------------------------------------------------------------
+   Page titles (30 Sep 2026, Sayed: "an empty strip on top, and Buying /
+   Suppliers in the bar isn't professional"). Every list page printed its name
+   only in the top bar and hid the <h1>, leaving an empty header card with
+   buttons on the right. Now the page names itself -- big title left, actions
+   right (Sortly / Linear) -- and the top-bar breadcrumb steps aside on those
+   pages. Record pages (one invoice, one supplier) keep the breadcrumb as the
+   way back. Heavier selectors + !important: the hiding rules above (and
+   older copies of them) otherwise win -- see the cascade-trap note.
+   --------------------------------------------------------------------------- */
+@media (min-width: 640px) {
+  .dashboard-shell .dashboard-page-header-card:not(.dashboard-page-header-record) .dashboard-page-heading.dashboard-page-heading {
+    position: static !important;
+    width: auto !important;
+    height: auto !important;
+    margin: 0 !important;
+    overflow: hidden !important;
+    clip: auto !important;
+    white-space: nowrap !important;
+    text-overflow: ellipsis;
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+    font-weight: 800 !important;
+    letter-spacing: -0.02em !important;
+    color: var(--text-primary) !important;
+  }
+
+  .dashboard-shell .dashboard-page-header-card:not(.dashboard-page-header-record) .dashboard-page-header-content.dashboard-page-header-content {
+    align-items: center !important;
+    min-height: 2.75rem !important;
+  }
+
+  .dashboard-shell .dashboard-main-canvas:has(.dashboard-page-header-card:not(.dashboard-page-header-record)) .dashboard-top-context-title {
+    visibility: hidden !important;
+  }
+}

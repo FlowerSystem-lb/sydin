@@ -6307,3 +6307,21 @@ Sayed: plan requests opened a different, older page and needed more buttons.
     - Unlink uses `unlinkIdentity` behind a page dialog; the last sign-in method can't be removed.
 - **A customer who forgets their email** contacts support; Sayed finds them in Admin > Customers by
   business name or phone.
+
+### 30 Sep — Page titles back on the page; breadcrumb only where it helps
+
+- Sayed: after the grey text went, every list page kept an empty white header strip with only
+  buttons on the right, and the top bar said "Buying / Suppliers", which read as unprofessional.
+- **Cause:** `DashboardPageHeader` visually hid its `<h1>` on desktop because the top bar printed
+  the page name.
+- **Fix** (CSS only, at the end of `globals.css`, 640px and wider):
+  - List pages show their title (1.5rem, bold) on the left of the header card, with the actions on
+    the right.
+  - The top-bar breadcrumb is hidden (`visibility: hidden`, so the search stays centred) whenever a
+    non-record page header is on screen.
+  - Record pages keep the breadcrumb as the way back. Overview and Inventory already had their own
+    big titles, so all pages now match.
+- **Figma Make was not used.** It would regenerate working pages outside the shared components;
+  one shared-header change fixes every page.
+- **Checks:** Suppliers, Sales, Customers, an invoice, Overview and Inventory were checked on the
+  local server.
