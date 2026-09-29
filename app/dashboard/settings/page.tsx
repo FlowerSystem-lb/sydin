@@ -820,6 +820,11 @@ export default function SettingsPage() {
       <aside className="st-logo-card" aria-label="Company logo">
         <p className="st-logo-title">Company logo</p>
         <div className={`st-logo-stage${hasLogo ? "" : " st-logo-stage-empty"}`}>
+          {canUseCustomLogo && (
+            <label htmlFor="business-logo-upload" className="st-logo-pencil" title="Update logo" aria-label="Update logo">
+              <UiIcon name="edit" className="h-3.5 w-3.5" />
+            </label>
+          )}
           {logoPreview ? (
             // eslint-disable-next-line @next/next/no-img-element -- a local blob: preview of the file just picked
             <img src={logoPreview} alt="New logo preview" className="st-logo-img" />
@@ -841,8 +846,8 @@ export default function SettingsPage() {
 
         {canUseCustomLogo ? (
           <div className="st-logo-actions">
-            <label htmlFor="business-logo-upload" className={buttonClassName({ variant: "secondary", size: "sm" })}>
-              {hasLogo ? "Change logo" : "Upload logo"}
+            <label htmlFor="business-logo-upload" className="st-logo-update">
+              {hasLogo ? "Update logo" : "Upload logo"}
             </label>
             {hasLogo && (
               <button
@@ -1011,7 +1016,6 @@ export default function SettingsPage() {
         />
       </Row>
       </div>
-      {renderLogoCard()}
     </div>
   );
 
@@ -2130,7 +2134,16 @@ export default function SettingsPage() {
               <div className="st-scroll" ref={scrollAreaRef}>
                 {editable ? (
                   <form onSubmit={handleSave} aria-busy={saving} className="min-w-0">
-                    {panel}
+                    {/* Company profile: the logo is its own card beside the
+                        details, like Sortly's Company Details (30 Sep). */}
+                    {activeSection === "workspace" && !loading ? (
+                      <div className="st-split">
+                        {panel}
+                        {renderLogoCard()}
+                      </div>
+                    ) : (
+                      panel
+                    )}
                   </form>
                 ) : (
                   <div className="min-w-0">{panel}</div>
