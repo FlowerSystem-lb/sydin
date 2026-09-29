@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { UserIdentity } from "@supabase/supabase-js";
 import { Button, DialogShell, useToast } from "@/components/ui";
 import GoogleMark from "@/components/GoogleMark";
@@ -27,7 +27,9 @@ const PROVIDER_LABEL: Record<string, string> = { email: "Email & password", goog
 function friendly(message: string) {
   const text = message.toLowerCase();
   if (text.includes("manual linking")) return "Linking accounts isn't switched on yet. Ask SydIN support.";
-  if (text.includes("already") && (text.includes("registered") || text.includes("exists") || text.includes("linked")))
+  if (text.includes("already linked to another user") || (text.includes("already") && text.includes("linked")))
+    return "That account already belongs to another SydIN account. Sign in with it, delete that account (Settings > My profile), then link it here.";
+  if (text.includes("already") && (text.includes("registered") || text.includes("exists")))
     return "That account is already used by another SydIN login.";
   if (text.includes("expired")) return "That code has expired. Start again to get new codes.";
   if (text.includes("invalid") || text.includes("token") || text.includes("otp")) return "A code isn't right. Check both emails and try again.";
@@ -69,6 +71,21 @@ export default function AccountAccess({
 
   // ---- unlink
   const [unlinking, setUnlinking] = useState<UserIdentity | null>(null);
+
+  /* Linking goes out to Google / Microsoft and comes back to this page. When
+     Supabase refuses (e.g. that account already belongs to another SydIN
+     login), the reason arrives in the URL -- it used to be ignored, so the
+     page simply looked like nothing happened (30 Sep 2026). */
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    const fromHash = new URLSearchParams(url.hash.replace(/^#/, ""));
+    const description =
+      url.searchParams.get("error_description") || fromHash.get("error_description");
+    if (!description) return;
+    showToast({ tone: "danger", message: friendly(decodeURIComponent(description.replace(/[+]/g, " "))) });
+    ["error", "error_code", "error_description"].forEach((key) => url.searchParams.delete(key));
+    window.history.replaceState(null, "", url.pathname + url.search);
+  }, [showToast]);
 
   const resetEmailFlow = () => {
     setChanging(false);
