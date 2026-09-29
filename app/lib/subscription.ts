@@ -85,6 +85,48 @@ export interface UserSubscription {
   plan: SubscriptionPlan;
   item_limit: number;
   status: string;
+  /* Phase 32 (manual payments). paid_until null = no end date. */
+  paid_until?: string | null;
+  billing_cycle?: "monthly" | "yearly" | null;
+  /** The plan they paid for, even after it lapsed to Free. */
+  paid_plan?: SubscriptionPlan;
+  billing_state?: BillingState;
+}
+
+/**
+ * active   -- paid, more than 7 days left (or no end date)
+ * due_soon -- paid, 7 days or fewer left
+ * grace    -- the paid period ended; full access for 3 more days
+ * expired  -- grace over: Free limits apply, every record is kept
+ * free     -- never paid / on Free
+ */
+export type BillingState = "active" | "due_soon" | "grace" | "expired" | "free";
+
+export const BILLING_GRACE_DAYS = 3;
+const DAY_MS = 24 * 60 * 60 * 1000;
+
+/** Mirrors effective_plan() in sql/phase-32-billing.sql. */
+export function getBillingState(
+  plan: SubscriptionPlan,
+  active: boolean,
+  paidUntil: string | null | undefined,
+  now = Date.now()
+): BillingState {
+  if (plan === "free" || !active) return "free";
+  if (!paidUntil) return "active";
+  const end = Date.parse(paidUntil);
+  if (!Number.isFinite(end)) return "active";
+  if (now > end + BILLING_GRACE_DAYS * DAY_MS) return "expired";
+  if (now > end) return "grace";
+  if (end - now <= 7 * DAY_MS) return "due_soon";
+  return "active";
+}
+
+/** When access falls back to Free if nothing is paid. */
+export function getGraceEnd(paidUntil: string | null | undefined) {
+  if (!paidUntil) return null;
+  const end = Date.parse(paidUntil);
+  return Number.isFinite(end) ? new Date(end + BILLING_GRACE_DAYS * DAY_MS) : null;
 }
 
 export interface SubscriptionUsage {
@@ -566,11 +608,30 @@ export function formatPlanName(plan: SubscriptionPlan) {
 export async function getUserSubscription(
   userId: string
 ): Promise<UserSubscription> {
-  const { data, error } = await supabase
+  type SubscriptionRow = {
+    plan: string | null;
+    item_limit: number | null;
+    status: string | null;
+    paid_until?: string | null;
+    billing_cycle?: "monthly" | "yearly" | null;
+  };
+  let { data, error } = await supabase
     .from("user_subscriptions")
-    .select("plan, item_limit, status")
+    .select("plan, item_limit, status, paid_until, billing_cycle")
     .eq("user_id", userId)
+    .returns<SubscriptionRow[]>()
     .maybeSingle();
+
+  // Before sql/phase-32 there are no period columns: read the old shape
+  // rather than treating a paying customer as Free.
+  if (error && /paid_until|billing_cycle/.test(error.message)) {
+    ({ data, error } = await supabase
+      .from("user_subscriptions")
+      .select("plan, item_limit, status")
+      .eq("user_id", userId)
+      .returns<SubscriptionRow[]>()
+      .maybeSingle());
+  }
 
   if (error) {
     console.warn("Subscription fetch failed:", error.message);
@@ -580,12 +641,20 @@ export async function getUserSubscription(
   if (data) {
     const storedPlan = normalizePlan(data.plan);
     const status = data.status || "inactive";
-    const plan = isActiveStatus(status) ? storedPlan : "free";
+    const active = isActiveStatus(status);
+    const paidUntil = (data as { paid_until?: string | null }).paid_until ?? null;
+    const billingState = getBillingState(storedPlan, active, paidUntil);
+    // Grace over: Free limits, same as the database. Nothing is deleted.
+    const plan = active && billingState !== "expired" ? storedPlan : "free";
 
     return {
       plan,
       item_limit: PLAN_ITEM_LIMITS[plan],
-      status,
+      status: billingState === "expired" ? "expired" : status,
+      paid_until: paidUntil,
+      billing_cycle: (data as { billing_cycle?: "monthly" | "yearly" | null }).billing_cycle ?? null,
+      paid_plan: storedPlan,
+      billing_state: billingState,
     };
   }
 
@@ -645,4 +714,31 @@ export function getPlanLimitMessage(plan: SubscriptionPlan) {
   return `You reached the ${formatPlanName(
     plan
   )} plan limit. Existing items remain available. ${nextStep} to add more.`;
+}
+
+
+export interface SubscriptionPayment {
+  id: number;
+  plan: "standard" | "pro";
+  billing_cycle: "monthly" | "yearly";
+  months: number;
+  amount: number;
+  currency: string;
+  method: string | null;
+  reference: string | null;
+  period_start: string;
+  period_end: string;
+  paid_at: string;
+}
+
+/** The owner's payment history (Plan & billing). Empty before phase 32. */
+export async function getSubscriptionPayments(userId: string): Promise<SubscriptionPayment[]> {
+  const { data, error } = await supabase
+    .from("subscription_payments")
+    .select("id, plan, billing_cycle, months, amount, currency, method, reference, period_start, period_end, paid_at")
+    .eq("user_id", userId)
+    .order("paid_at", { ascending: false })
+    .limit(100);
+  if (error) return [];
+  return ((data || []) as SubscriptionPayment[]).map((row) => ({ ...row, amount: Number(row.amount) }));
 }

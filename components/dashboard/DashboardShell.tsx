@@ -57,6 +57,7 @@ import { SCANNER_REQUEST_EVENT } from "@/app/lib/scannerNavigation";
 import { requestAddItem } from "@/app/lib/addItemNavigation";
 import { supabase } from "@/app/lib/supabase";
 import { useBusiness } from "@/components/dashboard/BusinessContext";
+import BillingNotice from "@/components/dashboard/BillingNotice";
 import {
   DASHBOARD_NAVIGATION,
   DASHBOARD_SECTION_LABELS,
@@ -1678,6 +1679,7 @@ export default function DashboardShell({
             currencyEpoch); no wrapper element, because the scroll-chain CSS
             selects this element's direct children. */}
         <div key={currencyEpoch} ref={shellContentRef} className="dashboard-shell-content">
+          <BillingNotice />
           {children}
         </div>
       </div>

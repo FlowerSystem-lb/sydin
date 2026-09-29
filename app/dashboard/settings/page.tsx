@@ -48,6 +48,7 @@ import {
   paymentMethodLabel,
 } from "@/app/lib/paymentMethods";
 import TeamPanel from "@/components/settings/TeamPanel";
+import BillingPanel from "@/components/settings/BillingPanel";
 import {
   INVENTORY_SORT_OPTIONS,
   getDefaultInventorySort,
@@ -58,13 +59,12 @@ import {
 import {
   FALLBACK_SUBSCRIPTION,
   FREE_LOW_STOCK_THRESHOLD,
-  formatPlanName,
   getSubscriptionCapabilities,
-  getUpgradeActionLabel,
   getUpgradeRequestHref,
   getSubscriptionUsage,
   getUserSubscription,
-  PLAN_DEFINITIONS,
+  getSubscriptionPayments,
+  type SubscriptionPayment,
   type UserSubscription,
 } from "@/app/lib/subscription";
 
@@ -329,6 +329,7 @@ export default function SettingsPage() {
     customers: number;
     members: number;
   } | null>(null);
+  const [billingPayments, setBillingPayments] = useState<SubscriptionPayment[] | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteWord, setDeleteWord] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -441,13 +442,11 @@ export default function SettingsPage() {
     };
   }, []);
 
-  const currentPlanName = formatPlanName(subscription.plan);
   const planCapabilities = getSubscriptionCapabilities(subscription);
   const canUseCustomLogo = planCapabilities.customBusinessLogo;
   const canCustomizeThreshold = planCapabilities.customLowStockThreshold;
   const canShowPublicContact = planCapabilities.publicContactBranding;
   const upgradeHref = getUpgradeRequestHref(subscription.plan, "settings");
-  const upgradeLabel = getUpgradeActionLabel(subscription.plan);
   const currencyCode = normalizeCurrencyCode(settings.currency_code, "USD");
   const sectionFromQuery = searchParams.get("section");
   // Folds the settings menu to icons (Sayed, from Sortly's settings, 28 Sep).
@@ -536,6 +535,9 @@ export default function SettingsPage() {
       ),
     ]).then(([depots, suppliers, customers, members]) => {
       if (live) setUsageCounts({ depots, suppliers, customers, members });
+    });
+    void getSubscriptionPayments(businessIdForUsage).then((rows) => {
+      if (live) setBillingPayments(rows);
     });
     return () => {
       live = false;
@@ -1943,109 +1945,21 @@ export default function SettingsPage() {
       ["Advanced reports", planCapabilities.advancedReports],
       ["Priority support", planCapabilities.priorityManualSupport],
     ];
-    const active = !subscription.status || subscription.status === "active";
-    const planDefinition =
-      PLAN_DEFINITIONS[subscription.plan as keyof typeof PLAN_DEFINITIONS] ?? PLAN_DEFINITIONS.free;
-    const usage: { label: string; used: number | null; limit: number | null }[] = [
-      { label: "Items", used: usedItems, limit: subscription.item_limit },
-      { label: "Locations", used: usageCounts?.depots ?? null, limit: planCapabilities.depotLimit },
-      { label: "Suppliers", used: usageCounts?.suppliers ?? null, limit: planCapabilities.supplierLimit },
-      { label: "Customers", used: usageCounts?.customers ?? null, limit: planCapabilities.customerLimit },
-      { label: "Team seats", used: usageCounts?.members ?? null, limit: business?.seatLimit ?? 1 },
-    ];
-    const full = usage.filter((row) => row.used !== null && row.limit !== null && row.limit > 0 && row.used >= row.limit);
-
     return (
-      <div className="st-billing">
-        <div className="st-billing-top">
-          <section className="st-billing-plan" aria-label="Current plan">
-            <p className="st-billing-label">Current plan</p>
-            <div className="st-billing-planrow">
-              <div>
-                <p className="st-billing-name">
-                  {currentPlanName}
-                  <span className={`st-pill ${active ? "st-pill-green" : "st-pill-amber"}`}>
-                    {active ? "Active" : subscription.status}
-                  </span>
-                </p>
-                <p className="st-billing-price">
-                  <strong>${planDefinition.priceMonthly}</strong> per month
-                </p>
-              </div>
-              <span className="st-billing-art" aria-hidden="true">
-                <UiIcon name="box" className="h-7 w-7" />
-              </span>
-            </div>
-            <p className="st-hint">{planDefinition.description}</p>
-            <p className="st-hint">Payment is arranged with you directly; nothing is charged automatically.</p>
-          </section>
-
-          <section className="st-billing-usage" aria-label="Usage">
-            <p className="st-billing-label">Usage</p>
-            {usage.map((row) => {
-              const percent =
-                row.used === null || !row.limit ? 0 : Math.min(100, Math.round((row.used / row.limit) * 100));
-              const tone = percent >= 100 ? " st-usage-fill-full" : percent >= 80 ? " st-usage-fill-warn" : "";
-              return (
-                <div key={row.label} className="st-usage-item">
-                  <div className="st-usage-line">
-                    <span>{row.label}</span>
-                    <strong>
-                      {row.used === null ? "…" : row.used.toLocaleString()} / {row.limit === null ? "Unlimited" : row.limit.toLocaleString()}
-                    </strong>
-                  </div>
-                  <div
-                    className="st-usage-track"
-                    role="progressbar"
-                    aria-valuemin={0}
-                    aria-valuemax={100}
-                    aria-valuenow={percent}
-                    aria-label={`${row.label} used on your plan`}
-                  >
-                    <div
-                      className={`st-usage-fill${tone}`}
-                      style={{ width: `${Math.max(percent, row.used ? 2 : 0)}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-            {full.length > 0 && (
-              <p className="st-billing-alert" role="status">
-                <UiIcon name="alert" className="h-4 w-4 shrink-0" />
-                <span>
-                  You&apos;ve reached your plan limit for {full.map((row) => row.label.toLowerCase()).join(", ")}.
-                  Your business is growing: upgrade to keep adding.
-                </span>
-              </p>
-            )}
-            <div className="st-billing-actions">
-              <Link href={upgradeHref} className={buttonClassName({ variant: "primary", size: "sm" })}>
-                {upgradeLabel}
-              </Link>
-              <Link href="/pricing" className={buttonClassName({ variant: "secondary", size: "sm" })}>
-                Compare plans
-              </Link>
-            </div>
-          </section>
-        </div>
-
-        <section className="st-billing-features" aria-label="What your plan includes">
-          <p className="st-billing-label">What your plan includes</p>
-          <ul className="st-features">
-            {included.map(([label, yes]) => (
-              <li key={label} className={yes ? undefined : "st-feature-off"}>
-                <span className={`st-feature-mark ${yes ? "st-feature-yes" : ""}`} aria-hidden="true">
-                  {yes ? <UiIcon name="check" className="h-3 w-3" /> : <span className="st-dash" />}
-                </span>
-                <span className="min-w-0 flex-1">{label}</span>
-                {!yes && <span className="st-pill st-pill-grey">Higher plan</span>}
-                <span className="sr-only">{yes ? "included" : "not included"}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+      <BillingPanel
+        subscription={subscription}
+        included={included}
+        payments={billingPayments}
+        businessName={settings.business_name}
+        email={userEmail}
+        usage={[
+          { label: "Items", used: usedItems, limit: subscription.item_limit },
+          { label: "Locations", used: usageCounts?.depots ?? null, limit: planCapabilities.depotLimit },
+          { label: "Suppliers", used: usageCounts?.suppliers ?? null, limit: planCapabilities.supplierLimit },
+          { label: "Customers", used: usageCounts?.customers ?? null, limit: planCapabilities.customerLimit },
+          { label: "Team seats", used: usageCounts?.members ?? null, limit: business?.seatLimit ?? 1 },
+        ]}
+      />
     );
   };
 

@@ -5,9 +5,9 @@ import SydINMark from "@/components/brand/SydINMark";
    -- a QR label, a rising chart, a scanned barcode -- so the picture says
    "more you can do" without words. Pure SVG + the real brand mark, no image
    files; colours come from the upg-* classes so it follows the theme. */
-export default function UpgradeIllustration() {
+export default function UpgradeIllustration({ className = "" }: { className?: string }) {
   return (
-    <div className="upg-art" aria-hidden="true">
+    <div className={`upg-art ${className}`.trim()} aria-hidden="true">
       <svg viewBox="0 0 260 240" className="upg-art-svg">
         <ellipse cx="130" cy="206" rx="92" ry="14" className="upg-art-shadow" />
 

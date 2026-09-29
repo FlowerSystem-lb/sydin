@@ -6114,3 +6114,46 @@ read-only query.
   - Reports label methods through `paymentMethodLabel`.
 - **Checks:** lint, type-check and build pass. The Lists styling was checked on a local-only
   static copy.
+
+### 29 Sep — Manual billing: paid periods, 3-day grace, payment history, pay on the page (phase 32)
+
+Sayed asked for payment history, manual payments over WhatsApp, 3 days to pay after a period ends,
+and no data loss.
+
+**Database (`sql/phase-32-billing.sql`):**
+- `user_subscriptions.paid_until` and `billing_cycle`.
+- `subscription_payments`: the history. The owner can read it through RLS; only the service role
+  writes.
+- `effective_plan(owner)`: the one rule for which plan applies now. After `paid_until` plus 3 days
+  it is Free. The item, pick-list and team-seat limits now use it.
+- `record_subscription_payment(...)`: service role only. Paying on time or inside the grace
+  continues from the old end date, so paying late gives no free days. A first payment, a plan
+  change, or paying long after expiry starts the period now.
+- Every account had `paid_until` null, so no current plan changes.
+
+**App:**
+- **`getUserSubscription`:**
+  - Mirrors the rule, with a billing state: active, due_soon (7 days or less), grace, expired or
+    free. Expired uses Free limits.
+  - Falls back to the old columns if phase 32 isn't applied.
+  - `getSubscriptionPayments` added.
+- **Admin:** `/admin` has a new "Record a payment" panel (`components/admin/RecordPaymentPanel.tsx`
+  and `app/api/admin/billing`). Sayed looks up an account by email, picks the plan, period, amount,
+  method and reference, and records it; the plan turns on at once. The existing plan-request
+  activation flow is untouched.
+- **Plan & billing** (`components/settings/BillingPanel.tsx`), all on one page:
+  - due-soon, grace and ended notices
+  - the current plan with Paid until, Pay by and Billing
+  - usage bars
+  - Free, Standard and Pro plans with a monthly/yearly switch
+  - How to pay (Whish, OMT and USDT with copy buttons, and "Send receipt on WhatsApp" with a
+    prefilled message)
+  - payment history
+  - what the plan includes
+  - "Choose / Renew" opens a pay dialog on the same page instead of going to /pricing or
+    /request-plan.
+- **Dashboard bar** (`components/dashboard/BillingNotice.tsx`): owner and admin see it on every page
+  when payment is due soon (dismissible for the day), in grace, or ended.
+- **Checks:**
+  - Lint, type-check and build pass.
+  - The billing layout and pay dialog were checked on a local-only mock page with a plan in grace.

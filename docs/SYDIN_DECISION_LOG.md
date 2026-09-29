@@ -648,3 +648,21 @@ stays as the alternative.
   customer actually needs them.
 
 **Status:** Active.
+
+### 29 Sep 2026 — Unpaid plans fall back to Free limits after 3 days; data is never deleted
+
+**Decision:**
+- Paid plans run for a paid period (`paid_until`). After it ends there are 3 days of grace with full
+  access.
+- Then the account uses **Free plan limits**. It is not locked out: everything stays readable,
+  editable within Free limits, and exportable.
+- Paying restores the plan instantly. Paying late continues from the old end date.
+- Payments are recorded by Sayed in /admin after the customer sends a receipt on WhatsApp.
+
+**Why:**
+- Customers in Lebanon pay by Whish, OMT or USDT, so there's no card gateway yet. Manual approval
+  stays the billing path (2026-06 decision).
+- A lockout would hold a business's own records hostage and burn trust. Free limits are a clear
+  nudge that still respects "your data is yours".
+
+**Status:** Active.

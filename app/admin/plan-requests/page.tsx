@@ -5,6 +5,7 @@ import Link from "next/link";
 import BrandMark from "@/components/BrandMark";
 import Wordmark from "@/components/Wordmark";
 import UiIcon from "@/components/UiIcon";
+import RecordPaymentPanel from "@/components/admin/RecordPaymentPanel";
 import { supabase } from "@/app/lib/supabase";
 
 type RequestStatus = "pending" | "paid" | "activated" | "rejected";
@@ -710,6 +711,8 @@ export default function AdminPlanRequestsPage() {
             </div>
           </div>
         </header>
+
+        <RecordPaymentPanel />
 
         <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
           <div className="glass-card col-span-2 p-4 sm:p-5 lg:col-span-1">

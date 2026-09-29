@@ -55,3 +55,34 @@ export function buildSupportWhatsAppUrl({
     message
   )}`;
 }
+
+/* How customers pay for a plan (phase 32). The same details as
+   /request-plan; shown in Settings > Plan & billing. */
+export const SYDIN_PAYMENT_RECEIVER = "SydIN Tech";
+export const SYDIN_WHISH_NUMBER = "96176075247";
+export const SYDIN_OMT_NUMBER = "96176075247";
+export const SYDIN_USDT_NETWORK = "USDT TRC20";
+export const SYDIN_USDT_ADDRESS = "TYwWogiC9f2aHcidDQcyspTPj9S5TDZaDs";
+
+/** WhatsApp message a customer sends after paying. */
+export function buildPaymentWhatsAppUrl({
+  businessName,
+  planName,
+  cycle,
+  email,
+}: {
+  businessName?: string | null;
+  planName: string;
+  cycle: "monthly" | "yearly";
+  email?: string | null;
+}) {
+  const message = [
+    `Hello SydIN, I paid for the ${planName} plan (${cycle}).`,
+    businessName ? `Business: ${normalizeContext(businessName)}.` : "",
+    email ? `Account email: ${normalizeContext(email)}.` : "",
+    "Here is my receipt:",
+  ]
+    .filter(Boolean)
+    .join(" ");
+  return `https://wa.me/${SYDIN_WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
