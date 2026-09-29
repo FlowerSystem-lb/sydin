@@ -18,6 +18,7 @@ import {
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
 import {
+  BUSINESS_SETTINGS_SAVED_EVENT,
   DEFAULT_BUSINESS_SETTINGS,
   isCompanyProfileSchemaMissing,
   getOrCreateBusinessSettings,
@@ -270,6 +271,21 @@ export default function SettingsPage() {
   const [signInMethods, setSignInMethods] = useState<string[]>([]);
   const [usedItems, setUsedItems] = useState<number | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [changingPassword, setChangingPassword] = useState(false);
+  // Show the picked logo straight away, before it is saved.
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  useEffect(() => {
+    if (!logoFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clears the preview when the pick is discarded or saved
+      setLogoPreview(null);
+      return;
+    }
+    const url = URL.createObjectURL(logoFile);
+    setLogoPreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [logoFile]);
   const [refreshingRates, setRefreshingRates] = useState(false);
   const [ratesNotice, setRatesNotice] = useState("");
   const [loading, setLoading] = useState(true);
@@ -430,7 +446,7 @@ export default function SettingsPage() {
   useEffect(() => {
     if (!window.matchMedia("(max-width: 767px)").matches) return;
     document
-      .querySelector(".settings-nav-item[aria-current=\"page\"]")
+      .querySelector(".st-nav-item[aria-current=\"page\"]")
       ?.scrollIntoView({ inline: "center", block: "nearest", behavior: "smooth" });
   }, [activeSection]);
   const activeSectionDetails =
@@ -555,7 +571,12 @@ export default function SettingsPage() {
           : savedSettings.low_stock_threshold,
         contact_email: settings.contact_email.trim() || null,
         contact_phone: settings.contact_phone.trim() || null,
-        contact_website: settings.contact_website.trim() || null,
+        // "flowerplus.com" is what people type; store a working link.
+        contact_website: settings.contact_website.trim()
+          ? /^https?:\/\//i.test(settings.contact_website.trim())
+            ? settings.contact_website.trim()
+            : `https://${settings.contact_website.trim()}`
+          : null,
         show_contact_publicly: freshCapabilities.publicContactBranding
           ? settings.show_contact_publicly
           : savedSettings.show_contact_publicly
@@ -623,6 +644,9 @@ export default function SettingsPage() {
       };
       setSettings(normalizedSettings);
       setSavedSettings(normalizedSettings);
+      window.dispatchEvent(
+        new CustomEvent(BUSINESS_SETTINGS_SAVED_EVENT, { detail: normalizedSettings })
+      );
       // The rest of the app converts through this; make the new choice count
       // immediately, not on the next full load.
       setCurrencyContext({
@@ -671,7 +695,10 @@ export default function SettingsPage() {
       <Row label="Logo" hint="PNG or JPG, square works best.">
         <div className="st-inline">
           <span className="settings-logo-preview">
-            {settings.business_logo_url ? (
+            {logoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element -- a local blob: preview of the file just picked
+              <img src={logoPreview} alt="New logo preview" className="h-full w-full object-contain p-1.5" />
+            ) : settings.business_logo_url ? (
               <Image
                 src={settings.business_logo_url}
                 alt={`Logo for ${settings.business_name}`}
@@ -694,12 +721,27 @@ export default function SettingsPage() {
               <input
                 id="business-logo-upload"
                 type="file"
-                accept="image/*"
-                onChange={(event) => setLogoFile(event.target.files?.[0] || null)}
+                accept="image/png,image/jpeg,image/webp"
+                onChange={(event) => {
+                  const file = event.target.files?.[0] || null;
+                  event.target.value = "";
+                  if (!file) return;
+                  // iPhone HEIC and SVG don't display everywhere documents
+                  // and emails go; a 10 MB photo makes every PDF slow.
+                  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+                    showToast({ tone: "danger", message: "Use a PNG, JPG or WebP image for the logo." });
+                    return;
+                  }
+                  if (file.size > 2 * 1024 * 1024) {
+                    showToast({ tone: "danger", message: "That image is over 2 MB. Use a smaller logo file." });
+                    return;
+                  }
+                  setLogoFile(file);
+                }}
                 className="sr-only"
               />
               {logoFile && (
-                <p className="st-hint">Selected: {logoFile.name}. Saved when you save.</p>
+                <p className="st-hint">New logo selected. It is saved when you press Save changes.</p>
               )}
             </div>
           ) : (
@@ -754,7 +796,9 @@ export default function SettingsPage() {
       <Row label="Website" htmlFor="contact-website">
         <input
           id="contact-website"
-          type="url"
+          type="text"
+          inputMode="url"
+          autoComplete="url"
           className="st-input"
           value={settings.contact_website}
           onChange={(event) => setField("contact_website", event.target.value)}
@@ -877,10 +921,7 @@ export default function SettingsPage() {
 
     return (
       <>
-        <Row
-          label="Show prices in"
-          hint={`Prices are stored in ${settings.base_currency} and converted for display.`}
-        >
+        <Row label="Show prices in">
           <div className="st-select">
             <Select
               ariaLabel="Currency shown across the app"
@@ -889,6 +930,10 @@ export default function SettingsPage() {
               options={currencyChoicesIncluding(currencyCode, settings.base_currency)}
             />
           </div>
+          {/* Live status, not an explanation -- stays on the page. */}
+          <p className="st-hint">
+            Prices are stored in {settings.base_currency} and converted for display.
+          </p>
         </Row>
 
         {currencyCode === settings.base_currency ? (
@@ -900,16 +945,7 @@ export default function SettingsPage() {
           </Row>
         ) : (
           <>
-            <Row
-              label="Current rate"
-              hint={
-                usingManual
-                  ? `Your own rate. The live rate is ${rateText(liveRate)}.`
-                  : settings.rates_updated_at
-                    ? `Live rate, updated ${new Date(settings.rates_updated_at).toLocaleDateString("en", { dateStyle: "medium" })}.`
-                    : "No live rate yet."
-              }
-            >
+            <Row label="Current rate">
               <div className="st-inline">
                 <span className="st-strong">{rateText(manualRate)}</span>
                 <Button
@@ -937,6 +973,14 @@ export default function SettingsPage() {
                   Update live rates
                 </Button>
               </div>
+              {/* Which rate is in use and how fresh it is: status, shown. */}
+              <p className="st-hint">
+                {usingManual
+                  ? `Your own rate. The live rate is ${rateText(liveRate)}.`
+                  : settings.rates_updated_at
+                    ? `Live rate, updated ${new Date(settings.rates_updated_at).toLocaleDateString("en", { dateStyle: "medium" })}.`
+                    : "No live rate yet."}
+              </p>
               {ratesNotice && <p className="st-hint">{ratesNotice}</p>}
             </Row>
             <Row
@@ -1118,8 +1162,66 @@ export default function SettingsPage() {
           })}
         </ul>
       </Row>
-      <Row label="Password" hint="Handled by the way you sign in: email code, Google or Microsoft.">
-        <span className="st-hint">Nothing to set here.</span>
+      <Row label="Password" hint="Used with your email on the sign-in page. Google and Microsoft sign-in keep working either way.">
+        {/* A separate small form: Account is not part of the business form. */}
+        <form
+          className="st-password-form"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            if (newPassword.length < 8) {
+              showToast({ tone: "danger", message: "Use at least 8 characters." });
+              return;
+            }
+            if (newPassword !== confirmPassword) {
+              showToast({ tone: "danger", message: "The two passwords don't match." });
+              return;
+            }
+            setChangingPassword(true);
+            const { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
+            setChangingPassword(false);
+            if (passwordError) {
+              showToast({
+                tone: "danger",
+                message: /same|different/i.test(passwordError.message)
+                  ? "Choose a password you haven't used for SydIN before."
+                  : "Couldn't change the password. Please try again.",
+              });
+              return;
+            }
+            setNewPassword("");
+            setConfirmPassword("");
+            showToast({ tone: "success", message: "Password changed. We emailed you a security note." });
+          }}
+        >
+          <input
+            type="password"
+            className="st-input"
+            placeholder="New password (8+ characters)"
+            autoComplete="new-password"
+            value={newPassword}
+            onChange={(event) => setNewPassword(event.target.value)}
+            aria-label="New password"
+          />
+          <input
+            type="password"
+            className="st-input"
+            placeholder="Type it again"
+            autoComplete="new-password"
+            value={confirmPassword}
+            onChange={(event) => setConfirmPassword(event.target.value)}
+            aria-label="Confirm new password"
+          />
+          <Button
+            type="submit"
+            variant="secondary"
+            size="sm"
+            loading={changingPassword}
+            loadingLabel="Saving…"
+            disabled={!newPassword || !confirmPassword}
+          >
+            Change password
+          </Button>
+        </form>
       </Row>
       <Row label="Help and support">
         <Link href="/dashboard/help" className={buttonClassName({ variant: "secondary", size: "sm" })}>

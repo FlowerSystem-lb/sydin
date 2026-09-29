@@ -27632,3 +27632,13 @@ body:has(.login-page)::-webkit-scrollbar,
     gap: 0.5rem;
   }
 }
+
+.st-password-form {
+  display: grid;
+  gap: 0.5rem;
+  max-width: 28rem;
+}
+
+.st-password-form > button {
+  justify-self: start;
+}

@@ -16,6 +16,7 @@ import {
   buttonClassName,
 } from "@/components/ui";
 import {
+  BUSINESS_SETTINGS_SAVED_EVENT,
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   saveLiveRates,
@@ -583,6 +584,16 @@ export default function DashboardShell({
     DEFAULT_BUSINESS_SETTINGS
   );
   const [usage, setUsage] = useState<SubscriptionUsage>(DEFAULT_USAGE);
+  // Settings announces a save so the name and logo up here change at once,
+  // not on the next full load.
+  useEffect(() => {
+    const onSaved = (event: Event) => {
+      const saved = (event as CustomEvent<typeof DEFAULT_BUSINESS_SETTINGS>).detail;
+      if (saved) setBusinessSettings(saved);
+    };
+    window.addEventListener(BUSINESS_SETTINGS_SAVED_EVENT, onSaved);
+    return () => window.removeEventListener(BUSINESS_SETTINGS_SAVED_EVENT, onSaved);
+  }, []);
   /* Bumped when live rates arrive for a display currency that had NO rate
      yet -- the page already painted unconverted numbers, and money is
      formatted by sixty call sites that do not subscribe to anything, so the

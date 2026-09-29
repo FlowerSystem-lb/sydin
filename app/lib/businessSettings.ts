@@ -26,6 +26,10 @@ export interface BusinessSettings {
   rates_updated_at: string | null;
 }
 
+/** Fired on window with the saved BusinessSettings as detail, so the
+ *  dashboard header shows a new name or logo straight away. */
+export const BUSINESS_SETTINGS_SAVED_EVENT = "sydin:business-settings-saved";
+
 export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   business_name: "SydIn Account",
   business_logo_url: "",

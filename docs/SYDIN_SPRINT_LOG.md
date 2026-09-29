@@ -5973,3 +5973,29 @@ Sayed: "should never ever be a scroll bar" on sign-in / sign-up / verify / reset
 **Measured on the reset code step:** 0px overflow at 1920x985, 1366x768 and 1280x720, and no
 sideways scroll at 375px. Reaching the step used an address with no account, so nothing was
 sent. Lint and build are clean.
+
+### 29 Sep — Settings audit: 5 bugs fixed, Change password added
+
+Sayed asked for a deep bug search in Settings plus research on what settings to have. Code read of
+`app/dashboard/settings/page.tsx`, with research into inFlow and Zoho Inventory settings and SaaS
+settings UX guides.
+
+**Bugs fixed:**
+
+1. **Phone menu:** the menu never slid the current section into view. It looked for the old
+   `.settings-nav-item` class; it now uses `.st-nav-item`.
+2. **Currency status hidden:** moving hints into tooltips had also hidden live status. "Your own
+   rate / live rate is …", "Live rate, updated …" and "Prices are stored in USD" are visible
+   again.
+3. **Logo checks:** the upload accepted any image of any size (HEIC, SVG, 10 MB photos). Now it
+   takes PNG, JPG or WebP up to 2 MB, with a clear message, and the picked logo previews at once
+   before saving.
+4. **Website field:** type=url blocked the whole save when someone typed "flowerplus.com". The
+   field is now text, and https:// is added on save.
+5. **Stale header:** the header kept the old business name and logo after a save until a reload.
+   Settings now fires `BUSINESS_SETTINGS_SAVED_EVENT` and the shell updates at once.
+
+**Added:** Account > Password now has a real Change password (new plus confirm, 8+ characters,
+`updateUser`). It triggers the "password changed" security email.
+
+Lint and build are clean. Not clicked through live: the test browser was signed out.
