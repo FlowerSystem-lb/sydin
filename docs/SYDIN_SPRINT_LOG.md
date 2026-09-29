@@ -6227,3 +6227,18 @@ Sayed: plan requests opened a different, older page and needed more buttons.
   change goes to the audit log. The list now returns `admin_notes`.
 - The standalone `RecordPaymentPanel` was removed; the customer page and the approve flow cover it.
 - **Checks:** lint, type-check and build pass. The card layout was checked on a local mock.
+
+### 30 Sep — Admin: Delete / Reject / Cancel didn't work (blocked browser pop-ups)
+
+- **Cause:**
+  - The admin buttons asked "Are you sure?" with `window.confirm()`. Opera and Chrome let a user
+    block a site's pop-ups, after which `confirm()` silently returns false.
+  - Server data showed the edit had saved (in the audit log) but no delete ever arrived.
+- **Fix:**
+  - `components/admin/useAdminConfirm.tsx` draws its own confirm dialog, which can't be blocked.
+    It is used for delete, reject, cancel, change plan, free days, remove end date and record
+    payment.
+  - Feedback (`.ad-flash` / `.ad-error`) now floats at the bottom of the screen, so it's seen
+    wherever the page is scrolled. The success message fades after about 4 seconds.
+- **Checks:** checked locally; the dialog returns true or false and the toast is fixed. Lint,
+  type-check and build pass.

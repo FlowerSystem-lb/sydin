@@ -28529,3 +28529,16 @@ body:has(.login-page)::-webkit-scrollbar,
 .ad-request-note.ad-request-note { margin: 0; border-radius: 10px; background: #fffbeb; padding: 0.45rem 0.65rem; font-size: 0.82rem; color: #92400e; }
 .ad-request-panel.ad-request-panel { display: grid; gap: 0.6rem; border: 1px solid #dbeafe; border-radius: 12px; background: #f8fbff; padding: 0.85rem; }
 .ad-request-panel-title.ad-request-panel-title { margin: 0; font-size: 0.9rem; font-weight: 700; color: #1e3a8a; }
+
+/* Admin: SydIN's own confirm dialog (browsers can block window.confirm) and
+   feedback that floats at the bottom so it's seen wherever you scrolled. */
+.ad-confirm-backdrop.ad-confirm-backdrop { position: fixed; inset: 0; z-index: 90; display: flex; align-items: center; justify-content: center; padding: 1rem; background: rgba(15, 23, 42, 0.4); backdrop-filter: blur(4px); animation: upg-fade 150ms ease-out; }
+.ad-confirm.ad-confirm { display: grid; gap: 0.6rem; width: 100%; max-width: 26rem; border-radius: 16px; background: #ffffff; padding: 1.25rem; box-shadow: 0 24px 60px rgba(15, 23, 42, 0.3); animation: upg-rise 200ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+.ad-confirm h2 { margin: 0; font-size: 1.05rem; font-weight: 700; color: #0f172a; }
+.ad-confirm p { margin: 0; font-size: 0.88rem; line-height: 1.5; color: #475569; }
+.ad-confirm-actions.ad-confirm-actions { display: flex; justify-content: flex-end; gap: 0.5rem; margin-top: 0.4rem; }
+.ad-btn.ad-btn-danger-solid { border-color: #dc2626; background: #dc2626; color: #ffffff; }
+.ad-btn.ad-btn-danger-solid:hover { background: #b91c1c; }
+.ad-flash.ad-flash, .ad-error.ad-error { position: fixed; left: 50%; bottom: 1.25rem; z-index: 80; max-width: min(34rem, calc(100vw - 2rem)); transform: translateX(-50%); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18); }
+.ad-flash.ad-flash { animation: ad-toast 4.5s ease forwards; }
+@keyframes ad-toast { 0% { opacity: 0; transform: translate(-50%, 8px); } 6% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }

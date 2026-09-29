@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AdminShell from "@/components/admin/AdminShell";
+import { useAdminConfirm } from "@/components/admin/useAdminConfirm";
 import { adminFetch, formatAdminDate } from "@/app/lib/adminClient";
 
 /* Admin > Plan requests (rebuilt 30 Sep 2026 inside the admin console --
@@ -77,6 +78,7 @@ export default function AdminPlanRequestsPage() {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState({ selected_plan: "Standard", phone: "", business_name: "", admin_notes: "" });
   const [pay, setPay] = useState({ plan: "standard", cycle: "monthly", months: 1, amount: "9", method: "Whish Money", reference: "" });
+  const { confirm, confirmDialog } = useAdminConfirm();
 
   const load = useCallback(() => {
     adminFetch<{ requests: PlanRequest[] }>("/api/admin/plan-requests")
@@ -391,8 +393,9 @@ export default function AdminPlanRequestsPage() {
                     type="button"
                     className="ad-btn ad-btn-danger"
                     disabled={busy}
-                    onClick={() => {
-                      if (window.confirm(`Reject ${row.full_name}'s request?`)) void run(row.id, () => patch(row.id, { action: "reject" }), "Rejected.");
+                    onClick={async () => {
+                      if (await confirm({ title: `Reject ${row.full_name}'s request?`, body: "You can reopen it later.", confirmLabel: "Reject", danger: true }))
+                        void run(row.id, () => patch(row.id, { action: "reject" }), "Rejected.");
                     }}
                   >
                     Reject
@@ -402,8 +405,8 @@ export default function AdminPlanRequestsPage() {
                   type="button"
                   className="ad-btn ad-btn-danger"
                   disabled={busy}
-                  onClick={() => {
-                    if (window.confirm(`Delete ${row.full_name}'s request for good? Their account and plan are not touched.`))
+                  onClick={async () => {
+                    if (await confirm({ title: `Delete ${row.full_name}'s request?`, body: "It is removed for good. Their account and plan are not touched.", confirmLabel: "Delete", danger: true }))
                       void run(
                         row.id,
                         () => adminFetch(`/api/admin/plan-requests/${encodeURIComponent(row.id)}`, { method: "DELETE" }),
@@ -418,6 +421,7 @@ export default function AdminPlanRequestsPage() {
           );
         })}
       </div>
+      {confirmDialog}
     </AdminShell>
   );
 }

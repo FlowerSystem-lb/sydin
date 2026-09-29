@@ -3,6 +3,7 @@
 import { use, useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import AdminShell from "@/components/admin/AdminShell";
+import { useAdminConfirm } from "@/components/admin/useAdminConfirm";
 import {
   CUSTOMER_STATE_LABELS,
   adminFetch,
@@ -62,6 +63,7 @@ export default function AdminCustomerPage({ params }: { params: Promise<{ id: st
   const [note, setNote] = useState("");
   const [days, setDays] = useState(7);
   const [pay, setPay] = useState({ plan: "standard", cycle: "monthly", months: 1, amount: "9", method: "Whish Money", reference: "" });
+  const { confirm, confirmDialog } = useAdminConfirm();
 
   const load = useCallback(() => {
     adminFetch<Detail>(`/api/admin/customers/${id}`)
@@ -79,7 +81,7 @@ export default function AdminCustomerPage({ params }: { params: Promise<{ id: st
   }, [load]);
 
   const act = async (action: string, extra: Record<string, unknown> = {}, confirmText?: string) => {
-    if (confirmText && !window.confirm(confirmText)) return;
+    if (confirmText && !(await confirm({ title: confirmText, confirmLabel: "Yes, do it", danger: action === "cancel_now" }))) return;
     setBusy(true);
     setError("");
     setFlash("");
@@ -101,7 +103,14 @@ export default function AdminCustomerPage({ params }: { params: Promise<{ id: st
   const recordPayment = async () => {
     if (!detail) return;
     const planName = planLabel(pay.plan);
-    if (!window.confirm(`Record ${pay.amount} USD for ${pay.months} month(s) of ${planName} (${pay.method})?\n\nThe plan turns on straight away.`)) return;
+    if (
+      !(await confirm({
+        title: `Record ${pay.amount} USD for ${pay.months} month(s) of ${planName}?`,
+        body: `Paid by ${pay.method}. The plan turns on straight away.`,
+        confirmLabel: "Record payment",
+      }))
+    )
+      return;
     setBusy(true);
     setError("");
     setFlash("");
@@ -352,6 +361,8 @@ export default function AdminCustomerPage({ params }: { params: Promise<{ id: st
           </table>
         </div>
       </section>
+
+      {confirmDialog}
 
       <section className="ad-card">
         <h2>History</h2>
