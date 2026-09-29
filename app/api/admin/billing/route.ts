@@ -3,6 +3,7 @@ import type { User } from "@supabase/supabase-js";
 import { authorizeAdminRequest } from "@/app/lib/adminAuth";
 import { getSupabaseAdmin } from "@/app/lib/supabaseAdmin";
 import { logAdminAction } from "@/app/lib/adminAudit";
+import { receiptEmail, sendEmail } from "@/app/lib/billingEmails";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -100,7 +101,7 @@ export async function POST(request: Request) {
     const user = await findUserByEmail(String(body.email || ""));
     if (!user) return json({ error: "No SydIN account uses that email." }, 404);
 
-    const { error } = await getSupabaseAdmin().rpc("record_subscription_payment", {
+    const { data: payment, error } = await getSupabaseAdmin().rpc("record_subscription_payment", {
       p_user: user.id,
       p_plan: plan,
       p_cycle: cycle,
@@ -117,7 +118,24 @@ export async function POST(request: Request) {
       return json({ error: "The payment could not be recorded. Nothing was changed." }, 500);
     }
     await logAdminAction(authorization.user.id, "record_payment", user.id, { plan, cycle, months, amount, currency, method: body.method ?? null });
-    return json(await accountSummary(user));
+
+    // Receipt to the customer (phase 34). Best effort: a failed email never
+    // undoes the payment; the admin sees whether it went out.
+    let receipt: "sent" | "not_sent" | "skipped" = "skipped";
+    const row = (Array.isArray(payment) ? payment[0] : payment) as
+      | { id: number; plan: string; months: number; amount: number | string; currency: string; method: string | null; reference: string | null; period_start: string; period_end: string; paid_at: string }
+      | null;
+    if (row && user.email && !/@[a-z0-9-]+.sydin.site$/i.test(user.email) && body.sendReceipt !== false) {
+      const { data: settings } = await getSupabaseAdmin().from("business_settings").select("business_name").eq("user_id", user.id).maybeSingle();
+      const sent = await sendEmail(receiptEmail(user.email, settings?.business_name || "there", { ...row, amount: Number(row.amount) }));
+      receipt = sent.ok ? "sent" : "not_sent";
+      if (sent.ok) {
+        await getSupabaseAdmin().from("billing_notifications").insert({ user_id: user.id, kind: "receipt", period_end: row.period_end, email: user.email });
+      } else {
+        console.error("Receipt email failed:", sent.error);
+      }
+    }
+    return json({ ...(await accountSummary(user)), receipt });
   } catch (error) {
     console.error("Admin record payment failed:", error instanceof Error ? error.message : error);
     return json({ error: "The payment could not be recorded." }, 500);

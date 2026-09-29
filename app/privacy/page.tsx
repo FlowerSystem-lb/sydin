@@ -76,7 +76,7 @@ export default function PrivacyPage() {
               </h2>
 
               <p className="mt-4 text-base leading-8 text-slate-400">
-                For privacy questions, contact SydIN at support@sydin.app.
+                For privacy questions, contact SydIN at support@sydin.site.
               </p>
             </article>
           </Reveal>

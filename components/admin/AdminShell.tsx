@@ -9,6 +9,7 @@ const TABS = [
   { href: "/admin/customers", label: "Customers" },
   { href: "/admin/payments", label: "Payments" },
   { href: "/admin/plan-requests", label: "Plan requests" },
+  { href: "/admin/emails", label: "Emails" },
   { href: "/admin/activity", label: "Activity" },
 ];
 

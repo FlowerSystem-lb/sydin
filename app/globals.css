@@ -28542,3 +28542,4 @@ body:has(.login-page)::-webkit-scrollbar,
 .ad-flash.ad-flash, .ad-error.ad-error { position: fixed; left: 50%; bottom: 1.25rem; z-index: 80; max-width: min(34rem, calc(100vw - 2rem)); transform: translateX(-50%); box-shadow: 0 12px 30px rgba(15, 23, 42, 0.18); }
 .ad-flash.ad-flash { animation: ad-toast 4.5s ease forwards; }
 @keyframes ad-toast { 0% { opacity: 0; transform: translate(-50%, 8px); } 6% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
+.ad-error-inline.ad-error-inline { background: #fef2f2 !important; color: #991b1b; }

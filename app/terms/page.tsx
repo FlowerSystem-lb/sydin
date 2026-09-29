@@ -76,7 +76,7 @@ export default function TermsPage() {
               </h2>
 
               <p className="mt-4 text-base leading-8 text-slate-400">
-                For terms or account questions, contact SydIN at support@sydin.app.
+                For terms or account questions, contact SydIN at support@sydin.site.
               </p>
             </article>
           </Reveal>

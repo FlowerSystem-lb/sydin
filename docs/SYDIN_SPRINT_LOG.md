@@ -6242,3 +6242,31 @@ Sayed: plan requests opened a different, older page and needed more buttons.
     wherever the page is scrolled. The success message fades after about 4 seconds.
 - **Checks:** checked locally; the dialog returns true or false and the toast is fixed. Lint,
   type-check and build pass.
+
+### 30 Sep — Admin part 3: automatic billing emails (phase 34)
+
+**Setup Sayed did:**
+- ImprovMX forwarding for *@sydin.site to his Gmail. The MX and SPF records were added in Vercel
+  DNS and checked; the Resend `send.` and DKIM records are untouched.
+- `RESEND_API_KEY` and `CRON_SECRET` added as Vercel environment variables (Sayed entered them;
+  Claude never saw them).
+
+**Database:** `sql/phase-34-billing-emails.sql` adds `billing_notifications`, with a unique key per
+(account, kind, period end) so each reminder goes out once per period. Server-only.
+
+**App:**
+- **`app/lib/billingEmails.ts`:** the same layout as the auth emails. Four emails: renew in 7 days,
+  "ended, 3 days to pay", "moved to Free, data safe", and a receipt; plus a test. Sent from
+  billing@sydin.site through Resend's API, with replies to support@sydin.site.
+- **`app/lib/billingJob.ts`:** the daily run. It claims a reminder row first, sends, and un-claims
+  if sending fails so the next run retries. Accounts marked "won't renew" get only the ended notice.
+  Team and managed logins are skipped.
+- **Schedule:** `vercel.json` runs the cron daily at 06:00 UTC (09:00 Beirut) and calls
+  `/api/cron/billing`, which requires `Bearer CRON_SECRET`.
+- **Receipts:** `/api/admin/billing` now emails a receipt after recording a payment (best effort).
+- **Admin > Emails:** connection status, "Send me a test email", "Run the daily check now", and the
+  list of emails sent. Activity labels cover automatic emails and plan-request actions.
+- **Support address:** it was support@sydin.app, a domain Sayed doesn't own. It is now
+  support@sydin.site in `app/lib/support.ts` and on the privacy and terms pages.
+
+**Checks:** lint, type-check and build pass. Live sending is confirmed from Admin > Emails.

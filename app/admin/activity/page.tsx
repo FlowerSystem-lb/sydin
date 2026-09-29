@@ -26,6 +26,17 @@ const LABELS: Record<string, string> = {
   reactivate: "Turned the plan back on",
   remove_end_date: "Removed the end date",
   note: "Added a note",
+  email_renew_7d: "Emailed: renews in 7 days",
+  email_grace_start: "Emailed: 3 days to pay",
+  email_ended: "Emailed: moved to Free",
+  email_test: "Sent a test email",
+  email_run: "Ran the daily email check",
+  request_mark_paid: "Marked a request paid",
+  request_reject: "Rejected a request",
+  request_reopen: "Reopened a request",
+  request_mark_activated: "Started a plan from a request",
+  request_edit: "Edited a request",
+  request_delete: "Deleted a request",
 };
 
 function describe(row: LogRow) {
@@ -87,7 +98,7 @@ export default function AdminActivityPage() {
                     "—"
                   )}
                 </td>
-                <td>{row.admin ?? "—"}</td>
+                <td>{row.admin ?? (row.action.startsWith("email_") ? "SydIN (automatic)" : "—")}</td>
               </tr>
             ))}
           </tbody>

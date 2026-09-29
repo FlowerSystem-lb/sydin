@@ -6,7 +6,7 @@ import { getSupabaseAdmin } from "@/app/lib/supabaseAdmin";
    who did it, what, to which account, when. Best effort: a missing table
    (before phase 33) or a failed write never blocks the action itself. */
 export async function logAdminAction(
-  adminId: string,
+  adminId: string | null,
   action: string,
   targetUser: string | null,
   details: Record<string, unknown> = {}
