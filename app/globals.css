@@ -28011,21 +28011,31 @@ body:has(.login-page)::-webkit-scrollbar,
 }
 
 /* Company profile: details on the left, a big logo card on the right */
+/* Flex-wrap, not a viewport breakpoint: the settings menu takes part of the
+   width, so the logo card goes underneath whenever the panel itself is too
+   narrow for both (it was cut off at ~900px windows). */
 .st-company.st-company {
-  display: grid !important;
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: flex-start !important;
   gap: 1.25rem !important;
   padding: 0.25rem 0 1.25rem !important;
 }
 
-.st-company-main.st-company-main { min-width: 0; }
+.st-company-main.st-company-main { flex: 1 1 28rem; min-width: 0; }
 
-@media (min-width: 1100px) {
-  .st-company.st-company {
-    grid-template-columns: minmax(0, 1fr) 16.5rem !important;
-    align-items: start !important;
-  }
-  .st-company .st-row { grid-template-columns: minmax(8.5rem, 11rem) minmax(0, 1fr) !important; }
-  .st-logo-card.st-logo-card { position: sticky; top: 1rem; margin-top: 1rem; }
+.st-logo-card.st-logo-card {
+  flex: 0 1 16.5rem;
+  min-width: 0;
+  max-width: 100%;
+  margin-top: 1rem;
+}
+
+.st-company .st-row { grid-template-columns: minmax(8.5rem, 11rem) minmax(0, 1fr) !important; }
+
+@media (max-width: 639px) {
+  .st-company .st-row { grid-template-columns: minmax(0, 1fr) !important; }
+  .st-logo-card.st-logo-card { flex: 1 1 100%; }
 }
 
 .st-logo-card.st-logo-card {
