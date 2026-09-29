@@ -1,18 +1,16 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import BrandMark from "@/components/BrandMark";
-import Wordmark from "@/components/Wordmark";
-import UiIcon from "@/components/UiIcon";
-import RecordPaymentPanel from "@/components/admin/RecordPaymentPanel";
-import { supabase } from "@/app/lib/supabase";
+import AdminShell from "@/components/admin/AdminShell";
+import { adminFetch, formatAdminDate } from "@/app/lib/adminClient";
 
-type RequestStatus = "pending" | "paid" | "activated" | "rejected";
-type StatusFilter = "all" | RequestStatus;
-type PlanFilter = "all" | "standard" | "pro";
-type RequestAction = "mark_paid" | "reject";
-type ActivationTarget = "standard" | "pro";
+/* Admin > Plan requests (rebuilt 30 Sep 2026 inside the admin console --
+   was a separate dark page). Everything a request needs, on its card:
+   contact on WhatsApp, mark paid, approve & start the plan (records the
+   payment with a real paid period), reject / reopen, edit, delete. */
+
+type Status = "pending" | "paid" | "activated" | "rejected";
 
 interface PlanRequest {
   id: string;
@@ -23,1261 +21,403 @@ interface PlanRequest {
   selected_plan: string;
   message: string | null;
   created_at: string | null;
-  status: RequestStatus;
+  status: Status;
   user_id: string | null;
   paid_at: string | null;
   activated_at: string | null;
-  reviewed_at: string | null;
+  admin_notes: string | null;
 }
 
-type LoadResult =
-  | {
-      type: "success";
-      requests: PlanRequest[];
-    }
-  | {
-      type: "denied";
-    }
-  | {
-      type: "error";
-      message: string;
-    };
-
-interface PendingAction {
-  action: RequestAction;
-  request: PlanRequest;
-}
-
-interface ActivationPreview {
-  request_id: string;
-  customer_name: string;
-  email: string;
-  matched_user_id: string;
-  selected_plan: string;
-  target_plan: "Standard" | "Pro";
-  item_limit: 250 | 1000;
-  request_status: "pending" | "paid";
-}
-
-const statusFilters: { value: StatusFilter; label: string }[] = [
-  { value: "all", label: "All statuses" },
-  { value: "pending", label: "Pending" },
-  { value: "paid", label: "Paid" },
-  { value: "activated", label: "Activated" },
-  { value: "rejected", label: "Rejected" },
-];
-
-const planFilters: { value: PlanFilter; label: string }[] = [
-  { value: "all", label: "All plans" },
-  { value: "standard", label: "Standard" },
-  { value: "pro", label: "Pro" },
-];
-
-const statusStyles: Record<RequestStatus, string> = {
-  pending: "border-amber-300/40 bg-amber-50 text-amber-800",
-  paid: "border-sky-300/40 bg-sky-50 text-sky-800",
-  activated: "border-emerald-300/40 bg-emerald-50 text-emerald-800",
-  rejected: "border-rose-300/40 bg-rose-50 text-rose-800",
+const STATUS_LABEL: Record<Status, string> = {
+  pending: "New",
+  paid: "Paid · to start",
+  activated: "Started",
+  rejected: "Rejected",
 };
 
-function formatStatus(status: RequestStatus) {
-  return status.charAt(0).toUpperCase() + status.slice(1);
-}
+const STATE_CLASS: Record<Status, string> = {
+  pending: "ad-state-due_soon",
+  paid: "ad-state-grace",
+  activated: "ad-state-paid",
+  rejected: "ad-state-cancelled",
+};
 
-function formatDate(value: string | null) {
-  if (!value) return "Not available";
+const PRICES: Record<string, Record<string, number>> = {
+  standard: { monthly: 9, yearly: 90 },
+  pro: { monthly: 19, yearly: 190 },
+};
 
-  const date = new Date(value);
+type Filter = "open" | Status | "all";
 
-  if (Number.isNaN(date.getTime())) return "Not available";
+const FILTERS: { id: Filter; label: string }[] = [
+  { id: "open", label: "To handle" },
+  { id: "pending", label: "New" },
+  { id: "paid", label: "Paid" },
+  { id: "activated", label: "Started" },
+  { id: "rejected", label: "Rejected" },
+  { id: "all", label: "All" },
+];
 
-  return new Intl.DateTimeFormat("en", {
-    dateStyle: "medium",
-    timeStyle: "short",
-  }).format(date);
-}
-
-function DetailRow({
-  label,
-  value,
-  mono = false,
-}: {
-  label: string;
-  value: string | null;
-  mono?: boolean;
-}) {
-  return (
-    <div className="min-w-0 rounded-2xl border border-white/10 bg-black/25 p-4">
-      <dt className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-        {label}
-      </dt>
-      <dd
-        className={`mt-2 break-words text-sm font-semibold leading-6 text-slate-200 ${
-          mono ? "font-mono text-xs" : ""
-        }`}
-      >
-        {value || "Not available"}
-      </dd>
-    </div>
-  );
-}
-
-function ShieldIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="h-7 w-7"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth="1.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M12 3 5 6v5c0 4.6 2.8 8.1 7 10 4.2-1.9 7-5.4 7-10V6l-7-3Z" />
-      <path d="m9 12 2 2 4-4" />
-    </svg>
-  );
-}
-
-async function requestPlanRequests(): Promise<LoadResult> {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      return {
-        type: "denied",
-      };
-    }
-
-    const response = await fetch("/api/admin/plan-requests", {
-      method: "GET",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-      },
-      cache: "no-store",
-    });
-    const payload = (await response.json()) as {
-      requests?: PlanRequest[];
-      error?: string;
-    };
-
-    if (response.status === 401 || response.status === 403) {
-      return {
-        type: "denied",
-      };
-    }
-
-    if (!response.ok) {
-      return {
-        type: "error",
-        message: payload.error || "Plan requests could not be loaded.",
-      };
-    }
-
-    return {
-      type: "success",
-      requests: payload.requests || [],
-    };
-  } catch {
-    return {
-      type: "error",
-      message: "Plan requests are temporarily unavailable.",
-    };
-  }
-}
-
-async function updatePlanRequest(
-  requestId: string,
-  action: RequestAction
-): Promise<
-  | {
-      type: "success";
-      message: string;
-    }
-  | {
-      type: "denied";
-    }
-  | {
-      type: "error";
-      message: string;
-    }
-> {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      return {
-        type: "denied",
-      };
-    }
-
-    const response = await fetch(
-      `/api/admin/plan-requests/${encodeURIComponent(requestId)}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          action,
-        }),
-      }
-    );
-    const payload = (await response.json()) as {
-      message?: string;
-      error?: string;
-    };
-
-    if (response.status === 401 || response.status === 403) {
-      return {
-        type: "denied",
-      };
-    }
-
-    if (!response.ok) {
-      return {
-        type: "error",
-        message: payload.error || "The plan request could not be updated.",
-      };
-    }
-
-    return {
-      type: "success",
-      message: payload.message || "Plan request updated.",
-    };
-  } catch {
-    return {
-      type: "error",
-      message: "The plan request is temporarily unavailable.",
-    };
-  }
-}
-
-async function requestPlanActivation(
-  action: "preview" | "activate",
-  requestId: string,
-  targetPlan: ActivationTarget,
-  matchedUserId?: string
-): Promise<
-  | {
-      type: "preview";
-      preview: ActivationPreview;
-    }
-  | {
-      type: "success";
-      message: string;
-    }
-  | {
-      type: "denied";
-    }
-  | {
-      type: "error";
-      message: string;
-    }
-> {
-  try {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    if (!session?.access_token) {
-      return {
-        type: "denied",
-      };
-    }
-
-    const response = await fetch("/api/admin/activate-plan", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        action,
-        request_id: requestId,
-        target_plan: targetPlan,
-        matched_user_id: matchedUserId,
-      }),
-    });
-    const payload = (await response.json()) as {
-      preview?: ActivationPreview;
-      message?: string;
-      error?: string;
-    };
-
-    if (response.status === 401 || response.status === 403) {
-      return {
-        type: "denied",
-      };
-    }
-
-    if (!response.ok) {
-      return {
-        type: "error",
-        message: payload.error || "The plan could not be activated.",
-      };
-    }
-
-    if (action === "preview" && payload.preview) {
-      return {
-        type: "preview",
-        preview: payload.preview,
-      };
-    }
-
-    return {
-      type: "success",
-      message: payload.message || "Plan activated.",
-    };
-  } catch {
-    return {
-      type: "error",
-      message: "Plan activation is temporarily unavailable.",
-    };
-  }
+function whatsappLink(phone: string | null, name: string, plan: string) {
+  const digits = String(phone || "").replace(/[^\d]/g, "").replace(/^00/, "");
+  if (!digits) return null;
+  const number = digits.startsWith("961") || digits.length > 9 ? digits : `961${digits.replace(/^0/, "")}`;
+  const message = `Hello ${name}, this is SydIN about your ${plan} plan request.`;
+  return `https://wa.me/${number}?text=${encodeURIComponent(message)}`;
 }
 
 export default function AdminPlanRequestsPage() {
-  const [requests, setRequests] = useState<PlanRequest[]>([]);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [planFilter, setPlanFilter] = useState<PlanFilter>("all");
-  const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-  const [accessDenied, setAccessDenied] = useState(false);
+  const [rows, setRows] = useState<PlanRequest[] | null>(null);
   const [error, setError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [pendingAction, setPendingAction] = useState<PendingAction | null>(null);
-  const [actionLoading, setActionLoading] = useState(false);
-  const [activationLookupKey, setActivationLookupKey] = useState("");
-  const [activationPreview, setActivationPreview] =
-    useState<ActivationPreview | null>(null);
-  const [activationLoading, setActivationLoading] = useState(false);
+  const [flash, setFlash] = useState("");
+  const [filter, setFilter] = useState<Filter>("open");
+  const [query, setQuery] = useState("");
+  const [busyId, setBusyId] = useState<string | null>(null);
+  const [approving, setApproving] = useState<string | null>(null);
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState({ selected_plan: "Standard", phone: "", business_name: "", admin_notes: "" });
+  const [pay, setPay] = useState({ plan: "standard", cycle: "monthly", months: 1, amount: "9", method: "Whish Money", reference: "" });
 
-  useEffect(() => {
-    let isActive = true;
-
-    requestPlanRequests().then((result) => {
-      if (!isActive) return;
-
-      if (result.type === "denied") {
-        setAccessDenied(true);
-        setRequests([]);
-        setLoading(false);
-        return;
-      }
-
-      if (result.type === "error") {
-        setError(result.message);
-        setLoading(false);
-        return;
-      }
-
-      setError("");
-      setAccessDenied(false);
-      setRequests(result.requests);
-      setLoading(false);
-    });
-
-    return () => {
-      isActive = false;
-    };
+  const load = useCallback(() => {
+    adminFetch<{ requests: PlanRequest[] }>("/api/admin/plan-requests")
+      .then((answer) => setRows(answer.requests))
+      .catch((failure: Error) => setError(failure.message));
   }, []);
 
   useEffect(() => {
-    if (!pendingAction || actionLoading) return;
+    load();
+  }, [load]);
 
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setPendingAction(null);
+  const counts = useMemo(() => {
+    const all = rows ?? [];
+    return {
+      pending: all.filter((row) => row.status === "pending").length,
+      paid: all.filter((row) => row.status === "paid").length,
+      activated: all.filter((row) => row.status === "activated").length,
+      rejected: all.filter((row) => row.status === "rejected").length,
     };
+  }, [rows]);
 
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [actionLoading, pendingAction]);
+  const visible = (rows ?? []).filter((row) => {
+    if (filter === "open" && !["pending", "paid"].includes(row.status)) return false;
+    if (filter !== "open" && filter !== "all" && row.status !== filter) return false;
+    const needle = query.trim().toLowerCase();
+    if (!needle) return true;
+    return [row.full_name, row.business_name, row.email, row.phone].some((value) => String(value || "").toLowerCase().includes(needle));
+  });
 
-  useEffect(() => {
-    if (!activationPreview || activationLoading) return;
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setActivationPreview(null);
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activationLoading, activationPreview]);
-
-  const refreshRequests = async () => {
-    if (refreshing) return;
-
-    setRefreshing(true);
+  const run = async (id: string, work: () => Promise<unknown>, done: string) => {
+    setBusyId(id);
     setError("");
-
-    const result = await requestPlanRequests();
-
-    if (result.type === "denied") {
-      setAccessDenied(true);
-      setRequests([]);
-    } else if (result.type === "error") {
-      setError(result.message);
-    } else {
-      setAccessDenied(false);
-      setRequests(result.requests);
+    setFlash("");
+    try {
+      await work();
+      setFlash(done);
+      load();
+    } catch (failure) {
+      setError((failure as Error).message);
+    } finally {
+      setBusyId(null);
     }
-
-    setRefreshing(false);
   };
 
-  const confirmAction = async () => {
-    if (!pendingAction || actionLoading) return;
+  const patch = (id: string, body: Record<string, unknown>) =>
+    adminFetch(`/api/admin/plan-requests/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(body) });
 
-    setActionLoading(true);
-    setError("");
-    setNotice("");
+  const startApprove = (row: PlanRequest) => {
+    const plan = row.selected_plan.toLowerCase() === "pro" ? "pro" : "standard";
+    setPay({ plan, cycle: "monthly", months: 1, amount: String(PRICES[plan].monthly), method: "Whish Money", reference: "" });
+    setEditing(null);
+    setApproving(row.id);
+  };
 
-    const result = await updatePlanRequest(
-      pendingAction.request.id,
-      pendingAction.action
+  const approve = (row: PlanRequest) =>
+    run(
+      row.id,
+      async () => {
+        const answer = await adminFetch<{ user: { id: string } }>("/api/admin/billing", {
+          method: "POST",
+          body: JSON.stringify({
+            email: row.email,
+            plan: pay.plan,
+            cycle: pay.cycle,
+            months: pay.months,
+            amount: Number(pay.amount),
+            currency: "USD",
+            method: pay.method,
+            reference: pay.reference,
+            note: `From plan request #${row.id}`,
+          }),
+        });
+        await patch(row.id, { action: "mark_activated", user_id: answer.user.id });
+        setApproving(null);
+      },
+      `${row.business_name || row.full_name} is on ${pay.plan === "pro" ? "Pro" : "Standard"}. Payment recorded.`
     );
 
-    if (result.type === "denied") {
-      setAccessDenied(true);
-      setRequests([]);
-      setPendingAction(null);
-      setActionLoading(false);
-      return;
-    }
-
-    if (result.type === "error") {
-      setError(result.message);
-      setActionLoading(false);
-      return;
-    }
-
-    const refreshed = await requestPlanRequests();
-
-    if (refreshed.type === "success") {
-      setRequests(refreshed.requests);
-      setNotice(result.message);
-      setPendingAction(null);
-    } else if (refreshed.type === "denied") {
-      setAccessDenied(true);
-      setRequests([]);
-      setPendingAction(null);
-    } else {
-      setError(
-        `${result.message} Refresh the page to load the latest request status.`
-      );
-      setPendingAction(null);
-    }
-
-    setActionLoading(false);
-  };
-
-  const prepareActivation = async (
-    planRequest: PlanRequest,
-    targetPlan: ActivationTarget
-  ) => {
-    const lookupKey = `${planRequest.id}:${targetPlan}`;
-
-    if (activationLookupKey || activationLoading) return;
-
-    setActivationLookupKey(lookupKey);
-    setError("");
-    setNotice("");
-
-    const result = await requestPlanActivation(
-      "preview",
-      planRequest.id,
-      targetPlan
-    );
-
-    if (result.type === "denied") {
-      setAccessDenied(true);
-      setRequests([]);
-    } else if (result.type === "error") {
-      setError(result.message);
-    } else if (result.type === "preview") {
-      setActivationPreview(result.preview);
-    }
-
-    setActivationLookupKey("");
-  };
-
-  const confirmActivation = async () => {
-    if (!activationPreview || activationLoading) return;
-
-    setActivationLoading(true);
-    setError("");
-    setNotice("");
-
-    const targetPlan = activationPreview.target_plan.toLowerCase() as
-      | "standard"
-      | "pro";
-    const result = await requestPlanActivation(
-      "activate",
-      activationPreview.request_id,
-      targetPlan,
-      activationPreview.matched_user_id
-    );
-
-    if (result.type === "denied") {
-      setAccessDenied(true);
-      setRequests([]);
-      setActivationPreview(null);
-      setActivationLoading(false);
-      return;
-    }
-
-    if (result.type === "error") {
-      setError(result.message);
-      setActivationLoading(false);
-      return;
-    }
-
-    if (result.type !== "success") {
-      setError("Activation confirmation returned an unexpected response.");
-      setActivationLoading(false);
-      return;
-    }
-
-    const refreshed = await requestPlanRequests();
-
-    if (refreshed.type === "success") {
-      setRequests(refreshed.requests);
-      setNotice(result.message);
-      setActivationPreview(null);
-    } else if (refreshed.type === "denied") {
-      setAccessDenied(true);
-      setRequests([]);
-      setActivationPreview(null);
-    } else {
-      setError(
-        `${result.message} Refresh the page to load the latest request status.`
-      );
-      setActivationPreview(null);
-    }
-
-    setActivationLoading(false);
-  };
-
-  const filteredRequests = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
-    return requests.filter((request) => {
-      const statusMatches =
-        statusFilter === "all" || request.status === statusFilter;
-      const requestPlan = request.selected_plan.trim().toLowerCase();
-      const planMatches =
-        planFilter === "all" || requestPlan === planFilter;
-      const searchMatches =
-        !normalizedSearch ||
-        [
-          request.email,
-          request.full_name,
-          request.business_name || "",
-        ].some((value) => value.toLowerCase().includes(normalizedSearch));
-
-      return statusMatches && planMatches && searchMatches;
+  const startEdit = (row: PlanRequest) => {
+    setDraft({
+      selected_plan: row.selected_plan.toLowerCase() === "pro" ? "Pro" : "Standard",
+      phone: row.phone ?? "",
+      business_name: row.business_name ?? "",
+      admin_notes: row.admin_notes ?? "",
     });
-  }, [planFilter, requests, search, statusFilter]);
-
-  const statusCounts = useMemo(
-    () =>
-      requests.reduce<Record<RequestStatus, number>>(
-        (counts, request) => {
-          counts[request.status] += 1;
-          return counts;
-        },
-        {
-          pending: 0,
-          paid: 0,
-          activated: 0,
-          rejected: 0,
-        }
-      ),
-    [requests]
-  );
-
-  if (loading) {
-    return (
-      <main className="admin-console liquid-bg min-h-screen overflow-x-hidden px-4 py-8 text-white sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="glass-panel h-40 animate-pulse" />
-          <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
-            {[1, 2, 3, 4].map((item) => (
-              <div
-                key={item}
-                className="glass-card h-80 animate-pulse"
-              />
-            ))}
-          </div>
-        </div>
-      </main>
-    );
-  }
-
-  if (accessDenied) {
-    return (
-      <main className="admin-console liquid-bg flex min-h-screen items-center justify-center overflow-x-hidden px-4 py-10 text-white sm:px-6">
-        <section className="glass-panel w-full max-w-xl p-6 text-center sm:p-9">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-3xl border border-sky-200/20 bg-sky-400/10 text-sky-100">
-            <ShieldIcon />
-          </div>
-          <p className="mt-6 text-sm font-black uppercase tracking-[0.18em] text-sky-300">
-            Private SydIN workspace
-          </p>
-          <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">
-            Admin access required
-          </h1>
-          <p className="mx-auto mt-4 max-w-md text-sm leading-7 text-slate-400 sm:text-base">
-            This account is not authorized to view plan requests. Sign in with
-            the SydIN admin account or return to your dashboard.
-          </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-            <Link
-              href="/login"
-              className="glass-button min-h-12 rounded-2xl px-5 py-3 text-sm"
-            >
-              Sign In
-            </Link>
-            <Link
-              href="/dashboard"
-              className="glass-button glass-button-secondary min-h-12 rounded-2xl px-5 py-3 text-sm"
-            >
-              Back to Dashboard
-            </Link>
-          </div>
-        </section>
-      </main>
-    );
-  }
+    setApproving(null);
+    setEditing(row.id);
+  };
 
   return (
-    <main className="admin-console liquid-bg min-h-screen overflow-x-hidden px-4 py-6 text-white sm:px-6 lg:px-8 lg:py-9">
-      <div className="mx-auto flex max-w-7xl flex-col gap-6">
-        <header className="glass-panel overflow-hidden p-5 sm:p-7 lg:p-8">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <Link
-                href="/"
-                className="inline-flex items-center gap-3"
-                aria-label="SydIN home"
-              >
-                <BrandMark compact />
-                <Wordmark size="md" />
-              </Link>
-              <div className="mt-7 flex items-center gap-3">
-                <span className="flex h-11 w-11 items-center justify-center rounded-2xl border border-sky-200/20 bg-sky-400/10 text-sky-100">
-                  <ShieldIcon />
-                </span>
-                <div>
-                  <p className="text-xs font-black uppercase tracking-[0.18em] text-sky-300">
-                    Manual review admin
-                  </p>
-                  <h1 className="mt-1 text-3xl font-black tracking-tight sm:text-4xl">
-                    Plan requests
-                  </h1>
-                </div>
-              </div>
-              <p className="mt-4 max-w-2xl text-sm leading-7 text-slate-400 sm:text-base">
-                Review early-access Standard and Pro requests, confirm manual
-                payments, activate matched customer accounts, or reject
-                requests.
-              </p>
-            </div>
-
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <Link
-                href="/dashboard"
-                className="glass-button glass-button-secondary min-h-12 rounded-2xl px-5 py-3 text-sm"
-              >
-                Dashboard
-              </Link>
-              <button
-                type="button"
-                onClick={() => void refreshRequests()}
-                disabled={refreshing}
-                className="glass-button min-h-12 rounded-2xl px-5 py-3 text-sm"
-              >
-                <UiIcon name="download" className="h-4 w-4 rotate-180" />
-                {refreshing ? "Refreshing..." : "Refresh requests"}
-              </button>
-            </div>
-          </div>
-        </header>
-
-        <RecordPaymentPanel />
-
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-5">
-          <div className="glass-card col-span-2 p-4 sm:p-5 lg:col-span-1">
-            <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-              Total
-            </p>
-            <p className="mt-2 text-3xl font-black">{requests.length}</p>
-          </div>
-          {(
-            [
-              "pending",
-              "paid",
-              "activated",
-              "rejected",
-            ] as RequestStatus[]
-          ).map((status) => (
-            <div key={status} className="glass-card p-4 sm:p-5">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                {formatStatus(status)}
-              </p>
-              <p className="mt-2 text-3xl font-black">
-                {statusCounts[status]}
-              </p>
-            </div>
-          ))}
-        </section>
-
-        <section className="glass-panel p-4 sm:p-5">
-          <div className="grid grid-cols-1 gap-3 lg:grid-cols-[1fr_220px_220px]">
-            <label className="relative block">
-              <span className="sr-only">
-                Search by email, full name, or business name
-              </span>
-              <UiIcon
-                name="search"
-                className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500"
-              />
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search email, full name, or business..."
-                className="glass-input min-h-12 pl-12"
-              />
-            </label>
-
-            <label>
-              <span className="sr-only">Filter by status</span>
-              <select
-                value={statusFilter}
-                onChange={(event) =>
-                  setStatusFilter(event.target.value as StatusFilter)
-                }
-                className="glass-input min-h-12"
-              >
-                {statusFilters.map((filter) => (
-                  <option key={filter.value} value={filter.value}>
-                    {filter.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-
-            <label>
-              <span className="sr-only">Filter by plan</span>
-              <select
-                value={planFilter}
-                onChange={(event) =>
-                  setPlanFilter(event.target.value as PlanFilter)
-                }
-                className="glass-input min-h-12"
-              >
-                {planFilters.map((filter) => (
-                  <option key={filter.value} value={filter.value}>
-                    {filter.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-
-          <p className="mt-4 text-sm font-semibold text-slate-500">
-            Showing {filteredRequests.length} of {requests.length} requests
-          </p>
-        </section>
-
-        {error && (
-          <section className="rounded-3xl border border-rose-300/25 bg-rose-500/10 px-5 py-4 text-sm font-semibold text-rose-100">
-            {error}
-          </section>
-        )}
-
-        {notice && (
-          <section className="rounded-3xl border border-emerald-300/25 bg-emerald-500/10 px-5 py-4 text-sm font-semibold text-emerald-100">
-            {notice}
-          </section>
-        )}
-
-        {filteredRequests.length > 0 ? (
-          <section className="grid grid-cols-1 gap-5 xl:grid-cols-2">
-            {filteredRequests.map((request) => (
-              <article
-                key={request.id}
-                className="glass-card min-w-0 overflow-hidden p-5 sm:p-6"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black uppercase tracking-[0.16em] text-sky-300">
-                      {request.business_name || "Individual request"}
-                    </p>
-                    <h2 className="mt-2 break-words text-2xl font-black tracking-tight text-white">
-                      {request.full_name}
-                    </h2>
-                    <p className="mt-2 break-all text-sm font-semibold text-slate-400">
-                      {request.email || "Email not available"}
-                    </p>
-                  </div>
-
-                  <div className="flex flex-wrap gap-2 sm:justify-end">
-                    <span
-                      className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-black ${statusStyles[request.status]}`}
-                    >
-                      {formatStatus(request.status)}
-                    </span>
-                    <span className="glass-badge text-xs font-black">
-                      {request.selected_plan}
-                    </span>
-                  </div>
-                </div>
-
-                <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  <DetailRow label="Phone / WhatsApp" value={request.phone} />
-                  <DetailRow
-                    label="Requested"
-                    value={formatDate(request.created_at)}
-                  />
-                  <DetailRow
-                    label="User ID"
-                    value={request.user_id}
-                    mono
-                  />
-                  <DetailRow
-                    label="Request ID"
-                    value={request.id}
-                    mono
-                  />
-                </dl>
-
-                <div className="mt-3 rounded-2xl border border-white/10 bg-black/25 p-4">
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-slate-500">
-                    Message
-                  </p>
-                  <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-7 text-slate-300">
-                    {request.message || "No message was included."}
-                  </p>
-                </div>
-
-                <dl className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  <DetailRow
-                    label="Paid at"
-                    value={
-                      request.paid_at ? formatDate(request.paid_at) : null
-                    }
-                  />
-                  <DetailRow
-                    label="Activated at"
-                    value={
-                      request.activated_at
-                        ? formatDate(request.activated_at)
-                        : null
-                    }
-                  />
-                  <DetailRow
-                    label="Reviewed at"
-                    value={
-                      request.reviewed_at
-                        ? formatDate(request.reviewed_at)
-                        : null
-                    }
-                  />
-                </dl>
-
-                {(request.status === "pending" ||
-                  request.status === "paid") && (
-                  <div className="mt-5 border-t border-white/10 pt-5">
-                    <div
-                      className={`rounded-2xl border p-4 ${
-                        request.status === "paid"
-                          ? "border-emerald-300/20 bg-emerald-500/[0.07]"
-                          : "border-amber-300/20 bg-amber-500/[0.07]"
-                      }`}
-                    >
-                      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                        <div>
-                          <p className="text-sm font-black text-white">
-                            Activate customer plan
-                          </p>
-                          <p
-                            className={`mt-1 text-xs leading-5 ${
-                              request.status === "paid"
-                                ? "text-emerald-100/70"
-                                : "text-amber-100/75"
-                            }`}
-                          >
-                            {request.status === "paid"
-                              ? "Payment is marked paid. Match the email to an existing SydIN account before activation."
-                              : "Payment has not been marked paid. Activation will record payment confirmation automatically."}
-                          </p>
-                        </div>
-                        <span
-                          className={`w-fit rounded-full border px-3 py-1 text-xs font-black ${
-                            request.status === "paid"
-                              ? "border-emerald-300/25 bg-emerald-400/10 text-emerald-100"
-                              : "border-amber-300/25 bg-amber-400/10 text-amber-100"
-                          }`}
-                        >
-                          {request.status === "paid"
-                            ? "Ready to activate"
-                            : "Payment pending"}
-                        </span>
-                      </div>
-
-                      <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        {(["standard", "pro"] as ActivationTarget[]).map(
-                          (targetPlan) => {
-                            const label =
-                              targetPlan === "standard" ? "Standard" : "Pro";
-                            const lookupKey = `${request.id}:${targetPlan}`;
-                            const isMatching =
-                              activationLookupKey === lookupKey;
-                            const isRequestedPlan =
-                              request.selected_plan.trim().toLowerCase() ===
-                              targetPlan;
-
-                            return (
-                              <button
-                                key={targetPlan}
-                                type="button"
-                                onClick={() =>
-                                  void prepareActivation(request, targetPlan)
-                                }
-                                disabled={
-                                  Boolean(activationLookupKey) ||
-                                  activationLoading ||
-                                  actionLoading
-                                }
-                                className={`glass-button min-h-11 rounded-2xl px-4 py-3 text-sm ${
-                                  isRequestedPlan
-                                    ? "ring-2 ring-cyan-200/20"
-                                    : ""
-                                }`}
-                              >
-                                {isMatching
-                                  ? "Matching account..."
-                                  : `Activate ${label}`}
-                              </button>
-                            );
-                          }
-                        )}
-                      </div>
-                    </div>
-
-                    <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:justify-end">
-                      {request.status === "pending" && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setError("");
-                          setNotice("");
-                          setPendingAction({
-                            action: "mark_paid",
-                            request,
-                          });
-                        }}
-                        disabled={
-                          actionLoading ||
-                          activationLoading ||
-                          Boolean(activationLookupKey)
-                        }
-                        className="glass-button min-h-11 rounded-2xl px-5 py-3 text-sm sm:min-w-32"
-                      >
-                        Mark Paid
-                      </button>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setError("");
-                          setNotice("");
-                          setPendingAction({
-                            action: "reject",
-                            request,
-                          });
-                        }}
-                        disabled={
-                          actionLoading ||
-                          activationLoading ||
-                          Boolean(activationLookupKey)
-                        }
-                        className="glass-button glass-button-danger min-h-11 rounded-2xl px-5 py-3 text-sm sm:min-w-32"
-                      >
-                        Reject
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </article>
-            ))}
-          </section>
-        ) : (
-          <section className="glass-panel px-5 py-14 text-center sm:px-8">
-            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl border border-sky-200/20 bg-sky-400/10 text-sky-100">
-              <UiIcon name="search" className="h-6 w-6" />
-            </div>
-            <h2 className="mt-5 text-2xl font-black">
-              No matching plan requests
-            </h2>
-            <p className="mx-auto mt-3 max-w-md text-sm leading-7 text-slate-400">
-              Adjust the search or filters. New requests will appear here after
-              customers submit the early-access form.
-            </p>
-          </section>
-        )}
+    <AdminShell title="Plan requests" subtitle="People who asked for Standard or Pro. Contact them, confirm the payment, and start their plan.">
+      <div className="ad-stats">
+        <div className={`ad-stat${counts.pending ? " ad-stat-warn" : ""}`}>
+          <span>New</span>
+          <strong>{rows ? counts.pending : "…"}</strong>
+        </div>
+        <div className="ad-stat">
+          <span>Paid · to start</span>
+          <strong>{rows ? counts.paid : "…"}</strong>
+        </div>
+        <div className="ad-stat">
+          <span>Started</span>
+          <strong>{rows ? counts.activated : "…"}</strong>
+        </div>
+        <div className="ad-stat">
+          <span>Rejected</span>
+          <strong>{rows ? counts.rejected : "…"}</strong>
+        </div>
       </div>
 
-      {pendingAction && (
-        <div
-          className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#020617]/88 p-4 backdrop-blur-xl"
-          onClick={() => {
-            if (!actionLoading) setPendingAction(null);
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="request-action-title"
-            className="glass-modal my-8 w-full max-w-lg p-5 sm:p-7"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p
-                  className={`text-xs font-black uppercase tracking-[0.16em] ${
-                    pendingAction.action === "reject"
-                      ? "text-rose-300"
-                      : "text-sky-300"
-                  }`}
-                >
-                  Confirmation required
-                </p>
-                <h2
-                  id="request-action-title"
-                  className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl"
-                >
-                  {pendingAction.action === "mark_paid"
-                    ? "Mark this request paid?"
-                    : "Reject this plan request?"}
-                </h2>
-              </div>
-              <button
-                type="button"
-                onClick={() => setPendingAction(null)}
-                disabled={actionLoading}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-slate-400 transition hover:bg-white/[0.1] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Close confirmation dialog"
-              >
-                <svg
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <path d="M6 6l12 12M18 6 6 18" />
-                </svg>
-              </button>
-            </div>
+      <div className="ad-toolbar">
+        <input
+          className="ad-input ad-search"
+          placeholder="Search name, business, email or phone"
+          value={query}
+          onChange={(event) => setQuery(event.target.value)}
+          aria-label="Search requests"
+        />
+        <div className="ad-chips" role="tablist" aria-label="Filter">
+          {FILTERS.map((entry) => (
+            <button
+              key={entry.id}
+              type="button"
+              role="tab"
+              aria-selected={filter === entry.id}
+              className={`ad-chip${filter === entry.id ? " ad-chip-on" : ""}`}
+              onClick={() => setFilter(entry.id)}
+            >
+              {entry.label}
+            </button>
+          ))}
+        </div>
+      </div>
 
-            <div className="mt-6 rounded-2xl border border-white/10 bg-black/25 p-4">
-              <p className="text-sm font-black text-white">
-                {pendingAction.request.full_name}
-              </p>
-              <p className="mt-1 break-all text-sm text-slate-400">
-                {pendingAction.request.email || "Email not available"}
-              </p>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <span className="glass-badge text-xs font-bold">
-                  {pendingAction.request.selected_plan}
-                </span>
-                <span
-                  className={`inline-flex rounded-full border px-3 py-1.5 text-xs font-black ${statusStyles[pendingAction.request.status]}`}
-                >
-                  {formatStatus(pendingAction.request.status)}
-                </span>
-              </div>
-            </div>
+      {flash && <p className="ad-flash" role="status">{flash}</p>}
+      {error && <p className="ad-error" role="alert">{error}</p>}
 
-            <p className="mt-5 text-sm leading-7 text-slate-300">
-              {pendingAction.action === "mark_paid"
-                ? "This records manual payment confirmation and reviewer details. It does not activate Standard or Pro."
-                : "This marks the request as rejected and records reviewer details. The request will remain stored and no customer data will be deleted."}
-            </p>
-
-            {error && (
-              <div className="mt-5 rounded-2xl border border-rose-300/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100">
-                {error}
-              </div>
-            )}
-
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setPendingAction(null)}
-                disabled={actionLoading}
-                className="glass-button glass-button-secondary min-h-12 rounded-2xl px-5 py-3 text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void confirmAction()}
-                disabled={actionLoading}
-                className={`glass-button min-h-12 rounded-2xl px-5 py-3 text-sm ${
-                  pendingAction.action === "reject"
-                    ? "glass-button-danger"
-                    : ""
-                }`}
-              >
-                {actionLoading
-                  ? pendingAction.action === "mark_paid"
-                    ? "Marking paid..."
-                    : "Rejecting..."
-                  : pendingAction.action === "mark_paid"
-                    ? "Confirm Mark Paid"
-                    : "Confirm Reject"}
-              </button>
-            </div>
-          </section>
+      {!rows && !error && <p className="ad-muted">Loading requests…</p>}
+      {rows && visible.length === 0 && (
+        <div className="ad-card">
+          <p className="ad-muted">{filter === "open" ? "Nothing to handle. New requests show up here." : "No requests match."}</p>
         </div>
       )}
 
-      {activationPreview && (
-        <div
-          className="fixed inset-0 z-[90] flex items-center justify-center overflow-y-auto bg-[#020617]/88 p-4 backdrop-blur-xl"
-          onClick={() => {
-            if (!activationLoading) setActivationPreview(null);
-          }}
-        >
-          <section
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="activation-dialog-title"
-            className="glass-modal my-8 w-full max-w-2xl p-5 sm:p-7"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-emerald-300">
-                  Account matched
-                </p>
-                <h2
-                  id="activation-dialog-title"
-                  className="mt-2 text-2xl font-black tracking-tight text-white sm:text-3xl"
+      <div className="ad-requests">
+        {visible.map((row) => {
+          const busy = busyId === row.id;
+          const whatsapp = whatsappLink(row.phone, row.full_name, row.selected_plan);
+          return (
+            <article key={row.id} className="ad-card ad-request">
+              <div className="ad-request-head">
+                <div className="min-w-0">
+                  <p className="ad-request-name">
+                    {row.full_name}
+                    {row.business_name && <span> · {row.business_name}</span>}
+                  </p>
+                  <p className="ad-sub">
+                    Asked for <strong>{row.selected_plan}</strong> on {formatAdminDate(row.created_at)}
+                    {row.paid_at && ` · paid ${formatAdminDate(row.paid_at)}`}
+                    {row.activated_at && ` · started ${formatAdminDate(row.activated_at)}`}
+                  </p>
+                </div>
+                <span className={`ad-state ${STATE_CLASS[row.status]}`}>{STATUS_LABEL[row.status]}</span>
+              </div>
+
+              <dl className="ad-facts">
+                <div><dt>Email</dt><dd>{row.email || "—"}</dd></div>
+                <div><dt>Phone</dt><dd>{row.phone || "—"}</dd></div>
+              </dl>
+              {row.message && <p className="ad-request-msg">“{row.message}”</p>}
+              {row.admin_notes && editing !== row.id && <p className="ad-request-note">Note: {row.admin_notes}</p>}
+
+              {approving === row.id && (
+                <div className="ad-request-panel">
+                  <p className="ad-request-panel-title">Approve and start the plan</p>
+                  <div className="ad-form">
+                    <label>
+                      Plan
+                      <select className="ad-input" value={pay.plan} onChange={(event) => setPay({ ...pay, plan: event.target.value, amount: String(PRICES[event.target.value][pay.cycle]) })}>
+                        <option value="standard">Standard</option>
+                        <option value="pro">Pro</option>
+                      </select>
+                    </label>
+                    <label>
+                      Period
+                      <select
+                        className="ad-input"
+                        value={pay.cycle}
+                        onChange={(event) =>
+                          setPay({ ...pay, cycle: event.target.value, months: event.target.value === "yearly" ? 12 : 1, amount: String(PRICES[pay.plan][event.target.value]) })
+                        }
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="yearly">Yearly</option>
+                      </select>
+                    </label>
+                    <label>
+                      Months
+                      <input className="ad-input" type="number" min={1} max={24} value={pay.months} onChange={(event) => setPay({ ...pay, months: Math.max(1, Math.min(24, Number(event.target.value) || 1)) })} />
+                    </label>
+                    <label>
+                      Amount (USD)
+                      <input className="ad-input" type="number" min={0} step="0.01" value={pay.amount} onChange={(event) => setPay({ ...pay, amount: event.target.value })} />
+                    </label>
+                    <label>
+                      Paid by
+                      <select className="ad-input" value={pay.method} onChange={(event) => setPay({ ...pay, method: event.target.value })}>
+                        {["Whish Money", "OMT", "Crypto", "Cash", "Bank transfer"].map((method) => (
+                          <option key={method}>{method}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Receipt / reference
+                      <input className="ad-input" value={pay.reference} onChange={(event) => setPay({ ...pay, reference: event.target.value })} placeholder="Optional" />
+                    </label>
+                  </div>
+                  <p className="ad-sub">They need a SydIN account with {row.email}. The plan starts today for the months paid.</p>
+                  <div className="ad-actions">
+                    <button type="button" className="ad-btn ad-btn-primary" disabled={busy} onClick={() => void approve(row)}>
+                      {busy ? "Starting…" : "Record payment and start plan"}
+                    </button>
+                    <button type="button" className="ad-btn ad-btn-ghost" onClick={() => setApproving(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {editing === row.id && (
+                <div className="ad-request-panel">
+                  <p className="ad-request-panel-title">Edit request</p>
+                  <div className="ad-form">
+                    <label>
+                      Plan
+                      <select className="ad-input" value={draft.selected_plan} onChange={(event) => setDraft({ ...draft, selected_plan: event.target.value })}>
+                        <option>Standard</option>
+                        <option>Pro</option>
+                      </select>
+                    </label>
+                    <label>
+                      Phone
+                      <input className="ad-input" value={draft.phone} onChange={(event) => setDraft({ ...draft, phone: event.target.value })} />
+                    </label>
+                    <label>
+                      Business name
+                      <input className="ad-input" value={draft.business_name} onChange={(event) => setDraft({ ...draft, business_name: event.target.value })} />
+                    </label>
+                    <label>
+                      Private note
+                      <input className="ad-input" value={draft.admin_notes} onChange={(event) => setDraft({ ...draft, admin_notes: event.target.value })} placeholder="Only you see this" />
+                    </label>
+                  </div>
+                  <div className="ad-actions">
+                    <button
+                      type="button"
+                      className="ad-btn ad-btn-primary"
+                      disabled={busy}
+                      onClick={() =>
+                        void run(
+                          row.id,
+                          async () => {
+                            await patch(row.id, { action: "edit", ...draft });
+                            setEditing(null);
+                          },
+                          "Request saved."
+                        )
+                      }
+                    >
+                      Save
+                    </button>
+                    <button type="button" className="ad-btn ad-btn-ghost" onClick={() => setEditing(null)}>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <div className="ad-actions">
+                {whatsapp && (
+                  <a className="ad-btn ad-btn-green" href={whatsapp} target="_blank" rel="noopener noreferrer">
+                    WhatsApp
+                  </a>
+                )}
+                {row.status === "pending" && (
+                  <button type="button" className="ad-btn" disabled={busy} onClick={() => void run(row.id, () => patch(row.id, { action: "mark_paid" }), "Marked paid.")}>
+                    Mark paid
+                  </button>
+                )}
+                {(row.status === "pending" || row.status === "paid") && approving !== row.id && (
+                  <button type="button" className="ad-btn ad-btn-primary" disabled={busy} onClick={() => startApprove(row)}>
+                    Approve &amp; start plan
+                  </button>
+                )}
+                {row.status === "activated" && row.user_id && (
+                  <Link className="ad-btn" href={`/admin/customers/${row.user_id}`}>
+                    Open customer
+                  </Link>
+                )}
+                {row.status === "rejected" && (
+                  <button type="button" className="ad-btn" disabled={busy} onClick={() => void run(row.id, () => patch(row.id, { action: "reopen" }), "Reopened.")}>
+                    Reopen
+                  </button>
+                )}
+                {editing !== row.id && (
+                  <button type="button" className="ad-btn" disabled={busy} onClick={() => startEdit(row)}>
+                    Edit
+                  </button>
+                )}
+                {(row.status === "pending" || row.status === "paid") && (
+                  <button
+                    type="button"
+                    className="ad-btn ad-btn-danger"
+                    disabled={busy}
+                    onClick={() => {
+                      if (window.confirm(`Reject ${row.full_name}'s request?`)) void run(row.id, () => patch(row.id, { action: "reject" }), "Rejected.");
+                    }}
+                  >
+                    Reject
+                  </button>
+                )}
+                <button
+                  type="button"
+                  className="ad-btn ad-btn-danger"
+                  disabled={busy}
+                  onClick={() => {
+                    if (window.confirm(`Delete ${row.full_name}'s request for good? Their account and plan are not touched.`))
+                      void run(
+                        row.id,
+                        () => adminFetch(`/api/admin/plan-requests/${encodeURIComponent(row.id)}`, { method: "DELETE" }),
+                        "Request deleted."
+                      );
+                  }}
                 >
-                  Confirm {activationPreview.target_plan} activation
-                </h2>
+                  Delete
+                </button>
               </div>
-              <button
-                type="button"
-                onClick={() => setActivationPreview(null)}
-                disabled={activationLoading}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/[0.05] text-slate-400 transition hover:bg-white/[0.1] hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Close activation dialog"
-              >
-                <svg
-                  aria-hidden="true"
-                  className="h-5 w-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                >
-                  <path d="M6 6l12 12M18 6 6 18" />
-                </svg>
-              </button>
-            </div>
-
-            {activationPreview.request_status === "pending" && (
-              <div className="mt-6 rounded-2xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold leading-6 text-amber-100">
-                Payment has not been marked paid. Confirming activation will
-                record payment confirmation now.
-              </div>
-            )}
-
-            <dl className="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-2">
-              <DetailRow
-                label="Customer"
-                value={activationPreview.customer_name}
-              />
-              <DetailRow label="Request email" value={activationPreview.email} />
-              <DetailRow
-                label="Matched user UUID"
-                value={activationPreview.matched_user_id}
-                mono
-              />
-              <DetailRow
-                label="Current request status"
-                value={formatStatus(activationPreview.request_status)}
-              />
-              <DetailRow
-                label="Selected plan"
-                value={activationPreview.selected_plan}
-              />
-              <DetailRow
-                label="Target plan"
-                value={activationPreview.target_plan}
-              />
-              <DetailRow
-                label="Item limit"
-                value={`${activationPreview.item_limit.toLocaleString()} items`}
-              />
-              <DetailRow
-                label="Request ID"
-                value={activationPreview.request_id}
-                mono
-              />
-            </dl>
-
-            <p className="mt-5 text-sm leading-7 text-slate-300">
-              This activates the matched account without deleting or changing
-              inventory, depots, settings, logos, QR links, or stock history.
-            </p>
-
-            {error && (
-              <div className="mt-5 rounded-2xl border border-rose-300/25 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-100">
-                {error}
-              </div>
-            )}
-
-            <div className="mt-7 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-              <button
-                type="button"
-                onClick={() => setActivationPreview(null)}
-                disabled={activationLoading}
-                className="glass-button glass-button-secondary min-h-12 rounded-2xl px-5 py-3 text-sm"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => void confirmActivation()}
-                disabled={activationLoading}
-                className="glass-button min-h-12 rounded-2xl border-emerald-200/35 bg-[linear-gradient(135deg,rgba(16,185,129,0.32),rgba(14,165,233,0.45))] px-5 py-3 text-sm"
-              >
-                {activationLoading
-                  ? `Activating ${activationPreview.target_plan}...`
-                  : `Confirm ${activationPreview.target_plan} Activation`}
-              </button>
-            </div>
-          </section>
-        </div>
-      )}
-    </main>
+            </article>
+          );
+        })}
+      </div>
+    </AdminShell>
   );
 }

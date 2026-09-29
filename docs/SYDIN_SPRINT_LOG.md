@@ -6209,3 +6209,21 @@ Sayed asked for the admin area to be locked with a password and strict privacy.
 **Checks:**
 - Lint, type-check and build pass.
 - The layout was checked on a local mock. Real data needs phase 33 and Sayed's authenticator code.
+
+### 30 Sep — Admin: Plan requests inside the console, with edit / manage / delete
+
+Sayed: plan requests opened a different, older page and needed more buttons.
+
+- `/admin/plan-requests` was rebuilt in `AdminShell`, in the same light style and with the same tabs
+  as Customers.
+  - It has stat tiles (new, paid, started, rejected), search, and filters, defaulting to "To handle".
+  - Each card has: WhatsApp (message ready), Mark paid, **Approve & start plan**, Reject, Reopen,
+    Edit (plan, phone, business name, private note), Delete (with a confirm; the account and plan
+    are untouched), and Open customer.
+  - **Approve & start plan** records the payment through `/api/admin/billing`, so the customer gets
+    a real paid period, then marks the request started with the account id. The old
+    activate-plan route (no period) is no longer used by the UI.
+- **API:** `plan-requests/[id]` gained PATCH `reopen`, `mark_activated` and `edit`, plus DELETE. Every
+  change goes to the audit log. The list now returns `admin_notes`.
+- The standalone `RecordPaymentPanel` was removed; the customer page and the approve flow cover it.
+- **Checks:** lint, type-check and build pass. The card layout was checked on a local mock.

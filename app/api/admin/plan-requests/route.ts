@@ -50,6 +50,7 @@ function normalizePlanRequest(row: PlanRequestRow, index: number) {
     paid_at: asNullableString(row.paid_at),
     activated_at: asNullableString(row.activated_at),
     reviewed_at: asNullableString(row.reviewed_at),
+    admin_notes: asNullableString(row.admin_notes),
   };
 }
 
