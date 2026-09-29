@@ -6032,3 +6032,26 @@ Settings > "Documents" is now **Invoices & tax**.
 - Lint, type-check and build pass.
 - Tax maths checked: 100 at 11% on top gives 111, and 100 at 11% included gives 100 with 9.91 VAT.
 - Not clicked through live, because the test browser was signed out.
+
+### 29 Sep — Download all my data + Delete my account
+
+- **Download all my data** (Settings > Account; owner and admin):
+  - One Excel file with a "Read me" sheet of row counts, plus one sheet for each of 21 kinds of
+    record, with every column.
+  - Read-only, and limited by the database's own rules. Invoice, order, receipt and pick-list lines
+    are scoped through their parent (policies checked).
+  - Code: `app/lib/fullDataExport.ts`.
+- **Delete my account** (owner only):
+  - Screen: `app/api/account/delete`, a red confirmation box, and you type DELETE.
+  - Guards: the caller's own token, the typed DELETE, a sign-in within the last 24 hours, and
+    role = owner of their own business.
+  - Order, and why:
+    1. Stock transfers. They don't delete automatically and block deleting items.
+    2. Items. `inventory` has no link to the auth user.
+    3. Plan requests.
+    4. Storage files under the business folder in 3 buckets.
+    5. Team logins SydIN made.
+    6. The auth user. Everything else cascades from it.
+  - Team members see "Leave business" instead.
+  - Checked: the refusals return 401, 400 and 401. A real delete has not been run yet; Sayed should
+    test it on a throwaway account.

@@ -275,6 +275,9 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [exportingAll, setExportingAll] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteWord, setDeleteWord] = useState("");
+  const [deletingAccount, setDeletingAccount] = useState(false);
   // Show the picked logo straight away, before it is saved.
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
   useEffect(() => {
@@ -1453,6 +1456,78 @@ export default function SettingsPage() {
           Sign out of SydIN
         </Button>
       </Row>
+      {myRole === "owner" && (
+        <Row
+          label="Delete account"
+          hint="Deletes this business and everything in it, for you and your team. It cannot be undone."
+        >
+          {!deleteOpen ? (
+            <Button variant="danger" size="sm" onClick={() => setDeleteOpen(true)}>
+              Delete my account
+            </Button>
+          ) : (
+            <div className="st-delete-box">
+              <p>
+                This permanently deletes <strong>{settings.business_name || "this business"}</strong>:
+                every item, photo, invoice, customer, supplier, order and report, plus the logins
+                SydIN made for your team. It cannot be undone.
+              </p>
+              <p>Download your data first if you may need it. Type <strong>DELETE</strong> to confirm.</p>
+              <input
+                className="st-input"
+                value={deleteWord}
+                onChange={(event) => setDeleteWord(event.target.value)}
+                placeholder="DELETE"
+                aria-label="Type DELETE to confirm"
+                autoComplete="off"
+              />
+              <div className="st-inline">
+                <Button
+                  variant="danger"
+                  size="sm"
+                  disabled={deleteWord !== "DELETE" || deletingAccount}
+                  onClick={async () => {
+                    setDeletingAccount(true);
+                    const { data } = await supabase.auth.getSession();
+                    const response = await fetch("/api/account/delete", {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${data.session?.access_token ?? ""}`,
+                      },
+                      body: JSON.stringify({ confirm: deleteWord }),
+                    }).catch(() => null);
+                    if (!response || !response.ok) {
+                      const answer = response ? await response.json().catch(() => ({})) : {};
+                      setDeletingAccount(false);
+                      showToast({
+                        tone: "danger",
+                        message: (answer as { message?: string }).message || "Couldn't delete. Please try again.",
+                      });
+                      return;
+                    }
+                    await supabase.auth.signOut().catch(() => undefined);
+                    window.location.href = "/?account=deleted";
+                  }}
+                >
+                  {deletingAccount ? "Deleting..." : "Delete everything"}
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  disabled={deletingAccount}
+                  onClick={() => {
+                    setDeleteOpen(false);
+                    setDeleteWord("");
+                  }}
+                >
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </Row>
+      )}
     </>
   );
 

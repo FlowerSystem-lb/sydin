@@ -27667,3 +27667,17 @@ body:has(.login-page)::-webkit-scrollbar,
   flex: none !important;
   accent-color: #2563eb;
 }
+
+/* Settings > Account > Delete account confirmation */
+.st-delete-box.st-delete-box {
+  display: grid !important;
+  gap: 0.6rem !important;
+  max-width: 30rem;
+  border: 1px solid var(--status-danger-border);
+  border-radius: 12px;
+  background: var(--status-danger-surface);
+  padding: 0.85rem 1rem;
+  font-size: 0.85rem;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
