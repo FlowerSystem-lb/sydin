@@ -58,6 +58,7 @@ import {
   getUpgradeRequestHref,
   getSubscriptionUsage,
   getUserSubscription,
+  PLAN_DEFINITIONS,
   type UserSubscription,
 } from "@/app/lib/subscription";
 
@@ -140,8 +141,8 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "profile",
     group: "Account",
-    label: "Account & security",
-    description: "Who is signed in, and signing out.",
+    label: "My profile",
+    description: "Your name, job title, sign-in and password.",
     icon: "settings",
   },
   {
@@ -166,6 +167,33 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     icon: "receipt",
   },
 ];
+
+/* What someone does in the business -- shown next to their name, and a hint
+   for SydIN about who uses it. Not a permission: the Team role is that. */
+const JOB_TITLES = ["Owner", "Manager", "Sales", "Warehouse / stock", "Accountant", "Purchasing", "Other"];
+
+interface PersonalProfile {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  jobTitle: string;
+}
+
+const EMPTY_PROFILE: PersonalProfile = { firstName: "", lastName: "", phone: "", jobTitle: "" };
+
+function profileFromMetadata(meta: Record<string, unknown> | undefined): PersonalProfile {
+  const text = (value: unknown) => (typeof value === "string" ? value.trim() : "");
+  let firstName = text(meta?.first_name);
+  let lastName = text(meta?.last_name);
+  if (!firstName && !lastName) {
+    // Google and Microsoft give one full name; split it once.
+    const full = text(meta?.full_name) || text(meta?.name);
+    const [first, ...rest] = full.split(/s+/).filter(Boolean);
+    firstName = first || "";
+    lastName = rest.join(" ");
+  }
+  return { firstName, lastName, phone: text(meta?.phone), jobTitle: text(meta?.job_title) };
+}
 
 const SECTION_GROUPS: SettingsSection["group"][] = ["Business", "Workspace", "Account"];
 
@@ -275,6 +303,16 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [exportingAll, setExportingAll] = useState(false);
+  const [profile, setProfile] = useState<PersonalProfile>(EMPTY_PROFILE);
+  const [savedProfile, setSavedProfile] = useState<PersonalProfile>(EMPTY_PROFILE);
+  const [savingProfile, setSavingProfile] = useState(false);
+  /* Plan & billing usage beyond items: counted only when that section opens. */
+  const [usageCounts, setUsageCounts] = useState<{
+    depots: number;
+    suppliers: number;
+    customers: number;
+    members: number;
+  } | null>(null);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteWord, setDeleteWord] = useState("");
   const [deletingAccount, setDeletingAccount] = useState(false);
@@ -348,6 +386,9 @@ export default function SettingsPage() {
         }
 
         setUserEmail(user.email || "");
+        const loadedProfile = profileFromMetadata(user.user_metadata);
+        setProfile(loadedProfile);
+        setSavedProfile(loadedProfile);
         setSignInMethods(
           (user.identities ?? []).map((identity) => identity.provider)
         );
@@ -458,6 +499,32 @@ export default function SettingsPage() {
   const activeSection = visibleSections.some((section) => section.id === requestedSection)
     ? requestedSection
     : visibleSections[0].id;
+
+  const businessIdForUsage = business?.businessId;
+  useEffect(() => {
+    if (activeSection !== "billing" || !businessIdForUsage) return;
+    let live = true;
+    const count = async (table: string) => {
+      const { count: rows } = await supabase
+        .from(table)
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", businessIdForUsage);
+      return rows ?? 0;
+    };
+    Promise.all([
+      count("depots"),
+      count("suppliers"),
+      count("customers"),
+      supabase.rpc("list_team").then(({ data }) =>
+        ((data ?? []) as { is_owner?: boolean }[]).filter((row) => !row.is_owner).length
+      ),
+    ]).then(([depots, suppliers, customers, members]) => {
+      if (live) setUsageCounts({ depots, suppliers, customers, members });
+    });
+    return () => {
+      live = false;
+    };
+  }, [activeSection, businessIdForUsage]);
   // On a phone the sections are a scrolling row of tabs; the active one
   // can arrive off-screen (e.g. Data & reports from the More sheet).
   useEffect(() => {
@@ -713,8 +780,113 @@ export default function SettingsPage() {
     setSettings((current) => ({ ...current, [key]: value }));
 
   /* ---- Company profile ------------------------------------------------ */
+  /* 29 Sep (Sayed, after Sortly's Company Details): the logo gets its own
+     big card beside the details instead of a 40px thumbnail in a row. Until
+     a business adds one, the SydIN mark stands in -- the same fallback the
+     header and documents use. */
+  const renderLogoCard = () => {
+    const hasLogo = Boolean(logoPreview || settings.business_logo_url);
+    return (
+      <aside className="st-logo-card" aria-label="Company logo">
+        <p className="st-logo-title">Company logo</p>
+        <div className={`st-logo-stage${hasLogo ? "" : " st-logo-stage-empty"}`}>
+          {logoPreview ? (
+            // eslint-disable-next-line @next/next/no-img-element -- a local blob: preview of the file just picked
+            <img src={logoPreview} alt="New logo preview" className="st-logo-img" />
+          ) : settings.business_logo_url ? (
+            <Image
+              src={settings.business_logo_url}
+              alt={`Logo for ${settings.business_name}`}
+              fill
+              sizes="240px"
+              className="object-contain p-4"
+            />
+          ) : (
+            <div className="st-logo-placeholder">
+              <BrandMark className="h-14 w-14 rounded-2xl" />
+              <span>SydIN logo shows until you add yours</span>
+            </div>
+          )}
+        </div>
+
+        {canUseCustomLogo ? (
+          <div className="st-logo-actions">
+            <label htmlFor="business-logo-upload" className={buttonClassName({ variant: "secondary", size: "sm" })}>
+              {hasLogo ? "Change logo" : "Upload logo"}
+            </label>
+            {hasLogo && (
+              <button
+                type="button"
+                className="st-text-button"
+                onClick={() => {
+                  setLogoFile(null);
+                  setField("business_logo_url", "");
+                }}
+              >
+                Remove
+              </button>
+            )}
+            <input
+              id="business-logo-upload"
+              type="file"
+              accept="image/png,image/jpeg,image/webp"
+              onChange={(event) => {
+                const file = event.target.files?.[0] || null;
+                event.target.value = "";
+                if (!file) return;
+                // iPhone HEIC and SVG don't display everywhere documents
+                // and emails go; a 10 MB photo makes every PDF slow.
+                if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
+                  showToast({ tone: "danger", message: "Use a PNG, JPG or WebP image for the logo." });
+                  return;
+                }
+                if (file.size > 2 * 1024 * 1024) {
+                  showToast({ tone: "danger", message: "That image is over 2 MB. Use a smaller logo file." });
+                  return;
+                }
+                setLogoFile(file);
+              }}
+              className="sr-only"
+            />
+          </div>
+        ) : (
+          <p className="st-logo-note">
+            Your own logo comes with the Standard plan.{" "}
+            <Link href={upgradeHref} className="st-link">
+              Compare plans
+            </Link>
+          </p>
+        )}
+        <p className="st-logo-note">
+          {logoFile ? "New logo picked. Press Save changes to keep it." : "PNG, JPG or WebP, up to 2 MB. Square works best."}
+        </p>
+
+        <div className="st-logo-colour">
+          <label htmlFor="accent-color">Brand colour</label>
+          <div className="st-inline">
+            <input
+              id="accent-color"
+              type="color"
+              className="settings-accent-swatch"
+              value={settings.accent_color || DEFAULT_ACCENT_COLOR}
+              onChange={(event) => setField("accent_color", event.target.value)}
+            />
+            <span className="st-mono">{(settings.accent_color || DEFAULT_ACCENT_COLOR).toUpperCase()}</span>
+            {settings.accent_color && (
+              <button type="button" className="st-text-button" onClick={() => setField("accent_color", null)}>
+                Reset
+              </button>
+            )}
+          </div>
+          <p className="st-logo-note">The colour bar on your invoices and orders.</p>
+        </div>
+      </aside>
+    );
+  };
+
   const renderCompanyPanel = () => (
-    <>
+    <div className="st-company">
+      <div className="st-company-main">
       <Row label="Business name" htmlFor="business-name">
         <input
           id="business-name"
@@ -724,87 +896,6 @@ export default function SettingsPage() {
           onChange={(event) => setField("business_name", event.target.value)}
           required
         />
-      </Row>
-
-      <Row label="Logo" hint="PNG or JPG, square works best.">
-        <div className="st-inline">
-          <span className="settings-logo-preview">
-            {logoPreview ? (
-              // eslint-disable-next-line @next/next/no-img-element -- a local blob: preview of the file just picked
-              <img src={logoPreview} alt="New logo preview" className="h-full w-full object-contain p-1.5" />
-            ) : settings.business_logo_url ? (
-              <Image
-                src={settings.business_logo_url}
-                alt={`Logo for ${settings.business_name}`}
-                fill
-                sizes="72px"
-                className="object-contain p-1.5"
-              />
-            ) : (
-              <BrandMark className="h-9 w-9 rounded-xl" />
-            )}
-          </span>
-          {canUseCustomLogo ? (
-            <div className="min-w-0">
-              <label
-                htmlFor="business-logo-upload"
-                className={buttonClassName({ variant: "secondary", size: "sm" })}
-              >
-                {settings.business_logo_url ? "Change logo" : "Upload logo"}
-              </label>
-              <input
-                id="business-logo-upload"
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                onChange={(event) => {
-                  const file = event.target.files?.[0] || null;
-                  event.target.value = "";
-                  if (!file) return;
-                  // iPhone HEIC and SVG don't display everywhere documents
-                  // and emails go; a 10 MB photo makes every PDF slow.
-                  if (!["image/png", "image/jpeg", "image/webp"].includes(file.type)) {
-                    showToast({ tone: "danger", message: "Use a PNG, JPG or WebP image for the logo." });
-                    return;
-                  }
-                  if (file.size > 2 * 1024 * 1024) {
-                    showToast({ tone: "danger", message: "That image is over 2 MB. Use a smaller logo file." });
-                    return;
-                  }
-                  setLogoFile(file);
-                }}
-                className="sr-only"
-              />
-              {logoFile && (
-                <p className="st-hint">New logo selected. It is saved when you press Save changes.</p>
-              )}
-            </div>
-          ) : (
-            <p className="st-hint">
-              A custom logo comes with the Standard plan.{" "}
-              <Link href={upgradeHref} className="st-link">
-                Compare plans
-              </Link>
-            </p>
-          )}
-        </div>
-      </Row>
-
-      <Row label="Accent colour" hint="The colour bar on every document you export." htmlFor="accent-color">
-        <div className="st-inline">
-          <input
-            id="accent-color"
-            type="color"
-            className="settings-accent-swatch"
-            value={settings.accent_color || DEFAULT_ACCENT_COLOR}
-            onChange={(event) => setField("accent_color", event.target.value)}
-          />
-          <span className="st-mono">{(settings.accent_color || DEFAULT_ACCENT_COLOR).toUpperCase()}</span>
-          {settings.accent_color && (
-            <button type="button" className="st-text-button" onClick={() => setField("accent_color", null)}>
-              Reset to default
-            </button>
-          )}
-        </div>
       </Row>
 
       <Row label="Phone" htmlFor="contact-phone">
@@ -889,7 +980,9 @@ export default function SettingsPage() {
           placeholder="VAT number or commercial registration"
         />
       </Row>
-    </>
+      </div>
+      {renderLogoCard()}
+    </div>
   );
 
   /* ---- Documents ------------------------------------------------------ */
@@ -1309,8 +1402,122 @@ export default function SettingsPage() {
     </>
   );
 
+  const profileDirty =
+    profile.firstName !== savedProfile.firstName ||
+    profile.lastName !== savedProfile.lastName ||
+    profile.phone !== savedProfile.phone ||
+    profile.jobTitle !== savedProfile.jobTitle;
+  const displayName =
+    [savedProfile.firstName, savedProfile.lastName].filter(Boolean).join(" ") || userEmail.split("@")[0] || "You";
+  const initials =
+    ((savedProfile.firstName[0] || "") + (savedProfile.lastName[0] || "")).toUpperCase() ||
+    (userEmail[0] || "?").toUpperCase();
+
+  const saveProfile = async () => {
+    const next = {
+      firstName: profile.firstName.trim(),
+      lastName: profile.lastName.trim(),
+      phone: profile.phone.trim(),
+      jobTitle: profile.jobTitle,
+    };
+    if (!next.firstName) {
+      showToast({ tone: "danger", message: "Add your first name." });
+      return;
+    }
+    setSavingProfile(true);
+    // full_name is what "Done by" shows across the app (sql/phase-29).
+    const { error: profileError } = await supabase.auth.updateUser({
+      data: {
+        first_name: next.firstName,
+        last_name: next.lastName,
+        full_name: [next.firstName, next.lastName].filter(Boolean).join(" "),
+        phone: next.phone,
+        job_title: next.jobTitle,
+      },
+    });
+    setSavingProfile(false);
+    if (profileError) {
+      showToast({ tone: "danger", message: "Couldn't save your profile. Please try again." });
+      return;
+    }
+    setProfile(next);
+    setSavedProfile(next);
+    showToast({ tone: "success", message: "Profile saved. Your name now shows on what you do." });
+  };
+
   const renderProfilePanel = () => (
     <>
+      <div className="st-me-card">
+        <span className="st-me-avatar" aria-hidden="true">{initials}</span>
+        <div className="min-w-0">
+          <p className="st-me-name">{displayName}</p>
+          <p className="st-me-sub">
+            {savedProfile.jobTitle ? `${savedProfile.jobTitle} · ` : ""}
+            {userEmail || "—"}
+          </p>
+        </div>
+        <span className="st-pill st-pill-grey st-me-role">{ROLE_LABELS[myRole]}</span>
+      </div>
+
+      <h2 className="st-subhead">Personal information</h2>
+      <Row label="Name" htmlFor="me-first-name">
+        <div className="st-pair">
+          <input
+            id="me-first-name"
+            className="st-input"
+            placeholder="First name"
+            autoComplete="given-name"
+            value={profile.firstName}
+            onChange={(event) => setProfile({ ...profile, firstName: event.target.value })}
+          />
+          <input
+            className="st-input"
+            placeholder="Last name"
+            aria-label="Last name"
+            autoComplete="family-name"
+            value={profile.lastName}
+            onChange={(event) => setProfile({ ...profile, lastName: event.target.value })}
+          />
+        </div>
+      </Row>
+      <Row label="Phone" htmlFor="me-phone">
+        <input
+          id="me-phone"
+          type="tel"
+          className="st-input"
+          placeholder="+961 …"
+          autoComplete="tel"
+          value={profile.phone}
+          onChange={(event) => setProfile({ ...profile, phone: event.target.value })}
+        />
+      </Row>
+      <Row label="Job title" htmlFor="me-job" hint="What you do in the business. Your Team role decides what you can change.">
+        <select
+          id="me-job"
+          className="st-input"
+          value={profile.jobTitle}
+          onChange={(event) => setProfile({ ...profile, jobTitle: event.target.value })}
+        >
+          <option value="">Choose…</option>
+          {JOB_TITLES.map((title) => (
+            <option key={title} value={title}>
+              {title}
+            </option>
+          ))}
+        </select>
+      </Row>
+      <div className="st-inline-save">
+        {profileDirty && (
+          <Button variant="ghost" size="sm" disabled={savingProfile} onClick={() => setProfile(savedProfile)}>
+            Discard
+          </Button>
+        )}
+        <Button size="sm" disabled={!profileDirty} loading={savingProfile} loadingLabel="Saving…" onClick={() => void saveProfile()}>
+          Save profile
+        </Button>
+      </div>
+
+      <h2 className="st-subhead">Sign-in and security</h2>
       <Row label="Signed in as">
         <span className="st-strong">{userEmail || "—"}</span>
       </Row>
@@ -1540,68 +1747,112 @@ export default function SettingsPage() {
       ["PDF and Word exports", planCapabilities.pdfExport === "basic"],
       ["Import from CSV or Excel", planCapabilities.csvExcelImport],
       ["Barcode scanner", planCapabilities.scanner],
+      ["Invoices, purchase orders and receiving", planCapabilities.sales],
       ["Advanced reports", planCapabilities.advancedReports],
       ["Priority support", planCapabilities.priorityManualSupport],
     ];
     const active = !subscription.status || subscription.status === "active";
-    const limit = subscription.item_limit;
-    const used = usedItems ?? 0;
-    const percent = limit > 0 ? Math.min(100, Math.round((used / limit) * 100)) : 0;
+    const planDefinition =
+      PLAN_DEFINITIONS[subscription.plan as keyof typeof PLAN_DEFINITIONS] ?? PLAN_DEFINITIONS.free;
+    const usage: { label: string; used: number | null; limit: number | null }[] = [
+      { label: "Items", used: usedItems, limit: subscription.item_limit },
+      { label: "Locations", used: usageCounts?.depots ?? null, limit: planCapabilities.depotLimit },
+      { label: "Suppliers", used: usageCounts?.suppliers ?? null, limit: planCapabilities.supplierLimit },
+      { label: "Customers", used: usageCounts?.customers ?? null, limit: planCapabilities.customerLimit },
+      { label: "Team seats", used: usageCounts?.members ?? null, limit: business?.seatLimit ?? 1 },
+    ];
+    const full = usage.filter((row) => row.used !== null && row.limit !== null && row.limit > 0 && row.used >= row.limit);
 
     return (
-      <div className="st-plan">
-        <div className="st-plan-head">
-          <div>
-            <p className="st-plan-name">
-              {currentPlanName} plan
-              <span className={`st-pill ${active ? "st-pill-green" : "st-pill-amber"}`}>
-                {active ? "Active" : subscription.status}
+      <div className="st-billing">
+        <div className="st-billing-top">
+          <section className="st-billing-plan" aria-label="Current plan">
+            <p className="st-billing-label">Current plan</p>
+            <div className="st-billing-planrow">
+              <div>
+                <p className="st-billing-name">
+                  {currentPlanName}
+                  <span className={`st-pill ${active ? "st-pill-green" : "st-pill-amber"}`}>
+                    {active ? "Active" : subscription.status}
+                  </span>
+                </p>
+                <p className="st-billing-price">
+                  <strong>${planDefinition.priceMonthly}</strong> per month
+                </p>
+              </div>
+              <span className="st-billing-art" aria-hidden="true">
+                <UiIcon name="box" className="h-7 w-7" />
               </span>
-            </p>
+            </div>
+            <p className="st-hint">{planDefinition.description}</p>
             <p className="st-hint">Payment is arranged with you directly; nothing is charged automatically.</p>
-          </div>
-          <Link href={upgradeHref} className={buttonClassName({ variant: "secondary", size: "sm" })}>
-            {upgradeLabel}
-          </Link>
+          </section>
+
+          <section className="st-billing-usage" aria-label="Usage">
+            <p className="st-billing-label">Usage</p>
+            {usage.map((row) => {
+              const percent =
+                row.used === null || !row.limit ? 0 : Math.min(100, Math.round((row.used / row.limit) * 100));
+              const tone = percent >= 100 ? " st-usage-fill-full" : percent >= 80 ? " st-usage-fill-warn" : "";
+              return (
+                <div key={row.label} className="st-usage-item">
+                  <div className="st-usage-line">
+                    <span>{row.label}</span>
+                    <strong>
+                      {row.used === null ? "…" : row.used.toLocaleString()} / {row.limit === null ? "Unlimited" : row.limit.toLocaleString()}
+                    </strong>
+                  </div>
+                  <div
+                    className="st-usage-track"
+                    role="progressbar"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={percent}
+                    aria-label={`${row.label} used on your plan`}
+                  >
+                    <div
+                      className={`st-usage-fill${tone}`}
+                      style={{ width: `${Math.max(percent, row.used ? 2 : 0)}%` }}
+                    />
+                  </div>
+                </div>
+              );
+            })}
+            {full.length > 0 && (
+              <p className="st-billing-alert" role="status">
+                <UiIcon name="alert" className="h-4 w-4 shrink-0" />
+                <span>
+                  You&apos;ve reached your plan limit for {full.map((row) => row.label.toLowerCase()).join(", ")}.
+                  Your business is growing: upgrade to keep adding.
+                </span>
+              </p>
+            )}
+            <div className="st-billing-actions">
+              <Link href={upgradeHref} className={buttonClassName({ variant: "primary", size: "sm" })}>
+                {upgradeLabel}
+              </Link>
+              <Link href="/pricing" className={buttonClassName({ variant: "secondary", size: "sm" })}>
+                Compare plans
+              </Link>
+            </div>
+          </section>
         </div>
 
-        <div className="st-usage">
-          <div className="st-usage-line">
-            <span>Items used</span>
-            <strong>
-              {usedItems === null ? "…" : used.toLocaleString()} of {limit.toLocaleString()}
-            </strong>
-          </div>
-          <div
-            className="st-usage-track"
-            role="progressbar"
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={percent}
-            aria-label="Items used on your plan"
-          >
-            <div
-              className={`st-usage-fill${percent >= 90 ? " st-usage-fill-warn" : ""}`}
-              style={{ width: `${Math.max(percent, used > 0 ? 1 : 0)}%` }}
-            />
-          </div>
-          <p className="st-hint">
-            {Math.max(0, limit - used).toLocaleString()} items remaining on your plan.
-          </p>
-        </div>
-
-        <ul className="st-features">
-          {included.map(([label, yes]) => (
-            <li key={label} className={yes ? undefined : "st-feature-off"}>
-              <span className={`st-feature-mark ${yes ? "st-feature-yes" : ""}`} aria-hidden="true">
-                {yes ? <UiIcon name="check" className="h-3 w-3" /> : <span className="st-dash" />}
-              </span>
-              <span className="min-w-0 flex-1">{label}</span>
-              {!yes && <span className="st-pill st-pill-grey">Higher plan</span>}
-              <span className="sr-only">{yes ? "included" : "not included"}</span>
-            </li>
-          ))}
-        </ul>
+        <section className="st-billing-features" aria-label="What your plan includes">
+          <p className="st-billing-label">What your plan includes</p>
+          <ul className="st-features">
+            {included.map(([label, yes]) => (
+              <li key={label} className={yes ? undefined : "st-feature-off"}>
+                <span className={`st-feature-mark ${yes ? "st-feature-yes" : ""}`} aria-hidden="true">
+                  {yes ? <UiIcon name="check" className="h-3 w-3" /> : <span className="st-dash" />}
+                </span>
+                <span className="min-w-0 flex-1">{label}</span>
+                {!yes && <span className="st-pill st-pill-grey">Higher plan</span>}
+                <span className="sr-only">{yes ? "included" : "not included"}</span>
+              </li>
+            ))}
+          </ul>
+        </section>
       </div>
     );
   };

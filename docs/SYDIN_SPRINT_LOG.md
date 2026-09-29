@@ -6055,3 +6055,35 @@ Settings > "Documents" is now **Invoices & tax**.
   - Team members see "Leave business" instead.
   - Checked: the refusals return 401, 400 and 401. A real delete has not been run yet; Sayed should
     test it on a throwaway account.
+
+### 29 Sep — Settings redesign after Sortly (profile, company logo card, plan usage, upgrade window)
+
+Sayed sent Sortly's User Profile, Company Details, Plan & Billing and upgrade window as the model.
+
+- **Upgrade window** (`components/UpgradePrompt.tsx` UpgradeDialog, used in all 18 places):
+  - A drawing on the left (`components/UpgradeIllustration.tsx`): a SydIN box with a QR card, a
+    chart and sparkles, gently moving and still when reduced motion is on.
+  - On the right: the feature, "Do even more with Standard/Pro", the plan's highlights from
+    `PLAN_DEFINITIONS` (the same list as the pricing page), the price, and "Upgrade to …" plus
+    Compare plans.
+  - On a phone, the drawing sits on top.
+- **My profile** (was "Account & security"):
+  - A card with initials, name, job title, email and Team role.
+  - Personal information: first and last name, phone, and job title (Owner, Manager, Sales and so
+    on).
+  - Saved to the login's own `user_metadata`. `full_name` is what "Done by" shows, so names appear
+    across the app.
+  - The job title is a label, not a permission; the Team role stays the permission.
+- **Company profile:**
+  - Details on the left, and a large **Company logo** card on the right with a big preview.
+  - The logo card has a dashed placeholder showing the SydIN mark until a logo is added, Change and
+    Remove, and the brand colour.
+- **Plan & billing:**
+  - A current-plan card with price and status, beside usage bars for items, locations, suppliers,
+    customers and team seats. Bars turn amber at 80% and red at 100%.
+  - A red "You've reached your plan limit" note, an Upgrade button and Compare plans.
+  - What the plan includes, listed below.
+- **Checks:**
+  - Styling checked on a local-only static copy of the markup (deleted afterwards), because the
+    test browser can't sign in.
+  - Lint, type-check and build pass.
