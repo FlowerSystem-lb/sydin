@@ -1,5 +1,6 @@
 "use client";
 
+import { paymentMethodOptions } from "@/app/lib/paymentMethods";
 import Image from "next/image";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -56,7 +57,6 @@ import {
 } from "@/app/lib/currency";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
-  PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
   PURCHASE_ORDER_PAYMENT_STATUS_LABELS,
   createPurchaseOrder,
   getNextPoNumber,
@@ -993,9 +993,7 @@ export default function NewPurchaseOrderPage() {
                 onChange={setPaymentMethod}
                 options={[
                   { value: "", label: "Not set" },
-                  ...Object.entries(PURCHASE_ORDER_PAYMENT_METHOD_LABELS).map(
-                    ([value, label]) => ({ value, label })
-                  ),
+                  ...paymentMethodOptions(settings.payment_methods, paymentMethod),
                 ]}
               />
             </FieldRow>

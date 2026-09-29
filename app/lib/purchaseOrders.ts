@@ -8,7 +8,8 @@ export type PurchaseOrderStatus =
   | "partially_received"
   | "received"
   | "cancelled";
-export type PurchaseOrderPaymentMethod = "cash" | "card" | "transfer" | "other";
+/* Phase 31: a built-in key or the business's own words -- see paymentMethods.ts. */
+export type PurchaseOrderPaymentMethod = string;
 export type PurchaseOrderPaymentStatus = "unpaid" | "partial" | "paid";
 export type PurchaseOrderLineType = "inventory" | "expense";
 export type PurchaseOrderExpenseCategory =

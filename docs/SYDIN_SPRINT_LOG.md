@@ -6087,3 +6087,30 @@ Sayed sent Sortly's User Profile, Company Details, Plan & Billing and upgrade wi
   - Styling checked on a local-only static copy of the markup (deleted afterwards), because the
     test browser can't sign in.
   - Lint, type-check and build pass.
+
+### 29 Sep — Your own lists: units and payment methods (phase 31)
+
+**Database (`sql/phase-31-lists.sql`):** applied by Sayed after the TEST passed; checked with a
+read-only query.
+- `business_settings.custom_units` (up to 30).
+- `business_settings.payment_methods` (1 to 20). The default is cash, card, transfer, whish, omt,
+  cheque.
+- The payment method columns on invoice payments, PO payments and POs now accept any short text,
+  where they used to allow only cash, card, transfer or other.
+
+**App:**
+- **Settings > Lists** (Workspace group, owner and admin):
+  - Units: built-in units shown as fixed chips, plus your own units added and removed as chips.
+  - Payment methods: an ordered list with up/down/remove (the first is the default), quick-add
+    chips for built-ins you don't have, and your own words.
+- **Shared code:**
+  - `app/lib/paymentMethods.ts`: labels for Whish, OMT, Cheque and so on; any other value is shown
+    as typed.
+  - `app/lib/savedUnits.ts`: `useSavedUnits` loads once and updates when settings are saved.
+- **Pickers:**
+  - A saved unit is stored as `unit_type='custom'` plus its label, so items, imports and the unit
+    rule are unchanged.
+  - Add item, edit item, the invoice payment, PO new and PO payments pickers all read these lists.
+  - Reports label methods through `paymentMethodLabel`.
+- **Checks:** lint, type-check and build pass. The Lists styling was checked on a local-only
+  static copy.

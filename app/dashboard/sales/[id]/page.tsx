@@ -1,5 +1,6 @@
 "use client";
 
+import { paymentMethodLabel, paymentMethodOptions } from "@/app/lib/paymentMethods";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
@@ -54,7 +55,6 @@ import {
   getSalesOrderTotal,
   getSalesOrderTotals,
   issueSalesOrder,
-  SALES_ORDER_PAYMENT_METHOD_LABELS,
   SALES_ORDER_PAYMENT_STATUS_LABELS,
   SALES_ORDER_STATUS_LABELS,
   type SalesOrder,
@@ -171,6 +171,8 @@ export default function SaleDetailPage() {
             "USD",
         );
         setBusinessSettings(settings || DEFAULT_BUSINESS_SETTINGS);
+        // The first method in Settings > Lists is the default for a new payment.
+        setPaymentMethod((settings || DEFAULT_BUSINESS_SETTINGS).payment_methods[0] || "cash");
       })
       .catch(() => {
         if (isActive) setError("We could not find that invoice.");
@@ -384,7 +386,7 @@ export default function SaleDetailPage() {
           amount: Number(payment.amount),
           currency: currencyCode,
           method: payment.method
-            ? SALES_ORDER_PAYMENT_METHOD_LABELS[payment.method]
+            ? paymentMethodLabel(payment.method)
             : null,
           note: payment.note || undefined,
           documentTotal: invoiceTotal,
@@ -709,7 +711,7 @@ export default function SaleDetailPage() {
                       <span className="min-w-0 truncate text-theme-secondary">
                         {payment.paid_at}
                         {payment.method
-                          ? ` · ${SALES_ORDER_PAYMENT_METHOD_LABELS[payment.method]}`
+                          ? ` · ${paymentMethodLabel(payment.method)}`
                           : ""}
                         {recordedBy(payment.actor_id) ? ` · recorded ${recordedBy(payment.actor_id)}` : ""}
                       </span>
@@ -761,12 +763,7 @@ export default function SaleDetailPage() {
                       onChange={(value) =>
                         setPaymentMethod(value as SalesOrderPaymentMethod)
                       }
-                      options={(
-                        ["cash", "card", "transfer", "other"] as const
-                      ).map((method) => ({
-                        value: method,
-                        label: SALES_ORDER_PAYMENT_METHOD_LABELS[method],
-                      }))}
+                      options={paymentMethodOptions(businessSettings.payment_methods, paymentMethod)}
                     />
                   </div>
                   <Button

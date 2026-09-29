@@ -415,7 +415,8 @@ export function getIssueErrorMessage(error: unknown) {
   return message;
 }
 
-export type SalesOrderPaymentMethod = "cash" | "card" | "transfer" | "other";
+/* Phase 31: a built-in key or the business's own words -- see paymentMethods.ts. */
+export type SalesOrderPaymentMethod = string;
 
 export const SALES_ORDER_PAYMENT_METHOD_LABELS: Record<
   SalesOrderPaymentMethod,

@@ -41,6 +41,12 @@ import {
   getBusinessUser,
 } from "@/app/lib/business";
 import { useBusiness } from "@/components/dashboard/BusinessContext";
+import { INVENTORY_UNIT_LABELS, INVENTORY_UNIT_TYPES } from "@/app/lib/inventoryItemModel";
+import {
+  BUILT_IN_PAYMENT_METHODS,
+  paymentMethodKey,
+  paymentMethodLabel,
+} from "@/app/lib/paymentMethods";
 import TeamPanel from "@/components/settings/TeamPanel";
 import {
   INVENTORY_SORT_OPTIONS,
@@ -67,6 +73,7 @@ type SettingsSectionId =
   | "documents"
   | "currency"
   | "inventory"
+  | "lists"
   | "profile"
   | "preferences"
   | "team"
@@ -137,6 +144,13 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     label: "Inventory",
     description: "When an item counts as low stock.",
     icon: "box",
+  },
+  {
+    id: "lists",
+    group: "Workspace",
+    label: "Lists",
+    description: "Units and payment methods you pick from.",
+    icon: "layers",
   },
   {
     id: "profile",
@@ -303,6 +317,8 @@ export default function SettingsPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
   const [exportingAll, setExportingAll] = useState(false);
+  const [newUnit, setNewUnit] = useState("");
+  const [newMethod, setNewMethod] = useState("");
   const [profile, setProfile] = useState<PersonalProfile>(EMPTY_PROFILE);
   const [savedProfile, setSavedProfile] = useState<PersonalProfile>(EMPTY_PROFILE);
   const [savingProfile, setSavingProfile] = useState(false);
@@ -685,6 +701,9 @@ export default function SettingsPage() {
         tax_name: settings.tax_name.trim().slice(0, 20) || "VAT",
         tax_rate: settings.tax_rate,
         prices_include_tax: settings.prices_include_tax,
+        // Phase 31: the business's own lists.
+        custom_units: settings.custom_units,
+        payment_methods: settings.payment_methods,
       };
 
       const upsert = (fields: Record<string, unknown>) =>
@@ -742,6 +761,8 @@ export default function SettingsPage() {
         tax_name: settings.tax_name.trim().slice(0, 20) || "VAT",
         tax_rate: settings.tax_rate,
         prices_include_tax: settings.prices_include_tax,
+        custom_units: documentFieldsSkipped ? [] : settings.custom_units,
+        payment_methods: settings.payment_methods,
       };
       setSettings(normalizedSettings);
       setSavedSettings(normalizedSettings);
@@ -1322,6 +1343,175 @@ export default function SettingsPage() {
   };
 
   /* ---- Inventory ------------------------------------------------------ */
+  /* ---- Lists (phase 31) ------------------------------------------------ */
+  const addUnit = () => {
+    const label = newUnit.trim().slice(0, 40);
+    if (!label) return;
+    const builtIn = INVENTORY_UNIT_TYPES.some(
+      (unit) => unit !== "custom" && INVENTORY_UNIT_LABELS[unit].toLowerCase() === label.toLowerCase()
+    );
+    if (builtIn || settings.custom_units.some((unit) => unit.toLowerCase() === label.toLowerCase())) {
+      showToast({ tone: "danger", message: `"${label}" is already in your units.` });
+      return;
+    }
+    if (settings.custom_units.length >= 30) {
+      showToast({ tone: "danger", message: "You can keep up to 30 of your own units." });
+      return;
+    }
+    setField("custom_units", [...settings.custom_units, label]);
+    setNewUnit("");
+  };
+
+  const addMethod = (value: string) => {
+    const key = paymentMethodKey(value.slice(0, 40));
+    if (!key) return;
+    if (settings.payment_methods.some((method) => method.toLowerCase() === key.toLowerCase())) {
+      showToast({ tone: "danger", message: `"${paymentMethodLabel(key)}" is already in your list.` });
+      return;
+    }
+    if (settings.payment_methods.length >= 20) {
+      showToast({ tone: "danger", message: "You can keep up to 20 payment methods." });
+      return;
+    }
+    setField("payment_methods", [...settings.payment_methods, key]);
+    setNewMethod("");
+  };
+
+  const moveMethod = (index: number, step: -1 | 1) => {
+    const next = [...settings.payment_methods];
+    const target = index + step;
+    if (target < 0 || target >= next.length) return;
+    [next[index], next[target]] = [next[target], next[index]];
+    setField("payment_methods", next);
+  };
+
+  const suggestedMethods = Object.keys(BUILT_IN_PAYMENT_METHODS).filter(
+    (key) => !settings.payment_methods.includes(key)
+  );
+
+  const renderListsPanel = () => (
+    <>
+      <Row label="Units" hint="Offered when you add or edit an item. Built-in units are always there.">
+        <div className="st-list-block">
+          <div className="st-chips" aria-label="Built-in units">
+            {INVENTORY_UNIT_TYPES.filter((unit) => unit !== "custom").map((unit) => (
+              <span key={unit} className="st-chip st-chip-fixed">
+                {INVENTORY_UNIT_LABELS[unit]}
+              </span>
+            ))}
+            {settings.custom_units.map((unit) => (
+              <span key={unit} className="st-chip">
+                {unit}
+                <button
+                  type="button"
+                  className="st-chip-x"
+                  aria-label={`Remove ${unit}`}
+                  onClick={() =>
+                    setField("custom_units", settings.custom_units.filter((entry) => entry !== unit))
+                  }
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
+          <div className="st-list-add">
+            <input
+              className="st-input"
+              value={newUnit}
+              onChange={(event) => setNewUnit(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addUnit();
+                }
+              }}
+              placeholder="Add a unit, e.g. Carton, Roll, Bag"
+              aria-label="New unit"
+              maxLength={40}
+            />
+            <Button variant="secondary" size="sm" onClick={addUnit} disabled={!newUnit.trim()}>
+              Add
+            </Button>
+          </div>
+          <p className="st-hint">Removing a unit here doesn&apos;t change items that already use it.</p>
+        </div>
+      </Row>
+
+      <Row label="Payment methods" hint="Offered when you record a payment on an invoice or a purchase order, in this order.">
+        <div className="st-list-block">
+          <ol className="st-method-list">
+            {settings.payment_methods.map((method, index) => (
+              <li key={method}>
+                <span className="st-method-name">{paymentMethodLabel(method)}</span>
+                <span className="st-method-actions">
+                  <button
+                    type="button"
+                    className="st-icon-btn"
+                    aria-label={`Move ${paymentMethodLabel(method)} up`}
+                    disabled={index === 0}
+                    onClick={() => moveMethod(index, -1)}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    className="st-icon-btn"
+                    aria-label={`Move ${paymentMethodLabel(method)} down`}
+                    disabled={index === settings.payment_methods.length - 1}
+                    onClick={() => moveMethod(index, 1)}
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    className="st-icon-btn st-icon-btn-danger"
+                    aria-label={`Remove ${paymentMethodLabel(method)}`}
+                    disabled={settings.payment_methods.length <= 1}
+                    onClick={() =>
+                      setField("payment_methods", settings.payment_methods.filter((entry) => entry !== method))
+                    }
+                  >
+                    ×
+                  </button>
+                </span>
+              </li>
+            ))}
+          </ol>
+          {suggestedMethods.length > 0 && (
+            <div className="st-chips" aria-label="Quick add">
+              {suggestedMethods.map((key) => (
+                <button key={key} type="button" className="st-chip st-chip-add" onClick={() => addMethod(key)}>
+                  + {BUILT_IN_PAYMENT_METHODS[key]}
+                </button>
+              ))}
+            </div>
+          )}
+          <div className="st-list-add">
+            <input
+              className="st-input"
+              value={newMethod}
+              onChange={(event) => setNewMethod(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  addMethod(newMethod);
+                }
+              }}
+              placeholder="Your own, e.g. Wish Money, USDT"
+              aria-label="New payment method"
+              maxLength={40}
+            />
+            <Button variant="secondary" size="sm" onClick={() => addMethod(newMethod)} disabled={!newMethod.trim()}>
+              Add
+            </Button>
+          </div>
+          <p className="st-hint">Payments already recorded keep the method they were saved with.</p>
+        </div>
+      </Row>
+    </>
+  );
+
   const renderInventoryPanel = () => (
     <Row
       label="Low-stock threshold"
@@ -1859,7 +2049,7 @@ export default function SettingsPage() {
     );
   };
 
-  const EDITABLE: SettingsSectionId[] = ["workspace", "documents", "currency", "inventory"];
+  const EDITABLE: SettingsSectionId[] = ["workspace", "documents", "currency", "inventory", "lists"];
 
   const renderActivePanel = () => {
     if (loading) {
@@ -1872,6 +2062,8 @@ export default function SettingsPage() {
         return renderCurrencyPanel();
       case "inventory":
         return renderInventoryPanel();
+      case "lists":
+        return renderListsPanel();
       case "profile":
         return renderProfilePanel();
       case "billing":

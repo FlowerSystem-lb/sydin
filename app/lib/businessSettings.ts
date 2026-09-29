@@ -1,5 +1,6 @@
 import { supabase } from "@/app/lib/supabase";
 import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
+import { DEFAULT_PAYMENT_METHODS, normalizeList, paymentMethodKey } from "@/app/lib/paymentMethods";
 
 export interface BusinessSettings {
   business_name: string;
@@ -34,6 +35,9 @@ export interface BusinessSettings {
   tax_name: string;
   tax_rate: number;
   prices_include_tax: boolean;
+  /* Phase 31: the business's own lists (Settings > Lists). */
+  custom_units: string[];
+  payment_methods: string[];
 }
 
 /** Fired on window with the saved BusinessSettings as detail, so the
@@ -66,6 +70,8 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   tax_name: "VAT",
   tax_rate: 0,
   prices_include_tax: false,
+  custom_units: [],
+  payment_methods: DEFAULT_PAYMENT_METHODS,
 };
 
 function normalizeRateTable(value: unknown): Record<string, number> {
@@ -132,11 +138,16 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
     tax_name: data?.tax_name?.trim() || DEFAULT_BUSINESS_SETTINGS.tax_name,
     tax_rate: Math.min(100, Math.max(0, Number(data?.tax_rate) || 0)),
     prices_include_tax: Boolean(data?.prices_include_tax),
+    custom_units: normalizeList(data?.custom_units, 30),
+    payment_methods: (() => {
+      const list = normalizeList(data?.payment_methods, 20, paymentMethodKey);
+      return list.length > 0 ? list : DEFAULT_PAYMENT_METHODS;
+    })(),
   };
 }
 
 const SETTINGS_SELECT =
-  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer, accent_color, base_currency, exchange_rates, manual_rates, rates_updated_at, invoice_prefix, invoice_next_number, invoice_number_digits, po_prefix, tax_enabled, tax_name, tax_rate, prices_include_tax";
+  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer, accent_color, base_currency, exchange_rates, manual_rates, rates_updated_at, invoice_prefix, invoice_next_number, invoice_number_digits, po_prefix, tax_enabled, tax_name, tax_rate, prices_include_tax, custom_units, payment_methods";
 
 /* The same row without the phase-24 columns, for a database where that
    migration has not been run yet. */
@@ -150,7 +161,7 @@ export function isCompanyProfileSchemaMissing(error: unknown) {
       ? String((error as { message: unknown }).message)
       : String(error ?? "");
   return (
-    /business_address|tax_id|payment_terms|document_footer|accent_color|base_currency|exchange_rates|manual_rates|rates_updated_at/.test(message) &&
+    /business_address|tax_id|payment_terms|document_footer|accent_color|base_currency|exchange_rates|manual_rates|rates_updated_at|invoice_prefix|tax_enabled|custom_units|payment_methods/.test(message) &&
     (message.includes("does not exist") ||
       message.includes("schema cache") ||
       message.includes("Could not find"))

@@ -1,4 +1,5 @@
 import autoTable from "jspdf-autotable";
+import { paymentMethodLabel } from "@/app/lib/paymentMethods";
 import { formatInventoryPrice, normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 import {
   DOCUMENT_FILL,
@@ -286,13 +287,6 @@ export function salesByCategory(
   };
 }
 
-const PAYMENT_METHOD_LABELS: Record<string, string> = {
-  cash: "Cash",
-  card: "Card",
-  transfer: "Transfer",
-  other: "Other",
-};
-
 export interface ReportPayment {
   amount: number;
   method: string | null;
@@ -335,7 +329,7 @@ export function paymentsByMethod(
       const inflow = receivedByMethod.get(method) || 0;
       const outflow = paidByMethod.get(method) || 0;
       return [
-        PAYMENT_METHOD_LABELS[method] || method,
+        paymentMethodLabel(method) || method,
         money(inflow, currency),
         money(outflow, currency),
         money(inflow - outflow, currency),

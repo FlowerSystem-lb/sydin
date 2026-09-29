@@ -1,5 +1,6 @@
 "use client";
 
+import { paymentMethodLabel, paymentMethodOptions } from "@/app/lib/paymentMethods";
 import Image from "next/image";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -41,7 +42,6 @@ import { exportGoodsReceivedPdf } from "@/app/lib/goodsReceivedPdf";
 import { exportPaymentReceiptPdf } from "@/app/lib/paymentReceiptPdf";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
-  PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
   PURCHASE_ORDER_PAYMENT_STATUS_LABELS,
   PURCHASE_ORDER_STATUS_LABELS,
   addPurchaseOrderPayment,
@@ -754,7 +754,7 @@ export default function PurchaseOrdersPage() {
     expectedDeliveryDate: order.expected_delivery_date || undefined,
     status: PURCHASE_ORDER_STATUS_LABELS[order.status],
     paymentMethod: order.payment_method
-      ? PURCHASE_ORDER_PAYMENT_METHOD_LABELS[order.payment_method]
+      ? paymentMethodLabel(order.payment_method)
       : undefined,
     paidBy: order.paid_by || undefined,
     paymentStatus: PURCHASE_ORDER_PAYMENT_STATUS_LABELS[order.payment_status],
@@ -870,7 +870,7 @@ export default function PurchaseOrdersPage() {
           amount: Number(payment.amount),
           currency: getPurchaseOrderCurrency(selectedOrder),
           method: payment.method
-            ? PURCHASE_ORDER_PAYMENT_METHOD_LABELS[payment.method]
+            ? paymentMethodLabel(payment.method)
             : null,
           note: [payment.paid_by ? `Paid by ${payment.paid_by}` : "", payment.note || ""]
             .filter(Boolean)
@@ -1590,9 +1590,7 @@ export default function PurchaseOrdersPage() {
                         onChange={setPayMethod}
                         options={[
                           { value: "", label: "Not set" },
-                          ...Object.entries(
-                            PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
-                          ).map(([value, label]) => ({ value, label })),
+                          ...paymentMethodOptions(settings.payment_methods, payMethod),
                         ]}
                       />
                       <label className="grid gap-1.5">
@@ -1659,9 +1657,7 @@ export default function PurchaseOrdersPage() {
                     onChange={setPayMethod}
                     options={[
                       { value: "", label: "Not set" },
-                      ...Object.entries(
-                        PURCHASE_ORDER_PAYMENT_METHOD_LABELS,
-                      ).map(([value, label]) => ({ value, label })),
+                      ...paymentMethodOptions(settings.payment_methods, payMethod),
                     ]}
                   />
                   <label className="grid gap-1.5">
@@ -1928,9 +1924,7 @@ export default function PurchaseOrdersPage() {
                         {[
                           formatDate(payment.paid_at),
                           payment.method
-                            ? PURCHASE_ORDER_PAYMENT_METHOD_LABELS[
-                                payment.method
-                              ]
+                            ? paymentMethodLabel(payment.method)
                             : "",
                           payment.paid_by ? `by ${payment.paid_by}` : "",
                           recordedBy(payment.actor_id) ? `recorded ${recordedBy(payment.actor_id)}` : "",
@@ -2006,9 +2000,7 @@ export default function PurchaseOrdersPage() {
                       }
                       {selectedOrder.payment_method
                         ? ` · ${
-                            PURCHASE_ORDER_PAYMENT_METHOD_LABELS[
-                              selectedOrder.payment_method
-                            ]
+                            paymentMethodLabel(selectedOrder.payment_method)
                           }`
                         : ""}
                     </p>

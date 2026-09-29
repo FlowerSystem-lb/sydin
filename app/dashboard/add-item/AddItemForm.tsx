@@ -1,5 +1,6 @@
 "use client";
 
+import { unitFromPicker, unitPickerOptions, unitPickerValue, useSavedUnits } from "@/app/lib/savedUnits";
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import {
@@ -42,7 +43,6 @@ import {
   calculateInventoryValue,
   DEFAULT_INVENTORY_UNIT_TYPE,
   formatInventoryPrice,
-  INVENTORY_UNIT_LABELS,
   INVENTORY_UNIT_TYPES,
   normalizeCurrencyCode,
   type InventoryUnitType,
@@ -207,6 +207,8 @@ export default function AddItemForm({
     DEFAULT_INVENTORY_UNIT_TYPE
   );
   const [customUnitLabel, setCustomUnitLabel] = useState("");
+  const savedUnits = useSavedUnits();
+  const unitValue = unitPickerValue(unitType, customUnitLabel, savedUnits);
   const [minStockLevel, setMinStockLevel] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
@@ -999,26 +1001,24 @@ export default function AddItemForm({
                 <FieldRow label="Unit" required error={fieldErrors.unitType}>
                   <Select
                     id="unit-type"
-                    value={unitType}
+                    value={unitValue}
                     onChange={(value) => {
-                      const nextUnit = value as InventoryUnitType;
-                      setUnitType(nextUnit);
+                      const next = unitFromPicker(value);
+                      setUnitType(next.unitType);
+                      if (next.customLabel !== null) setCustomUnitLabel(next.customLabel);
                       clearFieldError("unitType");
 
-                      if (nextUnit !== "custom") {
+                      if (next.unitType !== "custom" || next.customLabel) {
                         clearFieldError("customUnitLabel");
                       }
                     }}
                     disabled={loading}
                     error={fieldErrors.unitType}
-                    options={INVENTORY_UNIT_TYPES.map((unit) => ({
-                      value: unit,
-                      label: INVENTORY_UNIT_LABELS[unit],
-                    }))}
+                    options={unitPickerOptions(savedUnits)}
                   />
                 </FieldRow>
 
-                {unitType === "custom" && (
+                {unitValue === "custom" && (
                   <FieldRow
                     label="Custom unit"
                     htmlFor="custom-unit"
