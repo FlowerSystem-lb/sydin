@@ -27681,3 +27681,254 @@ body:has(.login-page)::-webkit-scrollbar,
   line-height: 1.45;
   color: var(--text-primary);
 }
+
+/* ---------------------------------------------------------------------------
+   Upgrade window (29 Sep, after Sortly's "Do even more with our Advanced plan").
+   Picture on the left, what the plan gives on the right. Doubled classes and
+   !important: older glass/modal rules in this file otherwise win.
+   --------------------------------------------------------------------------- */
+.upg-overlay.upg-overlay {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 80 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  padding: 1rem !important;
+  overflow-y: auto !important;
+  animation: upg-fade 180ms ease-out;
+}
+
+.upg-dialog.upg-dialog {
+  position: relative;
+  display: grid !important;
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr) !important;
+  width: 100% !important;
+  max-width: 50rem !important;
+  overflow: hidden !important;
+  border: 1px solid var(--sydin-ui-border) !important;
+  border-radius: 20px !important;
+  background: #ffffff !important;
+  box-shadow: 0 30px 80px rgba(8, 21, 43, 0.28) !important;
+  animation: upg-rise 260ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.upg-art.upg-art {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 20rem;
+  padding: 2rem 1.5rem;
+  background:
+    radial-gradient(circle at 50% 42%, rgba(37, 99, 235, 0.14), transparent 62%),
+    #eef3fa;
+}
+
+.upg-art-svg {
+  width: 100%;
+  max-width: 17rem;
+  height: auto;
+  overflow: visible;
+}
+
+.upg-art-shadow { fill: rgba(15, 23, 42, 0.08); }
+.upg-art-card { fill: #ffffff; stroke: #dbe3ef; stroke-width: 1.5; }
+.upg-art-ink rect { fill: #1e293b; }
+.upg-art-bar { fill: #bfdbfe; }
+.upg-art-bar-strong { fill: #2563eb; }
+.upg-art-box-inside { fill: #1e3a8a; }
+.upg-art-box-left { fill: #3b82f6; }
+.upg-art-box-right { fill: #2563eb; }
+.upg-art-flap { fill: #60a5fa; }
+.upg-art-flap-r { fill: #93c5fd; }
+.upg-art-label path:first-child { fill: #ffffff; opacity: 0.95; }
+.upg-art-barcode { fill: none; stroke: #1e293b; stroke-width: 1.6; }
+.upg-sparkle path { fill: #f59e0b; }
+.upg-sparkle-b path { fill: #2563eb; }
+
+.upg-art-mark.upg-art-mark {
+  position: absolute;
+  left: 36%;
+  top: 65%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.18);
+  transform: translate(-50%, -50%) rotate(-4deg);
+}
+
+.upg-float { transform-box: fill-box; transform-origin: center; }
+.upg-float-a { animation: upg-bob 4.2s ease-in-out infinite; }
+.upg-float-b { animation: upg-bob 4.8s ease-in-out 0.6s infinite; }
+.upg-sparkle { transform-box: fill-box; transform-origin: center; animation: upg-twinkle 2.6s ease-in-out infinite; }
+.upg-sparkle-b { animation-delay: 0.8s; }
+.upg-sparkle-c { animation-delay: 1.5s; }
+
+.upg-body.upg-body {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  padding: 2.25rem 2rem 1.75rem;
+  color: var(--sydin-text);
+}
+
+.upg-close.upg-close {
+  position: absolute;
+  top: 0.9rem;
+  right: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 10px;
+  color: var(--sydin-text-muted);
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.upg-close.upg-close:hover {
+  background: var(--sydin-surface-inset);
+  color: var(--sydin-text);
+}
+
+.upg-eyebrow.upg-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  align-self: flex-start;
+  margin: 0;
+  border-radius: 999px;
+  background: rgba(37, 99, 235, 0.1);
+  padding: 0.25rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #1d4ed8;
+}
+
+.upg-title.upg-title {
+  margin: 0;
+  padding-right: 2rem;
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--sydin-text);
+}
+
+.upg-title span { color: #2563eb; }
+
+.upg-benefit.upg-benefit {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--sydin-text-secondary);
+}
+
+.upg-list.upg-list {
+  display: grid;
+  gap: 0.55rem;
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.upg-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  color: var(--sydin-text);
+}
+
+.upg-check {
+  flex: none;
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.1rem;
+  color: #16a34a;
+}
+
+.upg-price.upg-price {
+  margin: 0.2rem 0 0;
+  font-size: 0.85rem;
+  color: var(--sydin-text-muted);
+}
+
+.upg-price strong {
+  font-size: 1.15rem;
+  color: var(--sydin-text);
+}
+
+.upg-actions.upg-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-top: 0.3rem;
+}
+
+.upg-primary.upg-primary,
+.upg-secondary.upg-secondary {
+  display: inline-flex;
+  flex: 1 1 10rem;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.9rem;
+  border-radius: 12px;
+  padding: 0 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: transform 150ms ease, box-shadow 150ms ease, background-color 150ms ease;
+}
+
+.upg-primary.upg-primary {
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+}
+
+.upg-primary.upg-primary:hover {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.upg-secondary.upg-secondary {
+  border: 1px solid var(--sydin-ui-border);
+  background: var(--sydin-ui-surface);
+  color: var(--sydin-text);
+}
+
+.upg-secondary.upg-secondary:hover { background: var(--sydin-surface-inset); }
+
+.upg-note.upg-note {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.45;
+  color: var(--sydin-text-muted);
+}
+
+@keyframes upg-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes upg-rise { from { opacity: 0; transform: translateY(14px) scale(0.98); } to { opacity: 1; transform: none; } }
+@keyframes upg-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes upg-twinkle { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.45; transform: scale(0.75); } }
+
+@media (prefers-reduced-motion: reduce) {
+  .upg-overlay, .upg-dialog, .upg-float-a, .upg-float-b, .upg-sparkle { animation: none !important; }
+}
+
+/* Phone: picture on top, shorter. */
+@media (max-width: 640px) {
+  .upg-dialog.upg-dialog { grid-template-columns: minmax(0, 1fr) !important; }
+  .upg-art.upg-art { min-height: 11rem; padding: 1.25rem 1rem 0.5rem; }
+  .upg-art-svg { max-width: 11rem; }
+  .upg-art-mark.upg-art-mark { width: 2rem; height: 2rem; }
+  .upg-body.upg-body { padding: 1.4rem 1.25rem 1.25rem; }
+  .upg-title.upg-title { font-size: 1.35rem; }
+}

@@ -4,7 +4,8 @@ import { useEffect, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
 import { Badge } from "@/components/ui";
-import type { UpgradePlan } from "@/app/lib/subscription";
+import { PLAN_DEFINITIONS, type UpgradePlan } from "@/app/lib/subscription";
+import UpgradeIllustration from "@/components/UpgradeIllustration";
 
 interface UpgradePromptProps {
   feature: string;
@@ -163,80 +164,77 @@ export function UpgradeDialog({
   );
   if (!open || !isClient) return null;
 
+  /* 29 Sep (Sayed, after Sortly's "Do even more with our Advanced plan"):
+     a picture on the left, and on the right what the plan actually gives --
+     the same highlights the pricing page uses, so the two never disagree. */
+  const planId =
+    prompt.requiredPlan === "Pro" ? "pro" : prompt.requiredPlan === "Standard" ? "standard" : null;
+  const plan = planId ? PLAN_DEFINITIONS[planId] : null;
+
   return createPortal(
-    <div
-      className="fixed inset-0 z-[80] flex items-center justify-center overflow-y-auto theme-overlay p-4 backdrop-blur-xl"
-      onClick={onClose}
-    >
+    <div className="upg-overlay theme-overlay" onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="upgrade-dialog-title"
-        className="glass-modal my-8 w-full max-w-lg p-5 sm:p-7"
+        className="upg-dialog"
         onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl border border-theme bg-theme-inset text-theme-accent">
-              <LockIcon className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
-                Upgrade SydIN
-              </p>
-              <h2
-                id="upgrade-dialog-title"
-                className="mt-1 text-2xl font-black text-theme-primary"
-              >
-                {prompt.feature}
-              </h2>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-theme bg-theme-surface text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary"
-            aria-label="Close upgrade dialog"
-          >
-            <svg
-              aria-hidden="true"
-              className="h-5 w-5"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            >
+        <UpgradeIllustration />
+
+        <div className="upg-body">
+          <button type="button" onClick={onClose} className="upg-close" aria-label="Close upgrade dialog">
+            <svg aria-hidden="true" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <path d="M6 6l12 12M18 6 6 18" />
             </svg>
           </button>
-        </div>
 
-        <p className="mt-5 text-base leading-7 text-theme-secondary">
-          {prompt.benefit}
-        </p>
-        <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div className="rounded-2xl border border-theme bg-theme-inset p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
-              Current plan
+          <p className="upg-eyebrow">
+            <LockIcon className="h-3.5 w-3.5" />
+            {prompt.feature}
+          </p>
+          <h2 id="upgrade-dialog-title" className="upg-title">
+            {plan ? (
+              <>
+                Do even more with <span>{plan.name}</span>
+              </>
+            ) : (
+              <>Let&apos;s find the right plan</>
+            )}
+          </h2>
+          <p className="upg-benefit">{prompt.benefit}</p>
+
+          {plan && (
+            <ul className="upg-list">
+              {plan.highlights.map((line) => (
+                <li key={line}>
+                  <svg aria-hidden="true" viewBox="0 0 16 16" className="upg-check">
+                    <path d="M3.5 8.5l3 3 6-7" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                  {line}
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {plan && (
+            <p className="upg-price">
+              <strong>${plan.priceMonthly}</strong> / month · You are on {prompt.currentPlan}
             </p>
-            <p className="mt-2 font-black text-theme-primary">{prompt.currentPlan}</p>
+          )}
+
+          <div className="upg-actions">
+            <Link href={getRequestHref(prompt.requiredPlan, prompt.source)} className="upg-primary">
+              {prompt.requiredPlan === "Contact" ? "Contact SydIN" : `Upgrade to ${prompt.requiredPlan}`}
+            </Link>
+            <Link href="/pricing" className="upg-secondary">
+              Compare plans
+            </Link>
           </div>
-          <div className="rounded-2xl border border-theme bg-theme-inset p-4">
-            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-accent">
-              Required plan
-            </p>
-            <p className="mt-2 font-black text-theme-primary">
-              {prompt.requiredPlan === "Contact"
-                ? "Contact SydIN"
-                : prompt.requiredPlan}
-            </p>
-          </div>
+          <p className="upg-note">
+            We reply by email or WhatsApp and arrange payment with you directly. Nothing is charged automatically.
+          </p>
         </div>
-        <UpgradeActions
-          requiredPlan={prompt.requiredPlan}
-          source={prompt.source}
-        />
       </div>
     </div>,
     document.body
