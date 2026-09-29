@@ -119,8 +119,8 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
   {
     id: "documents",
     group: "Business",
-    label: "Documents",
-    description: "Defaults printed on every invoice and purchase order.",
+    label: "Invoices & tax",
+    description: "Numbering, tax, and what prints on every invoice and order.",
     icon: "file",
   },
   {
@@ -292,6 +292,19 @@ export default function SettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [, setSuccess] = useState("");
+  // The database's own answer for "next invoice number" (auto mode), so the
+  // preview matches what the next invoice will really get.
+  const [nextInvoiceFromDb, setNextInvoiceFromDb] = useState<string | null>(null);
+  useEffect(() => {
+    if (loading) return;
+    let active = true;
+    void supabase.rpc("next_invoice_number", { p_reserve: false }).then(({ data }) => {
+      if (active && typeof data === "string") setNextInvoiceFromDb(data);
+    });
+    return () => {
+      active = false;
+    };
+  }, [loading, savedSettings.invoice_prefix, savedSettings.invoice_next_number]);
   const { showToast } = useToast();
 
   /* The page already keeps the last-saved copy so Cancel can restore it --
@@ -592,6 +605,15 @@ export default function SettingsPage() {
         document_footer: settings.document_footer.trim() || null,
         accent_color: normalizeAccentColor(settings.accent_color),
         manual_rates: settings.manual_rates,
+        // Phase 30: invoice numbering and tax.
+        invoice_prefix: settings.invoice_prefix.trim().slice(0, 12),
+        invoice_next_number: settings.invoice_next_number,
+        invoice_number_digits: settings.invoice_number_digits,
+        po_prefix: settings.po_prefix.trim().slice(0, 12) || null,
+        tax_enabled: settings.tax_enabled,
+        tax_name: settings.tax_name.trim().slice(0, 20) || "VAT",
+        tax_rate: settings.tax_rate,
+        prices_include_tax: settings.prices_include_tax,
       };
 
       const upsert = (fields: Record<string, unknown>) =>
@@ -641,6 +663,14 @@ export default function SettingsPage() {
         exchange_rates: settings.exchange_rates,
         manual_rates: documentFieldsSkipped ? {} : settings.manual_rates,
         rates_updated_at: settings.rates_updated_at,
+        invoice_prefix: settings.invoice_prefix.trim().slice(0, 12),
+        invoice_next_number: settings.invoice_next_number,
+        invoice_number_digits: settings.invoice_number_digits,
+        po_prefix: settings.po_prefix.trim().slice(0, 12),
+        tax_enabled: settings.tax_enabled,
+        tax_name: settings.tax_name.trim().slice(0, 20) || "VAT",
+        tax_rate: settings.tax_rate,
+        prices_include_tax: settings.prices_include_tax,
       };
       setSettings(normalizedSettings);
       setSavedSettings(normalizedSettings);
@@ -859,8 +889,149 @@ export default function SettingsPage() {
   );
 
   /* ---- Documents ------------------------------------------------------ */
+  const pad = (value: number) => String(value).padStart(settings.invoice_number_digits || 4, "0");
+  const invoicePrefix = settings.invoice_prefix;
+  const nextInvoiceLabel =
+    settings.invoice_next_number !== null
+      ? `${invoicePrefix}${pad(settings.invoice_next_number)}`
+      : invoicePrefix === savedSettings.invoice_prefix && nextInvoiceFromDb
+        ? nextInvoiceFromDb
+        : `${invoicePrefix}${pad(1)} (or after your last ${invoicePrefix} invoice)`;
+  const taxExample = (() => {
+    const rate = Number(settings.tax_rate) || 0;
+    if (!settings.tax_enabled || rate <= 0) return null;
+    const price = 100;
+    return settings.prices_include_tax
+      ? `An item at 100 stays 100 on the invoice, of which ${(price - price / (1 + rate / 100)).toFixed(2)} is ${settings.tax_name || "VAT"}.`
+      : `An item at 100 becomes ${(price + (price * rate) / 100).toFixed(2)} on the invoice: 100 + ${((price * rate) / 100).toFixed(2)} ${settings.tax_name || "VAT"}.`;
+  })();
+
   const renderDocumentsPanel = () => (
     <>
+      <Row label="Invoice numbers" htmlFor="invoice-prefix">
+        <div className="st-inline">
+          <input
+            id="invoice-prefix"
+            type="text"
+            className="st-input st-input-narrow"
+            value={settings.invoice_prefix}
+            maxLength={12}
+            onChange={(event) => setField("invoice_prefix", event.target.value.replace(/s/g, ""))}
+            aria-label="Invoice prefix"
+            placeholder="INV-"
+          />
+          <input
+            id="invoice-next-number"
+            type="number"
+            min={1}
+            className="st-input st-input-narrow"
+            value={settings.invoice_next_number ?? ""}
+            onChange={(event) => {
+              const typed = Math.round(Number(event.target.value));
+              setField("invoice_next_number", event.target.value && typed > 0 ? typed : null);
+            }}
+            aria-label="Next invoice number"
+            placeholder="Auto"
+          />
+        </div>
+        <p className="st-hint">
+          Next invoice: <strong className="st-strong">{nextInvoiceLabel}</strong>. Leave the number on Auto
+          to carry on from your last invoice.
+        </p>
+      </Row>
+
+      <Row label="Purchase order prefix" htmlFor="po-prefix">
+        <input
+          id="po-prefix"
+          type="text"
+          className="st-input st-input-narrow"
+          value={settings.po_prefix}
+          maxLength={12}
+          onChange={(event) => setField("po_prefix", event.target.value.replace(/s/g, ""))}
+          placeholder="Auto"
+        />
+        <p className="st-hint">
+          {settings.po_prefix.trim()
+            ? `Next orders look like ${settings.po_prefix.trim()}0001.`
+            : "Auto: named after the location, e.g. MAIN-PO-0001."}
+        </p>
+      </Row>
+
+      <Row label="Charge tax" htmlFor="tax-enabled">
+        <label className="st-switch">
+          <input
+            id="tax-enabled"
+            type="checkbox"
+            role="switch"
+            checked={settings.tax_enabled}
+            onChange={(event) => setField("tax_enabled", event.target.checked)}
+          />
+          <span aria-hidden="true" />
+        </label>
+        <p className="st-hint">
+          {settings.tax_enabled
+            ? "New invoices add this tax. Each invoice keeps the rate it was made with."
+            : "Off: invoices show no tax line."}
+        </p>
+      </Row>
+
+      {settings.tax_enabled && (
+        <>
+          <Row label="Tax name and rate" htmlFor="tax-name">
+            <div className="st-inline">
+              <input
+                id="tax-name"
+                type="text"
+                className="st-input st-input-narrow"
+                value={settings.tax_name}
+                maxLength={20}
+                onChange={(event) => setField("tax_name", event.target.value)}
+                aria-label="Tax name"
+                placeholder="VAT"
+              />
+              <input
+                id="tax-rate"
+                type="number"
+                min={0}
+                max={100}
+                step="0.01"
+                inputMode="decimal"
+                className="st-input st-input-narrow"
+                value={settings.tax_rate || ""}
+                onChange={(event) =>
+                  setField("tax_rate", Math.min(100, Math.max(0, Number(event.target.value) || 0)))
+                }
+                aria-label="Tax rate percent"
+                placeholder="11"
+              />
+              <span className="st-hint">%</span>
+            </div>
+          </Row>
+          <Row label="Your prices">
+            <div className="st-choice">
+              <label>
+                <input
+                  type="radio"
+                  name="prices-include-tax"
+                  checked={!settings.prices_include_tax}
+                  onChange={() => setField("prices_include_tax", false)}
+                />
+                <span>Don&apos;t include tax, add it on top</span>
+              </label>
+              <label>
+                <input
+                  type="radio"
+                  name="prices-include-tax"
+                  checked={settings.prices_include_tax}
+                  onChange={() => setField("prices_include_tax", true)}
+                />
+                <span>Already include tax</span>
+              </label>
+            </div>
+            {taxExample && <p className="st-hint">{taxExample}</p>}
+          </Row>
+        </>
+      )}
       <Row
         label="Payment terms"
         hint="Printed on every invoice and purchase order."

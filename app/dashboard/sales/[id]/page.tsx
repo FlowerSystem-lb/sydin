@@ -52,6 +52,7 @@ import {
   getSalesOrder,
   getSalesOrderLineTotal,
   getSalesOrderTotal,
+  getSalesOrderTotals,
   issueSalesOrder,
   SALES_ORDER_PAYMENT_METHOD_LABELS,
   SALES_ORDER_PAYMENT_STATUS_LABELS,
@@ -281,6 +282,9 @@ export default function SaleDetailPage() {
         paymentStatus: SALES_ORDER_PAYMENT_STATUS_LABELS[order.payment_status],
         amountPaid: order.amount_paid,
         notes: order.notes || undefined,
+        taxName: order.tax_name,
+        taxRate: order.tax_rate,
+        pricesIncludeTax: Boolean(order.prices_include_tax),
       },
       /* Everything printed comes from the SNAPSHOTS on the invoice, never
            from the live catalogue. A product renamed or repriced next month
@@ -453,7 +457,8 @@ export default function SaleDetailPage() {
     );
   }
 
-  const total = getSalesOrderTotal(order);
+  const totals = getSalesOrderTotals(order);
+  const total = totals.total;
   const balance = getSalesOrderBalance(order);
   const lines = order.lines || [];
 
@@ -635,6 +640,21 @@ export default function SaleDetailPage() {
                 </li>
               ))}
             </ul>
+
+            {totals.hasTax && (
+              <div className="mt-3 space-y-1 border-t border-theme pt-3 text-sm text-theme-secondary tabular-nums">
+                <div className="flex justify-between">
+                  <span>Subtotal</span>
+                  <span>{formatExactPrice(totals.subtotal, currencyCode) || "--"}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>
+                    {totals.taxName} {totals.rate}%{totals.included ? " (included)" : ""}
+                  </span>
+                  <span>{formatExactPrice(totals.tax, currencyCode) || "--"}</span>
+                </div>
+              </div>
+            )}
 
             <div className="mt-3 flex items-center justify-between border-t border-theme pt-3">
               <span className="text-sm font-semibold text-theme-secondary">

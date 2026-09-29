@@ -62,6 +62,10 @@ export interface SalesOrder {
   cancelled_at: string | null;
   /** Login that made it (team access); null for older rows. */
   actor_id?: string | null;
+  /* Phase 30: the tax this invoice was made with (null rate = no tax). */
+  tax_name?: string | null;
+  tax_rate?: number | null;
+  prices_include_tax?: boolean | null;
   lines?: SalesOrderLine[];
 }
 
@@ -92,6 +96,9 @@ export interface SalesOrderInput {
   exchange_rate?: number | null;
   notes?: string | null;
   internal_reference?: string | null;
+  tax_name?: string | null;
+  tax_rate?: number | null;
+  prices_include_tax?: boolean;
   lines: SalesOrderLineInput[];
 }
 
@@ -112,7 +119,7 @@ export const SALES_ORDER_PAYMENT_STATUS_LABELS: Record<
 };
 
 const ORDER_SELECT =
-  "id, user_id, invoice_number, title, customer_id, customer_name_snapshot, customer_contact_snapshot, depot_id, depot_name_snapshot, issue_date, due_date, status, payment_status, amount_paid, currency_code, exchange_rate, notes, internal_reference, created_at, updated_at, issued_at, cancelled_at, actor_id";
+  "id, user_id, invoice_number, title, customer_id, customer_name_snapshot, customer_contact_snapshot, depot_id, depot_name_snapshot, issue_date, due_date, status, payment_status, amount_paid, currency_code, exchange_rate, notes, internal_reference, created_at, updated_at, issued_at, cancelled_at, actor_id, tax_name, tax_rate, prices_include_tax";
 
 const LINE_SELECT =
   "id, sales_order_id, line_type, inventory_item_id, affects_stock, name_snapshot, sku_snapshot, item_code_snapshot, unit_label_snapshot, quantity, unit_price, notes";
@@ -138,11 +145,37 @@ export function getSalesOrderLineTotal(line: SalesOrderLine) {
   return Number(line.quantity || 0) * Number(line.unit_price || 0);
 }
 
-export function getSalesOrderTotal(order: SalesOrder) {
-  return (order.lines || []).reduce(
-    (sum, line) => sum + getSalesOrderLineTotal(line),
+const roundMoney = (value: number) => Math.round(value * 100) / 100;
+
+/**
+ * Subtotal, tax and total of one invoice, in its own currency. Mirrors the
+ * database's sales_order_total() (sql/phase-30): tax added on top is rounded
+ * once, on the whole subtotal; tax already included is shown as the part of
+ * the total that is tax, and does not change the total.
+ */
+export function getSalesOrderTotals(
+  order: Pick<SalesOrder, "lines" | "tax_name" | "tax_rate" | "prices_include_tax">
+) {
+  const subtotal = (order.lines || []).reduce(
+    (sum, line) => sum + getSalesOrderLineTotal(line as SalesOrderLine),
     0
   );
+  const rate = Number(order.tax_rate) || 0;
+  const taxName = order.tax_name?.trim() || "VAT";
+  if (rate <= 0) {
+    return { subtotal, tax: 0, total: subtotal, rate: 0, taxName, included: false, hasTax: false };
+  }
+  if (order.prices_include_tax) {
+    const tax = roundMoney(subtotal - subtotal / (1 + rate / 100));
+    return { subtotal, tax, total: subtotal, rate, taxName, included: true, hasTax: true };
+  }
+  const tax = roundMoney((subtotal * rate) / 100);
+  return { subtotal, tax, total: subtotal + tax, rate, taxName, included: false, hasTax: true };
+}
+
+/** The amount the customer owes for the invoice, tax included. */
+export function getSalesOrderTotal(order: SalesOrder) {
+  return getSalesOrderTotals(order).total;
 }
 
 export function getSalesOrderBalance(order: SalesOrder) {
@@ -231,6 +264,12 @@ export async function getSalesOrder(userId: string, orderId: number) {
  * a rule, because the field stays editable.
  */
 export async function suggestNextInvoiceNumber(userId: string) {
+  // Phase 30: the database knows the business's prefix and counter.
+  const { data: fromDb, error: rpcError } = await supabase.rpc("next_invoice_number", {
+    p_reserve: false,
+  });
+  if (!rpcError && typeof fromDb === "string" && fromDb) return fromDb;
+
   const { data } = await supabase
     .from("sales_orders")
     .select("invoice_number")
@@ -248,6 +287,17 @@ export async function suggestNextInvoiceNumber(userId: string) {
   const next = String(Number(digits) + 1).padStart(digits.length, "0");
 
   return `${prefix}${next}${suffix}`;
+}
+
+/**
+ * Takes the next invoice number for real (locked in the database, so two
+ * people never get the same one). Used when the number on the form is still
+ * the suggested one; a number the user typed themselves is kept as typed.
+ */
+export async function reserveInvoiceNumber() {
+  const { data, error } = await supabase.rpc("next_invoice_number", { p_reserve: true });
+  if (error || typeof data !== "string" || !data) return null;
+  return data;
 }
 
 export async function createSalesOrder(userId: string, input: SalesOrderInput) {

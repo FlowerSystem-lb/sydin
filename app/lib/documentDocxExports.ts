@@ -12,6 +12,7 @@ import {
   type DocumentBranding,
 } from "@/app/lib/documentPdf";
 import type { SalesInvoicePdfDetails, SalesInvoicePdfLine } from "@/app/lib/salesInvoicePdf";
+import { getInvoiceDocumentTotals, invoiceTaxLabel } from "@/app/lib/invoiceTax";
 import type {
   PurchaseOrderPdfDetails,
   PurchaseOrderPdfLine,
@@ -46,7 +47,8 @@ export async function exportSalesInvoiceDocx({
 }) {
   const currency = normalizeCurrencyCode(currencyCode);
   const images = await loadLineImages(lines.map((line) => line.imageUrl));
-  const total = lines.reduce((sum, line) => sum + line.lineTotal, 0);
+  const totals = getInvoiceDocumentTotals(lines, details);
+  const total = totals.total;
   const paid = Number(details.amountPaid || 0);
   const balance = Math.max(total - paid, 0);
 
@@ -95,6 +97,12 @@ export async function exportSalesInvoiceDocx({
     ],
     table,
     totals: [
+      ...(totals.hasTax
+        ? ([
+            ["Subtotal", money(totals.subtotal, currency)],
+            [invoiceTaxLabel(totals), money(totals.tax, currency)],
+          ] as [string, string][])
+        : []),
       ["Total", money(total, currency)],
       ["Paid", money(paid, currency)],
       ["Still owed", money(balance, currency)],

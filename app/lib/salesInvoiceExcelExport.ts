@@ -1,4 +1,5 @@
 import ExcelJS from "exceljs";
+import { getInvoiceDocumentTotals, invoiceTaxLabel } from "@/app/lib/invoiceTax";
 import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 import { getContainedImageSize, loadExportImage } from "@/app/lib/exportImage";
 
@@ -31,6 +32,9 @@ export interface SalesInvoiceExcelDetails {
   paymentStatus?: string;
   amountPaid?: number | null;
   notes?: string;
+  taxName?: string | null;
+  taxRate?: number | null;
+  pricesIncludeTax?: boolean;
 }
 
 export interface SalesInvoiceExcelBranding {
@@ -147,7 +151,11 @@ export async function exportSalesInvoiceExcel({
   const businessName = branding.businessName.trim() || "SydIN Account";
   const currency = normalizeCurrencyCode(currencyCode, "USD");
   const currencyFormat = `"${currency}" #,##0.00`;
-  const invoiceTotal = lines.reduce((total, line) => total + Number(line.lineTotal || 0), 0);
+  const totals = getInvoiceDocumentTotals(
+    lines.map((line) => ({ lineTotal: Number(line.lineTotal || 0) })),
+    details
+  );
+  const invoiceTotal = totals.total;
   const logo = branding.businessLogoUrl ? await loadExportImage(branding.businessLogoUrl) : null;
 
   const workbook = new ExcelJS.Workbook();
@@ -366,7 +374,25 @@ export async function exportSalesInvoiceExcel({
     row.getCell(6).numFmt = currencyFormat;
   });
 
-  const totalRowIndex = tableHeaderRow + lines.length + 1;
+  /* Phase 30: subtotal and tax rows sit between the lines and the total. */
+  const taxRows: Array<[string, number]> = totals.hasTax
+    ? [
+        ["Subtotal", totals.subtotal],
+        [invoiceTaxLabel(totals), totals.tax],
+      ]
+    : [];
+  taxRows.forEach(([label, value], index) => {
+    const rowIndex = tableHeaderRow + lines.length + 1 + index;
+    const row = worksheet.getRow(rowIndex);
+    worksheet.mergeCells(`A${rowIndex}:E${rowIndex}`);
+    row.getCell(1).value = label;
+    styleCell(row.getCell(1), { align: { horizontal: "right", vertical: "middle" } });
+    row.getCell(6).value = value;
+    row.getCell(6).numFmt = currencyFormat;
+    styleCell(row.getCell(6), { align: { horizontal: "right", vertical: "middle" } });
+  });
+
+  const totalRowIndex = tableHeaderRow + lines.length + 1 + taxRows.length;
   const totalRow = worksheet.getRow(totalRowIndex);
   totalRow.height = 26;
   worksheet.mergeCells(`A${totalRowIndex}:D${totalRowIndex}`);

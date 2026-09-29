@@ -24,6 +24,16 @@ export interface BusinessSettings {
   exchange_rates: Record<string, number>;
   manual_rates: Record<string, number>;
   rates_updated_at: string | null;
+  /* Phase 30: invoice numbering and tax. invoice_next_number null = continue
+     after the highest number already used with the prefix. */
+  invoice_prefix: string;
+  invoice_next_number: number | null;
+  invoice_number_digits: number;
+  po_prefix: string;
+  tax_enabled: boolean;
+  tax_name: string;
+  tax_rate: number;
+  prices_include_tax: boolean;
 }
 
 /** Fired on window with the saved BusinessSettings as detail, so the
@@ -48,6 +58,14 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettings = {
   exchange_rates: {},
   manual_rates: {},
   rates_updated_at: null,
+  invoice_prefix: "INV-",
+  invoice_next_number: null,
+  invoice_number_digits: 4,
+  po_prefix: "",
+  tax_enabled: false,
+  tax_name: "VAT",
+  tax_rate: 0,
+  prices_include_tax: false,
 };
 
 function normalizeRateTable(value: unknown): Record<string, number> {
@@ -103,11 +121,22 @@ function normalizeBusinessSettings(data: Partial<BusinessSettings> | null) {
     exchange_rates: normalizeRateTable(data?.exchange_rates),
     manual_rates: normalizeRateTable(data?.manual_rates),
     rates_updated_at: data?.rates_updated_at || null,
+    invoice_prefix: data?.invoice_prefix ?? DEFAULT_BUSINESS_SETTINGS.invoice_prefix,
+    invoice_next_number:
+      Number.isFinite(Number(data?.invoice_next_number)) && Number(data?.invoice_next_number) > 0
+        ? Math.round(Number(data?.invoice_next_number))
+        : null,
+    invoice_number_digits: Math.min(8, Math.max(1, Math.round(Number(data?.invoice_number_digits) || 4))),
+    po_prefix: data?.po_prefix || "",
+    tax_enabled: Boolean(data?.tax_enabled),
+    tax_name: data?.tax_name?.trim() || DEFAULT_BUSINESS_SETTINGS.tax_name,
+    tax_rate: Math.min(100, Math.max(0, Number(data?.tax_rate) || 0)),
+    prices_include_tax: Boolean(data?.prices_include_tax),
   };
 }
 
 const SETTINGS_SELECT =
-  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer, accent_color, base_currency, exchange_rates, manual_rates, rates_updated_at";
+  "business_name, business_logo_url, low_stock_threshold, currency_code, contact_email, contact_phone, contact_website, show_contact_publicly, business_address, tax_id, payment_terms, document_footer, accent_color, base_currency, exchange_rates, manual_rates, rates_updated_at, invoice_prefix, invoice_next_number, invoice_number_digits, po_prefix, tax_enabled, tax_name, tax_rate, prices_include_tax";
 
 /* The same row without the phase-24 columns, for a database where that
    migration has not been run yet. */

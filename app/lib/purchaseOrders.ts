@@ -829,7 +829,13 @@ export async function getPurchaseOrderAttachmentUrl(stored: string | null | unde
  */
 export async function getNextPoNumber(
   userId: string,
-  prefixSource: { depotCode?: string | null; depotName?: string | null; businessName?: string | null }
+  prefixSource: {
+    depotCode?: string | null;
+    depotName?: string | null;
+    businessName?: string | null;
+    /* Phase 30: the business's own PO prefix (Settings > Invoices & tax). */
+    poPrefix?: string | null;
+  }
 ) {
   const rawPrefix =
     prefixSource.depotCode?.trim() ||
@@ -852,5 +858,7 @@ export async function getNextPoNumber(
   }
 
   const nextNumber = String((count || 0) + 1).padStart(4, "0");
+  const ownPrefix = prefixSource.poPrefix?.trim();
+  if (ownPrefix) return `${ownPrefix}${nextNumber}`;
   return `${prefix}-PO-${nextNumber}`;
 }

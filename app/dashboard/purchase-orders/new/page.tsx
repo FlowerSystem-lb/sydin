@@ -416,12 +416,13 @@ export default function NewPurchaseOrderPage() {
   }, [router]);
 
   const refreshPoNumber = useCallback(
-    async (depot: Depot | null, businessName: string, ownerId: string) => {
+    async (depot: Depot | null, businessName: string, ownerId: string, poPrefix?: string) => {
       try {
         const nextNumber = await getNextPoNumber(ownerId, {
           depotCode: depot?.code,
           depotName: depot?.name,
           businessName,
+          poPrefix,
         });
         setPoNumber(nextNumber);
       } catch {
@@ -440,7 +441,7 @@ export default function NewPurchaseOrderPage() {
     if (loading || !userId || poNumberEdited) return;
 
     const frame = window.requestAnimationFrame(() => {
-      refreshPoNumber(selectedDepot, settings.business_name, userId);
+      refreshPoNumber(selectedDepot, settings.business_name, userId, settings.po_prefix);
     });
     return () => window.cancelAnimationFrame(frame);
   }, [
@@ -450,6 +451,7 @@ export default function NewPurchaseOrderPage() {
     refreshPoNumber,
     selectedDepot,
     settings.business_name,
+    settings.po_prefix,
   ]);
 
   useEffect(() => {

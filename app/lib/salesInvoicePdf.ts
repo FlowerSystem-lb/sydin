@@ -1,4 +1,5 @@
 import autoTable from "jspdf-autotable";
+import { getInvoiceDocumentTotals, invoiceTaxLabel } from "@/app/lib/invoiceTax";
 import { normalizeCurrencyCode } from "@/app/lib/inventoryItemModel";
 import { formatExactPrice } from "@/app/lib/currency";
 import {
@@ -64,7 +65,12 @@ export interface SalesInvoicePdfDetails {
   paymentStatus?: string;
   amountPaid?: number | null;
   notes?: string;
+  /* Phase 30: the tax the invoice was made with. No rate = no tax. */
+  taxName?: string | null;
+  taxRate?: number | null;
+  pricesIncludeTax?: boolean;
 }
+
 
 export type SalesInvoicePdfBranding = DocumentBranding;
 
@@ -180,7 +186,8 @@ export async function exportSalesInvoicePdf({
   // A quote has not been invoiced yet: one figure, not three. Paid and
   // still-owed describe a bill, and printing them on a proposal reads as
   // one -- as if money were already due.
-  const total = lines.reduce((sum, line) => sum + line.lineTotal, 0);
+  const totals = getInvoiceDocumentTotals(lines, details);
+  const total = totals.total;
   const paid = Number(details.amountPaid || 0);
   const balance = Math.max(total - paid, 0);
 
@@ -213,6 +220,7 @@ export async function exportSalesInvoicePdf({
     : 0;
   const tailHeight =
     (asQuote ? 8 : 6 + 6 + 8 + 4) + // totals rows and the due line
+    (totals.hasTax ? 12 : 0) + // subtotal and tax rows
     (termsLines ? 5 + termsLines * 4.2 + 6 : 0) +
     (noteLines ? 5 + noteLines * 4.2 + 6 : 0) +
     6 + 22 + 2; // signatures
@@ -221,9 +229,16 @@ export async function exportSalesInvoicePdf({
   const totalsX = pageWidth - margin;
   const labelX = totalsX - 60;
 
+  const taxRows: [string, string, boolean][] = totals.hasTax
+    ? [
+        ["Subtotal", money(totals.subtotal, currency), false],
+        [invoiceTaxLabel(totals), money(totals.tax, currency), false],
+      ]
+    : [];
   const rows: [string, string, boolean][] = asQuote
-    ? [["Total", money(total, currency), true]]
+    ? [...taxRows, ["Total", money(total, currency), true]]
     : [
+        ...taxRows,
         ["Total", money(total, currency), false],
         ["Paid", money(paid, currency), false],
         ["Still owed", money(balance, currency), true],

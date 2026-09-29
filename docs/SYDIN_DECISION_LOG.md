@@ -631,3 +631,20 @@ stays as the alternative.
 `sydin.site` is ours, so the addresses can't be received or claimed by anyone else.
 
 **Status:** Active.
+
+### 29 Sep 2026 — Tax is stored per invoice; numbers come from the database
+
+**Decision:**
+- Each invoice keeps its own tax name, rate and "prices include tax" flag. A null rate means no
+  tax, which covers every invoice made before this change.
+- VAT added on top is rounded once, on the whole subtotal.
+- One tax rate per business for now; no per-product rates.
+- Invoice numbers come from `next_invoice_number()`, which runs under a row lock.
+
+**Why:**
+- If someone changes the rate later, old invoices must not change.
+- Two staff saving at the same moment must never get the same number.
+- A single rate covers Lebanon's 11% VAT and most small shops. Per-product rates can wait until a
+  customer actually needs them.
+
+**Status:** Active.

@@ -27642,3 +27642,24 @@ body:has(.login-page)::-webkit-scrollbar,
 .st-password-form > button {
   justify-self: start;
 }
+
+/* Invoices & tax: two stacked radio choices */
+.st-choice {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.st-choice label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+.st-choice input {
+  width: 1rem;
+  height: 1rem;
+  accent-color: #2563eb;
+}

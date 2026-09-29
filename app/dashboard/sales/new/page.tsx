@@ -52,6 +52,8 @@ import {
   createSalesOrder,
   getSalesOrder,
   getSalesOrderErrorMessage,
+  getSalesOrderTotals,
+  reserveInvoiceNumber,
   suggestNextInvoiceNumber,
   type SalesOrderLineInput,
 } from "@/app/lib/salesOrders";
@@ -120,6 +122,12 @@ export default function NewSalePage() {
   const exchangeRate = getExchangeRate(baseCurrency, currencyCode);
 
   const [invoiceNumber, setInvoiceNumber] = useState("");
+  /* What the database suggested. Left as is, the number is reserved on save
+     (so two people never get the same one); typed over, it is kept. */
+  const [suggestedNumber, setSuggestedNumber] = useState("");
+  /* Phase 30: tax on this invoice. Starts from Settings > Invoices & tax and
+     can be switched off for one invoice (an export, a tax-free customer). */
+  const [applyTax, setApplyTax] = useState(false);
   // "New invoice" from a customer's account page names the customer.
   const [customerId, setCustomerId] = useState(() => searchParams.get("customer") || "");
   const [depotId, setDepotId] = useState("");
@@ -207,6 +215,8 @@ export default function NewSalePage() {
         );
         setBusinessSettings(settings || DEFAULT_BUSINESS_SETTINGS);
         setInvoiceNumber(suggested);
+        setSuggestedNumber(suggested);
+        setApplyTax(Boolean(settings?.tax_enabled && Number(settings?.tax_rate) > 0));
 
         /* Duplicate (?from=12): the same invoice again for the same customer
            -- customer, depot, currency, notes and every line at the price it
@@ -260,15 +270,29 @@ export default function NewSalePage() {
     };
   }, []);
 
-  const total = useMemo(
+  const taxAvailable = businessSettings.tax_enabled && businessSettings.tax_rate > 0;
+  const taxFields = applyTax && taxAvailable
+    ? {
+        tax_name: businessSettings.tax_name,
+        tax_rate: businessSettings.tax_rate,
+        prices_include_tax: businessSettings.prices_include_tax,
+      }
+    : { tax_name: null, tax_rate: null, prices_include_tax: false };
+
+  const totals = useMemo(
     () =>
-      lines.reduce(
-        (sum, line) =>
-          sum + (Number(line.quantity) || 0) * (Number(line.unitPrice) || 0),
-        0
-      ),
-    [lines]
+      getSalesOrderTotals({
+        lines: lines.map((line) => ({
+          quantity: Number(line.quantity) || 0,
+          unit_price: Number(line.unitPrice) || 0,
+        })) as never,
+        tax_name: taxFields.tax_name,
+        tax_rate: taxFields.tax_rate,
+        prices_include_tax: taxFields.prices_include_tax,
+      }),
+    [lines, taxFields.tax_name, taxFields.tax_rate, taxFields.prices_include_tax]
   );
+  const total = totals.total;
 
   const overStock = useMemo(
     () =>
@@ -441,8 +465,13 @@ export default function NewSalePage() {
       setError("");
 
       rememberDepotId(depotId);
+      let numberToUse = invoiceNumber.trim();
+      if (suggestedNumber && numberToUse === suggestedNumber) {
+        numberToUse = (await reserveInvoiceNumber()) || numberToUse;
+      }
       const created = await createSalesOrder(user.id, {
-        invoice_number: invoiceNumber,
+        invoice_number: numberToUse,
+        ...taxFields,
         customer_id: customer ? customer.id : null,
         customer_name_snapshot: customer ? customer.name : null,
         customer_contact_snapshot: customer
@@ -769,6 +798,33 @@ export default function NewSalePage() {
                     );
                   })}
                 </ul>
+              )}
+
+              {taxAvailable && (
+                <label className="mt-4 flex items-center gap-2 text-sm text-theme-secondary">
+                  <input
+                    type="checkbox"
+                    checked={applyTax}
+                    onChange={(event) => setApplyTax(event.target.checked)}
+                  />
+                  Add {businessSettings.tax_name} {businessSettings.tax_rate}%
+                  {businessSettings.prices_include_tax ? " (included in prices)" : ""}
+                </label>
+              )}
+
+              {totals.hasTax && (
+                <div className="mt-3 space-y-1 border-t border-theme pt-3 text-sm text-theme-secondary tabular-nums">
+                  <div className="flex justify-between">
+                    <span>Subtotal</span>
+                    <span>{formatExactPrice(totals.subtotal, currencyCode) || "--"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>
+                      {totals.taxName} {totals.rate}%{totals.included ? " (included)" : ""}
+                    </span>
+                    <span>{formatExactPrice(totals.tax, currencyCode) || "--"}</span>
+                  </div>
+                </div>
               )}
 
               <div className="mt-4 flex items-center justify-between border-t border-theme pt-3">

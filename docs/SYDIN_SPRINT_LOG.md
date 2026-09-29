@@ -5999,3 +5999,36 @@ settings UX guides.
 `updateUser`). It triggers the "password changed" security email.
 
 Lint and build are clean. Not clicked through live: the test browser was signed out.
+
+### 29 Sep — Invoices & tax (phase 30)
+
+Settings > "Documents" is now **Invoices & tax**.
+
+**Database (`sql/phase-30-invoices-tax.sql`, applied by Sayed after the TEST file passed):**
+- New invoice-numbering settings: prefix, next number, digits.
+- An optional PO prefix.
+- Tax settings: on/off, name, rate, and whether prices already include tax.
+- Each invoice keeps the tax it was made with.
+- `sales_order_total()` is the one definition of an invoice total. Payment status now uses it, so
+  "paid" means paid including VAT.
+- `next_invoice_number()` hands out numbers under a row lock and skips numbers already used.
+
+**App:**
+- **Settings:** new rows for invoice numbering (with a preview), the PO prefix, the Charge tax
+  switch, the tax name and rate, and whether prices include tax.
+- **New invoice:**
+  - an "Add VAT x%" checkbox that starts from Settings
+  - Subtotal, VAT and Total shown on screen
+  - an unchanged suggested number is reserved on save
+- **Tax shown everywhere:**
+  - The invoice page, PDF, Word and Excel all show Subtotal, VAT and Total.
+  - The shared maths lives in `app/lib/invoiceTax.ts` and matches the database rule.
+  - Balances, customer totals and the Sales list pick up tax through `getSalesOrderTotal`.
+- **PO numbers:** they use the PO prefix when one is set.
+- **Left without tax on purpose:** per-product and per-category revenue in the reports PDF, because
+  VAT is not product revenue.
+
+**Checks:**
+- Lint, type-check and build pass.
+- Tax maths checked: 100 at 11% on top gives 111, and 100 at 11% included gives 100 with 9.91 VAT.
+- Not clicked through live, because the test browser was signed out.
