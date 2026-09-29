@@ -49,6 +49,8 @@ import {
 } from "@/app/lib/paymentMethods";
 import TeamPanel from "@/components/settings/TeamPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
+import AccountAccess from "@/components/settings/AccountAccess";
+import type { UserIdentity } from "@supabase/supabase-js";
 import {
   INVENTORY_SORT_OPTIONS,
   getDefaultInventorySort,
@@ -104,13 +106,6 @@ interface SettingsSection {
   description: string;
   icon: UiIconName;
 }
-
-// Supabase names Microsoft sign-in "azure".
-const SIGN_IN_LABELS = {
-  email: "Email code",
-  google: "Google",
-  azure: "Microsoft",
-} as const;
 
 /* Rebuilt 26 Sep from Sayed's Figma Make design: grouped the way a business
    owner thinks about it (the business, how the app behaves, their account),
@@ -311,6 +306,7 @@ export default function SettingsPage() {
     useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
   const [userEmail, setUserEmail] = useState("");
   const [signInMethods, setSignInMethods] = useState<string[]>([]);
+  const [identities, setIdentities] = useState<UserIdentity[]>([]);
   const [usedItems, setUsedItems] = useState<number | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -419,6 +415,7 @@ export default function SettingsPage() {
         setSignInMethods(
           (user.identities ?? []).map((identity) => identity.provider)
         );
+        setIdentities(user.identities ?? []);
 
         Promise.all([
           getOrCreateBusinessSettings(user.id),
@@ -1725,9 +1722,20 @@ export default function SettingsPage() {
       </div>
 
       <h2 className="st-subhead">Sign-in and security</h2>
-      <Row label="Signed in as">
-        <span className="st-strong">{userEmail || "—"}</span>
-      </Row>
+      <AccountAccess
+        email={userEmail}
+        identities={identities}
+        canChangeEmail={!/@[a-z0-9-]+\.sydin\.site$/i.test(userEmail)}
+        onChanged={() => {
+          // Re-read the login: new email or identities after a change.
+          void supabase.auth.getUser().then(({ data }) => {
+            if (!data.user) return;
+            setUserEmail(data.user.email || "");
+            setIdentities(data.user.identities ?? []);
+            setSignInMethods((data.user.identities ?? []).map((identity) => identity.provider));
+          });
+        }}
+      />
       {myRole !== "owner" && (
         <Row
           label="Business"
@@ -1753,21 +1761,6 @@ export default function SettingsPage() {
           </Button>
         </Row>
       )}
-      <Row label="Sign-in methods" hint="The ways you can get into this account.">
-        <ul className="st-signins">
-          {(["email", "google", "azure"] as const).map((provider) => {
-            const linked = signInMethods.includes(provider);
-            return (
-              <li key={provider}>
-                <span>{SIGN_IN_LABELS[provider]}</span>
-                <span className={`st-pill ${linked ? "st-pill-green" : "st-pill-grey"}`}>
-                  {linked ? "Connected" : "Not connected"}
-                </span>
-              </li>
-            );
-          })}
-        </ul>
-      </Row>
       {(myRole === "owner" || myRole === "admin") && (
         <Row
           label="Your data"

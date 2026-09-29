@@ -28543,3 +28543,20 @@ body:has(.login-page)::-webkit-scrollbar,
 .ad-flash.ad-flash { animation: ad-toast 4.5s ease forwards; }
 @keyframes ad-toast { 0% { opacity: 0; transform: translate(-50%, 8px); } 6% { opacity: 1; transform: translate(-50%, 0); } 85% { opacity: 1; } 100% { opacity: 0; visibility: hidden; } }
 .ad-error-inline.ad-error-inline { background: #fef2f2 !important; color: #991b1b; }
+
+/* Settings > My profile: change email + linked accounts (after Sortly) */
+.st-email-change.st-email-change { display: grid !important; gap: 0.55rem !important; max-width: 28rem; }
+.st-email-code.st-email-code { display: grid !important; gap: 0.25rem !important; font-size: 0.8rem; font-weight: 600; color: var(--text-secondary); }
+.st-linked.st-linked { display: grid !important; max-width: 30rem; margin: 0 !important; padding: 0 !important; overflow: hidden; border: 1px solid var(--border-default); border-radius: 12px; list-style: none; }
+.st-linked li { display: flex; align-items: center; gap: 0.75rem; border-bottom: 1px solid var(--border-divider); padding: 0.7rem 0.85rem; }
+.st-linked li:last-child { border-bottom: 0; }
+.st-linked-icon.st-linked-icon { display: inline-flex; flex: none; align-items: center; justify-content: center; width: 2rem; height: 2rem; border-radius: 10px; background: var(--bg-inset); color: var(--text-secondary); }
+.st-linked-icon svg { width: 1.1rem !important; height: 1.1rem !important; }
+.st-linked-text.st-linked-text { display: grid; flex: 1 1 auto; min-width: 0; }
+.st-linked-text strong { font-size: 0.9rem; font-weight: 600; color: var(--text-primary); }
+.st-linked-text small { overflow: hidden; font-size: 0.78rem; color: var(--text-muted); text-overflow: ellipsis; white-space: nowrap; }
+.st-linked-action.st-linked-action { display: inline-flex; flex: none; align-items: center; gap: 0.35rem; border-radius: 8px; padding: 0.35rem 0.6rem; font-size: 0.82rem; font-weight: 600; color: #b91c1c; transition: background-color 150ms ease; }
+.st-linked-action.st-linked-action:hover:not(:disabled) { background: #fef2f2; }
+.st-linked-action.st-linked-action:disabled { opacity: 0.4; cursor: not-allowed; }
+.st-linked-action.st-linked-link { color: #1d4ed8; }
+.st-linked-action.st-linked-link:hover { background: #eff6ff !important; }

@@ -6293,3 +6293,17 @@ Sayed: plan requests opened a different, older page and needed more buttons.
   - A wrong current password gets a clear message pointing to Forgot password.
 - Not added: an email code on every change. With a fresh session, Supabase's nonce check does not
   apply; the current password is the standard control.
+
+### 30 Sep — My profile: Change email + Linked accounts (after Sortly)
+
+- **`components/settings/AccountAccess.tsx`** replaces the "Signed in as" and "Sign-in methods"
+  rows.
+  - **Change email:** `updateUser({ email })` with Supabase "Secure email change" on, which sends
+    codes to both the old and the new address. Both are verified with `verifyOtp(type
+    "email_change")`. MFA accounts are asked for the authenticator code (AAL2). Logins SydIN made
+    for a team (@x.sydin.site) can't change email; their owner manages them.
+  - **Linked accounts:** Email & password, Google and Microsoft, each with its email.
+    - Link uses `linkIdentity`, which needs Supabase "Allow manual linking".
+    - Unlink uses `unlinkIdentity` behind a page dialog; the last sign-in method can't be removed.
+- **A customer who forgets their email** contacts support; Sayed finds them in Admin > Customers by
+  business name or phone.
