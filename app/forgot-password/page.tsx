@@ -20,7 +20,15 @@ import { supabase } from "@/app/lib/supabase";
 const RESEND_COOLDOWN_SECONDS = 60;
 const MIN_PASSWORD_LENGTH = 8;
 
-type Step = "email" | "code" | "done";
+type Step = "email" | "code" | "mfa" | "done";
+
+/* Supabase refuses a password change on an account with an authenticator app
+   (MFA) until the session has passed that app's code ("AAL2 session is
+   required..."). The email code proves the inbox; the app code proves the
+   phone. 30 Sep 2026: the reset page used to stop at that error. */
+function needsAuthenticator(message: string) {
+  return /aal2|mfa/i.test(message);
+}
 
 function friendly(message: string) {
   const text = message.toLowerCase();
@@ -48,6 +56,9 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState("");
   const [sentAt, setSentAt] = useState(0);
   const [cooldown, setCooldown] = useState(0);
+  // The email code works once: after it is accepted, a retry must not send it again.
+  const [emailCodeAccepted, setEmailCodeAccepted] = useState(false);
+  const [appCode, setAppCode] = useState("");
 
   // Arriving from the login page with the email already typed.
   useEffect(() => {
@@ -80,6 +91,7 @@ export default function ForgotPasswordPage() {
       }
       setEmail(address);
       setCode("");
+      setEmailCodeAccepted(false);
       setSentAt(Date.now());
       setStep("code");
     } catch {
@@ -108,14 +120,56 @@ export default function ForgotPasswordPage() {
     setBusy(true);
     setError("");
     try {
-      const { error: verifyError } = await supabase.auth.verifyOtp({
-        email,
-        token: code,
-        type: "recovery",
-      });
+      if (!emailCodeAccepted) {
+        const { error: verifyError } = await supabase.auth.verifyOtp({
+          email,
+          token: code,
+          type: "recovery",
+        });
+        if (verifyError) {
+          setError(friendly(verifyError.message));
+          setCode("");
+          return;
+        }
+        setEmailCodeAccepted(true);
+      }
+      const { error: updateError } = await supabase.auth.updateUser({ password });
+      if (updateError) {
+        if (needsAuthenticator(updateError.message)) {
+          setAppCode("");
+          setStep("mfa");
+          return;
+        }
+        setError(friendly(updateError.message));
+        return;
+      }
+      setStep("done");
+      window.setTimeout(() => {
+        window.location.href = "/dashboard";
+      }, 1400);
+    } catch {
+      setError("We could not reach SydIN. Check your connection and try again.");
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const confirmWithApp = async (event: React.FormEvent) => {
+    event.preventDefault();
+    if (appCode.length !== CODE_LENGTH || busy) return;
+    setBusy(true);
+    setError("");
+    try {
+      const { data: factors } = await supabase.auth.mfa.listFactors();
+      const factor = factors?.totp?.find((entry) => entry.status === "verified");
+      if (!factor) {
+        setError("We couldn't find your authenticator app. Contact SydIN support.");
+        return;
+      }
+      const { error: verifyError } = await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code: appCode });
       if (verifyError) {
-        setError(friendly(verifyError.message));
-        setCode("");
+        setAppCode("");
+        setError("That code didn't work. Codes change every 30 seconds; enter the current one.");
         return;
       }
       const { error: updateError } = await supabase.auth.updateUser({ password });
@@ -155,6 +209,43 @@ export default function ForgotPasswordPage() {
             <span className="auth-verification-progress" aria-hidden="true">
               <i />
             </span>
+          </div>
+        ) : step === "mfa" ? (
+          <div className="auth-verification">
+            <span className="auth-verification-badge">
+              <UiIcon name="shield" className="h-6 w-6" />
+            </span>
+            <p className="auth-verification-eyebrow">One more step</p>
+            <h1>Enter your app code.</h1>
+            <p>
+              This account is protected with an authenticator app. Open it on your phone and type the
+              {" "}{CODE_LENGTH}-digit code for SydIN to save your new password.
+            </p>
+            <form onSubmit={confirmWithApp} className="auth-verification-form">
+              <label htmlFor="reset-app-0">Authenticator code</label>
+              <CodeInput
+                idPrefix="reset-app"
+                value={appCode}
+                onChange={(value) => {
+                  setAppCode(value);
+                  if (error) setError("");
+                }}
+                disabled={busy}
+                invalid={Boolean(error)}
+                autoFocus
+              />
+              {errorBox}
+              <button type="submit" disabled={appCode.length !== CODE_LENGTH || busy} aria-busy={busy} className="login-submit">
+                {busy ? (
+                  <>
+                    <span className="login-spinner" />
+                    Saving...
+                  </>
+                ) : (
+                  "Save new password"
+                )}
+              </button>
+            </form>
           </div>
         ) : step === "email" ? (
           <>

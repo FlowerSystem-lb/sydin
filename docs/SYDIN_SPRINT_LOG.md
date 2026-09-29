@@ -6270,3 +6270,15 @@ Sayed: plan requests opened a different, older page and needed more buttons.
   support@sydin.site in `app/lib/support.ts` and on the privacy and terms pages.
 
 **Checks:** lint, type-check and build pass. Live sending is confirmed from Admin > Emails.
+
+### 30 Sep — Password reset / change on accounts with an authenticator app
+
+- **Bug:** after Sayed turned on the authenticator app for /admin, "Forgot password" failed with
+  "AAL2 session is required to update email or password when MFA is enabled". Supabase requires the
+  app code before any password change on an MFA account.
+- **Fix, reset page:** after the email code is accepted, it now asks for the authenticator code
+  (`mfa.challengeAndVerify`) and then saves the password. The email code is not re-sent to Supabase
+  on retry, because it works only once.
+- **Fix, Settings > My profile > Password:** the same. On that error it shows an "authenticator app
+  code" field, then retries.
+- Accounts without MFA see no change.

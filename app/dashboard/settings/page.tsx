@@ -316,6 +316,9 @@ export default function SettingsPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [changingPassword, setChangingPassword] = useState(false);
+  // Accounts with an authenticator app need its code to change the password.
+  const [passwordAppCode, setPasswordAppCode] = useState("");
+  const [passwordNeedsApp, setPasswordNeedsApp] = useState(false);
   const [exportingAll, setExportingAll] = useState(false);
   const [newUnit, setNewUnit] = useState("");
   const [newMethod, setNewMethod] = useState("");
@@ -1801,8 +1804,27 @@ export default function SettingsPage() {
               return;
             }
             setChangingPassword(true);
+            // Supabase needs the authenticator-app code first on an MFA account.
+            if (passwordNeedsApp) {
+              const { data: factors } = await supabase.auth.mfa.listFactors();
+              const factor = factors?.totp?.find((entry) => entry.status === "verified");
+              const appError = factor
+                ? (await supabase.auth.mfa.challengeAndVerify({ factorId: factor.id, code: passwordAppCode })).error
+                : new Error("no factor");
+              if (appError) {
+                setChangingPassword(false);
+                setPasswordAppCode("");
+                showToast({ tone: "danger", message: "That app code didn't work. Enter the current one." });
+                return;
+              }
+            }
             const { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
             setChangingPassword(false);
+            if (passwordError && /aal2|mfa/i.test(passwordError.message)) {
+              setPasswordNeedsApp(true);
+              showToast({ tone: "info", message: "Enter the 6-digit code from your authenticator app, then press Change password again." });
+              return;
+            }
             if (passwordError) {
               showToast({
                 tone: "danger",
@@ -1814,6 +1836,8 @@ export default function SettingsPage() {
             }
             setNewPassword("");
             setConfirmPassword("");
+            setPasswordAppCode("");
+            setPasswordNeedsApp(false);
             showToast({ tone: "success", message: "Password changed. We emailed you a security note." });
           }}
         >
@@ -1835,13 +1859,25 @@ export default function SettingsPage() {
             onChange={(event) => setConfirmPassword(event.target.value)}
             aria-label="Confirm new password"
           />
+          {passwordNeedsApp && (
+            <input
+              className="st-input"
+              inputMode="numeric"
+              autoComplete="one-time-code"
+              maxLength={6}
+              placeholder="6-digit code from your authenticator app"
+              value={passwordAppCode}
+              onChange={(event) => setPasswordAppCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
+              aria-label="Authenticator app code"
+            />
+          )}
           <Button
             type="submit"
             variant="secondary"
             size="sm"
             loading={changingPassword}
             loadingLabel="Saving…"
-            disabled={!newPassword || !confirmPassword}
+            disabled={!newPassword || !confirmPassword || (passwordNeedsApp && passwordAppCode.length !== 6)}
           >
             Change password
           </Button>
