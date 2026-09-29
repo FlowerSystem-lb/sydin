@@ -1456,7 +1456,9 @@ export default function SettingsPage() {
             {userEmail || "—"}
           </p>
         </div>
-        <span className="st-pill st-pill-grey st-me-role">{ROLE_LABELS[myRole]}</span>
+        {savedProfile.jobTitle !== ROLE_LABELS[myRole] && (
+          <span className="st-pill st-pill-grey st-me-role">{ROLE_LABELS[myRole]}</span>
+        )}
       </div>
 
       <h2 className="st-subhead">Personal information</h2>
