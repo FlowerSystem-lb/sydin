@@ -325,7 +325,7 @@ export default function SignupPage() {
                     id="signup-password"
                     type={showPassword ? "text" : "password"}
                     required
-                    minLength={6}
+                    minLength={8}
                     autoComplete="new-password"
                     placeholder="Create a secure password"
                     value={password}
@@ -344,7 +344,7 @@ export default function SignupPage() {
                   </button>
                 </div>
                 <p id="signup-password-help" className="signup-password-help">
-                  Use at least 6 characters.
+                  Use at least 8 characters.
                 </p>
               </div>
 
