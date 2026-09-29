@@ -6282,3 +6282,14 @@ Sayed: plan requests opened a different, older page and needed more buttons.
 - **Fix, Settings > My profile > Password:** the same. On that error it shows an "authenticator app
   code" field, then retries.
 - Accounts without MFA see no change.
+
+### 30 Sep — Change password asks for the current password
+
+- Sayed noticed that Settings changed the password at once with no code. A signed-in session was
+  enough, so anyone at an unlocked computer could lock the owner out.
+- Settings > Password now has a "Current password" field, sent as `current_password`.
+  - It is enforced server-side once Supabase "Require current password when updating" is on.
+  - Google/Microsoft-only accounts (no email identity) don't see the field.
+  - A wrong current password gets a clear message pointing to Forgot password.
+- Not added: an email code on every change. With a fresh session, Supabase's nonce check does not
+  apply; the current password is the standard control.

@@ -318,6 +318,13 @@ export default function SettingsPage() {
   const [changingPassword, setChangingPassword] = useState(false);
   // Accounts with an authenticator app need its code to change the password.
   const [passwordAppCode, setPasswordAppCode] = useState("");
+  /* 30 Sep 2026 (Sayed: "it changes with no code"): a signed-in session could
+     change the password with nothing else, so anyone at an unlocked computer
+     could lock the owner out. The current password is now asked for, and
+     Supabase enforces it once "Require current password when updating" is on
+     (Authentication > Providers > Email). Google/Microsoft-only accounts have
+     no password to confirm, so they don't see the field. */
+  const [currentPassword, setCurrentPassword] = useState("");
   const [passwordNeedsApp, setPasswordNeedsApp] = useState(false);
   const [exportingAll, setExportingAll] = useState(false);
   const [newUnit, setNewUnit] = useState("");
@@ -1640,6 +1647,9 @@ export default function SettingsPage() {
     showToast({ tone: "success", message: "Profile saved. Your name now shows on what you do." });
   };
 
+  // Signs in with email + password (not only Google / Microsoft).
+  const hasEmailPassword = signInMethods.includes("email");
+
   const renderProfilePanel = () => (
     <>
       <div className="st-me-card">
@@ -1818,11 +1828,18 @@ export default function SettingsPage() {
                 return;
               }
             }
-            const { error: passwordError } = await supabase.auth.updateUser({ password: newPassword });
+            const { error: passwordError } = await supabase.auth.updateUser(
+              hasEmailPassword ? { password: newPassword, current_password: currentPassword } : { password: newPassword }
+            );
             setChangingPassword(false);
             if (passwordError && /aal2|mfa/i.test(passwordError.message)) {
               setPasswordNeedsApp(true);
               showToast({ tone: "info", message: "Enter the 6-digit code from your authenticator app, then press Change password again." });
+              return;
+            }
+            if (passwordError && /current password|invalid.*password|incorrect/i.test(passwordError.message)) {
+              setCurrentPassword("");
+              showToast({ tone: "danger", message: "Your current password isn't right. Try again, or use Forgot password on the sign-in page." });
               return;
             }
             if (passwordError) {
@@ -1836,11 +1853,23 @@ export default function SettingsPage() {
             }
             setNewPassword("");
             setConfirmPassword("");
+            setCurrentPassword("");
             setPasswordAppCode("");
             setPasswordNeedsApp(false);
             showToast({ tone: "success", message: "Password changed. We emailed you a security note." });
           }}
         >
+          {hasEmailPassword && (
+            <input
+              type="password"
+              className="st-input"
+              placeholder="Current password"
+              autoComplete="current-password"
+              value={currentPassword}
+              onChange={(event) => setCurrentPassword(event.target.value)}
+              aria-label="Current password"
+            />
+          )}
           <input
             type="password"
             className="st-input"
@@ -1877,7 +1906,12 @@ export default function SettingsPage() {
             size="sm"
             loading={changingPassword}
             loadingLabel="Saving…"
-            disabled={!newPassword || !confirmPassword || (passwordNeedsApp && passwordAppCode.length !== 6)}
+            disabled={
+              !newPassword ||
+              !confirmPassword ||
+              (hasEmailPassword && !currentPassword) ||
+              (passwordNeedsApp && passwordAppCode.length !== 6)
+            }
           >
             Change password
           </Button>
