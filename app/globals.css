@@ -28239,3 +28239,21 @@ body:has(.login-page)::-webkit-scrollbar,
 }
 
 .st-billing-features .st-billing-label { padding: 1rem 1.1rem 0.6rem !important; }
+
+/* Settings > Team > Permissions table (29 Sep, after Sortly's Manage permissions) */
+.st-perm.st-perm { padding: 0 0 1.35rem !important; }
+.st-perm-intro.st-perm-intro { margin: 0.2rem 0 0.8rem !important; font-size: 0.85rem !important; color: var(--text-muted) !important; }
+.st-perm-scroll.st-perm-scroll { overflow-x: auto; border: 1px solid var(--border-default); border-radius: 12px; background: #ffffff; }
+.st-perm-table.st-perm-table { width: 100%; min-width: 34rem; border-collapse: collapse; font-size: 0.85rem; }
+.st-perm-table th, .st-perm-table td { border-bottom: 1px solid var(--border-divider); padding: 0.65rem 0.8rem; }
+.st-perm-table tbody tr:last-child th, .st-perm-table tbody tr:last-child td { border-bottom: 0; }
+.st-perm-table thead th { background: var(--bg-inset); font-size: 0.72rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: center; }
+.st-perm-table thead th:first-child, .st-perm-table tbody th { text-align: left; }
+.st-perm-table tbody th { font-weight: 500; color: var(--text-primary); }
+.st-perm-table td { width: 5.5rem; text-align: center; }
+.st-perm-table tbody tr:hover { background: rgba(37, 99, 235, 0.03); }
+.st-perm-note { display: block; margin-top: 0.15rem; font-size: 0.75rem; font-weight: 400; color: var(--text-muted); }
+.st-perm-yes, .st-perm-some, .st-perm-no { display: inline-flex; align-items: center; justify-content: center; width: 1.4rem; height: 1.4rem; border-radius: 999px; }
+.st-perm-yes { background: var(--status-success-surface); color: var(--status-success-text); }
+.st-perm-some { background: var(--status-warning-surface); color: var(--status-warning-text); font-weight: 700; }
+.st-perm-no > span[aria-hidden] { width: 0.55rem; height: 2px; border-radius: 2px; background: #cbd5e1; }

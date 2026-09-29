@@ -47,6 +47,58 @@ const ROLE_HELP: Record<MemberRole, string> = {
   viewer: "Sees everything, changes nothing.",
 };
 
+/* What each role can do (29 Sep, after Sortly's "Manage permissions").
+   Read-only: it describes the rules the database already enforces
+   (sql/phase-28: can_write = not view-only, can_delete and business settings
+   = owner or admin) and what Settings shows each role. Keep in step with
+   those if a rule changes. "some" = allowed with a limit, explained in note. */
+type Access = "yes" | "no" | "some";
+const PERMISSIONS: { label: string; owner: Access; admin: Access; staff: Access; viewer: Access; note?: string }[] = [
+  { label: "See items, stock, orders and reports", owner: "yes", admin: "yes", staff: "yes", viewer: "yes" },
+  { label: "Add and edit items, stock in and out, scan", owner: "yes", admin: "yes", staff: "yes", viewer: "no" },
+  { label: "Make invoices and record payments", owner: "yes", admin: "yes", staff: "yes", viewer: "no" },
+  { label: "Purchase orders, receiving and pick lists", owner: "yes", admin: "yes", staff: "yes", viewer: "no" },
+  { label: "Import items from Excel or CSV", owner: "yes", admin: "yes", staff: "yes", viewer: "no" },
+  { label: "Delete items, invoices, customers…", owner: "yes", admin: "yes", staff: "no", viewer: "no" },
+  { label: "Company, invoices & tax, currency settings", owner: "yes", admin: "yes", staff: "no", viewer: "no" },
+  {
+    label: "Add and remove team members",
+    owner: "yes",
+    admin: "some",
+    staff: "no",
+    viewer: "no",
+    note: "Admins add Staff and View only; only the owner adds admins.",
+  },
+  { label: "Download all the business data", owner: "yes", admin: "yes", staff: "no", viewer: "no" },
+  { label: "Plan and billing", owner: "yes", admin: "no", staff: "no", viewer: "no" },
+  { label: "Delete the business", owner: "yes", admin: "no", staff: "no", viewer: "no" },
+];
+
+function AccessMark({ value, role }: { value: Access; role: string }) {
+  if (value === "yes") {
+    return (
+      <span className="st-perm-yes" title={`${role}: yes`}>
+        <UiIcon name="check" className="h-3.5 w-3.5" />
+        <span className="sr-only">Yes</span>
+      </span>
+    );
+  }
+  if (value === "some") {
+    return (
+      <span className="st-perm-some" title={`${role}: partly`}>
+        <span aria-hidden="true">~</span>
+        <span className="sr-only">Partly</span>
+      </span>
+    );
+  }
+  return (
+    <span className="st-perm-no" title={`${role}: no`}>
+      <span aria-hidden="true" />
+      <span className="sr-only">No</span>
+    </span>
+  );
+}
+
 const SIGN_IN_URL = "https://www.sydin.site/login";
 const SIGN_UP_URL = "https://www.sydin.site/signup";
 
@@ -443,6 +495,38 @@ export default function TeamPanel({
           );
         })}
       </div>
+
+      <section className="st-perm" aria-labelledby="team-permissions-heading">
+        <h2 id="team-permissions-heading" className="st-subhead">Permissions</h2>
+        <p className="st-perm-intro">What each role can do. Change someone&apos;s role above; SydIN enforces it everywhere.</p>
+        <div className="st-perm-scroll">
+          <table className="st-perm-table">
+            <thead>
+              <tr>
+                <th scope="col">Can…</th>
+                <th scope="col">Owner</th>
+                <th scope="col">{ROLE_LABELS.admin}</th>
+                <th scope="col">{ROLE_LABELS.staff}</th>
+                <th scope="col">{ROLE_LABELS.viewer}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {PERMISSIONS.map((row) => (
+                <tr key={row.label}>
+                  <th scope="row">
+                    {row.label}
+                    {row.note && <span className="st-perm-note">{row.note}</span>}
+                  </th>
+                  <td><AccessMark value={row.owner} role="Owner" /></td>
+                  <td><AccessMark value={row.admin} role={ROLE_LABELS.admin} /></td>
+                  <td><AccessMark value={row.staff} role={ROLE_LABELS.staff} /></td>
+                  <td><AccessMark value={row.viewer} role={ROLE_LABELS.viewer} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </section>
 
       <DialogShell
         open={Boolean(credentials)}
