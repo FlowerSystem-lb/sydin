@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import type { User } from "@supabase/supabase-js";
 import { authorizeAdminRequest } from "@/app/lib/adminAuth";
 import { getSupabaseAdmin } from "@/app/lib/supabaseAdmin";
+import { logAdminAction } from "@/app/lib/adminAudit";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -115,6 +116,7 @@ export async function POST(request: Request) {
       console.error("Admin record payment failed:", error.message);
       return json({ error: "The payment could not be recorded. Nothing was changed." }, 500);
     }
+    await logAdminAction(authorization.user.id, "record_payment", user.id, { plan, cycle, months, amount, currency, method: body.method ?? null });
     return json(await accountSummary(user));
   } catch (error) {
     console.error("Admin record payment failed:", error instanceof Error ? error.message : error);

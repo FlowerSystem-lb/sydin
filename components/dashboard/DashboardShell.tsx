@@ -1681,7 +1681,7 @@ export default function DashboardShell({
                     </Link>
                     {isSydinAdmin && (
                       <Link
-                        href="/admin/plan-requests"
+                        href="/admin/customers"
                         role="menuitem"
                         onClick={() => setAccountMenuOpen(false)}
                       >

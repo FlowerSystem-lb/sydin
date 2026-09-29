@@ -6180,3 +6180,32 @@ Sayed asked for the admin area to be locked with a password and strict privacy.
 - **Checks:** lint, type-check and build pass. Locally: `/api/admin/me` returns false for no token
   or a bad token, the billing API refuses a bad token, and the QR setup screen renders. The code
   step itself needs Sayed's phone.
+
+### 30 Sep — Admin part 2: Customers, customer page, Payments, Activity (phase 33)
+
+**Database (`sql/phase-33-admin.sql`):**
+- `user_subscriptions.cancel_at_period_end` and `cancelled_at`.
+- `admin_customer_notes` and `admin_audit_log`: RLS on with no policies, so they are server-only.
+- `admin_customer_overview()`: one row per account; service role only.
+
+**API** (every route needs admin plus the authenticator code):
+- `/api/admin/customers` lists every account.
+- `/api/admin/customers/[id]` returns the detail and runs the actions: extend (add free days),
+  change_plan, cancel_now (Free limits, data kept), stop_renewal, reactivate, remove_end_date and
+  note.
+- `/api/admin/payments` returns every payment plus the audit log.
+- Recording a payment is now logged too. Shared code is in `app/lib/adminAudit.ts`.
+
+**UI** (a light console with its own frame, `components/admin/AdminShell.tsx`):
+- **Customers:** stat tiles, search, and filters (all, paying, needs attention, free, team logins),
+  with status pills (paid, no end date, due soon, in grace, ended, cancelled, free).
+- **Customer page:** subscription facts, a WhatsApp reminder link built from the business phone,
+  add free days, remove end date, won't renew, cancel or turn back on, change plan, record a
+  payment, private notes, the payment table and the admin history.
+- **Payments:** this month, all time, 12 months of bars, and a CSV export.
+- **Activity:** the audit log.
+- `/admin` now opens Customers, and so does the account-menu link.
+
+**Checks:**
+- Lint, type-check and build pass.
+- The layout was checked on a local mock. Real data needs phase 33 and Sayed's authenticator code.
