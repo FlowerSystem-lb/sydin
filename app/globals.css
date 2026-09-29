@@ -27643,23 +27643,27 @@ body:has(.login-page)::-webkit-scrollbar,
   justify-self: start;
 }
 
-/* Invoices & tax: two stacked radio choices */
-.st-choice {
-  display: grid;
-  gap: 0.45rem;
+/* Invoices & tax: two stacked radio choices. Doubled classes + !important:
+   the settings row's control styles otherwise win (cascade trap). */
+.st-choice.st-choice {
+  display: grid !important;
+  gap: 0.55rem !important;
+  width: 100%;
 }
 
-.st-choice label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.55rem;
+.st-choice.st-choice label {
+  display: flex !important;
+  align-items: center !important;
+  gap: 0.6rem !important;
   font-size: 0.9rem;
   color: var(--text-primary);
   cursor: pointer;
 }
 
-.st-choice input {
-  width: 1rem;
-  height: 1rem;
+.st-choice.st-choice input {
+  width: 1rem !important;
+  height: 1rem !important;
+  margin: 0 !important;
+  flex: none !important;
   accent-color: #2563eb;
 }

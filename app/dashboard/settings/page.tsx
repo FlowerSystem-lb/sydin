@@ -1030,6 +1030,23 @@ export default function SettingsPage() {
             </div>
             {taxExample && <p className="st-hint">{taxExample}</p>}
           </Row>
+          {/* The same field as Company profile > Tax / registration number:
+              a VAT invoice should print it, so it is asked for here too. */}
+          <Row label={`${settings.tax_name || "VAT"} number`} htmlFor="tax-id-invoices">
+            <input
+              id="tax-id-invoices"
+              type="text"
+              className="st-input"
+              value={settings.tax_id}
+              onChange={(event) => setField("tax_id", event.target.value)}
+              placeholder="Your registration number"
+            />
+            <p className="st-hint">
+              {settings.tax_id.trim()
+                ? "Printed under your business name on every invoice."
+                : "Add it so invoices that charge tax show your number."}
+            </p>
+          </Row>
         </>
       )}
       <Row
