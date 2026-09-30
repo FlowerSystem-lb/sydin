@@ -85,23 +85,35 @@ export function DialogShell({
   const dialogRef = useRef<HTMLDivElement>(null);
   const portalTarget = useOverlayPortal(open);
 
+  /* The latest onClose / closeDisabled, read at key time. They used to be
+     effect dependencies: a parent passing an inline onClose re-ran the effect
+     on every keystroke, and each run moved focus back to the dialog -- typing
+     in a dialog input lost focus after every character (30 Sep 2026). */
+  const onCloseRef = useRef(onClose);
+  const closeDisabledRef = useRef(closeDisabled);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+    closeDisabledRef.current = closeDisabled;
+  });
+
+  // Focus the dialog once, when it opens.
   useEffect(() => {
     if (!open) return;
-
     const frame = window.requestAnimationFrame(() => {
-      dialogRef.current?.focus();
+      const panel = dialogRef.current;
+      if (panel && !panel.contains(document.activeElement)) panel.focus();
     });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open]);
 
+  useEffect(() => {
+    if (!open) return;
     const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !closeDisabled) onClose();
+      if (event.key === "Escape" && !closeDisabledRef.current) onCloseRef.current();
     };
-
     window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.cancelAnimationFrame(frame);
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [closeDisabled, onClose, open]);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [open]);
 
   if (!open || !portalTarget) return null;
 
