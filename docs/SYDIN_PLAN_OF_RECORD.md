@@ -744,3 +744,142 @@ Control. The sprint and decision logs have the detail.
    - per-location permissions
    - an audit-log page
    - revoke `team_seat_limit` from signed-in users (it only reveals a seat count)
+
+---
+
+## Q. Field Operations (Jobs & Crews) — PLANNED 1 October 2026, approved by Sayed
+
+Brief: [SYDIN_FIELD_OPS_BRIEF.md](SYDIN_FIELD_OPS_BRIEF.md). Status: **Phase 1 not started.** Build it in a fresh session.
+
+
+### Context
+Sayed brought `SYDIN-FIELD-OPS-MODULE-BRIEF.md`. It describes a scheduling layer covering projects, sites, jobs, crews, vehicles, timesheets and Arabic PDFs. The layer connects back to inventory ("stock that knows which job it is standing in"). The brief's examples (setup, strike, events, trucks) match Flower Plus's own event work, so **the first tenant is Sayed's own business**. That is the best possible test user.
+
+The brief is roughly 5 phases, each about the size of Sales & Invoices. This plan builds **Phase 1 only**. Each later phase is approved on its own, in a fresh session, to keep the cost down.
+
+### Where the brief conflicts with SydIN as built, and how I'd deviate
+| Brief says | SydIN reality | Decision |
+|---|---|---|
+| shadcn/ui, Zustand, Framer Motion | None of these are used. SydIN has its own `components/ui`, `components/dashboard/Workspace.tsx` primitives, Tailwind v4 and globals.css | Reuse SydIN primitives. Add no new UI libraries. |
+| Route `/ops` | All app pages live under `/dashboard/*` in `DashboardShell` | `/dashboard/jobs/*`, with a new "Jobs" nav group in `components/dashboard/navigation.ts` |
+| "Tenant" | The business is the owner's user id: `current_business_id()`, with RLS on `user_id` (phase 28) | New tables get `user_id` plus the same policies as `customers`/`sales_orders` |
+| Roles Manager/Supervisor/Crew/Driver | Login roles are Owner/Admin/Staff/Viewer (`business_members`) | Logins keep their roles. **Workers are records, not logins.** Crew and drivers get a private link (Phase 2), so there are no fake accounts. `ops_workers.role` = supervisor/crew/driver is just a label. |
+| Client entity | A `customers` table already exists (phase 19) | Projects point to `customers.id`. No second client table. |
+| Separate audit ledger forbidden | `stock_movements` plus `inventory_history` is the ledger | Phase 4 adds `ops_job_id` to `stock_movements`, plus movement types job_out/job_return. |
+| Arabic everywhere, server PDFs via headless Chrome | The app has no i18n today. PDFs use jspdf, which mangles Arabic. | Arabic is scoped to the module (worker view and printouts) first. PDFs become **print-ready HTML pages** that the browser prints to PDF. Arabic shaping is then perfect, with no Chrome-on-Vercel cost. Stored server PDFs come later only if really needed. |
+| Drag-and-drop board | Nothing in SydIN uses drag and drop | Phase 1 uses click-to-edit (open a card, change the day, crew or truck). Drag comes later. Fewer bugs, and it works on a phone. |
+
+### Phase 1: what ships (manager only, English UI with Arabic-ready fields)
+
+### Database: `sql/phase-36-field-ops.sql` + `-TEST.sql` (Sayed pastes; I verify read-only)
+- **`ops_workers`**
+  - Columns: `id, user_id, name_en, name_ar, role (supervisor|crew|driver), phone, hourly_rate, active, created_at`
+- **`ops_vehicles`**
+  - Columns: `id, user_id, name, kind (truck|van|car), capacity_note, default_driver_id, active`
+- **`ops_job_types`**
+  - Columns: `id, user_id, key, label_en, label_ar, color, sort_order`
+  - This is the tenant-editable "enum". Defaults are seeded on first open: prep, setup, install, delivery, pickup, strike, cleaning.
+- **`ops_projects`**
+  - Columns: `id, user_id, code (auto #1001…), customer_id → customers, title, start_date, end_date, status (draft|confirmed|in_progress|done|cancelled), value, notes`
+- **`ops_sites`**
+  - Columns: `id, user_id, customer_id nullable, name_en, name_ar, address, maps_url, contact_name, contact_phone, spec jsonb default '{}'`
+  - Sites are **reusable per customer**, not per project, so the same venue is never retyped.
+  - Linked to projects through **`ops_project_sites (project_id, site_id, sort_order, roles text[])`**. This covers "one place, two roles".
+- **`ops_jobs`**
+  - Columns: `id, user_id, project_id nullable, site_id nullable, job_type_id, date, start_time, end_time nullable, supervisor_id, helper_count int default 0, vehicle_id nullable, status (planned|done|cancelled), notes, actor_id default auth.uid()`
+  - A null `project_id` means the Depot/Workshop row.
+- **`ops_job_crew (job_id, worker_id)`**
+  - A join table, not an array, so crew conflicts are one indexed query.
+- **`ops_job_steps`**
+  - Columns: `id, job_id, position, time nullable, text_en, text_ar, done_at`
+- **`ops_job_changes`**
+  - Columns: `id, user_id, job_id, actor_id, field, old_value, new_value, created_at`
+  - Filled by an AFTER UPDATE trigger on `ops_jobs` and `ops_job_crew`. This is the "Changes this week" feed, and nobody types into it.
+- **Security**
+  - RLS copied from the phase 28 pattern: select for any role, insert/update with `can_write()`, delete with `can_delete()`.
+  - Child tables check the parent through EXISTS.
+  - `search_path` pinned. No public execute.
+- **Feature flag:** `business_settings.ops_enabled boolean default false`, switched on in Settings > General.
+  - Plan gate is **Pro**, reusing the capability gating in `app/lib/subscription.ts` exactly like Purchase Orders and Sales. Flower Plus is already on a paid plan.
+
+### Conflict check (the key feature)
+- **Rule:** two jobs on the same date whose time ranges overlap conflict when they share:
+  - a worker (supervisor or crew),
+  - or a vehicle.
+- **Missing end time:** it counts as "until end of day", so a job with no end time is never silently safe.
+- **Write path (source of truth):** an RPC `ops_save_job(payload)` (SECURITY DEFINER, business-scoped) does two things in one transaction:
+  - saves the job, crew and steps;
+  - returns `conflicts[]` (`worker|vehicle`, name, other job id and time), using `tsrange(date+start, date+coalesce(end,'23:59'))` overlap `&&` on indexed `(user_id, date)`.
+- **Warn, don't block:** a manager sometimes double-books on purpose, for example a truck doing two short drops. The save succeeds and the dialog shows the warning.
+- **Read path:** a view `ops_conflicts` (security_invoker) supplies the board's red flags. Anything written by any path, including a future API, shows up.
+- **Client:** the week board already has every job for the week loaded, so a pure function `findConflicts(jobs)` in `app/lib/opsConflicts.ts` gives instant feedback while editing. It uses the same rule, and the server result wins on save.
+
+### Screens (`app/dashboard/jobs/…`, built with Workspace.tsx primitives)
+1. **Week board** `/dashboard/jobs`, the main screen
+   - Layout (the §4.1 layout):
+     - rows are the pinned Depot row plus each active project;
+     - columns are 7 days, with the week arrows;
+     - a job card shows the type colour, time, site, "Lead +2 · Truck 1", and ⚠.
+   - A conflict bar under the board ("Truck 3 double-booked 11:00 and 12:00 · Resolve") opens the job.
+   - **Mobile:** the same data as a day list (one day at a time, with a swipe/arrow day picker). A 7-column grid on a phone is unusable.
+2. **Job dialog.** This is not a separate page in Phase 1 (fewer screens, faster).
+   - Fields: type, date, time, project, site, supervisor, crew (multi-pick), helpers (a number stepper), vehicle, and ordered steps (the §4.3 movement plan, add/reorder), plus notes.
+   - The conflict warning shows inline as you pick.
+3. **Project page** `/dashboard/jobs/projects/[id]`, the §4.2 layout.
+   - Header: code, customer, dates, status menu.
+   - Sites as tabs; each tab shows maps link, contact and the jobs at that site.
+   - Brief/spec and photos wait for Phase 5.
+4. **Workers & vehicles**: two simple list tabs at `/dashboard/jobs/team` with add/edit dialogs.
+5. **Changes this week**: a side panel on the week board, fed by `ops_job_changes`.
+
+### Arabic/RTL groundwork, laid in Phase 1 so it is never retrofitted
+- Every name and step has `_en`/`_ar` columns. The job dialog shows an optional "Arabic" field next to English.
+- All new CSS uses logical properties only: `ms-/me-/ps-/pe-`, `text-start`, `border-inline-start`, inset-inline. A grep check in the sprint-done step: **zero `left`/`right`/`ml-`/`mr-`/`text-left` in the new files.**
+- Times, codes, phones and plates are wrapped in `<bdi>` through one tiny `<Ltr>` helper.
+- Real Arabic test data (Flower Plus workers and venues) is used from day one, not lorem ipsum.
+
+### Later phases (each approved separately)
+2. **Field:** a private link per worker (`/w/<token>`, served by a token-checked RPC that returns only that worker's jobs today and tomorrow).
+   - AR/EN switch with `dir` on the page. Noto Naskh Arabic via next/font, line-height 1.7, no letter-spacing.
+   - Mark done, add a progress photo.
+   - In-app and batched email notifications using the existing Resend setup (`app/lib/billingEmails.ts` pattern).
+   - WhatsApp: a "Send to WhatsApp" button that opens wa.me with the job text. Free, and it matches how the teams talk. The WhatsApp API waits.
+3. **Paper parity:** timesheet and transport tables (hours and cost computed), plus print pages in the house style.
+   - The house style uses the logo, accent colour and company block already in `business_settings`.
+   - Arabic and English, verified by printing real Arabic before calling it done.
+4. **Inventory link:** a job checks items out and back in.
+   - Every movement goes through `stock_movements` with `ops_job_id`, so it shows in the existing Stock movements and item history.
+   - Damaged items are logged.
+   - **Availability** for a date is on hand minus quantities on jobs whose date range covers it and which aren't returned yet.
+   - Could reuse the pick-list flow (`complete_pick_list`) as the checkout UI.
+5. **Briefs and photos:** per-site spec fields (`ops_sites.spec` jsonb plus a per-business field list in `business_settings`) and galleries in the existing private storage pattern.
+
+### Defaults for the brief's open questions (my calls, changeable later)
+- Cost: a flat hourly rate per worker.
+- Vehicles: owned.
+- Helpers: headcount only.
+- Clients and sites: reusable records.
+- Currency: the business's existing currency setting.
+- No client portal.
+
+### Verification (Phase 1)
+- **TEST SQL** runs in a rolled-back transaction with pretend users:
+  - the owner sees and edits;
+  - Staff can add but can't delete;
+  - View only can't add;
+  - a stranger sees nothing;
+  - the `ops_save_job` conflict result is correct for worker overlap, vehicle overlap, no end time, and back-to-back (11:00–12:00 and 12:00–13:00 = **no** conflict).
+- `get_advisors` security check: no new warnings.
+- A unit-style check of `findConflicts` against the same cases, run with node in the scratchpad.
+- **Browser (preview, sydin-dev):**
+  - create 2 workers, 1 truck, 1 project with 2 sites, and 3 jobs, one deliberately double-booking the truck;
+  - the ⚠ appears on the board and in the conflict bar;
+  - edit the time and the ⚠ clears;
+  - "Changes this week" lists the edit;
+  - check the mobile day list at 375px.
+  - **Delete every test row the same turn** (dev writes to live data).
+- `npm run lint`, `npx tsc --noEmit`, `npm run build`. Commit and push. Update the plan of record (new section Q), the sprint log and the decision log (the deviations table above).
+
+### Size and cost honesty
+Phase 1 is about 1 large SQL file, 3 pages, 1 dialog and 2 lib files, the size of the Sales & Invoices sprint. Start it in a **fresh session** so it isn't paying to re-read this long one.
+
