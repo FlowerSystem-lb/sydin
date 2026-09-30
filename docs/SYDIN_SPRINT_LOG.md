@@ -6345,3 +6345,23 @@ Sayed: plan requests opened a different, older page and needed more buttons.
     `low_stock` and `weekly_summary` plus a `detail` column.
 - **Order that matters:** the app was deployed first, then the SQL, so owners with two-step on see
   the code screen before the database starts requiring it.
+
+### 1 Oct — Settings > Notifications + instant stock emails (phase 36)
+
+- Sayed dropped an item below its level and expected an email right away. The low-stock email was
+  only a 9:00 daily summary.
+- **New Settings > Notifications section** (owner only; the emails go to the owner):
+  - One table: each event × In app × Email.
+  - Instant "item runs low" and "item runs out", the daily summary and the weekly summary can each
+    be switched on or off.
+  - Plan/billing and security emails are always on (locked).
+  - "Send a test email" sends to the signed-in person's own address only (`/api/notify/test`).
+  - The email switches moved out of My profile, which keeps two-step verification and "sign out of
+    all devices".
+- **Instant emails:**
+  - `notifyIfCrossedIntoLowStock` already writes a bell notification only on a genuine crossing. It
+    now also calls `/api/notify/stock` with that notification's id.
+  - The route reads the notification with the caller's own token (RLS proves the business), refuses
+    ids older than 5 minutes, checks the owner's `notify_item_low` / `notify_item_out`, and emails
+    the owner via Resend.
+- No database change was needed.

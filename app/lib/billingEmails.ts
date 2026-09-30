@@ -182,14 +182,14 @@ export function receiptEmail(
 export function testEmail(to: string): EmailMessage {
   return {
     to,
-    subject: "SydIN billing emails are working",
+    subject: "SydIN emails are working",
     text: "This is a test from SydIN admin. Automatic billing emails are connected.",
     html: layout({
       preheader: "Automatic billing emails are connected.",
       eyebrow: "Test",
       eyebrowColor: "#15803d",
-      title: "Billing emails are working",
-      intro: "This test came from SydIN admin. Renewal reminders, payment-due notices and receipts will look like this.",
+      title: "SydIN emails are working",
+      intro: "This is a test from SydIN. Stock alerts, summaries, renewal reminders and receipts will look like this.",
       body: callout("ok", "All set", "Replies to this email go to support@sydin.site."),
     }),
   };
@@ -255,7 +255,7 @@ export function lowStockEmail(
       title: `${total} item${total === 1 ? " is" : "s are"} running low`,
       intro: `Hello <strong style="color:#18181b;">${escapeHtml(business)}</strong>, these reached their low-stock level. Reorder before a customer asks.`,
       body: details(rows) + more + button("See low stock in SydIN", `${SITE}/dashboard/alerts`),
-    }).replace("You get this because you have a paid SydIN plan.", "You asked for low-stock alerts. Turn them off in Settings &gt; My profile."),
+    }).replace("You get this because you have a paid SydIN plan.", "You asked for the daily low-stock summary. Change this in Settings &gt; Notifications."),
   };
 }
 
@@ -290,6 +290,36 @@ export function weeklySummaryEmail(
           ["Customers owe you", money(stats.owed)],
           ["Items running low", String(stats.lowItems)],
         ]) + button("Open your Overview", `${SITE}/dashboard`),
-    }).replace("You get this because you have a paid SydIN plan.", "You asked for a weekly summary. Turn it off in Settings &gt; My profile."),
+    }).replace("You get this because you have a paid SydIN plan.", "You asked for a weekly summary. Change this in Settings &gt; Notifications."),
+  };
+}
+
+/** Instant alert: one item just ran low or out (phase 36). */
+export function itemAlertEmail(
+  to: string,
+  business: string,
+  item: { id: number; name: string; quantity: number; threshold: number | null; out: boolean }
+): EmailMessage {
+  const title = item.out ? `${item.name} is out of stock` : `${item.name} is running low`;
+  const rows: [string, string][] = [
+    ["Item", escapeHtml(item.name)],
+    ["In stock now", String(item.quantity)],
+  ];
+  if (item.threshold !== null && !item.out) rows.push(["Alert level", String(item.threshold)]);
+  return {
+    to,
+    subject: `${item.out ? "Out of stock" : "Low stock"}: ${item.name}`,
+    text: `Hello ${business}, ${title} (${item.quantity} left). Reorder in SydIN: ${SITE}/dashboard/inventory/${item.id}`,
+    html: layout({
+      preheader: `${item.quantity} left. Reorder before a customer asks.`,
+      eyebrow: item.out ? "Out of stock" : "Low stock",
+      eyebrowColor: item.out ? "#b91c1c" : "#b45309",
+      title,
+      intro: `Hello <strong style="color:#18181b;">${escapeHtml(business)}</strong>, this just happened in SydIN.`,
+      body: details(rows) + button("Open the item", `${SITE}/dashboard/inventory/${item.id}`),
+    }).replace(
+      "You get this because you have a paid SydIN plan.",
+      "You turned on instant stock alerts. Change this in Settings &gt; Notifications."
+    ),
   };
 }

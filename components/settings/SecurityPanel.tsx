@@ -12,21 +12,12 @@ import { supabase } from "@/app/lib/supabase";
  *    entered the code (sql/phase-35), so a stolen password alone is useless.
  *  - Sign out of all devices: ends every session everywhere (lost phone, a
  *    worker who left). Sessions already open expire within the hour.
- *  - Email notifications (owners): low-stock alert and a Monday summary,
- *    sent by the daily job (app/lib/billingJob.ts). Saved on the login.
+ *  (Email notifications moved to their own section: NotificationsPanel.)
  * All confirmations are page dialogs, never window.confirm. */
 
 type Factor = { id: string; created_at?: string };
 
-export default function SecurityPanel({
-  isOwner,
-  notifyLowStock,
-  notifyWeekly,
-}: {
-  isOwner: boolean;
-  notifyLowStock: boolean;
-  notifyWeekly: boolean;
-}) {
+export default function SecurityPanel() {
   const { showToast } = useToast();
   const [factor, setFactor] = useState<Factor | null | undefined>(undefined);
   const [enrolling, setEnrolling] = useState<{ id: string; qr: string; secret: string } | null>(null);
@@ -34,8 +25,6 @@ export default function SecurityPanel({
   const [busy, setBusy] = useState(false);
   const [turningOff, setTurningOff] = useState(false);
   const [signingOutAll, setSigningOutAll] = useState(false);
-  const [lowStock, setLowStock] = useState(notifyLowStock);
-  const [weekly, setWeekly] = useState(notifyWeekly);
 
   const loadFactor = useCallback(async () => {
     const { data } = await supabase.auth.mfa.listFactors();
@@ -109,17 +98,6 @@ export default function SecurityPanel({
     setBusy(true);
     await supabase.auth.signOut({ scope: "global" }).catch(() => undefined);
     window.location.href = "/login";
-  };
-
-  const saveNotification = async (key: "notify_low_stock" | "notify_weekly", value: boolean) => {
-    const { error } = await supabase.auth.updateUser({ data: { [key]: value } });
-    if (error) {
-      showToast({ tone: "danger", message: "Couldn't save that. Please try again." });
-      if (key === "notify_low_stock") setLowStock(!value);
-      else setWeekly(!value);
-      return;
-    }
-    showToast({ tone: "success", message: value ? "You'll get these emails." : "Those emails are off." });
   };
 
   return (
@@ -197,54 +175,6 @@ export default function SecurityPanel({
           </div>
         </div>
       </div>
-
-      {isOwner && (
-        <div className="st-row">
-          <div className="st-row-label" title="Emails SydIN sends you about your business.">
-            <span>Email notifications</span>
-          </div>
-          <div className="st-row-control">
-            <div className="st-notify">
-              <label className="st-notify-row">
-                <span>
-                  <strong>Low-stock alert</strong>
-                  <small>An email when items reach their low-stock level. At most once a day.</small>
-                </span>
-                <span className="st-switch">
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    checked={lowStock}
-                    onChange={(event) => {
-                      setLowStock(event.target.checked);
-                      void saveNotification("notify_low_stock", event.target.checked);
-                    }}
-                  />
-                  <span aria-hidden="true" />
-                </span>
-              </label>
-              <label className="st-notify-row">
-                <span>
-                  <strong>Weekly summary</strong>
-                  <small>Every Monday: sales, payments, what customers owe and stock to reorder.</small>
-                </span>
-                <span className="st-switch">
-                  <input
-                    type="checkbox"
-                    role="switch"
-                    checked={weekly}
-                    onChange={(event) => {
-                      setWeekly(event.target.checked);
-                      void saveNotification("notify_weekly", event.target.checked);
-                    }}
-                  />
-                  <span aria-hidden="true" />
-                </span>
-              </label>
-            </div>
-          </div>
-        </div>
-      )}
 
       <DialogShell
         open={turningOff}

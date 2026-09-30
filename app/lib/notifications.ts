@@ -92,16 +92,36 @@ async function createNotification(params: {
   itemId?: number;
   linkHref?: string;
 }): Promise<void> {
-  await supabase.from("notifications").insert([
-    {
-      user_id: params.userId,
-      type: params.type,
-      title: params.title,
-      body: params.body || null,
-      item_id: params.itemId ?? null,
-      link_href: params.linkHref || null,
-    },
-  ]);
+  const { data } = await supabase
+    .from("notifications")
+    .insert([
+      {
+        user_id: params.userId,
+        type: params.type,
+        title: params.title,
+        body: params.body || null,
+        item_id: params.itemId ?? null,
+        link_href: params.linkHref || null,
+      },
+    ])
+    .select("id")
+    .maybeSingle();
+
+  // Instant email (phase 36): the server checks the owner's choice in
+  // Settings > Notifications and sends it. Fire-and-forget: a mail problem
+  // never touches the stock movement.
+  if (data?.id) {
+    const { data: session } = await supabase.auth.getSession();
+    const token = session.session?.access_token;
+    if (token) {
+      void fetch("/api/notify/stock", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ notificationId: data.id }),
+        keepalive: true,
+      }).catch(() => undefined);
+    }
+  }
 }
 
 /**

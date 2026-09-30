@@ -51,6 +51,7 @@ import TeamPanel from "@/components/settings/TeamPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
 import AccountAccess from "@/components/settings/AccountAccess";
 import SecurityPanel from "@/components/settings/SecurityPanel";
+import NotificationsPanel from "@/components/settings/NotificationsPanel";
 import type { UserIdentity } from "@supabase/supabase-js";
 import {
   INVENTORY_SORT_OPTIONS,
@@ -78,6 +79,7 @@ type SettingsSectionId =
   | "inventory"
   | "lists"
   | "profile"
+  | "notifications"
   | "preferences"
   | "team"
   | "billing";
@@ -154,6 +156,13 @@ const SETTINGS_SECTIONS: SettingsSection[] = [
     label: "My profile",
     description: "Your name, job title, sign-in and password.",
     icon: "settings",
+  },
+  {
+    id: "notifications",
+    group: "Account",
+    label: "Notifications",
+    description: "What SydIN tells you, in the bell and by email.",
+    icon: "bell",
   },
   {
     id: "preferences",
@@ -308,7 +317,12 @@ export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState("");
   const [signInMethods, setSignInMethods] = useState<string[]>([]);
   const [identities, setIdentities] = useState<UserIdentity[]>([]);
-  const [notifyPrefs, setNotifyPrefs] = useState<{ lowStock: boolean; weekly: boolean } | null>(null);
+  const [notifyPrefs, setNotifyPrefs] = useState<{
+    notify_item_low: boolean;
+    notify_item_out: boolean;
+    notify_low_stock: boolean;
+    notify_weekly: boolean;
+  } | null>(null);
   const [usedItems, setUsedItems] = useState<number | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -413,8 +427,10 @@ export default function SettingsPage() {
         setUserEmail(user.email || "");
         const loadedProfile = profileFromMetadata(user.user_metadata);
         setNotifyPrefs({
-          lowStock: Boolean(user.user_metadata?.notify_low_stock),
-          weekly: Boolean(user.user_metadata?.notify_weekly),
+          notify_item_low: Boolean(user.user_metadata?.notify_item_low),
+          notify_item_out: Boolean(user.user_metadata?.notify_item_out),
+          notify_low_stock: Boolean(user.user_metadata?.notify_low_stock),
+          notify_weekly: Boolean(user.user_metadata?.notify_weekly),
         });
         setProfile(loadedProfile);
         setSavedProfile(loadedProfile);
@@ -518,7 +534,7 @@ export default function SettingsPage() {
     myRole === "owner"
       ? true
       : myRole === "admin"
-        ? section.id !== "billing"
+        ? section.id !== "billing" && section.id !== "notifications"
         : section.id === "profile" || section.id === "preferences"
   );
   const requestedSection = sectionFromQuery
@@ -1746,13 +1762,7 @@ export default function SettingsPage() {
           });
         }}
       />
-      {notifyPrefs && (
-        <SecurityPanel
-          isOwner={myRole === "owner"}
-          notifyLowStock={notifyPrefs.lowStock}
-          notifyWeekly={notifyPrefs.weekly}
-        />
-      )}
+      <SecurityPanel />
       {myRole !== "owner" && (
         <Row
           label="Business"
@@ -2064,6 +2074,8 @@ export default function SettingsPage() {
         return renderBillingPanel();
       case "preferences":
         return renderPreferencesPanel();
+      case "notifications":
+        return notifyPrefs ? <NotificationsPanel email={userEmail} initial={notifyPrefs} /> : null;
       case "team":
         return (
           <TeamPanel
