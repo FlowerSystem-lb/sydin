@@ -50,6 +50,7 @@ import {
 import TeamPanel from "@/components/settings/TeamPanel";
 import BillingPanel from "@/components/settings/BillingPanel";
 import AccountAccess from "@/components/settings/AccountAccess";
+import SecurityPanel from "@/components/settings/SecurityPanel";
 import type { UserIdentity } from "@supabase/supabase-js";
 import {
   INVENTORY_SORT_OPTIONS,
@@ -307,6 +308,7 @@ export default function SettingsPage() {
   const [userEmail, setUserEmail] = useState("");
   const [signInMethods, setSignInMethods] = useState<string[]>([]);
   const [identities, setIdentities] = useState<UserIdentity[]>([]);
+  const [notifyPrefs, setNotifyPrefs] = useState<{ lowStock: boolean; weekly: boolean } | null>(null);
   const [usedItems, setUsedItems] = useState<number | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [newPassword, setNewPassword] = useState("");
@@ -410,6 +412,10 @@ export default function SettingsPage() {
 
         setUserEmail(user.email || "");
         const loadedProfile = profileFromMetadata(user.user_metadata);
+        setNotifyPrefs({
+          lowStock: Boolean(user.user_metadata?.notify_low_stock),
+          weekly: Boolean(user.user_metadata?.notify_weekly),
+        });
         setProfile(loadedProfile);
         setSavedProfile(loadedProfile);
         setSignInMethods(
@@ -1740,6 +1746,13 @@ export default function SettingsPage() {
           });
         }}
       />
+      {notifyPrefs && (
+        <SecurityPanel
+          isOwner={myRole === "owner"}
+          notifyLowStock={notifyPrefs.lowStock}
+          notifyWeekly={notifyPrefs.weekly}
+        />
+      )}
       {myRole !== "owner" && (
         <Row
           label="Business"

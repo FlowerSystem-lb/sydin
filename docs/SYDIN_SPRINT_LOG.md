@@ -6325,3 +6325,23 @@ Sayed: plan requests opened a different, older page and needed more buttons.
   one shared-header change fixes every page.
 - **Checks:** Suppliers, Sales, Customers, an invoice, Overview and Inventory were checked on the
   local server.
+
+### 30 Sep — Two-step verification for everyone, sign out everywhere, email notifications (phase 35)
+
+- **Two-step verification** (Settings > My profile):
+  - Turning it on: QR, then code. Turning it off needs the current code, in a page dialog.
+  - **Enforced by the database** (`sql/phase-35`): `mfa_satisfied()` plus one restrictive policy
+    on every RLS table (33 of them) and on `storage.objects`. An account with a verified factor
+    only gets its data in an aal2 session; accounts without two-step are unaffected. The TEST
+    proved all three cases on real accounts.
+  - **Sign-in:** `app/dashboard/layout.tsx` checks the assurance level after sign-in and shows
+    `components/auth/MfaChallenge.tsx` when the code is needed. This covers password, Google and
+    Microsoft sign-ins. /admin's own gate opens straight away once the session is aal2.
+- **Sign out of all devices:** `signOut({ scope: "global" })` behind a page dialog.
+- **Email notifications** (owners), saved on the login as `notify_low_stock` / `notify_weekly`:
+  - Low-stock alert: at most once a day, and only when the list of low items changed.
+  - Weekly summary on Mondays: invoices, sold, received, owed and low items.
+  - `app/lib/notificationJob.ts` runs from the daily cron. `billing_notifications` gains the kinds
+    `low_stock` and `weekly_summary` plus a `detail` column.
+- **Order that matters:** the app was deployed first, then the SQL, so owners with two-step on see
+  the code screen before the database starts requiring it.

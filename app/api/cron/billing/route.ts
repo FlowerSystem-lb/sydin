@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runBillingReminders } from "@/app/lib/billingJob";
+import { runOwnerNotifications } from "@/app/lib/notificationJob";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -18,7 +19,9 @@ export async function GET(request: Request) {
   }
   try {
     const result = await runBillingReminders();
-    return NextResponse.json(result, { headers: { "Cache-Control": "no-store" } });
+    // Owner emails (low stock, Monday summary): best effort, never blocks billing.
+    const notifications = await runOwnerNotifications().catch((error) => ({ error: String(error) }));
+    return NextResponse.json({ ...result, notifications }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     console.error("Billing cron failed:", error instanceof Error ? error.message : error);
     return NextResponse.json({ error: "Billing check failed." }, { status: 500 });

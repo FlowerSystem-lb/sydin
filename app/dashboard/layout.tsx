@@ -13,6 +13,7 @@ import DashboardShell from "@/components/dashboard/DashboardShell";
 import MobileShellWrapper from "@/components/mobile/MobileShellWrapper";
 import ThemeProvider from "@/components/ThemeProvider";
 import { ToastProvider } from "@/components/ui";
+import MfaChallenge from "@/components/auth/MfaChallenge";
 
 export default function DashboardLayout({
   children,
@@ -27,6 +28,11 @@ export default function DashboardLayout({
     email?: string | null;
   } | null>(null);
   const [business, setBusiness] = useState<BusinessContextValue | null>(null);
+  /* Two-step verification (phase 35): an account with an authenticator app
+     must enter its code before the workspace loads. The database will not
+     serve its data until then anyway. */
+  const [needsCode, setNeedsCode] = useState(false);
+  const [codeTick, setCodeTick] = useState(0);
 
   useEffect(() => {
     let isActive = true;
@@ -41,7 +47,16 @@ export default function DashboardLayout({
           return;
         }
 
-        return getBusinessContext(session.user).then((context) => {
+        return supabase.auth.mfa.getAuthenticatorAssuranceLevel().then(({ data: level }) => {
+          if (!isActive) return;
+          if (level?.nextLevel === "aal2" && level.currentLevel !== "aal2") {
+            setNeedsCode(true);
+            setLoading(false);
+            return;
+          }
+          setNeedsCode(false);
+
+          return getBusinessContext(session.user).then((context) => {
           if (!isActive) return;
 
           setBusiness(context);
@@ -52,6 +67,7 @@ export default function DashboardLayout({
             email: session.user.email,
           });
           setLoading(false);
+          });
         });
       })
       .catch(() => {
@@ -63,7 +79,7 @@ export default function DashboardLayout({
     return () => {
       isActive = false;
     };
-  }, [router]);
+  }, [router, codeTick]);
 
   if (loading) {
     return (
@@ -81,6 +97,20 @@ export default function DashboardLayout({
             </p>
           </div>
         </div>
+      </ThemeProvider>
+    );
+  }
+
+  if (needsCode) {
+    return (
+      <ThemeProvider>
+        <MfaChallenge
+          onVerified={() => {
+            setNeedsCode(false);
+            setLoading(true);
+            setCodeTick((tick) => tick + 1);
+          }}
+        />
       </ThemeProvider>
     );
   }

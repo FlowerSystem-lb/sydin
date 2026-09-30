@@ -226,3 +226,70 @@ export async function sendEmail(message: EmailMessage): Promise<{ ok: boolean; e
 export function emailConfigured() {
   return Boolean(process.env.RESEND_API_KEY);
 }
+
+/* ---- Owner notifications (phase 35): low stock + weekly summary ---------- */
+
+export function lowStockEmail(
+  to: string,
+  business: string,
+  items: { name: string; quantity: number; threshold: number; unit: string }[],
+  total: number
+): EmailMessage {
+  const shown = items.slice(0, 15);
+  const rows: [string, string][] = shown.map((item) => [
+    escapeHtml(item.name),
+    `${item.quantity} ${escapeHtml(item.unit)} <span style="color:#a1a1aa;font-weight:400;">(alert at ${item.threshold})</span>`,
+  ]);
+  const more = total > shown.length ? `<tr><td align="center" style="padding:12px 40px 0;font-size:13px;color:#71717a;">and ${total - shown.length} more</td></tr>` : "";
+  return {
+    to,
+    subject: `${total} item${total === 1 ? "" : "s"} running low at ${business}`,
+    text: `Hello ${business}, ${total} item(s) reached their low-stock level: ${items
+      .slice(0, 15)
+      .map((item) => `${item.name} (${item.quantity} ${item.unit})`)
+      .join(", ")}. Open SydIN to reorder: ${SITE}/dashboard/alerts`,
+    html: layout({
+      preheader: `${total} item${total === 1 ? "" : "s"} need reordering.`,
+      eyebrow: "Low stock",
+      eyebrowColor: "#b45309",
+      title: `${total} item${total === 1 ? " is" : "s are"} running low`,
+      intro: `Hello <strong style="color:#18181b;">${escapeHtml(business)}</strong>, these reached their low-stock level. Reorder before a customer asks.`,
+      body: details(rows) + more + button("See low stock in SydIN", `${SITE}/dashboard/alerts`),
+    }).replace("You get this because you have a paid SydIN plan.", "You asked for low-stock alerts. Turn them off in Settings &gt; My profile."),
+  };
+}
+
+export function weeklySummaryEmail(
+  to: string,
+  business: string,
+  currency: string,
+  stats: { invoices: number; sold: number; received: number; owed: number; lowItems: number; from: string; to: string }
+): EmailMessage {
+  const money = (value: number) => {
+    try {
+      return new Intl.NumberFormat("en-US", { style: "currency", currency }).format(value);
+    } catch {
+      return `${value.toFixed(2)} ${currency}`;
+    }
+  };
+  const range = `${formatDate(stats.from)} – ${formatDate(stats.to)}`;
+  return {
+    to,
+    subject: `Your week at ${business}: ${money(stats.sold)} sold`,
+    text: `Week ${range}: ${stats.invoices} invoice(s), ${money(stats.sold)} sold, ${money(stats.received)} received, ${money(stats.owed)} owed by customers, ${stats.lowItems} item(s) low. ${SITE}/dashboard`,
+    html: layout({
+      preheader: `${money(stats.sold)} sold, ${money(stats.received)} received this week.`,
+      eyebrow: "Weekly summary",
+      title: "Your week in SydIN",
+      intro: `Hello <strong style="color:#18181b;">${escapeHtml(business)}</strong>, here is ${range}.`,
+      body:
+        details([
+          ["Invoices issued", String(stats.invoices)],
+          ["Sold", money(stats.sold)],
+          ["Payments received", money(stats.received)],
+          ["Customers owe you", money(stats.owed)],
+          ["Items running low", String(stats.lowItems)],
+        ]) + button("Open your Overview", `${SITE}/dashboard`),
+    }).replace("You get this because you have a paid SydIN plan.", "You asked for a weekly summary. Turn it off in Settings &gt; My profile."),
+  };
+}
