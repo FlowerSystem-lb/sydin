@@ -8,9 +8,9 @@ import BrandMark from "@/components/BrandMark";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import {
   Button,
+  DialogShell,
   Select,
   UnsavedChangesGuard,
-  buttonClassName,
   useToast,
 } from "@/components/ui";
 import {
@@ -74,15 +74,14 @@ import {
 
 type SettingsSectionId =
   | "workspace"
+  | "general"
   | "documents"
-  | "currency"
-  | "inventory"
-  | "lists"
   | "profile"
+  | "security"
   | "notifications"
-  | "preferences"
   | "team"
-  | "billing";
+  | "billing"
+  | "data";
 
 /**
  * Sections merged during the 2026-07-25 reorganization (10 → 6). Kept so any
@@ -93,18 +92,19 @@ const MERGED_SECTION_ALIASES: Record<string, SettingsSectionId> = {
   branding: "workspace",
   // "Data & reports" held only links to Import & Export and Reports, both of
   // which are in the sidebar now (26 Sep); old links land on the profile.
-  data: "workspace",
   reports: "workspace",
-  operations: "inventory",
-  // Security & Email folded into Account (13 Sep 2026): both only said who
-  // is signed in and how to sign out.
-  email: "profile",
-  security: "profile",
+  // 1 Oct 2026 regroup: small sections merged into fuller ones.
+  operations: "general",
+  currency: "general",
+  inventory: "general",
+  lists: "general",
+  preferences: "profile",
+  email: "security",
 };
 
 interface SettingsSection {
   id: SettingsSectionId;
-  group: "Business" | "Workspace" | "Account";
+  group: "Business" | "Account" | "Team & plan";
   label: string;
   description: string;
   icon: UiIconName;
@@ -114,77 +114,20 @@ interface SettingsSection {
    owner thinks about it (the business, how the app behaves, their account),
    and the long single Company form split into the three things it actually
    held -- who you are, what prints on documents, and money. */
+/* 1 Oct 2026 (Sayed: "settings still ugly"): regrouped the Sortly way --
+   fewer sections, each one full. Currency + low-stock + units became
+   General; payment methods joined invoices; the long My profile split into
+   profile, login & security, and data & account. */
 const SETTINGS_SECTIONS: SettingsSection[] = [
-  {
-    id: "workspace",
-    group: "Business",
-    label: "Company profile",
-    description: "Business details shown on documents and public pages.",
-    icon: "dashboard",
-  },
-  {
-    id: "documents",
-    group: "Business",
-    label: "Invoices & tax",
-    description: "Numbering, tax, and what prints on every invoice and order.",
-    icon: "file",
-  },
-  {
-    id: "currency",
-    group: "Business",
-    label: "Currency",
-    description: "The currency the app shows, and the rate it converts at.",
-    icon: "usage",
-  },
-  {
-    id: "inventory",
-    group: "Workspace",
-    label: "Inventory",
-    description: "When an item counts as low stock.",
-    icon: "box",
-  },
-  {
-    id: "lists",
-    group: "Workspace",
-    label: "Lists",
-    description: "Units and payment methods you pick from.",
-    icon: "layers",
-  },
-  {
-    id: "profile",
-    group: "Account",
-    label: "My profile",
-    description: "Your name, job title, sign-in and password.",
-    icon: "settings",
-  },
-  {
-    id: "notifications",
-    group: "Account",
-    label: "Notifications",
-    description: "What SydIN tells you, in the bell and by email.",
-    icon: "bell",
-  },
-  {
-    id: "preferences",
-    group: "Account",
-    label: "Preferences",
-    description: "How SydIN opens for you, on this device.",
-    icon: "sliders",
-  },
-  {
-    id: "team",
-    group: "Account",
-    label: "Team",
-    description: "Invite people to this business and choose what they can do.",
-    icon: "customers",
-  },
-  {
-    id: "billing",
-    group: "Account",
-    label: "Plan & billing",
-    description: "Your current plan, usage and included features.",
-    icon: "receipt",
-  },
+  { id: "workspace", group: "Business", label: "Company profile", description: "Business details and logo.", icon: "dashboard" },
+  { id: "general", group: "Business", label: "General", description: "Currency, low stock and units.", icon: "sliders" },
+  { id: "documents", group: "Business", label: "Invoices & payments", description: "Numbering, tax and payment methods.", icon: "file" },
+  { id: "profile", group: "Account", label: "My profile", description: "Your name, job title and preferences.", icon: "settings" },
+  { id: "security", group: "Account", label: "Login & security", description: "Email, password and two-step.", icon: "lock" },
+  { id: "notifications", group: "Account", label: "Notifications", description: "What SydIN tells you.", icon: "bell" },
+  { id: "team", group: "Team & plan", label: "Team", description: "People and permissions.", icon: "customers" },
+  { id: "billing", group: "Team & plan", label: "Plan & billing", description: "Plan, usage and payments.", icon: "receipt" },
+  { id: "data", group: "Team & plan", label: "Data & account", description: "Download or delete.", icon: "download" },
 ];
 
 /* What someone does in the business -- shown next to their name, and a hint
@@ -214,7 +157,7 @@ function profileFromMetadata(meta: Record<string, unknown> | undefined): Persona
   return { firstName, lastName, phone: text(meta?.phone), jobTitle: text(meta?.job_title) };
 }
 
-const SECTION_GROUPS: SettingsSection["group"][] = ["Business", "Workspace", "Account"];
+const SECTION_GROUPS: SettingsSection["group"][] = ["Business", "Account", "Team & plan"];
 
 const SECTION_IDS = new Set<SettingsSectionId>(
   SETTINGS_SECTIONS.map((section) => section.id)
@@ -339,6 +282,7 @@ export default function SettingsPage() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [passwordNeedsApp, setPasswordNeedsApp] = useState(false);
   const [exportingAll, setExportingAll] = useState(false);
+  const [leaveOpen, setLeaveOpen] = useState(false);
   const [newUnit, setNewUnit] = useState("");
   const [newMethod, setNewMethod] = useState("");
   const [profile, setProfile] = useState<PersonalProfile>(EMPTY_PROFILE);
@@ -535,7 +479,7 @@ export default function SettingsPage() {
       ? true
       : myRole === "admin"
         ? section.id !== "billing" && section.id !== "notifications"
-        : section.id === "profile" || section.id === "preferences"
+        : section.id === "profile" || section.id === "security" || section.id === "data"
   );
   const requestedSection = sectionFromQuery
     ? normalizeSectionId(sectionFromQuery)
@@ -1230,6 +1174,7 @@ export default function SettingsPage() {
           placeholder="e.g. Thank you for your business · Bank: … IBAN …"
         />
       </Row>
+      {renderPaymentMethodsRow()}
       <Row label="Logo and colour">
         <p className="st-hint">
           Documents use the logo and accent colour from{" "}
@@ -1424,7 +1369,7 @@ export default function SettingsPage() {
     (key) => !settings.payment_methods.includes(key)
   );
 
-  const renderListsPanel = () => (
+  const renderUnitsRow = () => (
     <>
       <Row label="Units" hint="Offered when you add or edit an item. Built-in units are always there.">
         <div className="st-list-block">
@@ -1473,6 +1418,11 @@ export default function SettingsPage() {
         </div>
       </Row>
 
+    </>
+  );
+
+  const renderPaymentMethodsRow = () => (
+    <>
       <Row label="Payment methods" hint="Offered when you record a payment on an invoice or a purchase order, in this order.">
         <div className="st-list-block">
           <ol className="st-method-list">
@@ -1579,14 +1529,9 @@ export default function SettingsPage() {
   );
 
   /* ---- Account & security -------------------------------------------- */
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    router.replace("/login");
-  };
-
+  // Confirmed in a page dialog: browsers can silently block window.confirm.
   const leaveBusiness = async () => {
-    const name = business?.businessName || "this business";
-    if (!window.confirm(`Leave ${name}? You will lose access straight away.`)) return;
+    setLeaveOpen(false);
     const { error: leaveError } = await supabase.rpc("leave_business");
     if (leaveError) {
       showToast({ tone: "danger", message: "Couldn't leave the business. Please try again." });
@@ -1747,7 +1692,13 @@ export default function SettingsPage() {
         </Button>
       </div>
 
-      <h2 className="st-subhead">Sign-in and security</h2>
+      <h2 className="st-subhead">Preferences</h2>
+      {renderPreferencesPanel()}
+    </>
+  );
+
+  const renderSecurityPanel = () => (
+    <>
       <AccountAccess
         email={userEmail}
         identities={identities}
@@ -1763,62 +1714,6 @@ export default function SettingsPage() {
         }}
       />
       <SecurityPanel />
-      {myRole !== "owner" && (
-        <Row
-          label="Business"
-          hint="You work inside this business with the role shown."
-        >
-          <div className="st-inline">
-            <span className="st-strong">
-              {business?.businessName || settings.business_name || "This business"}
-            </span>
-            <span className="st-pill st-pill-grey">{ROLE_LABELS[myRole]}</span>
-          </div>
-        </Row>
-      )}
-      {/* A login SydIN made for this business (name.role@business.sydin.site)
-          exists only for it; the owner removes it instead. */}
-      {myRole !== "owner" && !/@[a-z0-9]+\.sydin\.site$/.test(userEmail) && (
-        <Row
-          label="Leave business"
-          hint="You lose access straight away. The owner can invite you again."
-        >
-          <Button variant="secondary" size="sm" onClick={() => void leaveBusiness()}>
-            Leave this business
-          </Button>
-        </Row>
-      )}
-      {(myRole === "owner" || myRole === "admin") && (
-        <Row
-          label="Your data"
-          hint="One Excel file with every item, movement, invoice, customer, supplier and order."
-        >
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={exportingAll}
-              onClick={async () => {
-                const businessId = business?.businessId;
-                if (!businessId) return;
-                setExportingAll(true);
-                try {
-                  const { exportAllBusinessData } = await import("@/app/lib/fullDataExport");
-                  await exportAllBusinessData(
-                    businessId,
-                    business?.businessName || settings.business_name || "SydIN"
-                  );
-                  showToast({ tone: "success", message: "Downloaded. Everything is in one Excel file." });
-                } catch {
-                  showToast({ tone: "danger", message: "Couldn't build the file. Please try again." });
-                } finally {
-                  setExportingAll(false);
-                }
-              }}
-            >
-              {exportingAll ? "Preparing file..." : "Download all my data"}
-            </Button>
-        </Row>
-      )}
       <Row label="Password" hint="Used with your email on the sign-in page. Google and Microsoft sign-in keep working either way.">
         {/* A separate small form: Account is not part of the business form. */}
         <form
@@ -1937,16 +1832,86 @@ export default function SettingsPage() {
           </Button>
         </form>
       </Row>
-      <Row label="Help and support">
-        <Link href="/dashboard/help" className={buttonClassName({ variant: "secondary", size: "sm" })}>
-          Open Help
-        </Link>
-      </Row>
-      <Row label="Sign out" hint="You can sign back in with the same email.">
-        <Button variant="secondary" size="sm" onClick={() => void signOut()}>
-          Sign out of SydIN
-        </Button>
-      </Row>
+    </>
+  );
+
+  /* ---- Data & account ------------------------------------------------ */
+  const renderDataPanel = () => (
+    <>
+      {myRole !== "owner" && (
+        <Row
+          label="Business"
+          hint="You work inside this business with the role shown."
+        >
+          <div className="st-inline">
+            <span className="st-strong">
+              {business?.businessName || settings.business_name || "This business"}
+            </span>
+            <span className="st-pill st-pill-grey">{ROLE_LABELS[myRole]}</span>
+          </div>
+        </Row>
+      )}
+      {/* A login SydIN made for this business (name.role@business.sydin.site)
+          exists only for it; the owner removes it instead. */}
+      {myRole !== "owner" && !/@[a-z0-9]+\.sydin\.site$/.test(userEmail) && (
+        <Row
+          label="Leave business"
+          hint="You lose access straight away. The owner can invite you again."
+        >
+          <Button variant="secondary" size="sm" onClick={() => setLeaveOpen(true)}>
+            Leave this business
+          </Button>
+          <DialogShell
+            open={leaveOpen}
+            tone="danger"
+            eyebrow="Team"
+            title={`Leave ${business?.businessName || "this business"}?`}
+            description="You lose access straight away. The owner can invite you again."
+            onClose={() => setLeaveOpen(false)}
+            footer={
+              <>
+                <Button variant="secondary" onClick={() => setLeaveOpen(false)}>
+                  Stay
+                </Button>
+                <Button variant="danger" onClick={() => void leaveBusiness()}>
+                  Leave
+                </Button>
+              </>
+            }
+          />
+        </Row>
+      )}
+      {(myRole === "owner" || myRole === "admin") && (
+        <Row
+          label="Your data"
+          hint="One Excel file with every item, movement, invoice, customer, supplier and order."
+        >
+            <Button
+              variant="secondary"
+              size="sm"
+              disabled={exportingAll}
+              onClick={async () => {
+                const businessId = business?.businessId;
+                if (!businessId) return;
+                setExportingAll(true);
+                try {
+                  const { exportAllBusinessData } = await import("@/app/lib/fullDataExport");
+                  await exportAllBusinessData(
+                    businessId,
+                    business?.businessName || settings.business_name || "SydIN"
+                  );
+                  showToast({ tone: "success", message: "Downloaded. Everything is in one Excel file." });
+                } catch {
+                  showToast({ tone: "danger", message: "Couldn't build the file. Please try again." });
+                } finally {
+                  setExportingAll(false);
+                }
+              }}
+            >
+              {exportingAll ? "Preparing file..." : "Download all my data"}
+            </Button>
+        </Row>
+      )}
       {myRole === "owner" && (
         <Row
           label="Delete account"
@@ -2053,7 +2018,17 @@ export default function SettingsPage() {
     );
   };
 
-  const EDITABLE: SettingsSectionId[] = ["workspace", "documents", "currency", "inventory", "lists"];
+  const renderGeneralPanel = () => (
+    <>
+      <h2 className="st-subhead st-subhead-first">Money</h2>
+      {renderCurrencyPanel()}
+      <h2 className="st-subhead">Stock</h2>
+      {renderInventoryPanel()}
+      {renderUnitsRow()}
+    </>
+  );
+
+  const EDITABLE: SettingsSectionId[] = ["workspace", "documents", "general"];
 
   const renderActivePanel = () => {
     if (loading) {
@@ -2062,18 +2037,16 @@ export default function SettingsPage() {
     switch (activeSection) {
       case "documents":
         return renderDocumentsPanel();
-      case "currency":
-        return renderCurrencyPanel();
-      case "inventory":
-        return renderInventoryPanel();
-      case "lists":
-        return renderListsPanel();
+      case "general":
+        return renderGeneralPanel();
       case "profile":
         return renderProfilePanel();
+      case "security":
+        return renderSecurityPanel();
+      case "data":
+        return renderDataPanel();
       case "billing":
         return renderBillingPanel();
-      case "preferences":
-        return renderPreferencesPanel();
       case "notifications":
         return notifyPrefs ? <NotificationsPanel email={userEmail} initial={notifyPrefs} /> : null;
       case "team":
@@ -2094,7 +2067,10 @@ export default function SettingsPage() {
   const editable = EDITABLE.includes(activeSection);
 
   const panel = (
-    <DashboardCard aria-labelledby="settings-panel-heading" className="st-panel">
+    <DashboardCard
+      aria-labelledby="settings-panel-heading"
+      className={`st-panel${["billing", "notifications"].includes(activeSection) ? " st-panel-bare" : ""}`}
+    >
       <div className="st-panel-body">{renderActivePanel()}</div>
       {editable && error && (
         <div role="alert" className="st-error">

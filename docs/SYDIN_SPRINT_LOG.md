@@ -6365,3 +6365,34 @@ Sayed: plan requests opened a different, older page and needed more buttons.
     ids older than 5 minutes, checks the owner's `notify_item_low` / `notify_item_out`, and emails
     the owner via Resend.
 - No database change was needed.
+
+### 1 Oct — Settings regrouped (Sayed: "settings still ugly, bugs")
+
+Audited all 10 sections live, reading only and saving nothing. Found: three nearly empty sections
+(Inventory with 1 row, Currency and Preferences with 2 each), an overloaded My profile (about 11
+rows mixing profile, security, data, help and sign-out), cards inside cards on Billing and
+Notifications, and a top bar repeating "Settings & help / Settings".
+
+**New structure** (9 sections in 3 groups; old `?section=` links redirect through aliases):
+- **Business:**
+  - Company profile
+  - General: Money (currency, rate) and Stock (low-stock level, units)
+  - Invoices & payments: numbering, tax, VAT number, terms, footer, payment methods
+- **Account:**
+  - My profile: personal info plus preferences
+  - Login & security: email, linked accounts, two-step, devices, password
+  - Notifications
+- **Team & plan:**
+  - Team
+  - Plan & billing
+  - Data & account: download all data, delete account, and for members, leave business
+- **Removed** from Settings: "Help and support" and "Sign out" (both are in the account menu).
+
+**Polish:**
+- Billing and Notifications render without the outer card (`st-panel-bare`).
+- The top-bar breadcrumb is hidden on Settings.
+- Dropdowns match the text inputs.
+- The logo card's Remove link no longer runs past the card edge.
+
+**Bug fixed:** "Leave business" used `window.confirm`, which Opera blocks. It now uses a page dialog.
+No `window.confirm` or `alert` is left in the app.

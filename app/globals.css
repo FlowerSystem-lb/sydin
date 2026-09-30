@@ -28661,3 +28661,18 @@ body:has(.login-page)::-webkit-scrollbar,
 @media (max-width: 560px) {
   .nt-head.nt-head, .nt-row.nt-row { grid-template-columns: minmax(0, 1fr) 3rem 4.2rem; padding: 0.65rem 0.75rem !important; }
 }
+
+/* Settings regroup (1 Oct 2026) */
+/* Sections that bring their own cards (Plan & billing, Notifications) sit
+   straight on the page: no card around cards. */
+.st-panel.st-panel.st-panel-bare { border: 0 !important; background: transparent !important; box-shadow: none !important; }
+.st-panel.st-panel-bare .st-panel-body { padding: 0 !important; }
+.st-panel.st-panel-bare .st-billing.st-billing, .st-panel.st-panel-bare .nt-panel.nt-panel { padding-top: 0 !important; }
+/* Settings has its own menu and title: the top-bar breadcrumb only repeated them. */
+.dashboard-shell .dashboard-main-canvas:has(.st-page) .dashboard-top-context-title { visibility: hidden !important; }
+.st-subhead.st-subhead-first { margin-top: 1rem !important; }
+/* Logo card: the Remove link no longer pushes past the card edge. */
+.st-logo-actions.st-logo-actions { flex-wrap: nowrap !important; }
+.st-logo-update.st-logo-update { min-width: 0; }
+/* Dropdowns look like the text boxes next to them. */
+.st-page select.st-input { appearance: none; -webkit-appearance: none; padding-right: 2.2rem !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 0.7rem center !important; background-size: 1rem !important; }
