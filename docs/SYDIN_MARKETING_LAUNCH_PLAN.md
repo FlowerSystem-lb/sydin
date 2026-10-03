@@ -125,7 +125,7 @@ non-wholesale shops.
 **Logo (3 Oct 2026, Sayed's call — supersedes the "colour logo on a badge" rule):** SydIN moves
 to a flat two-colour logo. On blue: everything white. On white/paper: the mark and "IN" in SydIN
 Blue `#2563EB`, "Syd" in navy `#0F1F3A`. Profile pictures on every platform: white mark on blue.
-Files: `docs/brand-kit/` (`sydin-logo-blue.png`, `sydin-logo-white.png`, `sydin-mark-blue.png`,
-`sydin-mark-white.png`) — recoloured from the existing raster logo, so ask for the original
-vector file before any large print. **The website, app icons and emails still use the old
+Files: `docs/brand-kit/` — PNG and SVG of `sydin-logo-blue`, `sydin-logo-white`,
+`sydin-mark-blue`, `sydin-mark-white`. The SVGs are real vector paths traced from the old raster
+logo (smooth at any size; still ask for the designer's original file before large print). **The website, app icons and emails still use the old
 gradient logo; Sayed will switch them later as its own sprint — do not change them unasked.**
