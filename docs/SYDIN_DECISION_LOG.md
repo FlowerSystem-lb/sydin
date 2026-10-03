@@ -677,3 +677,11 @@ stays as the alternative.
   classic, slim, recognisable at a glance. A solo student founder cannot sustain seven platforms;
   depot owners in Lebanon decide on WhatsApp and trust a face.
 - **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Pre-launch social plan".
+
+## 2026-10-03 — Flat blue/white logo for social (website to follow later)
+
+- **Decision:** social channels use a flat two-colour logo: all white on SydIN Blue; on white,
+  mark + "IN" blue `#2563EB` and "Syd" navy `#0F1F3A`. Profile pictures = white mark on blue.
+- **Why:** Sayed prefers it to the gradient logo and plans to move the website, app and email to
+  it later. Until that sprint happens, the product keeps the gradient logo.
+- **Files:** `docs/brand-kit/`. Details in `SYDIN_MARKETING_LAUNCH_PLAN.md`.

@@ -97,8 +97,7 @@ https://claude.ai/artifact/6heR6Gdy8SpgA52pW9p5JM.
 
 **Post look (Sayed rejected the first gradient/serif version as "AI-looking"):** two colours only,
 SydIN Blue `#2563EB` and Paper `#F5F6F8`, alternated post by post so the profile grid is a
-checkerboard; the colour logo (same as the website) top-centre — on blue posts it sits on a
-white rounded badge, never turned white; one Barlow Condensed headline in capitals; a thin 1px frame 36px
+checkerboard; the logo top-centre in the flat two-colour version (see "Logo" below); one Barlow Condensed headline in capitals; a thin 1px frame 36px
 inside the edge; a rounded footer pill with handle + Instagram/TikTok/WhatsApp icons; real
 photos only (no AI images, no stock). Feed 1080×1350, Stories/Reels/TikTok 1080×1920.
 
@@ -122,3 +121,11 @@ testimonials or followers.
 "للمستودعات بلبنان" — never "wholesale" / "الجملة". The product's target buyer in the plan of
 record is unchanged; only the marketing word is dropped so the message does not exclude
 non-wholesale shops.
+
+**Logo (3 Oct 2026, Sayed's call — supersedes the "colour logo on a badge" rule):** SydIN moves
+to a flat two-colour logo. On blue: everything white. On white/paper: the mark and "IN" in SydIN
+Blue `#2563EB`, "Syd" in navy `#0F1F3A`. Profile pictures on every platform: white mark on blue.
+Files: `docs/brand-kit/` (`sydin-logo-blue.png`, `sydin-logo-white.png`, `sydin-mark-blue.png`,
+`sydin-mark-white.png`) — recoloured from the existing raster logo, so ask for the original
+vector file before any large print. **The website, app icons and emails still use the old
+gradient logo; Sayed will switch them later as its own sprint — do not change them unasked.**
