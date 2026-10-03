@@ -110,11 +110,13 @@ not used yet.
 batched on Sunday. Six weeks from Mon 5 Oct 2026; the launch date is announced only once the
 plan-of-record launch steps (pagination, domain, backups) are done.
 
-**Language:** designs in English (the app UI is English-only today); captions Arabic first, then
-English. Never claim the app is in Arabic until it is.
+**Language:** every post is a carousel with the Arabic slide(s) first and the English slide(s)
+second (Arabic headlines in Cairo ExtraBold, body in Cairo; English in Barlow Condensed / Barlow).
+Captions Arabic first, then English. Never claim the app is in Arabic until it is.
 
-**Truth rules for posts:** scanner and Excel/CSV import are Standard/Pro only — say so on the
-post. Free = 50 items with photos, low-stock alerts, stock history. No invented numbers,
+**Truth rules for posts:** plan names (Standard/Pro) stay off the post images (Sayed's call, 3 Oct
+2026), but scanner and Excel/CSV import are paid-plan features — when someone asks, say so plainly,
+and never call them free. Free = 50 items with photos, low-stock alerts, stock history. No invented numbers,
 testimonials or followers.
 
 **Wording (3 Oct 2026, Sayed's call):** public social copy says "depots in Lebanon" /
