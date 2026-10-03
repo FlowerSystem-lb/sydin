@@ -13,6 +13,10 @@ import {
 // notification center that occasionally lies is worse than a small one.
 export type NotificationType = "low_stock" | "out_of_stock";
 
+/** Fired in this tab the moment a notification row is created, so the bell
+ * updates without waiting for the realtime round trip (DashboardShell). */
+export const NOTIFICATION_CREATED_EVENT = "sydin:notification-created";
+
 export interface Notification {
   id: number;
   user_id: string;
@@ -104,8 +108,12 @@ async function createNotification(params: {
         link_href: params.linkHref || null,
       },
     ])
-    .select("id")
+    .select("*")
     .maybeSingle();
+
+  if (data && typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent(NOTIFICATION_CREATED_EVENT, { detail: data }));
+  }
 
   // Instant email (phase 36): the server checks the owner's choice in
   // Settings > Notifications and sends it. Fire-and-forget: a mail problem
@@ -173,14 +181,12 @@ export async function notifyIfCrossedIntoLowStock(params: {
       businessThreshold
     );
 
-    const wasAboveThreshold = quantityBefore > threshold;
-    const nowAtOrBelowThreshold = quantityAfter <= threshold;
-
-    if (!wasAboveThreshold || !nowAtOrBelowThreshold) return;
-
     const linkHref = `/dashboard/inventory/${itemId}`;
 
-    if (quantityAfter <= 0) {
+    // Running out is its own crossing (3 Oct 2026): an item already sitting
+    // at its low-stock line that drops to 0 must still raise "out of stock",
+    // even though it never crossed the low line on this movement.
+    if (quantityBefore > 0 && quantityAfter <= 0) {
       await createNotification({
         userId,
         type: "out_of_stock",
@@ -191,6 +197,10 @@ export async function notifyIfCrossedIntoLowStock(params: {
       });
       return;
     }
+
+    const wasAboveThreshold = quantityBefore > threshold;
+    const nowAtOrBelowThreshold = quantityAfter <= threshold;
+    if (!wasAboveThreshold || !nowAtOrBelowThreshold) return;
 
     await createNotification({
       userId,

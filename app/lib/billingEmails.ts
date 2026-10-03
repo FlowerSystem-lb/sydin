@@ -11,7 +11,9 @@ const SITE = "https://www.sydin.site";
 const LOGO = `${SITE}/email/sydin-logo.png`;
 const FROM = "SydIN Billing <billing@sydin.site>";
 const REPLY_TO = "support@sydin.site";
-const WHATSAPP = "+961 76 075 247";
+const WHATSAPP = "+961 71 289 391";
+// Whish Money / OMT receive on the payments line, not the WhatsApp line.
+const PAY_NUMBER = "+961 76 075 247";
 
 export interface EmailMessage {
   to: string;
@@ -81,7 +83,7 @@ ${body}
 const HOW_TO_PAY = callout(
   "info",
   "How to pay",
-  `Send the amount by <strong>Whish Money</strong> or <strong>OMT</strong> to ${WHATSAPP} (receiver: SydIN Tech), or USDT (TRC20). Then send us the receipt on WhatsApp. Your plan continues as soon as we confirm it.`
+  `Send the amount by <strong>Whish Money</strong> or <strong>OMT</strong> to ${PAY_NUMBER} (receiver: SydIN Tech), or USDT (TRC20). Then send us the receipt on WhatsApp. Your plan continues as soon as we confirm it.`
 );
 
 const BILLING_URL = `${SITE}/dashboard/settings?section=billing`;
@@ -96,7 +98,7 @@ export function renewSoonEmail(to: string, business: string, plan: string, paidU
   return {
     to,
     subject: `Your SydIN ${name} plan renews on ${date}`,
-    text: `Hello ${business}, your SydIN ${name} plan is paid until ${date}. Pay before then to keep going without a break: Whish Money or OMT to ${WHATSAPP}, then send us the receipt on WhatsApp. Plan & billing: ${BILLING_URL}`,
+    text: `Hello ${business}, your SydIN ${name} plan is paid until ${date}. Pay before then to keep going without a break: Whish Money or OMT to ${PAY_NUMBER}, then send us the receipt on WhatsApp. Plan & billing: ${BILLING_URL}`,
     html: layout({
       preheader: `Your ${name} plan is paid until ${date}.`,
       eyebrow: "Renewal reminder",
@@ -113,7 +115,7 @@ export function graceStartEmail(to: string, business: string, plan: string, paid
   return {
     to,
     subject: `Action needed: your SydIN ${name} plan ended — 3 days to pay`,
-    text: `Hello ${business}, your SydIN ${name} plan ended on ${formatDate(paidUntil)}. You keep full access until ${end}. Pay before then to keep ${name}: Whish Money or OMT to ${WHATSAPP}, then send the receipt on WhatsApp. Your data is safe. ${BILLING_URL}`,
+    text: `Hello ${business}, your SydIN ${name} plan ended on ${formatDate(paidUntil)}. You keep full access until ${end}. Pay before then to keep ${name}: Whish Money or OMT to ${PAY_NUMBER}, then send the receipt on WhatsApp. Your data is safe. ${BILLING_URL}`,
     html: layout({
       preheader: `You keep full access until ${end}. Pay before then to keep ${name}.`,
       eyebrow: "Payment due",
@@ -142,7 +144,7 @@ export function endedEmail(to: string, business: string, plan: string): EmailMes
       intro: `Hello <strong style="color:#18181b;">${escapeHtml(business)}</strong>, your account now uses the Free plan's limits.`,
       body:
         callout("ok", "All your data is safe", "Every item, photo, invoice, customer and report is still in your account. Nothing was deleted.") +
-        callout("info", "Get it back instantly", `Pay by Whish Money or OMT to ${WHATSAPP} and send us the receipt on WhatsApp. ${name} comes back the moment we confirm it.`) +
+        callout("info", "Get it back instantly", `Pay by Whish Money or OMT to ${PAY_NUMBER} and send us the receipt on WhatsApp. ${name} comes back the moment we confirm it.`) +
         button(`Renew ${name}`, BILLING_URL),
     }),
   };

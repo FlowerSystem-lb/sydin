@@ -14,6 +14,7 @@ import {
   MenuSurface,
   SheetShell,
   buttonClassName,
+  useToast,
 } from "@/components/ui";
 import {
   BUSINESS_SETTINGS_SAVED_EVENT,
@@ -48,6 +49,7 @@ import {
   type NotificationsPreview,
 } from "@/app/lib/notificationsPreview";
 import {
+  NOTIFICATION_CREATED_EVENT,
   getNotifications,
   markAllNotificationsRead,
   markNotificationRead,
@@ -525,6 +527,7 @@ export default function DashboardShell({
 }: DashboardShellProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const { showToast } = useToast();
   const searchParams = useSearchParams();
   const business = useBusiness();
   // The page area is its own scroll container from 900px up, so the chrome and
@@ -739,6 +742,98 @@ export default function DashboardShell({
       active = false;
     };
   }, [userId]);
+
+  /* Live bell (3 Oct 2026, Sayed: "notify live, no reload"). Three ways in,
+     all landing in the same two lists:
+       - this tab: notifications.ts fires NOTIFICATION_CREATED_EVENT at once;
+       - other tabs and team members: Supabase realtime on notifications and
+         inventory (sql/phase-36-live-notifications.sql adds them);
+       - safety net: refresh when the tab is shown again, and every minute.
+     A new alert also pops a toast with a link to the item. */
+  const liveSettingsRef = useRef({ businessSettings, usage });
+  useEffect(() => {
+    liveSettingsRef.current = { businessSettings, usage };
+  });
+  useEffect(() => {
+    let active = true;
+    let previewTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const refreshPreview = () => {
+      clearTimeout(previewTimer);
+      previewTimer = setTimeout(() => {
+        const { businessSettings: settings, usage: current } = liveSettingsRef.current;
+        getNotificationsPreview(userId, current.subscription, settings)
+          .then((preview) => {
+            if (active) setNotificationsPreview(preview);
+          })
+          .catch(() => undefined);
+      }, 400);
+    };
+
+    const refreshAll = () => {
+      getNotifications(userId, 8)
+        .then((rows) => {
+          if (active) setPersistedNotifications(rows);
+        })
+        .catch(() => undefined);
+      refreshPreview();
+    };
+
+    // The same row arrives twice in this tab (local event, then realtime):
+    // remember ids so it is listed and announced once.
+    const announced = new Set<number>();
+    const receive = (row: Notification) => {
+      if (!row?.id || announced.has(row.id)) return;
+      announced.add(row.id);
+      setPersistedNotifications((current) =>
+        current.some((existing) => existing.id === row.id)
+          ? current
+          : [row, ...current].slice(0, 8)
+      );
+      refreshPreview();
+      showToast({
+        tone: row.type === "out_of_stock" ? "danger" : "info",
+        message: row.title,
+        action: row.link_href
+          ? { label: "View item", onClick: () => router.push(row.link_href as string) }
+          : undefined,
+      });
+    };
+
+    const onLocal = (event: Event) => receive((event as CustomEvent<Notification>).detail);
+    window.addEventListener(NOTIFICATION_CREATED_EVENT, onLocal);
+
+    const channel = supabase
+      .channel(`bell-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "notifications", filter: `user_id=eq.${userId}` },
+        (payload) => receive(payload.new as Notification)
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "inventory", filter: `user_id=eq.${userId}` },
+        () => refreshPreview()
+      )
+      .subscribe();
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") refreshAll();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const poll = setInterval(() => {
+      if (document.visibilityState === "visible") refreshAll();
+    }, 60_000);
+
+    return () => {
+      active = false;
+      clearTimeout(previewTimer);
+      clearInterval(poll);
+      window.removeEventListener(NOTIFICATION_CREATED_EVENT, onLocal);
+      document.removeEventListener("visibilitychange", onVisible);
+      void supabase.removeChannel(channel);
+    };
+  }, [userId, router, showToast]);
 
   const unreadPersistedCount = persistedNotifications.filter(
     (row) => !row.read_at
