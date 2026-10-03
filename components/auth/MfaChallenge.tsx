@@ -80,7 +80,7 @@ export default function MfaChallenge({ onVerified }: { onVerified: () => void })
           Sign out
         </button>
         <p className="mfa-help">
-          Lost your phone? Contact SydIN support on WhatsApp at +961 76 075 247.
+          Lost your phone? Contact SydIN support on WhatsApp at +961 71 289 391.
         </p>
       </form>
     </div>

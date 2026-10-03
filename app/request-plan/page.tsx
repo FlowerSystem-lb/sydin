@@ -28,7 +28,7 @@ const WHISH_NUMBER = "96176075247";
 const OMT_NUMBER = "96176075247";
 const USDT_NETWORK = "USDT TRC20";
 const USDT_ADDRESS = "TYwWogiC9f2aHcidDQcyspTPj9S5TDZaDs";
-const WHATSAPP_NUMBER = "96176075247";
+const WHATSAPP_NUMBER = "96171289391";
 
 function PaymentIcon({
   method,

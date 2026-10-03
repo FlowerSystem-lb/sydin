@@ -1,6 +1,6 @@
 export const SYDIN_SUPPORT_EMAIL = "support@sydin.site";
-export const SYDIN_WHATSAPP_NUMBER = "96176075247";
-export const SYDIN_WHATSAPP_DISPLAY = "+961 76 075 247";
+export const SYDIN_WHATSAPP_NUMBER = "96171289391";
+export const SYDIN_WHATSAPP_DISPLAY = "+961 71 289 391";
 
 function normalizeContext(value: string | null | undefined) {
   return String(value || "").trim().replace(/\s+/g, " ").slice(0, 120);
