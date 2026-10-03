@@ -129,8 +129,9 @@ to a flat two-colour logo. On blue: everything white. On white/paper: the mark a
 Blue `#2563EB`, "Syd" in navy `#0F1F3A`. Profile pictures on every platform: white mark on blue.
 Files: `docs/brand-kit/` — PNG and SVG of `sydin-logo-blue`, `sydin-logo-white`,
 `sydin-mark-blue`, `sydin-mark-white`. The SVGs are real vector paths traced from the old raster
-logo (smooth at any size; still ask for the designer's original file before large print). **The website, app icons and emails still use the old
-gradient logo; Sayed will switch them later as its own sprint — do not change them unasked.**
+logo (smooth at any size; still ask for the designer's original file before large print). **Update, same day:** at Sayed's
+request the website logo, favicon and app icons were switched to the flat logo (PR #3, see the sprint log). The email logo
+(`public/email/sydin-logo.png`) still uses the old gradient — change it only when Sayed asks.
 
 **Call to action until launch (3 Oct 2026, Sayed's call):** posts only ever say "reserve your place
 on the waitlist" / "احجز مكانك بلائحة الانتظار", link in bio. No "start free", no "50 items", no demo
@@ -154,3 +155,27 @@ session continues this role from here, not from scratch.
   goal "messages", Lebanon 25–55. No TikTok ads yet. Sayed enters his card himself.
 - **Sales:** outreach is done by Sayed on WhatsApp and in person, using the scripts Claude
   writes; leads tracked by name, area, stage (contacted → demo → trying → paying).
+
+---
+
+## Problem-story video: "وكان عندك / And you had it" (3 Oct 2026)
+
+Sayed asked for a video about **the problem SydIN solves, not its features**, and whether it could
+be made with Higgsfield (AI video).
+
+- **Story (22.5 s, 9:16):** a customer asks for a white Type-C cable, the owner digs through
+  identical cartons, the customer gives up, and the cable turns up in the last box ("وراحت البيعة...
+  وكان عندك" / "Sale lost. And you had it."). Then a rewind: same question, one look at SydIN
+  (Type-C Cable · White, 3 left, low stock), "Sale kept", blue brand card, waitlist call to action.
+  Arabic leads on every frame, with English under it; SydIN Blue first appears at the turn.
+- **Three versions, safest first:** (A) the motion-graphics version Claude rendered with designed
+  sound, no AI footage, ready to post; (B) real footage on Sayed's iPhone in a shop, with a real
+  SydIN screen recording, which is the preferred upgrade; (C) Higgsfield only for a shot that
+  can't be filmed.
+- **Rules for any AI footage:** AI label ON (Instagram/Facebook "AI label", TikTok "AI-generated
+  content"). Never generate the app screen, logo, text, faces or a "real customer". Never call a
+  staged scene real. Never buy a yearly plan; cancel auto-renew the day you subscribe.
+- **Schedule:** the motion version goes out Tue 6 Oct at 9 pm on Reels/TikTok/Facebook. "Who I am"
+  (V1) moves to Sat 10 Oct.
+- **Kit (shot list, CapCut steps, Higgsfield prompts, captions):**
+  https://claude.ai/artifact/3R3U5DaYs4DqVcrrri4EbT

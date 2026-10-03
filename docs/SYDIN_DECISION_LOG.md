@@ -685,3 +685,16 @@ stays as the alternative.
 - **Why:** Sayed prefers it to the gradient logo and plans to move the website, app and email to
   it later. Until that sprint happens, the product keeps the gradient logo.
 - **Files:** `docs/brand-kit/`. Details in `SYDIN_MARKETING_LAUNCH_PLAN.md`.
+- **Update (same day):** Sayed asked for the website too, so the website logo, favicon and app icons
+  switched in PR #3. The email logo still uses the gradient.
+
+## 2026-10-03 — Problem-story video: real footage over AI footage
+
+- **Decision:** SydIN's videos show the problem SydIN solves through a short story, not a feature
+  list. Make them as motion graphics or real footage. AI-generated footage (Higgsfield etc.) is a last resort, always
+  labelled as AI, and never used for the app screen, the logo, faces or anything presented as real.
+- **Why:** Sayed had already rejected visuals that "look AI". Real hands-and-cartons footage costs
+  nothing and builds trust with depot owners. Fake app UI could show features SydIN doesn't have.
+  Undisclosed AI footage risks platform penalties.
+- **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Problem-story video".
+
