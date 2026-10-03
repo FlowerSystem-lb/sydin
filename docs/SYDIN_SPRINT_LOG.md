@@ -6396,3 +6396,25 @@ Notifications, and a top bar repeating "Settings & help / Settings".
 
 **Bug fixed:** "Leave business" used `window.confirm`, which Opera blocks. It now uses a page dialog.
 No `window.confirm` or `alert` is left in the app.
+
+---
+
+## 3 Oct 2026 — Flat blue logo on the website
+
+At Sayed's request, the website switches from the gradient logo to the flat two-colour logo
+already used on social media (mark + "IN" in SydIN Blue `#2563EB`, "Syd" in navy `#0F1F3A`).
+
+**What changed (assets only, same file names, so no component code moved):**
+- `public/brand/sydin-logo.svg` and `sydin-mark.svg`: now real vector paths (11 KB and 7 KB)
+  instead of a PNG wrapped in SVG (265 KB and 247 KB).
+- `public/brand/sydin-logo.png` and `sydin-mark.png`: re-rendered from the SVGs at the same
+  pixel sizes the dashboard passes to `next/image`.
+- App icons (`public/icons/*`) and `app/favicon.ico`: white mark on SydIN Blue.
+- `.sydin-wordmark-in` in `globals.css`: solid blue instead of the gradient text.
+
+**Not changed:** the email logo (`public/email/sydin-logo.png`) — Sayed will do email later. The
+landing page copy still says "wholesale depots"; social copy dropped that word, the site has not.
+
+**Verified:** lint, `tsc --noEmit` and `next build` pass (the build needs the two public Supabase
+variables; this container has none, so placeholders were used). Screenshots of the landing page
+(desktop + phone) and the login page show the new logo.
