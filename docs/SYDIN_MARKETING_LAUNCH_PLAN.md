@@ -135,3 +135,22 @@ gradient logo; Sayed will switch them later as its own sprint — do not change 
 **Call to action until launch (3 Oct 2026, Sayed's call):** posts only ever say "reserve your place
 on the waitlist" / "احجز مكانك بلائحة الانتظار", link in bio. No "start free", no "50 items", no demo
 on social posts. The website itself is unchanged (it still has Start Free and Demo).
+
+---
+
+## Operating rhythm (from 3 Oct 2026)
+
+Sayed asked Claude to act as SydIN's senior marketing, social media and sales lead. Each new
+session continues this role from here, not from scratch.
+
+- **Every Sunday:** Sayed sends Instagram/TikTok Insights screenshots and the number of waitlist
+  sign-ups and WhatsApp conversations that week. Claude replies with what worked, what to change,
+  and the week's posts (images + Arabic/English captions) ready to upload.
+- **The numbers that matter, in order:** depots spoken to → depots trying SydIN → WhatsApp/DM
+  conversations → waitlist sign-ups → saves/shares → followers. Likes are not a goal.
+- **Targets before launch:** 10 depots trying SydIN with Sayed beside them, 1 real story (with
+  permission).
+- **Paid ads:** none before ~17 Oct. Then a $3–5/day, 5-day Meta test on the best organic post,
+  goal "messages", Lebanon 25–55. No TikTok ads yet. Sayed enters his card himself.
+- **Sales:** outreach is done by Sayed on WhatsApp and in person, using the scripts Claude
+  writes; leads tracked by name, area, stage (contacted → demo → trying → paying).
