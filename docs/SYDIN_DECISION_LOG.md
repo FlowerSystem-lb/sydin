@@ -666,3 +666,14 @@ stays as the alternative.
   nudge that still respects "your data is yours".
 
 **Status:** Active.
+
+## 2026-10-03 — Social media look and pre-launch platforms
+
+- **Decision:** social posts use a plain two-colour system (SydIN Blue `#2563EB` / Paper
+  `#F5F6F8`, alternating), Barlow Condensed headlines, logo top-centre, thin frame, footer pill,
+  real photos only. Platforms: Instagram, WhatsApp, TikTok/Reels, LinkedIn active; Facebook and
+  Threads as automatic copies; X reserved only. Captions Arabic + English.
+- **Why:** Sayed rejected the first gradient + serif version as AI-looking and asked for simple,
+  classic, slim, recognisable at a glance. A solo student founder cannot sustain seven platforms;
+  depot owners in Lebanon decide on WhatsApp and trust a face.
+- **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Pre-launch social plan".

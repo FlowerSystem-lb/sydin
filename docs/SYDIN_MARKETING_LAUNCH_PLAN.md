@@ -85,3 +85,34 @@ launch checklist · post-launch content · "when to post and what to post" guida
 
 > Keep claims truthful. If a feature isn't shipped, don't market it as available — tease it as
 > "coming" at most.
+
+---
+
+## Pre-launch social plan (set 3 Oct 2026)
+
+Decided with Sayed in a marketing session. The full plan (calendar, Arabic + English captions,
+video ideas, bios) lives in one artifact — update it rather than writing a new one:
+https://claude.ai/artifact/1zi11oQENfVsykHAVxMEtw. Post designs live on the canvas:
+https://claude.ai/artifact/6heR6Gdy8SpgA52pW9p5JM.
+
+**Post look (Sayed rejected the first gradient/serif version as "AI-looking"):** two colours only,
+SydIN Blue `#2563EB` and Paper `#F5F6F8`, alternated post by post so the profile grid is a
+checkerboard; logo top-centre; one Barlow Condensed headline in capitals; a thin 1px frame 36px
+inside the edge; a rounded footer pill with handle + Instagram/TikTok/WhatsApp icons; real
+photos only (no AI images, no stock). Feed 1080×1350, Stories/Reels/TikTok 1080×1920.
+
+**Platforms:** Instagram = home base · WhatsApp Business (Status + Channel) = where every post
+ends · TikTok + Reels = reach (Sayed speaking Lebanese, English subtitles) · LinkedIn = Sayed's
+personal profile, weekly, English · Facebook + Threads = automatic copies · X = handle reserved,
+not used yet.
+
+**Rhythm:** Mon + Thu feed post 8:30 pm, Tue + Sat video 9 pm, Wed LinkedIn 9:30 am (Beirut),
+batched on Sunday. Six weeks from Mon 5 Oct 2026; the launch date is announced only once the
+plan-of-record launch steps (pagination, domain, backups) are done.
+
+**Language:** designs in English (the app UI is English-only today); captions Arabic first, then
+English. Never claim the app is in Arabic until it is.
+
+**Truth rules for posts:** scanner and Excel/CSV import are Standard/Pro only — say so on the
+post. Free = 50 items with photos, low-stock alerts, stock history. No invented numbers,
+testimonials or followers.
