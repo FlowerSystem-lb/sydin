@@ -666,3 +666,22 @@ stays as the alternative.
   nudge that still respects "your data is yours".
 
 **Status:** Active.
+
+## 2026-10-03 — Social media look and pre-launch platforms
+
+- **Decision:** social posts use a plain two-colour system (SydIN Blue `#2563EB` / Paper
+  `#F5F6F8`, alternating), Barlow Condensed headlines, logo top-centre, thin frame, footer pill,
+  real photos only. Platforms: Instagram, WhatsApp, TikTok/Reels, LinkedIn active; Facebook and
+  Threads as automatic copies; X reserved only. Captions Arabic + English.
+- **Why:** Sayed rejected the first gradient + serif version as AI-looking and asked for simple,
+  classic, slim, recognisable at a glance. A solo student founder cannot sustain seven platforms;
+  depot owners in Lebanon decide on WhatsApp and trust a face.
+- **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Pre-launch social plan".
+
+## 2026-10-03 — Flat blue/white logo for social (website to follow later)
+
+- **Decision:** social channels use a flat two-colour logo: all white on SydIN Blue; on white,
+  mark + "IN" blue `#2563EB` and "Syd" navy `#0F1F3A`. Profile pictures = white mark on blue.
+- **Why:** Sayed prefers it to the gradient logo and plans to move the website, app and email to
+  it later. Until that sprint happens, the product keeps the gradient logo.
+- **Files:** `docs/brand-kit/`. Details in `SYDIN_MARKETING_LAUNCH_PLAN.md`.
