@@ -97,7 +97,8 @@ https://claude.ai/artifact/6heR6Gdy8SpgA52pW9p5JM.
 
 **Post look (Sayed rejected the first gradient/serif version as "AI-looking"):** two colours only,
 SydIN Blue `#2563EB` and Paper `#F5F6F8`, alternated post by post so the profile grid is a
-checkerboard; logo top-centre; one Barlow Condensed headline in capitals; a thin 1px frame 36px
+checkerboard; the colour logo (same as the website) top-centre — on blue posts it sits on a
+white rounded badge, never turned white; one Barlow Condensed headline in capitals; a thin 1px frame 36px
 inside the edge; a rounded footer pill with handle + Instagram/TikTok/WhatsApp icons; real
 photos only (no AI images, no stock). Feed 1080×1350, Stories/Reels/TikTok 1080×1920.
 
