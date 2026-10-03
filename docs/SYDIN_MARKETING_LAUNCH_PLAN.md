@@ -131,3 +131,7 @@ Files: `docs/brand-kit/` — PNG and SVG of `sydin-logo-blue`, `sydin-logo-white
 `sydin-mark-blue`, `sydin-mark-white`. The SVGs are real vector paths traced from the old raster
 logo (smooth at any size; still ask for the designer's original file before large print). **The website, app icons and emails still use the old
 gradient logo; Sayed will switch them later as its own sprint — do not change them unasked.**
+
+**Call to action until launch (3 Oct 2026, Sayed's call):** posts only ever say "reserve your place
+on the waitlist" / "احجز مكانك بلائحة الانتظار", link in bio. No "start free", no "50 items", no demo
+on social posts. The website itself is unchanged (it still has Start Free and Demo).
