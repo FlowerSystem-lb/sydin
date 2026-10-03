@@ -116,3 +116,8 @@ English. Never claim the app is in Arabic until it is.
 **Truth rules for posts:** scanner and Excel/CSV import are Standard/Pro only — say so on the
 post. Free = 50 items with photos, low-stock alerts, stock history. No invented numbers,
 testimonials or followers.
+
+**Wording (3 Oct 2026, Sayed's call):** public social copy says "depots in Lebanon" /
+"للمستودعات بلبنان" — never "wholesale" / "الجملة". The product's target buyer in the plan of
+record is unchanged; only the marketing word is dropped so the message does not exclude
+non-wholesale shops.
