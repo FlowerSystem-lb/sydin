@@ -6396,3 +6396,8 @@ Notifications, and a top bar repeating "Settings & help / Settings".
 
 **Bug fixed:** "Leave business" used `window.confirm`, which Opera blocks. It now uses a page dialog.
 No `window.confirm` or `alert` is left in the app.
+
+## 3–4 Oct 2026: live bell, out-of-stock fix, WhatsApp number
+- Out-of-stock alert now fires when an item already at its low line drops to 0 (it was skipped).
+- Live bell: new alerts pop up (toast + "View item") and join the bell list without a reload. Same tab via a window event; other tabs and team via Supabase realtime (`sql/phase-36-live-notifications.sql`, applied 4 Oct: notifications + inventory in `supabase_realtime`); refresh on tab focus and every minute as a safety net.
+- Business WhatsApp is +961 71 289 391 everywhere; Whish/OMT payments stay on +961 76 075 247.
