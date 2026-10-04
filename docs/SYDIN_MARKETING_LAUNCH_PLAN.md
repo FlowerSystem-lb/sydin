@@ -175,7 +175,12 @@ be made with Higgsfield (AI video).
 - **Rules for any AI footage:** AI label ON (Instagram/Facebook "AI label", TikTok "AI-generated
   content"). Never generate the app screen, logo, text, faces or a "real customer". Never call a
   staged scene real. Never buy a yearly plan; cancel auto-renew the day you subscribe.
-- **Schedule:** the motion version goes out Tue 6 Oct at 9 pm on Reels/TikTok/Facebook. "Who I am"
-  (V1) moves to Sat 10 Oct.
+- **Schedule:** the motion version was posted Sun 4 Oct, about 10:50 pm, as an Instagram Reel shared
+  to Facebook, and on TikTok. It moved up from Tue 6 because the account had only 10 followers and the
+  first carousel reached almost only them: 34 views (19 Instagram, 15 Facebook) and 0 follows in 24 h.
+  Reels/TikTok are the only format shown to non-followers. Tue 6 has no new post. "Who I am" (V1)
+  moves to Sat 10 Oct.
+- **Captions:** one post per platform, with one caption: Arabic, then English, then 5 hashtags
+  (`#لبنان #Lebanon #مستودعات #InventoryManagement #SydIN`). LinkedIn and Threads get English only.
 - **Kit (shot list, CapCut steps, Higgsfield prompts, captions):**
   https://claude.ai/artifact/3R3U5DaYs4DqVcrrri4EbT
