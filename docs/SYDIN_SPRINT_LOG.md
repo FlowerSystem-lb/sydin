@@ -6401,3 +6401,24 @@ No `window.confirm` or `alert` is left in the app.
 - Out-of-stock alert now fires when an item already at its low line drops to 0 (it was skipped).
 - Live bell: new alerts pop up (toast + "View item") and join the bell list without a reload. Same tab via a window event; other tabs and team via Supabase realtime (`sql/phase-36-live-notifications.sql`, applied 4 Oct: notifications + inventory in `supabase_realtime`); refresh on tab focus and every minute as a safety net.
 - Business WhatsApp is +961 71 289 391 everywhere; Whish/OMT payments stay on +961 76 075 247.
+---
+
+## 3 Oct 2026 — Flat blue logo on the website
+
+At Sayed's request, the website switches from the gradient logo to the flat two-colour logo
+already used on social media (mark + "IN" in SydIN Blue `#2563EB`, "Syd" in navy `#0F1F3A`).
+
+**What changed (assets only, same file names, so no component code moved):**
+- `public/brand/sydin-logo.svg` and `sydin-mark.svg`: now real vector paths (11 KB and 7 KB)
+  instead of a PNG wrapped in SVG (265 KB and 247 KB).
+- `public/brand/sydin-logo.png` and `sydin-mark.png`: re-rendered from the SVGs at the same
+  pixel sizes the dashboard passes to `next/image`.
+- App icons (`public/icons/*`) and `app/favicon.ico`: white mark on SydIN Blue.
+- `.sydin-wordmark-in` in `globals.css`: solid blue instead of the gradient text.
+
+**Not changed:** the email logo (`public/email/sydin-logo.png`) — Sayed will do email later. The
+landing page copy still says "wholesale depots"; social copy dropped that word, the site has not.
+
+**Verified:** lint, `tsc --noEmit` and `next build` pass (the build needs the two public Supabase
+variables; this container has none, so placeholders were used). Screenshots of the landing page
+(desktop + phone) and the login page show the new logo.

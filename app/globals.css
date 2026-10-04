@@ -527,12 +527,9 @@ canvas {
   object-fit: contain;
 }
 
+/* Flat two-colour brand (3 Oct 2026): "IN" is solid SydIN Blue, matching the logo files. */
 .sydin-wordmark-in {
-  background: linear-gradient(110deg, #14d9ff, #3977ff 48%, #8357ff 78%, #d64bff);
-  background-clip: text;
-  color: transparent;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #2563eb;
 }
 
 .ui-button {
