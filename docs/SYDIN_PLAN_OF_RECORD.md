@@ -973,7 +973,7 @@ Fix or add when building it:
    dependency or show the digits only.
 7. **The phone layout** isn't in the mockup. Mobile comes last anyway.
 
-**R.1 status — LIVE 5 Oct 2026 (laptop width checked; 1024px and phone still to check).** Sayed said "do it now". Built in
+**R.1 status — LIVE 5 Oct 2026, with the drawn barcode and inline + Assign buttons. Checked at 1440 and 1024 (no overflow); phone is left for the mobile phase.** Sayed said "do it now". Built in
 `app/dashboard/inventory/[id]/page.tsx` + an "ITEM PAGE v3" CSS block at the end of
 `globals.css`. Local commit on branch `claude/data-entry-screens-audit-aaed7f`, NOT yet pushed.
 **If a session resets here:** start the test server (`sydin-worktree`, port 3200; clear `.next` if
