@@ -6430,14 +6430,14 @@ variables; this container has none, so placeholders were used). Screenshots of t
 record section R. Nothing was saved during it.
 
 **Phase 1 changed:**
-- : loads Geist + Geist Mono. Before this, the app asked for Inter and never loaded it.
-- : the v2 token block (graphite ink, off-white ground, status colours) at
+- `app/layout.tsx`: loads Geist + Geist Mono. Before this, the app asked for Inter and never loaded it.
+- `app/globals.css`: the v2 token block (graphite ink, off-white ground, status colours) at
   the end of the file. Row inputs and textareas joined the shared boxed control list; the
   underline-focus rules and row hairlines were removed. Group titles are sentence case at body
   size, labels went from 11.2px to 12.9px, and field text from 11.9px to 13.5px. Select
-  triggers are 36px like inputs, and  is now 36px / 8px (was 44px / 12px).
+  triggers are 36px like inputs, and `.sale-input` is now 36px / 8px (was 44px / 12px).
 - Add Item: Cancel and Scan use the shared button, and the barcode notice uses status tokens.
-  Customer dialog error uses . The PO's New-depot dialog inputs use .
+  Customer dialog error uses `dashboard-notice`. The PO's New-depot dialog inputs use `.ui-input`.
 
 **Verified:** in a running copy of the branch (port 3200, signed in by Sayed): every input,
 select and button in the four forms measures 36px; Geist loads; tokens resolve; no console

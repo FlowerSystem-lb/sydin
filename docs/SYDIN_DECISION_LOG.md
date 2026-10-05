@@ -691,7 +691,7 @@ stays as the alternative.
 
 - **Decision:** (1) every form field is boxed in the one shared control style, replacing the
   "no box around each field" rule; (2) the UI font is Geist / Geist Mono, actually loaded via
-  ; (3) a v2 palette: graphite ink #111318, off-white ground #f6f6f5, info is
+  `next/font`; (3) a v2 palette: graphite ink #111318, off-white ground #f6f6f5, info is
   teal-cyan (#0b6e85) so it no longer shares blue with "act", and deeper, calmer
   success/warning/danger; (4) Sayed's full-redesign brief is carried out bold but staged,
   one layer per verified commit, mobile last.
@@ -699,6 +699,6 @@ stays as the alternative.
   boxed dropdowns, which read as plain text. The app named Inter but never loaded it, so
   Windows showed Segoe UI. Sayed's brief asks for a genuinely different, premium system and
   explicitly authorises the visual calls; staging keeps a live product unbroken.
-- **Details:** , plan of record section R.
+- **Details:** `docs/SYDIN_UI_REDESIGN_V2_BRIEF.md`, plan of record section R.
 
 **Status:** Active.
