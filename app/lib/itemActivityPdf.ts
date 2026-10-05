@@ -38,7 +38,7 @@ function pdfText(value: string | null | undefined) {
     .replace(/[  ]/g, " ");
 }
 
-export type ItemActivityReportKind = "movements" | "history" | "documents";
+export type ItemActivityReportKind = "activity" | "movements" | "history" | "documents";
 
 export interface ItemActivityReportItem {
   name: string;
@@ -59,18 +59,21 @@ export interface ItemActivityReportTable {
 }
 
 const TITLES: Record<ItemActivityReportKind, string> = {
+  activity: "Item Activity",
   movements: "Stock Movements",
   history: "Item History",
   documents: "Sales & Purchases",
 };
 
 const EMPTY: Record<ItemActivityReportKind, string> = {
+  activity: "No activity recorded for this item yet.",
   movements: "No stock movements recorded for this item yet.",
   history: "No history recorded for this item yet.",
   documents: "This item is not on any invoice or purchase order yet.",
 };
 
 const NOUN: Record<ItemActivityReportKind, [string, string]> = {
+  activity: ["event", "events"],
   movements: ["movement", "movements"],
   history: ["entry", "entries"],
   documents: ["document", "documents"],

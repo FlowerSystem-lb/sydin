@@ -181,6 +181,19 @@ function getActivityToneClasses(type: ActivityEventType) {
   }
 }
 
+function formatDocumentDay(value: string) {
+  const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
+  if (Number.isNaN(date.getTime())) return value;
+  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
+}
+
+function documentTone(status: string): "success" | "warning" | "danger" | "info" {
+  if (status === "cancelled") return "danger";
+  if (status === "paid" || status === "received") return "success";
+  if (status === "draft") return "warning";
+  return "info";
+}
+
 function formatQuantity(quantity: number | null) {
   return quantity ?? "N/A";
 }
@@ -191,42 +204,6 @@ function formatQuantityDelta(delta: number) {
   return String(delta);
 }
 
-function DetailCard({
-  label,
-  value,
-  detail,
-  monospace = false,
-}: {
-  label: string;
-  value: string;
-  detail?: string;
-  /** Kept in the signature so the 12 call sites need no edit; see below. */
-  accent?: "slate" | "indigo" | "cyan" | "violet" | "amber";
-  monospace?: boolean;
-}) {
-  // Was a bordered, tinted card per fact: 12 of them on this page, inside
-  // sections that were themselves bordered cards, so a box sat inside a box.
-  // Measured before the change: 42 bordered boxes on one item page.
-  //
-  // A label beside a value is a row, not a container — the same conclusion the
-  // item card reached in Phase 2 and the quick preview reached in note D. This
-  // page now matches both.
-  //
-  // `accent` is accepted and ignored on purpose. It painted indigo, cyan,
-  // violet and amber tints that carried no meaning — item code was purple and
-  // barcode was teal for no reason a reader could name. Removing the prop would
-  // mean touching all 12 call sites to say the same thing; ignoring it says it
-  // once, here.
-  return (
-    <div className="item-detail-row">
-      <dt>{label}</dt>
-      <dd className={monospace ? "font-mono tracking-wide" : undefined}>
-        {value}
-        {detail && <span className="item-detail-row-note">{detail}</span>}
-      </dd>
-    </div>
-  );
-}
 
 async function getBusinessCurrency(userId: string) {
   const { data, error } = await supabase
@@ -254,8 +231,12 @@ export default function ItemDetailsPage() {
   /* An item with a long life has hundreds of entries; every one used to
      render as a ~110px card, so 100 movements was ~11,000px of page (Sayed,
      5 Oct 2026). The newest 10 show; "Show more" adds 20 at a time. */
-  const [movementLimit, setMovementLimit] = useState(10);
-  const [historyLimit, setHistoryLimit] = useState(10);
+  const [activityLimit, setActivityLimit] = useState(10);
+  // "Now" for the 30-day sales pace, fixed when the page opens.
+  const [pageOpenedAt] = useState(() => Date.now());
+  const [activityFilter, setActivityFilter] = useState<
+    "all" | "movements" | "edits" | "created"
+  >("all");
   const [documentLimit, setDocumentLimit] = useState(10);
   // Which section's PDF is being built, so only its button shows "Preparing".
   const [pdfBusy, setPdfBusy] = useState<ItemActivityReportKind | null>(null);
@@ -784,7 +765,29 @@ export default function ItemDetailsPage() {
     let table: ItemActivityReportTable;
     let dates: string[];
 
-    if (kind === "movements") {
+    if (kind === "activity") {
+      // Exactly what the Activity card is showing: its filter, all rows.
+      table = {
+        head: ["Date", "Event", "Before", "After", "Change", ...(showBy ? ["By"] : []), "Note"],
+        rows: filteredActivity.map((event) => [
+          when(event.at),
+          event.title,
+          event.before === null ? "-" : String(event.before),
+          event.after === null ? "-" : String(event.after),
+          event.delta === null ? "" : formatQuantityDelta(event.delta),
+          ...(showBy ? [by(event.actorId)] : []),
+          event.note,
+        ]),
+        columns: {
+          0: { width: 34 },
+          1: { width: 30 },
+          2: { width: 15, align: "right" },
+          3: { width: 15, align: "right" },
+          4: { width: 16, align: "right", bold: true },
+        },
+      };
+      dates = filteredActivity.map((event) => event.at);
+    } else if (kind === "movements") {
       table = {
         head: ["Date", "Movement", "Before", "After", "Change", ...(showBy ? ["By"] : []), "Note"],
         rows: stockMovements.map((movement) => [
@@ -972,6 +975,135 @@ export default function ItemDetailsPage() {
     stockRetailValue !== null
       ? formatInventoryPrice(stockRetailValue, editCurrencyCode)
       : null;
+  /* ---- Item page v3 (5 Oct 2026, Sayed's reference) ---- */
+  type TimelineEvent = {
+    id: string;
+    group: "movements" | "edits" | "created";
+    tag: string;
+    title: string;
+    note: string;
+    at: string;
+    actorId: string | null | undefined;
+    before: number | null;
+    after: number | null;
+    delta: number | null;
+    icon: UiIconName;
+    tone: string;
+  };
+  // Movements and edits in one timeline, newest first.
+  const activity: TimelineEvent[] = [
+    ...stockMovements.map((movement): TimelineEvent => ({
+      id: `m-${movement.id}`,
+      group: "movements",
+      tag: "Movement",
+      title: STOCK_MOVEMENT_LABELS[movement.movement_type],
+      note: movement.notes ? formatStockMovementNotes(movement.notes) : "",
+      at: movement.created_at,
+      actorId: movement.actor_id,
+      before: movement.quantity_before,
+      after: movement.quantity_after,
+      delta: movement.quantity_delta,
+      icon: getActivityEventIcon(movement.movement_type) as UiIconName,
+      tone: getActivityToneClasses(movement.movement_type),
+    })),
+    ...history.map((entry): TimelineEvent => {
+      const eventType = HISTORY_ACTION_TO_EVENT_TYPE[entry.action] || "item_edited";
+      const created = entry.action === "created";
+      const before = typeof entry.old_quantity === "number" ? entry.old_quantity : null;
+      const after = typeof entry.new_quantity === "number" ? entry.new_quantity : null;
+      return {
+        id: `h-${entry.id}`,
+        group: created ? "created" : "edits",
+        tag: created ? "Created" : "Edit",
+        title: created ? "Item created" : `Item ${entry.action}`,
+        note: created
+          ? "Opening stock recorded"
+          : before !== null && after !== null && before !== after
+            ? "Quantity changed"
+            : "Details updated",
+        at: entry.created_at,
+        actorId: entry.actor_id,
+        before,
+        after,
+        delta: after !== null ? after - (before ?? 0) : null,
+        icon: getActivityEventIcon(eventType) as UiIconName,
+        tone: getActivityToneClasses(eventType),
+      };
+    }),
+  ].sort((a, b) => new Date(b.at).getTime() - new Date(a.at).getTime());
+  const activityCounts = {
+    all: activity.length,
+    movements: activity.filter((event) => event.group === "movements").length,
+    edits: activity.filter((event) => event.group === "edits").length,
+    created: activity.filter((event) => event.group === "created").length,
+  };
+  const filteredActivity =
+    activityFilter === "all"
+      ? activity
+      : activity.filter((event) => event.group === activityFilter);
+
+  // Sales pace, from the invoices already loaded for this item.
+  const thirtyDaysAgo = pageOpenedAt - 30 * 24 * 60 * 60 * 1000;
+  const soldLast30 = itemDocuments
+    .filter(
+      (document) =>
+        document.kind === "invoice" &&
+        !["draft", "cancelled"].includes(document.status) &&
+        document.date &&
+        new Date(document.date).getTime() >= thirtyDaysAgo
+    )
+    .reduce((sum, document) => sum + Number(document.quantity || 0), 0);
+  const daysOfStockLeft =
+    item && soldLast30 > 0 ? Math.floor(item.quantity / (soldLast30 / 30)) : null;
+
+  // The latest purchase order for this item, for the low-stock banner.
+  const lastOrder =
+    itemDocuments
+      .filter((document) => document.kind === "order")
+      .sort(
+        (a, b) =>
+          new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime()
+      )[0] || null;
+
+  const costNumber =
+    item?.cost_price !== null && item?.cost_price !== undefined && item.cost_price !== ""
+      ? Number(item.cost_price)
+      : null;
+  const sellNumber =
+    item?.selling_price !== null && item?.selling_price !== undefined && item.selling_price !== ""
+      ? Number(item.selling_price)
+      : null;
+  const marginNumber =
+    costNumber !== null && sellNumber !== null ? sellNumber - costNumber : null;
+  const marginPercent =
+    marginNumber !== null && sellNumber ? Math.round((marginNumber / sellNumber) * 1000) / 10 : null;
+  const potentialProfit =
+    stockCostValue !== null && stockRetailValue !== null
+      ? stockRetailValue - stockCostValue
+      : null;
+
+  const setupChecks = item
+    ? [
+        { label: "Photo", hint: "Recognise it at a glance", done: Boolean(item.image) },
+        { label: "Category", hint: "Groups items in reports and filters", done: Boolean(item.category_id) },
+        { label: "Depot", hint: "Where this stock physically sits", done: Boolean(item.depot_id) },
+        { label: "Supplier", hint: "Who to reorder from", done: Boolean(item.supplier_id) },
+        { label: "Cost price", hint: "Needed for stock value and margin", done: costNumber !== null },
+        { label: "Selling price", hint: "Prefills invoices", done: sellNumber !== null },
+        { label: "Minimum stock", hint: "When to warn you it is low", done: item.min_stock_level !== null && item.min_stock_level !== undefined },
+        { label: "SKU", hint: "Matches your own codes", done: Boolean(item.sku) },
+        { label: "Barcode", hint: "Scan it instead of searching", done: Boolean(item.barcode) },
+      ]
+    : [];
+  const setupDone = setupChecks.filter((check) => check.done).length;
+  const itemOut = item ? item.quantity <= 0 : false;
+  const shortBy = item ? Math.max(0, itemLowStockThreshold - item.quantity) : 0;
+  const restockHref = item
+    ? `/dashboard/purchase-orders/new?items=${item.id}&returnTo=${encodeURIComponent(
+        `/dashboard/inventory/${item.id}`
+      )}`
+    : "/dashboard/purchase-orders/new";
+
   const editDepotOptions = depots.filter(
     (depot) => depot.is_active || (item?.depot_id && depot.id === item.depot_id)
   );
@@ -985,75 +1117,70 @@ export default function ItemDetailsPage() {
           is weight doing every job and none of them well. */}
       <main className="item-detail">
         <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-5">
-          <section className="item-page-header rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-              <div>
-                <p className="item-detail-code">
-                  {item?.item_code || item?.sku || "Product"}
-                </p>
-
-                <div className="mt-1 flex flex-wrap items-center gap-3">
-                  <h1 className="break-normal text-3xl font-semibold tracking-tight text-theme-primary sm:text-4xl">
-                    {item?.name || "Item details"}
-                  </h1>
-                  {/* Three states, as on the Inventory list. The page only
-                      ever said "Low Stock" (and nothing at zero). */}
+          {/* Item page v3 (5 Oct 2026), from Sayed's reference
+              (docs/references/item-page-reference-2026-10-05.png). */}
+          <section className="item-v3-header">
+            <div className="item-v3-identity">
+              <span className="item-v3-thumb" aria-hidden="true">
+                {item?.image && failedImageSrc !== item.image ? (
+                  <Image
+                    src={item.image}
+                    alt=""
+                    fill
+                    sizes="56px"
+                    className="object-cover"
+                    onError={() => item && setFailedImageSrc(item.image)}
+                  />
+                ) : (
+                  <UiIcon name="box" className="h-6 w-6" />
+                )}
+              </span>
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="item-v3-name">{item?.name || "Item details"}</h1>
                   {item && (
                     <StatusBadge
-                      tone={
-                        item.quantity <= 0
-                          ? "danger"
-                          : itemIsLowStock
-                            ? "warning"
-                            : "success"
-                      }
+                      tone={itemOut ? "danger" : itemIsLowStock ? "warning" : "success"}
                     >
-                      {item.quantity <= 0
-                        ? "Out of stock"
-                        : itemIsLowStock
-                          ? "Low stock"
-                          : "In stock"}
+                      {itemOut ? "Out of stock" : itemIsLowStock ? "Low stock" : "In stock"}
                     </StatusBadge>
                   )}
                 </div>
-              </div>
-
-              {/* On a phone this was four full-width buttons stacked -- 200px
-                  of buttons before any content, Delete as loud as Edit. Now a
-                  two-column grid: Back as a short link on its own row, Record
-                  and Edit side by side, Delete last. From sm up it is the
-                  same right-aligned row as before. */}
-              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:justify-end">
-                <ContextBackButton
-                  fallbackHref="/dashboard/inventory"
-                  label={backLabel}
-                  className="col-span-2 justify-self-start min-h-10 rounded-xl px-3.5 py-2 text-sm"
-                />
-
                 {item && (
-                  <>
-                    <ActionButton onClick={openEditModal} variant="secondary" icon="edit">
-                      Edit item
-                    </ActionButton>
-
-                    <ActionButton onClick={openMovementModal} icon="movement">
-                      Record movement
-                    </ActionButton>
-
-                    {canDeleteRecords && (
-                      <ActionButton
-                        onClick={() => setIsDeleteDialogOpen(true)}
-                        disabled={isDeleting}
-                        variant="danger"
-                        icon="trash"
-                        className="col-span-2"
-                      >
-                        {isDeleting ? "Deleting..." : "Delete item"}
-                      </ActionButton>
+                  <p className="item-v3-meta">
+                    {(item.item_code || item.sku) && (
+                      <span className="item-v3-code">{item.item_code || item.sku}</span>
                     )}
-                  </>
+                    <span>Unit · {itemUnitLabel}</span>
+                    {item.created_at && (
+                      <span>
+                        Added{" "}
+                        {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
+                          new Date(item.created_at)
+                        )}
+                      </span>
+                    )}
+                  </p>
                 )}
               </div>
+            </div>
+
+            <div className="item-v3-actions">
+              <ContextBackButton
+                fallbackHref="/dashboard/inventory"
+                label={backLabel}
+                className="min-h-9 rounded-lg px-3 py-1.5 text-sm"
+              />
+              {item && (
+                <>
+                  <ActionButton onClick={openEditModal} variant="secondary" icon="edit">
+                    Edit item
+                  </ActionButton>
+                  <ActionButton onClick={openMovementModal} icon="movement">
+                    Record movement
+                  </ActionButton>
+                </>
+              )}
             </div>
           </section>
 
@@ -1095,65 +1222,532 @@ export default function ItemDetailsPage() {
 
           {!loading && item && (
             <>
-              {/* Redesign v2 (5 Oct 2026): a narrow side column for the photo
-                  and the QR label, a wide main column that leads with the four
-                  numbers that matter, then the chart, then every fact in one
-                  two-column list. Was: a 50/50 split with the photo alone on
-                  the left and five stacked groups on the right. */}
-              <div className="item-v2-grid">
-                <aside className="item-v2-side">
-                  <section className="item-v2-card item-page-photo">
-                    <div className="item-page-photo-frame item-v2-photo">
-                      {item.image && failedImageSrc !== item.image ? (
-                        <button
-                          type="button"
-                          onClick={() => setLightboxOpen(true)}
-                          className="group relative aspect-square w-full cursor-zoom-in"
-                          aria-label={`Enlarge image of ${item.name}`}
-                        >
-                          <Image
-                            src={item.image}
-                            alt={item.name}
-                            fill
-                            priority
-                            sizes="(min-width: 1280px) 22rem, 100vw"
-                            onError={() => setFailedImageSrc(item.image)}
-                            className="object-contain"
-                          />
-                          <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-slate-900/72 px-2 py-1 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
-                            Click to zoom
-                          </span>
-                        </button>
-                      ) : (
-                        <div className="item-photo-empty flex w-full flex-col items-center justify-center gap-1 py-10 text-center text-theme-subtle">
-                          <UiIcon name="box" className="h-6 w-6" />
-                          <span className="text-sm">No photo yet</span>
-                        </div>
+              {(itemOut || itemIsLowStock) && (
+                <section
+                  className={`item-v3-alert ${itemOut ? "item-v3-alert-danger" : ""}`}
+                  role="status"
+                >
+                  <span className="item-v3-alert-icon" aria-hidden="true">
+                    <UiIcon name="alert" className="h-5 w-5" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="item-v3-alert-title">
+                      {itemOut
+                        ? "Out of stock"
+                        : shortBy > 0
+                          ? `${shortBy} below minimum stock`
+                          : "At its minimum stock level"}
+                    </p>
+                    <p className="item-v3-alert-text">
+                      {itemQuantityLabel} on hand against a minimum of {itemLowStockThreshold}.
+                      {lastOrder
+                        ? lastOrder.status === "cancelled"
+                          ? ` The last purchase order (${lastOrder.number}) was cancelled.`
+                          : ["ordered", "partially_received"].includes(lastOrder.status)
+                            ? ` Purchase order ${lastOrder.number} is on its way.`
+                            : ` Last ordered on ${lastOrder.number}.`
+                        : " There is no purchase order for this item yet."}
+                    </p>
+                  </div>
+                  <div className="item-v3-alert-actions">
+                    <button
+                      type="button"
+                      onClick={openEditModal}
+                      className={buttonClassName({ variant: "secondary", size: "sm" })}
+                    >
+                      Adjust minimum
+                    </button>
+                    <Link href={restockHref} className={buttonClassName({ size: "sm" })}>
+                      Create purchase order
+                    </Link>
+                  </div>
+                </section>
+              )}
+
+              {/* The big photo Sayed asked for, beside the four numbers. */}
+              <div className="item-v3-hero">
+                <section className="item-v3-card item-v3-photo-card item-page-photo">
+                  {item.image && failedImageSrc !== item.image ? (
+                    <button
+                      type="button"
+                      onClick={() => setLightboxOpen(true)}
+                      className="item-v3-photo group"
+                      aria-label={`Enlarge image of ${item.name}`}
+                    >
+                      <Image
+                        src={item.image}
+                        alt={item.name}
+                        fill
+                        priority
+                        sizes="(min-width: 1280px) 34rem, 100vw"
+                        onError={() => setFailedImageSrc(item.image)}
+                        className="object-contain"
+                      />
+                      <span className="item-v3-photo-zoom">
+                        <UiIcon name="search" className="h-3.5 w-3.5" />
+                        Click to enlarge
+                      </span>
+                    </button>
+                  ) : (
+                    <div className="item-v3-photo item-v3-photo-empty">
+                      <UiIcon name="upload" className="h-8 w-8" />
+                      <span>No photo yet</span>
+                      <button
+                        type="button"
+                        onClick={openEditModal}
+                        className={buttonClassName({ variant: "secondary", size: "sm" })}
+                      >
+                        Upload photo
+                      </button>
+                    </div>
+                  )}
+                </section>
+
+                <div className="item-v3-figures">
+                  <div className="item-v3-figure">
+                    <span>On hand</span>
+                    <strong>
+                      {item.quantity}
+                      <small> {itemUnitLabel.toLowerCase()}</small>
+                    </strong>
+                    <span
+                      className={`item-v3-meter ${
+                        itemOut ? "is-out" : itemIsLowStock ? "is-low" : "is-ok"
+                      }`}
+                      aria-hidden="true"
+                    >
+                      <i
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            itemLowStockThreshold > 0
+                              ? (item.quantity / (itemLowStockThreshold * 2)) * 100
+                              : 100
+                          )}%`,
+                        }}
+                      />
+                    </span>
+                    <small>
+                      Minimum {itemLowStockThreshold}
+                      {daysOfStockLeft !== null
+                        ? ` · sold ${soldLast30} in 30 days · ~${daysOfStockLeft} days left`
+                        : ""}
+                    </small>
+                  </div>
+                  <div className="item-v3-figure">
+                    <span>Stock value at cost</span>
+                    <strong>{stockCostValueText || "—"}</strong>
+                    <small>
+                      {costPriceText
+                        ? `${item.quantity} × ${costPriceText} cost price`
+                        : "Add a cost price to see this"}
+                    </small>
+                  </div>
+                  <div className="item-v3-figure">
+                    <span>Stock value at retail</span>
+                    <strong>{stockRetailValueText || "—"}</strong>
+                    <small className={potentialProfit !== null && potentialProfit > 0 ? "is-positive" : ""}>
+                      {potentialProfit !== null
+                        ? `${formatInventoryPrice(potentialProfit, editCurrencyCode)} potential profit`
+                        : "Add both prices to see profit"}
+                    </small>
+                  </div>
+                  <div className="item-v3-figure">
+                    <span>Margin per {itemUnitLabel.toLowerCase()}</span>
+                    <strong>
+                      {marginNumber !== null
+                        ? formatInventoryPrice(marginNumber, editCurrencyCode)
+                        : "—"}
+                      {marginPercent !== null && (
+                        <small className={marginPercent >= 0 ? "is-positive" : "is-negative"}>
+                          {" "}
+                          {marginPercent}%
+                        </small>
                       )}
+                    </strong>
+                    <small>{sellingPriceText ? `Sells at ${sellingPriceText}` : "No selling price"}</small>
+                  </div>
+                </div>
+              </div>
+
+              <div className="item-v3-columns">
+                <div className="item-v3-main">
+                  <section className="item-v3-card">
+                    <div className="item-v3-card-head">
+                      <h2 className="item-v3-title">Item details</h2>
+                      <button type="button" onClick={openEditModal} className="item-v3-link">
+                        Edit
+                      </button>
+                    </div>
+                    <dl className="item-v3-facts">
+                      <div>
+                        <dt>Category</dt>
+                        <dd className={item.category_id ? "" : "is-empty"}>
+                          {resolveCategoryDisplay(item, assignedCategory)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Depot</dt>
+                        <dd className={item.depot_id ? "" : "is-empty"}>
+                          {formatDepotLabel(assignedDepot)}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Supplier</dt>
+                        <dd className={assignedSupplier ? "" : "is-empty"}>
+                          {assignedSupplier?.name || "No supplier"}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Supplier contact</dt>
+                        <dd className={assignedSupplier?.contact_name ? "" : "is-empty"}>
+                          {assignedSupplier?.contact_name || "Not set"}
+                          {(assignedSupplier?.phone || assignedSupplier?.email) && (
+                            <small>{assignedSupplier?.phone || assignedSupplier?.email}</small>
+                          )}
+                        </dd>
+                      </div>
+                      <div>
+                        <dt>Unit of measure</dt>
+                        <dd>{itemUnitLabel}</dd>
+                      </div>
+                      <div>
+                        <dt>Created</dt>
+                        <dd>{formatCreatedDate(item.created_at)}</dd>
+                      </div>
+                    </dl>
+
+                    <div className="item-v3-pricing">
+                      <div className="item-v3-card-head">
+                        <h3>Pricing</h3>
+                        <span className="text-xs text-theme-muted">
+                          per {itemUnitLabel.toLowerCase()}
+                        </span>
+                      </div>
+                      {costNumber !== null && sellNumber !== null && sellNumber > 0 ? (
+                        <span className="item-v3-price-bar" aria-hidden="true">
+                          <i
+                            className="is-cost"
+                            style={{ width: `${Math.min(100, Math.max(0, (costNumber / sellNumber) * 100))}%` }}
+                          />
+                          <i className="is-margin" />
+                        </span>
+                      ) : null}
+                      <div className="item-v3-price-legend">
+                        <div>
+                          <span><i className="is-cost" />Cost</span>
+                          <strong>{costPriceText || "Not set"}</strong>
+                        </div>
+                        <div>
+                          <span><i className="is-margin" />Margin</span>
+                          <strong>
+                            {marginNumber !== null
+                              ? formatInventoryPrice(marginNumber, editCurrencyCode)
+                              : "—"}
+                          </strong>
+                        </div>
+                        <div>
+                          <span>Selling price</span>
+                          <strong>{sellingPriceText || "Not set"}</strong>
+                        </div>
+                        {lastOrder && lastOrder.unitAmount !== null && (
+                          <div>
+                            <span>Last purchase</span>
+                            <strong>
+                              {formatExactPrice(
+                                lastOrder.unitAmount,
+                                lastOrder.currency || getCurrencyContext().base
+                              )}
+                            </strong>
+                            <small>{lastOrder.number}</small>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </section>
 
-                  <section className="item-v2-card item-v2-qr">
-                    <h2 className="item-v2-title">Item QR code</h2>
-                    <div ref={qrCodeRef} className="item-v2-qr-code">
+                  {/* Renders nothing until two movements exist. */}
+                  <StockLevelChart
+                    points={stockMovements.map((movement) => ({
+                      at: movement.created_at,
+                      quantity: movement.quantity_after,
+                    }))}
+                    threshold={itemLowStockThreshold}
+                    unitLabel={(quantity) =>
+                      getInventoryQuantityLabel(quantity, item.unit_type, item.custom_unit_label)
+                    }
+                  />
+
+                  <section className="item-v3-card" id="history">
+                    <div className="item-v3-card-head item-v3-card-head-wrap">
+                      <div>
+                        <h2 className="item-v3-title">Activity</h2>
+                        <p className="item-v3-sub">Stock movements and edits in one timeline</p>
+                      </div>
+                      <div className="item-v3-head-tools">
+                        <div className="item-v3-tabs" role="tablist" aria-label="Filter activity">
+                          {(
+                            [
+                              ["all", "All"],
+                              ["movements", "Movements"],
+                              ["edits", "Edits"],
+                              ["created", "Created"],
+                            ] as const
+                          ).map(([value, label]) => (
+                            <button
+                              key={value}
+                              type="button"
+                              role="tab"
+                              aria-selected={activityFilter === value}
+                              onClick={() => {
+                                setActivityFilter(value);
+                                setActivityLimit(10);
+                              }}
+                              className={activityFilter === value ? "is-active" : ""}
+                            >
+                              {label}
+                              <span>{activityCounts[value]}</span>
+                            </button>
+                          ))}
+                        </div>
+                        {pdfButton("activity", filteredActivity.length)}
+                      </div>
+                    </div>
+
+                    {filteredActivity.length === 0 ? (
+                      <p className="item-v3-empty">Nothing here yet.</p>
+                    ) : (
+                      <ul className="item-v3-timeline">
+                        {filteredActivity.slice(0, activityLimit).map((event) => (
+                          <li key={event.id}>
+                            <span className={`item-v3-event-icon ${event.tone}`} aria-hidden="true">
+                              <UiIcon name={event.icon} className="h-4 w-4" />
+                            </span>
+                            <div className="min-w-0">
+                              <p className="item-v3-event-title">
+                                <strong>{event.title}</strong>
+                                <span className="item-v3-tag">{event.tag}</span>
+                              </p>
+                              {event.note && (
+                                <p className="item-v3-event-note" title={event.note}>
+                                  {event.note}
+                                </p>
+                              )}
+                              <p className="item-v3-event-meta">
+                                {formatCreatedDate(event.at)}
+                                <DoneBy actorId={event.actorId} className="done-by done-by-inline" />
+                              </p>
+                            </div>
+                            <div className="item-v3-event-qty">
+                              <span>
+                                {event.before === null ? "—" : event.before} → {event.after === null ? "—" : event.after}
+                              </span>
+                              {event.delta !== null && (
+                                <strong
+                                  className={
+                                    event.delta < 0
+                                      ? "text-theme-danger"
+                                      : event.delta > 0
+                                        ? "text-theme-success"
+                                        : "text-theme-muted"
+                                  }
+                                >
+                                  {formatQuantityDelta(event.delta)}
+                                </strong>
+                              )}
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                    {filteredActivity.length > activityLimit && (
+                      <button
+                        type="button"
+                        onClick={() => setActivityLimit((limit) => limit + 20)}
+                        className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
+                      >
+                        Show more
+                        <span className="text-theme-muted">
+                          {" "}· {filteredActivity.length - activityLimit} older
+                        </span>
+                      </button>
+                    )}
+                  </section>
+
+                  <section className="item-v3-card">
+                    <div className="item-v3-card-head">
+                      <div>
+                        <h2 className="item-v3-title">Purchase &amp; sales documents</h2>
+                        <p className="item-v3-sub">Orders and invoices that include this item</p>
+                      </div>
+                      <div className="item-v3-head-tools">
+                        <span className="item-activity-count">
+                          {itemDocuments.length}{" "}
+                          {itemDocuments.length === 1 ? "document" : "documents"}
+                        </span>
+                        {pdfButton("documents", itemDocuments.length)}
+                      </div>
+                    </div>
+                    {itemDocuments.length === 0 ? (
+                      <p className="item-v3-empty">Not on any invoice or purchase order yet.</p>
+                    ) : (
+                      <div className="item-v3-table-wrap">
+                        <table className="item-v3-table">
+                          <thead>
+                            <tr>
+                              <th>Document</th>
+                              <th>Date</th>
+                              <th className="text-right">Qty</th>
+                              <th className="text-right">Unit price</th>
+                              <th className="text-right">Status</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {itemDocuments.slice(0, documentLimit).map((document) => (
+                              <tr key={`${document.kind}-${document.id}`}>
+                                <td>
+                                  <Link href={document.href} className="item-v3-doc-link">
+                                    <span className="po-line-type-chip" aria-hidden="true">
+                                      <UiIcon
+                                        name={document.kind === "invoice" ? "receipt" : "cart"}
+                                        className="h-4 w-4"
+                                      />
+                                    </span>
+                                    <span className="min-w-0">
+                                      <span className="item-v3-code">{document.number}</span>
+                                      {document.party && <small>{document.party}</small>}
+                                    </span>
+                                  </Link>
+                                </td>
+                                <td>{document.date ? formatDocumentDay(document.date) : "—"}</td>
+                                <td className="text-right tabular-nums">
+                                  {document.quantity}
+                                  {document.kind === "order" && document.received !== null && document.received > 0
+                                    ? ` (${document.received} in)`
+                                    : ""}
+                                </td>
+                                <td className="text-right tabular-nums">
+                                  {document.unitAmount !== null
+                                    ? formatExactPrice(
+                                        document.unitAmount,
+                                        document.currency || getCurrencyContext().base
+                                      )
+                                    : "—"}
+                                </td>
+                                <td className="text-right">
+                                  <StatusBadge tone={documentTone(document.status)}>
+                                    {document.status.replace(/_/g, " ")}
+                                  </StatusBadge>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                    )}
+                    {itemDocuments.length > documentLimit && (
+                      <button
+                        type="button"
+                        onClick={() => setDocumentLimit((limit) => limit + 20)}
+                        className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
+                      >
+                        Show more
+                        <span className="text-theme-muted">
+                          {" "}· {itemDocuments.length - documentLimit} older
+                        </span>
+                      </button>
+                    )}
+                  </section>
+
+                  <section className="item-v3-card">
+                    <div className="item-v3-card-head">
+                      <h2 className="item-v3-title">Notes</h2>
+                      <button type="button" onClick={openEditModal} className="item-v3-link">
+                        {item.notes ? "Edit" : "Add a note"}
+                      </button>
+                    </div>
+                    <p className={`item-v3-notes ${item.notes ? "" : "is-empty"}`}>
+                      {item.notes || "Handling instructions, storage tips or anything your team should know."}
+                    </p>
+                  </section>
+                </div>
+
+                <aside className="item-v3-side">
+                  <section className="item-v3-card">
+                    <div className="item-v3-card-head">
+                      <h2 className="item-v3-title">Item setup</h2>
+                      <span className="item-v3-setup-count">
+                        {setupDone} of {setupChecks.length}
+                      </span>
+                    </div>
+                    <span className="item-v3-setup-bar" aria-hidden="true">
+                      <i style={{ width: `${(setupDone / Math.max(1, setupChecks.length)) * 100}%` }} />
+                    </span>
+                    {setupDone < setupChecks.length ? (
+                      <>
+                        <p className="item-v3-sub mt-2">
+                          Complete these so reorders, reports and labels work properly.
+                        </p>
+                        <ul className="item-v3-setup">
+                          {setupChecks
+                            .filter((check) => !check.done)
+                            .map((check) => (
+                              <li key={check.label}>
+                                <span className="item-v3-setup-dot" aria-hidden="true" />
+                                <span className="min-w-0 flex-1">
+                                  <strong>{check.label}</strong>
+                                  <small>{check.hint}</small>
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={openEditModal}
+                                  className={buttonClassName({ variant: "secondary", size: "sm" })}
+                                  aria-label={`Add ${check.label.toLowerCase()}`}
+                                >
+                                  Add
+                                </button>
+                              </li>
+                            ))}
+                        </ul>
+                      </>
+                    ) : (
+                      <p className="item-v3-sub mt-2">Everything is filled in.</p>
+                    )}
+                  </section>
+
+                  <section className="item-v3-card">
+                    <h2 className="item-v3-title">Identifiers</h2>
+                    <dl className="item-v3-ids">
+                      <div>
+                        <dt>Item code</dt>
+                        <dd className="item-v3-code">{item.item_code?.trim() || "Not generated yet"}</dd>
+                      </div>
+                      <div>
+                        <dt>SKU</dt>
+                        <dd className={item.sku ? "item-v3-code" : "is-empty"}>{item.sku || "Not set"}</dd>
+                      </div>
+                      <div>
+                        <dt>Barcode</dt>
+                        <dd className={item.barcode ? "item-v3-code" : "is-empty"}>
+                          {item.barcode || "Not set"}
+                        </dd>
+                      </div>
+                    </dl>
+                  </section>
+
+                  <section className="item-v3-card item-v3-qr">
+                    <h2 className="item-v3-title">Public QR code</h2>
+                    <p className="item-v3-sub">Scan to open this item&rsquo;s public page</p>
+                    <div ref={qrCodeRef} className="item-v3-qr-code">
                       {qrUrl ? (
-                        <QRCode
-                          value={qrUrl}
-                          size={140}
-                          bgColor="#ffffff"
-                          fgColor="#02030a"
-                          level="M"
-                        />
+                        <QRCode value={qrUrl} size={148} bgColor="#ffffff" fgColor="#02030a" level="M" />
                       ) : (
-                        <div className="flex h-[140px] w-[140px] items-center justify-center text-center text-sm text-theme-subtle">
+                        <div className="flex h-[148px] w-[148px] items-center justify-center text-center text-sm text-theme-subtle">
                           Public link unavailable
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-theme-muted">
-                      Scan to open this item&rsquo;s public page.
-                    </p>
-                    {qrUrl && <p className="item-v2-qr-url">{qrUrl}</p>}
+                    {qrUrl && <p className="item-v3-qr-url">{qrUrl}</p>}
                     <div className="grid grid-cols-2 gap-2">
                       <button
                         type="button"
@@ -1173,395 +1767,25 @@ export default function ItemDetailsPage() {
                       </button>
                     </div>
                   </section>
+
+                  {canDeleteRecords && (
+                    <section className="item-v3-card item-v3-danger">
+                      <div className="min-w-0">
+                        <h2>Delete item</h2>
+                        <p>Removes it from stock and reports</p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsDeleteDialogOpen(true)}
+                        disabled={isDeleting}
+                        className={buttonClassName({ variant: "danger", size: "sm" })}
+                      >
+                        {isDeleting ? "Deleting..." : "Delete"}
+                      </button>
+                    </section>
+                  )}
                 </aside>
-
-                <div className="item-v2-main">
-                  <div className="item-v2-figures" role="group" aria-label="Stock summary">
-                    <div>
-                      <span>In stock</span>
-                      <strong>{itemQuantityLabel}</strong>
-                      <small>Unit: {itemUnitLabel}</small>
-                    </div>
-                    <div>
-                      <span>Low-stock level</span>
-                      <strong>{itemLowStockThreshold}</strong>
-                      <small>
-                        {item.min_stock_level !== null && item.min_stock_level !== undefined
-                          ? "Set for this item"
-                          : "Business default"}
-                      </small>
-                    </div>
-                    <div>
-                      <span>Stock cost value</span>
-                      <strong>{stockCostValueText || "—"}</strong>
-                      <small>{costPriceText ? `Cost ${costPriceText} each` : "No cost price"}</small>
-                    </div>
-                    <div>
-                      <span>Stock retail value</span>
-                      <strong>{stockRetailValueText || "—"}</strong>
-                      <small>
-                        {sellingPriceText ? `Sells at ${sellingPriceText}` : "No selling price"}
-                      </small>
-                    </div>
-                  </div>
-
-                  {/* Renders nothing until two movements exist. */}
-                  <StockLevelChart
-                    points={stockMovements.map((movement) => ({
-                      at: movement.created_at,
-                      quantity: movement.quantity_after,
-                    }))}
-                    threshold={itemLowStockThreshold}
-                    unitLabel={(quantity) =>
-                      getInventoryQuantityLabel(quantity, item.unit_type, item.custom_unit_label)
-                    }
-                  />
-
-                  <section className="item-v2-card">
-                    <h2 className="item-v2-title">Details</h2>
-                    <dl className="item-v2-details">
-                      <DetailCard
-                        label="Category"
-                        value={resolveCategoryDisplay(item, assignedCategory)}
-                      />
-                      <DetailCard label="Depot" value={formatDepotLabel(assignedDepot)} />
-                      <DetailCard label="Unit" value={itemUnitLabel} />
-                      <DetailCard label="Created" value={formatCreatedDate(item.created_at)} />
-                      <DetailCard
-                        label="Supplier"
-                        value={assignedSupplier?.name || "No supplier"}
-                      />
-                      <DetailCard
-                        label="Supplier contact"
-                        value={assignedSupplier?.contact_name || "Not set"}
-                        detail={
-                          assignedSupplier?.phone ||
-                          assignedSupplier?.whatsapp ||
-                          assignedSupplier?.email ||
-                          undefined
-                        }
-                      />
-                      <DetailCard label="Cost price" value={costPriceText || "Not set"} />
-                      <DetailCard label="Selling price" value={sellingPriceText || "Not set"} />
-                      <DetailCard
-                        label="Item code"
-                        value={item.item_code?.trim() || "Not generated yet"}
-                        monospace={Boolean(item.item_code)}
-                      />
-                      <DetailCard
-                        label="SKU"
-                        value={item.sku || "Not set"}
-                        monospace={Boolean(item.sku)}
-                      />
-                      <DetailCard
-                        label="Barcode"
-                        value={item.barcode || "Not set"}
-                        monospace={Boolean(item.barcode)}
-                      />
-                    </dl>
-                    <div className="item-v2-notes">
-                      <p className="item-v2-notes-label">Notes</p>
-                      <p className="whitespace-pre-wrap break-normal">
-                        {item.notes || "No notes added yet."}
-                      </p>
-                    </div>
-                  </section>
-                </div>
               </div>
-
-              <section className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="item-detail-eyebrow">
-                      Bought and sold
-                    </p>
-                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-theme-primary">
-                      Sales &amp; purchases
-                    </h2>
-                  </div>
-                  <div className="item-v2-section-actions">
-                    <span className="item-activity-count">
-                      {itemDocuments.length}{" "}
-                      {itemDocuments.length === 1 ? "document" : "documents"}
-                    </span>
-                    {pdfButton("documents", itemDocuments.length)}
-                  </div>
-                </div>
-
-                {itemDocuments.length === 0 ? (
-                  <p className="mt-4 rounded-xl border border-dashed border-theme px-4 py-5 text-center text-sm text-theme-muted">
-                    Not on any invoice or purchase order yet.
-                  </p>
-                ) : (
-                  <ul className="mt-4 divide-y divide-[var(--border-divider)]">
-                    {itemDocuments.slice(0, documentLimit).map((document) => (
-                      <li key={`${document.kind}-${document.id}`}>
-                        <Link
-                          href={document.href}
-                          className="flex flex-wrap items-center justify-between gap-2 py-2.5 transition hover:bg-theme-hover"
-                        >
-                          <span className="flex min-w-0 items-center gap-2.5">
-                            <span className="po-line-type-chip" aria-hidden="true">
-                              <UiIcon
-                                name={document.kind === "invoice" ? "receipt" : "cart"}
-                                className="h-4 w-4"
-                              />
-                            </span>
-                            <span className="min-w-0">
-                              <span className="block truncate text-sm font-semibold text-theme-primary">
-                                {document.number}
-                                {document.party ? ` · ${document.party}` : ""}
-                              </span>
-                              <span className="block truncate text-xs text-theme-muted">
-                                {document.date
-                                  ? new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(
-                                      new Date(
-                                        document.date.includes("T")
-                                          ? document.date
-                                          : `${document.date}T00:00:00`
-                                      )
-                                    )
-                                  : ""}
-                                {" · "}
-                                {document.kind === "invoice"
-                                  ? `sold ${document.quantity}`
-                                  : `ordered ${document.quantity}${
-                                      document.received !== null && document.received > 0
-                                        ? `, received ${document.received}`
-                                        : ""
-                                    }`}
-                                {document.unitAmount !== null
-                                  ? ` at ${formatExactPrice(
-                                      document.unitAmount,
-                                      document.currency || getCurrencyContext().base
-                                    )}`
-                                  : ""}
-                              </span>
-                            </span>
-                          </span>
-                          <span className="text-xs font-semibold capitalize text-theme-secondary">
-                            {document.status.replace(/_/g, " ")}
-                          </span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-                {itemDocuments.length > documentLimit && (
-                  <button
-                    type="button"
-                    onClick={() => setDocumentLimit((limit) => limit + 20)}
-                    className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
-                  >
-                    Show more
-                    <span className="text-theme-muted">
-                      {" "}· {itemDocuments.length - documentLimit} older
-                    </span>
-                  </button>
-                )}
-              </section>
-
-              <section
-                id="history"
-                className="scroll-mt-24 rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5"
-              >
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="item-detail-eyebrow">
-                      Stock activity
-                    </p>
-
-                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-theme-primary">
-                      Stock movements
-                    </h2>
-                  </div>
-
-                  <div className="item-v2-section-actions">
-                    <span className="item-activity-count">
-                      {stockMovements.length}{" "}
-                      {stockMovements.length === 1 ? "movement" : "movements"}
-                    </span>
-                    {pdfButton("movements", stockMovements.length)}
-                  </div>
-                </div>
-
-                {stockMovements.length > 0 ? (
-                  <>
-                  <ul className="item-activity-list">
-                    {stockMovements.slice(0, movementLimit).map((movement) => (
-                      <li key={movement.id} className="item-activity-row">
-                        <span
-                          className={`item-activity-icon ${getActivityToneClasses(
-                            movement.movement_type
-                          )}`}
-                          aria-hidden="true"
-                        >
-                          <UiIcon
-                            name={
-                              getActivityEventIcon(
-                                movement.movement_type
-                              ) as UiIconName
-                            }
-                            className="h-3.5 w-3.5"
-                          />
-                        </span>
-                        <span className="item-activity-text">
-                          <strong>
-                            {STOCK_MOVEMENT_LABELS[movement.movement_type]}
-                          </strong>
-                          <small>
-                            {formatCreatedDate(movement.created_at)}
-                            <DoneBy actorId={movement.actor_id} className="done-by done-by-inline" />
-                          </small>
-                          {movement.notes && (
-                            <span
-                              className="item-activity-note"
-                              title={formatStockMovementNotes(movement.notes)}
-                            >
-                              {formatStockMovementNotes(movement.notes)}
-                            </span>
-                          )}
-                        </span>
-                        <span className="item-detail-movement">
-                          <span>{movement.quantity_before}</span>
-                          <span aria-hidden="true">&rarr;</span>
-                          <span>{movement.quantity_after}</span>
-                          <strong
-                            className={
-                              movement.quantity_delta < 0
-                                ? "text-theme-danger"
-                                : "text-theme-success"
-                            }
-                          >
-                            {formatQuantityDelta(movement.quantity_delta)}
-                          </strong>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                  {stockMovements.length > movementLimit && (
-                    <button
-                      type="button"
-                      onClick={() => setMovementLimit((limit) => limit + 20)}
-                      className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
-                    >
-                      Show more
-                      <span className="text-theme-muted">
-                        {" "}· {stockMovements.length - movementLimit} older
-                      </span>
-                    </button>
-                  )}
-                  </>
-                ) : (
-                  <div className="mt-5 rounded-[18px] border border-dashed border-emerald-300/25 bg-theme-inset px-5 py-8 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-theme-success">
-                      <UiIcon name="movement" className="h-5 w-5" />
-                    </div>
-
-                    <h3 className="mt-4 text-xl font-bold text-theme-primary">
-                      No stock movements yet
-                    </h3>
-
-                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-theme-muted">
-                      Stock in, stock out, adjustments, and damaged or lost
-                      activity will appear here.
-                    </p>
-                  </div>
-                )}
-              </section>
-
-              <section className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                  <div>
-                    <p className="item-detail-eyebrow">
-                      Audit trail
-                    </p>
-
-                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-theme-primary">
-                      Item history
-                    </h2>
-                  </div>
-
-                  <div className="item-v2-section-actions">
-                    <span className="item-activity-count">
-                      {history.length} {history.length === 1 ? "entry" : "entries"}
-                    </span>
-                    {pdfButton("history", history.length)}
-                  </div>
-                </div>
-
-                {history.length > 0 ? (
-                  <>
-                  <ul className="item-activity-list">
-                    {history.slice(0, historyLimit).map((entry) => {
-                      const historyEventType =
-                        HISTORY_ACTION_TO_EVENT_TYPE[entry.action] ||
-                        "item_edited";
-
-                      return (
-                        <li key={entry.id} className="item-activity-row">
-                          <span
-                            className={`item-activity-icon ${getActivityToneClasses(
-                              historyEventType
-                            )}`}
-                            aria-hidden="true"
-                          >
-                            <UiIcon
-                              name={
-                                getActivityEventIcon(
-                                  historyEventType
-                                ) as UiIconName
-                              }
-                              className="h-3.5 w-3.5"
-                            />
-                          </span>
-                          <span className="item-activity-text">
-                            <strong>{formatAction(entry.action)}</strong>
-                            <small>
-                              {formatCreatedDate(entry.created_at)}
-                              <DoneBy actorId={entry.actor_id} className="done-by done-by-inline" />
-                            </small>
-                          </span>
-                          <span className="item-detail-movement">
-                            <span>{formatQuantity(entry.old_quantity)}</span>
-                            <span aria-hidden="true">&rarr;</span>
-                            <strong className="text-theme-primary">
-                              {formatQuantity(entry.new_quantity)}
-                            </strong>
-                          </span>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                  {history.length > historyLimit && (
-                    <button
-                      type="button"
-                      onClick={() => setHistoryLimit((limit) => limit + 20)}
-                      className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
-                    >
-                      Show more
-                      <span className="text-theme-muted">
-                        {" "}· {history.length - historyLimit} older
-                      </span>
-                    </button>
-                  )}
-                  </>
-                ) : (
-                  <div className="mt-5 rounded-[18px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-8 text-center">
-                    <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">
-                      <UiIcon name="clock" className="h-5 w-5" />
-                    </div>
-
-                    <h3 className="mt-4 text-xl font-bold text-theme-primary">
-                      No history yet
-                    </h3>
-
-                    <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-theme-muted">
-                      Create, edit, and delete activity for this item will appear here as the record changes.
-                    </p>
-                  </div>
-                )}
-              </section>
             </>
           )}
         </div>
