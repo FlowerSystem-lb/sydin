@@ -6694,3 +6694,20 @@ filtered empty state now offers "Create Pick List" when there's no search and th
 reached.
 
 **Verified** on Pick Lists at 1280: the dashed border, icon chip and button. Lint, tsc and build pass.
+
+## 2026-10-05 — Consistency pass, part 1: weight, capitals, cyan
+
+- **Weight:** `--font-weight-black: 700` in the theme. Older pages used `font-black` (900) about
+  300 times as their default emphasis; they keep their hierarchy without shouting.
+- **Class sweep** (dashboard code only; marketing and admin untouched): 99 `uppercase
+  tracking-[…]` label strings became sentence case and 19 `-cyan-` classes became `-blue-`, in
+  22 files.
+- **CSS:** 30 label selectors that forced capitals get `text-transform: none` on desktop and
+  tablet. Kept as capitals: the sidebar group labels, document-preview labels, item codes and
+  all phone styles.
+
+**Verified** live: `font-black` computes 700, and Overview and Stock Counts have zero uppercase
+leaf text. Lint, tsc and build pass.
+
+**Left for part 2:** Title Case button labels ("Start Count", "Create Pick List") and the Purchase
+Orders/Sales stat cards.

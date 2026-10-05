@@ -766,7 +766,7 @@ export default function StockCountsPage() {
                         : ""
                     }`}
                   >
-                    <span className="block text-xs uppercase tracking-[0.12em]">
+                    <span className="block text-xs">
                       Step {index + 1}
                     </span>
                     <span className="capitalize">{itemStep}</span>
@@ -929,7 +929,7 @@ export default function StockCountsPage() {
               </p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     Items
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -937,7 +937,7 @@ export default function StockCountsPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     Low stock
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1176,7 +1176,7 @@ export default function StockCountsPage() {
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                         <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                          <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                          <p className="font-bold text-theme-subtle">
                             Unit
                           </p>
                           <p className="mt-1 font-black text-theme-primary">
@@ -1188,7 +1188,7 @@ export default function StockCountsPage() {
                         </div>
                         {showExpected && (
                           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="font-bold text-theme-subtle">
                               Expected
                             </p>
                             <p className="mt-1 font-black text-theme-primary">
@@ -1302,7 +1302,7 @@ export default function StockCountsPage() {
                   key={label}
                   className="rounded-xl border border-theme bg-theme-inset px-3 py-2"
                 >
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     {label}
                   </p>
                   <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1330,7 +1330,7 @@ export default function StockCountsPage() {
                 <>
                 <div className="hidden overflow-x-auto md:block">
                   <table className="min-w-[760px] w-full table-fixed text-left text-sm">
-                    <thead className="border-b border-theme bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="border-b border-theme bg-theme-inset text-xs font-black text-theme-subtle">
                       <tr>
                         <th className="px-4 py-3">Item</th>
                         <th className="px-4 py-3 text-right">Expected</th>
@@ -1411,7 +1411,7 @@ export default function StockCountsPage() {
                         </div>
                         <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="font-bold text-theme-subtle">
                               Current
                             </p>
                             <p className="mt-1 font-black text-theme-primary">
@@ -1419,7 +1419,7 @@ export default function StockCountsPage() {
                             </p>
                           </div>
                           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="font-bold text-theme-subtle">
                               Counted
                             </p>
                             <p className="mt-1 font-black text-theme-primary">
@@ -1427,7 +1427,7 @@ export default function StockCountsPage() {
                             </p>
                           </div>
                           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="font-bold text-theme-subtle">
                               Change
                             </p>
                             <p className="mt-1 font-black text-theme-primary">
@@ -1502,7 +1502,7 @@ export default function StockCountsPage() {
         ) : (
           <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
+              <p className="text-xs font-bold text-theme-accent">
                 Finalized
               </p>
               <h2 className="mt-1 text-2xl font-black text-theme-primary">
@@ -1516,7 +1516,7 @@ export default function StockCountsPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold text-theme-subtle">
                   Adjusted
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1524,7 +1524,7 @@ export default function StockCountsPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold text-theme-subtle">
                   Skipped matched
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1532,7 +1532,7 @@ export default function StockCountsPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold text-theme-subtle">
                   Failed
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">

@@ -986,10 +986,10 @@ export default function ReceivingPage() {
                 <div
                   key={item.id}
                   className={`min-w-20 border-r border-theme px-3 py-2 last:border-r-0 ${
-                    step === item.id ? "bg-cyan-500/10 text-theme-accent" : ""
+                    step === item.id ? "bg-blue-500/10 text-theme-accent" : ""
                   }`}
                 >
-                  <span className="block text-xs uppercase tracking-[0.12em]">
+                  <span className="block text-xs">
                     Step {index + 1}
                   </span>
                   <span>{item.label}</span>
@@ -1014,7 +1014,7 @@ export default function ReceivingPage() {
         ) : loadError ? null : step === "setup" ? (
           <section className="dashboard-card grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
             <div className="grid gap-4">
-              <div className="rounded-2xl border border-cyan-300/20 bg-cyan-500/10 px-4 py-3 text-sm text-theme-accent">
+              <div className="rounded-2xl border border-blue-300/20 bg-blue-500/10 px-4 py-3 text-sm text-theme-accent">
                 Draft saved on this device. Finalizing records stock-in
                 movements and updates inventory.
               </div>
@@ -1177,7 +1177,7 @@ export default function ReceivingPage() {
               </p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     Inventory
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1185,7 +1185,7 @@ export default function ReceivingPage() {
                   </p>
                 </div>
                 <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     Selected
                   </p>
                   <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1195,7 +1195,7 @@ export default function ReceivingPage() {
               </div>
               {expectedOrders.length > 0 && (
                 <div className="grid gap-1.5">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     Deliveries expected
                   </p>
                   {expectedOrders.slice(0, 5).map((order) => {
@@ -1513,7 +1513,7 @@ export default function ReceivingPage() {
                       </div>
                       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
                         <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                          <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                          <p className="font-bold text-theme-subtle">
                             Current
                           </p>
                           <p className="mt-1 font-black text-theme-primary">
@@ -1525,7 +1525,7 @@ export default function ReceivingPage() {
                           </p>
                         </div>
                         <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                          <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                          <p className="font-bold text-theme-subtle">
                             Ordered
                           </p>
                           <p className="mt-1 font-black text-theme-primary">
@@ -1632,10 +1632,10 @@ export default function ReceivingPage() {
               )}
             </section>
 
-            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
+            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-blue-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold text-theme-secondary sm:flex sm:text-left">
-                  <span className="rounded-xl bg-cyan-500/10 px-3 py-2 text-theme-accent">
+                  <span className="rounded-xl bg-blue-500/10 px-3 py-2 text-theme-accent">
                     {receivedLineDetails.length}/{receivedDetails.length} received
                   </span>
                   <span className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
@@ -1685,7 +1685,7 @@ export default function ReceivingPage() {
                   key={label}
                   className="rounded-xl border border-theme bg-theme-inset px-3 py-2"
                 >
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     {label}
                   </p>
                   <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1705,7 +1705,7 @@ export default function ReceivingPage() {
                   </p>
                 )}
                 {missingQuantityCount > 0 && (
-                  <p className="rounded-xl border border-cyan-300/25 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-theme-accent">
+                  <p className="rounded-xl border border-blue-300/25 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-theme-accent">
                     {missingQuantityCount} line
                     {missingQuantityCount === 1 ? "" : "s"} have no received
                     quantity and will create no stock movement.
@@ -1732,7 +1732,7 @@ export default function ReceivingPage() {
                 <>
                 <div className="hidden overflow-x-auto md:block">
                   <table className="min-w-[840px] w-full table-fixed text-left text-sm">
-                    <thead className="border-b border-theme bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="border-b border-theme bg-theme-inset text-xs font-black text-theme-subtle">
                       <tr>
                         <th className="px-4 py-3">Item</th>
                         <th className="px-4 py-3 text-right">Current</th>
@@ -1814,7 +1814,7 @@ export default function ReceivingPage() {
                         </div>
                         <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="font-bold text-theme-subtle">
                               Current
                             </p>
                             <p className="mt-1 font-black text-theme-primary">
@@ -1822,7 +1822,7 @@ export default function ReceivingPage() {
                             </p>
                           </div>
                           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="font-bold text-theme-subtle">
                               Result
                             </p>
                             <p className="mt-1 font-black text-theme-primary">
@@ -1830,7 +1830,7 @@ export default function ReceivingPage() {
                             </p>
                           </div>
                           <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="font-bold text-theme-subtle">
                               Unit
                             </p>
                             <p className="mt-1 truncate font-black text-theme-primary">
@@ -1866,7 +1866,7 @@ export default function ReceivingPage() {
               )}
             </section>
 
-            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-cyan-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
+            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-blue-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
               <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
                 <label className="flex items-start gap-2 text-xs font-bold text-theme-primary">
                   <input
@@ -1874,7 +1874,7 @@ export default function ReceivingPage() {
                     checked={confirmFinalize}
                     onChange={(event) => setConfirmFinalize(event.target.checked)}
                     disabled={finalizing}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
+                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-sydin-blue/40"
                   />
                   Finalizing will record stock-in movements for received
                   quantities. Zero rows will be skipped.
@@ -1909,7 +1909,7 @@ export default function ReceivingPage() {
         ) : (
           <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
             <div>
-              <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
+              <p className="text-xs font-bold text-theme-accent">
                 Finalized
               </p>
               <h2 className="mt-1 text-2xl font-black text-theme-primary">
@@ -1922,7 +1922,7 @@ export default function ReceivingPage() {
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold text-theme-subtle">
                   Stock-in movements
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1930,7 +1930,7 @@ export default function ReceivingPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold text-theme-subtle">
                   Skipped rows
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">
@@ -1938,7 +1938,7 @@ export default function ReceivingPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                <p className="text-xs font-bold text-theme-subtle">
                   Failed
                 </p>
                 <p className="mt-1 text-2xl font-black text-theme-primary">

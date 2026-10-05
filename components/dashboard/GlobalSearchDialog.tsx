@@ -360,7 +360,7 @@ export default function GlobalSearchDialog({
               {recentQueries.length > 0 && (
                 <section className="px-1 py-2">
                   <div className="flex items-center justify-between px-2 pb-1">
-                    <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
+                    <p className="text-xs font-semibold text-theme-subtle">
                       Recent searches
                     </p>
                     <button
@@ -369,7 +369,7 @@ export default function GlobalSearchDialog({
                         clearRecentQueries();
                         setRecentQueries([]);
                       }}
-                      className="text-xs font-bold uppercase tracking-[0.08em] text-theme-subtle hover:text-theme-primary"
+                      className="text-xs font-bold text-theme-subtle hover:text-theme-primary"
                     >
                       Clear
                     </button>
@@ -393,7 +393,7 @@ export default function GlobalSearchDialog({
           )}
           {filteredGroupedResults.map(([group, groupItems]) => (
             <section key={group} className="py-2" aria-label={group}>
-              <p className="px-3 pb-1 text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
+              <p className="px-3 pb-1 text-xs font-semibold text-theme-subtle">
                 {group}
               </p>
               <div className="grid gap-1">

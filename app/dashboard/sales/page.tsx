@@ -386,7 +386,7 @@ function MoneyFigure({
 }) {
   return (
     <div className="dashboard-card p-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.1em] text-theme-muted">
+      <p className="text-xs font-semibold text-theme-muted">
         {label}
       </p>
       <p className="mt-1.5 text-2xl font-semibold text-theme-primary tabular-nums">

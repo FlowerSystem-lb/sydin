@@ -336,6 +336,11 @@
   --text-3xl: 2.12rem;   /* 28.8px  (was 30px) */
   --text-4xl: 2.54rem;   /* 34.6px  (was 36px) */
   --text-5xl: 3.39rem;   /* 46.1px  (was 48px) */
+  /* Redesign v2 (5 Oct 2026): the system tops out at 700. `font-black`
+     (900) was used ~300 times by older pages as the default emphasis and is
+     what made them look heavy next to the new ones; mapping the token keeps
+     their hierarchy and drops the shouting, in one place. */
+  --font-weight-black: 700;
 }
 
 @theme inline {
@@ -30152,4 +30157,51 @@ body:has(.login-page)::-webkit-scrollbar,
 
 .dashboard-empty-state.dashboard-empty-state .dashboard-empty-action {
   margin-top: 0.9rem;
+}
+
+/* ==========================================================================
+   SENTENCE-CASE LABELS (5 Oct 2026, redesign v2 consistency pass)
+   ==========================================================================
+   The v2 system labels things in sentence case (UI rules, decision log 5
+   Oct). 80 selectors in this file still forced tracked capitals; these are
+   the label ones, retired here in one list rather than edited in 30 places.
+   Kept as capitals on purpose: the sidebar group labels (navigation
+   convention, styled in SIDEBAR v2), document-preview labels (they mimic
+   the printed PDF), item codes, and everything on the phone (mobile phase).
+   `!important` because several originals are page-scoped at higher weight
+   and the intent here is a system rule, not a local style. */
+@media (min-width: 768px) {
+  .dashboard-eyebrow,
+  .dashboard-table thead,
+  .ui-eyebrow,
+  .ui-eyebrow-danger,
+  .item-details-eyebrow,
+  .item-details-quantity-strip p,
+  .item-details-field dt,
+  .item-details-notes p,
+  .item-details-group-title,
+  .item-panel-eyebrow,
+  .dashboard-sidebar-workspace-copy span,
+  .inventory-hero-kicker,
+  .inventory-hero-status small,
+  .inventory-stat-copy span,
+  .inventory-card-meta small,
+  .inventory-workspace .dashboard-metric-card small,
+  .dashboard-shell .inventory-workspace .inventory-insight-card-header strong,
+  .dashboard-shell .inventory-workspace .inventory-insight-card-header span,
+  .search-page-group-title,
+  .receiving-history-stat small,
+  .po-balance-strip small,
+  .po-detail-label,
+  .po-receive-head,
+  .po-stock-flag,
+  .dashboard-notifications-section-title,
+  .help-section-title,
+  .ov-eyebrow,
+  .ov-figure-label,
+  .ov-today strong,
+  .ov-chart-title {
+    letter-spacing: 0 !important;
+    text-transform: none !important;
+  }
 }

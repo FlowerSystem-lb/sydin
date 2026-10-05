@@ -505,7 +505,7 @@ export default function BulkPhotoDialog({
 
         {match.duplicates.length > 0 && (
           <section className="rounded-xl border border-amber-300/25 bg-amber-500/10 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-warning">
+            <p className="text-xs font-semibold text-theme-warning">
               An earlier photo already claimed this item — not uploaded
             </p>
             <ul className="mt-2 grid gap-1">
@@ -523,7 +523,7 @@ export default function BulkPhotoDialog({
 
         {match.invalid.length > 0 && (
           <section className="rounded-xl border border-red-400/25 bg-red-500/10 p-3">
-            <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-danger">
+            <p className="text-xs font-semibold text-theme-danger">
               Cannot be used
             </p>
             <ul className="mt-2 grid gap-1">
@@ -580,7 +580,7 @@ function SummaryTile({
 
   return (
     <div className={`rounded-xl border p-2.5 ${toneClass}`}>
-      <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-muted">
+      <p className="text-xs font-semibold text-theme-muted">
         {label}
       </p>
       <p className="mt-0.5 text-lg font-bold text-theme-primary">{value}</p>

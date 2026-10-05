@@ -119,7 +119,7 @@ export default function ScannerModal({
       <div className="scanner-modal-card m-auto flex w-full max-w-xl flex-col overflow-hidden rounded-[20px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(15,23,42,0.28)] backdrop-blur-2xl">
         <div className="flex flex-none items-start justify-between gap-4 border-b border-theme p-4 sm:p-5">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+            <p className="text-xs font-semibold text-theme-accent">
               {eyebrow}
             </p>
 
@@ -185,7 +185,7 @@ export default function ScannerModal({
           {showCamera && (
             <>
               {!handheld && (
-                <p className="mt-5 mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-theme-subtle">
+                <p className="mt-5 mb-2 text-xs font-semibold text-theme-subtle">
                   This device&rsquo;s camera
                 </p>
               )}

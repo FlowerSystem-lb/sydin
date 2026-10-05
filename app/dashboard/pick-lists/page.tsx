@@ -512,7 +512,7 @@ export default function PickListsPage() {
 
                     <div className="mt-6 grid grid-cols-2 gap-3 text-sm">
                       <div className="rounded-2xl border border-theme bg-theme-inset p-3">
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                        <p className="text-xs font-bold text-theme-subtle">
                           Due
                         </p>
                         <p className="mt-2 font-bold text-theme-primary">
@@ -520,7 +520,7 @@ export default function PickListsPage() {
                         </p>
                       </div>
                       <div className="rounded-2xl border border-theme bg-theme-inset p-3">
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                        <p className="text-xs font-bold text-theme-subtle">
                           Items
                         </p>
                         <p className="mt-2 font-bold text-theme-primary">

@@ -720,7 +720,7 @@ export default function EditItemForm({
                 {/* Same pair as Add Item: tints that encoded nothing, in a
                     form that is otherwise unboxed. */}
                 <div className="rounded-[14px] border border-theme bg-theme-inset p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
+                  <p className="text-xs font-bold text-theme-accent">
                     Cost value
                   </p>
                   <p className="mt-1 break-normal text-base font-black text-theme-primary">
@@ -728,7 +728,7 @@ export default function EditItemForm({
                   </p>
                 </div>
                 <div className="rounded-[14px] border border-theme bg-theme-inset p-3">
-                  <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
+                  <p className="text-xs font-bold text-theme-accent">
                     Retail value
                   </p>
                   <p className="mt-1 break-normal text-base font-black text-theme-primary">
@@ -744,7 +744,7 @@ export default function EditItemForm({
                   <span className="text-sm font-black text-theme-accent">
                     {itemCode || "Not generated yet"}
                   </span>
-                  <span className="rounded-lg border border-theme bg-theme-inset px-2 py-1 text-[10px] font-bold uppercase tracking-[0.1em] text-theme-muted">
+                  <span className="rounded-lg border border-theme bg-theme-inset px-2 py-1 text-[10px] font-bold text-theme-muted">
                     Read only
                   </span>
                 </div>

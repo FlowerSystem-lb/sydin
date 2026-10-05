@@ -668,7 +668,7 @@ export default function PickListDetailPage() {
 
           {detail.notes && (
             <section className="dashboard-card">
-              <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-subtle">
+              <p className="text-xs font-black text-theme-subtle">
                 Notes
               </p>
               <p className="mt-2 whitespace-pre-wrap leading-7 text-theme-secondary">
@@ -761,7 +761,7 @@ export default function PickListDetailPage() {
           <section className="dashboard-card">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
+                <p className="text-xs font-black text-theme-accent">
                   Preparation progress
                 </p>
                 <h2 className="mt-2 text-xl font-black">
@@ -793,7 +793,7 @@ export default function PickListDetailPage() {
             <section className="space-y-4">
               <div className="flex items-end justify-between gap-4">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.17em] text-theme-accent">
+                  <p className="text-xs font-black text-theme-accent">
                     Line items
                   </p>
                   <h2 className="mt-2 text-xl font-black">Preparation Items</h2>
@@ -875,7 +875,7 @@ export default function PickListDetailPage() {
                       {!editable && (
                         <div className="grid min-w-full grid-cols-2 gap-3 sm:min-w-[320px]">
                           <div className="rounded-2xl border border-theme bg-theme-inset p-4">
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="text-xs font-bold text-theme-subtle">
                               Required
                             </p>
                             <p className="mt-2 text-2xl font-black">
@@ -883,7 +883,7 @@ export default function PickListDetailPage() {
                             </p>
                           </div>
                           <div className="rounded-2xl border border-emerald-300/15 bg-emerald-400/[0.08] p-4">
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="text-xs font-bold text-theme-subtle">
                               Prepared
                             </p>
                             <p className="mt-2 text-2xl font-black text-theme-success">

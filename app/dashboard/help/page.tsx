@@ -302,7 +302,7 @@ export default function HelpCenterPage() {
             <DashboardCard className="help-setup">
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                  <p className="text-xs font-bold text-theme-subtle">
                     Getting started · {onboarding.completedCount} of {onboarding.totalCount} done
                   </p>
                   {nextStep && (

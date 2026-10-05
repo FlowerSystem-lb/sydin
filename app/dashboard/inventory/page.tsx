@@ -3105,7 +3105,7 @@ export default function InventoryPage() {
             >
               <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-wrap items-center gap-2">
-                  <p className="rounded-xl bg-cyan-500/10 px-3 py-1.5 text-sm font-black text-theme-accent">
+                  <p className="rounded-xl bg-blue-500/10 px-3 py-1.5 text-sm font-black text-theme-accent">
                     <span className="sr-only">Selected inventory item count: </span>
                     {selectedItems.length} selected
                   </p>
@@ -3387,7 +3387,7 @@ export default function InventoryPage() {
                        sat on top of the first characters of the name and SKU. */
                     className={`inventory-list-row grid cursor-pointer grid-cols-[auto_3rem_minmax(0,1fr)_auto] items-center gap-2.5 rounded-xl border bg-theme-surface p-2 text-left shadow-[0_6px_18px_rgba(15,23,42,0.05)] transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20 sm:grid-cols-[auto_3.5rem_minmax(0,1fr)_auto] ${
                       selected
-                        ? "border-cyan-300 bg-cyan-500/[0.08] ring-2 ring-cyan-300/30"
+                        ? "border-blue-300 bg-blue-500/[0.08] ring-2 ring-blue-300/30"
                         : "border-theme"
                     }`}
                   >
@@ -3398,7 +3398,7 @@ export default function InventoryPage() {
                         onChange={() => toggleItemSelection(item.id)}
                         onClick={(event) => event.stopPropagation()}
                         aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
-                        className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
+                        className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-sydin-blue/40"
                       />
                     ) : (
                       <span className="h-4 w-4" aria-hidden="true" />
@@ -3495,7 +3495,7 @@ export default function InventoryPage() {
                       }}
                       className={`flex items-center gap-2.5 rounded-2xl border bg-theme-surface p-2.5 text-left ${
                         selected
-                          ? "border-cyan-300 bg-cyan-500/[0.08]"
+                          ? "border-blue-300 bg-blue-500/[0.08]"
                           : "border-theme"
                       }`}
                     >
@@ -3506,7 +3506,7 @@ export default function InventoryPage() {
                           onChange={() => toggleItemSelection(item.id)}
                           onClick={(event) => event.stopPropagation()}
                           aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
-                          className="h-4 w-4 rounded border-slate-300 text-cyan-600"
+                          className="h-4 w-4 rounded border-slate-300 text-blue-600"
                         />
                       )}
                       <span className="min-w-0 flex-1">
@@ -3856,7 +3856,7 @@ export default function InventoryPage() {
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
                   <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
-                    <span className="block text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    <span className="block text-xs font-bold text-theme-subtle">
                       Out
                     </span>
                     <strong className="text-base text-theme-danger">
@@ -3864,7 +3864,7 @@ export default function InventoryPage() {
                     </strong>
                   </div>
                   <div className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
-                    <span className="block text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    <span className="block text-xs font-bold text-theme-subtle">
                       Healthy
                     </span>
                     <strong className="text-base text-theme-primary">
@@ -3932,7 +3932,7 @@ export default function InventoryPage() {
         >
           <div className="grid gap-4" aria-live="polite">
             {pdfExportStatus && (
-              <div className="rounded-xl border border-cyan-400/25 bg-cyan-500/10 px-4 py-3 text-sm font-semibold text-theme-accent">
+              <div className="rounded-xl border border-blue-400/25 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-theme-accent">
                 {pdfExportStatus}
               </div>
             )}
@@ -4062,7 +4062,7 @@ export default function InventoryPage() {
                       onChange={(event) =>
                         updatePdfInclude(key, event.target.checked)
                       }
-                      className="h-4 w-4 accent-cyan-600"
+                      className="h-4 w-4 accent-blue-600"
                     />
                     {label}
                   </label>
@@ -4164,7 +4164,7 @@ export default function InventoryPage() {
                   checked={bulkConfirmed}
                   onChange={(event) => setBulkConfirmed(event.target.checked)}
                   disabled={bulkSubmitting || bulkChangeSummary.length === 0}
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-sydin-blue/40"
                 />
                 Confirm these enabled fields should change for the selected
                 items.
@@ -4533,7 +4533,7 @@ export default function InventoryPage() {
                     bulkSubmitting ||
                     (bulkCategoryMode === "keep" && bulkDepotMode === "keep")
                   }
-                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
+                  className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-sydin-blue/40"
                 />
                 Confirm this move for the selected items.
               </label>

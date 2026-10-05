@@ -290,7 +290,7 @@ export default function StockMovementsPage() {
                   do, because there the row stacks and a header would have
                   nothing to line up with. */}
               <div
-                className="hidden gap-3 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:grid sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))]"
+                className="hidden gap-3 px-4 py-2 text-[11px] font-semibold text-theme-subtle sm:grid sm:grid-cols-[minmax(0,1.5fr)_repeat(3,minmax(90px,0.45fr))]"
                 aria-hidden="true"
               >
                 <span>Item</span>
@@ -349,7 +349,7 @@ export default function StockMovementsPage() {
                       </div>
                     </div>
                     <div className="movement-row-change">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
+                      <p className="text-[11px] font-semibold text-theme-subtle sm:hidden">
                         Change
                       </p>
                       <p
@@ -366,7 +366,7 @@ export default function StockMovementsPage() {
                       </p>
                     </div>
                     <div className="movement-row-range">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
+                      <p className="text-[11px] font-semibold text-theme-subtle sm:hidden">
                         Before → After
                       </p>
                       <p className="mt-1 text-sm font-semibold tabular-nums text-theme-primary sm:mt-0">
@@ -374,7 +374,7 @@ export default function StockMovementsPage() {
                       </p>
                     </div>
                     <div className="movement-row-date">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.06em] text-theme-subtle sm:hidden">
+                      <p className="text-[11px] font-semibold text-theme-subtle sm:hidden">
                         Date
                       </p>
                       <p className="mt-1 text-xs tabular-nums text-theme-secondary sm:mt-0">

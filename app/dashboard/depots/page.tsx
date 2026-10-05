@@ -358,7 +358,7 @@ export default function DepotsPage() {
               aria-busy={saving}
               className="dashboard-card organize-depot-form"
             >
-              <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+              <p className="text-sm font-semibold text-theme-accent">
                 New depot
               </p>
 
@@ -451,7 +451,7 @@ export default function DepotsPage() {
             <section className="dashboard-card organize-depot-list-panel">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+                  <p className="text-sm font-semibold text-theme-accent">
                     Saved locations
                   </p>
 

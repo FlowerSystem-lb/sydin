@@ -58,7 +58,7 @@ export default function PhonePairingPanel({
     <section className="dashboard-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+          <p className="text-xs font-semibold text-theme-accent">
             {eyebrow}
           </p>
           <h3 className="mt-1 text-base font-semibold text-theme-primary">
@@ -122,7 +122,7 @@ export default function PhonePairingPanel({
 
           {receivedCount > 0 && (
             <div className="mt-4 rounded-xl border border-emerald-400/25 bg-emerald-500/[0.08] px-3 py-2.5">
-              <p className="text-xs font-semibold uppercase tracking-[0.12em] text-theme-success">
+              <p className="text-xs font-semibold text-theme-success">
                 {receivedCount} code{receivedCount === 1 ? "" : "s"} received
               </p>
               <p className="mt-1 truncate font-mono text-sm text-theme-primary">

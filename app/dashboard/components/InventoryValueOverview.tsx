@@ -88,7 +88,7 @@ export default function InventoryValueOverview({
         formatInventoryPrice(analytics.totalCostValue, currencyCode) || "-",
       detail: "Quantity multiplied by cost price",
       icon: "layers",
-      accent: "from-cyan-300 to-indigo-500",
+      accent: "from-blue-300 to-indigo-500",
     },
     {
       label: "Retail value",
@@ -112,7 +112,7 @@ export default function InventoryValueOverview({
       accent:
         analytics.estimatedMarginValue < 0
           ? "from-rose-400 to-fuchsia-500"
-          : "from-emerald-300 to-cyan-500",
+          : "from-emerald-300 to-blue-500",
     },
     {
       label: "Items with price data",
@@ -145,7 +145,7 @@ export default function InventoryValueOverview({
     <section className="rounded-[32px] border border-theme bg-[radial-gradient(circle_at_top_right,_rgba(99,102,241,0.15),_transparent_38%),rgba(255,255,255,0.045)] p-5 shadow-[0_28px_100px_rgba(0,0,0,0.32)] backdrop-blur-2xl sm:p-7 lg:p-8">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-accent">
+          <p className="text-sm font-semibold text-theme-accent">
             Business overview
           </p>
           <h2 className="mt-2 text-3xl font-bold tracking-tight text-theme-primary sm:text-4xl">
@@ -158,7 +158,7 @@ export default function InventoryValueOverview({
           </p>
         </div>
         {!loading && !isLocked && (
-          <span className="w-fit rounded-full border border-indigo-300/20 bg-indigo-500/10 px-4 py-2 text-xs font-bold uppercase tracking-[0.14em] text-theme-accent">
+          <span className="w-fit rounded-full border border-indigo-300/20 bg-indigo-500/10 px-4 py-2 text-xs font-bold text-theme-accent">
             Currency: {normalizeCurrencyCode(currencyCode, "USD")}
           </span>
         )}
@@ -215,7 +215,7 @@ export default function InventoryValueOverview({
             <div className="mt-5 rounded-[28px] border border-theme bg-theme-inset p-5 sm:p-6">
               <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
+                  <p className="text-xs font-black text-theme-accent">
                     Category analysis
                   </p>
                   <h3 className="mt-2 text-2xl font-bold text-theme-primary">
@@ -274,7 +274,7 @@ export default function InventoryValueOverview({
                         </div>
                         <div className="mt-2 h-3 overflow-hidden rounded-full border border-theme bg-theme-inset">
                           <div
-                            className="h-full rounded-full bg-gradient-to-r from-cyan-300 via-indigo-400 to-violet-500 shadow-[0_0_20px_rgba(99,102,241,0.5)]"
+                            className="h-full rounded-full bg-gradient-to-r from-blue-300 via-indigo-400 to-violet-500 shadow-[0_0_20px_rgba(99,102,241,0.5)]"
                             style={{ width: `${width}%` }}
                           />
                         </div>

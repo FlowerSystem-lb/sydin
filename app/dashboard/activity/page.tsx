@@ -321,7 +321,7 @@ export default function ActivityPage() {
                     <div className="activity-entry-figures grid grid-cols-1 gap-3 sm:grid-cols-3 xl:min-w-[520px]">
                       {event.quantityBefore !== undefined && (
                         <div className="activity-figure rounded-2xl border border-theme bg-theme-surface p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
+                          <p className="text-xs font-semibold text-theme-subtle">
                             Before
                           </p>
 
@@ -333,7 +333,7 @@ export default function ActivityPage() {
 
                       {event.quantityDelta !== undefined && (
                         <div className="activity-figure rounded-2xl border border-theme bg-theme-surface p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
+                          <p className="text-xs font-semibold text-theme-subtle">
                             Change
                           </p>
 
@@ -353,7 +353,7 @@ export default function ActivityPage() {
 
                       {event.quantityAfter !== undefined && (
                         <div className="activity-figure rounded-2xl border border-theme bg-theme-surface p-4">
-                          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
+                          <p className="text-xs font-semibold text-theme-subtle">
                             After
                           </p>
 

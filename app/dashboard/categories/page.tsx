@@ -935,7 +935,7 @@ export default function CategoriesPage() {
             <div className="organize-sidebar-header border-b border-theme p-4">
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-accent">
+                  <p className="text-xs font-black text-theme-accent">
                     Organize
                   </p>
                   <h1 className="text-xl font-black text-theme-primary">
@@ -964,7 +964,7 @@ export default function CategoriesPage() {
             </div>
 
             <div className="organize-filter-panel border-b border-theme p-3">
-              <p className="px-2 pb-2 text-xs font-black uppercase tracking-[0.16em] text-theme-subtle">
+              <p className="px-2 pb-2 text-xs font-black text-theme-subtle">
                 Smart filters
               </p>
               <div className="organize-category-filter-strip grid gap-1">
@@ -1003,7 +1003,7 @@ export default function CategoriesPage() {
 
             <div className="min-h-0 flex-1 overflow-y-auto p-3">
               <div className="flex items-center justify-between px-2 pb-2">
-                <p className="text-xs font-black uppercase tracking-[0.16em] text-theme-subtle">
+                <p className="text-xs font-black text-theme-subtle">
                   Workspace categories
                 </p>
                 <span className="text-xs font-bold text-theme-subtle">
@@ -1133,7 +1133,7 @@ export default function CategoriesPage() {
                 <UiIcon name="chevron-left" className="h-4 w-4" />
                 Back to Categories
               </button>
-              <p className="organize-mobile-breadcrumb mb-2 hidden text-xs font-black uppercase tracking-[0.14em] text-theme-subtle lg:hidden">
+              <p className="organize-mobile-breadcrumb mb-2 hidden text-xs font-black text-theme-subtle lg:hidden">
                 Categories / {selectionTitle}
               </p>
 
@@ -1223,7 +1223,7 @@ export default function CategoriesPage() {
                   key={label}
                   className="border-b border-r border-theme px-4 py-3 last:border-r-0 sm:border-b-0"
                 >
-                  <p className="text-xs font-black uppercase tracking-[0.14em] text-theme-subtle">
+                  <p className="text-xs font-black text-theme-subtle">
                     {label}
                   </p>
                   <p className="mt-1 truncate text-sm font-black text-theme-primary">
@@ -1383,7 +1383,7 @@ export default function CategoriesPage() {
               ) : !phoneTiles && itemView === "table" ? (
                 <div className="mt-3 overflow-x-auto rounded-2xl border border-theme">
                   <table className="min-w-[760px] w-full border-collapse text-left text-sm">
-                    <thead className="bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="bg-theme-inset text-xs font-black text-theme-subtle">
                       <tr>
                         <th className="px-4 py-3">Item</th>
                         <th className="px-4 py-3">Category</th>

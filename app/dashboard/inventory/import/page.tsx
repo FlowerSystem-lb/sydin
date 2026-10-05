@@ -882,7 +882,7 @@ export default function InventoryImportPage() {
               <section className="grid grid-cols-1 gap-4 lg:grid-cols-[1fr_0.75fr]">
                 <div className="rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="text-sm font-bold text-theme-accent">
                       Templates
                     </p>
                     <h2 className="mt-2 text-2xl font-bold text-theme-primary">
@@ -916,13 +916,13 @@ export default function InventoryImportPage() {
                 </div>
 
                 <div className="rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-subtle">
+                  <p className="text-sm font-bold text-theme-subtle">
                     Import limits
                   </p>
 
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <div className="rounded-2xl border border-theme bg-theme-inset p-4">
-                      <p className="text-xs uppercase tracking-[0.14em] text-theme-subtle">
+                      <p className="text-xs text-theme-subtle">
                         File size
                       </p>
                       <p className="mt-2 text-xl font-black text-theme-primary">
@@ -931,7 +931,7 @@ export default function InventoryImportPage() {
                     </div>
 
                     <div className="rounded-2xl border border-theme bg-theme-inset p-4">
-                      <p className="text-xs uppercase tracking-[0.14em] text-theme-subtle">
+                      <p className="text-xs text-theme-subtle">
                         Rows
                       </p>
                       <p className="mt-2 text-xl font-black text-theme-primary">
@@ -1045,7 +1045,7 @@ export default function InventoryImportPage() {
               <section className="rounded-[20px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div className="min-w-0">
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="text-sm font-bold text-theme-accent">
                       {parsedFile.format === "Scan"
                         ? "Scanned items ready for review"
                         : "File ready for review"}
@@ -1097,7 +1097,7 @@ export default function InventoryImportPage() {
                               : "border-indigo-300/20 bg-indigo-500/10"
                       }`}
                     >
-                      <p className="text-xs font-bold uppercase tracking-[0.14em] text-theme-muted">
+                      <p className="text-xs font-bold text-theme-muted">
                         {String(label)}
                       </p>
                       <p className="mt-2 text-2xl font-black text-theme-primary">
@@ -1129,7 +1129,7 @@ export default function InventoryImportPage() {
               <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-5">
                 <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="text-sm font-bold text-theme-accent">
                       Row preview
                     </p>
                     <h2 className="mt-1 text-2xl font-bold text-theme-primary">
@@ -1147,7 +1147,7 @@ export default function InventoryImportPage() {
                 <div className="hidden overflow-hidden rounded-2xl border border-theme md:block">
                   <div className="overflow-x-auto">
                     <table className="w-full min-w-[1240px] border-collapse text-left text-sm">
-                      <thead className="border-b border-theme bg-theme-inset text-xs uppercase tracking-[0.12em] text-theme-subtle">
+                      <thead className="border-b border-theme bg-theme-inset text-xs text-theme-subtle">
                         <tr>
                           {["Row", "Name", "SKU", "Category", "Quantity", "Depot", "Item details", "Notes", "Status"].map(
                             (header) => (
@@ -1308,7 +1308,7 @@ export default function InventoryImportPage() {
                               field
                             )}`}
                           >
-                            <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                            <p className="text-xs font-bold text-theme-subtle">
                               {label}
                             </p>
                             <p className="mt-1 break-words text-sm font-semibold">
@@ -1324,7 +1324,7 @@ export default function InventoryImportPage() {
                           row.rowNumber
                         )}`}
                       >
-                        <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-accent">
+                        <p className="text-xs font-bold text-theme-accent">
                           Item details
                         </p>
                         <div className="mt-2 grid grid-cols-1 gap-1 text-sm sm:grid-cols-2">
@@ -1389,7 +1389,7 @@ export default function InventoryImportPage() {
               <section className="rounded-[20px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] sm:p-5">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="text-sm font-bold text-theme-accent">
                       Optional
                     </p>
                     <h2 className="mt-1 text-2xl font-bold text-theme-primary">
@@ -1471,7 +1471,7 @@ export default function InventoryImportPage() {
                 {photoMatch && photoFiles.length > 0 && (
                   <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
                     <div className="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 p-3">
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                      <p className="text-xs font-bold text-theme-muted">
                         Matched
                       </p>
                       <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1485,7 +1485,7 @@ export default function InventoryImportPage() {
                           : "border-theme bg-theme-inset"
                       }`}
                     >
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                      <p className="text-xs font-bold text-theme-muted">
                         No SKU match
                       </p>
                       <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1499,7 +1499,7 @@ export default function InventoryImportPage() {
                           : "border-theme bg-theme-inset"
                       }`}
                     >
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                      <p className="text-xs font-bold text-theme-muted">
                         Duplicate SKU
                       </p>
                       <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1513,7 +1513,7 @@ export default function InventoryImportPage() {
                           : "border-theme bg-theme-inset"
                       }`}
                     >
-                      <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-muted">
+                      <p className="text-xs font-bold text-theme-muted">
                         Invalid file
                       </p>
                       <p className="mt-1 text-xl font-black text-theme-primary">
@@ -1552,7 +1552,7 @@ export default function InventoryImportPage() {
 
                 {photoMatch && photoMatch.unmatched.length > 0 && (
                   <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-500/10 p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-warning">
+                    <p className="text-xs font-bold text-theme-warning">
                       No row has this name — choose the row yourself
                     </p>
                     <ul className="mt-2 flex flex-col gap-2">
@@ -1590,7 +1590,7 @@ export default function InventoryImportPage() {
 
                 {photoMatch && photoMatch.duplicates.length > 0 && (
                   <div className="mt-4 rounded-xl border border-amber-300/25 bg-amber-500/10 p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-warning">
+                    <p className="text-xs font-bold text-theme-warning">
                       Another file already claimed that SKU — not uploaded
                     </p>
                     <p className="mt-2 flex flex-wrap gap-2">
@@ -1608,7 +1608,7 @@ export default function InventoryImportPage() {
 
                 {photoMatch && photoMatch.invalid.length > 0 && (
                   <div className="mt-4 rounded-xl border border-red-400/20 bg-red-500/10 p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-danger">
+                    <p className="text-xs font-bold text-theme-danger">
                       Matched a row, but can&apos;t be uploaded
                     </p>
                     <ul className="mt-2 flex flex-col gap-1">
@@ -1637,7 +1637,7 @@ export default function InventoryImportPage() {
               <section className="rounded-[20px] border border-sydin-blue/20 bg-sydin-blue/[0.08] p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
                 <div className="flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="text-xs font-bold text-theme-accent">
                       Plan review
                     </p>
                     <p className="mt-2 text-2xl font-black text-theme-primary">
@@ -1730,7 +1730,7 @@ export default function InventoryImportPage() {
           <div className="my-8 w-full max-w-3xl overflow-hidden rounded-[32px] border border-theme bg-[var(--sydin-surface-strong)] shadow-[0_30px_120px_rgba(15,23,42,0.28)] backdrop-blur-2xl">
             <div className="flex items-start justify-between gap-4 border-b border-theme p-5 sm:p-6">
               <div>
-                <p className="text-sm font-semibold uppercase tracking-[0.18em] text-theme-success">
+                <p className="text-sm font-semibold text-theme-success">
                   Batch add
                 </p>
                 <h2 className="mt-2 text-2xl font-bold tracking-tight text-theme-primary sm:text-3xl">
@@ -1792,7 +1792,7 @@ export default function InventoryImportPage() {
 
                 {batchSkipped.length > 0 && (
                   <div className="mt-4 rounded-2xl border border-amber-300/25 bg-amber-500/10 p-3">
-                    <p className="text-xs font-bold uppercase tracking-[0.12em] text-theme-warning">
+                    <p className="text-xs font-bold text-theme-warning">
                       Skipped — already in your inventory
                     </p>
                     <ul className="mt-2 flex flex-col gap-1">
@@ -1809,7 +1809,7 @@ export default function InventoryImportPage() {
 
               <div className="flex min-h-0 flex-col">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm font-bold uppercase tracking-[0.16em] text-theme-accent">
+                  <p className="text-sm font-bold text-theme-accent">
                     New items ({batchRows.length})
                   </p>
                 </div>

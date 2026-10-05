@@ -73,7 +73,7 @@ export default function AddItemPage() {
           <section className="rounded-[14px] border border-theme bg-theme-surface px-4 py-2.5 shadow-[0_4px_12px_rgba(15,23,42,0.05)]">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent sm:hidden">
+                <p className="text-xs font-bold text-theme-accent sm:hidden">
                   New product
                 </p>
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:sr-only sm:mt-0">

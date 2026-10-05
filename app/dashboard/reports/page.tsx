@@ -437,7 +437,7 @@ function downloadCsv(filename: string, rows: Array<Array<string | number | null 
 
 function FormatChip({ label }: { label: string }) {
   return (
-    <span className="rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-xs font-black uppercase tracking-[0.08em] text-theme-secondary">
+    <span className="rounded-full border border-theme bg-theme-inset px-2.5 py-1 text-xs font-black text-theme-secondary">
       {label}
     </span>
   );
@@ -1401,7 +1401,7 @@ export default function ReportsPage() {
                       isWorkflowShortcut ? "mt-2" : "mt-3"
                     }`}
                   >
-                    <span className="font-bold uppercase tracking-[0.12em] text-theme-subtle">
+                    <span className="font-bold text-theme-subtle">
                       {isWorkflowShortcut ? report.source : `Source: ${report.source}`}
                     </span>
                     {report.note && (
