@@ -6422,3 +6422,24 @@ landing page copy still says "wholesale depots"; social copy dropped that word, 
 **Verified:** lint, `tsc --noEmit` and `next build` pass (the build needs the two public Supabase
 variables; this container has none, so placeholders were used). Screenshots of the landing page
 (desktop + phone) and the login page show the new logo.
+
+
+## 2026-10-05 — Data-entry audit + Redesign v2, phase 1 (foundation)
+
+**Audit:** Add Item, New Invoice, New PO, Add Customer. Findings and phases are in plan of
+record section R. Nothing was saved during it.
+
+**Phase 1 changed:**
+- : loads Geist + Geist Mono. Before this, the app asked for Inter and never loaded it.
+- : the v2 token block (graphite ink, off-white ground, status colours) at
+  the end of the file. Row inputs and textareas joined the shared boxed control list; the
+  underline-focus rules and row hairlines were removed. Group titles are sentence case at body
+  size, labels went from 11.2px to 12.9px, and field text from 11.9px to 13.5px. Select
+  triggers are 36px like inputs, and  is now 36px / 8px (was 44px / 12px).
+- Add Item: Cancel and Scan use the shared button, and the barcode notice uses status tokens.
+  Customer dialog error uses . The PO's New-depot dialog inputs use .
+
+**Verified:** in a running copy of the branch (port 3200, signed in by Sayed): every input,
+select and button in the four forms measures 36px; Geist loads; tokens resolve; no console
+errors. Settings and Inventory checked for spill-over and look right. lint, tsc and build pass
+(the build needs network to Google Fonts; it timed out twice on a slow link, then passed).

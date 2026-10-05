@@ -86,8 +86,10 @@ Generic UI kit lives in `components/ui/` (`Button`, `Card`, `Badge`, `Field`, `S
 
 Anything that asks the user to fill in a record — Add/Edit Item, Customers, Suppliers,
 Depots, New Invoice, New Purchase Order — is built from `FieldGroup` and `FieldRow`
-(`components/ui/FieldRow.tsx`): a small caps group heading, then label-left /
-value-right rows with a hairline between them and **no box around each field**. Put the
+(`components/ui/FieldRow.tsx`): a sentence-case group title, then label-left /
+value-right rows, **each field in the one shared box** (36px, 8px radius, hairline,
+blue focus ring -- the same box as every dropdown). Changed 5 Oct 2026 from "no box
+around each field": the audit found boxless fields read as plain text. Put the
 groups inside `<section className="dashboard-card item-form p-0">` → `.item-form-groups`,
 which is a container query, so the same form lays itself out in one column in a 30rem
 slide-over and two columns on a full page. Bare `<input>`/`<textarea>` children need no

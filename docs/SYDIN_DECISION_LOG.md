@@ -685,3 +685,20 @@ stays as the alternative.
 - **Why:** Sayed prefers it to the gradient logo and plans to move the website, app and email to
   it later. Until that sprint happens, the product keeps the gradient logo.
 - **Files:** `docs/brand-kit/`. Details in `SYDIN_MARKETING_LAUNCH_PLAN.md`.
+
+
+## 2026-10-05 — Redesign v2: boxed fields, Geist, graphite palette, staged rollout
+
+- **Decision:** (1) every form field is boxed in the one shared control style, replacing the
+  "no box around each field" rule; (2) the UI font is Geist / Geist Mono, actually loaded via
+  ; (3) a v2 palette: graphite ink #111318, off-white ground #f6f6f5, info is
+  teal-cyan (#0b6e85) so it no longer shares blue with "act", and deeper, calmer
+  success/warning/danger; (4) Sayed's full-redesign brief is carried out bold but staged,
+  one layer per verified commit, mobile last.
+- **Why:** the 5 Oct data-entry audit measured typed fields at 26px with no border beside 36px
+  boxed dropdowns, which read as plain text. The app named Inter but never loaded it, so
+  Windows showed Segoe UI. Sayed's brief asks for a genuinely different, premium system and
+  explicitly authorises the visual calls; staging keeps a live product unbroken.
+- **Details:** , plan of record section R.
+
+**Status:** Active.

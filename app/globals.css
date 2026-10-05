@@ -7677,7 +7677,7 @@ select.glass-input option {
   border: 1px solid var(--sydin-ui-border);
   border-radius: 0.75rem;
   background: var(--sydin-input-bg);
-  padding: 0.58rem 0.75rem;
+  padding: 0.45rem 0.75rem;
   color: var(--sydin-text);
   font-size: var(--text-sm);
   font-weight: 500;
@@ -21037,7 +21037,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   background: var(--sydin-input-bg, transparent);
   padding: 0.6rem 0.75rem;
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   line-height: 1.45;
   color: var(--text-primary, var(--ink));
   outline: none;
