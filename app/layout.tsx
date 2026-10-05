@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Source_Serif_4 } from "next/font/google";
+import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
 import "./globals.css";
 import "./mobile.css";
 import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
@@ -37,6 +37,21 @@ export const viewport: Viewport = {
 // Exposed as a CSS variable, not applied to <body>, so the dashboard's own
 // sans-serif type is untouched; only .marketing-hero-title /
 // .marketing-section-title opt in via app/globals.css.
+/* The UI face. Until 5 Oct 2026 the app asked for Inter but never loaded it,
+   so Windows drew everything in Segoe UI. Geist is loaded here, self-hosted
+   by Next, so every machine sees the same type (redesign v2). */
+const geistSans = Geist({
+  subsets: ["latin"],
+  variable: "--font-geist",
+  display: "swap",
+});
+
+const geistMono = Geist_Mono({
+  subsets: ["latin"],
+  variable: "--font-geist-mono",
+  display: "swap",
+});
+
 const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
   weight: ["400"],
@@ -52,7 +67,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`h-full antialiased ${sourceSerif.variable}`}
+      className={`h-full antialiased ${geistSans.variable} ${geistMono.variable} ${sourceSerif.variable}`}
       data-theme="light"
       style={{ colorScheme: "light" }}
       suppressHydrationWarning

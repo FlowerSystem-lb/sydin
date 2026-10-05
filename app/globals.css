@@ -366,10 +366,11 @@
   --color-brand-navy: var(--brand-navy);
   --color-brand-cyan: var(--brand-cyan);
   --font-sans:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    var(--font-geist), Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
   --font-mono:
-    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+    var(--font-geist-mono), "SFMono-Regular", Consolas, "Liberation Mono", Menlo,
+    Courier, monospace;
 }
 
 /* ===========================================================================
@@ -426,8 +427,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+    var(--font-geist), Inter, ui-sans-serif, system-ui, -apple-system,
+    BlinkMacSystemFont, "Segoe UI", sans-serif;
   text-rendering: optimizeLegibility;
 }
 
@@ -7678,8 +7679,8 @@ select.glass-input option {
   background: var(--sydin-input-bg);
   padding: 0.58rem 0.75rem;
   color: var(--sydin-text);
-  font-size: 0.875rem;
-  font-weight: 600;
+  font-size: var(--text-sm);
+  font-weight: 500;
   outline: none;
   transition:
     border-color 150ms ease,
@@ -20937,13 +20938,15 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   padding-top: var(--space-4);
 }
 
+/* Redesign v2 (5 Oct 2026): was 9.8px heavy caps, the smallest text in the
+   form heading the largest blocks. Now a quiet section title at body size,
+   the way Stripe and Linear head a settings group. */
 .item-field-group-label {
-  margin-bottom: var(--space-2);
-  font-size: 0.72rem;
-  font-weight: 800;
-  letter-spacing: 0.09em;
-  text-transform: uppercase;
-  color: var(--text-secondary, var(--text-subtle));
+  margin-bottom: var(--space-3);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text-primary, var(--ink));
 }
 
 /* One line under a group heading, for behaviour the fields cannot show on
@@ -20958,22 +20961,20 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   color: var(--text-muted, var(--text-subtle));
 }
 
+/* Fields are boxed since redesign v2, so the hairline between rows went:
+   a box inside a ruled line is two borders saying the same thing. */
 .item-field-row {
   display: grid;
-  grid-template-columns: 6.5rem minmax(0, 1fr);
+  grid-template-columns: 7rem minmax(0, 1fr);
   align-items: center;
   gap: var(--space-3);
   min-height: 2.4rem;
-  padding-block: 0.4rem;
-}
-
-.item-field-row + .item-field-row {
-  border-top: 1px solid var(--border-hairline);
+  padding-block: 0.3rem;
 }
 
 .item-field-row-label {
-  font-size: 0.82rem;
-  font-weight: 600;
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--text-secondary, var(--text-subtle));
 }
 
@@ -20999,7 +21000,7 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   border: none;
   background: transparent;
   padding: 0.3rem 0;
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   color: var(--text-primary, var(--ink));
   outline: none;
 }
@@ -21162,14 +21163,14 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 /* Invoice builder inputs. One class rather than repeating the same eight
    utilities on every field, because the line row already carries enough. */
 .sale-input {
-  min-height: 2.75rem;
+  min-height: var(--control-h);
   width: 100%;
   border: 1px solid var(--border-default);
-  border-radius: 12px;
+  border-radius: var(--radius-control);
   background: var(--bg-surface);
   padding-inline: 0.75rem;
   color: var(--text-primary);
-  font-size: 0.875rem;
+  font-size: var(--text-sm);
   font-weight: 400;
   outline: none;
 }
@@ -23501,22 +23502,18 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
    the one shared ring every button already uses.
    ========================================================================== */
 
-/* Bare row inputs: a blue underline that fades in, nothing else moves. */
-.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+/* Row inputs joined the boxed system on 5 Oct 2026 (redesign v2). The
+   data-entry audit measured them at 26px, no border, no background, beside
+   36px boxed dropdowns in the same rows: typed fields read as plain text and
+   nobody could tell where to click. Sayed approved the change of rule. They
+   are listed with the boxed controls below; this only sizes them. */
+.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]) {
+  min-height: var(--control-h);
+  padding: 0 0.75rem;
+}
+
 .item-field-row-control textarea {
-  box-shadow: inset 0 -1.5px 0 0 transparent;
-  transition: box-shadow 130ms var(--motion-ease-standard);
-}
-
-.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):focus-visible,
-.item-field-row-control textarea:focus-visible {
-  box-shadow: inset 0 -1.5px 0 0 var(--sydin-blue);
-}
-
-/* Error keeps priority over focus. */
-.item-field-row-control input[aria-invalid="true"]:focus-visible,
-.item-field-row-control textarea[aria-invalid="true"]:focus-visible {
-  box-shadow: inset 0 -1.5px 0 0 #ef4444;
+  padding: 0.55rem 0.75rem;
 }
 
 /* Boxed controls: neutral hairline at rest, darker on hover, blue ring on
@@ -23524,6 +23521,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ui-input,
 .ui-select-trigger,
 .sale-input,
+.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]),
+.item-field-row-control textarea,
+.item-panel-textarea,
 .glass-input,
 .quick-add-input,
 .dashboard-top-searchbar,
@@ -23543,6 +23543,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
   .ui-input:hover,
   .ui-select-trigger:hover,
   .sale-input:hover,
+  .item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):hover,
+  .item-field-row-control textarea:hover,
+  .item-panel-textarea:hover,
   .glass-input:hover,
   .quick-add-input:hover,
   .ui-search-input:hover {
@@ -23554,6 +23557,9 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 .ui-select-trigger:focus-visible,
 .ui-select-trigger[aria-expanded="true"],
 .sale-input:focus-visible,
+.item-field-row-control input:not([type="file"]):not([type="checkbox"]):not([type="radio"]):not([type="color"]):focus,
+.item-field-row-control textarea:focus,
+.item-panel-textarea:focus,
 .glass-input:focus-visible,
 .quick-add-input:focus-visible,
 .ui-search-input:focus-visible {
@@ -23586,12 +23592,16 @@ a[class*="linear-gradient(135deg,#10c4dc"] {
 }
 
 .ui-input[aria-invalid="true"],
-.sale-input[aria-invalid="true"] {
+.sale-input[aria-invalid="true"],
+.item-field-row-control input[aria-invalid="true"],
+.item-field-row-control textarea[aria-invalid="true"] {
   border-color: #ef4444 !important;
 }
 
 .ui-input[aria-invalid="true"]:focus-visible,
-.sale-input[aria-invalid="true"]:focus-visible {
+.sale-input[aria-invalid="true"]:focus-visible,
+.item-field-row-control input[aria-invalid="true"]:focus,
+.item-field-row-control textarea[aria-invalid="true"]:focus {
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.16) !important;
 }
 
@@ -28673,3 +28683,65 @@ body:has(.login-page)::-webkit-scrollbar,
 .st-logo-update.st-logo-update { min-width: 0; }
 /* Dropdowns look like the text boxes next to them. */
 .st-page select.st-input { appearance: none; -webkit-appearance: none; padding-right: 2.2rem !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='none' stroke='%2364748b' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 8 4 4 4-4'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 0.7rem center !important; background-size: 1rem !important; }
+
+
+/* ==========================================================================
+   SYDIN DESIGN SYSTEM v2 — 5 Oct 2026
+   ==========================================================================
+   Sayed's redesign brief (docs/SYDIN_UI_REDESIGN_V2_BRIEF.md): white,
+   off-white and graphite, SydIN blue as the one accent, and status colours
+   that each mean one thing. Declared last so it is the value that wins; the
+   16 Sep foundation above stays the structure, this retunes its values.
+
+   - Ink is graphite (#111318), a touch cooler and deeper than zinc, so blue
+     sits on it naturally.
+   - The page ground is a soft neutral off-white; cards stay pure white, so
+     the two levels read without a shadow doing the work.
+   - Info is teal-cyan, not a second blue: blue means "act", cyan means
+     "for your information". Before, info and accent were the same #1d4ed8.
+   - Success, warning and danger are deeper and less saturated, so a badge
+     reads as a label rather than an alarm.
+   ========================================================================== */
+:root,
+[data-theme="light"] {
+  --surface-page: #f6f6f5;
+  --surface-sunken: #efefed;
+  --bg-page-muted: #f3f3f2;
+  --bg-inset: #f6f6f5;
+
+  --ink: #111318;
+  --ink-muted: #474c56;
+  --text-primary: #111318;
+  --text-secondary: #474c56;
+  --text-muted: #6b7079;
+  --text-subtle: #9a9ea6;
+
+  --border-hairline: rgba(17, 19, 24, 0.06);
+  --border-divider: rgba(17, 19, 24, 0.08);
+  --border-default: rgba(17, 19, 24, 0.12);
+  --border-strong: rgba(17, 19, 24, 0.22);
+
+  --sydin-success-text: #0f7a4f;
+  --sydin-success-surface: rgba(15, 122, 79, 0.09);
+  --status-success-text: #0f7a4f;
+  --status-success-surface: rgba(15, 122, 79, 0.09);
+  --status-success-border: rgba(15, 122, 79, 0.22);
+
+  --sydin-warning-text: #a8560a;
+  --sydin-warning-surface: rgba(217, 119, 6, 0.1);
+  --status-warning-text: #a8560a;
+  --status-warning-surface: rgba(217, 119, 6, 0.1);
+  --status-warning-border: rgba(217, 119, 6, 0.26);
+
+  --sydin-danger-text: #c42b1c;
+  --sydin-danger-surface: rgba(196, 43, 28, 0.08);
+  --status-danger-text: #c42b1c;
+  --status-danger-surface: rgba(196, 43, 28, 0.08);
+  --status-danger-border: rgba(196, 43, 28, 0.22);
+
+  --sydin-info-text: #0b6e85;
+  --sydin-info-surface: rgba(11, 110, 133, 0.08);
+  --status-info-text: #0b6e85;
+  --status-info-surface: rgba(11, 110, 133, 0.08);
+  --status-info-border: rgba(11, 110, 133, 0.22);
+}

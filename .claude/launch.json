@@ -48,6 +48,21 @@
       "env": {
         "NODE_OPTIONS": "--use-system-ca"
       }
+    },
+    {
+      "name": "sydin-worktree",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "-p",
+        "3200"
+      ],
+      "port": 3200,
+      "env": {
+        "NODE_OPTIONS": "--use-system-ca"
+      }
     }
   ]
 }

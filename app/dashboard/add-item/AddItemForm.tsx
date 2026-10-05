@@ -1247,7 +1247,7 @@ export default function AddItemForm({
                       type="button"
                       onClick={openBarcodeScanner}
                       disabled={loading || isCheckingBarcode}
-                      className="inline-flex flex-none items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-2.5 py-1.5 text-xs font-bold text-theme-primary transition hover:bg-theme-hover disabled:cursor-not-allowed disabled:opacity-60"
+                      className={buttonClassName({ variant: "secondary", className: "flex-none" })}
                     >
                       {!usageLoading && !canUseScanner ? (
                         <LockedActionLabel>Scan</LockedActionLabel>
@@ -1263,8 +1263,8 @@ export default function AddItemForm({
                       role="status"
                       className={`mt-2 rounded-lg border px-3 py-2 text-xs font-semibold leading-5 ${
                         barcodeNotice.tone === "warning"
-                          ? "border-amber-400/30 bg-amber-500/10 text-theme-warning"
-                          : "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
+                          ? "border-[var(--status-warning-border)] bg-[var(--status-warning-surface)] text-theme-warning"
+                          : "border-[var(--status-success-border)] bg-[var(--status-success-surface)] text-theme-success"
                       }`}
                     >
                       {barcodeNotice.text}
@@ -1335,7 +1335,7 @@ export default function AddItemForm({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className="rounded-xl border border-theme bg-theme-surface px-4 py-2.5 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
+            className={buttonClassName({ variant: "secondary" })}
           >
             Cancel
           </button>

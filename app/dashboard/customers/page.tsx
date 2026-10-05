@@ -805,7 +805,7 @@ export default function CustomersPage() {
             {formError && (
               <p
                 role="alert"
-                className="mx-5 mb-3 rounded-xl border border-red-400/30 bg-red-500/10 px-4 py-3 text-sm font-semibold text-theme-danger"
+                className="dashboard-notice dashboard-notice-danger mx-5 mb-3"
               >
                 {formError}
               </p>
