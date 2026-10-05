@@ -623,7 +623,7 @@ export default function SuppliersPage() {
                   disabled={loading || limitReached}
                   icon="plus"
                 >
-                  Add Supplier
+                  Add supplier
                 </ActionButton>
               </>
             }
@@ -1155,7 +1155,7 @@ export default function SuppliersPage() {
                 loadingLabel="Deleting..."
                 className="flex-1"
               >
-                Delete Supplier
+                Delete supplier
               </Button>
             </>
           }

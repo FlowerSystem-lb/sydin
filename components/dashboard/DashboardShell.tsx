@@ -1350,7 +1350,7 @@ export default function DashboardShell({
             className={buttonClassName({ size: "sm" })}
           >
             <UiIcon name="plus" className="h-4 w-4" />
-            Add Item
+            Add item
           </button>
         )}
       </header>

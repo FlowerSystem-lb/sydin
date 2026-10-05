@@ -1914,7 +1914,7 @@ export default function ItemDetailsPage() {
                 loading={isDeleting}
                 loadingLabel="Deleting..."
               >
-                Delete Item
+                Delete item
               </Button>
             </>
           }

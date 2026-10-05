@@ -77,7 +77,7 @@ export default function AddItemPage() {
                   New product
                 </p>
                 <h1 className="mt-1 text-3xl font-black tracking-tight text-theme-primary sm:sr-only sm:mt-0">
-                  Add Item
+                  Add item
                 </h1>
                 {/* Described the disclosure ("...when you're ready") that this
                     page no longer has: at full width the form shows every field

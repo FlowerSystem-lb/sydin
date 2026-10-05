@@ -457,7 +457,7 @@ export default function QrCenterPage() {
                 Back to Inventory
               </ActionButton>
               <ActionButton icon="scan" onClick={openExistingScanner}>
-                Start Scanner
+                Start scanner
               </ActionButton>
             </div>
           }
@@ -474,7 +474,7 @@ export default function QrCenterPage() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
               <div>
                 <h2 className="text-xl font-black text-theme-primary">
-                  Select Items
+                  Select items
                 </h2>
                 <p className="mt-1 text-sm text-theme-muted">
                   Choose items to generate printable QR labels. Items shown here have public links enabled.
@@ -507,14 +507,14 @@ export default function QrCenterPage() {
                       onClick={() => setSelectedIds(new Set())}
                       className="rounded-xl border border-theme bg-theme-surface px-3 py-2.5 text-xs font-bold text-theme-primary hover:bg-theme-hover"
                     >
-                      Clear Selection
+                      Clear selection
                     </button>
                     <button
                       type="button"
                       onClick={() => setSettingsOpen(true)}
                       className="dashboard-action-button dashboard-action-button-primary min-h-10 px-4 py-2.5 text-xs"
                     >
-                      Create Labels
+                      Create labels
                     </button>
                   </div>
                 </div>
@@ -613,7 +613,7 @@ export default function QrCenterPage() {
             <DashboardCard>
               <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl font-black text-theme-primary">
-                  Label Preview
+                  Label preview
                 </h2>
                 <span className="rounded-full border border-theme bg-theme-inset px-3 py-1 text-xs font-bold text-theme-secondary">
                   {layoutOptions.find((option) => option.value === settings.layout)
@@ -694,7 +694,7 @@ export default function QrCenterPage() {
                 className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary hover:bg-theme-hover"
               >
                 <UiIcon name="scan" className="h-5 w-5" />
-                Start Camera Scanner
+                Start camera scanner
               </button>
             </DashboardCard>
           </div>
@@ -753,7 +753,7 @@ export default function QrCenterPage() {
 
           <fieldset>
             <legend className="mb-3 text-sm font-bold text-theme-secondary">
-              Label Branding
+              Label branding
             </legend>
             <div className="space-y-2">
               {(

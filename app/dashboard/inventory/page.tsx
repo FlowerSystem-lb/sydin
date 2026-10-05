@@ -2703,7 +2703,7 @@ export default function InventoryPage() {
                   icon="plus"
                   className="inventory-action-primary"
                 >
-                  Add Item
+                  Add item
                 </ActionButton>
 
                 {/* The phone's floating "+": same action as Add Item, portalled
@@ -3715,7 +3715,7 @@ export default function InventoryPage() {
                 items.length === 0 ? (
                   <div className="inventory-empty-actions">
                     <ActionButton onClick={() => openAddModal()} icon="plus">
-                      Add Item
+                      Add item
                     </ActionButton>
                     <ActionButton
                       href="/dashboard/inventory/import"
@@ -3757,7 +3757,7 @@ export default function InventoryPage() {
                 <div className="inventory-insight-card-header">
                   <span>
                     <UiIcon name="alert" className="h-4 w-4" />
-                    Low Stock Alerts
+                    Low stock alerts
                   </span>
                   <strong>{lowStockCount.toLocaleString()}</strong>
                 </div>
@@ -3851,7 +3851,7 @@ export default function InventoryPage() {
                 <div className="inventory-insight-card-header">
                   <span>
                     <UiIcon name="usage" className="h-4 w-4" />
-                    Stock Health
+                    Stock health
                   </span>
                 </div>
                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -4122,7 +4122,7 @@ export default function InventoryPage() {
                 loading={bulkSubmitting}
                 loadingLabel="Applying..."
               >
-                Apply Changes
+                Apply changes
               </Button>
             </>
           }
@@ -4498,7 +4498,7 @@ export default function InventoryPage() {
                 loading={bulkSubmitting}
                 loadingLabel="Moving..."
               >
-                Move Items
+                Move items
               </Button>
             </>
           }
@@ -4647,7 +4647,7 @@ export default function InventoryPage() {
                 loading={bulkSubmitting}
                 loadingLabel="Deleting..."
               >
-                Delete Selected
+                Delete selected
               </Button>
             </>
           }
@@ -4717,7 +4717,7 @@ export default function InventoryPage() {
                 loadingLabel="Deleting..."
                 className="sm:min-w-32"
               >
-                Delete Item
+                Delete item
               </Button>
             </>
           }

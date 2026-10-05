@@ -6721,3 +6721,12 @@ were flat. Inventory's strip is excluded with `:not(.inventory-stat-grid)`.
 
 **Verified** on Purchase Orders at 1280: all three cards are white, bordered and in Geist. Lint, tsc
 and build pass.
+
+## 2026-10-05 — Consistency pass, part 3: sentence-case labels
+
+66 Title Case JSX text labels across 16 dashboard files are now sentence case ("Add item", "Start
+count", "Create pick list", "Record movement", "Save changes", "Low stock alerts", …). Only lines
+that are a label on their own were changed. "Stock In" and "Stock Out" are kept as section names.
+No code finds a control by its text; the remaining matches were titles, aria labels, onboarding
+copy and comments. Page and nav titles stay Title Case, since they name modules. Lint, tsc and
+build pass.

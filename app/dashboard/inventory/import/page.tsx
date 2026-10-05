@@ -873,7 +873,7 @@ export default function InventoryImportPage() {
                   onClick={resetImport}
                   className="rounded-2xl border border-theme bg-theme-surface px-6 py-4 text-base font-bold text-theme-primary transition hover:bg-theme-hover"
                 >
-                  Import Another File
+                  Import another file
                 </button>
               </div>
             </section>
@@ -1069,7 +1069,7 @@ export default function InventoryImportPage() {
                     onClick={resetImport}
                     className="rounded-2xl border border-theme bg-theme-surface px-5 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover"
                   >
-                    Choose Another File
+                    Choose another file
                   </button>
                 </div>
 
@@ -1786,7 +1786,7 @@ export default function InventoryImportPage() {
                     onClick={retryBatchScan}
                     className={buttonClassName({ className: "mt-3 w-full" })}
                   >
-                    Try Again
+                    Try again
                   </button>
                 )}
 

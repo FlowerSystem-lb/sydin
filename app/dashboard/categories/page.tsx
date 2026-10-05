@@ -1175,7 +1175,7 @@ export default function CategoriesPage() {
                     icon="plus"
                     variant="primary"
                   >
-                    Add Item
+                    Add item
                   </ActionButton>
                   {selectedCategory && (
                     <>
@@ -1183,13 +1183,13 @@ export default function CategoriesPage() {
                         onClick={openAssignment}
                         variant="secondary"
                       >
-                        Add Existing Items
+                        Add existing items
                       </ActionButton>
                       <ActionButton
                         onClick={() => openEditForm(selectedCategory)}
                         variant="secondary"
                       >
-                        Edit Category
+                        Edit category
                       </ActionButton>
                       {canDeleteRecords && (
                         <ActionButton
@@ -1347,13 +1347,13 @@ export default function CategoriesPage() {
                               onClick={() => setAddPanelOpen(true)}
                               variant="primary"
                             >
-                              Add New Item
+                              Add new item
                             </ActionButton>
                             <ActionButton
                               onClick={openAssignment}
                               variant="secondary"
                             >
-                              Add Existing Items
+                              Add existing items
                             </ActionButton>
                           </>
                         ) : selection.type === "low" ||
@@ -1362,14 +1362,14 @@ export default function CategoriesPage() {
                             href="/dashboard/inventory"
                             variant="secondary"
                           >
-                            View Inventory
+                            View inventory
                           </ActionButton>
                         ) : (
                           <ActionButton
                             onClick={() => setAddPanelOpen(true)}
                             variant="primary"
                           >
-                            Add New Item
+                            Add new item
                           </ActionButton>
                         )}
                       </div>
@@ -1590,7 +1590,7 @@ export default function CategoriesPage() {
                 disabled={visibleAssignmentCandidates.length === 0}
                 className="rounded-xl border border-theme px-4 py-3 text-sm font-bold text-theme-primary disabled:opacity-50"
               >
-                Select Visible
+                Select visible
               </button>
               <button
                 type="button"

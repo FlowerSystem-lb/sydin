@@ -245,7 +245,7 @@ export default function ScannerModal({
                 onClick={handleRetry}
                 className={buttonClassName()}
               >
-                Try Again
+                Try again
               </button>
             )}
           </div>

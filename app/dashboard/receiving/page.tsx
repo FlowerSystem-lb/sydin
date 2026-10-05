@@ -1160,7 +1160,7 @@ export default function ReceivingPage() {
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button onClick={startReceiving} disabled={items.length === 0}>
-                  Start Receiving
+                  Start receiving
                 </Button>
                 <Button
                   variant="secondary"
@@ -1900,7 +1900,7 @@ export default function ReceivingPage() {
                     loading={finalizing}
                     loadingLabel="Finalizing..."
                   >
-                    Finalize Receiving
+                    Finalize receiving
                   </Button>
                 </div>
               </div>
@@ -1963,7 +1963,7 @@ export default function ReceivingPage() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button onClick={clearDraft}>Start a new stock in</Button>
               <Button variant="secondary" onClick={() => setStep("receive")}>
-                View Receiving Rows
+                View receiving rows
               </Button>
             </div>
           </section>

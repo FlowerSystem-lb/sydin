@@ -912,7 +912,7 @@ export default function StockCountsPage() {
               </div>
               <div className="flex flex-col gap-2 sm:flex-row">
                 <Button onClick={startCount} disabled={items.length === 0}>
-                  Start Count
+                  Start count
                 </Button>
                 <Button
                   variant="secondary"
@@ -1493,7 +1493,7 @@ export default function StockCountsPage() {
                     loading={finalizing}
                     loadingLabel="Finalizing..."
                   >
-                    Finalize Count
+                    Finalize count
                   </Button>
                 </div>
               </div>
@@ -1557,7 +1557,7 @@ export default function StockCountsPage() {
             <div className="flex flex-col gap-2 sm:flex-row">
               <Button onClick={clearDraft}>Start New Count</Button>
               <Button variant="secondary" onClick={() => setStep("count")}>
-                View Count Rows
+                View count rows
               </Button>
             </div>
           </section>

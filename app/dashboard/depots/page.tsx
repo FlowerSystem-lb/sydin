@@ -363,7 +363,7 @@ export default function DepotsPage() {
               </p>
 
               <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
-                Add Location
+                Add location
               </h2>
 
               {!loading && reachedDepotLimit ? (
@@ -441,7 +441,7 @@ export default function DepotsPage() {
                       loading={saving}
                       loadingLabel="Saving depot..."
                     >
-                      Add Depot
+                      Add depot
                     </Button>
                   </div>
                 </>
@@ -456,7 +456,7 @@ export default function DepotsPage() {
                   </p>
 
                   <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
-                    Depot List
+                    Depot list
                   </h2>
                 </div>
 
@@ -574,7 +574,7 @@ export default function DepotsPage() {
                               loading={saving}
                               loadingLabel="Saving..."
                             >
-                              Save Changes
+                              Save changes
                             </Button>
                           </div>
                         </form>
@@ -705,7 +705,7 @@ export default function DepotsPage() {
                 loadingLabel="Deleting..."
                 className="flex-1"
               >
-                Delete Depot
+                Delete depot
               </Button>
             </>
           }

@@ -149,7 +149,7 @@ function PickListForm({
             loading={saving}
             loadingLabel="Creating..."
           >
-            Create Pick List
+            Create pick list
           </Button>
         </>
       }
@@ -413,7 +413,7 @@ export default function PickListsPage() {
                 disabled={loading || limitReached}
                 icon="plus"
               >
-                Create Pick List
+                Create pick list
               </ActionButton>
             }
           />
@@ -559,7 +559,7 @@ export default function PickListsPage() {
               action={
                 limitReached ? undefined : (
                   <ActionButton onClick={openCreateForm} icon="plus">
-                    Create Pick List
+                    Create pick list
                   </ActionButton>
                 )
               }
@@ -580,7 +580,7 @@ export default function PickListsPage() {
               action={
                 search.trim() || limitReached ? undefined : (
                   <ActionButton onClick={openCreateForm} icon="plus">
-                    Create Pick List
+                    Create pick list
                   </ActionButton>
                 )
               }

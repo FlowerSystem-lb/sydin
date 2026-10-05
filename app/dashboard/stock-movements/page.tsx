@@ -222,7 +222,7 @@ export default function StockMovementsPage() {
                 setDialogOpen(true);
               }}
             >
-              Record Movement
+              Record movement
             </ActionButton>
           }
         />
@@ -409,7 +409,7 @@ export default function StockMovementsPage() {
                       setDialogOpen(true);
                     }}
                   >
-                    Record Movement
+                    Record movement
                   </ActionButton>
                 ) : undefined
               }

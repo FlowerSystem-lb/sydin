@@ -682,7 +682,7 @@ export default function PickListDetailPage() {
               rest secondary, Cancel List on the danger surface. */}
           <DashboardToolbar className="flex flex-wrap items-center gap-2">
             <Button variant="secondary" onClick={() => window.print()}>
-              Print Pick Sheet
+              Print pick sheet
             </Button>
             <Button variant="secondary" onClick={exportPickListCsv}>
               Export CSV
@@ -701,7 +701,7 @@ export default function PickListDetailPage() {
                   onClick={openMetadata}
                   disabled={Boolean(busyAction)}
                 >
-                  Edit Details
+                  Edit details
                 </Button>
                 <Button
                   variant={detail.status === "preparing" ? "secondary" : "primary"}
@@ -709,7 +709,7 @@ export default function PickListDetailPage() {
                   disabled={Boolean(busyAction)}
                   leadingIcon={<UiIcon name="plus" className="h-4 w-4" />}
                 >
-                  Add Item
+                  Add item
                 </Button>
                 {detail.status === "draft" && (
                   <Button
@@ -719,7 +719,7 @@ export default function PickListDetailPage() {
                     loading={busyAction === "start"}
                     loadingLabel="Starting..."
                   >
-                    Start Preparing
+                    Start preparing
                   </Button>
                 )}
                 {detail.status === "preparing" && (
@@ -733,7 +733,7 @@ export default function PickListDetailPage() {
                   onClick={() => setCancelOpen(true)}
                   disabled={Boolean(busyAction)}
                 >
-                  Cancel List
+                  Cancel list
                 </Button>
               </>
             )}
@@ -804,7 +804,7 @@ export default function PickListDetailPage() {
                     onClick={openAddItem}
                     className="rounded-xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold transition hover:bg-theme-hover"
                   >
-                    Add Item
+                    Add item
                   </button>
                 )}
               </div>
@@ -986,7 +986,7 @@ export default function PickListDetailPage() {
                               }
                               className="min-h-12 flex-1 rounded-xl border border-emerald-300/20 bg-emerald-400/10 px-4 py-3 text-sm font-bold text-theme-success disabled:opacity-40"
                             >
-                              Mark Prepared
+                              Mark prepared
                             </button>
                           </div>
                         </div>
@@ -1023,7 +1023,7 @@ export default function PickListDetailPage() {
                             loading={savingLineId === item.id}
                             loadingLabel="Saving..."
                           >
-                            Save Line
+                            Save line
                           </Button>
                         </div>
                       </div>
@@ -1050,7 +1050,7 @@ export default function PickListDetailPage() {
               action={
                 editable ? (
                   <ActionButton onClick={openAddItem} icon="plus">
-                    Add First Item
+                    Add first item
                   </ActionButton>
                 ) : undefined
               }
@@ -1081,7 +1081,7 @@ export default function PickListDetailPage() {
                 loading={busyAction === "metadata"}
                 loadingLabel="Saving..."
               >
-                Save Details
+                Save details
               </Button>
             </>
           }
@@ -1323,7 +1323,7 @@ export default function PickListDetailPage() {
                 onClick={() => setCancelOpen(false)}
                 disabled={busyAction === "cancel"}
               >
-                Keep Active
+                Keep active
               </Button>
               <Button
                 variant="danger"
@@ -1331,7 +1331,7 @@ export default function PickListDetailPage() {
                 loading={busyAction === "cancel"}
                 loadingLabel="Cancelling..."
               >
-                Cancel Pick List
+                Cancel pick list
               </Button>
             </>
           }
@@ -1353,7 +1353,7 @@ export default function PickListDetailPage() {
                 onClick={() => setPendingRemove(null)}
                 disabled={busyAction === "remove"}
               >
-                Keep Item
+                Keep item
               </Button>
               <Button
                 variant="danger"
@@ -1361,7 +1361,7 @@ export default function PickListDetailPage() {
                 loading={busyAction === "remove"}
                 loadingLabel="Removing..."
               >
-                Remove Item
+                Remove item
               </Button>
             </>
           }
@@ -1383,7 +1383,7 @@ export default function PickListDetailPage() {
                 onClick={() => setCompleteOpen(false)}
                 disabled={busyAction === "complete"}
               >
-                Continue Preparing
+                Continue preparing
               </Button>
               <Button
                 onClick={() => void handleComplete()}
@@ -1391,7 +1391,7 @@ export default function PickListDetailPage() {
                 loading={busyAction === "complete"}
                 loadingLabel="Completing..."
               >
-                Complete Without Deducting
+                Complete without deducting
               </Button>
             </>
           }
