@@ -106,9 +106,9 @@ All three must pass.
   the post-sprint checklist (verification gate, UI rules review, drafts the sprint log + decision
   log entries). Does not auto-commit.
 
-**Deliberately not installed:** generic marketplace "frontend-design", "motion/animation",
-"accessibility", or "feature-dev" skills. SydIN's own docs (`SYDIN_UI_RULES.md`,
-`SYDIN_PRODUCT_PRINCIPLES.md`, `SYDIN_DECISION_LOG.md`) already cover this ground more precisely
-than a generic skill would, and a generic skill risks quietly disagreeing with a decision already
-recorded in the decision log. If UI/UX capability ever feels insufficient, extend
-`sydin-ui.md` or the docs it points to — don't bolt on an unrelated marketplace skill.
+**Design skills installed (5 Oct 2026, at Sayed's request for the UI upgrade):** the
+`frontend-design` (Anthropic) and `VectorLab UI/UX Skills` plugins (forms, spacing,
+colour-palette, surfaces, typography, keyboard, ux-audit). This reverses the earlier "deliberately
+not installed" call. They are inputs, not authorities: where a skill disagrees with
+`SYDIN_UI_RULES.md`, `SYDIN_PRODUCT_PRINCIPLES.md` or a settled entry in `SYDIN_DECISION_LOG.md`,
+SydIN's docs win, and a deliberate change goes into the decision log first.
