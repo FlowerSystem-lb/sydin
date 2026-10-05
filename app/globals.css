@@ -30268,3 +30268,13 @@ body:has(.login-page)::-webkit-scrollbar,
     font-style: normal;
   }
 }
+
+/* `.ui-input` sets `padding` as a shorthand after Tailwind's utilities, so an
+   input that also asks for icon room (`pl-10` beside a search glyph) lost
+   it and the glyph sat on the placeholder. Inputs moved onto `.ui-input` in
+   the consistency pass keep their leading-icon padding. */
+.ui-input.pl-8 { padding-left: 2rem; }
+.ui-input.pl-9 { padding-left: 2.25rem; }
+.ui-input.pl-10 { padding-left: 2.5rem; }
+.ui-input.pl-11 { padding-left: 2.75rem; }
+.ui-input.pl-12 { padding-left: 3rem; }

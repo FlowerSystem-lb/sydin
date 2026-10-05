@@ -6730,3 +6730,14 @@ that are a label on their own were changed. "Stock In" and "Stock Out" are kept 
 No code finds a control by its text; the remaining matches were titles, aria labels, onboarding
 copy and comments. Page and nav titles stay Title Case, since they name modules. Lint, tsc and
 build pass.
+
+## 2026-10-05 — Consistency pass, part 4: hand-made inputs
+
+26 inputs in 7 files (Purchase Orders, Stock In, Reports, Scanner, Search, Stock Counts, Set alert
+level) each had their own grey `bg-theme-inset rounded-xl min-h-11` style. They now join
+`.ui-input`, so they share the white surface, 8px corners, 36px height and the shared focus ring.
+`.ui-input` set `padding` as a shorthand after the utilities and dropped the `pl-10` icon room, so
+the search glyph sat on the placeholder. The `.ui-input.pl-*` rules keep it.
+
+**Verified** on Purchase Orders: the search is white, 37px high and has 34px of left padding, and
+the icon is clear. Lint, tsc and build pass.

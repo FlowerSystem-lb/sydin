@@ -1260,7 +1260,7 @@ export default function ReportsPage() {
                 value={reportDateFrom}
                 max={reportDateTo || undefined}
                 onChange={(event) => setReportDateFrom(event.target.value)}
-                className="min-h-10 rounded-lg border border-theme bg-theme-inset px-2.5 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                className="ui-input min-h-10 rounded-lg border border-theme bg-theme-surface px-2.5 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
               />
             </label>
             <label className="grid gap-1 text-xs font-semibold text-theme-secondary">
@@ -1270,7 +1270,7 @@ export default function ReportsPage() {
                 value={reportDateTo}
                 min={reportDateFrom || undefined}
                 onChange={(event) => setReportDateTo(event.target.value)}
-                className="min-h-10 rounded-lg border border-theme bg-theme-inset px-2.5 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                className="ui-input min-h-10 rounded-lg border border-theme bg-theme-surface px-2.5 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
               />
             </label>
             {reportRangeActive && (
@@ -1848,7 +1848,7 @@ export default function ReportsPage() {
                   type="date"
                   value={movementStartDate}
                   onChange={(event) => setMovementStartDate(event.target.value)}
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                  className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
@@ -1857,7 +1857,7 @@ export default function ReportsPage() {
                   type="date"
                   value={movementEndDate}
                   onChange={(event) => setMovementEndDate(event.target.value)}
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                  className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                 />
               </label>
               <label className="grid gap-1.5 text-sm font-bold text-theme-primary">
@@ -1880,7 +1880,7 @@ export default function ReportsPage() {
                   value={movementSearch}
                   onChange={(event) => setMovementSearch(event.target.value)}
                   placeholder="Search item, code, or note"
-                  className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                  className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                 />
               </label>
             </div>

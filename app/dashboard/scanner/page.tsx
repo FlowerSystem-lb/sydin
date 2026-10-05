@@ -910,7 +910,7 @@ function ScannerWorkspace() {
                           setActionError("");
                         }}
                         disabled={busy}
-                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                        className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                       />
                     </label>
                     <div className="grid gap-2 sm:grid-cols-2">
@@ -981,7 +981,7 @@ function ScannerWorkspace() {
                           setSelectedDepot(e.target.value ? Number(e.target.value) : null)
                         }
                         disabled={busy}
-                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                        className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                       >
                         <option value="">Choose a depot...</option>
                         {depots.map((depot) => (
@@ -1020,7 +1020,7 @@ function ScannerWorkspace() {
                         value={selectedAssetId || ""}
                         onChange={(e) => setSelectedAssetId(Number(e.target.value))}
                         disabled={busy}
-                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                        className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                       >
                         {scannedAssets.map((asset) => (
                           <option key={asset.id} value={asset.id}>
@@ -1039,7 +1039,7 @@ function ScannerWorkspace() {
                         onChange={(e) => updateAssigneeSuggestions(e.target.value)}
                         placeholder="Name or email..."
                         disabled={busy}
-                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                        className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                       />
                       {assigneeSuggestions.length > 0 && (
                         <datalist id="assignee-suggestions">
@@ -1081,7 +1081,7 @@ function ScannerWorkspace() {
                         value={selectedAssetId || ""}
                         onChange={(e) => setSelectedAssetId(Number(e.target.value))}
                         disabled={busy}
-                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                        className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                       >
                         {scannedAssets.map((asset) => (
                           <option key={asset.id} value={asset.id}>
@@ -1122,7 +1122,7 @@ function ScannerWorkspace() {
                         value={selectedAssetId || ""}
                         onChange={(e) => setSelectedAssetId(Number(e.target.value))}
                         disabled={busy}
-                        className="min-h-11 rounded-xl border border-theme bg-theme-inset px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                        className="ui-input min-h-9 rounded-lg border border-theme bg-theme-surface px-3 text-base text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                       >
                         {scannedAssets.map((asset) => (
                           <option key={asset.id} value={asset.id}>

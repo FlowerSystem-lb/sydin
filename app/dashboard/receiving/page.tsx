@@ -1269,7 +1269,7 @@ export default function ReceivingPage() {
                       value={receiveSearch}
                       onChange={(event) => setReceiveSearch(event.target.value)}
                       placeholder="Search receiving"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                     />
                   </label>
                   <Select

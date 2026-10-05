@@ -1032,7 +1032,7 @@ export default function PurchaseOrdersPage() {
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search PO number, supplier, item…"
-              className="w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+              className="ui-input w-full rounded-lg border border-theme bg-theme-surface py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
             />
           </label>
           <Select
@@ -1570,7 +1570,7 @@ export default function PurchaseOrdersPage() {
                           value={payAmount}
                           onChange={(event) => setPayAmount(event.target.value)}
                           placeholder="This payment"
-                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                         />
                       </label>
                       <label className="grid gap-1.5">
@@ -1581,7 +1581,7 @@ export default function PurchaseOrdersPage() {
                           type="date"
                           value={payDate}
                           onChange={(event) => setPayDate(event.target.value)}
-                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                         />
                       </label>
                       <Select
@@ -1601,7 +1601,7 @@ export default function PurchaseOrdersPage() {
                           value={payBy}
                           onChange={(event) => setPayBy(event.target.value)}
                           placeholder="Person or account"
-                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                         />
                       </label>
                       <label className="grid gap-1.5 sm:col-span-2">
@@ -1612,7 +1612,7 @@ export default function PurchaseOrdersPage() {
                           value={payNote}
                           onChange={(event) => setPayNote(event.target.value)}
                           placeholder="e.g. deposit, balance on delivery"
-                          className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                         />
                       </label>
                     </div>
@@ -1637,7 +1637,7 @@ export default function PurchaseOrdersPage() {
                       value={payAmount}
                       onChange={(event) => setPayAmount(event.target.value)}
                       placeholder="This payment"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                     />
                   </label>
                   <label className="grid gap-1.5">
@@ -1648,7 +1648,7 @@ export default function PurchaseOrdersPage() {
                       type="date"
                       value={payDate}
                       onChange={(event) => setPayDate(event.target.value)}
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                     />
                   </label>
                   <Select
@@ -1668,7 +1668,7 @@ export default function PurchaseOrdersPage() {
                       value={payBy}
                       onChange={(event) => setPayBy(event.target.value)}
                       placeholder="Person or account"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                     />
                   </label>
                   <label className="grid gap-1.5 sm:col-span-2">
@@ -1679,7 +1679,7 @@ export default function PurchaseOrdersPage() {
                       value={payNote}
                       onChange={(event) => setPayNote(event.target.value)}
                       placeholder="e.g. deposit, balance on delivery"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
+                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
                     />
                   </label>
                 </div>

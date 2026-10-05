@@ -987,7 +987,7 @@ export default function StockCountsPage() {
                       value={countSearch}
                       onChange={(event) => setCountSearch(event.target.value)}
                       placeholder="Search count"
-                      className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                     />
                   </label>
                   <Select
@@ -1101,7 +1101,7 @@ export default function StockCountsPage() {
                                   countedQuantity: event.target.value,
                                 })
                               }
-                              className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                              className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                             />
                           </td>
                           <td className="px-4 py-3">
@@ -1134,7 +1134,7 @@ export default function StockCountsPage() {
                               }
                               aria-label={`Count note for ${item.name}`}
                               placeholder="Optional"
-                              className="min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
+                              className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
                             />
                           </td>
                         </tr>
