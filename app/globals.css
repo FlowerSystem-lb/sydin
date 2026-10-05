@@ -3076,7 +3076,7 @@ select.glass-input option {
 
    `.item-panel-footer` and `.po-save-bar` are the only two sticky-to-bottom
    bars in this file; if a third is ever added, add it here too. */
-.dashboard-shell-content:has(.item-panel-footer, .po-save-bar) {
+.dashboard-shell-content:has(.item-panel-footer, .po-save-bar, .invoice-save-bar) {
   scroll-padding-bottom: 6.5rem;
 }
 
@@ -28905,4 +28905,36 @@ body:has(.login-page)::-webkit-scrollbar,
   .dashboard-theme .dashboard-shell.dashboard-shell.dashboard-shell .dashboard-sidebar .dashboard-sidebar-scroll {
     scrollbar-color: rgba(255, 255, 255, 0.16) transparent;
   }
+}
+
+
+/* ==========================================================================
+   FORMS v2 — SAVE BARS (5 Oct 2026, redesign v2 phase 3)
+   ==========================================================================
+   The invoice's Save sat at y=1024 on a 900px laptop (audit, plan R). The PO
+   already pins its bar; the invoice now does the same on desktop, with the
+   same card language. The phone keeps mobile.css's own pinned bar. The
+   error line inside a save bar is where a failed save explains itself,
+   next to the button that was pressed. */
+@media (min-width: 768px) {
+  .invoice-save-bar {
+    position: sticky;
+    bottom: 0.75rem;
+    z-index: 30;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+.form-save-error {
+  flex: 1 1 16rem;
+  min-width: 0;
+  margin: 0;
+  color: var(--sydin-danger-text);
+  font-size: var(--text-sm);
+  font-weight: 500;
 }

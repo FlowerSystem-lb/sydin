@@ -1785,6 +1785,9 @@ export default function CategoriesPage() {
               setAddPanelOpen(false);
               if (userId) void loadWorkspace(userId);
             }}
+            onSavedAndContinue={() => {
+              if (userId) void loadWorkspace(userId);
+            }}
           />
         </ItemPanel>
       )}

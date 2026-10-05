@@ -603,6 +603,9 @@ export default function NewPurchaseOrderPage() {
     }
   };
 
+  /* The picker stays open so a whole order can be picked in one go (it
+     closed after every item -- audit, 5 Oct 2026). Picking an item already on
+     the order adds one more of it; it used to be silently ignored. */
   const addInventoryLine = (item: PickerItem) => {
     setLines((current) => {
       if (
@@ -611,7 +614,11 @@ export default function NewPurchaseOrderPage() {
             line.lineType === "inventory" && line.inventoryItemId === item.id
         )
       ) {
-        return current;
+        return current.map((line) =>
+          line.lineType === "inventory" && line.inventoryItemId === item.id
+            ? { ...line, quantity: String((Number(line.quantity) || 0) + 1) }
+            : line
+        );
       }
 
       return [
@@ -633,8 +640,6 @@ export default function NewPurchaseOrderPage() {
         },
       ];
     });
-    setPickerOpen(false);
-    setPickerQuery("");
   };
 
   const addExpenseLine = () => {
@@ -799,6 +804,18 @@ export default function NewPurchaseOrderPage() {
     }
   };
 
+  // Ctrl+Enter (Cmd+Enter on a Mac) saves the order, as the main button does.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter" && !saving) {
+        event.preventDefault();
+        void handleSave("ordered");
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   if (loading) {
     return (
       <DashboardPageShell as="main">
@@ -821,7 +838,8 @@ export default function NewPurchaseOrderPage() {
         }
       />
 
-      {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
+      {/* A failed save explains itself in the pinned save bar at the bottom,
+          beside the button that was pressed -- not up here, off screen. */}
 
       {/* Three blocks, stacked: the fields, then Lines, then the invoice
           dropzone. The two-column pairing Sayed asked for is still here, but
@@ -1406,6 +1424,11 @@ export default function NewPurchaseOrderPage() {
             {formatExactPrice(lineTotals.total, currencyCode) || "No total yet"}
           </p>
         </div>
+        {error && (
+          <p role="alert" className="form-save-error">
+            {error}
+          </p>
+        )}
         <div className="flex flex-wrap gap-2">
           <ActionButton href="/dashboard/purchase-orders" variant="ghost">
             Cancel
@@ -1481,12 +1504,27 @@ export default function NewPurchaseOrderPage() {
 
       {pickerOpen && (
         <DialogShell
-          title="Add inventory item"
-          description="Search your inventory by name, SKU, code or barcode."
+          title="Add inventory items"
+          description="Pick as many as you need. Picking one again adds one more."
           onClose={() => {
             setPickerOpen(false);
             setPickerQuery("");
           }}
+          footer={
+            <div className="flex items-center justify-between gap-3">
+              <span className="text-sm text-theme-muted">
+                {lines.length} line{lines.length === 1 ? "" : "s"} on this order
+              </span>
+              <Button
+                onClick={() => {
+                  setPickerOpen(false);
+                  setPickerQuery("");
+                }}
+              >
+                Done
+              </Button>
+            </div>
+          }
         >
           <div className="grid gap-3">
             <label className="relative">
@@ -1539,6 +1577,18 @@ export default function NewPurchaseOrderPage() {
                         · {item.quantity} in stock
                       </span>
                     </span>
+                    {(() => {
+                      const onOrder = lines.find(
+                        (line) =>
+                          line.lineType === "inventory" &&
+                          line.inventoryItemId === item.id
+                      );
+                      return onOrder ? (
+                        <span className="shrink-0 rounded-md bg-[var(--sydin-surface-selected)] px-2 py-0.5 text-xs font-semibold text-theme-accent tabular-nums">
+                          {onOrder.quantity} on order
+                        </span>
+                      ) : null;
+                    })()}
                     <UiIcon name="plus" className="h-4 w-4 shrink-0" />
                   </button>
                 ))}

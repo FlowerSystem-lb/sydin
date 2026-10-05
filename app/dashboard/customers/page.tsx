@@ -791,8 +791,10 @@ export default function CustomersPage() {
               >
                 Cancel
               </Button>
+              {/* Submits the form below by id, so Enter in any field saves too. */}
               <Button
-                onClick={() => void save()}
+                type="submit"
+                form="customer-form"
                 loading={saving}
                 loadingLabel="Saving..."
               >
@@ -801,7 +803,15 @@ export default function CustomersPage() {
             </>
           }
         >
-          <div className="item-form -mx-1">
+          <form
+            id="customer-form"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              void save();
+            }}
+            className="item-form -mx-1"
+          >
             {formError && (
               <p
                 role="alert"
@@ -818,6 +828,7 @@ export default function CustomersPage() {
               <FieldRow label="Name" htmlFor="customer-name" required>
                 <input
                   id="customer-name"
+                  autoFocus
                   placeholder="Business or person"
                   value={form.name}
                   onChange={(event) =>
@@ -842,6 +853,9 @@ export default function CustomersPage() {
               <FieldRow label="Phone" htmlFor="customer-phone">
                 <input
                   id="customer-phone"
+                  type="tel"
+                  inputMode="tel"
+                  autoComplete="tel"
                   placeholder="Phone number"
                   value={form.phone || ""}
                   onChange={(event) =>
@@ -853,6 +867,8 @@ export default function CustomersPage() {
               <FieldRow label="WhatsApp" htmlFor="customer-whatsapp">
                 <input
                   id="customer-whatsapp"
+                  type="tel"
+                  inputMode="tel"
                   placeholder="WhatsApp number"
                   value={form.whatsapp || ""}
                   onChange={(event) =>
@@ -892,10 +908,11 @@ export default function CustomersPage() {
                   setForm({ ...form, notes: event.target.value })
                 }
                 placeholder="Anything worth remembering about this customer"
+                aria-label="Notes"
                 className="item-panel-textarea"
               />
             </FieldGroup>
-          </div>
+          </form>
         </DialogShell>
       )}
 

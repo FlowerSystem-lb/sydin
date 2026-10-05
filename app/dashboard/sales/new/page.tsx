@@ -350,6 +350,19 @@ export default function NewSalePage() {
     const item = items.find((candidate) => String(candidate.id) === itemId);
     if (!item) return;
 
+    // Picking a product already on the invoice adds one more of it rather
+    // than a second identical line (audit, 5 Oct 2026).
+    if (lines.some((line) => line.itemId === item.id)) {
+      setLines((current) =>
+        current.map((line) =>
+          line.itemId === item.id
+            ? { ...line, quantity: String((Number(line.quantity) || 0) + 1) }
+            : line
+        )
+      );
+      return;
+    }
+
     setLines((current) => [
       ...current,
       {
@@ -494,6 +507,18 @@ export default function NewSalePage() {
     }
   };
 
+  // Ctrl+Enter (Cmd+Enter on a Mac) saves from anywhere on the form.
+  useEffect(() => {
+    const onKey = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+        event.preventDefault();
+        void save();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  });
+
   // Same gate as the Sales list: a Free account reaching this URL directly
   // gets the padlock, not a form that would fail on save.
   if (!loading && !getSubscriptionCapabilities(subscription).sales) {
@@ -526,7 +551,11 @@ export default function NewSalePage() {
           description="Saved as a draft. Nothing leaves stock until you issue it."
         />
 
-        {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
+        {/* Once the form is up, errors show in the pinned save bar, beside
+            the button that was pressed; up here they were off screen. */}
+        {error && loading && (
+          <DashboardNotice tone="danger">{error}</DashboardNotice>
+        )}
 
         {loading ? (
           /* Was a bare `<p>Loading...</p>`. The rest of the app draws the
@@ -891,7 +920,12 @@ export default function NewSalePage() {
             {/* invoice-save-bar: pinned above the tab bar on a phone (mobile.css),
                 so Save is never 400px below the fold. Desktop unchanged. */}
             <div className="invoice-save-bar flex flex-wrap items-center justify-end gap-2">
-              {overStock.length > 0 && (
+              {error && (
+                <p role="alert" className="form-save-error">
+                  {error}
+                </p>
+              )}
+              {!error && overStock.length > 0 && (
                 <p className="mr-auto text-xs font-semibold text-theme-warning">
                   {overStock.length} line
                   {overStock.length === 1 ? "" : "s"} above what is in stock.

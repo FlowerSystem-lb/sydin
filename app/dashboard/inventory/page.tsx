@@ -4823,6 +4823,7 @@ export default function InventoryPage() {
             initialCategoryId={addModalCategoryId}
             onCancel={closeAddModal}
             onSaved={() => void handleItemAdded()}
+            onSavedAndContinue={() => void fetchItems()}
           />
         </ItemPanel>
       )}

@@ -6464,3 +6464,31 @@ errors. Settings and Inventory checked for spill-over and look right. lint, tsc 
 collapsed. Computed colours were read live and the hover name-chip checked. Lint, tsc and build pass.
 Found on the way: Turbopack stopped shipping globals.css edits twice. Clearing .next and restarting
 fixed it.
+
+
+## 2026-10-05 — Redesign v2, phase 3: faster forms
+
+**Changed:**
+- **Add Item:** the cursor starts in the name. A new "Save & add another" button clears the form
+  for the next item and keeps the category, depot, supplier and unit, which a batch usually shares.
+  Carried-over choices don't trigger the leave-page warning. Inventory and Categories refresh
+  their list through the new `onSavedAndContinue` prop. Cancel is now a ghost button.
+- **New invoice:** picking a product already on it adds 1 to its quantity instead of a second line.
+  Errors appear in the save bar next to Save rather than at the page top. On desktop the save bar is
+  pinned (it was at y=1024 on a 900px screen). Ctrl/Cmd+Enter saves.
+- **New PO:** the item picker stays open with a "N lines · Done" footer and an "N on order" badge
+  per item. Picking an item again adds 1 (it used to be silently ignored). Errors appear in the
+  save bar. Ctrl/Cmd+Enter saves.
+- **Customer dialog:** it is a real form now, so Enter saves. The cursor starts in Name, phone and
+  WhatsApp bring up the number keypad (`type="tel"`), and Notes is labelled.
+
+**Verified** on the running branch, signed in. The name gets focus and an empty "add another" is
+caught. The invoice's same product went to one line with qty 2, Ctrl+Enter on an empty invoice
+shows the error in the pinned bar (sticky, 27px from the bottom), and the PO picker stays open
+with qty 2 and the badge. On the customer form, Enter with no name shows the error and phone is
+tel. Lint, tsc and build pass.
+
+**Mistake, cleaned up:** a Ctrl+Enter test fired on the PO after a valid line was added saved a
+real order, FLOWERPL-PO-0002 ($0, Ordered, nothing received). It was deleted through the app the
+same turn; the app confirmed nothing else changed. The PO counter is not rewound, so the next order
+will be 0003, and an activity entry may remain.

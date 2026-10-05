@@ -189,6 +189,10 @@ export interface AddItemFormProps {
    *  navigate away, or close and refresh the list -- so this form only
    *  reports success, never navigates itself. */
   onSaved: () => void;
+  /** "Save & add another": the item is created, the form clears for the
+   *  next one and stays open. Callers refresh their list here; without it
+   *  (the standalone page) the form simply clears. */
+  onSavedAndContinue?: () => void;
   onCancel: () => void;
 }
 
@@ -196,6 +200,7 @@ export default function AddItemForm({
   initialBarcode,
   initialCategoryId,
   onSaved,
+  onSavedAndContinue,
   onCancel,
 }: AddItemFormProps) {
   const [name, setName] = useState("");
@@ -229,6 +234,16 @@ export default function AddItemForm({
      challenged. In the slide-over the sidebar sits behind an overlay and is
      not clickable, so this is really guarding the full page -- but the
      tab-close half applies to both. */
+  /* After "Save & add another" the category, depot and supplier carry over
+     to the next item -- a batch usually shares them. Carried-over choices are
+     not new work, so they alone must not trigger the leave-page warning. */
+  const [carriedOver, setCarriedOver] = useState({
+    category: "",
+    depot: "",
+    supplier: "",
+  });
+  const nameInputRef = useRef<HTMLInputElement>(null);
+
   const hasUnsavedWork =
     !loading &&
     Boolean(
@@ -241,10 +256,15 @@ export default function AddItemForm({
         sellingPrice.trim() ||
         notes.trim() ||
         image ||
-        selectedCategoryId ||
-        selectedDepotId ||
-        selectedSupplierId
+        (selectedCategoryId && selectedCategoryId !== carriedOver.category) ||
+        (selectedDepotId && selectedDepotId !== carriedOver.depot) ||
+        (selectedSupplierId && selectedSupplierId !== carriedOver.supplier)
     );
+
+  // The name is the one required field: the cursor starts there.
+  useEffect(() => {
+    nameInputRef.current?.focus({ preventScroll: true });
+  }, []);
   const [formError, setFormError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [isLimitError, setIsLimitError] = useState(false);
@@ -484,10 +504,15 @@ export default function AddItemForm({
     setImage(file);
   };
 
-  const handleSubmit = async (event: React.FormEvent) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
     if (loading) return;
+
+    const submitter = (event.nativeEvent as SubmitEvent).submitter as
+      | HTMLElement
+      | null;
+    const addAnother = submitter?.dataset.addAnother === "true";
 
     setIsLimitError(false);
 
@@ -672,6 +697,36 @@ export default function AddItemForm({
           ? `${createdItem.name} added to your inventory.`
           : "Item added to your inventory.",
       });
+
+      if (addAnother) {
+        // Clear what is specific to the item just saved; keep what a batch
+        // shares (category, depot, supplier, unit).
+        setName("");
+        setSku("");
+        setBarcode("");
+        setQuantity("");
+        setMinStockLevel("");
+        setCostPrice("");
+        setSellingPrice("");
+        setNotes("");
+        setImage(null);
+        setImageError("");
+        setBarcodeNotice(null);
+        setCarriedOver({
+          category: selectedCategoryId,
+          depot: selectedDepotId,
+          supplier: selectedSupplierId,
+        });
+        setSubscriptionUsage((current) => ({
+          ...current,
+          usedItems: current.usedItems + 1,
+        }));
+        onSavedAndContinue?.();
+        window.requestAnimationFrame(() =>
+          nameInputRef.current?.focus({ preventScroll: true })
+        );
+        return;
+      }
 
       onSaved();
     } catch (error) {
@@ -896,6 +951,7 @@ export default function AddItemForm({
 
             <div className="min-w-0 flex-1">
               <input
+                ref={nameInputRef}
                 id="product-name"
                 type="text"
                 value={name}
@@ -1335,17 +1391,29 @@ export default function AddItemForm({
             type="button"
             onClick={onCancel}
             disabled={loading}
-            className={buttonClassName({ variant: "secondary" })}
+            className={buttonClassName({ variant: "ghost" })}
           >
             Cancel
+          </button>
+
+          {/* Loading stock is rarely one item. This saves, clears the form
+              and keeps it open, with the batch's category/depot/supplier
+              still chosen. */}
+          <button
+            type="submit"
+            data-add-another="true"
+            disabled={loading}
+            className={buttonClassName({ variant: "secondary" })}
+          >
+            Save &amp; add another
           </button>
 
           <button
             type="submit"
             disabled={loading}
-            className={buttonClassName({ className: "min-w-[140px]" })}
+            className={buttonClassName({ className: "min-w-[120px]" })}
           >
-            {loading ? "Saving..." : "Save Item"}
+            {loading ? "Saving..." : "Save item"}
           </button>
         </div>
       </form>
