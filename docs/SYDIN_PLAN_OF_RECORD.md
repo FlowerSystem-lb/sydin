@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 5 October 2026 (section R: data-entry UI audit, phases proposed — waiting for Sayed)
+**Last touched:** 5 October 2026 (section R: redesign v2 phase 1 live — fields, font, palette; next: sidebar + top bar)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -930,7 +930,7 @@ Suppliers/Depots dialogs, screen readers.
 
 **Proposed phases (desktop first, one surface per commit):**
 
-- **Phase 1: one field system.** One input look for every typed field, dropdown and
+- ✅ **Phase 1: one field system — LIVE 5 Oct (fdecb30), with the Geist font and v2 palette.** One input look for every typed field, dropdown and
   line field (a light box, same height, same radius, blue focus ring). Bigger labels and
   headings. Palette colours for errors and notices. This changes the UI rule "no box
   around each field", so it needs Sayed's OK and a decision-log entry first.

@@ -90,8 +90,8 @@ Mobile stays last (his 5 Oct instruction).
 | # | Area | State |
 |---|---|---|
 | 2 | Audit | ◐ forms done (plan R); rest audited per phase as each is reached |
-| 5–6 | Colour + design system (font, type, palette, radius, elevation, fields) | ☐ Phase 1 |
-| 11 | Forms | ☐ Phase 1 (look) + Phase 3 (speed) |
+| 5–6 | Colour + design system (font, type, palette, radius, elevation, fields) | ✅ Phase 1 live 5 Oct (fdecb30) |
+| 11 | Forms | ◐ look done (Phase 1); speed = Phase 3 |
 | 8 | Sidebar + header | ☐ Phase 2 |
 | 7 | Overview | ☐ |
 | 9–10 | Inventory table + item page | ☐ |
