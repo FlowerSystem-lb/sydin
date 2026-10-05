@@ -941,3 +941,34 @@ Suppliers/Depots dialogs, screen readers.
   supplier made one picker like the invoice's customer. Add Item order changed to
   name → quantity → prices → the rest. Due date pre-filled from payment terms.
 - Then Edit Item, Suppliers, Depots, Stock Counts get the same pass. Mobile comes last.
+
+### R.1 Item page v3 — Sayed's reference, saved for later (5 Oct 2026)
+
+Reference: [docs/references/item-page-reference-2026-10-05.png](references/item-page-reference-2026-10-05.png)
+(an AI-generated mockup Sayed shared; "we will do this later"). **His must-have: a big image
+preview.**
+
+Take from it:
+- low-stock banner with actions (Create purchase order, Adjust minimum)
+- margin figure and a cost / margin / price bar
+- an "Item setup" checklist (category, depot, supplier, SKU)
+- one Activity timeline with filter tabs (All / Movements / Edits / Created)
+- identifiers with a rendered barcode
+- inline notes
+- delete as a separate danger card
+- a "…" overflow menu
+
+Fix or add when building it:
+1. **Big photo.** It should lead the page, large and zoomable, not a small side card. The mockup
+   hides it lower down.
+2. **Keep the section PDF buttons** and the newest-10 + "Show more" limits. The mockup has
+   neither, and they were built today at Sayed's request.
+3. **Sentence-case labels**, not "CATEGORY" capitals. Use the primary blue for "Create purchase
+   order", not dark brown. Activity text is one size (the mockup mixes 13px and 20px).
+4. **Real data only.** "The last purchase order was cancelled" must come from the item's real
+   documents, or not be shown.
+5. **Worth adding:** sold in the last 30 days and "about N days of stock left" (from invoice lines
+   already loaded), and the last purchase cost.
+6. **A rendered EAN-13 barcode needs a small library** (e.g. jsbarcode). Decide whether to add a
+   dependency or show the digits only.
+7. **The phone layout** isn't in the mockup. Mobile comes last anyway.
