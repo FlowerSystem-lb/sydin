@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 20 September 2026 (visual redesign passes 1–3 · reference-matched graphs · bug hunt · 500-item test · accessibility sweep · phone: every page in the app language, installable)
+**Last touched:** 5 October 2026 (section R: data-entry UI audit, phases proposed — waiting for Sayed)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -883,3 +883,61 @@ The brief is roughly 5 phases, each about the size of Sales & Invoices. This pla
 ### Size and cost honesty
 Phase 1 is about 1 large SQL file, 3 pages, 1 dialog and 2 lib files, the size of the Sales & Invoices sprint. Start it in a **fresh session** so it isn't paying to re-read this long one.
 
+
+---
+
+## R. UI upgrade: data entry. Audit 5 October 2026 (no code changed)
+
+Sayed, 5 Oct: drop the promo video, make data entry easy, focus on design (colours,
+shapes, spacing), mobile last. The four forms audited: Add Item, New Invoice, New
+Purchase Order, Add Customer. Each was read in code and opened in the running app at
+1440×900. Nothing was saved.
+
+**What was measured (verified):**
+
+1. **Three kinds of input in one form.** Dropdowns are white boxes 36px tall. Typed
+   fields (quantity, prices, SKU) have no box at all, are 26px tall and look like
+   plain text ("0", "Business default"). Invoice/PO line fields are a third style,
+   boxed at 37px. The PO's "New depot" dialog uses a fourth, older style (44px, 12px radius).
+2. **Small type.** Section headings are 9.8px, field labels 11.2px and typed text 11.9px.
+3. **Errors appear in the wrong place.** On the Invoice and PO, a failed save puts its
+   message at the top of the page while the Save button is at the bottom. Nothing
+   scrolls there, so Save looks dead. The invoice's line errors don't say which line.
+4. **The invoice's Save is off screen.** It sits at y=1024 on a 900px-tall laptop.
+   The PO has a pinned save bar and the invoice doesn't.
+5. **Adding the same product twice makes two lines.** It should add 1 to the
+   quantity. Seen on the invoice.
+6. **The cursor doesn't land where typing starts.** Add Item, the customer dialog and
+   a new invoice line all leave focus on the page/dialog, not the first field.
+7. **Add Item has no "Save & add another"**, which is the most common need when
+   loading stock. The name field has no visible label or required mark. A plan/usage
+   strip sits at the top of the form.
+8. **The PO buries its lines.** 17 fields (order, supplier, five payment fields) come
+   before the first line. Supplier is three fields: a saved-supplier dropdown plus a
+   free-text name plus a contact. The item picker is a pop-up that closes after every
+   item. The invoice adds products inline. The two pages give the same job two designs.
+9. **The customer dialog** isn't a real form, so Enter doesn't save. Phone and
+   WhatsApp are plain text fields, so phones don't show the number pad. There is no
+   "same as phone" for WhatsApp. Notes has no label.
+10. **Small inconsistencies:** the PO is headed "Operations / New Purchase Order"
+    while the invoice says "Selling / New invoice". There are three Cancel styles.
+    Error boxes and the barcode notice are hand-coloured red/amber/green instead of
+    the palette. Dates show US mm/dd/yyyy. The due date ignores the payment terms
+    already saved in Company settings.
+
+**Not checked:** phone widths (mobile is last by instruction), Arabic/RTL, Edit Item,
+Suppliers/Depots dialogs, screen readers.
+
+**Proposed phases (desktop first, one surface per commit):**
+
+- **Phase 1: one field system.** One input look for every typed field, dropdown and
+  line field (a light box, same height, same radius, blue focus ring). Bigger labels and
+  headings. Palette colours for errors and notices. This changes the UI rule "no box
+  around each field", so it needs Sayed's OK and a decision-log entry first.
+- **Phase 2: speed fixes.** Focus on the first field. Save & add another on Add Item.
+  Same product → quantity +1. Errors next to Save, naming the line. A pinned save bar
+  on the invoice. Enter saves the customer. Number pad for phones. Ctrl+Enter saves.
+- **Phase 3: layout.** PO lines moved up, payment folded into "Payment (optional)" and
+  supplier made one picker like the invoice's customer. Add Item order changed to
+  name → quantity → prices → the rest. Due date pre-filled from payment terms.
+- Then Edit Item, Suppliers, Depots, Stock Counts get the same pass. Mobile comes last.
