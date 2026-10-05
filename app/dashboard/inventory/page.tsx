@@ -2572,22 +2572,23 @@ export default function InventoryPage() {
   const renderItemActionMenu = (
     item: Item,
     menuClassName =
-      "inventory-floating-menu z-[120] rounded-xl border border-slate-200 bg-white p-1.5 text-slate-700 shadow-[0_14px_34px_rgba(15,23,42,0.16)]"
+      "inventory-floating-menu z-[120] rounded-xl border border-theme bg-theme-surface p-1.5 text-theme-secondary shadow-[var(--shadow-elevated)]"
   ) => (
     <div
       onClick={(event) => event.stopPropagation()}
       onKeyDown={(event) => event.stopPropagation()}
     >
       <InventoryActionMenu
-        label="More"
-        buttonClassName="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-theme bg-theme-surface px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20"
+        label={`More actions for ${item.name}`}
+        labelHidden
+        buttonClassName="inline-flex h-8 w-8 items-center justify-center rounded-lg text-theme-muted transition hover:bg-theme-hover hover:text-theme-primary focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20"
         menuClassName={menuClassName}
       >
         <button
           type="button"
           role="menuitem"
           onClick={() => setDetailsItem({ id: item.id, tab: "details" })}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium hover:bg-theme-hover focus-visible:bg-theme-hover focus-visible:outline-none"
         >
           <UiIcon name="file" className="h-4 w-4" />
           View details
@@ -2596,7 +2597,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => setMovementItem(item)}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium hover:bg-theme-hover focus-visible:bg-theme-hover focus-visible:outline-none"
         >
           <UiIcon name="movement" className="h-4 w-4" />
           Adjust stock
@@ -2605,7 +2606,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => setAlertLevelItem(item)}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium hover:bg-theme-hover focus-visible:bg-theme-hover focus-visible:outline-none"
         >
           <UiIcon name="alert" className="h-4 w-4" />
           Set alert level
@@ -2614,7 +2615,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => openEditModal(item)}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium hover:bg-theme-hover focus-visible:bg-theme-hover focus-visible:outline-none"
         >
           <UiIcon name="appearance" className="h-4 w-4" />
           Edit
@@ -2624,7 +2625,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => setDetailsItem({ id: item.id, tab: "activity" })}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium hover:bg-theme-hover focus-visible:bg-theme-hover focus-visible:outline-none"
         >
           <UiIcon name="clock" className="h-4 w-4" />
           Activity
@@ -2633,7 +2634,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => openQrCenterForItems([item.id])}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium hover:bg-theme-hover focus-visible:bg-theme-hover focus-visible:outline-none"
         >
           <UiIcon name="qr" className="h-4 w-4" />
           Create QR / Label
@@ -2642,7 +2643,7 @@ export default function InventoryPage() {
           type="button"
           role="menuitem"
           onClick={() => openPurchaseOrderForItems([item.id])}
-          className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold hover:bg-slate-50 focus-visible:bg-slate-50 focus-visible:outline-none"
+          className="flex min-h-10 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-medium hover:bg-theme-hover focus-visible:bg-theme-hover focus-visible:outline-none"
         >
           <UiIcon name="file" className="h-4 w-4" />
           Create purchase order
@@ -3533,7 +3534,7 @@ export default function InventoryPage() {
               <div className="inventory-table-shell hidden overflow-hidden rounded-2xl border border-theme bg-theme-surface md:block">
                 <div className="inventory-table-scroll">
                   <table className="inventory-table table-fixed text-left text-sm">
-                    <thead className="border-b border-theme bg-theme-inset text-xs font-black uppercase tracking-[0.12em] text-theme-subtle">
+                    <thead className="border-b border-theme bg-theme-inset text-xs font-medium text-theme-muted">
                       <tr>
                         <th className="w-10 px-3 py-2.5">
                           <span className="sr-only">Select</span>
@@ -3545,7 +3546,9 @@ export default function InventoryPage() {
                         <th className="px-3 py-2.5 text-right">Stock</th>
                         <th className="px-3 py-2.5">Status</th>
                         <th className="px-3 py-2.5 text-right">Value</th>
-                        <th className="px-3 py-2.5 text-right">Actions</th>
+                        <th className="w-12 px-3 py-2.5 text-right">
+                          <span className="sr-only">Actions</span>
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-[var(--border-divider)]">
@@ -3579,7 +3582,7 @@ export default function InventoryPage() {
                               setDetailsItem({ id: item.id, tab: "details" });
                             }}
                             className={`cursor-pointer transition hover:bg-theme-hover focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-sydin-blue/20 ${
-                              selected ? "bg-cyan-500/[0.08]" : ""
+                              selected ? "bg-[var(--sydin-surface-selected)]" : ""
                             }`}
                           >
                             <td className="px-3 py-2.5">
@@ -3590,7 +3593,7 @@ export default function InventoryPage() {
                                   onChange={() => toggleItemSelection(item.id)}
                                   onClick={(event) => event.stopPropagation()}
                                   aria-label={`${selected ? "Deselect" : "Select"} ${item.name}`}
-                                  className="h-4 w-4 rounded border-slate-300 text-cyan-600 focus:ring-sydin-blue/40"
+                                  className="h-4 w-4 accent-[var(--sydin-blue)]"
                                 />
                               )}
                             </td>
@@ -3599,7 +3602,7 @@ export default function InventoryPage() {
                                 {/* `contain` on white, matching grid and list:
                                     cropping a wide logo to its centre makes the
                                     thumbnail useless for recognising the item. */}
-                                <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-white p-1 ring-1 ring-black/5">
+                                <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg bg-white p-1 ring-1 ring-black/5">
                                   <InventoryThumbnail
                                     src={item.image}
                                     alt=""
@@ -3608,7 +3611,7 @@ export default function InventoryPage() {
                                   />
                                 </div>
                                 <div className="min-w-0">
-                                  <p className="font-black text-theme-primary [overflow-wrap:anywhere]" title={item.name}>
+                                  <p className="font-semibold text-theme-primary [overflow-wrap:anywhere]" title={item.name}>
                                     {item.name}
                                   </p>
                                   {/* Only show the barcode line when there is a
@@ -3617,14 +3620,14 @@ export default function InventoryPage() {
                                       row of a table that is entirely inventory
                                       items — a line of noise per row. */}
                                   {item.barcode && (
-                                    <p className="text-xs font-semibold text-theme-muted [overflow-wrap:anywhere]">
+                                    <p className="font-mono text-xs text-theme-muted [overflow-wrap:anywhere]">
                                       {item.barcode}
                                     </p>
                                   )}
                                 </div>
                               </div>
                             </td>
-                            <td className="px-3 py-2.5 text-theme-secondary">
+                            <td className="px-3 py-2.5 font-mono text-xs text-theme-secondary">
                               <span
                                 className="block [overflow-wrap:anywhere]"
                                 title={
@@ -3644,9 +3647,13 @@ export default function InventoryPage() {
                               {getCategoryLabel(item)}
                             </td>
                             <td className="px-3 py-2.5 text-theme-secondary">
-                              {depot ? formatDepotLabel(depot) : "Unassigned"}
+                              {depot ? (
+                                formatDepotLabel(depot)
+                              ) : (
+                                <span className="text-theme-subtle">Unassigned</span>
+                              )}
                             </td>
-                            <td className="px-3 py-2.5 text-right font-black text-theme-primary">
+                            <td className="px-3 py-2.5 text-right font-semibold tabular-nums text-theme-primary">
                               {getInventoryQuantityLabel(
                                 item.quantity,
                                 item.unit_type,
@@ -3660,7 +3667,7 @@ export default function InventoryPage() {
                                 {status.label}
                               </span>
                             </td>
-                            <td className="px-3 py-2.5 text-right text-xs font-black text-theme-primary">
+                            <td className="px-3 py-2.5 text-right font-medium tabular-nums text-theme-primary">
                               {itemValue === null
                                 ? "--"
                                 : formatCompactCurrency(

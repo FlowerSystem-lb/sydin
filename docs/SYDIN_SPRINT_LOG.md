@@ -6649,3 +6649,18 @@ data.
 
 **Verified** on item 37 (barcode 5283001515680): an EAN-13 rendered with 31 bars and the caption,
 and the four add buttons are present. Lint, tsc and build pass.
+
+## 2026-10-05 — Inventory table polish
+
+- **Head:** sentence case at 11.6px. An old `.inventory-workspace .inventory-table th` rule forced
+  uppercase and 0.06em tracking; it is fixed at source. Cells no longer pin `font-weight: 400`, so
+  names and stock carry weight. The Actions heading is screen-reader only.
+- **Rows:** semibold names, the barcode in mono, the code column in mono, "Unassigned" faded, and
+  stock and value in tabular numerals. The selected row uses the selection token, not cyan.
+  Checkboxes use accent-colour blue. Thumbnails are 40px with 8px corners.
+- **Row menu:** an icon-only "…" (32px, aria-label "More actions for <item>") instead of a
+  bordered 44px "More" button. Menu items use theme hover tokens instead of slate; the menu uses
+  the elevated shadow token.
+
+**Verified** live at 1280: the head has no text-transform, the menu opens with all 8 actions and
+the row click doesn't fire. Lint, tsc and build pass.
