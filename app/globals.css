@@ -29251,3 +29251,78 @@ body:has(.login-page)::-webkit-scrollbar,
   font-weight: 600;
   letter-spacing: -0.005em;
 }
+
+
+/* ==========================================================================
+   ITEM ACTIVITY LISTS (5 Oct 2026)
+   ==========================================================================
+   Sayed: "what if this item has 100 activities -- how will they fit?" Each
+   movement and history entry was a ~110px bordered card, all rendered. Now
+   a ~48px row with a hairline between (icon, what, when and who, the note
+   on one line, then before -> after and the change), newest 10 first, and
+   "Show 20 more". */
+.item-detail .item-activity-list {
+  margin-top: 1rem;
+  border-top: 1px solid var(--border-divider);
+}
+
+.item-detail .item-activity-row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0.25rem;
+  border-bottom: 1px solid var(--border-divider);
+}
+
+.item-detail .item-activity-icon {
+  display: inline-flex;
+  width: 1.9rem;
+  height: 1.9rem;
+  align-items: center;
+  justify-content: center;
+  border-width: 1px;
+  border-radius: var(--radius-control);
+}
+
+.item-detail .item-activity-text {
+  display: flex;
+  min-width: 0;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 0.6rem;
+  row-gap: 0.1rem;
+}
+
+.item-detail .item-activity-text strong {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.item-detail .item-activity-text small {
+  color: var(--text-muted);
+  font-size: var(--text-xs);
+}
+
+.item-detail .item-activity-note {
+  flex-basis: 100%;
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-detail .item-activity-count {
+  align-self: flex-start;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (min-width: 640px) {
+  .item-detail .item-activity-count {
+    align-self: auto;
+  }
+}

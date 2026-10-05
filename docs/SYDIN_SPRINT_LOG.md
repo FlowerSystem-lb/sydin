@@ -6565,3 +6565,21 @@ overflows and the submit is solid blue. Nothing was recorded. Lint, tsc and buil
 
 **Verified** live at 1280×800, signed in: the badge says "Low stock" in amber for an 80-of-81
 item, and the button order and section titles are right. Lint, tsc and build pass.
+
+
+## 2026-10-05 — Item activity that scales (Sayed: "what if an item has 100 activities?")
+
+**Found:** the full item page fetched and rendered every stock movement and every history entry,
+each as a ~110px bordered card, in two separate lists. 100 movements meant ~11,000px of page. The
+documents list and the slide-over's Activity tab were also unbounded.
+
+**Changed:**
+- Item page: Stock movements and Item history are compact rows (~45px; icon, what, when and who,
+  the note truncated with a title tooltip, then before → after and the change) with hairlines.
+  The newest 10 show, and "Show more · N older" adds 20. Documents work the same way. The count
+  pills became plain muted text, and the headings are sentence case.
+- Slide-over Activity tab: the newest 15, with "Show more" adding 30.
+- Fetching is unchanged (the chart still needs the full movement series); this limits rendering only.
+
+**Verified** live: rows are 43–56px. With the limit temporarily set to 1, "Show more · 2 older"
+revealed all 3 and the button disappeared; the limit was then restored to 10. Lint, tsc and build pass.

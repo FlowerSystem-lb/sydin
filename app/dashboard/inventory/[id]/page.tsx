@@ -246,6 +246,12 @@ export default function ItemDetailsPage() {
   const [item, setItem] = useState<Item | null>(null);
   const [history, setHistory] = useState<InventoryHistory[]>([]);
   const [stockMovements, setStockMovements] = useState<StockMovement[]>([]);
+  /* An item with a long life has hundreds of entries; every one used to
+     render as a ~110px card, so 100 movements was ~11,000px of page (Sayed,
+     5 Oct 2026). The newest 10 show; "Show more" adds 20 at a time. */
+  const [movementLimit, setMovementLimit] = useState(10);
+  const [historyLimit, setHistoryLimit] = useState(10);
+  const [documentLimit, setDocumentLimit] = useState(10);
   // Every invoice and purchase order this item is on (brief points 26, 40).
   const [itemDocuments, setItemDocuments] = useState<ItemDocument[]>([]);
   const [qrUrl, setQrUrl] = useState("");
@@ -1276,7 +1282,7 @@ export default function ItemDetailsPage() {
                   </p>
                 ) : (
                   <ul className="mt-4 divide-y divide-[var(--border-divider)]">
-                    {itemDocuments.map((document) => (
+                    {itemDocuments.slice(0, documentLimit).map((document) => (
                       <li key={`${document.kind}-${document.id}`}>
                         <Link
                           href={document.href}
@@ -1329,6 +1335,18 @@ export default function ItemDetailsPage() {
                     ))}
                   </ul>
                 )}
+                {itemDocuments.length > documentLimit && (
+                  <button
+                    type="button"
+                    onClick={() => setDocumentLimit((limit) => limit + 20)}
+                    className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
+                  >
+                    Show more
+                    <span className="text-theme-muted">
+                      {" "}· {itemDocuments.length - documentLimit} older
+                    </span>
+                  </button>
+                )}
               </section>
 
               <section
@@ -1342,84 +1360,83 @@ export default function ItemDetailsPage() {
                     </p>
 
                     <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
-                      Stock Movements
+                      Stock movements
                     </h2>
                   </div>
 
-                  <span className="self-start rounded-full border border-emerald-300/25 bg-emerald-500/15 px-4 py-2 text-sm font-bold text-theme-success sm:self-auto">
+                  <span className="item-activity-count">
                     {stockMovements.length}{" "}
                     {stockMovements.length === 1 ? "movement" : "movements"}
                   </span>
                 </div>
 
                 {stockMovements.length > 0 ? (
-                  <div className="mt-6 space-y-4">
-                    {stockMovements.map((movement) => (
-                      <div
-                        key={movement.id}
-                        className="item-movement-card rounded-[18px] border border-theme bg-theme-inset p-4"
-                      >
-                        <div className="item-movement-inner flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
-                          <div className="item-movement-head flex items-start gap-3">
-                            <div
-                              className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${getActivityToneClasses(
+                  <>
+                  <ul className="item-activity-list">
+                    {stockMovements.slice(0, movementLimit).map((movement) => (
+                      <li key={movement.id} className="item-activity-row">
+                        <span
+                          className={`item-activity-icon ${getActivityToneClasses(
+                            movement.movement_type
+                          )}`}
+                          aria-hidden="true"
+                        >
+                          <UiIcon
+                            name={
+                              getActivityEventIcon(
                                 movement.movement_type
-                              )}`}
+                              ) as UiIconName
+                            }
+                            className="h-3.5 w-3.5"
+                          />
+                        </span>
+                        <span className="item-activity-text">
+                          <strong>
+                            {STOCK_MOVEMENT_LABELS[movement.movement_type]}
+                          </strong>
+                          <small>
+                            {formatCreatedDate(movement.created_at)}
+                            <DoneBy actorId={movement.actor_id} className="done-by done-by-inline" />
+                          </small>
+                          {movement.notes && (
+                            <span
+                              className="item-activity-note"
+                              title={formatStockMovementNotes(movement.notes)}
                             >
-                              <UiIcon
-                                name={
-                                  getActivityEventIcon(
-                                    movement.movement_type
-                                  ) as UiIconName
-                                }
-                                className="h-4 w-4"
-                              />
-                            </div>
-
-                            <div>
-                              <h3 className="text-lg font-bold text-theme-primary">
-                                {
-                                  STOCK_MOVEMENT_LABELS[
-                                    movement.movement_type
-                                  ]
-                                }
-                              </h3>
-
-                              <p className="mt-1 text-sm font-medium text-theme-muted">
-                                {formatCreatedDate(movement.created_at)}
-                                <DoneBy actorId={movement.actor_id} className="done-by done-by-inline" />
-                              </p>
-
-                              {movement.notes && (
-                                <p className="mt-3 max-w-2xl whitespace-pre-wrap break-normal text-sm leading-6 text-theme-secondary">
-                                  {formatStockMovementNotes(movement.notes)}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-
-                          {/* Three bordered boxes for three numbers, per movement — the same
-                              box-per-fact habit as the rest of the page. A stock
-                              movement reads as one sentence: 1 → 2, and the change
-                              is the part worth colouring. */}
-                          <div className="item-detail-movement">
-                            <span>{movement.quantity_before}</span>
-                            <span aria-hidden="true">&rarr;</span>
-                            <span>{movement.quantity_after}</span>
-                            <strong
-                              className={
-                                movement.quantity_delta < 0
-                                  ? "text-theme-danger"
-                                  : "text-theme-success"
-                              }
-                            >
-                              {formatQuantityDelta(movement.quantity_delta)}
-                            </strong>
-                          </div>
-                        </div>
-                      </div>
+                              {formatStockMovementNotes(movement.notes)}
+                            </span>
+                          )}
+                        </span>
+                        <span className="item-detail-movement">
+                          <span>{movement.quantity_before}</span>
+                          <span aria-hidden="true">&rarr;</span>
+                          <span>{movement.quantity_after}</span>
+                          <strong
+                            className={
+                              movement.quantity_delta < 0
+                                ? "text-theme-danger"
+                                : "text-theme-success"
+                            }
+                          >
+                            {formatQuantityDelta(movement.quantity_delta)}
+                          </strong>
+                        </span>
+                      </li>
                     ))}
-                  </div>
+                  </ul>
+                  {stockMovements.length > movementLimit && (
+                    <button
+                      type="button"
+                      onClick={() => setMovementLimit((limit) => limit + 20)}
+                      className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
+                    >
+                      Show more
+                      <span className="text-theme-muted">
+                        {" "}· {stockMovements.length - movementLimit} older
+                      </span>
+                    </button>
+                  )}
+                  </>
                 ) : (
                   <div className="mt-5 rounded-[18px] border border-dashed border-emerald-300/25 bg-theme-inset px-5 py-8 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/20 bg-emerald-500/15 text-theme-success">
@@ -1446,82 +1463,71 @@ export default function ItemDetailsPage() {
                     </p>
 
                     <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
-                      Item History
+                      Item history
                     </h2>
                   </div>
 
-                  <span className="self-start rounded-full border border-indigo-300/25 bg-indigo-500/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
+                  <span className="item-activity-count">
                     {history.length} {history.length === 1 ? "entry" : "entries"}
                   </span>
                 </div>
 
                 {history.length > 0 ? (
-                  <div className="mt-6 space-y-4">
-                    {history.map((entry) => {
+                  <>
+                  <ul className="item-activity-list">
+                    {history.slice(0, historyLimit).map((entry) => {
                       const historyEventType =
                         HISTORY_ACTION_TO_EVENT_TYPE[entry.action] ||
                         "item_edited";
 
                       return (
-                      <div
-                        key={entry.id}
-                        className="item-history-card relative rounded-[18px] border border-theme bg-theme-inset p-4"
-                      >
-                        <div className="item-movement-inner flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                          <div className="item-movement-head flex items-start gap-3">
-                            <div
-                              className={`mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border ${getActivityToneClasses(
-                                historyEventType
-                              )}`}
-                            >
-                              <UiIcon
-                                name={
-                                  getActivityEventIcon(
-                                    historyEventType
-                                  ) as UiIconName
-                                }
-                                className="h-4 w-4"
-                              />
-                            </div>
-
-                            <div>
-                              <h3 className="text-lg font-bold text-theme-primary">
-                                {formatAction(entry.action)}
-                              </h3>
-
-                              <p className="mt-1 text-sm font-medium text-theme-muted">
-                                {formatCreatedDate(entry.created_at)}
-                                <DoneBy actorId={entry.actor_id} className="done-by done-by-inline" />
-                              </p>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:min-w-[300px]">
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
-                                Old quantity
-                              </p>
-
-                              <p className="mt-1.5 text-xl font-black text-theme-primary">
-                                {formatQuantity(entry.old_quantity)}
-                              </p>
-                            </div>
-
-                            <div className="rounded-2xl border border-theme bg-theme-surface p-3">
-                              <p className="text-xs font-semibold uppercase tracking-[0.14em] text-theme-subtle">
-                                New quantity
-                              </p>
-
-                              <p className="mt-1.5 text-xl font-black text-theme-accent">
-                                {formatQuantity(entry.new_quantity)}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
+                        <li key={entry.id} className="item-activity-row">
+                          <span
+                            className={`item-activity-icon ${getActivityToneClasses(
+                              historyEventType
+                            )}`}
+                            aria-hidden="true"
+                          >
+                            <UiIcon
+                              name={
+                                getActivityEventIcon(
+                                  historyEventType
+                                ) as UiIconName
+                              }
+                              className="h-3.5 w-3.5"
+                            />
+                          </span>
+                          <span className="item-activity-text">
+                            <strong>{formatAction(entry.action)}</strong>
+                            <small>
+                              {formatCreatedDate(entry.created_at)}
+                              <DoneBy actorId={entry.actor_id} className="done-by done-by-inline" />
+                            </small>
+                          </span>
+                          <span className="item-detail-movement">
+                            <span>{formatQuantity(entry.old_quantity)}</span>
+                            <span aria-hidden="true">&rarr;</span>
+                            <strong className="text-theme-primary">
+                              {formatQuantity(entry.new_quantity)}
+                            </strong>
+                          </span>
+                        </li>
                       );
                     })}
-                  </div>
+                  </ul>
+                  {history.length > historyLimit && (
+                    <button
+                      type="button"
+                      onClick={() => setHistoryLimit((limit) => limit + 20)}
+                      className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-3" })}
+                    >
+                      Show more
+                      <span className="text-theme-muted">
+                        {" "}· {history.length - historyLimit} older
+                      </span>
+                    </button>
+                  )}
+                  </>
                 ) : (
                   <div className="mt-5 rounded-[18px] border border-dashed border-indigo-300/25 bg-theme-inset px-5 py-8 text-center">
                     <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-indigo-300/20 bg-indigo-500/15 text-theme-accent">

@@ -14,7 +14,7 @@ import {
 import { createPortal } from "react-dom";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import StockLevelChart from "@/components/inventory/StockLevelChart";
-import { Select, StatusBadge } from "@/components/ui";
+import { buttonClassName, Select, StatusBadge } from "@/components/ui";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -240,6 +240,9 @@ export default function ItemDetailsSlideOver({
   // The header's "Adjust stock" jumps here: the most-used action used to sit
   // below every detail group, out of view on a laptop (audit, 5 Oct 2026).
   const adjustFormRef = useRef<HTMLFormElement>(null);
+  // Long-lived items have hundreds of events; the feed shows the newest 15
+  // and grows 30 at a time instead of rendering them all (5 Oct 2026).
+  const [activityLimit, setActivityLimit] = useState(15);
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -1093,7 +1096,7 @@ export default function ItemDetailsSlideOver({
                         inventory-history list. See combinedActivity above. */}
                     {combinedActivity.length > 0 ? (
                       <div className="item-details-activity-list">
-                        {combinedActivity.map((event, index) => (
+                        {combinedActivity.slice(0, activityLimit).map((event, index) => (
                           <article
                             key={event.id}
                             className={index === 0 && quantityChanged ? "is-new" : undefined}
@@ -1152,6 +1155,17 @@ export default function ItemDetailsSlideOver({
                             )}
                           </article>
                         ))}
+                        {combinedActivity.length > activityLimit && (
+                          <button
+                            type="button"
+                            onClick={() => setActivityLimit((limit) => limit + 30)}
+                            className={buttonClassName({ variant: "secondary", size: "sm", className: "mt-2 self-start" })}
+                          >
+                            Show more
+                            {" · "}
+                            {combinedActivity.length - activityLimit} older
+                          </button>
+                        )}
                       </div>
                     ) : (
                       <DashboardEmptyState
