@@ -6615,3 +6615,26 @@ pdf.js. That gave 5 pages, no split rows, the header and table head on every pag
 footers, and "-5" correct after the fix. The history and empty documents PDFs were checked the same
 way. In the running app, signed in, all three buttons produced application/pdf files (22–24 KB, with
 the logo) without error. Temporary test files were removed. Lint, tsc and build pass.
+
+
+## 2026-10-05 — Item page v3 from Sayed's reference
+
+Built from docs/references/item-page-reference-2026-10-05.png: header with status, low-stock banner (real last-PO status, Create purchase order, Adjust minimum), big zoomable photo beside four figures (on hand + meter + 30-day sales pace, cost value, retail value + profit, margin 
+## 2026-10-05 — Item page v3 from Sayed's reference
+
+Built from docs/references/item-page-reference-2026-10-05.png:
+- **Header** with the status badge.
+- **Low-stock banner** with the real last purchase order status, plus Create purchase order and
+  Adjust minimum.
+- **Big zoomable photo** beside four figures: on hand with a meter and 30-day sales pace, cost
+  value, retail value with profit, and margin percent.
+- **Details** with a pricing bar and the last purchase cost, then the stock chart.
+- **One Activity timeline** with All / Movements / Edits / Created tabs, the newest 10 plus "Show
+  more", and a PDF of the current filter.
+- **Documents table** with its PDF, then notes.
+- **Side column:** item setup checklist (9 checks), identifiers, QR code and delete card.
+
+**Verified** on real data at 1440px wide: the banner text, figures, "5 of 9", tab counts 4/1/2/1
+and the activity PDF (27 KB). Lint, tsc and build pass.
+
+**Not yet checked:** 1024px and phone widths.
