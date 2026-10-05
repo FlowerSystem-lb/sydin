@@ -93,7 +93,7 @@ Mobile stays last (his 5 Oct instruction).
 | 5–6 | Colour + design system (font, type, palette, radius, elevation, fields) | ✅ Phase 1 live 5 Oct (fdecb30) |
 | 11 | Forms | ◐ look (Phase 1) + speed (Phase 3) done; PO layout next |
 | 8 | Sidebar + header | ◐ Phase 2: graphite rail built (top bar unchanged) |
-| 7 | Overview | ☐ |
+| 7 | Overview | ◐ figure strips + quick actions (phase 4); chart/attention next |
 | 9–10 | Inventory table + item page | ☐ |
 | 12 | Dialogs/drawers | ☐ |
 | 16–17 | Empty + loading states | ☐ |

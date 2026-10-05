@@ -6492,3 +6492,20 @@ tel. Lint, tsc and build pass.
 real order, FLOWERPL-PO-0002 ($0, Ordered, nothing received). It was deleted through the app the
 same turn; the app confirmed nothing else changed. The PO counter is not rewound, so the next order
 will be 0003, and an activity entry may remain.
+
+
+## 2026-10-05 — Redesign v2, phase 4: Overview figure strips + quick actions
+
+**Changed** (desktop and tablet; the phone Overview is untouched):
+- The eight bordered figure tiles are now two figure strips, Stock and Money. Each strip is one
+  card with four cells split by hairlines (2×2 below 1024px). Labels went from 9.4px capitals to
+  11.6px sentence case, and figures are 23.8px in Geist with tabular numerals (were 18.7px mono).
+- The full-width "Today" box is folded into a line under the title, with the full date.
+- Header quick actions: Add item (secondary), New purchase order (secondary), New invoice
+  (primary). Add item uses the existing `requestAddItem`.
+- Labels: "Total Items / Depots / Locations / Total Quantity / Inventory Value" became "Items /
+  Depots / Units in stock / Stock value".
+
+**Verified** live at 1280×800 and 900×800, signed in: the header line, three actions, the strip
+(89px, 10.9px padding), hairlines at both breakpoints, and "Today" hidden on desktop. Lint, tsc
+and build pass.

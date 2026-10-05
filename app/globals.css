@@ -28938,3 +28938,109 @@ body:has(.login-page)::-webkit-scrollbar,
   font-size: var(--text-sm);
   font-weight: 500;
 }
+
+
+/* ==========================================================================
+   OVERVIEW v2 — FIGURE STRIPS (5 Oct 2026, redesign v2 phase 4)
+   ==========================================================================
+   Measured before: eight bordered tiles and a full-width "Today" box sat
+   above the chart, which started at y=420 on an 800px laptop. Labels were
+   9.4px capitals and notes 10.2px. Each row is now ONE card with four
+   cells split by hairlines (the Stripe/Linear figure strip): one edge
+   instead of eight, readable sentence-case labels, and figures in the UI
+   face with tabular numerals rather than the mono. The "Today" line moved
+   into the header. Desktop and tablet only; the phone layout (mobile.css)
+   is unchanged. */
+@media (min-width: 768px) {
+  .ov-page .ov-today {
+    display: none;
+  }
+
+  .ov-page .ov-head-sub {
+    margin: 0.3rem 0 0;
+    color: var(--text-muted);
+    font-size: var(--text-sm);
+  }
+
+  .ov-page .ov-head-actions {
+    gap: 0.5rem;
+  }
+
+  .ov-page .ov-figures {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--border-default);
+    border-radius: var(--radius-card);
+    background: var(--bg-surface);
+    box-shadow: var(--shadow-card);
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .ov-page .ov-figures + .ov-figures {
+    margin-top: 0.75rem;
+  }
+
+  .ov-page .ov-figures .ov-figure {
+    gap: 0.2rem;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0.8rem 1.15rem;
+    transition: background-color 120ms var(--motion-ease-standard);
+  }
+
+  /* Two columns: hairline between the pair, and between the two rows. */
+  .ov-page .ov-figures .ov-figure:nth-child(even) {
+    border-left: 1px solid var(--border-divider);
+  }
+
+  .ov-page .ov-figures .ov-figure:nth-child(n + 3) {
+    border-top: 1px solid var(--border-divider);
+  }
+
+  @media (hover: hover) {
+    .ov-page .ov-figures .ov-figure:hover {
+      background: var(--surface-page);
+      transform: none;
+    }
+  }
+
+  .ov-page .ov-figures .ov-figure-label {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .ov-page .ov-figures .ov-figure-value {
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 1.75rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.025em;
+    line-height: 1.15;
+  }
+
+  .ov-page .ov-figures .ov-figure-note,
+  .ov-page .ov-figures .ov-figure-compare {
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+  }
+}
+
+@media (min-width: 1024px) {
+  .ov-page .ov-figures {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .ov-page .ov-figures .ov-figure:nth-child(n + 3) {
+    border-top: 0;
+  }
+
+  .ov-page .ov-figures .ov-figure + .ov-figure {
+    border-left: 1px solid var(--border-divider);
+  }
+}

@@ -572,7 +572,7 @@ export default function DashboardPage() {
 
   const summaryCards = [
     {
-      label: "Total Items",
+      label: "Items",
       rawValue: dashboardData.totalItems,
       format: (n: number) => formatNumber(Math.round(n)),
       detail: `${formatNumber(dashboardData.lowStockCount)} need attention`,
@@ -580,7 +580,7 @@ export default function DashboardPage() {
       href: "/dashboard/inventory",
     },
     {
-      label: "Depots / Locations",
+      label: "Depots",
       rawValue: dashboardData.totalDepots,
       format: (n: number) => formatNumber(Math.round(n)),
       detail: "Inventory locations",
@@ -588,7 +588,7 @@ export default function DashboardPage() {
       href: "/dashboard/depots",
     },
     {
-      label: "Total Quantity",
+      label: "Units in stock",
       rawValue: dashboardData.totalQuantity,
       format: (n: number) => formatNumber(Math.round(n)),
       detail: "Units across items",
@@ -596,7 +596,7 @@ export default function DashboardPage() {
       href: "/dashboard/inventory",
     },
     {
-      label: "Inventory Value",
+      label: "Stock value",
       rawValue:
         !analyticsLocked && dashboardData.hasValue ? dashboardData.totalValue : null,
       format: (n: number) => formatCurrency(n, currencyCode),
@@ -981,16 +981,48 @@ export default function DashboardPage() {
           <h1 id="dashboard-title" className="ov-title">
             Overview
           </h1>
+          {/* Redesign v2: the date and the "Today" line were a separate
+              full-width box under the header; one quiet line under the title
+              says the same and gives the space back to the figures. The
+              phone keeps its own .ov-today (mobile.css). */}
+          <p className="ov-head-sub">
+            {new Intl.DateTimeFormat("en", { dateStyle: "full" }).format(new Date())}
+            {!hasNoItems && !loading && (
+              <>
+                {" · "}
+                {todayLine.length > 0
+                  ? todayLine.join(" · ")
+                  : "Nothing sold or moved yet today."}
+              </>
+            )}
+          </p>
         </div>
         {/* The reference's page header is title on the left, context and a
             primary action on the right. Ours had nothing on the right, which
             is why the top of the page felt empty next to it. The date is
             real (today, informational, no filter pretending to exist behind
             it) and the action is the one a depot starts most days with. */}
+        {/* Quick actions: the three records a depot creates most. */}
         <div className="ov-head-actions">
-          <span className="ov-head-date">
-            {new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date())}
-          </span>
+          <button
+            type="button"
+            className={buttonClassName({ variant: "secondary" })}
+            onClick={() =>
+              requestAddItem(
+                {},
+                { pathname, navigate: (href) => router.push(href) }
+              )
+            }
+          >
+            <UiIcon name="plus" className="h-4 w-4" />
+            Add item
+          </button>
+          <Link
+            href="/dashboard/purchase-orders/new"
+            className={buttonClassName({ variant: "secondary" })}
+          >
+            New purchase order
+          </Link>
           <Link href="/dashboard/sales/new" className={buttonClassName()}>
             New invoice
           </Link>
