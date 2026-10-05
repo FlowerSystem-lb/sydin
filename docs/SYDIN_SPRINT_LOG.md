@@ -6527,3 +6527,25 @@ and build pass.
 **Verified** live, signed in, at 1280×800: badge colours and size in the table and grid, the strip
 border and background, and the PO list badges (plain `.ui-badge`, unaffected apart from tokens).
 Lint, tsc and build pass. Turbopack again stopped shipping CSS edits; clearing .next fixed it.
+
+
+## 2026-10-05 — Redesign v2, phase 5b: item panel
+
+**Bug fixed:** the item slide-over's status had two states only, so an item at 0 showed "Low stock"
+in red. It now uses the shared `StatusBadge` with three states (Out of stock / Low stock / In
+stock), matching the list.
+
+**Changed:**
+- A primary **Adjust stock** in the panel header switches to Details, scrolls the Adjust form into
+  view and focuses its quantity. The form used to sit below every detail group, out of view.
+- Edit and Full page are icon-only on desktop. Their words stay for screen readers and they have
+  title tooltips, so the product name is no longer truncated.
+- The title is 17.7px (was ~14px) and the item code is mono. Quantity and low-stock level are
+  21.8px Geist with sentence-case labels; "Threshold" is now "Low-stock level". Group titles are
+  sentence case at body size ("Stock & unit", "Pricing & value", "Tracking codes"). The image area
+  is capped at 13rem.
+- Record movement drops its cyan-to-violet gradient for the solid primary blue.
+
+**Verified** live, signed in, at 1280×800: an out-of-stock item shows red "Out of stock" and a
+low one shows amber. Adjust stock focuses the number input in the form. The title no longer
+overflows and the submit is solid blue. Nothing was recorded. Lint, tsc and build pass.

@@ -29134,3 +29134,99 @@ body:has(.login-page)::-webkit-scrollbar,
     letter-spacing: -0.02em;
   }
 }
+
+/* ==========================================================================
+   ITEM PANEL v2 (5 Oct 2026, redesign v2 phase 5b)
+   ==========================================================================
+   The item slide-over carried the right facts with no emphasis: a 14px
+   name, caps micro-labels, and Adjust stock below every detail group. The
+   name now reads as the title, the quantity as the figure that matters,
+   group headings are sentence case at body size like the forms, and the
+   header gains a primary "Adjust stock" that jumps to the form. Desktop
+   and tablet; the phone keeps mobile.css's icon-only header. */
+@media (min-width: 768px) {
+  .item-details-panel .item-details-title {
+    font-size: 1.3rem;
+    font-weight: 600;
+    letter-spacing: -0.015em;
+  }
+
+  .item-details-panel .item-details-header .item-details-eyebrow {
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: var(--text-xs);
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .item-details-panel .item-details-action.item-details-action-primary {
+    border-color: transparent;
+    background: var(--sydin-blue);
+    color: #ffffff;
+  }
+
+  @media (hover: hover) {
+    .item-details-panel .item-details-action.item-details-action-primary:hover {
+      background: #1d4ed8;
+      color: #ffffff;
+    }
+  }
+
+  .item-details-panel .item-details-image-area {
+    height: 13rem;
+    min-height: 0;
+    max-height: 13rem;
+  }
+
+  .item-details-panel .item-details-quantity-strip p {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .item-details-panel .item-details-quantity-strip strong {
+    font-family: var(--font-sans);
+    font-size: 1.6rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}
+
+.item-details-panel .item-details-group-title {
+  color: var(--text-primary) !important;
+  font-size: var(--text-sm) !important;
+  font-weight: 600 !important;
+  letter-spacing: -0.005em !important;
+  text-transform: none !important;
+}
+
+
+/* Panel header room: with Adjust stock added, the title was truncated to
+   "E...". Edit and Full page go icon-only (their words stay for screen
+   readers -- font-size 0, the same trick the phone header uses -- and each
+   carries a title tooltip). The Record movement button drops its old
+   cyan-to-violet gradient for the one primary blue. */
+@media (min-width: 768px) {
+  .item-details-panel .item-details-header .item-details-action:not(.item-details-action-primary) {
+    min-width: 2.25rem;
+    padding-inline: 0.5rem;
+    font-size: 0;
+    gap: 0;
+  }
+}
+
+.item-details-panel .item-details-submit {
+  background: var(--sydin-blue) !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+@media (hover: hover) {
+  .item-details-panel .item-details-submit:hover:not(:disabled) {
+    background: #1d4ed8 !important;
+  }
+}

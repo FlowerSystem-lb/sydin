@@ -14,7 +14,7 @@ import {
 import { createPortal } from "react-dom";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import StockLevelChart from "@/components/inventory/StockLevelChart";
-import { Select } from "@/components/ui";
+import { Select, StatusBadge } from "@/components/ui";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -237,6 +237,9 @@ export default function ItemDetailsSlideOver({
   const activityPanelId = useId();
   const alertsPanelId = useId();
   const panelRef = useRef<HTMLElement>(null);
+  // The header's "Adjust stock" jumps here: the most-used action used to sit
+  // below every detail group, out of view on a laptop (audit, 5 Oct 2026).
+  const adjustFormRef = useRef<HTMLFormElement>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
   const closeTimerRef = useRef<number | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -721,23 +724,46 @@ export default function ItemDetailsSlideOver({
               {item?.name || "Loading item"}
             </h2>
           </div>
+          {/* Three states, like the Inventory list. This said "Low stock" in
+              red for an item at zero -- there was no "Out of stock" here. */}
           {item && (
-            <span
-              className={cx(
-                "item-details-status",
-                lowStock
-                  ? "item-details-status-danger"
-                  : "item-details-status-success"
-              )}
+            <StatusBadge
+              tone={
+                item.quantity <= 0 ? "danger" : lowStock ? "warning" : "success"
+              }
+              className="item-details-status"
             >
-              {lowStock ? "Low stock" : "In stock"}
-            </span>
+              {item.quantity <= 0
+                ? "Out of stock"
+                : lowStock
+                  ? "Low stock"
+                  : "In stock"}
+            </StatusBadge>
           )}
+          <button
+            type="button"
+            onClick={() => {
+              setTab("details");
+              window.requestAnimationFrame(() => {
+                const form = adjustFormRef.current;
+                form?.scrollIntoView({ behavior: "smooth", block: "center" });
+                form
+                  ?.querySelector<HTMLInputElement>('input[type="number"]')
+                  ?.focus({ preventScroll: true });
+              });
+            }}
+            className="item-details-action item-details-action-primary"
+            disabled={!item}
+          >
+            <UiIcon name="plus" className="h-4 w-4" />
+            Adjust stock
+          </button>
           <button
             type="button"
             onClick={handleEdit}
             className="item-details-action"
             disabled={!item}
+            title="Edit item"
           >
             <UiIcon name="appearance" className="h-4 w-4" />
             Edit
@@ -883,7 +909,7 @@ export default function ItemDetailsSlideOver({
                         </strong>
                       </div>
                       <div>
-                        <p>Threshold</p>
+                        <p>Low-stock level</p>
                         <strong>{itemLowStockThreshold}</strong>
                       </div>
                     </section>
@@ -908,7 +934,7 @@ export default function ItemDetailsSlideOver({
                     )}
 
                     {detailGroups.stock.length > 0 && (
-                      <DetailGroup title="Stock & Unit">
+                      <DetailGroup title="Stock & unit">
                         {detailGroups.stock.map((field) => (
                           <DetailField
                             key={field.label}
@@ -932,7 +958,7 @@ export default function ItemDetailsSlideOver({
                     )}
 
                     {detailGroups.pricing.length > 0 && (
-                      <DetailGroup title="Pricing & Value">
+                      <DetailGroup title="Pricing & value">
                         {detailGroups.pricing.map((field) => (
                           <DetailField
                             key={field.label}
@@ -944,7 +970,7 @@ export default function ItemDetailsSlideOver({
                     )}
 
                     {detailGroups.tracking.length > 0 && (
-                      <DetailGroup title="Tracking Codes">
+                      <DetailGroup title="Tracking codes">
                         {detailGroups.tracking.map((field) => (
                           <DetailField
                             key={field.label}
@@ -957,6 +983,7 @@ export default function ItemDetailsSlideOver({
                     )}
 
                     <form
+                      ref={adjustFormRef}
                       onSubmit={handleMovementSubmit}
                       className="item-details-adjust"
                     >

@@ -94,7 +94,7 @@ Mobile stays last (his 5 Oct instruction).
 | 11 | Forms | ◐ look (Phase 1) + speed (Phase 3) done; PO layout next |
 | 8 | Sidebar + header | ◐ Phase 2: graphite rail built (top bar unchanged) |
 | 7 | Overview | ◐ figure strips + quick actions (phase 4); chart/attention next |
-| 9–10 | Inventory table + item page | ☐ |
+| 9–10 | Inventory table + item page | ◐ badges, strip, item panel (5a/5b); full item page + table polish next |
 | 12 | Dialogs/drawers | ☐ |
 | 16–17 | Empty + loading states | ☐ |
 | 15 | Login/landing | ☐ |
