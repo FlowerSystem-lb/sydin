@@ -577,6 +577,13 @@ export default function PickListsPage() {
                   ? "Try another title or customer name."
                   : "Completed and cancelled lists are under their own tabs, or choose All."
               }
+              action={
+                search.trim() || limitReached ? undefined : (
+                  <ActionButton onClick={openCreateForm} icon="plus">
+                    Create Pick List
+                  </ActionButton>
+                )
+              }
             />
           )}
         </DashboardPageShell>

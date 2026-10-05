@@ -6679,3 +6679,18 @@ Desktop and tablet only; the phone keeps its bottom sheet.
 
 **Verified** on Add customer at 1280: radius 16px, the shadow, the backdrop, no text transform on
 the eyebrow and the footer band all read correctly. Lint, tsc and build pass.
+
+## 2026-10-05 — Empty states v2
+
+All 36 `DashboardEmptyState` screens are restyled in one CSS block:
+- a dashed outline on white
+- a 48px blue-tinted icon chip with a soft ring
+- the title at text-base 600 and the description capped at 28rem
+- room above the action
+
+Of those 36, 15 had no action. Nearly all are "no results for this filter or search" and correctly
+have none. Depots doesn't need one, because the New depot form sits beside the list. Pick Lists'
+filtered empty state now offers "Create Pick List" when there's no search and the limit isn't
+reached.
+
+**Verified** on Pick Lists at 1280: the dashed border, icon chip and button. Lint, tsc and build pass.

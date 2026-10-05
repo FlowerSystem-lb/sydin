@@ -30097,3 +30097,59 @@ body:has(.login-page)::-webkit-scrollbar,
     padding: 0.75rem 1.1rem;
   }
 }
+
+/* ==========================================================================
+   EMPTY STATES v2 (5 Oct 2026, redesign v2)
+   ==========================================================================
+   All 36 DashboardEmptyState screens. Was a 32px grey icon, small type and
+   a flat grey slab. Now a calm, centred moment: a 48px blue-tinted icon chip
+   with a soft ring, the title at body-large, the explanation held to a
+   readable width, the action given room, on a dashed outline that reads as
+   "space waiting to be filled" rather than as a card. */
+.dashboard-empty-state.dashboard-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-panel);
+  background: var(--bg-surface);
+  box-shadow: none;
+  padding: 2.75rem 1.5rem;
+  text-align: center;
+}
+
+.dashboard-empty-state.dashboard-empty-state .dashboard-empty-icon {
+  display: inline-flex;
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.6rem;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--radius-card);
+  background: var(--sydin-surface-selected);
+  box-shadow: 0 0 0 6px rgba(37, 99, 235, 0.04);
+  color: var(--sydin-blue);
+}
+
+.dashboard-empty-state.dashboard-empty-state h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.dashboard-empty-state.dashboard-empty-state p {
+  max-width: 28rem;
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.dashboard-empty-state.dashboard-empty-state .dashboard-empty-action {
+  margin-top: 0.9rem;
+}

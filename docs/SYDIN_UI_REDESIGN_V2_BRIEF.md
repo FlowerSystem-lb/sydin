@@ -96,7 +96,7 @@ Mobile stays last (his 5 Oct instruction).
 | 7 | Overview | ◐ figure strips + quick actions (phase 4); chart/attention next |
 | 9–10 | Inventory table + item page | ◐ badges, strip, item panel, full item page redesign + section PDFs; table polish next |
 | 12 | Dialogs/drawers | ◐ DialogShell restyled (v2); slide-overs keep their own style |
-| 16–17 | Empty + loading states | ☐ |
+| 16–17 | Empty + loading states | ◐ empty states restyled (36); skeletons already in place |
 | 15 | Login/landing | ☐ |
 | 13–14 | Motion + depth | ☐ alongside each phase |
 | 21–22, 26 | Consistency, accessibility, final QA | ☐ |
