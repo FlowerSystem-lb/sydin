@@ -6549,3 +6549,19 @@ stock), matching the list.
 **Verified** live, signed in, at 1280×800: an out-of-stock item shows red "Out of stock" and a
 low one shows amber. Adjust stock focuses the number input in the form. The title no longer
 overflows and the submit is solid blue. Nothing was recorded. Lint, tsc and build pass.
+
+
+## 2026-10-05 — Redesign v2, phase 5c: full item page
+
+**Changed** (`app/dashboard/inventory/[id]/page.tsx`):
+- The header shows the item code as a mono eyebrow (was "Product record"), and the three-state
+  `StatusBadge` sits beside the name. The page only ever said "Low Stock" and showed nothing at
+  zero; the details card's own pill is gone.
+- **Record movement** is the primary action and Edit item is secondary. Labels are sentence case.
+- The success notice and the signed-out box use `DashboardNotice` instead of hand-coloured boxes.
+- Ten 0.16em-tracked accent-caps eyebrows became one `.item-detail-eyebrow`, a sentence-case
+  section title. Cards use `--radius-panel` and `--shadow-card` instead of 22px corners and a
+  42px blue-tinted shadow.
+
+**Verified** live at 1280×800, signed in: the badge says "Low stock" in amber for an 80-of-81
+item, and the button order and section titles are right. Lint, tsc and build pass.

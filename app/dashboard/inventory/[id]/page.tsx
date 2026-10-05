@@ -18,8 +18,10 @@ import StockLevelChart from "@/components/inventory/StockLevelChart";
 import {
   ActionButton,
   DashboardEmptyState,
+  DashboardNotice,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
+import { StatusBadge } from "@/components/ui";
 import {
   getActivityEventIcon,
   getActivityEventTone,
@@ -280,7 +282,7 @@ export default function ItemDetailsPage() {
      box icon, so it keeps the same rule locally: hold the src that failed, so
      editing the item to a different photo clears the failure by itself. */
   const [failedImageSrc, setFailedImageSrc] = useState<string | null>(null);
-  const [backLabel, setBackLabel] = useState("Back to Inventory");
+  const [backLabel, setBackLabel] = useState("Back to inventory");
 
   const fetchHistory = async (userId: string, historyItemId: number) => {
     const { data, error: historyError } = await supabase
@@ -834,20 +836,37 @@ export default function ItemDetailsPage() {
           is weight doing every job and none of them well. */}
       <main className="item-detail">
         <div className="mx-auto flex w-full max-w-[1320px] flex-col gap-5">
-          <section className="item-page-header rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+          <section className="item-page-header rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
-                  Product record
+                <p className="item-detail-code">
+                  {item?.item_code || item?.sku || "Product"}
                 </p>
 
-                <h1 className="mt-1 break-normal text-3xl font-black tracking-tight text-theme-primary sm:text-4xl">
-                  {item?.name || "Item Details"}
-                </h1>
-
-                <p className="mt-2 max-w-2xl text-sm leading-6 text-theme-muted">
-
-                </p>
+                <div className="mt-1 flex flex-wrap items-center gap-3">
+                  <h1 className="break-normal text-3xl font-semibold tracking-tight text-theme-primary sm:text-4xl">
+                    {item?.name || "Item details"}
+                  </h1>
+                  {/* Three states, as on the Inventory list. The page only
+                      ever said "Low Stock" (and nothing at zero). */}
+                  {item && (
+                    <StatusBadge
+                      tone={
+                        item.quantity <= 0
+                          ? "danger"
+                          : itemIsLowStock
+                            ? "warning"
+                            : "success"
+                      }
+                    >
+                      {item.quantity <= 0
+                        ? "Out of stock"
+                        : itemIsLowStock
+                          ? "Low stock"
+                          : "In stock"}
+                    </StatusBadge>
+                  )}
+                </div>
               </div>
 
               {/* On a phone this was four full-width buttons stacked -- 200px
@@ -864,16 +883,12 @@ export default function ItemDetailsPage() {
 
                 {item && (
                   <>
-                    <ActionButton
-                      onClick={openMovementModal}
-                      variant="secondary"
-                      icon="movement"
-                    >
-                      Record Movement
+                    <ActionButton onClick={openEditModal} variant="secondary" icon="edit">
+                      Edit item
                     </ActionButton>
 
-                    <ActionButton onClick={openEditModal} icon="edit">
-                      Edit Item
+                    <ActionButton onClick={openMovementModal} icon="movement">
+                      Record movement
                     </ActionButton>
 
                     {canDeleteRecords && (
@@ -884,7 +899,7 @@ export default function ItemDetailsPage() {
                         icon="trash"
                         className="col-span-2"
                       >
-                        {isDeleting ? "Deleting..." : "Delete Item"}
+                        {isDeleting ? "Deleting..." : "Delete item"}
                       </ActionButton>
                     )}
                   </>
@@ -894,9 +909,7 @@ export default function ItemDetailsPage() {
           </section>
 
           {pageNotice && (
-            <div className="rounded-2xl border border-emerald-400/25 bg-emerald-500/10 px-5 py-4 text-sm font-semibold text-theme-success">
-              {pageNotice}
-            </div>
+            <DashboardNotice tone="success">{pageNotice}</DashboardNotice>
           )}
 
           {loading && (
@@ -908,9 +921,9 @@ export default function ItemDetailsPage() {
           )}
 
           {!loading && authMissing && (
-            <div className="rounded-[32px] border border-red-500/30 bg-red-500/10 p-8 text-center text-theme-danger">
-              Please login to view this item.
-            </div>
+            <DashboardNotice tone="danger">
+              Please sign in to view this item.
+            </DashboardNotice>
           )}
 
           {!loading && !authMissing && (error || !item) && (
@@ -922,7 +935,7 @@ export default function ItemDetailsPage() {
               }
               action={
                 <Link href="/dashboard/inventory" className={buttonClassName()}>
-                  Back to Inventory
+                  Back to inventory
                 </Link>
               }
             />
@@ -933,7 +946,7 @@ export default function ItemDetailsPage() {
             <>
               <div className="item-detail-split grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
               <div className="item-page-media flex flex-col gap-4">
-              <section className="item-page-photo rounded-[22px] border border-theme bg-theme-surface p-3 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-4">
+              <section className="item-page-photo rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-3 shadow-[var(--shadow-card)] sm:p-4">
                 {/* backlog §16E: was a fixed h-240/300px box stretched across
                     the whole ~0.95fr column (~550-580px wide) — a ~1.82:1
                     letterbox shape. Measured with real product photos: a 4:3
@@ -995,7 +1008,7 @@ export default function ItemDetailsPage() {
               </div>
 
               <section className="flex flex-col gap-6">
-                <div className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+                <div className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
                   {/* backlog §16E: the item name was shown here again, right
                       below the page's own H1 with the same name a few
                       hundred pixels up — pure duplication, no new
@@ -1003,15 +1016,11 @@ export default function ItemDetailsPage() {
                       thing this row actually added) now sits with the
                       section label instead of framing a repeated title. */}
                   <div className="flex items-center justify-between gap-3">
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="item-detail-eyebrow">
                       Item details
                     </p>
 
-                    {itemIsLowStock && (
-                      <span className="rounded-full border border-red-400/30 bg-red-500/15 px-3 py-1 text-xs font-bold text-theme-danger">
-                        Low Stock
-                      </span>
-                    )}
+
                   </div>
 
                   <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
@@ -1032,8 +1041,8 @@ export default function ItemDetailsPage() {
                   <section className="item-detail-group">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
                       <div>
-                        <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                          Stock & Unit
+                        <p className="item-detail-eyebrow">
+                          Stock & unit
                         </p>
                         <h3 className="mt-1 text-xl font-black text-theme-primary">
                           {itemQuantityLabel}
@@ -1068,8 +1077,8 @@ export default function ItemDetailsPage() {
                   </section>
 
                   <section className="item-detail-group">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                      Private Supplier
+                    <p className="item-detail-eyebrow">
+                      Private supplier
                     </p>
                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <DetailCard
@@ -1091,8 +1100,8 @@ export default function ItemDetailsPage() {
                   </section>
 
                   <section className="item-detail-group">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                      Pricing & Value
+                    <p className="item-detail-eyebrow">
+                      Pricing & value
                     </p>
 
                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1120,8 +1129,8 @@ export default function ItemDetailsPage() {
                   </section>
 
                   <section className="item-detail-group">
-                    <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-accent">
-                      Tracking Codes
+                    <p className="item-detail-eyebrow">
+                      Tracking codes
                     </p>
 
                     <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -1161,8 +1170,8 @@ export default function ItemDetailsPage() {
                   </div>
                 </div>
 
-                <div className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+                <div className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
+                  <p className="item-detail-eyebrow">
                     Item QR Code
                   </p>
 
@@ -1189,7 +1198,7 @@ export default function ItemDetailsPage() {
 
                     <div
                       ref={qrCodeRef}
-                      className="rounded-3xl bg-white p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)]"
+                      className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)]"
                     >
                       {qrUrl ? (
                         <QRCode
@@ -1245,10 +1254,10 @@ export default function ItemDetailsPage() {
               </section>
               </div>
 
-              <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+              <section className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="item-detail-eyebrow">
                       Bought and sold
                     </p>
                     <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
@@ -1324,11 +1333,11 @@ export default function ItemDetailsPage() {
 
               <section
                 id="history"
-                className="scroll-mt-24 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5"
+                className="scroll-mt-24 rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5"
               >
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-success">
+                    <p className="item-detail-eyebrow">
                       Stock activity
                     </p>
 
@@ -1429,10 +1438,10 @@ export default function ItemDetailsPage() {
                 )}
               </section>
 
-              <section className="rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_14px_42px_rgba(15,23,42,0.12)] sm:p-5">
+              <section className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                   <div>
-                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-theme-accent">
+                    <p className="item-detail-eyebrow">
                       Audit trail
                     </p>
 

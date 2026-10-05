@@ -29230,3 +29230,24 @@ body:has(.login-page)::-webkit-scrollbar,
     background: #1d4ed8 !important;
   }
 }
+
+
+/* ==========================================================================
+   ITEM PAGE v2 (5 Oct 2026, redesign v2 phase 5c)
+   ==========================================================================
+   The full item page: the code as a mono eyebrow over the name, section
+   eyebrows in sentence case (they were 0.16em-tracked accent capitals in
+   ten places), and the system card shadow instead of a 42px blue-tinted
+   one. */
+.item-detail .item-detail-code {
+  color: var(--text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.item-detail .item-detail-eyebrow {
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  letter-spacing: -0.005em;
+}
