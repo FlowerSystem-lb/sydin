@@ -6664,3 +6664,18 @@ and the four add buttons are present. Lint, tsc and build pass.
 
 **Verified** live at 1280: the head has no text-transform, the menu opens with all 8 actions and
 the row click doesn't fire. Lint, tsc and build pass.
+
+## 2026-10-05 — Dialogs v2
+
+All DialogShell pop-ups, styled in one place:
+- **Corners and shadow:** 16px corners (were 22) and an elevation shadow (it was the flat card
+  shadow).
+- **Backdrop:** neutral graphite at 40% with a 3px blur (was navy-tinted).
+- **Header:** the eyebrow is a sentence-case muted label (was blue tracked caps) and the title is
+  1.2rem.
+- **Footer:** a soft band behind the actions.
+
+Desktop and tablet only; the phone keeps its bottom sheet.
+
+**Verified** on Add customer at 1280: radius 16px, the shadow, the backdrop, no text transform on
+the eyebrow and the footer band all read correctly. Lint, tsc and build pass.

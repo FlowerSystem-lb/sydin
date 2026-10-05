@@ -95,7 +95,7 @@ Mobile stays last (his 5 Oct instruction).
 | 8 | Sidebar + header | ◐ Phase 2: graphite rail built (top bar unchanged) |
 | 7 | Overview | ◐ figure strips + quick actions (phase 4); chart/attention next |
 | 9–10 | Inventory table + item page | ◐ badges, strip, item panel, full item page redesign + section PDFs; table polish next |
-| 12 | Dialogs/drawers | ☐ |
+| 12 | Dialogs/drawers | ◐ DialogShell restyled (v2); slide-overs keep their own style |
 | 16–17 | Empty + loading states | ☐ |
 | 15 | Login/landing | ☐ |
 | 13–14 | Motion + depth | ☐ alongside each phase |
