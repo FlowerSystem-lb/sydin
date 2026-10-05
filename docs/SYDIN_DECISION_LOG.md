@@ -702,3 +702,14 @@ stays as the alternative.
 - **Details:** `docs/SYDIN_UI_REDESIGN_V2_BRIEF.md`, plan of record section R.
 
 **Status:** Active.
+
+
+## 2026-10-05 — Graphite sidebar; fonts self-hosted
+
+- **Decision:** the desktop rail is graphite with an on-dark wordmark. The top bar, the grey canvas
+  and the curved white page Sayed chose on 26 Sep stay as they are. Fonts ship in `app/fonts`
+  rather than being fetched from Google.
+- **Why:** Sayed approved "a darker, more premium sidebar" (5 Oct). Self-hosting removes a
+  build-time third-party dependency that failed on a slow link.
+
+**Status:** Active.

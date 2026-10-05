@@ -6443,3 +6443,24 @@ record section R. Nothing was saved during it.
 select and button in the four forms measures 36px; Geist loads; tokens resolve; no console
 errors. Settings and Inventory checked for spill-over and look right. lint, tsc and build pass
 (the build needs network to Google Fonts; it timed out twice on a slow link, then passed).
+
+
+## 2026-10-05 — Redesign v2, phase 2: graphite sidebar + self-hosted fonts
+
+**Changed:**
+- `app/layout.tsx`: Geist, Geist Mono and Source Serif 4 now load from `app/fonts/` through
+  `next/font/local` (latin subset, 73 KB total, OFL). Dev gives Google Fonts 3s and timed out on a
+  slow link, which broke the whole page in dev. The build also stopped depending on a third party,
+  and it now passes offline.
+- `public/brand/sydin-logo-on-dark.svg`: the wordmark with "Syd" in white, used by the rail.
+- `app/globals.css`, "SIDEBAR v2 — GRAPHITE RAIL": a graphite gradient rail, faint caps group
+  headings, transparent 8px rows, a lifted tint for the current page with a light-blue icon and a
+  3px blue edge marker, a glass workspace card and toggle. Labels follow the row colour (a 12 Sep
+  slate label colour was winning on expanded rows). The old white end-dot marker is hidden. Nav
+  text is 12.9px, headings 10.6px. The header, the grey canvas and the curved white page from 26 Sep
+  are untouched.
+
+**Verified** on the running branch, signed in, at 1280×800: Overview and Inventory, expanded and
+collapsed. Computed colours were read live and the hover name-chip checked. Lint, tsc and build pass.
+Found on the way: Turbopack stopped shipping globals.css edits twice. Clearing .next and restarting
+fixed it.

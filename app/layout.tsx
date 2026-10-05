@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Source_Serif_4 } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import "./mobile.css";
 import ServiceWorkerRegistration from "@/components/pwa/ServiceWorkerRegistration";
@@ -32,29 +32,33 @@ export const viewport: Viewport = {
   themeColor: "#ffffff",
 };
 
-// Marketing-only display serif (Steep reference: editorial headlines,
-// regular weight even at large sizes — restraint instead of bold sans).
-// Exposed as a CSS variable, not applied to <body>, so the dashboard's own
-// sans-serif type is untouched; only .marketing-hero-title /
-// .marketing-section-title opt in via app/globals.css.
-/* The UI face. Until 5 Oct 2026 the app asked for Inter but never loaded it,
-   so Windows drew everything in Segoe UI. Geist is loaded here, self-hosted
-   by Next, so every machine sees the same type (redesign v2). */
-const geistSans = Geist({
-  subsets: ["latin"],
+/* The fonts ship inside the app (app/fonts, latin subset, OFL) rather than
+   being fetched from Google at build time. Fetching failed on slow links
+   (dev gives it 3s) and made the build depend on a third party.
+   Until 5 Oct 2026 the app asked for Inter but never loaded it, so Windows
+   drew everything in Segoe UI. Geist is the UI face (redesign v2). */
+const geistSans = localFont({
+  src: "./fonts/Geist-Variable.woff2",
+  weight: "100 900",
   variable: "--font-geist",
   display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
+const geistMono = localFont({
+  src: "./fonts/GeistMono-Variable.woff2",
+  weight: "100 900",
   variable: "--font-geist-mono",
   display: "swap",
 });
 
-const sourceSerif = Source_Serif_4({
-  subsets: ["latin"],
-  weight: ["400"],
+// Marketing-only display serif (Steep reference: editorial headlines,
+// regular weight even at large sizes — restraint instead of bold sans).
+// Exposed as a CSS variable, not applied to <body>, so the dashboard's own
+// sans-serif type is untouched; only the classes that opt in via
+// app/globals.css use it.
+const sourceSerif = localFont({
+  src: "./fonts/SourceSerif4-Regular.woff2",
+  weight: "400",
   variable: "--font-serif-display",
   display: "swap",
 });

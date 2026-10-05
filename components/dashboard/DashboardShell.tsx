@@ -1264,12 +1264,16 @@ export default function DashboardShell({
               priority
               className="dashboard-brand-mark object-contain"
             />
+            {/* Redesign v2 (5 Oct 2026): the rail is graphite, so the wordmark
+                is the on-dark cut -- "Syd" in white, the mark and "IN" in
+                SydIN blue (docs/brand-kit colours). A vector, so it is served
+                as-is; 11 KB. */}
             <Image
-              src="/brand/sydin-logo.png"
+              src="/brand/sydin-logo-on-dark.svg"
               alt=""
-              width={1213}
-              height={545}
-              sizes="120px"
+              width={1163}
+              height={478}
+              unoptimized
               priority
               className="dashboard-brand-logo object-contain"
             />
