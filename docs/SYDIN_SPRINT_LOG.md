@@ -6509,3 +6509,21 @@ will be 0003, and an activity entry may remain.
 **Verified** live at 1280×800 and 900×800, signed in: the header line, three actions, the strip
 (89px, 10.9px padding), hairlines at both breakpoints, and "Today" hidden on desktop. Lint, tsc
 and build pass.
+
+
+## 2026-10-05 — Redesign v2, phase 5a: one status badge, Inventory strip
+
+**Changed:**
+- **One stock/status badge.** Inventory drew "Out of stock" three ways: the grid card's own
+  class, and hand-picked Tailwind pills in the list and table views (violet-ish in the table, red
+  in the grid). The list and table now use the shared `.ui-status-badge`. Globals restyle it,
+  and the grid card's `.inventory-card-status` matches: a 6px dot plus the word on the status tint,
+  22px tall, 6px corners, sentence case. The photo-only view keeps its over-photo chip.
+- **Sentence case:** "In stock / Low stock / Out of stock" in the status helper, the quick-filter
+  chips, the card default and the Categories heading. CSV/Excel export labels are untouched.
+- **Inventory figure row** is now one card like the Overview strips, with figures in Geist. An old
+  `.inventory-stat-grid { border: 0 !important }` rule needed `!important` back.
+
+**Verified** live, signed in, at 1280×800: badge colours and size in the table and grid, the strip
+border and background, and the PO list badges (plain `.ui-badge`, unaffected apart from tokens).
+Lint, tsc and build pass. Turbopack again stopped shipping CSS edits; clearing .next fixed it.

@@ -1956,14 +1956,14 @@ export default function InventoryPage() {
     item.quantity <= getLowStockThresholdForItem(item);
   const getStockStatus = (item: Item) => {
     if (item.quantity <= 0) {
-      return { label: "Out of Stock", tone: "danger" as const };
+      return { label: "Out of stock", tone: "danger" as const };
     }
 
     if (isItemLowStock(item)) {
-      return { label: "Low Stock", tone: "warning" as const };
+      return { label: "Low stock", tone: "warning" as const };
     }
 
-    return { label: "In Stock", tone: "success" as const };
+    return { label: "In stock", tone: "success" as const };
   };
   const normalizedSearch = search.trim().toLowerCase();
   const depotFilterOptions = depots.filter(
@@ -2078,7 +2078,7 @@ export default function InventoryPage() {
     },
     {
       key: "low-stock",
-      label: "Low Stock",
+      label: "Low stock",
       count: items.filter((item) => isItemLowStock(item)).length,
       icon: "alert" as UiIconName,
       active: quickFilter === "low-stock" || stockFilter === "low",
@@ -2091,7 +2091,7 @@ export default function InventoryPage() {
     },
     {
       key: "out-of-stock",
-      label: "Out of Stock",
+      label: "Out of stock",
       count: items.filter((item) => Number(item.quantity || 0) <= 0).length,
       icon: "alert" as UiIconName,
       active: quickFilter === "out-of-stock",
@@ -3438,11 +3438,7 @@ export default function InventoryPage() {
                               }`}
                             />
                             <span
-                              className={`inventory-row-pill rounded-full border px-2 py-0.5 text-xs font-bold ${
-                                status.tone === "danger"
-                                  ? "border-red-200 bg-red-50 text-red-600"
-                                  : "border-amber-200 bg-amber-50 text-amber-700"
-                              }`}
+                              className={`inventory-row-pill ui-badge ui-status-badge ui-badge-${status.tone}`}
                             >
                               {status.label}
                             </span>
@@ -3659,13 +3655,7 @@ export default function InventoryPage() {
                             </td>
                             <td className="px-3 py-2.5">
                               <span
-                                className={`inline-flex rounded-full border px-2 py-0.5 text-xs font-bold ${
-                                  status.tone === "danger"
-                                    ? "border-red-200 bg-red-50 text-red-600"
-                                    : status.tone === "warning"
-                                      ? "border-amber-200 bg-amber-50 text-amber-700"
-                                      : "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                }`}
+                                className={`ui-badge ui-status-badge ui-badge-${status.tone}`}
                               >
                                 {status.label}
                               </span>

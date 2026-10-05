@@ -479,7 +479,7 @@ export default function CategoriesPage() {
       : selection.type === "uncategorized"
         ? "Uncategorized"
         : selection.type === "low"
-          ? "Low Stock"
+          ? "Low stock"
           : selection.type === "recent"
             ? "Recently Updated"
             : selectedCategory?.name || "Category";

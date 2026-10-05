@@ -29044,3 +29044,93 @@ body:has(.login-page)::-webkit-scrollbar,
     border-left: 1px solid var(--border-divider);
   }
 }
+
+
+/* ==========================================================================
+   STATUS BADGES v2 + INVENTORY STRIP (5 Oct 2026, redesign v2 phase 5)
+   ==========================================================================
+   One stock/status badge across the app: a 6px dot and the word, on the
+   status tint, 6px corners, sentence case. Before this, Inventory drew the
+   same "Out of stock" three ways -- the grid card's own class, and
+   hand-picked Tailwind red/amber/green pills in the list and the table
+   (where it rendered violet-ish against the grid's red). The list and the
+   table now use the shared .ui-status-badge; the grid card's class is
+   matched to it here. The photo-only view keeps its over-the-photo chip. */
+.ui-badge.ui-status-badge,
+.dashboard-shell .inventory-workspace .inventory-item-card:not(.inventory-item-card--photo) .inventory-card-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-height: 1.6rem;
+  padding: 0 0.55rem;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background-image: none !important;
+  box-shadow: none !important;
+  font-size: var(--text-xs);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.ui-badge.ui-status-badge::before,
+.dashboard-shell .inventory-workspace .inventory-item-card:not(.inventory-item-card--photo) .inventory-card-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: none;
+  border-radius: 999px;
+  background: currentColor;
+}
+
+.ui-status-badge.ui-badge-success,
+.dashboard-shell .inventory-workspace .inventory-item-card:not(.inventory-item-card--photo) .inventory-card-status--success {
+  background-color: var(--status-success-surface) !important;
+  color: var(--status-success-text) !important;
+}
+
+.ui-status-badge.ui-badge-warning,
+.dashboard-shell .inventory-workspace .inventory-item-card:not(.inventory-item-card--photo) .inventory-card-status--warning {
+  background-color: var(--status-warning-surface) !important;
+  color: var(--status-warning-text) !important;
+}
+
+.ui-status-badge.ui-badge-danger,
+.dashboard-shell .inventory-workspace .inventory-item-card:not(.inventory-item-card--photo) .inventory-card-status--danger {
+  background-color: var(--status-danger-surface) !important;
+  color: var(--status-danger-text) !important;
+}
+
+.ui-status-badge.ui-badge-info {
+  background-color: var(--status-info-surface) !important;
+  color: var(--status-info-text) !important;
+}
+
+/* Inventory's figure row joins the Overview strip: one card, hairline
+   cells, figures in the UI face. Desktop and tablet only. */
+@media (min-width: 768px) {
+  .dashboard-shell .inventory-workspace .inventory-stat-grid {
+    overflow: hidden;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-card) !important;
+    background: var(--bg-surface) !important;
+    box-shadow: var(--shadow-card) !important;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card .min-w-0 > :nth-child(1) {
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .dashboard-shell .inventory-workspace .inventory-stat-grid .dashboard-metric-card .min-w-0 > :nth-child(2) {
+    font-family: var(--font-sans);
+    font-size: 1.45rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+  }
+}

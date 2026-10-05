@@ -422,7 +422,7 @@ export default function InventoryItemCard({
           <span
             className={`inventory-card-status ${statusToneClass}`}
           >
-            {stockStatusLabel || "In Stock"}
+            {stockStatusLabel || "In stock"}
           </span>
           {valueLabel && (
             <span className="inventory-card-value">{valueLabel}</span>
