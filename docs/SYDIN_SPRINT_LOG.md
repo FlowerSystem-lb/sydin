@@ -6711,3 +6711,13 @@ leaf text. Lint, tsc and build pass.
 
 **Left for part 2:** Title Case button labels ("Start Count", "Create Pick List") and the Purchase
 Orders/Sales stat cards.
+
+## 2026-10-05 — Consistency pass, part 2: metric cards
+
+`MetricCard` (Purchase Orders, Alerts, Reports) is one system card: a border, 16px corners and the
+card shadow. Figures are Geist 1.45rem/600 with tabular numerals (were mono), labels are sentence
+case, and the detail line is no longer italic. Before, the first card was raised white and the rest
+were flat. Inventory's strip is excluded with `:not(.inventory-stat-grid)`.
+
+**Verified** on Purchase Orders at 1280: all three cards are white, bordered and in Geist. Lint, tsc
+and build pass.

@@ -30205,3 +30205,66 @@ body:has(.login-page)::-webkit-scrollbar,
     text-transform: none !important;
   }
 }
+
+/* ==========================================================================
+   METRIC CARDS v2 (5 Oct 2026, consistency pass 2)
+   ==========================================================================
+   MetricCard on Purchase Orders, Alerts and Reports. Before: the first card
+   white and raised, the rest flat on grey, figures in mono, the detail in
+   italics. Now every card is the same system card with the Overview's
+   figure type. Inventory's strip is excluded -- its cells sit inside one
+   card already (STATUS BADGES v2 + INVENTORY STRIP). */
+@media (min-width: 768px) {
+  .dashboard-shell-content :not(.inventory-stat-grid) > .dashboard-metric-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.8rem;
+    border: 1px solid var(--border-default) !important;
+    border-radius: var(--radius-panel) !important;
+    background: var(--bg-surface) !important;
+    background-image: none !important;
+    box-shadow: var(--shadow-card) !important;
+    padding: 1rem 1.15rem !important;
+  }
+
+  .dashboard-shell-content :not(.inventory-stat-grid) > .dashboard-metric-card .dashboard-metric-icon {
+    display: inline-flex;
+    width: 2.1rem;
+    height: 2.1rem;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    border-radius: var(--radius-control);
+    background: var(--sydin-surface-selected);
+    color: var(--sydin-blue);
+  }
+
+  .dashboard-shell-content :not(.inventory-stat-grid) > .dashboard-metric-card small {
+    display: block;
+    color: var(--text-muted);
+    font-size: var(--text-xs);
+    font-weight: 500;
+    letter-spacing: 0;
+    text-transform: none;
+  }
+
+  .dashboard-shell-content :not(.inventory-stat-grid) > .dashboard-metric-card strong {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 1.45rem;
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+    line-height: 1.15;
+  }
+
+  .dashboard-shell-content :not(.inventory-stat-grid) > .dashboard-metric-card em {
+    display: block;
+    margin-top: 0.2rem;
+    color: var(--text-subtle);
+    font-size: var(--text-xs);
+    font-style: normal;
+  }
+}
