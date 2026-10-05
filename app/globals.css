@@ -27459,13 +27459,13 @@ circle.ov-dot-main {
 
 .login-page .login-input-wrap input {
   min-height: 3.3rem;
-  border: 1px solid #e6e9ef;
+  border: 1px solid var(--border-default); /* v2 neutral (was #e6e9ef, blue-cast) */
   border-radius: 14px;
-  background: #f7f8fb;
+  background: var(--surface-page); /* v2 neutral (was #f7f8fb) */
   padding-top: 0.8rem;
   padding-bottom: 0.8rem;
   font-size: 0.95rem;
-  color: #0f172a;
+  color: var(--text-primary);
   transition:
     border-color 160ms ease,
     background-color 160ms ease,
@@ -27473,7 +27473,7 @@ circle.ov-dot-main {
 }
 
 .login-page .login-input-wrap input:hover:not(:focus):not(:disabled) {
-  border-color: #d6dbe4;
+  border-color: var(--border-strong);
 }
 
 .login-page .login-input-wrap input:focus {
@@ -27483,15 +27483,15 @@ circle.ov-dot-main {
 }
 
 .login-page .login-input-wrap input::placeholder {
-  color: #9aa3b5;
+  color: var(--text-subtle);
 }
 
 /* Chrome paints saved emails/passwords pale blue; keep the box design. */
 .login-page .login-input-wrap input:-webkit-autofill,
 .login-page .login-input-wrap input:-webkit-autofill:hover {
   -webkit-text-fill-color: #0f172a;
-  -webkit-box-shadow: 0 0 0 100px #f7f8fb inset;
-  box-shadow: 0 0 0 100px #f7f8fb inset;
+  -webkit-box-shadow: 0 0 0 100px #f6f6f5 inset;
+  box-shadow: 0 0 0 100px #f6f6f5 inset;
   transition: background-color 9999s ease-out;
 }
 
@@ -27524,15 +27524,15 @@ circle.ov-dot-main {
    input` (white !important) and a translucent glass rule -- the cascade trap.
    Same values, forced. */
 .login-page .login-input-wrap.login-input-wrap input {
-  border: 1px solid #e6e9ef !important;
-  background: #f7f8fb !important;
+  border: 1px solid var(--border-default) !important;
+  background: var(--surface-page) !important;
   border-radius: 14px !important;
   min-height: 3.3rem !important;
   box-shadow: none !important;
 }
 
 .login-page .login-input-wrap.login-input-wrap input:hover:not(:focus):not(:disabled) {
-  border-color: #d6dbe4 !important;
+  border-color: var(--border-strong) !important;
 }
 
 .login-page .login-input-wrap.login-input-wrap input:focus {

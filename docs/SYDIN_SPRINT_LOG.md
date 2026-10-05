@@ -6741,3 +6741,13 @@ the search glyph sat on the placeholder. The `.ui-input.pl-*` rules keep it.
 
 **Verified** on Purchase Orders: the search is white, 37px high and has 34px of left padding, and
 the icon is clear. Lint, tsc and build pass.
+
+## 2026-10-05 — Sign-in page aligned
+
+The sign-in already met brief 15 (split screen, the "Everything in sync" visual, the Source Serif
+headline) and used Geist and the system button. Only its fields (Sayed's 28 Sep design: soft
+filled boxes, a white blue ring on focus) still used blue-cast greys (#f7f8fb / #e6e9ef / #d6dbe4).
+Those became the v2 tokens (surface-page, border-default, border-strong) in both the design rule
+and its forced copy. The shape and the behaviour are unchanged.
+
+**Verified:** the field background is #f6f6f5 with the v2 border and a 14px radius. Build passes.

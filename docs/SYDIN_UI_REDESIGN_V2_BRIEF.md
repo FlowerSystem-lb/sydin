@@ -97,7 +97,7 @@ Mobile stays last (his 5 Oct instruction).
 | 9–10 | Inventory table + item page | ◐ badges, strip, item panel, full item page redesign + section PDFs; table polish next |
 | 12 | Dialogs/drawers | ◐ DialogShell restyled (v2); slide-overs keep their own style |
 | 16–17 | Empty + loading states | ◐ empty states restyled (36); skeletons already in place |
-| 15 | Login/landing | ☐ |
+| 15 | Login/landing | ✅ already split-screen + brand visual; fields aligned to v2 |
 | 13–14 | Motion + depth | ☐ alongside each phase |
 | 21–22, 26 | Consistency, accessibility, final QA | ☐ |
 | 18–19 | Responsive + mobile | ☐ last |
