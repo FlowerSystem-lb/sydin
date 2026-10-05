@@ -6751,3 +6751,23 @@ Those became the v2 tokens (surface-page, border-default, border-strong) in both
 and its forced copy. The shape and the behaviour are unchanged.
 
 **Verified:** the field background is #f6f6f5 with the v2 border and a 14px radius. Build passes.
+
+## 2026-10-05 — Consistency pass, part 5: page walk-through
+
+An automated audit of each page at 1440 (leaf text in capitals, weight ≥800, boxes with ≥20px
+corners) covered Overview, Inventory, Sales, Suppliers, Customers, Categories, Depots, Reports,
+Alerts, Activity, Import & Export, Settings, Help, Stock In, Stock Counts, Stock Movements, QR
+Center and Purchase Orders.
+
+**Fixed:**
+- Page titles are weight 600 (were 800 through a forced header rule), matching the Overview.
+- `font-extrabold` maps to 700, like `font-black`.
+- The Settings labels (Update logo, sub-heads, billing labels, the permission table head, the
+  facts lists) join the sentence-case list.
+
+**Result:** zero over-rounded boxes and zero ≥800 text on every audited page. The only capitals
+left are deliberate: item codes, the Settings menu groups (Sayed's Figma design) and the sidebar
+group labels. Lint, tsc and build pass.
+
+**Not in this pass:** the phone layouts (mobile phase), the public item page and the marketing
+site.

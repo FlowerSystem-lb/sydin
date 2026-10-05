@@ -1,6 +1,6 @@
 # SydIN — Plan of Record
 
-**Last touched:** 5 October 2026 (section R: redesign v2 phase 1 live — fields, font, palette; next: sidebar + top bar)
+**Last touched:** 5 October 2026 (redesign v2 desktop done: foundation, sidebar, forms, Overview, Inventory, item page v3, dialogs, empty states, sign-in, consistency pass. Next: mobile phase)
 **Shared view:** https://claude.ai/code/artifact/c7e93db9-8082-47d5-8f06-4ff8b9b8f5c4
 
 > **This is THE plan. One file, one link. It is appended to and ticked off — never
@@ -981,3 +981,6 @@ CSS edits don't show), open `/dashboard/inventory/37`, and check the header, ban
 figures, details/pricing, chart, Activity tabs + PDF + Show more, documents table + PDF, notes,
 setup list, identifiers, QR and delete card at 1440 and 1024 wide. Then lint/tsc/build, sprint
 log, push to `origin main`.
+
+
+**R status, 5 Oct 2026 (end of day):** redesign v2 is complete on desktop/laptop/tablet and live. That covers phases 1–5 plus the item page v3, dialogs, empty states, sign-in alignment and a five-part consistency pass (see the sprint log). **Next: the mobile phase**, the last by Sayed's instruction, then the public item page and the marketing site.

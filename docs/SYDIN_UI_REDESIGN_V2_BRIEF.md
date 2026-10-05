@@ -99,5 +99,5 @@ Mobile stays last (his 5 Oct instruction).
 | 16–17 | Empty + loading states | ◐ empty states restyled (36); skeletons already in place |
 | 15 | Login/landing | ✅ already split-screen + brand visual; fields aligned to v2 |
 | 13–14 | Motion + depth | ☐ alongside each phase |
-| 21–22, 26 | Consistency, accessibility, final QA | ☐ |
+| 21–22, 26 | Consistency, accessibility, final QA | ◐ desktop consistency pass done (5 parts); phone + public pages remain |
 | 18–19 | Responsive + mobile | ☐ last |
