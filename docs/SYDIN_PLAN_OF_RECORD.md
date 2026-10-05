@@ -972,3 +972,12 @@ Fix or add when building it:
 6. **A rendered EAN-13 barcode needs a small library** (e.g. jsbarcode). Decide whether to add a
    dependency or show the digits only.
 7. **The phone layout** isn't in the mockup. Mobile comes last anyway.
+
+**R.1 status — IN PROGRESS (5 Oct 2026, evening).** Sayed said "do it now". Built in
+`app/dashboard/inventory/[id]/page.tsx` + an "ITEM PAGE v3" CSS block at the end of
+`globals.css`. Local commit on branch `claude/data-entry-screens-audit-aaed7f`, NOT yet pushed.
+**If a session resets here:** start the test server (`sydin-worktree`, port 3200; clear `.next` if
+CSS edits don't show), open `/dashboard/inventory/37`, and check the header, banner, big photo,
+figures, details/pricing, chart, Activity tabs + PDF + Show more, documents table + PDF, notes,
+setup list, identifiers, QR and delete card at 1440 and 1024 wide. Then lint/tsc/build, sprint
+log, push to `origin main`.
