@@ -713,3 +713,14 @@ stays as the alternative.
   build-time third-party dependency that failed on a slow link.
 
 **Status:** Active.
+
+## 2026-10-05 — jsbarcode for item barcodes
+
+- **Decision:** the item page draws the item's barcode with `jsbarcode` (MIT, ~60 KB, with
+  types). It uses EAN-13 / EAN-8 / UPC-A when the code looks like one and is valid, otherwise
+  CODE128. The component is `components/inventory/ItemBarcode.tsx`.
+- **Why:** Sayed's reference shows a scannable barcode for each item, and he asked for it
+  explicitly. Hand-writing barcode encoders is error-prone; this library is the standard one, and
+  the page is client-rendered anyway.
+
+**Status:** Active.

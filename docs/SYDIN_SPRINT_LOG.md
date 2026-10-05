@@ -6638,3 +6638,14 @@ Built from docs/references/item-page-reference-2026-10-05.png:
 and the activity PDF (27 KB). Lint, tsc and build pass.
 
 **Not yet checked:** 1024px and phone widths.
+
+## 2026-10-05 — Item page: drawn barcode + inline "+ Add" buttons
+
+Sayed: the barcode for each item was missing compared with his reference. Identifiers now draws the
+barcode (`ItemBarcode`, jsbarcode, auto format, CODE128 fallback, caption "EAN-13 barcode"). Empty
+SKU and barcode show "+ Add SKU" / "+ Add barcode". Empty Category, Depot and Supplier in Item
+details show "+ Assign" / "+ Link". All of them open the existing edit form, so nothing new writes
+data.
+
+**Verified** on item 37 (barcode 5283001515680): an EAN-13 rendered with 31 bars and the caption,
+and the four add buttons are present. Lint, tsc and build pass.

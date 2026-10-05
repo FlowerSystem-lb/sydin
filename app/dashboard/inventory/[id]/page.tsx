@@ -14,6 +14,7 @@ import ContextBackButton from "@/components/navigation/ContextBackButton";
 import ImageLightbox from "@/components/inventory/ImageLightbox";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
 import StockLevelChart from "@/components/inventory/StockLevelChart";
+import ItemBarcode from "@/components/inventory/ItemBarcode";
 import {
   ActionButton,
   DashboardEmptyState,
@@ -1383,19 +1384,40 @@ export default function ItemDetailsPage() {
                       <div>
                         <dt>Category</dt>
                         <dd className={item.category_id ? "" : "is-empty"}>
-                          {resolveCategoryDisplay(item, assignedCategory)}
+                          <span className="item-v3-fact-row">
+                            {resolveCategoryDisplay(item, assignedCategory)}
+                            {!item.category_id && (
+                              <button type="button" onClick={openEditModal} className="item-v3-add">
+                                + Assign
+                              </button>
+                            )}
+                          </span>
                         </dd>
                       </div>
                       <div>
                         <dt>Depot</dt>
                         <dd className={item.depot_id ? "" : "is-empty"}>
-                          {formatDepotLabel(assignedDepot)}
+                          <span className="item-v3-fact-row">
+                            {formatDepotLabel(assignedDepot)}
+                            {!item.depot_id && (
+                              <button type="button" onClick={openEditModal} className="item-v3-add">
+                                + Assign
+                              </button>
+                            )}
+                          </span>
                         </dd>
                       </div>
                       <div>
                         <dt>Supplier</dt>
                         <dd className={assignedSupplier ? "" : "is-empty"}>
-                          {assignedSupplier?.name || "No supplier"}
+                          <span className="item-v3-fact-row">
+                            {assignedSupplier?.name || "No supplier"}
+                            {!assignedSupplier && (
+                              <button type="button" onClick={openEditModal} className="item-v3-add">
+                                + Link
+                              </button>
+                            )}
+                          </span>
                         </dd>
                       </div>
                       <div>
@@ -1724,15 +1746,26 @@ export default function ItemDetailsPage() {
                       </div>
                       <div>
                         <dt>SKU</dt>
-                        <dd className={item.sku ? "item-v3-code" : "is-empty"}>{item.sku || "Not set"}</dd>
-                      </div>
-                      <div>
-                        <dt>Barcode</dt>
-                        <dd className={item.barcode ? "item-v3-code" : "is-empty"}>
-                          {item.barcode || "Not set"}
+                        <dd className={item.sku ? "item-v3-code" : ""}>
+                          {item.sku || (
+                            <button type="button" onClick={openEditModal} className="item-v3-add">
+                              + Add SKU
+                            </button>
+                          )}
                         </dd>
                       </div>
+                      {!item.barcode && (
+                        <div>
+                          <dt>Barcode</dt>
+                          <dd>
+                            <button type="button" onClick={openEditModal} className="item-v3-add">
+                              + Add barcode
+                            </button>
+                          </dd>
+                        </div>
+                      )}
                     </dl>
+                    {item.barcode && <ItemBarcode value={item.barcode} />}
                   </section>
 
                   <section className="item-v3-card item-v3-qr">
