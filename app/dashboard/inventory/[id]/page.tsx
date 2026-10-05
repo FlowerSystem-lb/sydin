@@ -10,7 +10,6 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
-import BrandMark from "@/components/BrandMark";
 import ContextBackButton from "@/components/navigation/ContextBackButton";
 import ImageLightbox from "@/components/inventory/ImageLightbox";
 import UiIcon, { type UiIconName } from "@/components/UiIcon";
@@ -69,7 +68,13 @@ import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
 import { useCanDelete } from "@/components/dashboard/BusinessContext";
-import DoneBy from "@/components/dashboard/DoneBy";
+import DoneBy, { useBusinessPeople } from "@/components/dashboard/DoneBy";
+import { brandingFromSettings } from "@/app/lib/documentPdf";
+import {
+  exportItemActivityPdf,
+  type ItemActivityReportKind,
+  type ItemActivityReportTable,
+} from "@/app/lib/itemActivityPdf";
 import {
   getSuppliersForUser,
   type Supplier,
@@ -252,6 +257,10 @@ export default function ItemDetailsPage() {
   const [movementLimit, setMovementLimit] = useState(10);
   const [historyLimit, setHistoryLimit] = useState(10);
   const [documentLimit, setDocumentLimit] = useState(10);
+  // Which section's PDF is being built, so only its button shows "Preparing".
+  const [pdfBusy, setPdfBusy] = useState<ItemActivityReportKind | null>(null);
+  const [pdfError, setPdfError] = useState("");
+  const people = useBusinessPeople();
   // Every invoice and purchase order this item is on (brief points 26, 40).
   const [itemDocuments, setItemDocuments] = useState<ItemDocument[]>([]);
   const [qrUrl, setQrUrl] = useState("");
@@ -753,6 +762,140 @@ export default function ItemDetailsPage() {
     }
   };
 
+  /* One section of the record as a PDF (Sayed, 5 Oct 2026): movements,
+     history or documents, with the business header, the item, a summary
+     and a table that never splits a row across pages. Built from what the
+     page already loaded -- no new queries. */
+  const downloadSectionPdf = async (kind: ItemActivityReportKind) => {
+    if (!item || pdfBusy) return;
+    setPdfBusy(kind);
+    setPdfError("");
+
+    const when = (value: string) =>
+      new Intl.DateTimeFormat("en", { dateStyle: "medium", timeStyle: "short" }).format(
+        new Date(value)
+      );
+    // "By" only means something when the business has more than one person;
+    // the screen hides it for a business of one, so the paper does too.
+    const showBy = Boolean(people && people.size > 1);
+    const by = (actorId: string | null | undefined) =>
+      (actorId && people?.get(actorId)) || "";
+
+    let table: ItemActivityReportTable;
+    let dates: string[];
+
+    if (kind === "movements") {
+      table = {
+        head: ["Date", "Movement", "Before", "After", "Change", ...(showBy ? ["By"] : []), "Note"],
+        rows: stockMovements.map((movement) => [
+          when(movement.created_at),
+          STOCK_MOVEMENT_LABELS[movement.movement_type],
+          String(movement.quantity_before),
+          String(movement.quantity_after),
+          formatQuantityDelta(movement.quantity_delta),
+          ...(showBy ? [by(movement.actor_id)] : []),
+          movement.notes ? formatStockMovementNotes(movement.notes) : "",
+        ]),
+        columns: {
+          0: { width: 34 },
+          1: { width: 26 },
+          2: { width: 15, align: "right" },
+          3: { width: 15, align: "right" },
+          4: { width: 16, align: "right", bold: true },
+        },
+      };
+      dates = stockMovements.map((movement) => movement.created_at);
+    } else if (kind === "history") {
+      table = {
+        head: ["Date", "Change", "Old quantity", "New quantity", ...(showBy ? ["By"] : [])],
+        rows: history.map((entry) => [
+          when(entry.created_at),
+          formatAction(entry.action),
+          String(formatQuantity(entry.old_quantity)),
+          String(formatQuantity(entry.new_quantity)),
+          ...(showBy ? [by(entry.actor_id)] : []),
+        ]),
+        columns: {
+          0: { width: 36 },
+          2: { width: 26, align: "right" },
+          3: { width: 26, align: "right", bold: true },
+        },
+      };
+      dates = history.map((entry) => entry.created_at);
+    } else {
+      table = {
+        head: ["Date", "Document", "Customer / supplier", "Quantity", "Unit price", "Status"],
+        rows: itemDocuments.map((document) => [
+          document.date ? formatCreatedDate(document.date) : "",
+          `${document.kind === "invoice" ? "Invoice" : "Purchase order"} ${document.number}`,
+          document.party || "",
+          document.kind === "invoice"
+            ? `Sold ${document.quantity}`
+            : `Ordered ${document.quantity}${
+                document.received !== null && document.received > 0
+                  ? `, received ${document.received}`
+                  : ""
+              }`,
+          document.unitAmount !== null
+            ? formatExactPrice(
+                document.unitAmount,
+                document.currency || getCurrencyContext().base
+              ) || ""
+            : "",
+          document.status.replace(/_/g, " "),
+        ]),
+        columns: {
+          0: { width: 26 },
+          3: { width: 30 },
+          4: { width: 24, align: "right" },
+          5: { width: 24 },
+        },
+      };
+      dates = itemDocuments
+        .map((document) => document.date)
+        .filter((value): value is string => Boolean(value));
+    }
+
+    const sorted = [...dates].sort();
+    try {
+      await exportItemActivityPdf({
+        kind,
+        item: {
+          name: item.name,
+          code: item.item_code,
+          sku: item.sku,
+          barcode: item.barcode,
+          category: resolveCategoryDisplay(item, assignedCategory),
+          depot: formatDepotLabel(assignedDepot),
+          quantityLabel: itemQuantityLabel,
+          lowStockLevel: String(itemLowStockThreshold),
+        },
+        table,
+        branding: brandingFromSettings(businessSettings),
+        period: sorted.length
+          ? { from: sorted[0], to: sorted[sorted.length - 1] }
+          : undefined,
+      });
+    } catch {
+      setPdfError("The PDF could not be created. Please try again.");
+    } finally {
+      setPdfBusy(null);
+    }
+  };
+
+  const pdfButton = (kind: ItemActivityReportKind, rowCount: number) => (
+    <button
+      type="button"
+      onClick={() => void downloadSectionPdf(kind)}
+      disabled={pdfBusy !== null}
+      className={buttonClassName({ variant: "secondary", size: "sm" })}
+      title={rowCount === 0 ? "Download an empty report" : "Download this section as a PDF"}
+    >
+      <UiIcon name="download" className="h-4 w-4" />
+      {pdfBusy === kind ? "Preparing…" : "PDF"}
+    </button>
+  );
+
   const downloadQrCode = () => {
     const svg = qrCodeRef.current?.querySelector("svg");
 
@@ -918,6 +1061,8 @@ export default function ItemDetailsPage() {
             <DashboardNotice tone="success">{pageNotice}</DashboardNotice>
           )}
 
+          {pdfError && <DashboardNotice tone="danger">{pdfError}</DashboardNotice>}
+
           {loading && (
             <LoadingSkeletonGroup
               count={2}
@@ -950,150 +1095,144 @@ export default function ItemDetailsPage() {
 
           {!loading && item && (
             <>
-              <div className="item-detail-split grid grid-cols-1 gap-5 xl:grid-cols-[0.95fr_1.05fr]">
-              <div className="item-page-media flex flex-col gap-4">
-              <section className="item-page-photo rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-3 shadow-[var(--shadow-card)] sm:p-4">
-                {/* backlog §16E: was a fixed h-240/300px box stretched across
-                    the whole ~0.95fr column (~550-580px wide) — a ~1.82:1
-                    letterbox shape. Measured with real product photos: a 4:3
-                    photo (1200x900) pillarboxed to ~27% empty space per side;
-                    a portrait phone photo would waste ~59%. That mismatch,
-                    not a rendering bug, is the "dead space on the left."
-                    Fixed by sizing the frame off `aspect-[4/3]` (matches the
-                    common case) capped to a sane width instead of a fixed
-                    pixel height stretched to the column's full width. */}
-                <div className="item-page-photo-frame mx-auto flex w-full max-w-[26rem] items-center justify-center rounded-[18px] border border-theme bg-white p-4">
-                  {item.image && failedImageSrc !== item.image ? (
-                    <button
-                      type="button"
-                      onClick={() => setLightboxOpen(true)}
-                      className="group relative aspect-[4/3] w-full cursor-zoom-in"
-                      aria-label={`Enlarge image of ${item.name}`}
-                    >
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        priority
-                        sizes="(min-width: 1280px) 26rem, 100vw"
-                        onError={() => setFailedImageSrc(item.image)}
-                        className="object-contain"
-                      />
-                      <span className="pointer-events-none absolute bottom-2 right-2 rounded-full bg-slate-900/72 px-2.5 py-1 text-xs font-bold text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
-                        Click to zoom
-                      </span>
-                    </button>
-                  ) : (
-                    /* An item with no photo was reserving a full 4:3 frame --
-                       on a 26rem column that is ~250px of empty box, inside
-                       another box, filling the first screen of the page before
-                       any actual item data. An absent photo is worth one line,
-                       and the frame it would have filled is not worth drawing
-                       twice. */
-                    <div className="item-photo-empty flex w-full flex-col items-center justify-center gap-1 py-8 text-center text-theme-subtle">
-                      <UiIcon name="box" className="h-6 w-6" />
-                      <span className="text-sm">No photo yet</span>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {/* The item's own chart under its photo -- the product page of
-                  the reference designs. Same component as the slide-over's
-                  Activity tab; renders nothing until two movements exist. */}
-              <StockLevelChart
-                points={stockMovements.map((movement) => ({
-                  at: movement.created_at,
-                  quantity: movement.quantity_after,
-                }))}
-                threshold={itemLowStockThreshold}
-                unitLabel={(quantity) =>
-                  getInventoryQuantityLabel(quantity, item.unit_type, item.custom_unit_label)
-                }
-              />
-              </div>
-
-              <section className="flex flex-col gap-6">
-                <div className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
-                  {/* backlog §16E: the item name was shown here again, right
-                      below the page's own H1 with the same name a few
-                      hundred pixels up — pure duplication, no new
-                      information. Dropped; the Low Stock badge (the one
-                      thing this row actually added) now sits with the
-                      section label instead of framing a repeated title. */}
-                  <div className="flex items-center justify-between gap-3">
-                    <p className="item-detail-eyebrow">
-                      Item details
-                    </p>
-
-
-                  </div>
-
-                  <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-3">
-                    <DetailCard
-                      label="Category"
-                      value={resolveCategoryDisplay(item, assignedCategory)}
-                    />
-                    <DetailCard
-                      label="Depot"
-                      value={formatDepotLabel(assignedDepot)}
-                    />
-                    <DetailCard
-                      label="Created"
-                      value={formatCreatedDate(item.created_at)}
-                    />
-                  </div>
-
-                  <section className="item-detail-group">
-                    <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-                      <div>
-                        <p className="item-detail-eyebrow">
-                          Stock & unit
-                        </p>
-                        <h3 className="mt-1 text-xl font-black text-theme-primary">
-                          {itemQuantityLabel}
-                        </h3>
-                      </div>
-                      <span className="self-start rounded-full border border-theme bg-theme-inset px-3 py-2 text-xs font-bold text-theme-secondary sm:self-auto">
-                        Unit: {itemUnitLabel}
-                      </span>
-                    </div>
-
-                    {/* backlog §16E: this grid used to repeat the section's
-                        own quantity a second time as a "Current stock" card
-                        directly below the h3 showing the same value. Minimum
-                        stock is the only fact this row actually adds. */}
-                    <div className="mt-3">
-                      <DetailCard
-                        label="Minimum stock"
-                        value={
-                          item.min_stock_level !== null &&
-                          item.min_stock_level !== undefined
-                            ? String(item.min_stock_level)
-                            : "Business default"
-                        }
-                        accent={
-                          item.min_stock_level !== null &&
-                          item.min_stock_level !== undefined
-                            ? "amber"
-                            : "slate"
-                        }
-                      />
+              {/* Redesign v2 (5 Oct 2026): a narrow side column for the photo
+                  and the QR label, a wide main column that leads with the four
+                  numbers that matter, then the chart, then every fact in one
+                  two-column list. Was: a 50/50 split with the photo alone on
+                  the left and five stacked groups on the right. */}
+              <div className="item-v2-grid">
+                <aside className="item-v2-side">
+                  <section className="item-v2-card item-page-photo">
+                    <div className="item-page-photo-frame item-v2-photo">
+                      {item.image && failedImageSrc !== item.image ? (
+                        <button
+                          type="button"
+                          onClick={() => setLightboxOpen(true)}
+                          className="group relative aspect-square w-full cursor-zoom-in"
+                          aria-label={`Enlarge image of ${item.name}`}
+                        >
+                          <Image
+                            src={item.image}
+                            alt={item.name}
+                            fill
+                            priority
+                            sizes="(min-width: 1280px) 22rem, 100vw"
+                            onError={() => setFailedImageSrc(item.image)}
+                            className="object-contain"
+                          />
+                          <span className="pointer-events-none absolute bottom-2 right-2 rounded-md bg-slate-900/72 px-2 py-1 text-xs font-medium text-white opacity-0 transition group-hover:opacity-100 group-focus-visible:opacity-100">
+                            Click to zoom
+                          </span>
+                        </button>
+                      ) : (
+                        <div className="item-photo-empty flex w-full flex-col items-center justify-center gap-1 py-10 text-center text-theme-subtle">
+                          <UiIcon name="box" className="h-6 w-6" />
+                          <span className="text-sm">No photo yet</span>
+                        </div>
+                      )}
                     </div>
                   </section>
 
-                  <section className="item-detail-group">
-                    <p className="item-detail-eyebrow">
-                      Private supplier
+                  <section className="item-v2-card item-v2-qr">
+                    <h2 className="item-v2-title">Item QR code</h2>
+                    <div ref={qrCodeRef} className="item-v2-qr-code">
+                      {qrUrl ? (
+                        <QRCode
+                          value={qrUrl}
+                          size={140}
+                          bgColor="#ffffff"
+                          fgColor="#02030a"
+                          level="M"
+                        />
+                      ) : (
+                        <div className="flex h-[140px] w-[140px] items-center justify-center text-center text-sm text-theme-subtle">
+                          Public link unavailable
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-theme-muted">
+                      Scan to open this item&rsquo;s public page.
                     </p>
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                    {qrUrl && <p className="item-v2-qr-url">{qrUrl}</p>}
+                    <div className="grid grid-cols-2 gap-2">
+                      <button
+                        type="button"
+                        onClick={copyQrLink}
+                        disabled={!qrUrl}
+                        className={buttonClassName({ variant: "secondary", size: "sm" })}
+                      >
+                        {copyLabel}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={downloadQrCode}
+                        disabled={!qrUrl}
+                        className={buttonClassName({ size: "sm" })}
+                      >
+                        Download QR
+                      </button>
+                    </div>
+                  </section>
+                </aside>
+
+                <div className="item-v2-main">
+                  <div className="item-v2-figures" role="group" aria-label="Stock summary">
+                    <div>
+                      <span>In stock</span>
+                      <strong>{itemQuantityLabel}</strong>
+                      <small>Unit: {itemUnitLabel}</small>
+                    </div>
+                    <div>
+                      <span>Low-stock level</span>
+                      <strong>{itemLowStockThreshold}</strong>
+                      <small>
+                        {item.min_stock_level !== null && item.min_stock_level !== undefined
+                          ? "Set for this item"
+                          : "Business default"}
+                      </small>
+                    </div>
+                    <div>
+                      <span>Stock cost value</span>
+                      <strong>{stockCostValueText || "—"}</strong>
+                      <small>{costPriceText ? `Cost ${costPriceText} each` : "No cost price"}</small>
+                    </div>
+                    <div>
+                      <span>Stock retail value</span>
+                      <strong>{stockRetailValueText || "—"}</strong>
+                      <small>
+                        {sellingPriceText ? `Sells at ${sellingPriceText}` : "No selling price"}
+                      </small>
+                    </div>
+                  </div>
+
+                  {/* Renders nothing until two movements exist. */}
+                  <StockLevelChart
+                    points={stockMovements.map((movement) => ({
+                      at: movement.created_at,
+                      quantity: movement.quantity_after,
+                    }))}
+                    threshold={itemLowStockThreshold}
+                    unitLabel={(quantity) =>
+                      getInventoryQuantityLabel(quantity, item.unit_type, item.custom_unit_label)
+                    }
+                  />
+
+                  <section className="item-v2-card">
+                    <h2 className="item-v2-title">Details</h2>
+                    <dl className="item-v2-details">
+                      <DetailCard
+                        label="Category"
+                        value={resolveCategoryDisplay(item, assignedCategory)}
+                      />
+                      <DetailCard label="Depot" value={formatDepotLabel(assignedDepot)} />
+                      <DetailCard label="Unit" value={itemUnitLabel} />
+                      <DetailCard label="Created" value={formatCreatedDate(item.created_at)} />
                       <DetailCard
                         label="Supplier"
                         value={assignedSupplier?.name || "No supplier"}
-                        accent={assignedSupplier ? "cyan" : "slate"}
                       />
                       <DetailCard
-                        label="Contact"
+                        label="Supplier contact"
                         value={assignedSupplier?.contact_name || "Not set"}
                         detail={
                           assignedSupplier?.phone ||
@@ -1102,53 +1241,11 @@ export default function ItemDetailsPage() {
                           undefined
                         }
                       />
-                    </div>
-                  </section>
-
-                  <section className="item-detail-group">
-                    <p className="item-detail-eyebrow">
-                      Pricing & value
-                    </p>
-
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      <DetailCard
-                        label="Cost price"
-                        value={costPriceText || "Not set"}
-                        detail={
-                          stockCostValueText
-                            ? `Stock cost value: ${stockCostValueText}`
-                            : undefined
-                        }
-                        accent={costPriceText ? "cyan" : "slate"}
-                      />
-                      <DetailCard
-                        label="Selling price"
-                        value={sellingPriceText || "Not set"}
-                        detail={
-                          stockRetailValueText
-                            ? `Stock retail value: ${stockRetailValueText}`
-                            : undefined
-                        }
-                        accent={sellingPriceText ? "violet" : "slate"}
-                      />
-                    </div>
-                  </section>
-
-                  <section className="item-detail-group">
-                    <p className="item-detail-eyebrow">
-                      Tracking codes
-                    </p>
-
-                    <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      <DetailCard label="Cost price" value={costPriceText || "Not set"} />
+                      <DetailCard label="Selling price" value={sellingPriceText || "Not set"} />
                       <DetailCard
                         label="Item code"
                         value={item.item_code?.trim() || "Not generated yet"}
-                        detail={
-                          item.item_code
-                            ? ""
-                            : "Older items may not have a generated code."
-                        }
-                        accent={item.item_code ? "indigo" : "slate"}
                         monospace={Boolean(item.item_code)}
                       />
                       <DetailCard
@@ -1159,105 +1256,17 @@ export default function ItemDetailsPage() {
                       <DetailCard
                         label="Barcode"
                         value={item.barcode || "Not set"}
-                        accent={item.barcode ? "cyan" : "slate"}
                         monospace={Boolean(item.barcode)}
                       />
+                    </dl>
+                    <div className="item-v2-notes">
+                      <p className="item-v2-notes-label">Notes</p>
+                      <p className="whitespace-pre-wrap break-normal">
+                        {item.notes || "No notes added yet."}
+                      </p>
                     </div>
                   </section>
-
-                  <div className="mt-5 rounded-2xl border border-theme bg-theme-inset p-4">
-                    <p className="text-sm font-semibold text-theme-subtle">
-                      Notes
-                    </p>
-
-                    <p className="mt-2 whitespace-pre-wrap break-normal text-sm leading-6 text-theme-secondary">
-                      {item.notes || "No notes added yet."}
-                    </p>
-                  </div>
                 </div>
-
-                <div className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
-                  <p className="item-detail-eyebrow">
-                    Item QR Code
-                  </p>
-
-                  <div className="item-qr-block mt-5 flex flex-col items-center justify-center rounded-3xl border border-theme bg-theme-inset p-5 text-center sm:p-6">
-                    <div className="mb-5 flex flex-col items-center gap-3">
-                      <div className="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-2xl border border-[#c7d7fa] bg-[#e9effc] text-lg font-black text-[#1d4ed8]">
-                        {businessSettings.business_logo_url ? (
-                          <Image
-                            src={businessSettings.business_logo_url}
-                            alt={businessSettings.business_name}
-                            fill
-                            sizes="56px"
-                            className="object-contain p-1"
-                          />
-                        ) : (
-                          <BrandMark compact className="border-0 shadow-none" />
-                        )}
-                      </div>
-
-                      <p className="text-sm font-bold text-theme-accent">
-                        {businessSettings.business_name}
-                      </p>
-                    </div>
-
-                    <div
-                      ref={qrCodeRef}
-                      className="rounded-3xl bg-white p-4 shadow-[var(--shadow-card)]"
-                    >
-                      {qrUrl ? (
-                        <QRCode
-                          value={qrUrl}
-                          size={180}
-                          bgColor="#ffffff"
-                          fgColor="#02030a"
-                          level="M"
-                        />
-                      ) : (
-                        <div className="flex h-[180px] w-[180px] items-center justify-center text-sm font-semibold text-theme-subtle">
-                          Public link unavailable
-                        </div>
-                      )}
-                    </div>
-
-                    {/* backlog §16E: this heading repeated the section's own
-                        "Item QR Code" eyebrow above, and the two sentences
-                        that followed it said the same thing twice ("Scan to
-                        open this public item page" / "This QR opens the
-                        public item page"). Collapsed to one line. */}
-                    <p className="mt-4 text-sm leading-6 text-theme-muted">
-                      Scan to open this item&rsquo;s public page.
-                    </p>
-
-                    {qrUrl && (
-                      <p className="mt-3 max-w-full break-all rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-xs text-theme-muted">
-                        {qrUrl}
-                      </p>
-                    )}
-
-                    <div className="mt-5 flex w-full flex-col gap-3 sm:flex-row">
-                      <button
-                        type="button"
-                        onClick={copyQrLink}
-                        disabled={!qrUrl}
-                        className="flex-1 rounded-2xl border border-theme bg-theme-surface px-4 py-3 text-sm font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
-                      >
-                        {copyLabel}
-                      </button>
-
-                      <button
-                        type="button"
-                        onClick={downloadQrCode}
-                        disabled={!qrUrl}
-                        className={buttonClassName({ className: "flex-1" })}
-                      >
-                        Download QR
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </section>
               </div>
 
               <section className="rounded-[var(--radius-panel)] border border-theme bg-theme-surface p-4 shadow-[var(--shadow-card)] sm:p-5">
@@ -1266,14 +1275,17 @@ export default function ItemDetailsPage() {
                     <p className="item-detail-eyebrow">
                       Bought and sold
                     </p>
-                    <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
-                      Documents with this item
+                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-theme-primary">
+                      Sales &amp; purchases
                     </h2>
                   </div>
-                  <span className="self-start rounded-full border border-theme bg-theme-inset px-4 py-2 text-sm font-bold text-theme-secondary sm:self-auto">
-                    {itemDocuments.length}{" "}
-                    {itemDocuments.length === 1 ? "document" : "documents"}
-                  </span>
+                  <div className="item-v2-section-actions">
+                    <span className="item-activity-count">
+                      {itemDocuments.length}{" "}
+                      {itemDocuments.length === 1 ? "document" : "documents"}
+                    </span>
+                    {pdfButton("documents", itemDocuments.length)}
+                  </div>
                 </div>
 
                 {itemDocuments.length === 0 ? (
@@ -1359,15 +1371,18 @@ export default function ItemDetailsPage() {
                       Stock activity
                     </p>
 
-                    <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
+                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-theme-primary">
                       Stock movements
                     </h2>
                   </div>
 
-                  <span className="item-activity-count">
-                    {stockMovements.length}{" "}
-                    {stockMovements.length === 1 ? "movement" : "movements"}
-                  </span>
+                  <div className="item-v2-section-actions">
+                    <span className="item-activity-count">
+                      {stockMovements.length}{" "}
+                      {stockMovements.length === 1 ? "movement" : "movements"}
+                    </span>
+                    {pdfButton("movements", stockMovements.length)}
+                  </div>
                 </div>
 
                 {stockMovements.length > 0 ? (
@@ -1462,14 +1477,17 @@ export default function ItemDetailsPage() {
                       Audit trail
                     </p>
 
-                    <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
+                    <h2 className="mt-1 text-xl font-semibold tracking-tight text-theme-primary">
                       Item history
                     </h2>
                   </div>
 
-                  <span className="item-activity-count">
-                    {history.length} {history.length === 1 ? "entry" : "entries"}
-                  </span>
+                  <div className="item-v2-section-actions">
+                    <span className="item-activity-count">
+                      {history.length} {history.length === 1 ? "entry" : "entries"}
+                    </span>
+                    {pdfButton("history", history.length)}
+                  </div>
                 </div>
 
                 {history.length > 0 ? (

@@ -6583,3 +6583,35 @@ documents list and the slide-over's Activity tab were also unbounded.
 
 **Verified** live: rows are 43–56px. With the limit temporarily set to 1, "Show more · 2 older"
 revealed all 3 and the button disappeared; the limit was then restored to 10. Lint, tsc and build pass.
+
+
+## 2026-10-05 — Item page redesign + per-section PDFs (Sayed's request)
+
+Sayed asked to redesign the full item page and to put a PDF button beside each section title
+(sales, stock activity, item history), with a professional layout that never breaks a row.
+
+**Page** (`app/dashboard/inventory/[id]/page.tsx`):
+- **Side column:** the photo (square, click to zoom) and a compact QR card (140px code, the link in
+  mono, Copy link / Download QR).
+- **Main column:** a four-figure strip (In stock, Low-stock level, Stock cost value, Stock retail
+  value), the stock chart, then one Details card. Its two-column list covers category, depot, unit,
+  created, supplier and contact, cost and selling price, item code, SKU and barcode, with notes
+  below. This replaces the 50/50 split with five stacked groups.
+- **Below:** "Sales & purchases" (was "Documents with this item"), Stock movements and Item history.
+  Each header has its count and a **PDF** button ("Preparing…" while building, one at a time).
+
+**PDFs** (`app/lib/itemActivityPdf.ts`): on the shared document furniture (`documentPdf.ts`), with
+the branded header bar, From / Item / Summary columns (stock now, low-stock level, row count and
+date range), and a footer with page numbers.
+- The table repeats its head on every page and uses `rowPageBreak: "avoid"`, so a row never splits.
+- Movements: Date, Movement, Before, After, Change, (By), Note. History: Date, Change, Old/New
+  quantity, (By). Sales & purchases: Date, Document, Customer/supplier, Quantity, Unit price,
+  Status. "By" appears only for businesses of 2+ people, as on screen.
+- Characters outside Helvetica's WinAnsi set are mapped first: the app's minus sign printed as "˜5".
+- Built from data the page already loaded, so there are no new queries.
+
+**Verified:** 60 movements with long notes were rendered in Node and viewed page by page through
+pdf.js. That gave 5 pages, no split rows, the header and table head on every page, "Page n of N"
+footers, and "-5" correct after the fix. The history and empty documents PDFs were checked the same
+way. In the running app, signed in, all three buttons produced application/pdf files (22–24 KB, with
+the logo) without error. Temporary test files were removed. Lint, tsc and build pass.
