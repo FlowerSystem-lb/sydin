@@ -184,3 +184,17 @@ be made with Higgsfield (AI video).
   (`#لبنان #Lebanon #مستودعات #InventoryManagement #SydIN`). LinkedIn and Threads get English only.
 - **Kit (shot list, CapCut steps, Higgsfield prompts, captions):**
   https://claude.ai/artifact/3R3U5DaYs4DqVcrrri4EbT
+
+## Nothing personal, LinkedIn paused (6 Oct 2026, Sayed's call)
+
+Sayed does not want personal content: no posts on his personal LinkedIn and no face-to-camera
+videos. So:
+- **LinkedIn is paused.** The Wednesday LinkedIn slots are gone from the calendar. Revisit at
+  launch, possibly as a SydIN company page. Don't re-propose personal posts before then.
+- **Videos come from the SydIN accounts only, with no face.** Motion stories (like "And you had it")
+  and screen recordings of the app. V1 "Who I am" and V10 "Why I built SydIN" are paused. Sat 10
+  becomes V3 (scan a barcode, the item opens), Tue 13 becomes V7 (low stock), and Tue 3 / Tue 10 Nov
+  become new motion stories.
+- **Trust still needs a human.** That now happens in person and on WhatsApp during depot visits,
+  not on social media. Sales scripts should be written for that.
+

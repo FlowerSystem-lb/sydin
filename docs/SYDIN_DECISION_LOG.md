@@ -698,3 +698,13 @@ stays as the alternative.
   Undisclosed AI footage risks platform penalties.
 - **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Problem-story video".
 
+## 2026-10-06 — No personal content; LinkedIn paused
+
+- **Decision:** marketing runs only from the SydIN brand accounts. No posts on Sayed's personal
+  LinkedIn and no face-to-camera videos. LinkedIn is paused until launch.
+- **Why:** Sayed's call. He is not comfortable posting personally. Depot owners in Lebanon are
+  reached on Instagram, Facebook, TikTok and WhatsApp, not LinkedIn, so pausing it costs little now.
+- **Trade-off accepted:** brand-only content builds trust more slowly, so the human trust comes from
+  in-person depot visits and WhatsApp conversations instead.
+- **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Nothing personal, LinkedIn paused".
+
