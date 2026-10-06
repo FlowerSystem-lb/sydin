@@ -13,7 +13,8 @@
       "port": 3000,
       "env": {
         "NODE_OPTIONS": "--use-system-ca"
-      }
+      },
+      "autoPort": true
     },
     {
       "name": "sydin-prod",
