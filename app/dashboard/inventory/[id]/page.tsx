@@ -47,6 +47,7 @@ import {
   Button,
   buttonClassName,
   DialogShell,
+  useToast,
 } from "@/components/ui";
 import {
   createCategoryInline,
@@ -235,6 +236,12 @@ export default function ItemDetailsPage() {
   const [activityLimit, setActivityLimit] = useState(10);
   // "Now" for the 30-day sales pace, fixed when the page opens.
   const [pageOpenedAt] = useState(() => Date.now());
+  // Notes are written on the page (Sayed's reference, 6 Oct 2026). null =
+  // untouched, so the textarea shows the saved note until it is edited.
+  const [noteDraft, setNoteDraft] = useState<string | null>(null);
+  const [savingNote, setSavingNote] = useState(false);
+  const [moreOpen, setMoreOpen] = useState(false);
+  const { showToast } = useToast();
   const [activityFilter, setActivityFilter] = useState<
     "all" | "movements" | "edits" | "created"
   >("all");
@@ -744,6 +751,48 @@ export default function ItemDetailsPage() {
     }
   };
 
+  const saveNote = async () => {
+    if (!item || savingNote || noteDraft === null) return;
+    const nextNotes = noteDraft.trim();
+    if (nextNotes === (item.notes || "").trim()) {
+      setNoteDraft(null);
+      return;
+    }
+    setSavingNote(true);
+    try {
+      const {
+        data: { user },
+      } = await getBusinessUser();
+      if (!user) throw new Error("signed out");
+      const oldItem = { ...item };
+      const { data, error: noteError } = await supabase
+        .from("inventory")
+        .update({ notes: nextNotes })
+        .eq("id", item.id)
+        .eq("user_id", user.id)
+        .select("*");
+      if (noteError || !data?.[0]) throw noteError || new Error("not saved");
+      const updatedRecord = data[0] as Item;
+      await logInventoryHistory({
+        itemId: item.id,
+        userId: user.id,
+        action: "edited",
+        oldQuantity: oldItem.quantity,
+        newQuantity: updatedRecord.quantity,
+        oldValues: oldItem,
+        newValues: updatedRecord,
+      });
+      setItem(updatedRecord);
+      setNoteDraft(null);
+      await fetchHistory(user.id, item.id);
+      showToast({ tone: "success", message: "Note saved" });
+    } catch {
+      showToast({ tone: "danger", message: "The note could not be saved. Please try again." });
+    } finally {
+      setSavingNote(false);
+    }
+  };
+
   /* One section of the record as a PDF (Sayed, 5 Oct 2026): movements,
      history or documents, with the business header, the item, a summary
      and a table that never splits a row across pages. Built from what the
@@ -1180,6 +1229,60 @@ export default function ItemDetailsPage() {
                   <ActionButton onClick={openMovementModal} icon="movement">
                     Record movement
                   </ActionButton>
+                  <div className="item-v3-more">
+                    <button
+                      type="button"
+                      onClick={() => setMoreOpen((open) => !open)}
+                      onBlur={(event) => {
+                        if (!event.currentTarget.parentElement?.contains(event.relatedTarget as Node)) {
+                          setMoreOpen(false);
+                        }
+                      }}
+                      aria-haspopup="menu"
+                      aria-expanded={moreOpen}
+                      aria-label="More actions"
+                      className={buttonClassName({ variant: "secondary" })}
+                    >
+                      <UiIcon name="more" className="h-4 w-4" />
+                    </button>
+                    {moreOpen && (
+                      <div className="item-v3-more-menu" role="menu">
+                        <Link
+                          role="menuitem"
+                          href={`/dashboard/qr-center?items=${item.id}`}
+                          onClick={() => setMoreOpen(false)}
+                        >
+                          <UiIcon name="qr" className="h-4 w-4" />
+                          Print shelf label
+                        </Link>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setMoreOpen(false);
+                            downloadQrCode();
+                          }}
+                        >
+                          <UiIcon name="download" className="h-4 w-4" />
+                          Download QR
+                        </button>
+                        {canDeleteRecords && (
+                          <button
+                            type="button"
+                            role="menuitem"
+                            className="is-danger"
+                            onClick={() => {
+                              setMoreOpen(false);
+                              setIsDeleteDialogOpen(true);
+                            }}
+                          >
+                            <UiIcon name="trash" className="h-4 w-4" />
+                            Delete item
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
             </div>
@@ -1265,45 +1368,8 @@ export default function ItemDetailsPage() {
                 </section>
               )}
 
-              {/* The big photo Sayed asked for, beside the four numbers. */}
+              {/* Four figures across, as in Sayed's reference (6 Oct 2026). */}
               <div className="item-v3-hero">
-                <section className="item-v3-card item-v3-photo-card item-page-photo">
-                  {item.image && failedImageSrc !== item.image ? (
-                    <button
-                      type="button"
-                      onClick={() => setLightboxOpen(true)}
-                      className="item-v3-photo group"
-                      aria-label={`Enlarge image of ${item.name}`}
-                    >
-                      <Image
-                        src={item.image}
-                        alt={item.name}
-                        fill
-                        priority
-                        sizes="(min-width: 1280px) 34rem, 100vw"
-                        onError={() => setFailedImageSrc(item.image)}
-                        className="object-contain"
-                      />
-                      <span className="item-v3-photo-zoom">
-                        <UiIcon name="search" className="h-3.5 w-3.5" />
-                        Click to enlarge
-                      </span>
-                    </button>
-                  ) : (
-                    <div className="item-v3-photo item-v3-photo-empty">
-                      <UiIcon name="upload" className="h-8 w-8" />
-                      <span>No photo yet</span>
-                      <button
-                        type="button"
-                        onClick={openEditModal}
-                        className={buttonClassName({ variant: "secondary", size: "sm" })}
-                      >
-                        Upload photo
-                      </button>
-                    </div>
-                  )}
-                </section>
-
                 <div className="item-v3-figures">
                   <div className="item-v3-figure">
                     <span>On hand</span>
@@ -1682,15 +1748,32 @@ export default function ItemDetailsPage() {
                   </section>
 
                   <section className="item-v3-card">
-                    <div className="item-v3-card-head">
-                      <h2 className="item-v3-title">Notes</h2>
-                      <button type="button" onClick={openEditModal} className="item-v3-link">
-                        {item.notes ? "Edit" : "Add a note"}
+                    <h2 className="item-v3-title">Notes</h2>
+                    <p className="item-v3-sub">
+                      Handling instructions, storage tips or anything your team should know
+                    </p>
+                    <textarea
+                      value={noteDraft ?? item.notes ?? ""}
+                      onChange={(event) => setNoteDraft(event.target.value)}
+                      placeholder="Write a note…"
+                      aria-label="Notes"
+                      rows={3}
+                      className="ui-input item-v3-note-input"
+                    />
+                    <div className="item-v3-note-actions">
+                      <button
+                        type="button"
+                        onClick={() => void saveNote()}
+                        disabled={
+                          savingNote ||
+                          noteDraft === null ||
+                          noteDraft.trim() === (item.notes || "").trim()
+                        }
+                        className="item-v3-dark-button"
+                      >
+                        {savingNote ? "Saving…" : "Save note"}
                       </button>
                     </div>
-                    <p className={`item-v3-notes ${item.notes ? "" : "is-empty"}`}>
-                      {item.notes || "Handling instructions, storage tips or anything your team should know."}
-                    </p>
                   </section>
                 </div>
 
@@ -1734,6 +1817,44 @@ export default function ItemDetailsPage() {
                       </>
                     ) : (
                       <p className="item-v3-sub mt-2">Everything is filled in.</p>
+                    )}
+                  </section>
+
+                  <section className="item-v3-card item-v3-photo-card item-page-photo">
+                      <h2 className="item-v3-title">Photo</h2>
+                    {item.image && failedImageSrc !== item.image ? (
+                      <button
+                        type="button"
+                        onClick={() => setLightboxOpen(true)}
+                        className="item-v3-photo group"
+                        aria-label={`Enlarge image of ${item.name}`}
+                      >
+                        <Image
+                          src={item.image}
+                          alt={item.name}
+                          fill
+                          priority
+                          sizes="(min-width: 1280px) 34rem, 100vw"
+                          onError={() => setFailedImageSrc(item.image)}
+                          className="object-contain"
+                        />
+                        <span className="item-v3-photo-zoom">
+                          <UiIcon name="search" className="h-3.5 w-3.5" />
+                          Click to enlarge
+                        </span>
+                      </button>
+                    ) : (
+                      <div className="item-v3-photo item-v3-photo-empty">
+                        <UiIcon name="upload" className="h-8 w-8" />
+                        <span>No photo yet</span>
+                        <button
+                          type="button"
+                          onClick={openEditModal}
+                          className={buttonClassName({ variant: "secondary", size: "sm" })}
+                        >
+                          Upload photo
+                        </button>
+                      </div>
                     )}
                   </section>
 
@@ -1799,6 +1920,9 @@ export default function ItemDetailsPage() {
                         Download QR
                       </button>
                     </div>
+                    <Link href={`/dashboard/qr-center?items=${item.id}`} className="item-v3-print-link">
+                      Print shelf label
+                    </Link>
                   </section>
 
                   {canDeleteRecords && (

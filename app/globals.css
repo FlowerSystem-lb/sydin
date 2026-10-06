@@ -30480,3 +30480,42 @@ body:has(.login-page)::-webkit-scrollbar,
   .depots-v3-field-actions { width: 100%; padding-left: 3.4rem; }
   .depots-v3-drawer-foot > * { flex: 1 1 auto; }
 }
+
+
+/* ==========================================================================
+   ITEM PAGE v3.1 (6 Oct 2026) — Sayed's second reference
+   ==========================================================================
+   Four figures across the top (the photo moved into the side column as
+   its own card), a "..." menu beside Record movement (print label,
+   download QR, delete), notes written and saved on the page, and a Print
+   shelf label link on the QR card. */
+.item-detail .item-v3-hero { grid-template-columns: minmax(0, 1fr) !important; }
+@media (min-width: 1024px) {
+  .item-detail .item-v3-hero .item-v3-figures { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+.item-detail .item-v3-photo-card { padding: 1.1rem 1.25rem; }
+.item-detail .item-v3-photo-card .item-v3-title { margin-bottom: 0.75rem; }
+.item-detail .item-v3-photo-card .item-v3-photo { min-height: 0; max-height: none; aspect-ratio: 1 / 1; }
+
+.item-detail .item-v3-more { position: relative; }
+.item-detail .item-v3-more-menu {
+  position: absolute; right: 0; top: calc(100% + 0.35rem); z-index: 60; min-width: 13rem;
+  border: 1px solid var(--border-default); border-radius: var(--radius-card); background: var(--bg-surface);
+  box-shadow: var(--shadow-elevated); padding: 0.35rem;
+}
+.item-detail .item-v3-more-menu > a, .item-detail .item-v3-more-menu > button {
+  display: flex; width: 100%; min-height: 2.5rem; align-items: center; gap: 0.6rem; border-radius: var(--radius-control);
+  padding: 0 0.7rem; color: var(--text-primary); font-size: var(--text-sm); font-weight: 500; text-align: left;
+}
+.item-detail .item-v3-more-menu > a:hover, .item-detail .item-v3-more-menu > button:hover { background: var(--surface-page); }
+.item-detail .item-v3-more-menu .is-danger { color: var(--status-danger-text); }
+
+.item-detail .item-v3-note-input { display: block; width: 100%; min-height: 5rem; margin-top: 0.75rem; padding: 0.6rem 0.75rem; resize: vertical; line-height: 1.5; }
+.item-detail .item-v3-note-actions { display: flex; justify-content: flex-end; margin-top: 0.6rem; }
+.item-detail .item-v3-dark-button {
+  display: inline-flex; min-height: var(--control-h); align-items: center; border-radius: var(--radius-control);
+  background: var(--ink); padding: 0 0.95rem; color: #fff; font-size: var(--text-sm); font-weight: 600;
+}
+.item-detail .item-v3-dark-button:disabled { opacity: 0.45; cursor: not-allowed; }
+.item-detail .item-v3-print-link { align-self: center; color: var(--sydin-blue); font-size: var(--text-sm); font-weight: 600; }
+.item-detail .item-v3-print-link:hover { text-decoration: underline; }

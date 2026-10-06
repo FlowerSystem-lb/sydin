@@ -6808,3 +6808,19 @@ site.
 row was confirmed and then reset to null. The drawer gave Auto "ACH6", the ✓ Maps hint, the live
 preview at 5 of 6, the empty-name error and Escape closing, with nothing saved. Lint, tsc and build
 pass.
+
+## 2026-10-06 — Item page v3.1 (Sayed's second reference)
+
+- **Top:** four figures in one row; the big photo moved out of the top row.
+- **Side column:** Item setup, then **Photo** (square, zoomable, an upload prompt when empty, no
+  logo fallback), then Identifiers, then the QR card, which gains "Print shelf label"
+  (`/dashboard/qr-center?items=<id>`).
+- **"…" menu** beside Record movement: Print shelf label, Download QR, Delete item. Delete opens
+  the existing confirm dialog and is hidden for roles that can't delete.
+- **Notes:** written and saved on the page ("Save note", enabled only when the text changed). Same
+  write path as the edit form: update `inventory.notes`, log an "edited" history entry, refresh the
+  history, show a toast.
+
+**Verified** live on item 37 at 1440: the four figures share one row, the side order is right, the
+menu has 3 items and the print link is correct. Save note was **not** exercised live: each save
+writes a permanent history row on Sayed's real item. Lint, tsc and build pass.
