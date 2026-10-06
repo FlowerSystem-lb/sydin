@@ -1,25 +1,40 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+/* Depots (redesign, 6 Oct 2026) -- Sayed's spec and screenshots:
+   a searchable list on the left, the selected depot on the right with its
+   contact and location filled in place (phone, address, map link), copy and
+   call shortcuts, actions, and a New/Edit side drawer with a live preview.
+   Phase 37 added phone, address, map_url and is_default to `depots`. */
+
+import Link from "next/link";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import UiIcon from "@/components/UiIcon";
 import {
-  ActionButton,
   DashboardEmptyState,
   DashboardNotice,
-  DashboardPageHeader,
-  DashboardPageShell,
-  FilterBar,
-  FilterChip,
   LoadingSkeletonGroup,
 } from "@/components/dashboard/Workspace";
-import { Button, DialogShell, FieldGroup, FieldRow } from "@/components/ui";
+import { buttonClassName, useToast } from "@/components/ui";
 import {
+  clearDefaultDepot,
+  countStockedItemsInDepot,
   createDepot,
   deleteDepot,
-  formatDepotLabel,
+  depotMissingInfo,
+  depotProfileScore,
+  depotTelUrl,
+  depotWhatsAppUrl,
+  formatDepotPhone,
+  getDepotErrorMessage,
   getDepotsForUser,
+  looksLikeMapsUrl,
+  mapsSearchUrl,
+  setDefaultDepot,
+  shortMapUrl,
+  suggestDepotCode,
   updateDepot,
+  updateDepotFields,
   type Depot,
 } from "@/app/lib/depots";
 import { getBusinessUser } from "@/app/lib/business";
@@ -38,678 +53,1021 @@ const DEFAULT_SUBSCRIPTION_USAGE: SubscriptionUsage = {
   usedItems: 0,
 };
 
-type DepotFilter = "all" | "active" | "inactive" | "missing-code";
+type DepotFilter = "all" | "active" | "inactive" | "missing";
+
+type DraftDepot = {
+  name: string;
+  code: string;
+  phone: string;
+  address: string;
+  map_url: string;
+  notes: string;
+  is_active: boolean;
+  is_default: boolean;
+};
+
+const EMPTY_DRAFT: DraftDepot = {
+  name: "",
+  code: "",
+  phone: "",
+  address: "",
+  map_url: "",
+  notes: "",
+  is_active: true,
+  is_default: false,
+};
+
+function initialOf(name: string) {
+  return (name.trim().charAt(0) || "?").toUpperCase();
+}
+
+function copyText(value: string) {
+  return navigator.clipboard?.writeText(value) ?? Promise.reject(new Error("no clipboard"));
+}
 
 export default function DepotsPage() {
   const canDeleteRecords = useCanDelete();
+  const { showToast } = useToast();
   const [depots, setDepots] = useState<Depot[]>([]);
-  const [depotFilter, setDepotFilter] = useState<DepotFilter>("all");
   const [userId, setUserId] = useState("");
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [pendingDeleteDepot, setPendingDeleteDepot] = useState<Depot | null>(null);
   const [pageError, setPageError] = useState("");
-  const [pageNotice, setPageNotice] = useState("");
-  const [name, setName] = useState("");
-  const [code, setCode] = useState("");
-  const [notes, setNotes] = useState("");
-  const [isActive, setIsActive] = useState(true);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editName, setEditName] = useState("");
-  const [editCode, setEditCode] = useState("");
-  const [editNotes, setEditNotes] = useState("");
-  const [editIsActive, setEditIsActive] = useState(true);
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<DepotFilter>("all");
+  const [selectedId, setSelectedId] = useState<number | null>(null);
   const [subscriptionUsage, setSubscriptionUsage] =
     useState<SubscriptionUsage>(DEFAULT_SUBSCRIPTION_USAGE);
 
-  const loadDepots = async () => {
-    const {
-      data: { user },
-    } = await getBusinessUser();
+  // Inline "fill it in now" rows on the detail panel.
+  const [inlinePhone, setInlinePhone] = useState("");
+  const [inlineAddress, setInlineAddress] = useState("");
+  const [inlineMap, setInlineMap] = useState("");
+  const [savingField, setSavingField] = useState<string | null>(null);
 
-    if (!user) {
-      setPageError("Please sign in again to manage depots.");
-      setLoading(false);
-      return;
-    }
+  // Delete confirm, inline in the actions card.
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [stockedCount, setStockedCount] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
-    setUserId(user.id);
+  // Drawer.
+  const [drawer, setDrawer] = useState<"new" | "edit" | null>(null);
+  const [draft, setDraft] = useState<DraftDepot>(EMPTY_DRAFT);
+  const [draftError, setDraftError] = useState("");
+  const [nameError, setNameError] = useState("");
+  const [savingDraft, setSavingDraft] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
 
-    try {
-      const [loadedDepots, loadedUsage] = await Promise.all([
-        getDepotsForUser(user.id),
-        getSubscriptionUsage(user.id),
-      ]);
-      setDepots(loadedDepots);
-      setSubscriptionUsage(loadedUsage);
-    } catch {
-      setPageError("We could not load your depots. Refresh the page and try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const toast = (message: string, tone: "success" | "danger" = "success") =>
+    showToast({ tone, message });
 
+  /* ---------------- load ---------------- */
   useEffect(() => {
-    let isActiveRequest = true;
-
+    let active = true;
     getBusinessUser()
       .then(({ data: { user } }) => {
-        if (!isActiveRequest) return;
-
+        if (!active) return;
         if (!user) {
           setPageError("Please sign in again to manage depots.");
           setLoading(false);
           return;
         }
-
         setUserId(user.id);
-
-        Promise.all([
-          getDepotsForUser(user.id),
-          getSubscriptionUsage(user.id),
-        ])
-          .then(([loadedDepots, loadedUsage]) => {
-            if (!isActiveRequest) return;
-
-            setDepots(loadedDepots);
-            setSubscriptionUsage(loadedUsage);
+        Promise.all([getDepotsForUser(user.id), getSubscriptionUsage(user.id)])
+          .then(([loaded, usage]) => {
+            if (!active) return;
+            setDepots(loaded);
+            setSubscriptionUsage(usage);
+            // The selected depot lives in the URL (?id=) so it can be linked.
+            const requested = Number(new URLSearchParams(window.location.search).get("id"));
+            const initial =
+              loaded.find((depot) => depot.id === requested) ||
+              loaded.find((depot) => depot.is_default) ||
+              loaded[0];
+            setSelectedId(initial ? initial.id : null);
             setLoading(false);
           })
           .catch(() => {
-            if (!isActiveRequest) return;
-
+            if (!active) return;
             setPageError("We could not load your depots. Refresh the page and try again.");
             setLoading(false);
           });
       })
       .catch(() => {
-        if (!isActiveRequest) return;
-
+        if (!active) return;
         setPageError("We could not confirm your session. Please sign in again.");
         setLoading(false);
       });
-
     return () => {
-      isActiveRequest = false;
+      active = false;
     };
   }, []);
 
-  const resetCreateForm = () => {
-    setName("");
-    setCode("");
-    setNotes("");
-    setIsActive(true);
+  const selectDepot = (id: number) => {
+    setSelectedId(id);
+    setInlinePhone("");
+    setInlineAddress("");
+    setInlineMap("");
+    setConfirmDelete(false);
+    setStockedCount(null);
+    const url = new URL(window.location.href);
+    url.searchParams.set("id", String(id));
+    window.history.replaceState(null, "", url.toString());
   };
+
+  /* ---------------- derived ---------------- */
+  const selected = depots.find((depot) => depot.id === selectedId) || null;
+  const counts = {
+    all: depots.length,
+    active: depots.filter((depot) => depot.is_active).length,
+    inactive: depots.filter((depot) => !depot.is_active).length,
+    missing: depots.filter((depot) => depotMissingInfo(depot)).length,
+  };
+  const visibleDepots = useMemo(() => {
+    const needle = search.trim().toLowerCase();
+    return depots.filter((depot) => {
+      if (filter === "active" && !depot.is_active) return false;
+      if (filter === "inactive" && depot.is_active) return false;
+      if (filter === "missing" && !depotMissingInfo(depot)) return false;
+      if (!needle) return true;
+      return [depot.name, depot.code, depot.phone, depot.address]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(needle));
+    });
+  }, [depots, filter, search]);
 
   const currentPlan = subscriptionUsage.subscription.plan;
   const currentPlanName = formatPlanName(currentPlan);
-  const depotLimit = getSubscriptionDepotLimit(
-    subscriptionUsage.subscription
-  );
+  const depotLimit = getSubscriptionDepotLimit(subscriptionUsage.subscription);
   const reachedDepotLimit = depots.length >= depotLimit;
-  const requiredPlan = getUpgradePlanForDepotLimit(currentPlan);
-  const visibleDepots = useMemo(
-    () =>
-      depots.filter(
-        (depot) =>
-          depotFilter === "all" ||
-          (depotFilter === "active" && depot.is_active) ||
-          (depotFilter === "inactive" && !depot.is_active) ||
-          (depotFilter === "missing-code" && !depot.code?.trim())
-      ),
-    [depotFilter, depots]
-  );
-  const depotFilters: { value: DepotFilter; label: string; count: number }[] = [
-    { value: "all", label: "All", count: depots.length },
-    {
-      value: "active",
-      label: "Active",
-      count: depots.filter((depot) => depot.is_active).length,
-    },
-    {
-      value: "inactive",
-      label: "Inactive",
-      count: depots.filter((depot) => !depot.is_active).length,
-    },
-    {
-      value: "missing-code",
-      label: "Missing code",
-      count: depots.filter((depot) => !depot.code?.trim()).length,
-    },
-  ];
 
-  const handleCreateDepot = async (event: React.FormEvent) => {
-    event.preventDefault();
+  const replaceDepot = (next: Depot) =>
+    setDepots((current) => current.map((depot) => (depot.id === next.id ? next : depot)));
 
-    if (saving) return;
+  /* ---------------- inline saves (optimistic) ---------------- */
+  const saveField = async (
+    field: "phone" | "address" | "map_url" | "is_active",
+    value: string | boolean,
+    label: string
+  ) => {
+    if (!selected || !userId) return;
+    const before = selected;
+    replaceDepot({ ...selected, [field]: value } as Depot);
+    setSavingField(field);
+    try {
+      const saved = await updateDepotFields(userId, selected.id, { [field]: value });
+      replaceDepot(saved);
+      if (field === "phone") setInlinePhone("");
+      if (field === "address") setInlineAddress("");
+      if (field === "map_url") setInlineMap("");
+      toast(label);
+    } catch (error) {
+      replaceDepot(before);
+      toast(getDepotErrorMessage(error), "danger");
+    } finally {
+      setSavingField(null);
+    }
+  };
 
-    const trimmedName = name.trim();
+  const toggleDefault = async () => {
+    if (!selected || !userId) return;
+    const before = depots;
+    const makeDefault = !selected.is_default;
+    setDepots((current) =>
+      current.map((depot) => ({
+        ...depot,
+        is_default: makeDefault ? depot.id === selected.id : depot.id === selected.id ? false : depot.is_default,
+      }))
+    );
+    try {
+      if (makeDefault) await setDefaultDepot(selected.id);
+      else await clearDefaultDepot(userId, selected.id);
+      toast(makeDefault ? `${selected.name} is now the default depot` : "Default depot cleared");
+    } catch (error) {
+      setDepots(before);
+      toast(getDepotErrorMessage(error), "danger");
+    }
+  };
 
-    if (!trimmedName) {
-      setPageError("Add a depot name before saving.");
-      setPageNotice("");
+  const copy = async (value: string, label: string) => {
+    try {
+      await copyText(value);
+      toast(label);
+    } catch {
+      toast("Could not copy. Select the text and copy it instead.", "danger");
+    }
+  };
+
+  const copyAll = () => {
+    if (!selected) return;
+    const lines = [
+      selected.code ? `${selected.name} (${selected.code})` : selected.name,
+      selected.phone ? `Phone: ${formatDepotPhone(selected.phone)}` : "",
+      selected.address ? `Address: ${selected.address}` : "",
+      selected.map_url ? `Map: ${selected.map_url}` : "",
+    ].filter(Boolean);
+    void copy(lines.join("\n"), "Depot details copied");
+  };
+
+  /* ---------------- duplicate / delete ---------------- */
+  const duplicate = async () => {
+    if (!selected || !userId) return;
+    if (reachedDepotLimit) {
+      toast(`The ${currentPlanName} plan allows ${depotLimit} depots.`, "danger");
       return;
     }
-
     try {
-      setSaving(true);
-      setPageError("");
-      setPageNotice("");
-
-      const currentUserId =
-        userId ||
-        (
-          await getBusinessUser()
-        ).data.user?.id;
-
-      if (!currentUserId) {
-        setPageError("Please sign in again before creating a depot.");
-        return;
-      }
-
-      const [freshDepots, freshUsage] = await Promise.all([
-        getDepotsForUser(currentUserId),
-        getSubscriptionUsage(currentUserId),
-      ]);
-      const freshDepotLimit = getSubscriptionDepotLimit(
-        freshUsage.subscription
-      );
-
-      setDepots(freshDepots);
-      setSubscriptionUsage(freshUsage);
-
-      if (freshDepots.length >= freshDepotLimit) {
-        setPageError(
-          `You reached the ${formatPlanName(
-            freshUsage.subscription.plan
-          )} plan limit of ${freshDepotLimit} depot${
-            freshDepotLimit === 1 ? "" : "s"
-          }. Existing depots remain available.`
-        );
-        return;
-      }
-
-      await createDepot(currentUserId, {
-        name: trimmedName,
-        code,
-        notes,
-        is_active: isActive,
+      const created = await createDepot(userId, {
+        name: `${selected.name} copy`,
+        phone: selected.phone || "",
+        address: selected.address || "",
+        map_url: selected.map_url || "",
+        notes: selected.notes || "",
+        is_active: selected.is_active,
       });
-      resetCreateForm();
-      setPageNotice("Depot added successfully.");
-      await loadDepots();
-    } catch {
-      setPageError("We could not save this depot. Check for duplicate names and try again.");
-    } finally {
-      setSaving(false);
+      setDepots((current) => [...current, created].sort((a, b) => a.name.localeCompare(b.name)));
+      selectDepot(created.id);
+      toast("Depot duplicated");
+    } catch (error) {
+      toast(getDepotErrorMessage(error), "danger");
     }
   };
 
-  const startEditing = (depot: Depot) => {
-    setEditingId(depot.id);
-    setEditName(depot.name);
-    setEditCode(depot.code || "");
-    setEditNotes(depot.notes || "");
-    setEditIsActive(depot.is_active);
-    setPageError("");
-    setPageNotice("");
+  const askDelete = async () => {
+    if (!selected || !userId) return;
+    setConfirmDelete(true);
+    setStockedCount(null);
+    try {
+      setStockedCount(await countStockedItemsInDepot(userId, selected.id));
+    } catch {
+      setStockedCount(0);
+    }
   };
 
-  const cancelEditing = () => {
-    setEditingId(null);
-    setEditName("");
-    setEditCode("");
-    setEditNotes("");
-    setEditIsActive(true);
+  const runDelete = async () => {
+    if (!selected || !userId || deleting) return;
+    setDeleting(true);
+    try {
+      await deleteDepot(userId, selected.id);
+      const remaining = depots.filter((depot) => depot.id !== selected.id);
+      setDepots(remaining);
+      setConfirmDelete(false);
+      if (remaining[0]) selectDepot(remaining[0].id);
+      else setSelectedId(null);
+      toast("Depot deleted. Its items moved to Unassigned.");
+    } catch {
+      toast("We could not delete this depot. Please try again.", "danger");
+    } finally {
+      setDeleting(false);
+    }
   };
 
-  const handleUpdateDepot = async (event: React.FormEvent) => {
-    event.preventDefault();
+  /* ---------------- drawer ---------------- */
+  const openNew = () => {
+    setDraft(EMPTY_DRAFT);
+    setDraftError("");
+    setNameError("");
+    setDrawer("new");
+  };
 
-    if (!editingId || saving) return;
+  const openEdit = () => {
+    if (!selected) return;
+    setDraft({
+      name: selected.name,
+      code: selected.code || "",
+      phone: selected.phone || "",
+      address: selected.address || "",
+      map_url: selected.map_url || "",
+      notes: selected.notes || "",
+      is_active: selected.is_active,
+      is_default: selected.is_default === true,
+    });
+    setDraftError("");
+    setNameError("");
+    setDrawer("edit");
+  };
 
-    const trimmedName = editName.trim();
+  useEffect(() => {
+    if (!drawer) return;
+    const frame = window.requestAnimationFrame(() => nameRef.current?.focus());
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !savingDraft) setDrawer(null);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [drawer, savingDraft]);
 
-    if (!trimmedName) {
-      setPageError("Add a depot name before saving changes.");
-      setPageNotice("");
+  const submitDraft = async (addAnother: boolean) => {
+    if (savingDraft || !userId) return;
+    if (!draft.name.trim()) {
+      setNameError("Give the depot a name.");
+      nameRef.current?.focus();
       return;
     }
-
+    setSavingDraft(true);
+    setDraftError("");
+    setNameError("");
     try {
-      setSaving(true);
-      setPageError("");
-      setPageNotice("");
-
-      if (!userId) {
-        setPageError("Please sign in again before updating this depot.");
-        return;
+      const input = {
+        name: draft.name,
+        code: draft.code,
+        phone: draft.phone,
+        address: draft.address,
+        map_url: draft.map_url,
+        notes: draft.notes,
+        is_active: draft.is_active,
+      };
+      let saved: Depot;
+      if (drawer === "edit" && selected) {
+        saved = await updateDepot(userId, selected.id, input);
+      } else {
+        const usage = await getSubscriptionUsage(userId);
+        if (depots.length >= getSubscriptionDepotLimit(usage.subscription)) {
+          setDraftError(
+            `You reached the ${formatPlanName(usage.subscription.plan)} plan limit of ${getSubscriptionDepotLimit(
+              usage.subscription
+            )} depots. Existing depots remain available.`
+          );
+          return;
+        }
+        saved = await createDepot(userId, input);
       }
 
-      await updateDepot(userId, editingId, {
-        name: trimmedName,
-        code: editCode,
-        notes: editNotes,
-        is_active: editIsActive,
-      });
-      cancelEditing();
-      setPageNotice("Depot updated successfully.");
-      await loadDepots();
-    } catch {
-      setPageError("We could not update this depot. Check the details and try again.");
+      // Default is its own one-per-business step (phase 37 function).
+      if (draft.is_default && !saved.is_default) {
+        await setDefaultDepot(saved.id);
+      } else if (!draft.is_default && saved.is_default) {
+        await clearDefaultDepot(userId, saved.id);
+      }
+      const fresh = await getDepotsForUser(userId);
+      setDepots(fresh);
+      selectDepot(saved.id);
+      toast(drawer === "edit" ? "Depot saved" : `${saved.name} added`);
+
+      if (addAnother && drawer === "new") {
+        setDraft(EMPTY_DRAFT);
+        window.requestAnimationFrame(() => nameRef.current?.focus());
+      } else {
+        setDrawer(null);
+      }
+    } catch (error) {
+      setDraftError(getDepotErrorMessage(error, draft.code.toUpperCase()));
     } finally {
-      setSaving(false);
+      setSavingDraft(false);
     }
   };
 
-  const handleDeleteDepot = async (depot: Depot) => {
-    if (deletingId) return;
+  const draftScore = depotProfileScore(draft);
+  const mapHint = !draft.map_url.trim()
+    ? { tone: "muted", text: "Open the place in Google Maps › Share › Copy link, then paste here." }
+    : looksLikeMapsUrl(draft.map_url)
+      ? { tone: "ok", text: `✓ Looks like a Maps link — it will show as ${shortMapUrl(draft.map_url)}` }
+      : { tone: "bad", text: "This does not look like a Google Maps link." };
 
-    try {
-      setDeletingId(depot.id);
-      setPageError("");
-      setPageNotice("");
-
-      if (!userId) {
-        setPageError("Please sign in again before deleting this depot.");
-        return;
-      }
-
-      await deleteDepot(userId, depot.id);
-      setPageNotice("Depot deleted. Assigned items were moved to Unassigned.");
-      setPendingDeleteDepot(null);
-      await loadDepots();
-    } catch {
-      setPageError("We could not delete this depot. Please try again.");
-    } finally {
-      setDeletingId(null);
-    }
-  };
+  /* ---------------- render ---------------- */
+  const score = selected ? depotProfileScore(selected) : 0;
 
   return (
     <div className="contents">
-      <main className="organize-workspace organize-depots">
-        <DashboardPageShell width="compact">
-          <DashboardPageHeader
-            eyebrow="Locations"
-            title="Depots"
-            description="Manage the places where inventory items live."
-            actions={
-              <ActionButton
-                href="/dashboard/inventory"
-                variant="secondary"
-                className="organize-inventory-link"
-              >
-                Back to Inventory
-              </ActionButton>
-            }
-          />
+      <main className="depots-v3">
+        <div className="depots-v3-inner">
+          <header className="depots-v3-head">
+            <div>
+              <p className="depots-v3-crumb">
+                <Link href="/dashboard/inventory">Inventory</Link> / <strong>Depots</strong>
+              </p>
+              <h1>Depots</h1>
+              <p className="depots-v3-summary">
+                {counts.all} {counts.all === 1 ? "depot" : "depots"} · {counts.active} active ·{" "}
+                {counts.missing} missing contact or location
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={openNew}
+              disabled={loading}
+              className={buttonClassName({ size: "lg" })}
+            >
+              <UiIcon name="plus" className="h-4 w-4" />
+              New depot
+            </button>
+          </header>
 
-          {(pageNotice || pageError) && (
-            <DashboardNotice tone={pageError ? "danger" : "success"}>
-              {pageError || pageNotice}
-            </DashboardNotice>
+          {pageError && <DashboardNotice tone="danger">{pageError}</DashboardNotice>}
+
+          {!loading && reachedDepotLimit && (
+            <LockedFeaturePanel
+              feature={`${currentPlanName} depot limit reached`}
+              benefit={`${currentPlanName} includes up to ${depotLimit} depot${depotLimit === 1 ? "" : "s"}. Existing locations remain visible, editable, and removable.`}
+              currentPlan={currentPlanName}
+              requiredPlan={getUpgradePlanForDepotLimit(currentPlan)}
+              source="depot-limit"
+              compact
+            />
           )}
 
-          <div className="grid grid-cols-1 gap-6 xl:grid-cols-[0.85fr_1.15fr]">
-            <form
-              onSubmit={handleCreateDepot}
-              aria-busy={saving}
-              className="dashboard-card organize-depot-form"
-            >
-              <p className="text-sm font-semibold text-theme-accent">
-                New depot
-              </p>
-
-              <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
-                Add location
-              </h2>
-
-              {!loading && reachedDepotLimit ? (
-                <div className="mt-6">
-                  <LockedFeaturePanel
-                    feature={`${currentPlanName} depot limit reached`}
-                    benefit={`${currentPlanName} includes up to ${depotLimit} depot${
-                      depotLimit === 1 ? "" : "s"
-                    }. Existing locations remain visible, editable, and removable.`}
-                    currentPlan={currentPlanName}
-                    requiredPlan={requiredPlan}
-                    source="depot-limit"
-                    compact
-                  />
+          {loading ? (
+            <LoadingSkeletonGroup count={3} itemClassName="min-h-28" />
+          ) : depots.length === 0 ? (
+            <DashboardEmptyState
+              icon="depots"
+              title="No depots yet"
+              description="Add your first location to assign inventory items to a depot, with its phone, address and map link in one place."
+              action={
+                <button type="button" onClick={openNew} className={buttonClassName()}>
+                  <UiIcon name="plus" className="h-4 w-4" />
+                  New depot
+                </button>
+              }
+            />
+          ) : (
+            <div className="depots-v3-grid">
+              {/* ---------- list ---------- */}
+              <section className="depots-v3-card depots-v3-list" aria-label="Depot list">
+                <div className="depots-v3-list-tools">
+                  <label className="depots-v3-search">
+                    <UiIcon name="search" className="h-4 w-4" />
+                    <span className="sr-only">Search depots</span>
+                    <input
+                      type="search"
+                      value={search}
+                      onChange={(event) => setSearch(event.target.value)}
+                      placeholder="Name, code, phone or address"
+                    />
+                  </label>
+                  <div className="depots-v3-chips" role="group" aria-label="Depot filters">
+                    {(
+                      [
+                        ["all", "All"],
+                        ["active", "Active"],
+                        ["inactive", "Inactive"],
+                        ["missing", "Missing info"],
+                      ] as const
+                    ).map(([value, label]) => (
+                      <button
+                        key={value}
+                        type="button"
+                        aria-pressed={filter === value}
+                        onClick={() => setFilter(value)}
+                        className={filter === value ? "is-active" : ""}
+                      >
+                        {label} <span>{counts[value]}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              ) : (
-                <>
-                  {/* Same label/value rows as Add Item, the invoice,
-                      Customers and Suppliers. */}
-                  <div className="item-form -mx-1 mt-4">
-                    <FieldGroup>
-                      <FieldRow label="Name" htmlFor="depot-name" required>
-                        <input
-                          id="depot-name"
-                          type="text"
-                          value={name}
-                          onChange={(event) => setName(event.target.value)}
-                          placeholder="e.g. Main warehouse"
-                          required
-                        />
-                      </FieldRow>
 
-                      <FieldRow label="Code" htmlFor="depot-code">
-                        <input
-                          id="depot-code"
-                          type="text"
-                          value={code}
-                          onChange={(event) => setCode(event.target.value)}
-                          placeholder="Short label, e.g. WH1"
-                        />
-                      </FieldRow>
-                    </FieldGroup>
-
-                    <FieldGroup label="Notes">
-                      <textarea
-                        value={notes}
-                        onChange={(event) => setNotes(event.target.value)}
-                        placeholder="Anything worth remembering about this location"
-                        className="item-panel-textarea"
-                      />
-                    </FieldGroup>
-
-                    <FieldGroup>
-                      <FieldRow label="Active" htmlFor="depot-active">
-                        <label
-                          htmlFor="depot-active"
-                          className="flex items-center gap-2 text-sm text-theme-primary"
+                {visibleDepots.length === 0 ? (
+                  <p className="depots-v3-none">No depots match.</p>
+                ) : (
+                  <ul>
+                    {visibleDepots.map((depot) => (
+                      <li key={depot.id}>
+                        <button
+                          type="button"
+                          onClick={() => selectDepot(depot.id)}
+                          aria-current={depot.id === selectedId ? "true" : undefined}
+                          className={`depots-v3-row ${depot.id === selectedId ? "is-selected" : ""}`}
                         >
-                          <input
-                            id="depot-active"
-                            type="checkbox"
-                            checked={isActive}
-                            onChange={(event) => setIsActive(event.target.checked)}
-                            className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
-                          />
-                          Shown in item forms
-                        </label>
-                      </FieldRow>
-                    </FieldGroup>
-                  </div>
-
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      type="submit"
-                      loading={saving}
-                      loadingLabel="Saving depot..."
-                    >
-                      Add depot
-                    </Button>
-                  </div>
-                </>
-              )}
-            </form>
-
-            <section className="dashboard-card organize-depot-list-panel">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-                <div>
-                  <p className="text-sm font-semibold text-theme-accent">
-                    Saved locations
-                  </p>
-
-                  <h2 className="mt-1 text-xl font-black tracking-tight text-theme-primary">
-                    Depot list
-                  </h2>
-                </div>
-
-                <span className="self-start rounded-full border border-sydin-blue/25 bg-sydin-blue/15 px-4 py-2 text-sm font-bold text-theme-accent sm:self-auto">
-                  {depots.length} {depots.length === 1 ? "depot" : "depots"}
-                </span>
-              </div>
-              <FilterBar label="Depot filters" className="mt-4">
-                {depotFilters.map((filter) => (
-                  <FilterChip
-                    key={filter.value}
-                    active={depotFilter === filter.value}
-                    count={filter.count}
-                    onClick={() => setDepotFilter(filter.value)}
-                  >
-                    {filter.label}
-                  </FilterChip>
-                ))}
-              </FilterBar>
-
-              {loading ? (
-                <LoadingSkeletonGroup
-                  count={3}
-                  className="mt-6"
-                  itemClassName="min-h-32"
-                />
-              ) : visibleDepots.length > 0 ? (
-                <div className="organize-list-grid mt-6 grid grid-cols-1 gap-4">
-                  {visibleDepots.map((depot) => (
-                    <div
-                      key={depot.id}
-                      className="organize-row organize-depot-row relative rounded-2xl border border-theme bg-theme-inset p-4"
-                    >
-                      {editingId === depot.id ? (
-                        <form onSubmit={handleUpdateDepot}>
-                          {/* Was the old boxed layout while the Add form next
-                              to it had already moved to rows: two shapes for
-                              the same four fields. */}
-                          <div className="item-form -mx-1">
-                            <FieldGroup>
-                              <FieldRow
-                                label="Name"
-                                htmlFor={`depot-edit-name-${depot.id}`}
-                                required
-                              >
-                                <input
-                                  id={`depot-edit-name-${depot.id}`}
-                                  type="text"
-                                  value={editName}
-                                  onChange={(event) =>
-                                    setEditName(event.target.value)
-                                  }
-                                  required
-                                  autoFocus
-                                />
-                              </FieldRow>
-                              <FieldRow
-                                label="Code"
-                                htmlFor={`depot-edit-code-${depot.id}`}
-                              >
-                                <input
-                                  id={`depot-edit-code-${depot.id}`}
-                                  type="text"
-                                  value={editCode}
-                                  onChange={(event) =>
-                                    setEditCode(event.target.value)
-                                  }
-                                  placeholder="Short label, e.g. WH1"
-                                />
-                              </FieldRow>
-                              <FieldRow
-                                label="Active"
-                                htmlFor={`depot-edit-active-${depot.id}`}
-                              >
-                                <label
-                                  htmlFor={`depot-edit-active-${depot.id}`}
-                                  className="flex items-center gap-2 text-sm text-theme-primary"
-                                >
-                                  <input
-                                    id={`depot-edit-active-${depot.id}`}
-                                    type="checkbox"
-                                    checked={editIsActive}
-                                    onChange={(event) =>
-                                      setEditIsActive(event.target.checked)
-                                    }
-                                    className="h-4 w-4 rounded border-slate-300 text-sydin-blue focus:ring-sydin-blue/50"
-                                  />
-                                  Shown in item forms
-                                </label>
-                              </FieldRow>
-                            </FieldGroup>
-
-                            <FieldGroup label="Notes">
-                              <textarea
-                                value={editNotes}
-                                onChange={(event) =>
-                                  setEditNotes(event.target.value)
-                                }
-                                placeholder="Anything worth remembering about this location"
-                                className="item-panel-textarea"
-                              />
-                            </FieldGroup>
-                          </div>
-
-                          <div className="mt-4 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-                            <Button
-                              variant="secondary"
-                              onClick={cancelEditing}
-                              disabled={saving}
-                            >
-                              Cancel
-                            </Button>
-                            <Button
-                              type="submit"
-                              loading={saving}
-                              loadingLabel="Saving..."
-                            >
-                              Save changes
-                            </Button>
-                          </div>
-                        </form>
-                      ) : (
-                        <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
-                          <div className="min-w-0">
-                            <div className="flex flex-wrap items-center gap-2">
-                              <h3 className="break-words text-base font-extrabold text-theme-primary">
-                                {depot.name}
-                              </h3>
-
-                              <span
-                                className={`rounded-full border px-3 py-1 text-xs font-bold ${
-                                  depot.is_active
-                                    ? "border-emerald-400/25 bg-emerald-500/10 text-theme-success"
-                                    : "border-slate-400/20 bg-theme-surface text-theme-muted"
-                                }`}
-                              >
+                          <span className="depots-v3-avatar" aria-hidden="true">
+                            {initialOf(depot.name)}
+                          </span>
+                          <span className="min-w-0 flex-1">
+                            <span className="depots-v3-row-name">
+                              {depot.name}
+                              {depot.is_default && <span className="depots-v3-default">Default</span>}
+                            </span>
+                            <span className="depots-v3-row-meta">
+                              <span className="depots-v3-mono">{depot.code || "no code"}</span>
+                              {" · "}
+                              <span className={depot.is_active ? "is-on" : "is-off"}>
                                 {depot.is_active ? "Active" : "Inactive"}
                               </span>
-                            </div>
+                            </span>
+                          </span>
+                          <span
+                            className={`depots-v3-dot ${depot.phone ? "is-set" : ""}`}
+                            title={depot.phone ? "Phone saved" : "No phone"}
+                          >
+                            <UiIcon name="phone" className="h-3.5 w-3.5" />
+                          </span>
+                          <span
+                            className={`depots-v3-dot ${depot.map_url || depot.address ? "is-set" : ""}`}
+                            title={depot.map_url || depot.address ? "Location saved" : "No location"}
+                          >
+                            <UiIcon name="map-pin" className="h-3.5 w-3.5" />
+                          </span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
 
-                            <p className="mt-2 text-sm font-semibold text-theme-accent">
-                              {depot.code || "No code"}
-                            </p>
+              {/* ---------- detail ---------- */}
+              {selected && (
+                <div className="depots-v3-detail">
+                  <section className="depots-v3-card depots-v3-hero">
+                    <div className="depots-v3-hero-top">
+                      <span className="depots-v3-avatar depots-v3-avatar-lg" aria-hidden="true">
+                        {initialOf(selected.name)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <h2>{selected.name}</h2>
+                        <div className="depots-v3-hero-tags">
+                          {selected.code ? (
+                            <span className="depots-v3-chip depots-v3-mono">{selected.code}</span>
+                          ) : (
+                            <span className="depots-v3-chip is-warn">No code</span>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => void saveField("is_active", !selected.is_active, selected.is_active ? "Depot set inactive" : "Depot set active")}
+                            className={`depots-v3-status ${selected.is_active ? "is-on" : "is-off"}`}
+                            title="Click to switch"
+                          >
+                            <i aria-hidden="true" />
+                            {selected.is_active ? "Active" : "Inactive"}
+                          </button>
+                          {selected.is_default && <span className="depots-v3-chip is-default">Default depot</span>}
+                        </div>
+                      </div>
+                      <div className="depots-v3-hero-actions">
+                        <button type="button" onClick={copyAll} className={buttonClassName({ variant: "secondary" })}>
+                          <UiIcon name="copy" className="h-4 w-4" />
+                          Copy all
+                        </button>
+                        <button type="button" onClick={openEdit} className="depots-v3-dark-button">
+                          <UiIcon name="edit" className="h-4 w-4" />
+                          Edit
+                        </button>
+                      </div>
+                    </div>
+                    <div className="depots-v3-progress">
+                      <span>Profile complete</span>
+                      <strong>{score} of 6</strong>
+                    </div>
+                    <span className={`depots-v3-bar ${score === 6 ? "is-done" : ""}`} aria-hidden="true">
+                      <i style={{ width: `${(score / 6) * 100}%` }} />
+                    </span>
+                  </section>
 
-                            <p className="mt-3 whitespace-pre-wrap break-words text-sm leading-6 text-theme-muted">
-                              {depot.notes || "No notes added."}
-                            </p>
-                          </div>
+                  <section className="depots-v3-card">
+                    <h3 className="depots-v3-card-title">Contact &amp; location</h3>
 
-                          {/* Actions stay on one line instead of stacking at lg.
-                              The stack was what set the row height (107px of
-                              buttons against 90px of copy); side by side, the
-                              copy sets it again. */}
-                          <div className="organize-row-actions organize-desktop-actions flex shrink-0 flex-row gap-2">
-                            {/* Secondary: a blue Edit on every row made five
-                                primaries on one screen. The page's primary is
-                                the New depot form beside the list. */}
-                            <ActionButton
-                              variant="secondary"
-                              onClick={() => startEditing(depot)}
-                            >
-                              Edit
-                            </ActionButton>
-
-                            {canDeleteRecords && (
-                              <ActionButton
-                                variant="danger"
-                                onClick={() => setPendingDeleteDepot(depot)}
-                                disabled={deletingId === depot.id}
-                              >
-                                {deletingId === depot.id ? "Deleting..." : "Delete"}
-                              </ActionButton>
-                            )}
-                          </div>
-                          <details className="organize-action-menu organize-mobile-actions">
-                            <summary aria-label={`More actions for ${formatDepotLabel(depot)}`}>
-                              <UiIcon name="more" className="h-4 w-4" />
-                            </summary>
-                            <div>
-                              <button
-                                type="button"
-                                onClick={() => startEditing(depot)}
-                              >
-                                Edit
-                              </button>
-                              {canDeleteRecords && (
-                                <button
-                                  type="button"
-                                  onClick={() => setPendingDeleteDepot(depot)}
-                                  disabled={deletingId === depot.id}
-                                  className="organize-danger-action"
-                                >
-                                  {deletingId === depot.id ? "Deleting..." : "Delete"}
-                                </button>
-                              )}
-                            </div>
-                          </details>
+                    {/* Phone */}
+                    <div className="depots-v3-field">
+                      <span className="depots-v3-field-icon is-green" aria-hidden="true">
+                        <UiIcon name="phone" className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="depots-v3-field-label">Phone</p>
+                        {selected.phone ? (
+                          <p className="depots-v3-field-value depots-v3-mono">{formatDepotPhone(selected.phone)}</p>
+                        ) : (
+                          <form
+                            className="depots-v3-inline"
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              if (inlinePhone.trim()) void saveField("phone", inlinePhone, "Phone saved");
+                            }}
+                          >
+                            <span className="depots-v3-prefix">+961</span>
+                            <input
+                              type="tel"
+                              inputMode="tel"
+                              value={inlinePhone}
+                              onChange={(event) => setInlinePhone(event.target.value)}
+                              placeholder="03 123 456"
+                              aria-label="Phone number"
+                              className="ui-input depots-v3-mono"
+                            />
+                            <button type="submit" disabled={!inlinePhone.trim() || savingField === "phone"} className={buttonClassName()}>
+                              Save
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                      {selected.phone && (
+                        <div className="depots-v3-field-actions">
+                          <a href={depotTelUrl(selected.phone)} className={buttonClassName({ variant: "secondary", size: "sm" })} aria-label="Call">
+                            <UiIcon name="phone" className="h-4 w-4" />
+                          </a>
+                          <a
+                            href={depotWhatsAppUrl(selected.phone)}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={`${buttonClassName({ variant: "secondary", size: "sm" })} depots-v3-wa`}
+                          >
+                            WhatsApp
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => void copy(formatDepotPhone(selected.phone), "Phone copied")}
+                            className={buttonClassName({ variant: "secondary", size: "sm" })}
+                            aria-label="Copy phone"
+                          >
+                            <UiIcon name="copy" className="h-4 w-4" />
+                          </button>
                         </div>
                       )}
                     </div>
-                  ))}
+
+                    {/* Address */}
+                    <div className="depots-v3-field">
+                      <span className="depots-v3-field-icon is-blue" aria-hidden="true">
+                        <UiIcon name="depots" className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="depots-v3-field-label">Address</p>
+                        {selected.address ? (
+                          <>
+                            <p className="depots-v3-field-value">{selected.address}</p>
+                            {!selected.map_url && (
+                              <a
+                                href={mapsSearchUrl(selected.address)}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="depots-v3-link"
+                              >
+                                Find this address on Google Maps →
+                              </a>
+                            )}
+                          </>
+                        ) : (
+                          <form
+                            className="depots-v3-inline"
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              if (inlineAddress.trim()) void saveField("address", inlineAddress, "Address saved");
+                            }}
+                          >
+                            <input
+                              value={inlineAddress}
+                              onChange={(event) => setInlineAddress(event.target.value)}
+                              placeholder="Street, building, area, city"
+                              aria-label="Address"
+                              className="ui-input"
+                            />
+                            <button type="submit" disabled={!inlineAddress.trim() || savingField === "address"} className={buttonClassName()}>
+                              Save
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                      {selected.address && (
+                        <div className="depots-v3-field-actions">
+                          <button
+                            type="button"
+                            onClick={() => void copy(selected.address || "", "Address copied")}
+                            className={buttonClassName({ variant: "secondary", size: "sm" })}
+                            aria-label="Copy address"
+                          >
+                            <UiIcon name="copy" className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Map */}
+                    <div className="depots-v3-field">
+                      <span className="depots-v3-field-icon is-red" aria-hidden="true">
+                        <UiIcon name="map-pin" className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="depots-v3-field-label">Map location</p>
+                        {selected.map_url ? (
+                          <a
+                            href={selected.map_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="depots-v3-field-value depots-v3-mono depots-v3-maplink"
+                            title={selected.map_url}
+                          >
+                            {shortMapUrl(selected.map_url)}
+                          </a>
+                        ) : (
+                          <form
+                            className="depots-v3-inline"
+                            onSubmit={(event) => {
+                              event.preventDefault();
+                              if (inlineMap.trim()) void saveField("map_url", inlineMap, "Map link saved");
+                            }}
+                          >
+                            <input
+                              type="url"
+                              value={inlineMap}
+                              onChange={(event) => setInlineMap(event.target.value)}
+                              placeholder="Paste a Google Maps link"
+                              aria-label="Google Maps link"
+                              className="ui-input depots-v3-mono"
+                            />
+                            <button type="submit" disabled={!inlineMap.trim() || savingField === "map_url"} className={buttonClassName()}>
+                              Save
+                            </button>
+                          </form>
+                        )}
+                      </div>
+                      {selected.map_url && (
+                        <div className="depots-v3-field-actions">
+                          <a
+                            href={selected.map_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className={buttonClassName({ variant: "secondary", size: "sm" })}
+                          >
+                            Open ↗
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => void copy(selected.map_url || "", "Map link copied")}
+                            className={buttonClassName({ variant: "secondary", size: "sm" })}
+                            aria-label="Copy map link"
+                          >
+                            <UiIcon name="copy" className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+
+                  <div className="depots-v3-bottom">
+                    <section className="depots-v3-card">
+                      <h3 className="depots-v3-card-title">Notes</h3>
+                      <p className={`depots-v3-notes ${selected.notes ? "" : "is-empty"}`}>
+                        {selected.notes || "No notes yet. Opening hours, who manages it, gate code…"}
+                      </p>
+                    </section>
+
+                    <section className="depots-v3-card depots-v3-actions">
+                      <button type="button" onClick={() => void toggleDefault()}>
+                        {selected.is_default ? "Remove as default depot" : "Set as default depot"}
+                      </button>
+                      <button type="button" onClick={() => void duplicate()}>
+                        Duplicate depot
+                      </button>
+                      <Link href={`/dashboard/inventory?depot=${selected.id}`}>View items in this depot →</Link>
+                      {canDeleteRecords &&
+                        (confirmDelete ? (
+                          <div className="depots-v3-confirm" role="alert">
+                            <p>
+                              Delete {selected.name}?
+                              {stockedCount === null
+                                ? " Checking stock…"
+                                : stockedCount > 0
+                                  ? ` ${stockedCount} item${stockedCount === 1 ? "" : "s"} with stock will move to Unassigned.`
+                                  : " No items with stock are in it."}
+                            </p>
+                            <div>
+                              <button
+                                type="button"
+                                onClick={() => void runDelete()}
+                                disabled={deleting || stockedCount === null}
+                                className={buttonClassName({ variant: "danger", size: "sm" })}
+                              >
+                                {deleting ? "Deleting…" : "Delete"}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setConfirmDelete(false)}
+                                className={buttonClassName({ variant: "secondary", size: "sm" })}
+                              >
+                                Keep
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button type="button" onClick={() => void askDelete()} className="is-danger">
+                            Delete depot
+                          </button>
+                        ))}
+                    </section>
+                  </div>
                 </div>
-              ) : (
-                <DashboardEmptyState
-                  className="mt-6"
-                  icon="depots"
-                  title={depots.length === 0 ? "No depots yet" : "No depots found"}
-                  description={
-                    depots.length === 0
-                      ? "Add your first location to assign inventory items to a depot."
-                      : "Try another location filter."
-                  }
-                />
               )}
-            </section>
-          </div>
-        </DashboardPageShell>
+            </div>
+          )}
+        </div>
       </main>
 
-      {pendingDeleteDepot && (
-        <DialogShell
-          title={`Delete ${formatDepotLabel(pendingDeleteDepot)}?`}
-          eyebrow="Delete depot"
-          description="Items assigned to this depot will become Unassigned. Inventory items will not be deleted."
-          tone="danger"
-          onClose={() => {
-            if (!deletingId) setPendingDeleteDepot(null);
-          }}
-          closeDisabled={deletingId !== null}
-          className="max-w-md"
-          footer={
-            <>
-              <Button
-                variant="secondary"
-                onClick={() => setPendingDeleteDepot(null)}
-                disabled={deletingId !== null}
-                className="flex-1"
+      {/* ---------- New / Edit drawer ---------- */}
+      {drawer && (
+        <div className="depots-v3-overlay" onMouseDown={(event) => event.target === event.currentTarget && !savingDraft && setDrawer(null)}>
+          <form
+            className="depots-v3-drawer"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="depot-drawer-title"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              void submitDraft(false);
+            }}
+          >
+            <header className="depots-v3-drawer-head">
+              <div>
+                <h2 id="depot-drawer-title">{drawer === "edit" ? "Edit depot" : "New depot"}</h2>
+                <p>Only the name is required. Fill the rest now or later.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setDrawer(null)}
+                className={buttonClassName({ variant: "secondary" })}
+                aria-label="Close"
               >
+                <UiIcon name="close" className="h-4 w-4" />
+              </button>
+            </header>
+
+            <div className="depots-v3-drawer-body">
+              <div className="depots-v3-drawer-form">
+                {draftError && <DashboardNotice tone="danger">{draftError}</DashboardNotice>}
+                <div className="depots-v3-two">
+                  <label className="depots-v3-label">
+                    <span>
+                      Depot name <b>*</b>
+                    </span>
+                    <input
+                      ref={nameRef}
+                      value={draft.name}
+                      onChange={(event) => {
+                        setDraft({ ...draft, name: event.target.value });
+                        setNameError("");
+                      }}
+                      placeholder="e.g. Achrafieh shop"
+                      aria-invalid={Boolean(nameError)}
+                      className="ui-input"
+                    />
+                    {nameError && <small className="is-bad">{nameError}</small>}
+                  </label>
+                  <label className="depots-v3-label">
+                    <span>Code</span>
+                    <span className="depots-v3-code-row">
+                      <input
+                        value={draft.code}
+                        onChange={(event) => setDraft({ ...draft, code: event.target.value.toUpperCase() })}
+                        placeholder="e.g. ACH1"
+                        className="ui-input depots-v3-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setDraft({
+                            ...draft,
+                            code: suggestDepotCode(
+                              draft.name,
+                              depots.filter((depot) => drawer !== "edit" || depot.id !== selected?.id)
+                            ),
+                          })
+                        }
+                        disabled={!draft.name.trim()}
+                        className="depots-v3-auto"
+                      >
+                        Auto
+                      </button>
+                    </span>
+                  </label>
+                </div>
+
+                <label className="depots-v3-label">
+                  <span>Phone number</span>
+                  <span className="depots-v3-code-row">
+                    <span className="depots-v3-prefix">LB +961</span>
+                    <input
+                      type="tel"
+                      inputMode="tel"
+                      value={draft.phone}
+                      onChange={(event) => setDraft({ ...draft, phone: event.target.value })}
+                      placeholder="71 555 222"
+                      className="ui-input depots-v3-mono"
+                    />
+                  </span>
+                </label>
+
+                <label className="depots-v3-label">
+                  <span>Address</span>
+                  <textarea
+                    value={draft.address}
+                    onChange={(event) => setDraft({ ...draft, address: event.target.value })}
+                    placeholder="Street, building, area, city"
+                    rows={2}
+                    className="ui-input"
+                  />
+                </label>
+
+                <label className="depots-v3-label">
+                  <span>Google Maps link</span>
+                  <input
+                    type="url"
+                    value={draft.map_url}
+                    onChange={(event) => setDraft({ ...draft, map_url: event.target.value })}
+                    placeholder="https://maps.app.goo.gl/…"
+                    className="ui-input depots-v3-mono"
+                  />
+                  <small className={mapHint.tone === "ok" ? "is-ok" : mapHint.tone === "bad" ? "is-bad" : ""}>
+                    {mapHint.text}
+                  </small>
+                </label>
+
+                <label className="depots-v3-label">
+                  <span>Notes</span>
+                  <textarea
+                    value={draft.notes}
+                    onChange={(event) => setDraft({ ...draft, notes: event.target.value })}
+                    placeholder="Opening hours, who manages it, gate code…"
+                    rows={3}
+                    className="ui-input"
+                  />
+                </label>
+
+                <div className="depots-v3-two">
+                  <label className="depots-v3-check">
+                    <input
+                      type="checkbox"
+                      checked={draft.is_active}
+                      onChange={(event) => setDraft({ ...draft, is_active: event.target.checked })}
+                    />
+                    <span>
+                      <strong>Active</strong>
+                      <small>Pickable in item forms</small>
+                    </span>
+                  </label>
+                  <label className="depots-v3-check">
+                    <input
+                      type="checkbox"
+                      checked={draft.is_default}
+                      onChange={(event) => setDraft({ ...draft, is_default: event.target.checked })}
+                    />
+                    <span>
+                      <strong>Default depot</strong>
+                      <small>Pre-selected for new items</small>
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              <aside className="depots-v3-preview" aria-label="Live preview">
+                <p className="depots-v3-preview-label">Live preview</p>
+                <div className="depots-v3-preview-card">
+                  <div className="depots-v3-preview-top">
+                    <span className="depots-v3-avatar depots-v3-avatar-lg" aria-hidden="true">
+                      {initialOf(draft.name || "?")}
+                    </span>
+                    <div className="min-w-0">
+                      <strong>{draft.name || "Depot name"}</strong>
+                      <small className="depots-v3-mono">
+                        {draft.code || "no code"} · {draft.is_active ? "Active" : "Inactive"}
+                      </small>
+                    </div>
+                  </div>
+                  <dl>
+                    <div>
+                      <dt>Phone</dt>
+                      <dd className="depots-v3-mono">{draft.phone ? formatDepotPhone(draft.phone.replace(/^\+?961\s*/, "")) : "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>Address</dt>
+                      <dd>{draft.address || "—"}</dd>
+                    </div>
+                    <div>
+                      <dt>Map</dt>
+                      <dd className="depots-v3-mono depots-v3-preview-map">{draft.map_url ? shortMapUrl(draft.map_url) : "—"}</dd>
+                    </div>
+                  </dl>
+                  <div className="depots-v3-preview-progress">
+                    <span>Profile</span>
+                    <span>{draftScore} of 6</span>
+                  </div>
+                  <span className="depots-v3-preview-bar" aria-hidden="true">
+                    <i style={{ width: `${(draftScore / 6) * 100}%` }} />
+                  </span>
+                </div>
+                <p className="depots-v3-tip">Tip: press Enter in any field to save.</p>
+              </aside>
+            </div>
+
+            <footer className="depots-v3-drawer-foot">
+              <button type="button" onClick={() => setDrawer(null)} disabled={savingDraft} className={buttonClassName({ variant: "secondary" })}>
                 Cancel
-              </Button>
-              <Button
-                variant="danger"
-                onClick={() => void handleDeleteDepot(pendingDeleteDepot)}
-                disabled={deletingId !== null}
-                loading={deletingId === pendingDeleteDepot.id}
-                loadingLabel="Deleting..."
-                className="flex-1"
-              >
-                Delete depot
-              </Button>
-            </>
-          }
-        />
+              </button>
+              {drawer === "new" && (
+                <button
+                  type="button"
+                  onClick={() => void submitDraft(true)}
+                  disabled={savingDraft}
+                  className={`${buttonClassName({ variant: "secondary" })} depots-v3-soft`}
+                >
+                  Save &amp; add another
+                </button>
+              )}
+              <button type="submit" disabled={savingDraft} className={buttonClassName()}>
+                {savingDraft ? "Saving…" : drawer === "edit" ? "Save changes" : "Save depot"}
+              </button>
+            </footer>
+          </form>
+        </div>
       )}
     </div>
   );

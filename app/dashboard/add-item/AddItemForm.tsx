@@ -353,6 +353,12 @@ export default function AddItemForm({
 
               setSubscriptionUsage(usage);
               setDepots(loadedDepots);
+              // The business's default depot (Depots page) starts selected.
+              const defaultDepot = loadedDepots.find((depot) => depot.is_default);
+              if (defaultDepot) {
+                setSelectedDepotId(String(defaultDepot.id));
+                setCarriedOver((current) => ({ ...current, depot: String(defaultDepot.id) }));
+              }
               setSuppliers(loadedSuppliers);
               setCategories(loadedCategories);
 
