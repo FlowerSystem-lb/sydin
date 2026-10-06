@@ -6771,3 +6771,40 @@ group labels. Lint, tsc and build pass.
 
 **Not in this pass:** the phone layouts (mobile phase), the public item page and the marketing
 site.
+
+## 2026-10-06 — Depots redesign (Sayed's spec + screenshots)
+
+**Database, phase 37** (`sql/phase-37-depot-contact.sql`, applied live via the connector as
+`phase_37_depot_contact`):
+- New `depots` columns: phone, address, map_url, and is_default (default false).
+- Unique code per business: case-insensitive, blank allowed. Checked for duplicates first; none.
+- At most one default per business.
+- `set_default_depot(bigint)`, SECURITY INVOKER, so RLS still applies; it clears the old default
+  and sets the new one in one transaction.
+
+**Page** (`app/dashboard/depots/page.tsx`, rewritten; helpers in `app/lib/depots.ts`):
+- **List:** search over name, code, phone and address; All / Active / Inactive / Missing info chips
+  with counts; per-row phone and location dots (green when set); the selected depot in the URL (`?id=`).
+- **Detail:**
+  - The hero has a code chip ("No code" warning), an active pill that toggles, a Default badge,
+    Copy all (multi-line, WhatsApp-ready) and Edit, plus "Profile complete X of 6", green at 6.
+  - Contact & location: phone, address and map rows with inline +961 / input / Save when empty.
+    When set, phone has Call (`tel:`), WhatsApp (`wa.me/961…`, leading 0 dropped) and Copy; address
+    has Copy; the map shows a shortened link with Open and Copy. "Find this address on Google Maps
+    →" appears when there's an address but no map link.
+  - Notes, then actions: set/remove default, duplicate, view items (`/dashboard/inventory?depot=`)
+    and delete with an inline confirm that counts items still holding stock.
+- **Drawer (New/Edit):** Auto code, +961 phone, Maps-link helper (hint / ✓ / not a Maps link),
+  Active and Default cards, a live dark preview, Save & add another, Escape to close and Enter to
+  save. Plan depot limit and code-unique errors show inline. Saves are optimistic, with rollback
+  and an error toast.
+- New `phone` and `map-pin` icons in UiIcon. Add Item pre-selects the default depot (as carried
+  over, so it doesn't trigger the unsaved warning).
+- The spec's own palette and font weren't applied; the page uses the v2 system adopted app-wide
+  on 5 Oct.
+
+**Verified** live, signed in: 5 depots and the summary line. A real inline phone save on test depot
+"666" gave "+961 03 123 456", tel/wa links without the leading 0, 4 of 6 and a green dot; the DB
+row was confirmed and then reset to null. The drawer gave Auto "ACH6", the ✓ Maps hint, the live
+preview at 5 of 6, the empty-name error and Escape closing, with nothing saved. Lint, tsc and build
+pass.
