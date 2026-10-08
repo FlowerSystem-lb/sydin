@@ -549,6 +549,17 @@ function ScannerWorkspace() {
 
   // The phone reads the "Vibrate phone" switch on its next heartbeat.
   const pairingRowId = pairing?.id;
+
+  // A new pairing starts in Lookup: hand it the laptop's current mode. Only
+  // when the pairing changes, so a mode picked on the phone is not undone.
+  const modeRef = useRef(mode);
+  useEffect(() => {
+    modeRef.current = mode;
+  }, [mode]);
+  useEffect(() => {
+    if (pairingRowId) syncPhoneMode(modeRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- run once per pairing, not on every syncPhoneMode identity change
+  }, [pairingRowId]);
   useEffect(() => {
     if (pairingRowId && prefsLoaded) void setPairingVibrate(pairingRowId, settings.vibrate);
   }, [pairingRowId, prefsLoaded, settings.vibrate]);
