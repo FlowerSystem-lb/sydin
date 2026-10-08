@@ -6839,3 +6839,12 @@ Sayed's Scanner spec (`SydIN-scanner-prompt.md`) with 4 screenshots.
 - **Receive / Issue** now build a list (scan again = +1, stepper, remove), saved with "Receive all / Issue all"; every line is validated first, Issue cannot exceed stock. **Count** applies on each scan (local draft).
 - Phone page: light background, real SydIN mark, mode-aware result chip; fixed the mobile stylesheet zeroing `<main>` padding (!important). `scanner_phone_ping` accepts the `add` mode (38c).
 - Verified signed in on localhost against the live DB: add list (2 scans = 2 pcs, FP016 skipped, missing name refused), created a test item, received 2, issue of 9 refused ("Only 4 pcs in stock"), issued 4, unknown code card, outside link not opened, Lookup auto-opened the item with "Back to scanner". Test item, its movements, history and notifications deleted.
+
+## 8 Oct 2026 · Stock alerts redesign + app-wide motion and 3D buttons
+
+Sayed's `SydIN-alerts-motion-prompt.md` + 3 screenshots.
+- **Phase 39 (live DB):** `inventory.alert_snoozed_until`. Snoozed items leave alerts and counts for 7 days.
+- **/dashboard/alerts rewritten:** 4 clickable KPI cards that filter (count up on first load), tabs with counts, search, depot, sort (most urgent / name / biggest shortfall) kept in the URL; rows with checkbox, photo or coloured initial, code · depot · supplier ("No supplier" amber), status with pulsing red dot, qty / alert, animated bar, suggested-order stepper (2x alert level − qty), Receive (movement dialog prefilled with the qty), Add to order / In order, and an inline "…" panel (alert level + Save, Snooze 7 days, Link supplier, Open item). Sticky bulk bar: Clear, Set alert level (bulk), Create purchase order → one draft per supplier at the stepper qty and item cost, unassigned items after an inline confirm, then opens the PO. Settings strip at the bottom replaces the old "Default alert level" card.
+- **Motion system:** `--ease-out`, `--dur-*`; 3D lift/press on every primary/secondary/danger button (`.ui-button-*`, `.dashboard-action-button-*`), hover only on real pointers; `.motion-enter` fade-up with stagger, `.motion-card` lift; everything off under reduced motion.
+- `StockMovementDialog` takes an optional `initialQuantity`.
+- Verified on localhost against the live DB: layout, select + bulk bar, inline panel, Create PO made one draft (Ebook 4, Nestle 19) and opened Purchase orders; that test draft was deleted through the app. Fixed a shell rule (`width:100% !important`) stretching the bulk bar.

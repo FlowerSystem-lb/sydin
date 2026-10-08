@@ -28,12 +28,15 @@ export default function StockMovementDialog({
   open,
   items,
   initialItemId,
+  initialQuantity,
   onClose,
   onRecorded,
 }: {
   open: boolean;
   items: MovementInventoryItem[];
   initialItemId?: number | null;
+  /** Prefill, e.g. Stock alerts' suggested order quantity. */
+  initialQuantity?: number | null;
   onClose: () => void;
   onRecorded: (movement: StockMovement, itemId: number) => void | Promise<void>;
 }) {
@@ -43,6 +46,7 @@ export default function StockMovementDialog({
     <StockMovementDialogContent
       items={items}
       initialItemId={initialItemId}
+      initialQuantity={initialQuantity}
       onClose={onClose}
       onRecorded={onRecorded}
     />
@@ -52,11 +56,13 @@ export default function StockMovementDialog({
 function StockMovementDialogContent({
   items,
   initialItemId,
+  initialQuantity,
   onClose,
   onRecorded,
 }: {
   items: MovementInventoryItem[];
   initialItemId?: number | null;
+  initialQuantity?: number | null;
   onClose: () => void;
   onRecorded: (movement: StockMovement, itemId: number) => void | Promise<void>;
 }) {
@@ -65,7 +71,9 @@ function StockMovementDialogContent({
   );
   const [movementType, setMovementType] =
     useState<StockMovementType>("stock_in");
-  const [quantity, setQuantity] = useState("");
+  const [quantity, setQuantity] = useState(
+    initialQuantity && initialQuantity > 0 ? String(initialQuantity) : ""
+  );
   const [notes, setNotes] = useState("");
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
