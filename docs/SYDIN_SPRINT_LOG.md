@@ -6848,3 +6848,4 @@ Sayed's `SydIN-alerts-motion-prompt.md` + 3 screenshots.
 - **Motion system:** `--ease-out`, `--dur-*`; 3D lift/press on every primary/secondary/danger button (`.ui-button-*`, `.dashboard-action-button-*`), hover only on real pointers; `.motion-enter` fade-up with stagger, `.motion-card` lift; everything off under reduced motion.
 - `StockMovementDialog` takes an optional `initialQuantity`.
 - Verified on localhost against the live DB: layout, select + bulk bar, inline panel, Create PO made one draft (Ebook 4, Nestle 19) and opened Purchase orders; that test draft was deleted through the app. Fixed a shell rule (`width:100% !important`) stretching the bulk bar.
+- Follow-up (same day): the three browser dropdowns on Stock alerts (depot, sort, supplier) now use the shared SydIN `Select`; the 3D lift/press also covers the page-specific solid buttons (item/depot dark Save, Scanner sound/tools/resume/disconnect, alerts bulk bar, phone page buttons).

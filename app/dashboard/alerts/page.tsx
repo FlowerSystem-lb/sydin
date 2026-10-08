@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import ProductThumbnail from "@/components/inventory/ProductThumbnail";
 import UiIcon from "@/components/UiIcon";
 import { buttonClassName, useToast } from "@/components/ui";
+import Select from "@/components/ui/Select";
 import {
   DashboardNotice,
   DashboardPageHeader,
@@ -652,27 +653,25 @@ export default function StockAlertsPage() {
               <UiIcon name="search" className="h-4 w-4" />
               <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search item or code" aria-label="Search alerts" />
             </label>
-            <label className="alerts-v2-select">
-              <span>Depot</span>
-              <select value={depotFilter} onChange={(event) => setDepotFilter(event.target.value)} aria-label="Depot">
-                <option value="">All depots</option>
-                {depots.map((depot) => (
-                  <option key={depot.id} value={depot.id}>
-                    {depot.name}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label className="alerts-v2-select">
-              <span>Sort</span>
-              <select value={sort} onChange={(event) => setSort(event.target.value as Sort)} aria-label="Sort">
-                {(Object.keys(SORT_LABEL) as Sort[]).map((key) => (
-                  <option key={key} value={key}>
-                    {SORT_LABEL[key]}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <Select
+              ariaLabel="Depot"
+              className="alerts-v2-dropdown"
+              value={depotFilter}
+              onChange={setDepotFilter}
+              leadingIcon={<span className="alerts-v2-dropdown-label">Depot</span>}
+              options={[
+                { value: "", label: "All depots" },
+                ...depots.map((depot) => ({ value: String(depot.id), label: depot.name, description: depot.code || undefined })),
+              ]}
+            />
+            <Select
+              ariaLabel="Sort"
+              className="alerts-v2-dropdown"
+              value={sort}
+              onChange={(value) => setSort(value as Sort)}
+              leadingIcon={<span className="alerts-v2-dropdown-label">Sort</span>}
+              options={(Object.keys(SORT_LABEL) as Sort[]).map((key) => ({ value: key, label: SORT_LABEL[key] }))}
+            />
           </div>
 
           {loading ? (
@@ -817,14 +816,22 @@ export default function StockAlertsPage() {
                           Snooze 7 days
                         </button>
                         <span className="alerts-v2-panel-group">
-                          <select value={panelSupplier} onChange={(event) => setPanelSupplier(event.target.value)} aria-label="Supplier" className="ui-input alerts-v2-panel-select">
-                            <option value="">No supplier</option>
-                            {suppliers.map((option) => (
-                              <option key={option.id} value={option.id}>
-                                {option.name}
-                              </option>
-                            ))}
-                          </select>
+                          <Select
+                            ariaLabel="Supplier"
+                            className="alerts-v2-dropdown is-panel"
+                            value={panelSupplier}
+                            onChange={setPanelSupplier}
+                            searchable={suppliers.length > 6}
+                            searchPlaceholder="Find a supplier"
+                            options={[
+                              { value: "", label: "No supplier" },
+                              ...suppliers.map((option) => ({
+                                value: String(option.id),
+                                label: option.name,
+                                description: option.phone || option.email || undefined,
+                              })),
+                            ]}
+                          />
                           <button
                             type="button"
                             disabled={panelBusy || (panelSupplier ? Number(panelSupplier) : null) === (item.supplier_id ?? null)}

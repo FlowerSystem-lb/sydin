@@ -31221,3 +31221,42 @@ main.pair-screen {
 /* A shell rule forces width:100% !important on direct page children; the
    floating bulk bar must size to its content. */
 .dashboard-workspace-shell .dashboard-shell-content main.alerts-v2 > .alerts-v2-bulk { width: max-content !important; max-width: calc(100vw - 2rem) !important; }
+
+/* ==========================================================================
+   3D BUTTONS, part 2 (8 Oct 2026) — the page-specific solid buttons
+   ==========================================================================
+   The dark Save buttons (item notes, depot drawer), the Scanner's sound,
+   camera-tool, resume and disconnect buttons, the alerts bulk-bar buttons and
+   the phone page's big buttons get the same lift / press as the shared ones.
+   Text and ghost links stay flat. */
+:is(.item-v3-dark-button, .depots-v3-dark-button, .scanner-v2-sound, .scanner-v2-resume,
+    .scanner-v2-dark-outline, .scanner-v2-tools > button, .alerts-v2-bulk-ghost, .pair-primary, .pair-secondary) {
+  transition: transform var(--dur) var(--ease-out), box-shadow var(--dur) var(--ease-out),
+    background-color var(--dur) var(--ease-out), color var(--dur) var(--ease-out);
+}
+:is(.item-v3-dark-button, .depots-v3-dark-button, .scanner-v2-sound, .scanner-v2-resume, .pair-secondary) { box-shadow: var(--btn3d-rest); }
+:is(.item-v3-dark-button, .depots-v3-dark-button) {
+  box-shadow: 0 1px 0 rgb(15 23 42 / 0.08), 0 4px 10px -4px rgb(17 19 24 / 0.5), inset 0 -2px 0 rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.12);
+}
+.pair-primary { box-shadow: var(--btn3d-primary); }
+@media (hover: hover) and (pointer: fine) {
+  :is(.item-v3-dark-button, .depots-v3-dark-button, .scanner-v2-sound, .scanner-v2-resume, .scanner-v2-dark-outline,
+      .scanner-v2-tools > button, .alerts-v2-bulk-ghost):not(:disabled):hover { transform: translateY(-2px); }
+  :is(.scanner-v2-sound, .scanner-v2-resume):not(:disabled):hover { box-shadow: var(--btn3d-hover); }
+  :is(.item-v3-dark-button, .depots-v3-dark-button):not(:disabled):hover {
+    box-shadow: 0 14px 24px -10px rgb(17 19 24 / 0.55), 0 4px 8px -4px rgb(17 19 24 / 0.4), inset 0 -2px 0 rgb(0 0 0 / 0.3), inset 0 1px 0 rgb(255 255 255 / 0.12);
+  }
+}
+:is(.item-v3-dark-button, .depots-v3-dark-button, .scanner-v2-sound, .scanner-v2-resume, .scanner-v2-dark-outline,
+    .scanner-v2-tools > button, .alerts-v2-bulk-ghost, .pair-primary, .pair-secondary):not(:disabled):active {
+  transform: translateY(1px) scale(0.985); transition-duration: 60ms; box-shadow: var(--btn3d-press);
+}
+@media (prefers-reduced-motion: reduce) {
+  :is(.item-v3-dark-button, .depots-v3-dark-button, .scanner-v2-sound, .scanner-v2-resume, .scanner-v2-dark-outline,
+      .scanner-v2-tools > button, .alerts-v2-bulk-ghost, .pair-primary, .pair-secondary) { transition: none; transform: none !important; }
+}
+
+/* Stock alerts: the shared SydIN dropdown in place of the browser's own. */
+.alerts-v2-dropdown { min-width: 11rem; }
+.alerts-v2-dropdown.is-panel { min-width: 13rem; }
+.alerts-v2-dropdown-label { color: var(--text-muted); font-size: var(--text-sm); font-weight: 500; }
