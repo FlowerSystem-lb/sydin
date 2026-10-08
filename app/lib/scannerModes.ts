@@ -1,6 +1,7 @@
 /** The eight Scanner modes, shared by the laptop page and the phone (/pair). */
 export type ScannerMode =
   | "lookup"
+  | "add"
   | "receive"
   | "issue"
   | "count"
@@ -20,8 +21,9 @@ export interface ScannerModeInfo {
 
 export const SCANNER_MODES: ScannerModeInfo[] = [
   { id: "lookup", label: "Lookup", description: "Scan to open an item. SydIN QR links open the item page directly.", dot: "#2447d6" },
-  { id: "receive", label: "Receive", description: "Scan an item, then add the stock that arrived.", dot: "#0f7a4f" },
-  { id: "issue", label: "Issue", description: "Scan an item, then remove the stock that left.", dot: "#c42b1c" },
+  { id: "add", label: "Add items", description: "Scan new barcodes to build a list, name them, then create them all at once.", dot: "#111318" },
+  { id: "receive", label: "Receive", description: "Each scan adds the item to a receive list. Scan twice for 2. Then receive them all at once.", dot: "#0f7a4f" },
+  { id: "issue", label: "Issue", description: "Each scan adds the item to an issue list. Scan twice for 2. Then issue them all at once.", dot: "#c42b1c" },
   { id: "count", label: "Count", description: "Each scan adds one to the stock count open in this browser.", dot: "#6d4ad6" },
   { id: "transfer", label: "Transfer", description: "Scan an item, then move it to another depot.", dot: "#0b6e85" },
   { id: "assign", label: "Assign", description: "Scan a tracked unit, then assign it to a person.", dot: "#a8560a" },

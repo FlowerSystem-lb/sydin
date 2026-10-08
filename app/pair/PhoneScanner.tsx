@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import BarcodeScannerView, { type ScannerViewStatus } from "@/components/scanner/BarcodeScannerView";
 import UiIcon from "@/components/UiIcon";
 import { useScanSound } from "@/components/scanner/useScanSound";
@@ -292,22 +293,36 @@ export default function PhoneScanner({ token, initialCode = "" }: { token?: stri
       setReconnecting(false);
       setSentCount((count) => count + 1);
       const item = result.result.item;
+      const unitLabel = (value: string | null) => (!value || /^pieces?$/i.test(value) ? "pcs" : value);
       if (item) {
+        const title = item.code ? `${item.name} · ${item.code}` : item.name;
+        if (mode === "add") {
+          play("duplicate");
+          setChip({ tone: "unknown", title, detail: "Already in SydIN, not added again", at });
+          return;
+        }
         play("success");
         showFlash("ok");
         setChip({
           tone: "ok",
-          title: item.code ? `${item.name} · ${item.code}` : item.name,
-          detail: `Sent to laptop · ${item.quantity} ${!item.unit || /^pieces?$/i.test(item.unit) ? "pcs" : item.unit} on hand`,
+          title,
+          detail:
+            mode === "receive" || mode === "issue"
+              ? `Added to the ${mode} list on the laptop`
+              : `Sent to laptop · ${item.quantity} ${unitLabel(item.unit)} on hand`,
           at,
         });
+      } else if (mode === "add" && !/^https?:\/\//i.test(text)) {
+        play("success");
+        showFlash("ok");
+        setChip({ tone: "ok", title: "New barcode", detail: `${text.slice(0, 32)} · added to the new items list`, at });
       } else {
         play("error");
         showFlash("error");
         setChip({ tone: "unknown", title: "Unknown code", detail: `${text.slice(0, 40)} · sent to laptop`, at });
       }
     },
-    [play, secret]
+    [mode, play, secret]
   );
 
   const changeMode = async (next: string) => {
@@ -344,7 +359,7 @@ export default function PhoneScanner({ token, initialCode = "" }: { token?: stri
     return (
       <main className="pair-screen pair-screen-center">
         <div className="pair-brand">
-          <span className="pair-logo">S</span>
+          <Image src="/brand/sydin-mark.svg" alt="" width={42} height={42} className="pair-logo" />
           <span>SydIN Scanner</span>
         </div>
 
@@ -415,7 +430,7 @@ export default function PhoneScanner({ token, initialCode = "" }: { token?: stri
   return (
     <main className="pair-screen">
       <header className="pair-header">
-        <span className="pair-logo">S</span>
+        <Image src="/brand/sydin-mark.svg" alt="" width={42} height={42} className="pair-logo" />
         <div className="pair-header-text">
           <p className="pair-header-title">SydIN Scanner</p>
           <p className="pair-header-sub">

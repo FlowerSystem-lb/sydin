@@ -328,3 +328,31 @@ begin
   return json_build_object('ok', true, 'mode', v_pairing.mode, 'vibrate', v_pairing.phone_vibrate);
 end;
 $$;
+
+-- 38c (same day): "Add items" mode joins the list the phone may switch to.
+create or replace function public.scanner_phone_ping(p_secret text, p_mode text default null)
+returns json
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_pairing public.device_pairings;
+begin
+  select * into v_pairing from public.device_pairings
+   where phone_secret = p_secret and coalesce(p_secret, '') <> '';
+
+  if v_pairing.id is null or v_pairing.status <> 'paired' or v_pairing.expires_at < now() then
+    return json_build_object('error', 'closed');
+  end if;
+
+  update public.device_pairings
+     set last_seen_at = now(),
+         mode = case when p_mode in ('lookup','add','receive','issue','count','transfer','assign','repair','return')
+                     then p_mode else mode end
+   where id = v_pairing.id
+   returning * into v_pairing;
+
+  return json_build_object('ok', true, 'mode', v_pairing.mode, 'vibrate', v_pairing.phone_vibrate);
+end;
+$$;

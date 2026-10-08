@@ -7,7 +7,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0e1424",
+  themeColor: "#f6f6f5",
 };
 
 export default function PairLayout({ children }: { children: React.ReactNode }) {

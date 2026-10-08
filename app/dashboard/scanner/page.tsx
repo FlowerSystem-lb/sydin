@@ -36,6 +36,7 @@ import { getPairingBaseUrl, setPairingVibrate } from "@/app/lib/devicePairing";
 import { recordStockMovement } from "@/app/lib/stockMovements";
 import { applyScanToStockCountDraft } from "@/app/lib/stockCountDraft";
 import {
+  DEFAULT_INVENTORY_UNIT_TYPE,
   getEffectiveItemLowStockThreshold,
   getInventoryQuantityLabel,
 } from "@/app/lib/inventoryItemModel";
@@ -48,12 +49,15 @@ import {
   type InventoryAsset,
 } from "@/app/lib/assetTracking";
 import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
+import { logInventoryHistory } from "@/app/lib/inventoryHistory";
 import { supabase } from "@/app/lib/supabase";
 import { getBusinessUser } from "@/app/lib/business";
 import {
   FALLBACK_SUBSCRIPTION,
   getEffectiveLowStockThreshold,
+  getPlanLimitMessage,
   getSubscriptionCapabilities,
+  getSubscriptionUsage,
   getUserSubscription,
   type UserSubscription,
 } from "@/app/lib/subscription";
@@ -116,6 +120,24 @@ interface SessionEntry {
   how: string;
   mode: string;
   at: number;
+}
+
+/** One line of a scan list (Receive / Issue / Add items, 8 Oct 2026):
+    scanning the same code again adds one more instead of a new line. */
+interface ListLine {
+  key: string;
+  raw: string;
+  itemId: number | null;
+  name: string;
+  quantity: string;
+  price: string;
+  error?: string;
+}
+
+type ListMode = "add" | "receive" | "issue";
+
+function isListMode(value: ScannerMode): value is ListMode {
+  return value === "add" || value === "receive" || value === "issue";
 }
 
 interface ScannerSettings {
@@ -273,10 +295,13 @@ function ScannerWorkspace() {
 
   const [last, setLast] = useState<LastScan | null>(null);
   const [manualInput, setManualInput] = useState("");
-  const [quantityInput, setQuantityInput] = useState("1");
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [session, setSession] = useState<SessionEntry[]>([]);
+  const [lists, setLists] = useState<Record<ListMode, ListLine[]>>({ add: [], receive: [], issue: [] });
+  const [listBusy, setListBusy] = useState(false);
+  const [listNotice, setListNotice] = useState("");
+  const [defaultDepotId, setDefaultDepotId] = useState<number | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [history, setHistory] = useState<SessionEntry[]>([]);
   const [now, setNow] = useState(() => Date.now());
@@ -321,7 +346,7 @@ function ScannerWorkspace() {
           isAssetTrackingMigrationMissing(),
           supabase
             .from("depots")
-            .select("id, name, code")
+            .select("id, name, code, is_default")
             .eq("user_id", user.id)
             .order("name", { ascending: true }),
           supabase
@@ -339,6 +364,9 @@ function ScannerWorkspace() {
         setTransferMigrationMissing(transferMissing);
         setAssetMigrationMissing(assetMissing);
         setDepots((depotData || []) as Depot[]);
+        setDefaultDepotId(
+          ((depotData || []) as Array<Depot & { is_default?: boolean }>).find((depot) => depot.is_default)?.id ?? null
+        );
         const threshold = Number((settingsRow as { low_stock_threshold?: number } | null)?.low_stock_threshold);
         if (Number.isFinite(threshold)) setStoredLowStock(threshold);
         setLoading(false);
@@ -472,7 +500,6 @@ function ScannerWorkspace() {
       const resolution = resolveRaw(raw, items);
       if (openTimerRef.current) window.clearTimeout(openTimerRef.current);
       setActionError("");
-      setQuantityInput("1");
       setScannedAssets([]);
       setLast({ resolution, raw, source: from, at });
 
@@ -489,6 +516,52 @@ function ScannerWorkspace() {
           how,
           mode: activeMode.label,
         });
+        if (mode === "receive" || mode === "issue") {
+          // Scan lists: the same item again is one more, not a new line.
+          setLists((current) => {
+            const lines = current[mode];
+            const existing = lines.find((line) => line.itemId === item.id);
+            const nextCount = existing ? (Number(existing.quantity) || 0) + 1 : 1;
+            const nextLines = existing
+              ? lines.map((line) =>
+                  line.itemId === item.id ? { ...line, quantity: String(nextCount), error: undefined } : line
+                )
+              : [{ key: `i-${item.id}`, raw, itemId: item.id, name: item.name, quantity: "1", price: "" }, ...lines];
+            return { ...current, [mode]: nextLines };
+          });
+          setListNotice("");
+          showToast({
+            tone: "success",
+            message: `${mode === "receive" ? "Receive" : "Issue"} list · ${item.name}`,
+          });
+          return;
+        }
+
+        if (mode === "add") {
+          showToast({ tone: "info", message: `${item.name} is already in SydIN` });
+          return;
+        }
+
+        if (mode === "count") {
+          // A count is a draft in this browser, so each scan counts at once.
+          const outcome = applyScanToStockCountDraft({ itemId: item.id, expectedQuantity: item.quantity });
+          if (outcome.ok) {
+            showToast({
+              tone: "success",
+              message: `Count · ${item.name} ${outcome.countedQuantity}${outcome.added ? " (added to count)" : ""}`,
+            });
+          } else {
+            setActionError(
+              outcome.reason === "no-draft"
+                ? "No stock count is in progress in this tab. Start one in Stock Counts, then come back."
+                : outcome.reason === "finalized"
+                  ? "That stock count is already finalized. Start a new count to keep scanning."
+                  : "We could not update the stock count draft in this browser."
+            );
+          }
+          return;
+        }
+
         showToast({ tone: "success", message: `Found ${item.name}` });
 
         if (mode === "lookup") {
@@ -519,6 +592,25 @@ function ScannerWorkspace() {
           mode: activeMode.label,
         });
         showToast({ tone: "info", message: `${resolution.items.length} items share that code. Pick one.` });
+        return;
+      }
+
+      if (mode === "add" && resolution.kind === "none" && !/^https?:\/\//i.test(raw)) {
+        // A new barcode: onto the Add items list (again = one more of it).
+        play("success");
+        showFlash();
+        setLists((current) => {
+          const existing = current.add.find((line) => line.raw === raw);
+          const nextLines = existing
+            ? current.add.map((line) =>
+                line.raw === raw ? { ...line, quantity: String((Number(line.quantity) || 0) + 1) } : line
+              )
+            : [{ key: `n-${raw}`, raw, itemId: null, name: "", quantity: "1", price: "" }, ...current.add];
+          return { ...current, add: nextLines };
+        });
+        setListNotice("");
+        addSessionEntry({ ok: true, title: "New barcode", code: raw, how: "added to list", mode: activeMode.label });
+        showToast({ tone: "success", message: "New barcode added to the list" });
         return;
       }
 
@@ -622,84 +714,8 @@ function ScannerWorkspace() {
     if (openTimerRef.current) window.clearTimeout(openTimerRef.current);
     setLast(null);
     setActionError("");
-    setQuantityInput("1");
     setScanning(true);
   }, []);
-
-  const applyStockMovement = useCallback(
-    async (item: ScannerItem, direction: "stock_in" | "stock_out") => {
-      const parsed = Number(quantityInput);
-
-      if (!Number.isFinite(parsed) || !Number.isInteger(parsed) || parsed <= 0) {
-        setActionError("Enter a whole quantity greater than zero.");
-        return;
-      }
-
-      if (direction === "stock_out" && parsed > item.quantity) {
-        setActionError(`Only ${describeItemQuantity(item)} in stock. Reduce the quantity.`);
-        return;
-      }
-
-      try {
-        setBusy(true);
-        setActionError("");
-
-        const movement = await recordStockMovement({
-          itemId: item.id,
-          movementType: direction,
-          quantity: parsed,
-          notes: direction === "stock_in" ? "Scanner - receive" : "Scanner - issue",
-        });
-
-        const updated = { ...item, quantity: movement.quantity_after };
-        setItems((current) => current.map((entry) => (entry.id === item.id ? updated : entry)));
-        setLast((current) =>
-          current && current.resolution.kind === "item"
-            ? { ...current, resolution: { ...current.resolution, item: updated } }
-            : current
-        );
-
-        showToast({
-          tone: "success",
-          message: `${direction === "stock_in" ? "Receive" : "Issue"} · ${item.name} ${direction === "stock_in" ? "+" : "−"}${parsed}`,
-        });
-        setQuantityInput("1");
-        rearm();
-      } catch (error: unknown) {
-        setActionError(error instanceof Error ? error.message : "We could not record that stock movement.");
-      } finally {
-        setBusy(false);
-      }
-    },
-    [quantityInput, rearm, showToast]
-  );
-
-  const applyCountScan = useCallback(
-    (item: ScannerItem) => {
-      const outcome = applyScanToStockCountDraft({
-        itemId: item.id,
-        expectedQuantity: item.quantity,
-      });
-
-      if (!outcome.ok) {
-        setActionError(
-          outcome.reason === "no-draft"
-            ? "No stock count is in progress in this tab. Start one in Stock Counts, then come back."
-            : outcome.reason === "finalized"
-              ? "That stock count is already finalized. Start a new count to keep scanning."
-              : "We could not update the stock count draft in this browser."
-        );
-        return;
-      }
-
-      showToast({
-        tone: "success",
-        message: `Count · ${item.name} ${outcome.countedQuantity}${outcome.added ? " (added to count)" : ""}`,
-      });
-      rearm();
-    },
-    [rearm, showToast]
-  );
 
   const applyTransfer = useCallback(
     async (item: ScannerItem) => {
@@ -804,6 +820,173 @@ function ScannerWorkspace() {
       setAssigneeSuggestions([]);
     }
   }, []);
+
+  /* ---------------- scan lists ---------------- */
+
+  const updateLine = (listMode: ListMode, key: string, patch: Partial<ListLine>) => {
+    setLists((current) => ({
+      ...current,
+      [listMode]: current[listMode].map((line) => (line.key === key ? { ...line, ...patch, error: undefined } : line)),
+    }));
+  };
+
+  const removeLine = (listMode: ListMode, key: string) => {
+    setLists((current) => ({ ...current, [listMode]: current[listMode].filter((line) => line.key !== key) }));
+  };
+
+  const clearList = (listMode: ListMode) => {
+    setLists((current) => ({ ...current, [listMode]: [] }));
+    setListNotice("");
+  };
+
+  /** Receive / Issue every line: one stock movement each, same as before. */
+  const applyStockList = async (listMode: "receive" | "issue") => {
+    const lines = lists[listMode];
+    if (lines.length === 0 || listBusy) return;
+
+    // Check every line first, so nothing half-saves on a typo.
+    let invalid = false;
+    const checked = lines.map((line) => {
+      const quantity = Number(line.quantity);
+      const item = items.find((entry) => entry.id === line.itemId);
+      if (!Number.isInteger(quantity) || quantity <= 0) {
+        invalid = true;
+        return { ...line, error: "Enter a whole number above 0." };
+      }
+      if (listMode === "issue" && item && quantity > item.quantity) {
+        invalid = true;
+        return { ...line, error: `Only ${describeItemQuantity(item)} in stock.` };
+      }
+      return line;
+    });
+    if (invalid) {
+      setLists((current) => ({ ...current, [listMode]: checked }));
+      return;
+    }
+
+    setListBusy(true);
+    setListNotice("");
+    let done = 0;
+    let pieces = 0;
+    const failed: ListLine[] = [];
+    for (const line of lines) {
+      const quantity = Number(line.quantity);
+      try {
+        const movement = await recordStockMovement({
+          itemId: line.itemId as number,
+          movementType: listMode === "receive" ? "stock_in" : "stock_out",
+          quantity,
+          notes: listMode === "receive" ? "Scanner - receive" : "Scanner - issue",
+        });
+        setItems((current) =>
+          current.map((entry) => (entry.id === line.itemId ? { ...entry, quantity: movement.quantity_after } : entry))
+        );
+        done += 1;
+        pieces += quantity;
+      } catch (error: unknown) {
+        failed.push({ ...line, error: error instanceof Error ? error.message : "Not saved. Try again." });
+      }
+    }
+    setLists((current) => ({ ...current, [listMode]: failed }));
+    setListBusy(false);
+    if (done > 0) {
+      showToast({
+        tone: "success",
+        message: `${listMode === "receive" ? "Received" : "Issued"} ${pieces} across ${done} ${done === 1 ? "item" : "items"}`,
+      });
+    }
+    if (failed.length > 0) setListNotice(`${failed.length} could not be saved. They are still in the list.`);
+  };
+
+  /** Add items: create every named line as a new item with its barcode. */
+  const createListItems = async () => {
+    const lines = lists.add;
+    if (lines.length === 0 || listBusy || !userId) return;
+
+    let invalid = false;
+    const checked = lines.map((line) => {
+      const quantity = line.quantity.trim() === "" ? 0 : Number(line.quantity);
+      const price = line.price.trim() === "" ? null : Number(line.price);
+      if (!line.name.trim()) {
+        invalid = true;
+        return { ...line, error: "Give this item a name." };
+      }
+      if (!Number.isInteger(quantity) || quantity < 0) {
+        invalid = true;
+        return { ...line, error: "Quantity must be a whole number." };
+      }
+      if (price !== null && (!Number.isFinite(price) || price < 0)) {
+        invalid = true;
+        return { ...line, error: "Price must be 0 or more." };
+      }
+      return line;
+    });
+    if (invalid) {
+      setLists((current) => ({ ...current, add: checked }));
+      return;
+    }
+
+    setListBusy(true);
+    setListNotice("");
+    try {
+      const usage = await getSubscriptionUsage(userId, { strictCount: true });
+      const room = usage.subscription.item_limit - usage.usedItems;
+      if (room < lines.length) {
+        setListNotice(
+          room <= 0
+            ? getPlanLimitMessage(usage.subscription.plan)
+            : `Your plan has room for ${room} more ${room === 1 ? "item" : "items"}. Remove some lines or upgrade.`
+        );
+        return;
+      }
+
+      const created: ScannerItem[] = [];
+      const failed: ListLine[] = [];
+      for (const line of lines) {
+        const { data, error } = await supabase
+          .from("inventory")
+          .insert([
+            {
+              user_id: userId,
+              name: line.name.trim(),
+              sku: "",
+              barcode: line.raw,
+              quantity: line.quantity.trim() === "" ? 0 : Number(line.quantity),
+              unit_type: DEFAULT_INVENTORY_UNIT_TYPE,
+              selling_price: line.price.trim() === "" ? null : Number(line.price),
+              image: "",
+              depot_id: defaultDepotId,
+            },
+          ])
+          .select("*")
+          .single();
+        if (error || !data) {
+          failed.push({ ...line, error: error?.message || "Not saved. Try again." });
+          continue;
+        }
+        await logInventoryHistory({
+          itemId: data.id,
+          userId,
+          action: "created",
+          newQuantity: data.quantity,
+          newValues: data,
+        });
+        created.push(data as ScannerItem);
+      }
+
+      setItems((current) => [...current, ...created]);
+      setLists((current) => ({ ...current, add: failed }));
+      if (created.length > 0) {
+        showToast({
+          tone: "success",
+          message: `${created.length} new ${created.length === 1 ? "item" : "items"} added to your inventory`,
+        });
+      }
+      if (failed.length > 0) setListNotice(`${failed.length} could not be saved. They are still in the list.`);
+    } finally {
+      setListBusy(false);
+    }
+  };
 
   /* ---------------- modes ---------------- */
 
@@ -1259,6 +1442,150 @@ function ScannerWorkspace() {
             </button>
           </form>
 
+          {isListMode(mode) && (
+            <section className="scanner-v2-list-card" aria-label={`${activeMode.label} list`}>
+              <div className="scanner-v2-list-head">
+                <div>
+                  <h3>
+                    {mode === "add" ? "New items" : mode === "receive" ? "Receive list" : "Issue list"}
+                  </h3>
+                  <p>
+                    {lists[mode].length === 0
+                      ? mode === "add"
+                        ? "Scan barcodes that are not in SydIN yet. Each one becomes a line here."
+                        : "Scan items. Each scan adds one; scan again for more."
+                      : `${lists[mode].length} ${lists[mode].length === 1 ? "line" : "lines"} · ${lists[mode].reduce(
+                          (sum, line) => sum + (Number(line.quantity) || 0),
+                          0
+                        )} pcs`}
+                  </p>
+                </div>
+                {lists[mode].length > 0 && (
+                  <button type="button" onClick={() => clearList(mode)} disabled={listBusy} className="scanner-v2-text-button">
+                    Clear
+                  </button>
+                )}
+              </div>
+
+              {lists[mode].length > 0 && (
+                <ul className="scanner-v2-lines">
+                  {lists[mode].map((line) => {
+                    const item = line.itemId ? items.find((entry) => entry.id === line.itemId) : null;
+                    return (
+                      <li key={line.key} className={line.error ? "has-error" : ""}>
+                        {mode === "add" ? (
+                          <div className="scanner-v2-line-add">
+                            <span className="scanner-v2-line-code is-mono">{line.raw}</span>
+                            <input
+                              value={line.name}
+                              onChange={(event) => updateLine("add", line.key, { name: event.target.value })}
+                              placeholder="Item name"
+                              aria-label={`Name for ${line.raw}`}
+                              className="ui-input"
+                              disabled={listBusy}
+                            />
+                            <input
+                              value={line.quantity}
+                              onChange={(event) => updateLine("add", line.key, { quantity: event.target.value.replace(/[^\d]/g, "") })}
+                              inputMode="numeric"
+                              placeholder="Qty"
+                              aria-label={`Quantity for ${line.raw}`}
+                              className="ui-input is-narrow"
+                              disabled={listBusy}
+                            />
+                            <input
+                              value={line.price}
+                              onChange={(event) => updateLine("add", line.key, { price: event.target.value.replace(/[^\d.]/g, "") })}
+                              inputMode="decimal"
+                              placeholder="Price"
+                              aria-label={`Selling price for ${line.raw}`}
+                              className="ui-input is-narrow"
+                              disabled={listBusy}
+                            />
+                          </div>
+                        ) : (
+                          <div className="scanner-v2-line-stock">
+                            <span className="scanner-v2-line-text">
+                              <strong>{line.name}</strong>
+                              <small>
+                                <span className="is-mono">{item?.item_code || item?.sku || line.raw}</span>
+                                {item ? ` · ${describeItemQuantity(item)} now` : ""}
+                              </small>
+                            </span>
+                            <span className="scanner-v2-stepper">
+                              <button
+                                type="button"
+                                aria-label={`One less ${line.name}`}
+                                disabled={listBusy || Number(line.quantity) <= 1}
+                                onClick={() => updateLine(mode, line.key, { quantity: String(Math.max(1, (Number(line.quantity) || 1) - 1)) })}
+                              >
+                                −
+                              </button>
+                              <input
+                                value={line.quantity}
+                                onChange={(event) => updateLine(mode, line.key, { quantity: event.target.value.replace(/[^\d]/g, "") })}
+                                inputMode="numeric"
+                                aria-label={`Quantity of ${line.name}`}
+                                disabled={listBusy}
+                              />
+                              <button
+                                type="button"
+                                aria-label={`One more ${line.name}`}
+                                disabled={listBusy}
+                                onClick={() => updateLine(mode, line.key, { quantity: String((Number(line.quantity) || 0) + 1) })}
+                              >
+                                +
+                              </button>
+                            </span>
+                          </div>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => removeLine(mode, line.key)}
+                          disabled={listBusy}
+                          aria-label={`Remove ${line.name || line.raw}`}
+                          className="scanner-v2-line-remove"
+                        >
+                          <UiIcon name="close" className="h-4 w-4" />
+                        </button>
+                        {line.error && <p className="scanner-v2-line-error">{line.error}</p>}
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+
+              {listNotice && <p className="scanner-v2-line-error is-block">{listNotice}</p>}
+
+              {lists[mode].length > 0 && (
+                <div className="scanner-v2-list-foot">
+                  {mode === "add" && (
+                    <span className="scanner-v2-muted">
+                      {defaultDepotId
+                        ? `Saved in ${depots.find((depot) => depot.id === defaultDepotId)?.name || "your default depot"}. Add photos and details later.`
+                        : "Add photos, depot and details later from each item page."}
+                    </span>
+                  )}
+                  <button
+                    type="button"
+                    disabled={listBusy}
+                    onClick={() => void (mode === "add" ? createListItems() : applyStockList(mode))}
+                    className={buttonClassName()}
+                  >
+                    {listBusy
+                      ? "Saving…"
+                      : mode === "add"
+                        ? `Create ${lists.add.length} ${lists.add.length === 1 ? "item" : "items"}`
+                        : `${mode === "receive" ? "Receive" : "Issue"} all · ${lists[mode].reduce(
+                            (sum, line) => sum + (Number(line.quantity) || 0),
+                            0
+                          )} pcs`}
+                  </button>
+                </div>
+              )}
+            </section>
+          )}
+
           <div className="scanner-v2-toggles">
             {(
               [
@@ -1421,47 +1748,18 @@ function ScannerWorkspace() {
                   </div>
                 )}
 
-                {(mode === "receive" || mode === "issue") && (
-                  <form
-                    className="scanner-v2-action"
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      if (!busy) void applyStockMovement(scannedItem, mode === "receive" ? "stock_in" : "stock_out");
-                    }}
-                  >
-                    <label>
-                      Quantity to {mode === "receive" ? "add" : "remove"}
-                      <input
-                        type="number"
-                        inputMode="numeric"
-                        min="1"
-                        step="1"
-                        value={quantityInput}
-                        onChange={(event) => {
-                          setQuantityInput(event.target.value);
-                          setActionError("");
-                        }}
-                        disabled={busy}
-                        className="ui-input"
-                      />
-                    </label>
-                    <div className="scanner-v2-actions is-split">
-                      {cancelButton}
-                      <button type="submit" disabled={busy} className={buttonClassName()}>
-                        {busy ? "Saving…" : mode === "receive" ? "Add stock" : "Remove stock"}
-                      </button>
-                    </div>
-                  </form>
+                {(mode === "receive" || mode === "issue" || mode === "add") && (
+                  <p className="scanner-v2-muted">
+                    {mode === "add"
+                      ? "Already in SydIN, so it was not added to the new items list."
+                      : `In the ${mode === "receive" ? "receive" : "issue"} list below. Scan it again to add one more.`}
+                  </p>
                 )}
 
                 {mode === "count" && (
-                  <div className="scanner-v2-actions is-split">
-                    {cancelButton}
-                    <button type="button" onClick={() => applyCountScan(scannedItem)} className={buttonClassName()}>
-                      Count 1
-                    </button>
-                  </div>
+                  <p className="scanner-v2-muted">Counted in the stock count open in this browser.</p>
                 )}
+
 
                 {mode === "transfer" && (
                   <div className="scanner-v2-action">
