@@ -6824,3 +6824,12 @@ pass.
 **Verified** live on item 37 at 1440: the four figures share one row, the side order is right, the
 menu has 3 items and the print link is correct. Save note was **not** exercised live: each save
 writes a permanent history row on Sayed's real item. Lint, tsc and build pass.
+
+## 8 Oct 2026 · Scanner redesign + phone link without login (phase 38)
+
+Sayed's Scanner spec (`SydIN-scanner-prompt.md`) with 4 screenshots.
+- **Phase 38 (live DB):** `device_pairings` gains `pair_token`, `phone_secret`, `device_label`, `mode`, `linked_at`, `last_seen_at`, `closed_at`, `phone_vibrate`; `pairing_barcodes` gains `item_id`, `matched_by`; new `scanner_pair_attempts` (RLS, no policies). Four SECURITY DEFINER functions for the anonymous phone: `scanner_phone_claim` (single use, throttled typed codes), `scanner_phone_post` (same resolver order as the laptop, 5 scans/s cap, returns name/code/qty only), `scanner_phone_ping` (heartbeat + mode + vibrate), `scanner_phone_leave`.
+- **Phone page `/pair` and `/pair/[token]`:** full-screen dark scanner, mode chips synced with the laptop, result chip, Torch, Type code, wake lock, beeps + vibrate, expired / already linked / disconnected states. Old `/dashboard/scanner/phone` redirects here.
+- **Laptop `/dashboard/scanner` rewritten:** 8-mode bar with dots, source switch (this camera / phone / USB), dark viewfinder with brackets and scan line, switch camera + torch, green flash, pairing card with QR + code + countdown, connected card with heartbeat status, manual input, 4 remembered switches, Last scan card (On hand / Min / Price, matched by, Open item / Record movement, mode actions), This session with Export CSV, Scan history dialog (this computer), toasts. Mode save logic unchanged.
+- **Shared:** `BarcodeScannerView` uses the native BarcodeDetector where available (zxing otherwise), takes a camera id, reports the stream, pauses when the tab is hidden. New `useScanSound` (Web Audio beeps) and `useKeyboardWedge` (USB scanners). Resolver also matches item codes. Item page shows "Back to scanner"; the public item page sends signed-in members to the dashboard item and has "Open in SydIN".
+- Verified: phone link by token on localhost against live DB (linked, FP016 resolved, unknown code, second phone refused, wrong code refused), test rows deleted. Laptop page verified on the live site after push.

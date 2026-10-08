@@ -344,12 +344,11 @@ export default function ItemDetailsPage() {
 
     const action = new URLSearchParams(window.location.search).get("action");
     const frame = window.requestAnimationFrame(() => {
-      if (
-        new URLSearchParams(window.location.search)
-          .get("returnTo")
-          ?.startsWith("/dashboard/categories")
-      ) {
+      const returnTo = new URLSearchParams(window.location.search).get("returnTo");
+      if (returnTo?.startsWith("/dashboard/categories")) {
         setBackLabel("Back to Categories");
+      } else if (returnTo?.startsWith("/dashboard/scanner")) {
+        setBackLabel("Back to scanner");
       }
       if (action === "edit") {
         setEditValues(createEditItemFormValues(item));

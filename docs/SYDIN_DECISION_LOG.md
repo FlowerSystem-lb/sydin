@@ -724,3 +724,6 @@ stays as the alternative.
   the page is client-rendered anyway.
 
 **Status:** Active.
+
+### 2026-10-08 · Scanner redesign supersedes "Scanner Workspace stays off-limits"
+**Decision:** Sayed explicitly asked for a full Scanner page redesign, so the 2026-08-11 hands-off rule no longer applies to `/dashboard/scanner`. The phone links **without login** through four SECURITY DEFINER functions scoped to one pairing (token claimed once and swapped for a `phone_secret`), reusing the phase-12 `device_pairings` / `pairing_barcodes` tables instead of new `scan_sessions` / `scan_events` tables. The laptop **polls every second** rather than using Supabase Realtime (works under RLS, no new moving parts; the spec allows polling as the fallback). Stock-changing modes still **confirm the quantity** before saving instead of +1 per scan, so a double scan cannot change stock. Scan history is per computer (localStorage). On localhost the QR points to the live site, since a phone cannot reach localhost and the camera needs HTTPS.

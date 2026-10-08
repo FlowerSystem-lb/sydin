@@ -110,6 +110,35 @@ export default function PublicItemPage() {
     };
   }, [publicId]);
 
+  /* Scanned with the phone's own camera by someone signed in to SydIN: if the
+     item belongs to their business (RLS answers that), go straight to the
+     dashboard item instead of the public page (Sayed's Scanner spec, 8 Oct). */
+  useEffect(() => {
+    if (!publicId) return;
+    let isActive = true;
+
+    (async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      if (!session || !isActive) return;
+      const { data } = await supabase
+        .from("inventory")
+        .select("id")
+        .eq("public_id", publicId)
+        .maybeSingle();
+      if (isActive && data?.id) {
+        window.location.replace(`/dashboard/inventory/${data.id}`);
+      }
+    })().catch(() => {
+      // Stay on the public page.
+    });
+
+    return () => {
+      isActive = false;
+    };
+  }, [publicId]);
+
   useEffect(() => {
     let isActive = true;
 
@@ -318,6 +347,15 @@ export default function PublicItemPage() {
                     </div>
                   ))}
                 </dl>
+
+                {/* Staff who scan a label while signed out: sign in, come back
+                    here, and the check above opens the dashboard item. */}
+                <Link
+                  href={`/login?returnTo=${encodeURIComponent(`/item/${publicId}`)}`}
+                  className={buttonClassName({ variant: "secondary", className: "mt-5 w-full sm:w-auto" })}
+                >
+                  Open in SydIN
+                </Link>
 
                 {hasContact && (
                   <div className="mt-6">

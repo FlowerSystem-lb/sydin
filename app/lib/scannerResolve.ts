@@ -11,9 +11,10 @@ export interface ScannableItem {
   sku?: string | null;
   barcode?: string | null;
   public_id?: string | null;
+  item_code?: string | null;
 }
 
-export type ScanMatchField = "public_id" | "sku" | "barcode";
+export type ScanMatchField = "public_id" | "sku" | "barcode" | "item_code";
 
 export type ScanResolution<T extends ScannableItem> =
   | { kind: "item"; item: T; matchedBy: ScanMatchField }
@@ -44,7 +45,7 @@ function normalize(value: string | null | undefined) {
 
 /**
  * Resolves a scanned code against the supplied items, in priority order:
- * public id (SydIN QR) → exact SKU → barcode → case-insensitive SKU.
+ * public id (SydIN QR) → exact SKU → barcode → item code → case-insensitive SKU.
  *
  * The barcode step closes a real gap: inventory rows carry a `barcode` column
  * that the original inventory scanner never matched against, so scanning a
@@ -97,6 +98,20 @@ export function resolveScannedCode<T extends ScannableItem>(
   }
 
   const lowerText = trimmedText.toLowerCase();
+
+  // The item code printed on SydIN labels ("FP016"), any case. Callers that
+  // don't load item_code simply never match here.
+  const itemCodeMatches = items.filter(
+    (item) => normalize(item.item_code).toLowerCase() === lowerText
+  );
+
+  if (itemCodeMatches.length === 1) {
+    return { kind: "item", item: itemCodeMatches[0], matchedBy: "item_code" };
+  }
+
+  if (itemCodeMatches.length > 1) {
+    return { kind: "ambiguous", items: itemCodeMatches, query: trimmedText };
+  }
   const looseSkuMatches = items.filter(
     (item) => normalize(item.sku).toLowerCase() === lowerText
   );

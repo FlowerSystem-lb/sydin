@@ -1,5 +1,9 @@
 export type UiIconName =
   | "phone"
+  | "volume"
+  | "volume-off"
+  | "flash"
+  | "camera-switch"
   | "map-pin"
   | "box"
   | "layers"
@@ -336,6 +340,28 @@ export default function UiIcon({
       {/* Depots (6 Oct 2026): call and location. */}
       {name === "phone" && (
         <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.13.96.36 1.9.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0 1 22 16.92Z" />
+      )}
+      {name === "volume" && (
+        <>
+          <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+          <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
+        </>
+      )}
+      {name === "volume-off" && (
+        <>
+          <path d="M11 5 6 9H2v6h4l5 4V5Z" />
+          <path d="m22 9-6 6" />
+          <path d="m16 9 6 6" />
+        </>
+      )}
+      {name === "flash" && <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8Z" />}
+      {name === "camera-switch" && (
+        <>
+          <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z" />
+          <path d="M9 13a3 3 0 0 1 5.12-2.12L15 12" />
+          <path d="M15 9.5V12h-2.5" />
+        </>
       )}
       {name === "map-pin" && (
         <>

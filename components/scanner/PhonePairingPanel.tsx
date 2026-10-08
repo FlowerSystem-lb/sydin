@@ -4,6 +4,7 @@ import { useState } from "react";
 import QRCode from "react-qr-code";
 import UiIcon from "@/components/UiIcon";
 import { useDevicePairing } from "@/components/scanner/useDevicePairing";
+import { getPairingBaseUrl } from "@/app/lib/devicePairing";
 
 interface PhonePairingPanelProps {
   userId: string;
@@ -33,7 +34,7 @@ export default function PhonePairingPanel({
   // pairing has resolved, which is after hydration, so there is no SSR/client
   // mismatch to worry about.
   const [origin] = useState(() =>
-    typeof window === "undefined" ? "" : window.location.origin
+    typeof window === "undefined" ? "" : getPairingBaseUrl()
   );
   const [lastReceived, setLastReceived] = useState<string | null>(null);
   const [receivedCount, setReceivedCount] = useState(0);
@@ -50,8 +51,8 @@ export default function PhonePairingPanel({
   // The phone opens a real URL rather than a custom scheme, so the QR works
   // with any stock camera app — no SydIN app install required.
   const joinUrl =
-    pairing && origin
-      ? `${origin}/dashboard/scanner/phone?code=${pairing.pairing_code}`
+    pairing?.pair_token && origin
+      ? `${origin}/pair/${pairing.pair_token}`
       : "";
 
   return (
@@ -108,8 +109,8 @@ export default function PhonePairingPanel({
                 Scan this with your phone camera
               </p>
               <p className="mt-1 text-xs leading-5 text-theme-muted">
-                Or open <strong className="font-semibold">Scanner → Use as phone scanner</strong> on your
-                phone and enter this code:
+                No app and no sign-in on the phone. Or open{" "}
+                <strong className="font-semibold">sydin.site/pair</strong> and enter this code:
               </p>
               <p className="mt-2 font-mono text-2xl font-semibold tracking-[0.3em] text-theme-primary">
                 {pairing.pairing_code}
