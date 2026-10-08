@@ -219,3 +219,38 @@ graphics made by Claude until the app is public, so Sayed doesn't need screen re
     (ask@thmanyah.com).
   - Sayed downloads it himself from the official site. Claude renders with a private copy.
 
+## Pre-launch plan, version 2 (rebuilt 8 Oct 2026; runs Sat 10 Oct to Sun 22 Nov)
+
+Sayed asked for the plan to be rebuilt from scratch, because he was editing it every day. Version 2
+was written by three independent strategies (reach-first, sales-first, sustainability-first), scored
+by a judge (sustainability-first won), merged with the best ideas from the other two, then put
+through an adversarial rule check that fixed 42 issues. **The full plan is the existing artifact:
+https://claude.ai/artifact/1zi11oQENfVsykHAVxMEtw** (same URL, no second plan). Where older sections
+above conflict with it, version 2 wins.
+
+- **Rhythm:**
+  - Tue 9 pm: a "how it works" motion Reel.
+  - Thu 8:30 pm: a carousel from the existing designs.
+  - Sat 9 pm: the "وكان عندك / And you had it" Season 1 episode (Ep 2 to Ep 7, then a finale).
+  - Mon and Wed 5 pm: private WhatsApp sales messages from scripts.
+  - Wed: an optional story poll.
+  - Fri: rest.
+  - Sunday: Sayed sends screenshots and counts by 6 pm; Claude sends the review and next week's batch by 10 pm.
+- **Posting:**
+  - Every Reel goes to Instagram (Facebook auto-share), the SydIN Instagram Story with a link sticker, TikTok, Threads (English) and the SydIN WhatsApp Business Status.
+  - Never on personal accounts.
+  - Claude reminds Sayed 45 minutes before every slot.
+- **Sales target by 22 Nov:**
+  - 10 depots or shops trying SydIN with Sayed beside them, plus 1 real story approved in writing.
+  - Contacts come from a private list (people he knows, friends' introductions, walk-ins).
+  - At most 3 new people a day, 1:1 only.
+  - The pilot terms are decided at the Sun 11 Oct review, before any visit.
+  - No data-safety claims until backups exist.
+- **Privacy:** Sayed never sends Claude names or phone numbers. Claude gets counts per stage and anonymised one-liners only.
+- **Ads:**
+  - Decision on Sat 17 Oct at noon by a written GO gate. A GO test runs at $4/day for 5 days, goal messages to Instagram Direct, Lebanon 25-55.
+  - Stop rules apply after 48 hours.
+  - Hard cap $43 before launch. No TikTok ads.
+- **Changes:** only at the Sunday review, at most 2 per week, each triggered by a written rule. New ideas go on a "Sunday list".
+- **Arabic font** for new social content: Thmanyah Sans (see above).
+
