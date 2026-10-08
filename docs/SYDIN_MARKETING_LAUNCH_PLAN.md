@@ -198,3 +198,10 @@ videos. So:
 - **Trust still needs a human.** That now happens in person and on WhatsApp during depot visits,
   not on social media. Sales scripts should be written for that.
 
+## Pre-launch wording (8 Oct 2026)
+
+SydIN is not open to the public yet. Captions and video text must not tell people to "open SydIN"
+or "try it now" as if they can. Describe how it works ("with SydIN, you tap Scan…") and say
+**"قريباً / Coming soon"** next to the waitlist call to action. Videos that show the app are motion
+graphics made by Claude until the app is public, so Sayed doesn't need screen recordings.
+
