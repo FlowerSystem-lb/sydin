@@ -99,9 +99,25 @@ export interface PurchaseOrder {
   cancelled_at: string | null;
   /** True when the order was marked received with quantities still outstanding. */
   closed_short: boolean;
+  /** Phase 40 (9 Oct 2026). Both 0 on older orders. */
+  discount: number;
+  delivery_fee: number;
+  payment_terms: PurchaseOrderPaymentTerms | null;
+  ordered_at: string | null;
+  /** The supplier's read-only link: /po/<public_token>. */
+  public_token: string | null;
   lines: PurchaseOrderLine[];
   payments: PurchaseOrderPayment[];
 }
+
+export type PurchaseOrderPaymentTerms = "on_delivery" | "paid_now" | "net_7" | "net_30";
+
+export const PURCHASE_ORDER_PAYMENT_TERMS_LABELS: Record<PurchaseOrderPaymentTerms, string> = {
+  on_delivery: "Pay on delivery",
+  paid_now: "Paid now",
+  net_7: "Due in 7 days",
+  net_30: "Due in 30 days",
+};
 
 export interface PurchaseOrderLineInput {
   line_type: PurchaseOrderLineType;
@@ -138,6 +154,10 @@ export interface PurchaseOrderInput {
   internal_reference?: string | null;
   attachment_url?: string | null;
   attachment_label?: string | null;
+  discount?: number;
+  delivery_fee?: number;
+  payment_terms?: PurchaseOrderPaymentTerms | null;
+  ordered_at?: string | null;
 }
 
 export const PURCHASE_ORDER_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
@@ -193,6 +213,7 @@ unit_label_snapshot, quantity, unit_cost, notes`;
    without them for a database where that migration has not been run yet.
    The page must keep working in between -- Sayed runs SQL by hand. */
 const PURCHASE_ORDER_SELECT = `${PURCHASE_ORDER_SELECT_BASE}, closed_short,
+discount, delivery_fee, payment_terms, ordered_at, public_token,
 purchase_order_lines (${PURCHASE_ORDER_LINE_SELECT_BASE}, received_quantity)`;
 
 const PURCHASE_ORDER_SELECT_LEGACY = `${PURCHASE_ORDER_SELECT_BASE},
@@ -302,6 +323,11 @@ function normalizeOrder(data: Record<string, unknown>): PurchaseOrder {
     received_at: (data.received_at as string | null) ?? null,
     cancelled_at: (data.cancelled_at as string | null) ?? null,
     closed_short: Boolean(data.closed_short),
+    discount: Number(data.discount || 0),
+    delivery_fee: Number(data.delivery_fee || 0),
+    payment_terms: (data.payment_terms as PurchaseOrderPaymentTerms | null) ?? null,
+    ordered_at: (data.ordered_at as string | null) ?? null,
+    public_token: (data.public_token as string | null) ?? null,
     lines: rawLines
       .map(normalizeLine)
       .sort((first, second) => first.id - second.id),
@@ -330,10 +356,20 @@ export function getPurchaseOrderLineTotal(line: PurchaseOrderLine) {
   return line.quantity * line.unit_cost;
 }
 
-export function getPurchaseOrderTotal(order: PurchaseOrder) {
+/** The lines alone, before discount and delivery. */
+export function getPurchaseOrderSubtotal(order: Pick<PurchaseOrder, "lines">) {
   return order.lines.reduce(
     (total, line) => total + (getPurchaseOrderLineTotal(line) || 0),
     0
+  );
+}
+
+/** Lines − discount + delivery (phase 40), never below 0. Same formula as
+ *  recompute_purchase_order_payment in the database. */
+export function getPurchaseOrderTotal(order: Pick<PurchaseOrder, "lines"> & Partial<Pick<PurchaseOrder, "discount" | "delivery_fee">>) {
+  return Math.max(
+    0,
+    getPurchaseOrderSubtotal(order) - Number(order.discount || 0) + Number(order.delivery_fee || 0)
   );
 }
 
@@ -603,7 +639,7 @@ export async function cancelPurchaseOrder(userId: string, orderId: number) {
 export async function markPurchaseOrderOrdered(userId: string, orderId: number) {
   const { error } = await supabase
     .from("purchase_orders")
-    .update({ status: "ordered" })
+    .update({ status: "ordered", ordered_at: new Date().toISOString() })
     .eq("id", orderId)
     .eq("user_id", userId)
     .eq("status", "draft");
@@ -862,4 +898,118 @@ export async function getNextPoNumber(
   const ownPrefix = prefixSource.poPrefix?.trim();
   if (ownPrefix) return `${ownPrefix}${nextNumber}`;
   return `${prefix}-PO-${nextNumber}`;
+}
+
+/* ---- one order, and its activity (phase 40) ------------------------------ */
+
+export async function getPurchaseOrder(userId: string, orderId: number) {
+  const { data, error } = await supabase
+    .from("purchase_orders")
+    .select(PURCHASE_ORDER_SELECT)
+    .eq("user_id", userId)
+    .eq("id", orderId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? normalizeOrder(data as unknown as Record<string, unknown>) : null;
+}
+
+/** Discount, delivery, terms, dates, notes: the parts that may change after
+ *  the order is placed (lines are guarded in the database). */
+export async function updatePurchaseOrderFields(
+  userId: string,
+  orderId: number,
+  patch: Partial<Pick<PurchaseOrder, "discount" | "delivery_fee" | "payment_terms" | "expected_delivery_date" | "notes" | "internal_reference" | "title">>
+) {
+  const { error } = await supabase
+    .from("purchase_orders")
+    .update(patch)
+    .eq("id", orderId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export type PurchaseOrderActivityType =
+  | "created"
+  | "placed"
+  | "sent"
+  | "received"
+  | "paid"
+  | "edited"
+  | "cancelled";
+
+export interface PurchaseOrderActivity {
+  id: number;
+  type: PurchaseOrderActivityType | string;
+  text: string;
+  actor_id: string | null;
+  created_at: string;
+}
+
+export async function getPurchaseOrderActivity(orderId: number): Promise<PurchaseOrderActivity[]> {
+  const { data, error } = await supabase
+    .from("purchase_order_activity")
+    .select("id, type, text, actor_id, created_at")
+    .eq("purchase_order_id", orderId)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) return [];
+  return (data || []) as PurchaseOrderActivity[];
+}
+
+/** Best effort: a missing log line must never fail the action it describes. */
+export async function logPurchaseOrderActivity(
+  userId: string,
+  orderId: number,
+  type: PurchaseOrderActivityType,
+  text: string
+) {
+  try {
+    await supabase
+      .from("purchase_order_activity")
+      .insert([{ purchase_order_id: orderId, user_id: userId, type, text }]);
+  } catch {
+    // Not logged; the order itself is fine.
+  }
+}
+
+/**
+ * Saves an edited draft (phase 40 "Continue" on a draft): the order's fields,
+ * then its lines replaced. Only drafts: once ordered, lines change through
+ * the order's own page and receiving.
+ */
+export async function updateDraftPurchaseOrder(
+  userId: string,
+  orderId: number,
+  order: Partial<PurchaseOrderInput>,
+  lines: PurchaseOrderLineInput[]
+) {
+  if (lines.length === 0) throw new Error("Add at least one line to the purchase order.");
+  const { error: orderError } = await supabase
+    .from("purchase_orders")
+    .update(order)
+    .eq("id", orderId)
+    .eq("user_id", userId)
+    .eq("status", "draft");
+  if (orderError) throw orderError;
+
+  const { error: deleteError } = await supabase.from("purchase_order_lines").delete().eq("purchase_order_id", orderId);
+  if (deleteError) throw deleteError;
+
+  const { error: linesError } = await supabase.from("purchase_order_lines").insert(
+    lines.map((line) => ({
+      purchase_order_id: orderId,
+      line_type: line.line_type,
+      inventory_item_id: line.inventory_item_id,
+      affects_stock: line.affects_stock,
+      expense_category: line.expense_category,
+      name_snapshot: line.name_snapshot,
+      sku_snapshot: line.sku_snapshot ?? null,
+      item_code_snapshot: line.item_code_snapshot ?? null,
+      unit_label_snapshot: line.unit_label_snapshot ?? null,
+      quantity: line.quantity,
+      unit_cost: line.unit_cost,
+      notes: line.notes ?? null,
+    }))
+  );
+  if (linesError) throw linesError;
 }

@@ -1,956 +1,323 @@
 "use client";
 
-import { paymentMethodLabel, paymentMethodOptions } from "@/app/lib/paymentMethods";
-import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { buttonClassName } from "@/components/ui";
+import Select from "@/components/ui/Select";
 import UiIcon from "@/components/UiIcon";
-import ProductThumbnail from "@/components/inventory/ProductThumbnail";
+import { LockedFeaturePanel } from "@/components/UpgradePrompt";
 import {
-  Badge,
-  Button,
-  DialogShell,
-  DocumentTimeline,
-  HelpLink,
-  ResultsAnnouncer,
-  Select,
-} from "@/components/ui";
-import {
-  ActionButton,
-  DashboardEmptyState,
   DashboardNotice,
   DashboardPageHeader,
   DashboardPageShell,
-  DashboardToolbar,
   LoadingSkeletonGroup,
-  MetricCard,
 } from "@/components/dashboard/Workspace";
+import { getBusinessUser } from "@/app/lib/business";
+import { supabase } from "@/app/lib/supabase";
 import {
   DEFAULT_BUSINESS_SETTINGS,
   getOrCreateBusinessSettings,
   type BusinessSettings,
 } from "@/app/lib/businessSettings";
-import {
-  formatInventoryPrice,
-  normalizeCurrencyCode,
-} from "@/app/lib/inventoryItemModel";
-import { exportPurchaseOrderExcel } from "@/app/lib/purchaseOrderExcelExport";
-import { exportPurchaseOrderPdf } from "@/app/lib/purchaseOrderPdfExport";
-import { exportPurchaseOrderDocx } from "@/app/lib/documentDocxExports";
-import { brandingFromSettings } from "@/app/lib/documentPdf";
-import { exportGoodsReceivedPdf } from "@/app/lib/goodsReceivedPdf";
-import { exportPaymentReceiptPdf } from "@/app/lib/paymentReceiptPdf";
-import {
-  PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
-  PURCHASE_ORDER_PAYMENT_STATUS_LABELS,
-  PURCHASE_ORDER_STATUS_LABELS,
-  addPurchaseOrderPayment,
-  cancelPurchaseOrder,
-  deletePurchaseOrder,
-  deletePurchaseOrderPayment,
-  getPurchaseOrderBalance,
-  getPurchaseOrderLineTotal,
-  getPurchaseOrderPayments,
-  getPurchaseOrderAttachmentUrl,
-  getPurchaseOrderReceipts,
-  getPurchaseOrderReceivingProgress,
-  formatPurchaseOrderAmount,
-  getPurchaseOrderCurrency,
-  getPurchaseOrderSplit,
-  getPurchaseOrderTotal,
-  getPurchaseOrderTotalInBase,
-  toPurchaseOrderBase,
-  getPurchaseOrdersForUser,
-  isPaymentsSchemaMissing,
-  isPurchaseOrderOpen,
-  isPurchaseOrdersSchemaMissing,
-  isReceivingSchemaMissing,
-  markPurchaseOrderOrdered,
-  receivePurchaseOrderLines,
-  type PurchaseOrder,
-  type PurchaseOrderLine,
-  type PurchaseOrderPayment,
-  type PurchaseOrderPaymentMethod,
-  type PurchaseOrderReceipt,
-  type PurchaseOrderStatus,
-} from "@/app/lib/purchaseOrders";
-import { supabase } from "@/app/lib/supabase";
-import { getBusinessUser } from "@/app/lib/business";
-import { useCanDelete } from "@/components/dashboard/BusinessContext";
-import { useActorName } from "@/components/dashboard/DoneBy";
-import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import { formatExactPrice, getCurrencyContext } from "@/app/lib/currency";
+import { getEffectiveItemLowStockThreshold } from "@/app/lib/inventoryItemModel";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
+  getEffectiveLowStockThreshold,
   getSubscriptionCapabilities,
   getUserSubscription,
   type UserSubscription,
 } from "@/app/lib/subscription";
+import {
+  formatPurchaseOrderAmount,
+  getPurchaseOrderBalanceInBase,
+  getPurchaseOrderReceivingProgress,
+  getPurchaseOrderSplit,
+  getPurchaseOrderTotal,
+  getPurchaseOrdersForUser,
+  isPurchaseOrdersSchemaMissing,
+  toPurchaseOrderBase,
+  type PurchaseOrder,
+} from "@/app/lib/purchaseOrders";
 
-type StatusFilter = "all" | PurchaseOrderStatus;
+/*
+ * Purchase orders list (redesign 9 Oct 2026, Sayed's PO spec). Four figures,
+ * status tabs, search + depot + supplier filters kept in the URL, rows
+ * grouped by month with a receiving bar, the payment state and the one next
+ * step for that order. A row opens the order's own page.
+ */
 
-const STATUS_TONES: Record<
-  PurchaseOrderStatus,
-  "neutral" | "accent" | "success" | "danger" | "warning"
-> = {
-  draft: "neutral",
-  ordered: "accent",
-  partially_received: "warning",
-  received: "success",
-  cancelled: "danger",
-};
+type Tab = "all" | "draft" | "receive" | "received" | "cancelled";
 
-const SCHEMA_MISSING_MESSAGE =
-  "Purchase order history needs a one-time database update. Open Supabase → SQL Editor, paste the file sql/phase-8-purchase-orders.sql from the project, and click Run. Then refresh this page.";
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: "all", label: "All" },
+  { id: "draft", label: "Drafts" },
+  { id: "receive", label: "To receive" },
+  { id: "received", label: "Received" },
+  { id: "cancelled", label: "Cancelled" },
+];
 
-function formatDate(value: string | null) {
-  if (!value) return "Not set";
+function inTab(order: PurchaseOrder, tab: Tab) {
+  if (tab === "all") return true;
+  if (tab === "draft") return order.status === "draft";
+  if (tab === "receive") return order.status === "ordered" || order.status === "partially_received";
+  if (tab === "received") return order.status === "received";
+  return order.status === "cancelled";
+}
+
+function orderDate(order: PurchaseOrder) {
+  return order.purchase_date || order.created_at.slice(0, 10);
+}
+
+function shortDate(value?: string | null) {
+  if (!value) return "";
   const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return value;
-
-  return new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(date);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(date);
 }
 
-function todayIsoDate() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const month = String(now.getMonth() + 1).padStart(2, "0");
-  const day = String(now.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
+function monthKey(value: string) {
+  return value.slice(0, 7);
 }
 
-const RECEIVING_SCHEMA_MESSAGE =
-  "Receiving deliveries needs a one-time database update. Open Supabase → SQL Editor, paste sql/phase-23-partial-receiving.sql from the project, and click Run. Then try again.";
-
-function formatUnits(value: number) {
-  return Number.isInteger(value) ? String(value) : value.toFixed(2);
+function monthLabel(key: string) {
+  const date = new Date(`${key}-01T00:00:00`);
+  return Number.isNaN(date.getTime()) ? key : new Intl.DateTimeFormat("en", { month: "long", year: "numeric" }).format(date);
 }
 
-/** "1 unit", "3 units", "2.50 units". */
-function unitsLabel(value: number) {
-  return `${formatUnits(value)} ${value === 1 ? "unit" : "units"}`;
+function stage(order: PurchaseOrder) {
+  switch (order.status) {
+    case "draft":
+      return { label: "Draft", tone: "draft" };
+    case "ordered":
+      return { label: "Ordered", tone: "ordered" };
+    case "partially_received":
+      return { label: "Partly received", tone: "partial" };
+    case "received":
+      return { label: order.closed_short ? "Closed short" : "Received", tone: "received" };
+    default:
+      return { label: "Cancelled", tone: "cancelled" };
+  }
 }
 
-/** What is still to come on a line. Never negative. */
-function lineOutstanding(line: PurchaseOrderLine) {
-  return Math.max(0, line.quantity - line.received_quantity);
-}
-
-function isInCurrentMonth(order: PurchaseOrder) {
-  const source = order.purchase_date || order.created_at;
-  if (!source) return false;
-  const date = new Date(source.includes("T") ? source : `${source}T00:00:00`);
-  if (Number.isNaN(date.getTime())) return false;
-
-  const now = new Date();
-  return (
-    date.getFullYear() === now.getFullYear() &&
-    date.getMonth() === now.getMonth()
-  );
-}
-
-export default function PurchaseOrdersPage() {
-  const canDeleteRecords = useCanDelete();
-  // "by Ahmed" on records made by a team member (team access).
-  const nameOf = useActorName();
-  const recordedBy = (actorId?: string | null) => {
-    const name = nameOf(actorId);
-    return name ? `by ${name}` : "";
+function readQuery() {
+  const params = new URLSearchParams(window.location.search);
+  const tab = params.get("tab") as Tab | null;
+  return {
+    tab: tab && TABS.some((entry) => entry.id === tab) ? tab : ("all" as Tab),
+    q: params.get("q") || "",
+    depot: params.get("depot") || "",
+    supplier: params.get("supplier") || "",
+    open: Number(params.get("open")),
   };
+}
+
+function PurchaseOrdersList() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const [userId, setUserId] = useState("");
-  const [loading, setLoading] = useState(true);
-  const [schemaMissing, setSchemaMissing] = useState(false);
-  const [subscription, setSubscription] = useState<UserSubscription>(
-    FALLBACK_SUBSCRIPTION,
-  );
-  const [loadError, setLoadError] = useState("");
-  const [settings, setSettings] = useState<BusinessSettings>(
-    DEFAULT_BUSINESS_SETTINGS,
-  );
   const [orders, setOrders] = useState<PurchaseOrder[]>([]);
-
+  const [, setSettings] = useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+  const [subscription, setSubscription] = useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
+  const [alertCount, setAlertCount] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [schemaMissing, setSchemaMissing] = useState(false);
+  const [tab, setTab] = useState<Tab>("all");
   const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
-  const [depotFilter, setDepotFilter] = useState("all");
+  const [depotFilter, setDepotFilter] = useState("");
+  const [supplierFilter, setSupplierFilter] = useState("");
+  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const [ready, setReady] = useState(false);
 
-  const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(
-    new Set(),
-  );
-  const [selectedOrderId, setSelectedOrderId] = useState<number | null>(null);
-  // "receive" = confirm receive + record payment together; "edit" = record payment only.
-  const [paymentMode, setPaymentMode] = useState<"none" | "receive" | "edit">(
-    "none",
-  );
-  const [payAmount, setPayAmount] = useState("");
-  const [payMethod, setPayMethod] = useState("");
-  const [payBy, setPayBy] = useState("");
-  const [payDate, setPayDate] = useState("");
-  const [payNote, setPayNote] = useState("");
-  const [selectedPayments, setSelectedPayments] = useState<
-    PurchaseOrderPayment[]
-  >([]);
-  // Deliveries recorded against the open order, and item photos for its lines
-  // -- a name alone is not enough to know which carton is which.
-  const [selectedReceipts, setSelectedReceipts] = useState<
-    PurchaseOrderReceipt[]
-  >([]);
-  // A signed, one-hour link to the order's attachment; the bucket is private.
-  const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
-  const [lineImages, setLineImages] = useState<Record<number, string | null>>(
-    {},
-  );
-  // Receive mode: how much of each line is arriving now, keyed by line id.
-  const [receiveQuantities, setReceiveQuantities] = useState<
-    Record<number, string>
-  >({});
-  const [receiveNotes, setReceiveNotes] = useState("");
-  const [receiveClose, setReceiveClose] = useState(false);
-  const [receivePaymentOpen, setReceivePaymentOpen] = useState(false);
-  const [actionBusy, setActionBusy] = useState(false);
-  const [actionError, setActionError] = useState("");
-  // An order on which nothing has happened -- no delivery, no payment -- is
-  // noise in the history and can go. Once stock or money has moved it is
-  // cancelled or closed, never deleted, so the record survives.
-  const [confirmDeleteDraft, setConfirmDeleteDraft] = useState(false);
-  const [successNotice, setSuccessNotice] = useState("");
-  const [successNoticeTone, setSuccessNoticeTone] = useState<
-    "success" | "warning"
-  >("success");
+  // Old links (?open=12, e.g. from Stock alerts) go to the order's page.
+  useEffect(() => {
+    const query = readQuery();
+    if (Number.isFinite(query.open) && query.open > 0) {
+      router.replace(`/dashboard/purchase-orders/${query.open}`);
+      return;
+    }
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time read of the URL query after mount */
+    setTab(query.tab);
+    setSearch(query.q);
+    setDepotFilter(query.depot);
+    setSupplierFilter(query.supplier);
+    setReady(true);
+    /* eslint-enable react-hooks/set-state-in-effect */
+  }, [router]);
 
-  const currencyCode = normalizeCurrencyCode(settings.currency_code, "USD");
-  const selectedOrder = useMemo(
-    () => orders.find((order) => order.id === selectedOrderId) || null,
-    [orders, selectedOrderId],
-  );
+  useEffect(() => {
+    if (!ready) return;
+    const params = new URLSearchParams();
+    if (tab !== "all") params.set("tab", tab);
+    if (search.trim()) params.set("q", search.trim());
+    if (depotFilter) params.set("depot", depotFilter);
+    if (supplierFilter) params.set("supplier", supplierFilter);
+    window.history.replaceState(window.history.state, "", `${window.location.pathname}${params.toString() ? `?${params}` : ""}`);
+  }, [depotFilter, ready, search, supplierFilter, tab]);
 
   useEffect(() => {
     let active = true;
-
-    async function loadData() {
-      const { data } = await getBusinessUser();
-      const user = data.user;
+    (async () => {
+      const {
+        data: { user },
+      } = await getBusinessUser();
       if (!user) {
         router.replace("/login");
         return;
       }
-      if (!active) return;
-      setUserId(user.id);
-
-      const [loadedSettings, loadedSubscription] = await Promise.all([
+      const [loadedSettings, loadedSubscription, inventory] = await Promise.all([
         getOrCreateBusinessSettings(user.id),
         getUserSubscription(user.id),
+        supabase.from("inventory").select("quantity, min_stock_level, alert_snoozed_until").eq("user_id", user.id),
       ]);
       if (!active) return;
       setSettings(loadedSettings);
       setSubscription(loadedSubscription);
 
+      // Same rule as Stock alerts: at or below the alert level, not snoozed.
+      const capabilities = getSubscriptionCapabilities(loadedSubscription);
+      const fallback = getEffectiveLowStockThreshold(loadedSubscription, loadedSettings.low_stock_threshold);
+      const now = Date.now();
+      const alerts = ((inventory.data || []) as Array<{ quantity: number; min_stock_level: number | null; alert_snoozed_until: string | null }>).filter((row) => {
+        if (row.alert_snoozed_until && new Date(row.alert_snoozed_until).getTime() > now) return false;
+        const level = capabilities.customLowStockThreshold ? getEffectiveItemLowStockThreshold(row.min_stock_level, fallback) : fallback;
+        return Number(row.quantity) <= level;
+      }).length;
+      setAlertCount(alerts);
+
       try {
         const loadedOrders = await getPurchaseOrdersForUser(user.id);
+        if (active) setOrders(loadedOrders);
+      } catch (loadError) {
         if (!active) return;
-        setOrders(loadedOrders);
-      } catch (error) {
-        if (!active) return;
-        if (isPurchaseOrdersSchemaMissing(error)) {
-          setSchemaMissing(true);
-        } else {
-          setLoadError(
-            "Purchase orders could not be loaded. Refresh and try again.",
-          );
-        }
+        if (isPurchaseOrdersSchemaMissing(loadError)) setSchemaMissing(true);
+        else setError("Purchase orders could not be loaded. Refresh and try again.");
       }
-      setLoading(false);
-    }
-
-    loadData().catch(() => {
+      if (active) setLoading(false);
+    })().catch(() => {
       if (!active) return;
-      setLoadError(
-        "Purchase orders could not be loaded. Refresh and try again.",
-      );
+      setError("Purchase orders could not be loaded. Refresh and try again.");
       setLoading(false);
     });
-
     return () => {
       active = false;
     };
   }, [router]);
 
-  // Load the payment timeline, the delivery history and the line photos
-  // whenever a different order's dialog opens.
-  useEffect(() => {
-    if (selectedOrderId === null) return;
+  const base = getCurrencyContext().base;
+  const baseMoney = (value: number) => formatExactPrice(value, base) || "—";
 
-    let active = true;
-    getPurchaseOrderPayments(selectedOrderId)
-      .then((payments) => {
-        if (active) setSelectedPayments(payments);
-      })
-      .catch(() => {
-        if (active) setSelectedPayments([]);
-      });
-    getPurchaseOrderReceipts(selectedOrderId)
-      .then((receipts) => {
-        if (active) setSelectedReceipts(receipts);
-      })
-      .catch(() => {
-        if (active) setSelectedReceipts([]);
-      });
-
-    const order = orders.find((entry) => entry.id === selectedOrderId);
-    getPurchaseOrderAttachmentUrl(order?.attachment_url)
-      .then((url) => {
-        if (active) setAttachmentUrl(url);
-      })
-      .catch(() => {
-        if (active) setAttachmentUrl(null);
-      });
-    const itemIds = Array.from(
-      new Set(
-        (order?.lines || [])
-          .map((line) => line.inventory_item_id)
-          .filter((id): id is number => id !== null),
-      ),
-    );
-    // Photos for the lines. An order with no inventory lines simply keeps
-    // whatever map is there; nothing reads it.
-    const loadImages = async () => {
-      if (itemIds.length === 0) return {};
-      const { data } = await supabase
-        .from("inventory")
-        .select("id, image")
-        .in("id", itemIds);
-      const next: Record<number, string | null> = {};
-      for (const row of (data || []) as {
-        id: number;
-        image: string | null;
-      }[]) {
-        next[row.id] = row.image;
-      }
-      return next;
+  const figures = useMemo(() => {
+    const open = orders.filter((order) => order.status === "ordered" || order.status === "partially_received");
+    const toReceive = open.reduce((sum, order) => sum + getPurchaseOrderReceivingProgress(order).remaining, 0);
+    const unpaid = orders.filter((order) => order.status !== "cancelled" && order.status !== "draft" && getPurchaseOrderBalanceInBase(order).remaining > 0.004);
+    const unpaidTotal = unpaid.reduce((sum, order) => sum + getPurchaseOrderBalanceInBase(order).remaining, 0);
+    const thisMonth = new Date().toISOString().slice(0, 7);
+    const monthOrders = orders.filter((order) => order.status !== "cancelled" && order.status !== "draft" && monthKey(orderDate(order)) === thisMonth);
+    let stock = 0;
+    let general = 0;
+    for (const order of monthOrders) {
+      const split = getPurchaseOrderSplit(order);
+      stock += toPurchaseOrderBase(order, split.inventoryTotal);
+      general += toPurchaseOrderBase(order, split.expenseTotal);
+    }
+    const charges = monthOrders.reduce((sum, order) => sum + toPurchaseOrderBase(order, order.delivery_fee - order.discount), 0);
+    return {
+      openCount: open.length,
+      toReceive,
+      toReceiveOrders: open.filter((order) => getPurchaseOrderReceivingProgress(order).remaining > 0).length,
+      unpaidTotal,
+      unpaidCount: unpaid.length,
+      spent: Math.max(0, stock + general + charges),
+      stock,
+      general,
     };
-    loadImages()
-      .then((next) => {
-        if (active) setLineImages(next);
-      })
-      .catch(() => {
-        if (active) setLineImages({});
-      });
+  }, [orders]);
 
-    return () => {
-      active = false;
-    };
-    // `orders` is deliberately not a dependency: a refresh after a receipt
-    // must not refetch photos for the same dialog.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedOrderId]);
-
-  /* Deep link from Stock In: /dashboard/purchase-orders?open=12&receive=1
-     opens that order's dialog straight into receiving. Acted on once the
-     orders have arrived; the router's params, not window.location, because
-     on a client-side navigation the page renders before the URL bar moves. */
-  const openParam = Number(searchParams.get("open"));
-  const receiveParam = searchParams.get("receive") === "1";
-  const handledOpenRef = useRef<number | null>(null);
-
-  useEffect(() => {
-    if (loading || !Number.isFinite(openParam) || openParam <= 0) return;
-    if (handledOpenRef.current === openParam) return;
-    handledOpenRef.current = openParam;
-    const order = orders.find((entry) => entry.id === openParam);
-    if (!order) return;
-    // Deferred a frame, like the `created` notice below: opening a dialog
-    // from inside the effect that noticed the URL is a render inside a render.
-    const frame = window.requestAnimationFrame(() => {
-      setSelectedOrderId(order.id);
-      if (receiveParam && isPurchaseOrderOpen(order)) {
-        const seeded: Record<number, string> = {};
-        for (const line of order.lines) {
-          const outstanding = lineOutstanding(line);
-          if (outstanding > 0) seeded[line.id] = formatUnits(outstanding);
-        }
-        setReceiveQuantities(seeded);
-        setReceiveNotes("");
-        setReceiveClose(false);
-        setReceivePaymentOpen(false);
-        setPayAmount("");
-        setPayMethod(order.payment_method || "");
-        setPayBy(order.paid_by || "");
-        setPayDate(todayIsoDate());
-        setPayNote("");
-        setPaymentMode("receive");
-      }
-      window.history.replaceState(null, "", "/dashboard/purchase-orders");
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, [openParam, receiveParam, loading, orders]);
-
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const created = params.get("created");
-    if (!created) return;
-    const receiveFailed = params.get("receivefailed") === "1";
-
-    const frame = window.requestAnimationFrame(() => {
-      if (receiveFailed) {
-        setSuccessNoticeTone("warning");
-        setSuccessNotice(
-          "Purchase order saved, but the stock update didn't run. Open it below and press Mark received to add the items to inventory.",
-        );
-      } else {
-        setSuccessNoticeTone("success");
-        setSuccessNotice("Purchase order saved to your history.");
-      }
-      window.history.replaceState(null, "", "/dashboard/purchase-orders");
-    });
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
+  const counts = useMemo(
+    () => Object.fromEntries(TABS.map((entry) => [entry.id, orders.filter((order) => inTab(order, entry.id)).length])) as Record<Tab, number>,
+    [orders]
+  );
 
   const depotOptions = useMemo(() => {
-    const labels = new Map<string, string>();
-    for (const order of orders) {
-      if (order.depot_name_snapshot) {
-        labels.set(order.depot_name_snapshot, order.depot_name_snapshot);
-      }
-    }
-
-    return [
-      { value: "all", label: "All depots" },
-      ...Array.from(labels.values())
-        .sort((a, b) => a.localeCompare(b))
-        .map((label) => ({ value: label, label })),
-    ];
+    const map = new Map<string, string>();
+    orders.forEach((order) => {
+      if (order.depot_id) map.set(String(order.depot_id), order.depot_name_snapshot || `Depot ${order.depot_id}`);
+    });
+    return [{ value: "", label: "All" }, ...[...map].map(([value, label]) => ({ value, label }))];
   }, [orders]);
 
-  const filteredOrders = useMemo(() => {
-    const normalizedSearch = search.trim().toLowerCase();
-
-    return orders.filter((order) => {
-      if (statusFilter !== "all" && order.status !== statusFilter) return false;
-      if (
-        depotFilter !== "all" &&
-        (order.depot_name_snapshot || "") !== depotFilter
-      ) {
-        return false;
-      }
-      if (!normalizedSearch) return true;
-
-      return [
-        order.po_number,
-        order.title,
-        order.supplier_name_snapshot,
-        order.depot_name_snapshot,
-        order.paid_by,
-        order.internal_reference,
-        ...order.lines.map((line) => line.name_snapshot),
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase()
-        .includes(normalizedSearch);
+  const supplierOptions = useMemo(() => {
+    const map = new Map<string, string>();
+    orders.forEach((order) => {
+      const name = order.supplier_name_snapshot;
+      if (name) map.set(order.supplier_id ? String(order.supplier_id) : `name:${name}`, name);
     });
-  }, [orders, search, statusFilter, depotFilter]);
-
-  // Group the (already newest-first) filtered orders into collapsible month sections.
-  const monthGroups = useMemo(() => {
-    const groups: Array<{
-      key: string;
-      label: string;
-      orders: PurchaseOrder[];
-    }> = [];
-    const indexByKey = new Map<string, number>();
-
-    for (const order of filteredOrders) {
-      const source = order.purchase_date || order.created_at;
-      const date = source
-        ? new Date(source.includes("T") ? source : `${source}T00:00:00`)
-        : null;
-      const valid = date && !Number.isNaN(date.getTime());
-      const key = valid
-        ? `${date!.getFullYear()}-${date!.getMonth()}`
-        : "undated";
-      const label = valid
-        ? new Intl.DateTimeFormat("en", {
-            month: "long",
-            year: "numeric",
-          }).format(date!)
-        : "No date";
-
-      if (!indexByKey.has(key)) {
-        indexByKey.set(key, groups.length);
-        groups.push({ key, label, orders: [] });
-      }
-      groups[indexByKey.get(key)!].orders.push(order);
-    }
-
-    return groups;
-  }, [filteredOrders]);
-
-  const spending = useMemo(() => {
-    const monthOrders = orders.filter(
-      (order) => order.status !== "cancelled" && isInCurrentMonth(order),
-    );
-    let inventoryTotal = 0;
-    let expenseTotal = 0;
-
-    for (const order of monthOrders) {
-      // Orders in different currencies add up in base.
-      const split = getPurchaseOrderSplit(order);
-      inventoryTotal += toPurchaseOrderBase(order, split.inventoryTotal);
-      expenseTotal += toPurchaseOrderBase(order, split.expenseTotal);
-    }
-
-    return {
-      monthTotal: inventoryTotal + expenseTotal,
-      inventoryTotal,
-      expenseTotal,
-      monthCount: monthOrders.length,
-    };
+    return [{ value: "", label: "All" }, ...[...map].map(([value, label]) => ({ value, label }))];
   }, [orders]);
 
-  const refreshOrders = async () => {
-    try {
-      setOrders(await getPurchaseOrdersForUser(userId));
-    } catch {
-      // Keep the current list; the action already reported its own error.
-    }
-  };
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return orders
+      .filter((order) => inTab(order, tab))
+      .filter((order) => !depotFilter || String(order.depot_id || "") === depotFilter)
+      .filter((order) =>
+        !supplierFilter
+          ? true
+          : supplierFilter.startsWith("name:")
+            ? order.supplier_name_snapshot === supplierFilter.slice(5)
+            : String(order.supplier_id || "") === supplierFilter
+      )
+      .filter((order) => {
+        if (!term) return true;
+        const haystack = [
+          order.po_number,
+          order.title,
+          order.supplier_name_snapshot,
+          ...order.lines.map((line) => `${line.name_snapshot} ${line.item_code_snapshot || ""}`),
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(term);
+      })
+      .sort((a, b) => orderDate(b).localeCompare(orderDate(a)) || b.id - a.id);
+  }, [depotFilter, orders, search, supplierFilter, tab]);
 
-  const refreshSelectedPayments = async (orderId: number) => {
-    try {
-      setSelectedPayments(await getPurchaseOrderPayments(orderId));
-    } catch {
-      setSelectedPayments([]);
-    }
-  };
-
-  const openPaymentPanel = (mode: "receive" | "edit") => {
-    if (!selectedOrder) return;
-    setActionError("");
-    if (mode === "receive") {
-      // Default to "everything still outstanding": the common case is the
-      // whole delivery arriving, and a partial one is a matter of lowering
-      // one or two numbers.
-      const seeded: Record<number, string> = {};
-      for (const line of selectedOrder.lines) {
-        const outstanding = lineOutstanding(line);
-        if (outstanding > 0) seeded[line.id] = formatUnits(outstanding);
-      }
-      setReceiveQuantities(seeded);
-      setReceiveNotes("");
-      setReceiveClose(false);
-      setReceivePaymentOpen(false);
-    }
-    // Default this payment to the outstanding balance for a one-tap "pay the rest".
-    const remaining = getPurchaseOrderBalance(selectedOrder).remaining;
-    setPayAmount(remaining > 0 ? String(remaining) : "");
-    setPayMethod(selectedOrder.payment_method || "");
-    setPayBy(selectedOrder.paid_by || "");
-    setPayDate(todayIsoDate());
-    setPayNote("");
-    setPaymentMode(mode);
-  };
-
-  const parsePayAmount = () => {
-    const parsed = Number(payAmount.trim());
-    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
-  };
-
-  const recordPaymentEntry = async (orderId: number) => {
-    const amount = parsePayAmount();
-    if (amount === null) return false;
-    await addPurchaseOrderPayment(orderId, {
-      amount,
-      method: (payMethod || null) as PurchaseOrderPaymentMethod | null,
-      paid_by: payBy.trim() || null,
-      note: payNote.trim() || null,
-      paid_at: payDate || null,
+  const groups = useMemo(() => {
+    const map = new Map<string, PurchaseOrder[]>();
+    visible.forEach((order) => {
+      const key = monthKey(orderDate(order));
+      map.set(key, [...(map.get(key) || []), order]);
     });
-    return true;
-  };
+    return [...map];
+  }, [visible]);
 
-  /* Units being received now, and what would still be outstanding after. */
-  const receivingSummary = useMemo(() => {
-    if (!selectedOrder) return { now: 0, after: 0, invalid: false };
-    let now = 0;
-    let after = 0;
-    let invalid = false;
-    for (const line of selectedOrder.lines) {
-      const outstanding = lineOutstanding(line);
-      const raw = receiveQuantities[line.id];
-      const value = raw === undefined || raw.trim() === "" ? 0 : Number(raw);
-      if (!Number.isFinite(value) || value < 0 || value > outstanding + 1e-9) {
-        invalid = true;
-        continue;
+  const header = (
+    <DashboardPageHeader
+      eyebrow="Buying"
+      title="Purchase orders"
+      description="Order from suppliers, receive the goods, pay — all tracked in one place."
+      actions={
+        getSubscriptionCapabilities(subscription).purchaseOrders ? (
+          <>
+            <Link href="/dashboard/alerts" className={buttonClassName({ variant: "secondary" })}>
+              From stock alerts
+              {alertCount > 0 && <span className="pol-v2-count">{alertCount}</span>}
+            </Link>
+            <Link href="/dashboard/purchase-orders/new" className={buttonClassName()}>
+              <UiIcon name="plus" className="h-4 w-4" />
+              New purchase order
+            </Link>
+          </>
+        ) : undefined
       }
-      if (line.affects_stock && !Number.isInteger(value)) invalid = true;
-      now += value;
-      after += outstanding - value;
-    }
-    return { now, after: Math.max(0, after), invalid };
-  }, [selectedOrder, receiveQuantities]);
+    />
+  );
 
-  const handleReceive = async () => {
-    if (!selectedOrder) return;
-    if (receivingSummary.invalid) {
-      setActionError(
-        "Check the quantities: each must be a whole number no larger than what is still outstanding.",
-      );
-      return;
-    }
-    if (receivingSummary.now <= 0 && !receiveClose) {
-      setActionError(
-        "Enter what arrived for at least one line, or close the order short.",
-      );
-      return;
-    }
-    setActionBusy(true);
-    setActionError("");
-    try {
-      // A payment on delivery is optional — only log it when an amount was entered.
-      if (receivePaymentOpen) await recordPaymentEntry(selectedOrder.id);
-      const lines = selectedOrder.lines
-        .map((line) => ({
-          line_id: line.id,
-          quantity: Number(receiveQuantities[line.id] || 0),
-        }))
-        .filter((line) => line.quantity > 0);
-      await receivePurchaseOrderLines(selectedOrder.id, lines, {
-        notes: receiveNotes,
-        close: receiveClose,
-      });
-      await refreshOrders();
-      setPaymentMode("none");
-      setSuccessNoticeTone("success");
-      const received = unitsLabel(receivingSummary.now);
-      setSuccessNotice(
-        receivingSummary.after > 0 && !receiveClose
-          ? `${selectedOrder.po_number}: ${received} received and added to stock. ${formatUnits(
-              receivingSummary.after,
-            )} still to come — the order stays open.`
-          : receiveClose && receivingSummary.after > 0
-            ? `${selectedOrder.po_number} closed short: ${received} received, ${formatUnits(
-                receivingSummary.after,
-              )} never arrived.`
-            : `${selectedOrder.po_number} fully received. Stock lines were added to inventory.`,
-      );
-      setSelectedOrderId(null);
-    } catch (error) {
-      setActionError(
-        isReceivingSchemaMissing(error)
-          ? RECEIVING_SCHEMA_MESSAGE
-          : "The delivery could not be recorded. Refresh and try again — if a line's item was deleted, edit the order first.",
-      );
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const handleRecordPayment = async () => {
-    if (!selectedOrder) return;
-    if (parsePayAmount() === null) {
-      setActionError("Enter a payment amount greater than zero.");
-      return;
-    }
-    setActionBusy(true);
-    setActionError("");
-    try {
-      await recordPaymentEntry(selectedOrder.id);
-      await Promise.all([
-        refreshOrders(),
-        refreshSelectedPayments(selectedOrder.id),
-      ]);
-      setPaymentMode("none");
-    } catch (error) {
-      setActionError(
-        isPaymentsSchemaMissing(error)
-          ? "Payments need a one-time database update — run sql/phase-9-purchase-order-payments.sql in Supabase, then try again."
-          : "The payment could not be recorded. Try again.",
-      );
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const handleDeletePayment = async (paymentId: number) => {
-    if (!selectedOrder) return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      await deletePurchaseOrderPayment(paymentId);
-      await Promise.all([
-        refreshOrders(),
-        refreshSelectedPayments(selectedOrder.id),
-      ]);
-    } catch {
-      setActionError("The payment could not be removed. Try again.");
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const canDeleteOrder =
-    canDeleteRecords &&
-    selectedOrder !== null &&
-    (selectedOrder.status === "draft" || selectedOrder.status === "ordered") &&
-    selectedPayments.length === 0 &&
-    selectedOrder.lines.every((line) => line.received_quantity <= 0);
-
-  const handleDeleteDraft = async () => {
-    if (!selectedOrder || !canDeleteOrder) return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      await deletePurchaseOrder(userId, selectedOrder.id);
-      await refreshOrders();
-      setConfirmDeleteDraft(false);
-      setSelectedOrderId(null);
-      setSuccessNoticeTone("success");
-      setSuccessNotice(`${selectedOrder.po_number} deleted.`);
-    } catch {
-      setConfirmDeleteDraft(false);
-      setActionError("The order could not be deleted. Try again.");
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const handleMarkOrdered = async () => {
-    if (!selectedOrder || selectedOrder.status !== "draft") return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      await markPurchaseOrderOrdered(userId, selectedOrder.id);
-      await refreshOrders();
-    } catch {
-      setActionError("The order could not be marked as ordered. Try again.");
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const handleCancelOrder = async () => {
-    if (!selectedOrder) return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      await cancelPurchaseOrder(userId, selectedOrder.id);
-      await refreshOrders();
-      setSelectedOrderId(null);
-    } catch {
-      setActionError("The order could not be cancelled. Try again.");
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const exportDetails = (order: PurchaseOrder) => ({
-    poNumber: order.po_number,
-    title: order.title || undefined,
-    supplierName: order.supplier_name_snapshot || "Not set",
-    supplierContact: order.supplier_contact_snapshot || undefined,
-    depotName: order.depot_name_snapshot || undefined,
-    purchaseDate: order.purchase_date || undefined,
-    expectedDeliveryDate: order.expected_delivery_date || undefined,
-    status: PURCHASE_ORDER_STATUS_LABELS[order.status],
-    paymentMethod: order.payment_method
-      ? paymentMethodLabel(order.payment_method)
-      : undefined,
-    paidBy: order.paid_by || undefined,
-    paymentStatus: PURCHASE_ORDER_PAYMENT_STATUS_LABELS[order.payment_status],
-    amountPaid: order.amount_paid,
-    notes: order.notes || undefined,
-    internalReference: order.internal_reference || undefined,
-  });
-
-  const exportBranding = () => ({
-    businessName: settings.business_name,
-    businessLogoUrl: settings.business_logo_url || undefined,
-    contactEmail: settings.contact_email || undefined,
-    contactPhone: settings.contact_phone || undefined,
-    contactWebsite: settings.contact_website || undefined,
-  });
-
-  /* One description of the document; PDF and Word both print it. */
-  const buildOrderDocument = (order: PurchaseOrder) => ({
-    details: exportDetails(order),
-    lines: order.lines.map((line) => ({
-      name: line.name_snapshot,
-      category:
-        line.line_type === "expense" && line.expense_category
-          ? PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS[line.expense_category]
-          : undefined,
-      code: line.item_code_snapshot || undefined,
-      sku: line.sku_snapshot || undefined,
-      unit: line.unit_label_snapshot || "unit",
-      imageUrl:
-        line.inventory_item_id !== null
-          ? (lineImages[line.inventory_item_id] ?? null)
-          : null,
-      orderQuantity: line.quantity,
-      receivedQuantity: line.received_quantity,
-      unitCost: line.unit_cost,
-      lineTotal: getPurchaseOrderLineTotal(line),
-      note: line.notes || undefined,
-    })),
-    branding: brandingFromSettings(settings),
-    currencyCode: getPurchaseOrderCurrency(order),
-  });
-
-  /* The paper for one delivery: what arrived, against what, signed by whom.
-     Counts come from the receipt's lines; ordered and received-so-far from
-     the order's lines as they stand now. */
-  const handleExportReceipt = async (receipt: PurchaseOrderReceipt) => {
-    if (!selectedOrder) return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      const byLine = new Map(receipt.lines.map((line) => [line.purchase_order_line_id, line.quantity]));
-      await exportGoodsReceivedPdf({
-        details: {
-          receiptNumber: receipt.receipt_number,
-          poNumber: selectedOrder.po_number,
-          receivedAt: receipt.received_at,
-          supplierName: selectedOrder.supplier_name_snapshot || undefined,
-          supplierContact: selectedOrder.supplier_contact_snapshot || undefined,
-          depotName: selectedOrder.depot_name_snapshot || undefined,
-          notes: receipt.notes || undefined,
-          orderStatus: PURCHASE_ORDER_STATUS_LABELS[selectedOrder.status],
-        },
-        lines: selectedOrder.lines.map((line) => ({
-          name: line.name_snapshot,
-          code: line.item_code_snapshot || line.sku_snapshot || undefined,
-          unit: line.unit_label_snapshot || undefined,
-          imageUrl:
-            line.inventory_item_id !== null
-              ? (lineImages[line.inventory_item_id] ?? null)
-              : null,
-          ordered: line.quantity,
-          receivedNow: byLine.get(line.id) ?? 0,
-          receivedTotal: line.received_quantity,
-        })),
-        branding: brandingFromSettings(settings),
-      });
-    } catch {
-      setActionError("The goods received note could not be generated. Try again.");
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  /* Same paper trail as the invoice side: what a supplier was handed, and
-     the order's balance right after that particular payment (brief 14). */
-  const handleExportPaymentReceipt = async (payment: PurchaseOrderPayment) => {
-    if (!selectedOrder) return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      const orderTotal = getPurchaseOrderTotal(selectedOrder);
-      const chronological = [...selectedPayments].sort((a, b) =>
-        a.paid_at === b.paid_at ? a.id - b.id : a.paid_at.localeCompare(b.paid_at),
-      );
-      let paidSoFar = 0;
-      let balanceAfter = orderTotal;
-      for (const entry of chronological) {
-        paidSoFar += Number(entry.amount);
-        if (entry.id === payment.id) {
-          balanceAfter = Math.max(0, orderTotal - paidSoFar);
-          break;
-        }
-      }
-      await exportPaymentReceiptPdf({
-        details: {
-          receiptNumber: `RCT-${selectedOrder.po_number}-${payment.id}`,
-          documentKind: "Purchase order",
-          documentNumber: selectedOrder.po_number,
-          partyLabel: "Supplier",
-          partyName: selectedOrder.supplier_name_snapshot || "Not set",
-          partyContact: selectedOrder.supplier_contact_snapshot || undefined,
-          paidAt: payment.paid_at,
-          amount: Number(payment.amount),
-          currency: getPurchaseOrderCurrency(selectedOrder),
-          method: payment.method
-            ? paymentMethodLabel(payment.method)
-            : null,
-          note: [payment.paid_by ? `Paid by ${payment.paid_by}` : "", payment.note || ""]
-            .filter(Boolean)
-            .join(" · "),
-          documentTotal: orderTotal,
-          balanceAfter,
-        },
-        branding: brandingFromSettings(settings),
-      });
-    } catch {
-      setActionError("The receipt could not be generated. Try again.");
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const handleExportDocument = async (format: "pdf" | "docx") => {
-    if (!selectedOrder) return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      const spec = buildOrderDocument(selectedOrder);
-      if (format === "pdf") await exportPurchaseOrderPdf(spec);
-      else await exportPurchaseOrderDocx(spec);
-    } catch {
-      setActionError(
-        format === "pdf"
-          ? "The PDF could not be generated. Try again."
-          : "The Word file could not be generated. Try again.",
-      );
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  const handleExportExcel = async () => {
-    if (!selectedOrder) return;
-    setActionBusy(true);
-    setActionError("");
-    try {
-      await exportPurchaseOrderExcel({
-        details: exportDetails(selectedOrder),
-        lines: selectedOrder.lines.map((line) => ({
-          type: line.line_type === "expense" ? "General purchase" : "Inventory",
-          name: line.name_snapshot,
-          category:
-            line.line_type === "expense" && line.expense_category
-              ? PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS[line.expense_category]
-              : undefined,
-          code: line.item_code_snapshot || undefined,
-          sku: line.sku_snapshot || undefined,
-          unit: line.unit_label_snapshot || "unit",
-          quantity: line.quantity,
-          unitCost: line.unit_cost,
-          lineTotal: getPurchaseOrderLineTotal(line),
-          affectsStock: line.affects_stock,
-          note: line.notes || undefined,
-        })),
-        branding: exportBranding(),
-        currencyCode: getPurchaseOrderCurrency(selectedOrder),
-      });
-    } catch {
-      setActionError("The Excel file could not be generated. Try again.");
-    } finally {
-      setActionBusy(false);
-    }
-  };
-
-  // Purchasing is where Free stops. The landing page promises "know what is in
-  // your depot", and Free delivers exactly that; raising orders against
-  // suppliers is the first thing a growing wholesaler pays for. Gated here
-  // rather than only described on the pricing page, so the two agree.
-  if (!getSubscriptionCapabilities(subscription).purchaseOrders) {
+  if (!loading && !getSubscriptionCapabilities(subscription).purchaseOrders) {
     return (
-      <DashboardPageShell className="po-history-workspace" as="main">
-        <DashboardPageHeader
-          eyebrow="Operations"
-          title="Purchase Orders"
-          description="Record what you buy, what you paid, and what arrived."
-        />
+      <DashboardPageShell as="main">
+        {header}
         <LockedFeaturePanel
           feature="Purchase orders"
           benefit="Record every purchase with its cost, payment status and invoice, then receive the stock straight into your depot."
@@ -963,1230 +330,205 @@ export default function PurchaseOrdersPage() {
   }
 
   return (
-    <DashboardPageShell className="po-history-workspace" as="main">
-      <DashboardPageHeader
-        eyebrow="Operations"
-        title="Purchase Orders"
-        description="Every purchase in one place — stock restocks and general spending like equipment or supplies, saved permanently with proof attached."
-        actions={
-          <ActionButton href="/dashboard/purchase-orders/new" icon="plus">
-            New purchase order
-          </ActionButton>
-        }
-      />
+    <DashboardPageShell as="main" className="pol-v2">
+      {header}
 
-      {successNotice && (
-        <DashboardNotice tone={successNoticeTone}>
-          {successNotice}
-        </DashboardNotice>
-      )}
-      {loadError && (
-        <DashboardNotice tone="danger">{loadError}</DashboardNotice>
-      )}
+      {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
       {schemaMissing && (
         <DashboardNotice tone="warning">
-          {SCHEMA_MISSING_MESSAGE}
+          Purchase orders are not set up in this database yet (sql/phase-8-purchase-orders.sql).
         </DashboardNotice>
       )}
 
-      {!schemaMissing && (
-        <div className="po-summary-grid">
-          <MetricCard
-            label="Spent this month"
-            value={
-              formatInventoryPrice(spending.monthTotal, currencyCode) || "—"
-            }
-            detail={`${spending.monthCount} purchase${
-              spending.monthCount === 1 ? "" : "s"
-            }`}
-            icon="reports"
-          />
-          <MetricCard
-            label="Stock purchases"
-            value={
-              formatInventoryPrice(spending.inventoryTotal, currencyCode) || "—"
-            }
-            detail="Inventory restocks this month"
-            icon="box"
-          />
-          <MetricCard
-            label="General purchases"
-            value={
-              formatInventoryPrice(spending.expenseTotal, currencyCode) || "—"
-            }
-            detail="Equipment, supplies, services"
-            icon="file"
-          />
-        </div>
-      )}
+      <section className="pol-v2-kpis">
+        {[
+          { label: "Open orders", value: String(figures.openCount), hint: "Waiting for goods", dot: "#2447d6", go: () => setTab("receive") },
+          {
+            label: "To receive",
+            value: `${figures.toReceive} ${figures.toReceive === 1 ? "unit" : "units"}`,
+            hint: `From ${figures.toReceiveOrders} ${figures.toReceiveOrders === 1 ? "order" : "orders"}`,
+            dot: "#f79009",
+            go: () => setTab("receive"),
+          },
+          {
+            label: "Unpaid balance",
+            value: baseMoney(figures.unpaidTotal),
+            hint: `${figures.unpaidCount} ${figures.unpaidCount === 1 ? "order" : "orders"} not paid yet`,
+            dot: "#d92d20",
+            go: () => setTab("all"),
+          },
+          {
+            label: "Spent this month",
+            value: baseMoney(figures.spent),
+            hint: `Stock ${baseMoney(figures.stock)} · General ${baseMoney(figures.general)}`,
+            dot: "#12b76a",
+            go: () => setTab("all"),
+          },
+        ].map((card, index) => (
+          <button key={card.label} type="button" onClick={card.go} className="alerts-v2-kpi motion-enter" style={{ animationDelay: `${index * 50}ms` }}>
+            <span className="alerts-v2-kpi-top">
+              {card.label}
+              <span className="alerts-v2-dot" style={{ background: card.dot }} aria-hidden />
+            </span>
+            <strong>{loading ? "—" : card.value}</strong>
+            <small>{card.hint}</small>
+          </button>
+        ))}
+      </section>
 
-      {!schemaMissing && (
-        <DashboardToolbar className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-          <label className="relative">
-            <UiIcon
-              name="search"
-              className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-            />
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Search PO number, supplier, item…"
-              className="ui-input w-full rounded-lg border border-theme bg-theme-surface py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/10"
-            />
+      <section className="alerts-v2-card motion-enter" style={{ animationDelay: "120ms" }}>
+        <div className="alerts-v2-toolbar">
+          <div className="alerts-v2-tabs" role="tablist" aria-label="Filter orders">
+            {TABS.map((entry) => (
+              <button key={entry.id} type="button" role="tab" aria-selected={tab === entry.id} onClick={() => setTab(entry.id)} className={tab === entry.id ? "is-active" : ""}>
+                {entry.label} <span>{counts[entry.id] ?? 0}</span>
+              </button>
+            ))}
+          </div>
+          <label className="alerts-v2-search">
+            <UiIcon name="search" className="h-4 w-4" />
+            <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="PO number, supplier or item" aria-label="Search purchase orders" />
           </label>
-          <Select
-            ariaLabel="Status filter"
-            value={statusFilter}
-            onChange={(value) => setStatusFilter(value as StatusFilter)}
-            options={[
-              { value: "all", label: "All statuses" },
-              ...Object.entries(PURCHASE_ORDER_STATUS_LABELS).map(
-                ([value, label]) => ({ value, label }),
-              ),
-            ]}
-          />
-          <Select
-            ariaLabel="Depot filter"
-            value={depotFilter}
-            onChange={setDepotFilter}
-            options={depotOptions}
-            searchable={depotOptions.length > 9}
-          />
-        </DashboardToolbar>
-      )}
+          <Select ariaLabel="Depot" className="alerts-v2-dropdown" value={depotFilter} onChange={setDepotFilter} leadingIcon={<span className="alerts-v2-dropdown-label">Depot</span>} options={depotOptions} />
+          <Select ariaLabel="Supplier" className="alerts-v2-dropdown" value={supplierFilter} onChange={setSupplierFilter} leadingIcon={<span className="alerts-v2-dropdown-label">Supplier</span>} options={supplierOptions} />
+        </div>
 
-      <ResultsAnnouncer count={filteredOrders.length} noun="order" />
-
-      {loading ? (
-        <LoadingSkeletonGroup count={4} itemClassName="min-h-20" />
-      ) : schemaMissing ? (
-        <DashboardEmptyState
-          icon="file"
-          title="One quick database step left"
-          description="Run sql/phase-8-purchase-orders.sql in the Supabase SQL Editor to switch on saved purchase orders, spending analytics and invoice attachments."
-          action={
-            <ActionButton href="/dashboard/purchase-orders/new" icon="plus">
-              Try the new purchase form
-            </ActionButton>
-          }
-        />
-      ) : filteredOrders.length === 0 ? (
-        <DashboardEmptyState
-          icon="file"
-          title={
-            orders.length === 0 ? "No purchases yet" : "No matching purchases"
-          }
-          description={
-            orders.length === 0
-              ? "Record your first purchase — a stock restock or anything you buy for a depot."
-              : "Try a different search or clear the filters."
-          }
-          action={
-            orders.length === 0 ? (
-              <ActionButton href="/dashboard/purchase-orders/new" icon="plus">
+        {loading ? (
+          <LoadingSkeletonGroup count={4} className="p-4" itemClassName="min-h-16" />
+        ) : visible.length === 0 ? (
+          <div className="alerts-v2-empty">
+            <span aria-hidden>
+              <UiIcon name="cart" className="h-6 w-6" />
+            </span>
+            <p className="alerts-v2-empty-title">{orders.length === 0 ? "No purchase orders yet" : "Nothing matches"}</p>
+            <p>{orders.length === 0 ? "Create one, or start from Stock alerts." : "Try another tab, depot, supplier or search."}</p>
+            {orders.length === 0 && (
+              <Link href="/dashboard/purchase-orders/new" className={buttonClassName({ className: "mt-3" })}>
                 New purchase order
-              </ActionButton>
-            ) : undefined
-          }
-        />
-      ) : (
-        <div className="po-history-months">
-          {monthGroups.map((group) => {
-            const collapsed = collapsedMonths.has(group.key);
-            const groupTotal = group.orders.reduce(
-              (sum, order) => sum + getPurchaseOrderTotalInBase(order),
-              0,
-            );
-
+              </Link>
+            )}
+          </div>
+        ) : (
+          groups.map(([key, monthOrders]) => {
+            const isCollapsed = collapsed.has(key);
+            const monthTotal = monthOrders
+              .filter((order) => order.status !== "cancelled")
+              .reduce((sum, order) => sum + toPurchaseOrderBase(order, getPurchaseOrderTotal(order)), 0);
             return (
-              <section key={group.key} className="po-month-group">
+              <div key={key} className="pol-v2-month">
                 <button
                   type="button"
-                  aria-expanded={!collapsed}
+                  className="pol-v2-month-head"
+                  aria-expanded={!isCollapsed}
                   onClick={() =>
-                    setCollapsedMonths((current) => {
+                    setCollapsed((current) => {
                       const next = new Set(current);
-                      if (next.has(group.key)) next.delete(group.key);
-                      else next.add(group.key);
+                      if (next.has(key)) next.delete(key);
+                      else next.add(key);
                       return next;
                     })
                   }
-                  className="po-month-header"
                 >
-                  <UiIcon
-                    name="chevron-down"
-                    className={`po-month-chevron h-4 w-4 ${
-                      collapsed ? "po-month-chevron-collapsed" : ""
-                    }`}
-                  />
-                  <span className="po-month-label">{group.label}</span>
-                  <span className="po-month-meta">
-                    {group.orders.length} order
-                    {group.orders.length === 1 ? "" : "s"} ·{" "}
-                    {formatInventoryPrice(groupTotal, currencyCode) || "—"}
+                  <UiIcon name={isCollapsed ? "chevron-right" : "chevron-down"} className="h-4 w-4" />
+                  <strong>{monthLabel(key)}</strong>
+                  <span>
+                    {monthOrders.length} {monthOrders.length === 1 ? "order" : "orders"} · {baseMoney(monthTotal)}
                   </span>
                 </button>
-
-                {!collapsed && (
-                  <div className="po-history-list">
-                    {group.orders.map((order) => {
-                      const total = getPurchaseOrderTotal(order);
-                      const remaining =
-                        order.status === "cancelled"
-                          ? 0
-                          : getPurchaseOrderBalance(order).remaining;
-
-                      return (
-                        <button
-                          key={order.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedOrderId(order.id);
-                            setPaymentMode("none");
-                            setActionError("");
-                          }}
-                          className={`po-history-row po-history-row-${order.status}`}
-                        >
-                          <span
-                            className="po-history-row-icon"
-                            aria-hidden="true"
-                          >
-                            <UiIcon
-                              name={
-                                order.lines.some(
-                                  (line) => line.line_type === "expense",
-                                )
-                                  ? "file"
-                                  : "box"
-                              }
-                              className="h-4 w-4"
-                            />
-                          </span>
-                          <span className="min-w-0 flex-1">
-                            <span className="block truncate text-sm font-black text-theme-primary">
-                              {order.po_number}
-                              {order.title ? ` — ${order.title}` : ""}
-                            </span>
-                            <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted">
-                              {[
-                                formatDate(
-                                  order.purchase_date || order.created_at,
-                                ),
-                                order.depot_name_snapshot,
-                                order.supplier_name_snapshot,
-                                `${order.lines.length} line${
-                                  order.lines.length === 1 ? "" : "s"
-                                }`,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ")}
-                            </span>
-                          </span>
-                          <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-nowrap">
-                            {(order.status === "ordered" ||
-                              order.status === "partially_received") &&
-                              (() => {
-                                const progress =
-                                  getPurchaseOrderReceivingProgress(order);
-                                return progress.received > 0 ? (
-                                  <span
-                                    className="rounded-lg border border-amber-300/50 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
-                                    title="Units received so far"
-                                  >
-                                    {formatUnits(progress.received)} /{" "}
-                                    {formatUnits(progress.ordered)} received
-                                  </span>
-                                ) : null;
-                              })()}
-                            {/* The status badge beside this already says
-                                Cancelled; a second grey "Cancelled" pill in
-                                the payment slot said it twice. */}
-                            {order.status === "cancelled" ? null : remaining >
-                              0 ? (
-                              <span
-                                className="rounded-lg border border-amber-300/50 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-700"
-                                title="Balance still owed"
-                              >
-                                Owe{" "}
-                                {formatPurchaseOrderAmount(order, remaining)}
-                              </span>
-                            ) : (
-                              <span
-                                className="rounded-lg border border-emerald-300/50 bg-emerald-50 px-2.5 py-1 text-xs font-semibold text-emerald-700"
-                                title="Fully paid"
-                              >
-                                Paid
-                              </span>
-                            )}
-                            {order.attachment_url && (
-                              <span
-                                className="flex items-center gap-1.5 rounded-lg border border-blue-300/50 bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700"
-                                title="Invoice attached"
-                              >
-                                <UiIcon name="file" className="h-3 w-3" />
-                                Invoice
-                              </span>
-                            )}
-                            <Badge tone={STATUS_TONES[order.status]}>
-                              {PURCHASE_ORDER_STATUS_LABELS[order.status]}
-                            </Badge>
-                          </div>
-                          <span className="shrink-0 text-right text-sm font-black text-theme-primary">
-                            {formatPurchaseOrderAmount(order, total) || "—"}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                )}
-              </section>
-            );
-          })}
-        </div>
-      )}
-
-      {selectedOrder && (
-        <DialogShell
-          title={selectedOrder.po_number}
-          eyebrow={PURCHASE_ORDER_STATUS_LABELS[selectedOrder.status]}
-          description={selectedOrder.title || undefined}
-          onClose={() => {
-            setSelectedOrderId(null);
-            setPaymentMode("none");
-            setSelectedPayments([]);
-          }}
-          closeDisabled={actionBusy}
-          footer={
-            paymentMode === "receive" ? (
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => setPaymentMode("none")}
-                  disabled={actionBusy}
-                >
-                  Back
-                </Button>
-                <Button
-                  onClick={handleReceive}
-                  disabled={
-                    actionBusy || (receivingSummary.now <= 0 && !receiveClose)
-                  }
-                  loading={actionBusy}
-                  loadingLabel="Recording…"
-                >
-                  {receiveClose && receivingSummary.now <= 0
-                    ? "Close order"
-                    : `Receive ${unitsLabel(receivingSummary.now)}`}
-                </Button>
-              </div>
-            ) : paymentMode === "edit" ? (
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => setPaymentMode("none")}
-                  disabled={actionBusy}
-                >
-                  Back
-                </Button>
-                <Button onClick={handleRecordPayment} disabled={actionBusy}>
-                  {actionBusy ? "Saving…" : "Save payment"}
-                </Button>
-              </div>
-            ) : (
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button
-                  variant="secondary"
-                  leadingIcon={<UiIcon name="download" className="h-4 w-4" />}
-                  onClick={() => handleExportDocument("pdf")}
-                  disabled={actionBusy}
-                >
-                  PDF
-                </Button>
-                <Button
-                  variant="secondary"
-                  leadingIcon={<UiIcon name="file" className="h-4 w-4" />}
-                  onClick={() => handleExportDocument("docx")}
-                  disabled={actionBusy}
-                >
-                  Word
-                </Button>
-                <Button
-                  variant="secondary"
-                  leadingIcon={<UiIcon name="sheet" className="h-4 w-4" />}
-                  onClick={handleExportExcel}
-                  disabled={actionBusy}
-                >
-                  Excel
-                </Button>
-                {selectedOrder.status !== "cancelled" && (
-                  <Button
-                    variant="secondary"
-                    leadingIcon={<UiIcon name="usage" className="h-4 w-4" />}
-                    onClick={() => openPaymentPanel("edit")}
-                    disabled={actionBusy}
-                  >
-                    Record payment
-                  </Button>
-                )}
-                <Button
-                  variant="secondary"
-                  onClick={() =>
-                    router.push(`/dashboard/purchase-orders/new?from=${selectedOrder.id}`)
-                  }
-                  disabled={actionBusy}
-                  title="Start a new order with the same supplier and lines"
-                >
-                  Duplicate
-                </Button>
-                {/* Cancelling stops at the first delivery: stock has been
-                    added, so a partially received order is finished by
-                    receiving the rest or closing it short, never undone. */}
-                {canDeleteOrder ? (
-                  <Button
-                    variant="danger"
-                    onClick={() => setConfirmDeleteDraft(true)}
-                    disabled={actionBusy}
-                  >
-                    {selectedOrder.status === "draft"
-                      ? "Delete draft"
-                      : "Delete"}
-                  </Button>
-                ) : (
-                  selectedOrder.status === "ordered" && (
-                    <Button
-                      variant="danger"
-                      onClick={handleCancelOrder}
-                      disabled={actionBusy}
-                    >
-                      Cancel order
-                    </Button>
-                  )
-                )}
-                {selectedOrder.status === "draft" && (
-                  <Button
-                    variant="secondary"
-                    onClick={handleMarkOrdered}
-                    disabled={actionBusy}
-                    leadingIcon={<UiIcon name="cart" className="h-4 w-4" />}
-                  >
-                    Mark as ordered
-                  </Button>
-                )}
-                {isPurchaseOrderOpen(selectedOrder) && (
-                  <Button
-                    onClick={() => openPaymentPanel("receive")}
-                    leadingIcon={<UiIcon name="stock-in" className="h-4 w-4" />}
-                    disabled={actionBusy}
-                  >
-                    {selectedOrder.status === "partially_received"
-                      ? "Receive more"
-                      : "Receive stock"}
-                  </Button>
-                )}
-              </div>
-            )
-          }
-        >
-          <div className="grid gap-4">
-            {actionError && (
-              <DashboardNotice tone="danger">{actionError}</DashboardNotice>
-            )}
-
-            {paymentMode === "receive" && (
-              <div className="po-receive-panel">
-                <p className="text-sm text-theme-muted">
-                  Enter what arrived. Lines marked{" "}
-                  <span className="po-stock-flag">→ stock</span> are added to
-                  inventory now; anything left over stays open on the order
-                  until the next delivery.{" "}
-                  <HelpLink article="receive-against-order">
-                    How receiving works
-                  </HelpLink>
-                </p>
-
-                <div className="po-receive-lines">
-                  <div className="po-receive-head" aria-hidden="true">
-                    <span>Item</span>
-                    <span>Ordered</span>
-                    <span>Received</span>
-                    <span>Arriving now</span>
-                  </div>
-                  {selectedOrder.lines.map((line) => {
-                    const outstanding = lineOutstanding(line);
-                    const done = outstanding <= 0;
+                {!isCollapsed &&
+                  monthOrders.map((order, index) => {
+                    const progress = getPurchaseOrderReceivingProgress(order);
+                    const st = stage(order);
+                    const total = getPurchaseOrderTotal(order);
+                    const missingCosts =
+                      (order.status === "draft" || order.status === "ordered") &&
+                      order.lines.some((line) => line.unit_cost === null || Number(line.unit_cost) === 0);
+                    const balance = getPurchaseOrderBalanceInBase(order).remaining;
+                    const action =
+                      order.status === "draft"
+                        ? { label: "Continue", href: `/dashboard/purchase-orders/new?edit=${order.id}` }
+                        : missingCosts
+                          ? { label: "Add costs", href: `/dashboard/purchase-orders/${order.id}` }
+                          : order.status === "ordered" || order.status === "partially_received"
+                            ? { label: "Receive", href: `/dashboard/purchase-orders/${order.id}?receive=1` }
+                            : order.status === "received" && balance > 0.004
+                              ? { label: "Pay", href: `/dashboard/purchase-orders/${order.id}?pay=1` }
+                              : null;
+                    const pay =
+                      order.status === "cancelled" || order.status === "draft"
+                        ? null
+                        : total <= 0
+                          ? { label: "No costs", tone: "none" }
+                          : order.payment_status === "paid"
+                          ? { label: "Paid", tone: "paid" }
+                          : order.payment_status === "partial"
+                            ? { label: "Partly paid", tone: "partial" }
+                            : { label: "Unpaid", tone: "unpaid" };
+                    const meta = [
+                      shortDate(orderDate(order)),
+                      order.depot_name_snapshot,
+                      order.supplier_name_snapshot,
+                      `${order.lines.length} ${order.lines.length === 1 ? "line" : "lines"}`,
+                      order.expected_delivery_date && (order.status === "ordered" || order.status === "partially_received")
+                        ? `expected ${shortDate(order.expected_delivery_date).replace(/, \d{4}$/, "")}`
+                        : "",
+                      missingCosts ? "no unit costs" : "",
+                    ].filter(Boolean);
                     return (
                       <div
-                        key={line.id}
-                        className={`po-receive-line${done ? " po-receive-line-done" : ""}`}
+                        key={order.id}
+                        className={`pol-v2-row ${order.status === "cancelled" ? "is-cancelled" : ""} ${index < 10 ? "motion-enter" : ""}`}
+                        style={index < 10 ? { animationDelay: `${150 + index * 50}ms` } : undefined}
                       >
-                        <div className="flex min-w-0 items-center gap-2.5">
-                          <span className="po-line-thumb">
-                            <ProductThumbnail
-                              src={
-                                line.inventory_item_id !== null
-                                  ? lineImages[line.inventory_item_id]
-                                  : null
-                              }
-                              alt=""
-                              width={40}
-                              height={40}
-                              sizes="40px"
-                            />
-                          </span>
-                          <span className="min-w-0">
-                            <span className="block truncate text-sm font-semibold text-theme-primary">
-                              {line.name_snapshot}
-                              {line.affects_stock && (
-                                <span className="po-stock-flag">→ stock</span>
-                              )}
-                            </span>
-                            <span className="block truncate text-xs text-theme-muted">
-                              {[
-                                line.item_code_snapshot,
-                                line.sku_snapshot,
-                                line.unit_label_snapshot,
-                              ]
-                                .filter(Boolean)
-                                .join(" · ") ||
-                                (line.line_type === "expense"
-                                  ? "General purchase"
-                                  : "Inventory item")}
-                            </span>
-                          </span>
-                        </div>
-                        <span className="po-receive-num" data-label="Ordered">
-                          {formatUnits(line.quantity)}
+                        <Link href={`/dashboard/purchase-orders/${order.id}`} className="pol-v2-row-link" aria-label={`Open ${order.po_number}`} />
+                        <span className="pol-v2-icon" aria-hidden>
+                          <UiIcon name="cart" className="h-5 w-5" />
                         </span>
-                        <span className="po-receive-num" data-label="Received">
-                          {formatUnits(line.received_quantity)}
+                        <span className="pol-v2-main">
+                          <span className="pol-v2-title">
+                            <b className="is-mono">{order.po_number}</b>
+                            {order.title && <span>{order.title}</span>}
+                          </span>
+                          <small>{meta.join(" · ")}</small>
                         </span>
-                        <span
-                          className="po-receive-input"
-                          data-label="Arriving now"
-                        >
-                          {done ? (
-                            <span className="text-xs font-semibold text-theme-success">
-                              Complete
-                            </span>
-                          ) : (
-                            <input
-                              type="number"
-                              min="0"
-                              max={outstanding}
-                              step={line.affects_stock ? "1" : "any"}
-                              inputMode={
-                                line.affects_stock ? "numeric" : "decimal"
-                              }
-                              value={receiveQuantities[line.id] ?? ""}
-                              onChange={(event) =>
-                                setReceiveQuantities((current) => ({
-                                  ...current,
-                                  [line.id]: event.target.value,
-                                }))
-                              }
-                              aria-label={`Quantity of ${line.name_snapshot} arriving now (${formatUnits(
-                                outstanding,
-                              )} outstanding)`}
-                              className="sale-input"
-                            />
+                        <span className="pol-v2-progress">
+                          <span className="pol-v2-progress-top">
+                            <span className={`pol-v2-stage is-${st.tone}`}>{st.label}</span>
+                            {order.status !== "cancelled" && order.status !== "draft" && (
+                              <span>
+                                {progress.received} of {progress.ordered} received
+                              </span>
+                            )}
+                          </span>
+                          <span className={`pol-v2-bar is-${st.tone}`} aria-hidden>
+                            <i style={{ transform: `scaleX(${progress.ordered ? progress.received / progress.ordered : 0})` }} />
+                          </span>
+                        </span>
+                        <span className="pol-v2-pay">{pay ? <span className={`pol-v2-pill is-${pay.tone}`}>{pay.label}</span> : <span className="pol-v2-pill">—</span>}</span>
+                        <span className="pol-v2-total is-mono">{formatPurchaseOrderAmount(order, total)}</span>
+                        <span className="pol-v2-action">
+                          {action && (
+                            <Link href={action.href} className={buttonClassName({ variant: "secondary" })}>
+                              {action.label}
+                            </Link>
                           )}
                         </span>
                       </div>
                     );
                   })}
-                </div>
-
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-semibold text-theme-muted">
-                  <span>
-                    {receivingSummary.after > 0
-                      ? `${unitsLabel(receivingSummary.after)} will still be outstanding after this delivery.`
-                      : "This delivery completes the order."}
-                  </span>
-                  <button
-                    type="button"
-                    className="text-theme-accent underline-offset-2 hover:underline"
-                    onClick={() => openPaymentPanel("receive")}
-                  >
-                    Reset to everything outstanding
-                  </button>
-                </div>
-
-                <label className="grid gap-1.5">
-                  <span className="text-xs font-bold text-theme-secondary">
-                    Delivery note (optional)
-                  </span>
-                  <input
-                    value={receiveNotes}
-                    onChange={(event) => setReceiveNotes(event.target.value)}
-                    placeholder="Driver, delivery note number, damaged cartons…"
-                    className="sale-input"
-                  />
-                </label>
-
-                {receivingSummary.after > 0 && (
-                  <label className="po-receive-close">
-                    <input
-                      type="checkbox"
-                      checked={receiveClose}
-                      onChange={(event) =>
-                        setReceiveClose(event.target.checked)
-                      }
-                    />
-                    <span>
-                      <strong>Close the order after this delivery</strong>
-                      <small>
-                        The supplier will not send the rest. The order is marked
-                        received with {formatUnits(receivingSummary.after)}{" "}
-                        units recorded as never arrived.
-                      </small>
-                    </span>
-                  </label>
-                )}
-
-                {!receivePaymentOpen ? (
-                  <button
-                    type="button"
-                    className="justify-self-start text-sm font-semibold text-theme-accent underline-offset-2 hover:underline"
-                    onClick={() => setReceivePaymentOpen(true)}
-                  >
-                    + Paid something on delivery? Record it here
-                  </button>
-                ) : (
-                  <div className="grid gap-2">
-                    <p className="po-detail-label">
-                      Payment on delivery (optional)
-                    </p>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <label className="grid gap-1.5">
-                        <span className="text-xs font-bold text-theme-secondary">
-                          Amount paid now (
-                          {selectedOrder.currency_code || currencyCode})
-                        </span>
-                        <input
-                          type="number"
-                          min="0"
-                          step="any"
-                          value={payAmount}
-                          onChange={(event) => setPayAmount(event.target.value)}
-                          placeholder="This payment"
-                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                        />
-                      </label>
-                      <label className="grid gap-1.5">
-                        <span className="text-xs font-bold text-theme-secondary">
-                          Payment date
-                        </span>
-                        <input
-                          type="date"
-                          value={payDate}
-                          onChange={(event) => setPayDate(event.target.value)}
-                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                        />
-                      </label>
-                      <Select
-                        label="Payment method"
-                        value={payMethod}
-                        onChange={setPayMethod}
-                        options={[
-                          { value: "", label: "Not set" },
-                          ...paymentMethodOptions(settings.payment_methods, payMethod),
-                        ]}
-                      />
-                      <label className="grid gap-1.5">
-                        <span className="text-xs font-bold text-theme-secondary">
-                          Paid by (optional)
-                        </span>
-                        <input
-                          value={payBy}
-                          onChange={(event) => setPayBy(event.target.value)}
-                          placeholder="Person or account"
-                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                        />
-                      </label>
-                      <label className="grid gap-1.5 sm:col-span-2">
-                        <span className="text-xs font-bold text-theme-secondary">
-                          Note (optional)
-                        </span>
-                        <input
-                          value={payNote}
-                          onChange={(event) => setPayNote(event.target.value)}
-                          placeholder="e.g. deposit, balance on delivery"
-                          className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                        />
-                      </label>
-                    </div>
-                  </div>
-                )}
               </div>
-            )}
-
-            {paymentMode === "edit" && (
-              <div className="po-payment-panel">
-                <p className="po-detail-label">Add a payment</p>
-                <div className="grid gap-3 sm:grid-cols-2">
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Amount paid now (
-                      {selectedOrder.currency_code || currencyCode})
-                    </span>
-                    <input
-                      type="number"
-                      min="0"
-                      step="any"
-                      value={payAmount}
-                      onChange={(event) => setPayAmount(event.target.value)}
-                      placeholder="This payment"
-                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Payment date
-                    </span>
-                    <input
-                      type="date"
-                      value={payDate}
-                      onChange={(event) => setPayDate(event.target.value)}
-                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                  <Select
-                    label="Payment method"
-                    value={payMethod}
-                    onChange={setPayMethod}
-                    options={[
-                      { value: "", label: "Not set" },
-                      ...paymentMethodOptions(settings.payment_methods, payMethod),
-                    ]}
-                  />
-                  <label className="grid gap-1.5">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Paid by (optional)
-                    </span>
-                    <input
-                      value={payBy}
-                      onChange={(event) => setPayBy(event.target.value)}
-                      placeholder="Person or account"
-                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                  <label className="grid gap-1.5 sm:col-span-2">
-                    <span className="text-xs font-bold text-theme-secondary">
-                      Note (optional)
-                    </span>
-                    <input
-                      value={payNote}
-                      onChange={(event) => setPayNote(event.target.value)}
-                      placeholder="e.g. deposit, balance on delivery"
-                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                </div>
-              </div>
-            )}
-
-            {/* A cancelled order owes nobody anything; the strip would say
-                "Still owe" over a figure that no longer means anything. */}
-            {selectedOrder.status !== "cancelled" &&
-              (paymentMode !== "receive" || receivePaymentOpen) &&
-              (() => {
-                const balance = getPurchaseOrderBalance(selectedOrder);
-                return (
-                  <div className="po-balance-strip">
-                    <div>
-                      <small>Order total</small>
-                      <strong>
-                        {formatPurchaseOrderAmount(
-                          selectedOrder,
-                          balance.total,
-                        ) || "—"}
-                      </strong>
-                    </div>
-                    <div>
-                      <small>Paid</small>
-                      <strong>
-                        {formatPurchaseOrderAmount(
-                          selectedOrder,
-                          balance.paid,
-                        ) || "—"}
-                      </strong>
-                    </div>
-                    <div
-                      className={
-                        balance.remaining > 0
-                          ? "po-balance-remaining-due"
-                          : "po-balance-remaining-clear"
-                      }
-                    >
-                      <small>
-                        {balance.remaining > 0 ? "Still owe" : "Fully paid"}
-                      </small>
-                      <strong>
-                        {balance.remaining > 0
-                          ? formatPurchaseOrderAmount(
-                              selectedOrder,
-                              balance.remaining,
-                            )
-                          : "✓"}
-                      </strong>
-                    </div>
-                  </div>
-                );
-              })()}
-
-            {/* Brief point 39: where this order is in its life, in one row.
-                The receiving line below says how much; this says what stage. */}
-            {paymentMode === "none" && (
-              <DocumentTimeline
-                steps={
-                  selectedOrder.status === "cancelled"
-                    ? [
-                        {
-                          label: "Created",
-                          detail: [formatDate(selectedOrder.created_at), recordedBy(selectedOrder.actor_id)]
-                            .filter(Boolean)
-                            .join(" · "),
-                          state: "done",
-                        },
-                        {
-                          label: "Cancelled",
-                          detail: formatDate(selectedOrder.cancelled_at),
-                          state: "stopped",
-                        },
-                      ]
-                    : [
-                        {
-                          label: "Created",
-                          detail: [formatDate(selectedOrder.created_at), recordedBy(selectedOrder.actor_id)]
-                            .filter(Boolean)
-                            .join(" · "),
-                          state:
-                            selectedOrder.status === "draft"
-                              ? "current"
-                              : "done",
-                        },
-                        {
-                          label: "Ordered",
-                          detail:
-                            selectedOrder.status === "draft"
-                              ? null
-                              : formatDate(
-                                  selectedOrder.purchase_date ||
-                                    selectedOrder.created_at,
-                                ),
-                          state:
-                            selectedOrder.status === "draft"
-                              ? "upcoming"
-                              : selectedOrder.status === "ordered"
-                                ? "current"
-                                : "done",
-                        },
-                        {
-                          label: "Received",
-                          detail:
-                            selectedOrder.status === "received"
-                              ? `${formatDate(selectedOrder.received_at)}${selectedOrder.closed_short ? " · short" : ""}`
-                              : selectedOrder.status === "partially_received"
-                                ? "In parts"
-                                : null,
-                          state:
-                            selectedOrder.status === "received"
-                              ? "done"
-                              : selectedOrder.status === "partially_received"
-                                ? "current"
-                                : "upcoming",
-                        },
-                        {
-                          label: "Paid",
-                          detail:
-                            selectedOrder.payment_status === "paid"
-                              ? "Fully paid"
-                              : selectedOrder.payment_status === "partial"
-                                ? "Partly paid"
-                                : null,
-                          state:
-                            selectedOrder.payment_status === "paid"
-                              ? "done"
-                              : selectedOrder.payment_status === "partial"
-                                ? "current"
-                                : "upcoming",
-                        },
-                      ]
-                }
-              />
-            )}
-
-            {paymentMode === "none" &&
-              selectedOrder.status !== "draft" &&
-              selectedOrder.status !== "cancelled" &&
-              (() => {
-                const progress =
-                  getPurchaseOrderReceivingProgress(selectedOrder);
-                return (
-                  <div className="po-receiving-progress">
-                    <div className="flex flex-wrap items-baseline justify-between gap-2">
-                      <p className="po-detail-label">Receiving</p>
-                      <p className="text-xs font-semibold text-theme-muted">
-                        {formatUnits(progress.received)} of{" "}
-                        {formatUnits(progress.ordered)} units received
-                        {progress.remaining > 0
-                          ? ` · ${formatUnits(progress.remaining)} ${
-                              selectedOrder.closed_short
-                                ? "never arrived"
-                                : "still to come"
-                            }`
-                          : ""}
-                      </p>
-                    </div>
-                    <div
-                      className="po-progress-track"
-                      role="progressbar"
-                      aria-valuemin={0}
-                      aria-valuemax={100}
-                      aria-valuenow={progress.percent}
-                      aria-label="Share of ordered units received"
-                    >
-                      <div
-                        className={`po-progress-fill${
-                          selectedOrder.closed_short
-                            ? " po-progress-fill-short"
-                            : ""
-                        }`}
-                        style={{ width: `${progress.percent}%` }}
-                      />
-                    </div>
-                    {selectedOrder.closed_short && (
-                      <p className="text-xs font-semibold text-theme-warning">
-                        Closed short — the supplier did not send everything
-                        ordered.
-                      </p>
-                    )}
-                  </div>
-                );
-              })()}
-
-            {paymentMode === "none" && selectedReceipts.length > 0 && (
-              <div className="grid gap-1.5">
-                <p className="po-detail-label">Deliveries</p>
-                {selectedReceipts.map((receipt) => {
-                  const units = receipt.lines.reduce(
-                    (sum, line) => sum + line.quantity,
-                    0,
-                  );
-                  return (
-                    <div key={receipt.id} className="po-payment-row">
-                      <span className="po-payment-row-icon" aria-hidden="true">
-                        <UiIcon name="stock-in" className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-black text-theme-primary">
-                          {unitsLabel(units)} · {receipt.receipt_number}
-                        </span>
-                        <span className="block truncate text-xs font-semibold text-theme-muted">
-                          {[formatDate(receipt.received_at), recordedBy(receipt.actor_id), receipt.notes]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => void handleExportReceipt(receipt)}
-                        disabled={actionBusy}
-                        className="po-line-remove"
-                        aria-label={`Goods received note for ${receipt.receipt_number} (PDF)`}
-                        title="Goods received note (PDF)"
-                      >
-                        <UiIcon name="download" className="h-4 w-4" />
-                      </button>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-
-            {paymentMode === "none" && selectedPayments.length > 0 && (
-              <div className="grid gap-1.5">
-                <p className="po-detail-label">Payment history</p>
-                {selectedPayments.map((payment) => (
-                  <div key={payment.id} className="po-payment-row">
-                    <span className="po-payment-row-icon" aria-hidden="true">
-                      <UiIcon name="usage" className="h-4 w-4" />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="block text-sm font-black text-theme-primary">
-                        {formatPurchaseOrderAmount(
-                          selectedOrder,
-                          payment.amount,
-                        )}
-                      </span>
-                      <span className="block truncate text-xs font-semibold text-theme-muted">
-                        {[
-                          formatDate(payment.paid_at),
-                          payment.method
-                            ? paymentMethodLabel(payment.method)
-                            : "",
-                          payment.paid_by ? `by ${payment.paid_by}` : "",
-                          recordedBy(payment.actor_id) ? `recorded ${recordedBy(payment.actor_id)}` : "",
-                          payment.note,
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </span>
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => void handleExportPaymentReceipt(payment)}
-                      disabled={actionBusy}
-                      className="po-line-remove"
-                      aria-label={`Payment receipt for ${formatDate(payment.paid_at)} (PDF)`}
-                      title="Payment receipt (PDF)"
-                    >
-                      <UiIcon name="download" className="h-4 w-4" />
-                    </button>
-                    {canDeleteRecords && (
-                      <button
-                        type="button"
-                        onClick={() => handleDeletePayment(payment.id)}
-                        disabled={actionBusy}
-                        className="po-line-remove"
-                        aria-label="Remove this payment"
-                        title="Remove payment"
-                      >
-                        <UiIcon name="trash" className="h-4 w-4" />
-                      </button>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* While receiving, the dialog is the goods-received note and
-                nothing else: the order's own details and line prices come
-                back when the delivery is recorded. */}
-            {paymentMode !== "receive" && (
-              <>
-                <div className="po-detail-grid">
-                  <div>
-                    <p className="po-detail-label">Purchase date</p>
-                    <p className="po-detail-value">
-                      {formatDate(selectedOrder.purchase_date)}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="po-detail-label">Depot</p>
-                    <p className="po-detail-value">
-                      {selectedOrder.depot_name_snapshot || "Not set"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="po-detail-label">Supplier</p>
-                    <p className="po-detail-value">
-                      {selectedOrder.supplier_name_snapshot || "Not set"}
-                    </p>
-                    {selectedOrder.supplier_contact_snapshot && (
-                      <p className="po-detail-sub">
-                        {selectedOrder.supplier_contact_snapshot}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <p className="po-detail-label">Payment</p>
-                    <p className="po-detail-value">
-                      {
-                        PURCHASE_ORDER_PAYMENT_STATUS_LABELS[
-                          selectedOrder.payment_status
-                        ]
-                      }
-                      {selectedOrder.payment_method
-                        ? ` · ${
-                            paymentMethodLabel(selectedOrder.payment_method)
-                          }`
-                        : ""}
-                    </p>
-                    {(selectedOrder.paid_by ||
-                      selectedOrder.amount_paid !== null) && (
-                      <p className="po-detail-sub">
-                        {[
-                          selectedOrder.paid_by
-                            ? `Paid by ${selectedOrder.paid_by}`
-                            : "",
-                          selectedOrder.amount_paid !== null
-                            ? formatPurchaseOrderAmount(
-                                selectedOrder,
-                                selectedOrder.amount_paid,
-                              )
-                            : "",
-                        ]
-                          .filter(Boolean)
-                          .join(" · ")}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="grid gap-1.5">
-                  <p className="po-detail-label">Lines</p>
-                  {selectedOrder.lines.map((line) => {
-                    const lineTotal = getPurchaseOrderLineTotal(line);
-                    return (
-                      <div key={line.id} className="po-detail-line">
-                        <span className="po-line-thumb">
-                          <ProductThumbnail
-                            src={
-                              line.inventory_item_id !== null
-                                ? lineImages[line.inventory_item_id]
-                                : null
-                            }
-                            alt=""
-                            width={40}
-                            height={40}
-                            sizes="40px"
-                          />
-                        </span>
-                        <span className="min-w-0 flex-1">
-                          <span className="block truncate text-sm font-bold text-theme-primary">
-                            {line.name_snapshot}
-                            {line.affects_stock && (
-                              <span className="po-stock-flag">→ stock</span>
-                            )}
-                            {selectedOrder.status !== "draft" &&
-                              selectedOrder.status !== "cancelled" &&
-                              line.received_quantity < line.quantity && (
-                                <span className="po-received-flag">
-                                  {formatUnits(line.received_quantity)} /{" "}
-                                  {formatUnits(line.quantity)} received
-                                </span>
-                              )}
-                          </span>
-                          <span className="block truncate text-xs font-semibold text-theme-muted">
-                            {[
-                              line.line_type === "expense"
-                                ? line.expense_category
-                                  ? PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS[
-                                      line.expense_category
-                                    ]
-                                  : "General purchase"
-                                : [line.item_code_snapshot, line.sku_snapshot]
-                                    .filter(Boolean)
-                                    .join(" · ") || "Inventory item",
-                              line.notes,
-                            ]
-                              .filter(Boolean)
-                              .join(" — ")}
-                          </span>
-                        </span>
-                        <span className="shrink-0 text-right">
-                          <span className="block text-xs font-semibold text-theme-muted">
-                            {line.quantity} ×{" "}
-                            {line.unit_cost === null
-                              ? "—"
-                              : formatPurchaseOrderAmount(
-                                  selectedOrder,
-                                  line.unit_cost,
-                                )}
-                          </span>
-                          <span className="block text-sm font-black text-theme-primary">
-                            {lineTotal === null
-                              ? "—"
-                              : formatPurchaseOrderAmount(
-                                  selectedOrder,
-                                  lineTotal,
-                                )}
-                          </span>
-                        </span>
-                      </div>
-                    );
-                  })}
-                  <div className="po-detail-total">
-                    <span>Total</span>
-                    <strong>
-                      {formatPurchaseOrderAmount(
-                        selectedOrder,
-                        getPurchaseOrderTotal(selectedOrder),
-                      ) || "—"}
-                    </strong>
-                  </div>
-                </div>
-
-                {selectedOrder.attachment_url && attachmentUrl && (
-                  <div className="grid gap-1.5">
-                    {/* Brief 40/41's "supplier bill link": whatever was
-                        uploaded when this order was placed -- almost always
-                        the supplier's own invoice -- shown by that name
-                        instead of the generic "Attachment". */}
-                    <p className="po-detail-label">
-                      Supplier bill
-                      {selectedOrder.attachment_label
-                        ? ` — ${selectedOrder.attachment_label}`
-                        : ""}
-                    </p>
-                    <a
-                      href={attachmentUrl}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="po-attachment-link"
-                    >
-                      <Image
-                        src={attachmentUrl}
-                        alt={
-                          selectedOrder.attachment_label ||
-                          "Purchase attachment"
-                        }
-                        width={480}
-                        height={280}
-                        unoptimized
-                        className="max-h-56 w-full rounded-xl border border-theme bg-white object-contain"
-                      />
-                    </a>
-                  </div>
-                )}
-
-                {selectedOrder.notes && (
-                  <div>
-                    <p className="po-detail-label">Notes</p>
-                    <p className="text-sm font-semibold text-theme-secondary">
-                      {selectedOrder.notes}
-                    </p>
-                  </div>
-                )}
-              </>
-            )}
-          </div>
-        </DialogShell>
-      )}
-
-      {selectedOrder && confirmDeleteDraft && (
-        <DialogShell
-          title={`Delete ${selectedOrder.po_number}?`}
-          eyebrow={
-            selectedOrder.status === "draft" ? "Delete draft" : "Delete order"
-          }
-          description="Nothing has been received or paid on it, so nothing else changes. This cannot be undone."
-          tone="danger"
-          onClose={() => setConfirmDeleteDraft(false)}
-          closeDisabled={actionBusy}
-          footer={
-            <>
-              <Button
-                variant="secondary"
-                onClick={() => setConfirmDeleteDraft(false)}
-                disabled={actionBusy}
-              >
-                Keep it
-              </Button>
-              <Button
-                variant="danger"
-                onClick={handleDeleteDraft}
-                loading={actionBusy}
-                loadingLabel="Deleting…"
-              >
-                Delete
-              </Button>
-            </>
-          }
-        />
-      )}
+            );
+          })
+        )}
+      </section>
     </DashboardPageShell>
+  );
+}
+
+export default function PurchaseOrdersPage() {
+  return (
+    <Suspense fallback={null}>
+      <PurchaseOrdersList />
+    </Suspense>
   );
 }
