@@ -205,3 +205,17 @@ or "try it now" as if they can. Describe how it works ("with SydIN, you tap Scan
 **"قريباً / Coming soon"** next to the waitlist call to action. Videos that show the app are motion
 graphics made by Claude until the app is public, so Sayed doesn't need screen recordings.
 
+## Arabic font for social: Thmanyah Sans (8 Oct 2026, Sayed's call)
+
+- Social posts and Reels set Arabic in **Thmanyah Sans** (خط ثمانية, the sans family), Black for
+  headlines and Bold/Medium for smaller lines. It replaces Cairo on social only, starting with the
+  8 Oct scan Reel. English stays Barlow Condensed. Sayed compared Cairo, Thmanyah Sans and Thmanyah
+  Serif Display on the same frames and chose Sans.
+- **License (read from the LICENSE.pdf in the official download):** commercial use in branding,
+  social posts, video and print is allowed. It is **not allowed** to redistribute, upload or host
+  the font files, or to embed them in a website or app in a way users could extract. So:
+  - The font files never go into this repository, an artifact, or any public link.
+  - **The website does not use it.** It keeps its current fonts unless Thmanyah grants an exception
+    (ask@thmanyah.com).
+  - Sayed downloads it himself from the official site. Claude renders with a private copy.
+

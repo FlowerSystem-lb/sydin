@@ -708,3 +708,13 @@ stays as the alternative.
   in-person depot visits and WhatsApp conversations instead.
 - **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Nothing personal, LinkedIn paused".
 
+## 2026-10-08 — Thmanyah Sans for Arabic on social only
+
+- **Decision:** Arabic text in social posts and Reels uses Thmanyah Sans instead of Cairo. It is not
+  used on the website.
+- **Why:** Sayed preferred it after a side-by-side test (A Cairo, B Thmanyah Sans, C Thmanyah Serif
+  Display). It is more distinctive than Cairo and still very readable on a phone. The license allows
+  commercial design use but forbids hosting the files or web embedding that exposes them, so it stays
+  off the website and out of the repo.
+- **Details:** `SYDIN_MARKETING_LAUNCH_PLAN.md` → "Arabic font for social".
+
