@@ -99,25 +99,25 @@ export interface ExportPurchaseOrderPdfOptions {
 const DEFAULT_TERMS =
   "Please quote the PO number on your delivery note and invoice. Goods are checked on arrival; quantities that don't match will be noted on receipt.";
 
-type RGB = [number, number, number];
-const INK: RGB = [17, 24, 39];
-const MUTED: RGB = [100, 112, 133];
-const SUBTLE: RGB = [148, 158, 176];
-const RULE: RGB = [226, 231, 239];
-const PANEL: RGB = [244, 246, 250];
-const PRIMARY: RGB = [36, 71, 214];
-const GREEN: RGB = [15, 122, 79];
-const GREEN_FILL: RGB = [22, 163, 74];
-const GREEN_TINT: RGB = [236, 253, 243];
-const RED: RGB = [196, 43, 28];
-const RED_TINT: RGB = [254, 242, 240];
+export type RGB = [number, number, number];
+export const INK: RGB = [17, 24, 39];
+export const MUTED: RGB = [100, 112, 133];
+export const SUBTLE: RGB = [148, 158, 176];
+export const RULE: RGB = [226, 231, 239];
+export const PANEL: RGB = [244, 246, 250];
+export const PRIMARY: RGB = [36, 71, 214];
+export const GREEN: RGB = [15, 122, 79];
+export const GREEN_FILL: RGB = [22, 163, 74];
+export const GREEN_TINT: RGB = [236, 253, 243];
+export const RED: RGB = [196, 43, 28];
+export const RED_TINT: RGB = [254, 242, 240];
 
 const PAGE_MARGIN = 15;
 const FOOTER_TOP_OFFSET = 30; // footer block starts this far from the bottom edge
 const CONT_TOP = 22; // first y on continuation pages
 
 /** WinAnsi only: the standard PDF fonts cannot draw these characters. */
-function t(value: string | null | undefined) {
+export function t(value: string | null | undefined) {
   return (value || "")
     .replace(/−/g, "-")
     .replace(/→/g, "->")
@@ -126,11 +126,11 @@ function t(value: string | null | undefined) {
     .replace(/[  ]/g, " ");
 }
 
-function money(value: number | null | undefined, currency: string) {
+export function money(value: number | null | undefined, currency: string) {
   return value === null || value === undefined ? "--" : t(formatExactPrice(value, currency) || "--");
 }
 
-function units(value: number) {
+export function units(value: number) {
   return Number.isInteger(value) ? String(value) : value.toFixed(2);
 }
 
@@ -138,7 +138,7 @@ function formatDateForFilename(date: Date) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 }
 
-function shortDate(value?: string | null) {
+export function shortDate(value?: string | null) {
   if (!value) return "";
   const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
   if (Number.isNaN(date.getTime())) return value;
@@ -146,7 +146,7 @@ function shortDate(value?: string | null) {
 }
 
 /** Letter-spaced small caps label, the way the sample prints them. */
-function label(doc: jsPDF, text: string, x: number, y: number, options: { align?: "right" } = {}) {
+export function label(doc: jsPDF, text: string, x: number, y: number, options: { align?: "right" } = {}) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7);
   doc.setTextColor(...MUTED);
@@ -155,7 +155,7 @@ function label(doc: jsPDF, text: string, x: number, y: number, options: { align?
   doc.setCharSpace(0);
 }
 
-function drawQr(doc: jsPDF, value: string, x: number, y: number, size: number) {
+export function drawQr(doc: jsPDF, value: string, x: number, y: number, size: number) {
   try {
     const qr = new QRCodeImpl(-1, ErrorCorrectLevel.M);
     qr.addData(value);
@@ -174,7 +174,7 @@ function drawQr(doc: jsPDF, value: string, x: number, y: number, size: number) {
 }
 
 /** A drawn tick, since the standard fonts have no ✓. */
-function tick(doc: jsPDF, x: number, y: number, color: RGB) {
+export function tick(doc: jsPDF, x: number, y: number, color: RGB) {
   doc.setDrawColor(...color);
   doc.setLineWidth(0.45);
   doc.line(x, y - 1, x + 0.9, y);
@@ -182,7 +182,7 @@ function tick(doc: jsPDF, x: number, y: number, color: RGB) {
   doc.setLineWidth(0.2);
 }
 
-function badge(doc: jsPDF, text: string, rightX: number, y: number, style: "outline" | "fill", color: RGB, fill?: RGB) {
+export function badge(doc: jsPDF, text: string, rightX: number, y: number, style: "outline" | "fill", color: RGB, fill?: RGB) {
   doc.setFont("helvetica", "bold");
   doc.setFontSize(7.5);
   doc.setCharSpace(0.3);

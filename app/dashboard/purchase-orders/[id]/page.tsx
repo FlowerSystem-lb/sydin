@@ -22,7 +22,10 @@ import { exportPurchaseOrderPdf } from "@/app/lib/purchaseOrderPdfExport";
 import { exportPurchaseOrderExcel } from "@/app/lib/purchaseOrderExcelExport";
 import { exportPurchaseOrderDocx } from "@/app/lib/documentDocxExports";
 import { exportPaymentReceiptPdf } from "@/app/lib/paymentReceiptPdf";
-import { exportGoodsReceivedPdf } from "@/app/lib/goodsReceivedPdf";
+import { exportStockReceiptPdf } from "@/app/lib/stockReceiptPdf";
+import { getReceiptsForOrder, voidStockReceipt, type StockReceipt } from "@/app/lib/stockReceipts";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
+import { getInventoryUnitLabel } from "@/app/lib/inventoryItemModel";
 import {
   buildPurchaseOrderDocument,
   getPurchaseOrderPublicUrl,
@@ -33,7 +36,6 @@ import type { Supplier } from "@/app/lib/suppliers";
 import {
   PURCHASE_ORDER_EXPENSE_CATEGORY_LABELS,
   PURCHASE_ORDER_PAYMENT_TERMS_LABELS,
-  PURCHASE_ORDER_STATUS_LABELS,
   addPurchaseOrderPayment,
   cancelPurchaseOrder,
   deletePurchaseOrder,
@@ -45,18 +47,15 @@ import {
   getPurchaseOrderCurrency,
   getPurchaseOrderLineTotal,
   getPurchaseOrderPayments,
-  getPurchaseOrderReceipts,
   getPurchaseOrderReceivingProgress,
   getPurchaseOrderSubtotal,
   getPurchaseOrderTotal,
   logPurchaseOrderActivity,
   markPurchaseOrderOrdered,
-  receivePurchaseOrderLines,
   updatePurchaseOrderFields,
   type PurchaseOrder,
   type PurchaseOrderActivity,
   type PurchaseOrderPayment,
-  type PurchaseOrderReceipt,
 } from "@/app/lib/purchaseOrders";
 
 /*
@@ -126,7 +125,9 @@ export default function PurchaseOrderDetailsPage() {
   const [order, setOrder] = useState<PurchaseOrder | null>(null);
   const [settings, setSettings] = useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
   const [payments, setPayments] = useState<PurchaseOrderPayment[]>([]);
-  const [receipts, setReceipts] = useState<PurchaseOrderReceipt[]>([]);
+  const [receipts, setReceipts] = useState<StockReceipt[]>([]);
+  const [voidingId, setVoidingId] = useState<number | null>(null);
+  const canDelete = useCanDelete();
   const [activity, setActivity] = useState<PurchaseOrderActivity[]>([]);
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [depot, setDepot] = useState<Depot | null>(null);
@@ -135,10 +136,6 @@ export default function PurchaseOrderDetailsPage() {
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
 
-  const [receiving, setReceiving] = useState(false);
-  const [receiveQty, setReceiveQty] = useState<Record<number, string>>({});
-  const [receiveNote, setReceiveNote] = useState("");
-  const [closeShort, setCloseShort] = useState(false);
   const [attachmentUrl, setAttachmentUrl] = useState<string | null>(null);
   const [paymentOpen, setPaymentOpen] = useState(false);
   const [payAmount, setPayAmount] = useState("");
@@ -159,7 +156,7 @@ export default function PurchaseOrderDetailsPage() {
       if (!loaded) throw new Error("This purchase order was not found.");
       const [loadedPayments, loadedReceipts, loadedActivity, parties] = await Promise.all([
         getPurchaseOrderPayments(orderId).catch(() => [] as PurchaseOrderPayment[]),
-        getPurchaseOrderReceipts(orderId).catch(() => [] as PurchaseOrderReceipt[]),
+        getReceiptsForOrder(ownerId, orderId).catch(() => [] as StockReceipt[]),
         getPurchaseOrderActivity(orderId),
         loadPurchaseOrderParties(loaded),
       ]);
@@ -240,15 +237,18 @@ export default function PurchaseOrderDetailsPage() {
     const entries: TimelineEntry[] = [
       { key: "created", text: activity.some((entry) => entry.type === "created") ? "" : "Order created", at: order.created_at, by: nameOf(order.actor_id) },
       ...activity.map((entry) => ({ key: `a-${entry.id}`, text: entry.text, at: entry.created_at, by: nameOf(entry.actor_id) })),
-      ...receipts.map((receipt) => {
-        const unitsIn = receipt.lines.reduce((sum, line) => sum + line.quantity, 0);
-        return {
-          key: `r-${receipt.id}`,
-          text: `Received ${unitsIn} ${unitsIn === 1 ? "unit" : "units"}${depotName ? ` into ${depotName}` : ""}`,
-          at: receipt.received_at,
-          by: nameOf(receipt.actor_id),
-        };
-      }),
+      // Receipts made since phase 41 write their own activity line.
+      ...receipts
+        .filter((receipt) => !receipt.reference)
+        .map((receipt) => {
+          const unitsIn = receipt.lines.reduce((sum, line) => sum + line.quantity, 0);
+          return {
+            key: `r-${receipt.id}`,
+            text: `Received ${unitsIn} ${unitsIn === 1 ? "unit" : "units"}${depotName ? ` into ${depotName}` : ""}`,
+            at: receipt.received_at,
+            by: nameOf(receipt.actor_id),
+          };
+        }),
       ...payments.map((payment) => ({
         key: `p-${payment.id}`,
         text: `Paid ${money(Number(payment.amount))}${payment.method ? ` · ${paymentMethodLabel(payment.method)}` : ""}`,
@@ -287,40 +287,8 @@ export default function PurchaseOrderDetailsPage() {
       showToast({ tone: "success", message: "Order placed" });
     }, "The order could not be placed.");
 
-  const startReceiving = () => {
-    if (!order) return;
-    setReceiveQty(
-      Object.fromEntries(
-        order.lines.map((line) => [line.id, String(Math.max(0, line.quantity - line.received_quantity))])
-      )
-    );
-    setReceiveNote("");
-    setCloseShort(false);
-    setReceiving(true);
-  };
-
-  const receiveUnits = order
-    ? order.lines.reduce((sum, line) => sum + Math.max(0, Math.min(Number(receiveQty[line.id]) || 0, line.quantity - line.received_quantity)), 0)
-    : 0;
-
-  const confirmReceipt = () =>
-    run(async () => {
-      if (!order) return;
-      const lines = order.lines
-        .map((line) => ({
-          line_id: line.id,
-          quantity: Math.max(0, Math.min(Math.floor(Number(receiveQty[line.id]) || 0), line.quantity - line.received_quantity)),
-        }))
-        .filter((line) => line.quantity > 0);
-      if (lines.length === 0 && !closeShort) {
-        showToast({ tone: "danger", message: "Enter how many arrived on at least one line, or close the order short." });
-        return;
-      }
-      await receivePurchaseOrderLines(order.id, lines, { notes: receiveNote, close: closeShort });
-      setReceiving(false);
-      await reload(userId);
-      showToast({ tone: "success", message: `Received ${receiveUnits} ${receiveUnits === 1 ? "unit" : "units"}` });
-    }, "The delivery could not be saved.");
+  /* Receiving is one screen for the whole app (phase 41): Stock in. */
+  const startReceiving = () => router.push(`/dashboard/receiving/new?po=${orderId}`);
 
   const openPayment = () => {
     setPayAmount(balance > 0 ? String(Math.round(balance * 100) / 100) : "");
@@ -479,33 +447,50 @@ export default function PurchaseOrderDetailsPage() {
       });
     }, "The receipt could not be made. Try again.");
 
-  const downloadDeliveryNote = (receipt: PurchaseOrderReceipt) =>
+  const downloadDeliveryNote = (receipt: StockReceipt) =>
     run(async () => {
       if (!order) return;
-      const byLine = new Map(receipt.lines.map((line) => [line.purchase_order_line_id, line.quantity]));
-      await exportGoodsReceivedPdf({
+      await exportStockReceiptPdf({
         details: {
-          receiptNumber: receipt.receipt_number,
+          reference: receipt.reference || receipt.receipt_number,
+          poReference: receipt.po_reference || receipt.receipt_number,
           poNumber: order.po_number,
+          sourceLabel: "Purchase order",
           receivedAt: receipt.received_at,
-          supplierName: supplier?.name || order.supplier_name_snapshot || undefined,
-          supplierContact: order.supplier_contact_snapshot || undefined,
-          depotName: depotName || undefined,
-          notes: receipt.notes || undefined,
-          orderStatus: PURCHASE_ORDER_STATUS_LABELS[order.status],
+          receivedBy: receipt.received_by || nameOf(receipt.actor_id),
+          supplierName: supplier?.name || order.supplier_name_snapshot,
+          supplierPhone: supplierPhone || null,
+          depotName: depotName || null,
+          depotAddress: depot?.address || null,
+          deliveryNoteNo: receipt.delivery_note_no,
+          notes: receipt.notes,
+          voided: receipt.status === "voided",
+          qrUrl: getPurchaseOrderPublicUrl(order, window.location.origin),
         },
-        lines: order.lines.map((line) => ({
-          name: line.name_snapshot,
-          code: line.item_code_snapshot || line.sku_snapshot || undefined,
-          unit: line.unit_label_snapshot || undefined,
-          imageUrl: line.inventory_item_id !== null ? (lineImages[line.inventory_item_id] ?? null) : null,
-          ordered: line.quantity,
-          receivedNow: byLine.get(line.id) ?? 0,
-          receivedTotal: line.received_quantity,
+        lines: receipt.lines.map((line) => ({
+          name: line.item?.name || order.lines.find((entry) => entry.id === line.purchase_order_line_id)?.name_snapshot || "Item",
+          code: line.item?.item_code || line.item?.sku,
+          unit: line.item ? getInventoryUnitLabel(line.item.unit_type, line.item.custom_unit_label) : null,
+          imageUrl: line.item?.image || (line.inventory_item_id ? lineImages[line.inventory_item_id] : null),
+          expected: line.expected_quantity,
+          received: line.quantity,
+          damaged: line.damaged_quantity,
+          unitCost: line.unit_cost ?? order.lines.find((entry) => entry.id === line.purchase_order_line_id)?.unit_cost ?? null,
+          batch: line.batch,
+          expiryDate: line.expiry_date,
         })),
         branding: brandingFromSettings(settings),
+        currencyCode: getPurchaseOrderCurrency(order),
       });
     }, "The delivery note could not be made. Try again.");
+
+  const voidReceipt = (receipt: StockReceipt) =>
+    run(async () => {
+      await voidStockReceipt(receipt.id, "Voided from the purchase order");
+      setVoidingId(null);
+      await reload(userId);
+      showToast({ tone: "success", message: `${receipt.reference || receipt.receipt_number} voided; its stock was taken back out.` });
+    }, "The receipt could not be voided.");
 
   const sendWhatsApp = () => {
     if (!order) return;
@@ -734,7 +719,7 @@ export default function PurchaseOrderDetailsPage() {
           <section className="po-v2-card motion-enter" style={{ animationDelay: "120ms" }}>
             <div className="po-v2-card-head">
               <h2>Items</h2>
-              {canReceive && !receiving && (
+              {canReceive && (
                 <button type="button" onClick={startReceiving} className={buttonClassName()}>
                   {status === "partially_received" ? "Receive the rest" : "Receive items"}
                 </button>
@@ -753,7 +738,7 @@ export default function PurchaseOrderDetailsPage() {
                     <th>Item</th>
                     <th className="is-num">Ordered</th>
                     <th className="is-num">Received</th>
-                    <th>{receiving ? "Receive now" : "Status"}</th>
+                    <th>Status</th>
                     <th className="is-num">Unit cost</th>
                     <th className="is-num">Total</th>
                   </tr>
@@ -792,24 +777,7 @@ export default function PurchaseOrderDetailsPage() {
                         <td className="is-num is-mono">{line.quantity}</td>
                         <td className="is-num is-mono">{line.received_quantity}</td>
                         <td>
-                          {receiving ? (
-                            remaining > 0 ? (
-                              <span className="po-v2-receive">
-                                <input
-                                  value={receiveQty[line.id] ?? ""}
-                                  onChange={(event) => setReceiveQty((current) => ({ ...current, [line.id]: event.target.value.replace(/\D/g, "") }))}
-                                  inputMode="numeric"
-                                  aria-label={`Receive now: ${line.name_snapshot}`}
-                                  className="ui-input"
-                                />
-                                <button type="button" onClick={() => setReceiveQty((current) => ({ ...current, [line.id]: String(remaining) }))} className="po-v2-all">
-                                  All
-                                </button>
-                              </span>
-                            ) : (
-                              <span className="po-v2-chip is-done">Complete</span>
-                            )
-                          ) : status === "cancelled" ? (
+                          {status === "cancelled" ? (
                             <span className="po-v2-chip">Cancelled</span>
                           ) : remaining === 0 ? (
                             <span className="po-v2-chip is-done">Complete</span>
@@ -827,39 +795,6 @@ export default function PurchaseOrderDetailsPage() {
                 </tbody>
               </table>
             </div>
-
-            {receiving && (
-              <div className="po-v2-receive-bar">
-                <span>
-                  Receiving <strong>{receiveUnits} {receiveUnits === 1 ? "unit" : "units"}</strong>
-                  {depotName ? (
-                    <>
-                      {" "}into <strong>{depotName}</strong>
-                    </>
-                  ) : null}
-                  . Stock updates right away; partial deliveries are fine.
-                </span>
-                <button type="button" onClick={() => setReceiving(false)} className={buttonClassName({ variant: "secondary" })}>
-                  Cancel
-                </button>
-                <button type="button" disabled={busy || (receiveUnits === 0 && !closeShort)} onClick={() => void confirmReceipt()} className={buttonClassName()}>
-                  {busy ? "Saving…" : closeShort && receiveUnits === 0 ? "Close order" : "Confirm receipt"}
-                </button>
-                <div className="po-v2-receive-extra">
-                  <input
-                    value={receiveNote}
-                    onChange={(event) => setReceiveNote(event.target.value)}
-                    placeholder="Note for this delivery (optional)"
-                    aria-label="Delivery note"
-                    className="ui-input"
-                  />
-                  <label className="po-v2-check">
-                    <input type="checkbox" checked={closeShort} onChange={(event) => setCloseShort(event.target.checked)} />
-                    Close short: the rest will not come
-                  </label>
-                </div>
-              </div>
-            )}
 
             <div className="po-v2-sums">
               <div>
@@ -1005,23 +940,45 @@ export default function PurchaseOrderDetailsPage() {
               </div>
               <ul className="po-v2-payments">
                 {receipts.map((receipt) => {
-                  const unitsIn = receipt.lines.reduce((sum, line) => sum + line.quantity, 0);
+                  const unitsIn = receipt.lines.reduce((sum, line) => sum + line.quantity - line.damaged_quantity, 0);
+                  const damaged = receipt.lines.reduce((sum, line) => sum + line.damaged_quantity, 0);
                   return (
-                    <li key={receipt.id}>
+                    <li key={receipt.id} className={receipt.status === "voided" ? "is-voided" : ""}>
                       <span className="po-v2-pay-icon is-blue" aria-hidden>
                         <UiIcon name="download" className="h-3.5 w-3.5" />
                       </span>
                       <span className="po-v2-pay-text">
-                        <strong className="is-mono">{receipt.receipt_number}</strong>
+                        <strong className="is-mono">
+                          {receipt.reference ? `${receipt.reference} · ${receipt.po_reference || receipt.receipt_number}` : receipt.receipt_number}
+                          {receipt.status === "voided" ? " · voided" : ""}
+                        </strong>
                         <small>
-                          {[dateTime(receipt.received_at), `${unitsIn} ${unitsIn === 1 ? "unit" : "units"}`, nameOf(receipt.actor_id) ? `by ${nameOf(receipt.actor_id)}` : "", receipt.notes || ""]
+                          {[dateTime(receipt.received_at), `${unitsIn} into stock`, damaged ? `${damaged} damaged` : "", receipt.received_by || (nameOf(receipt.actor_id) ? `by ${nameOf(receipt.actor_id)}` : ""), receipt.delivery_note_no ? `note ${receipt.delivery_note_no}` : "", receipt.notes || ""]
                             .filter(Boolean)
                             .join(" · ")}
                         </small>
                       </span>
-                      <button type="button" onClick={() => void downloadDeliveryNote(receipt)} className="po-v2-link">
-                        Delivery note
-                      </button>
+                      {voidingId === receipt.id ? (
+                        <>
+                          <button type="button" onClick={() => setVoidingId(null)} className="po-v2-link">
+                            Keep
+                          </button>
+                          <button type="button" disabled={busy} onClick={() => void voidReceipt(receipt)} className="po-v2-link is-danger">
+                            Void receipt
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button type="button" onClick={() => void downloadDeliveryNote(receipt)} className="po-v2-link">
+                            GRN
+                          </button>
+                          {canDelete && receipt.status === "confirmed" && (
+                            <button type="button" onClick={() => setVoidingId(receipt.id)} className="po-v2-link is-danger">
+                              Void
+                            </button>
+                          )}
+                        </>
+                      )}
                     </li>
                   );
                 })}

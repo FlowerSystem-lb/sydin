@@ -2269,7 +2269,7 @@ export default function InventoryPage() {
     const params = new URLSearchParams();
     if (ids.length > 0) params.set("items", ids.join(","));
     const query = params.toString();
-    router.push(`/dashboard/receiving${query ? `?${query}` : ""}`);
+    router.push(`/dashboard/receiving/new?source=no_order${query ? `&${query}` : ""}`);
   };
 
   const searchMatchedItems = items.filter((item) => {

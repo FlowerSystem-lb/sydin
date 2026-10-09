@@ -77,6 +77,9 @@ interface Entry {
   level: number;
   state: "out" | "low";
   suggested: number;
+  /** Units still to arrive on open purchase orders (Stock in spec §5). */
+  onOrder: number;
+  expectedOn: string | null;
 }
 
 const TAB_LABEL: Record<Tab, string> = {
@@ -215,6 +218,7 @@ export default function StockAlertsPage() {
   const [movementItemId, setMovementItemId] = useState<number | null>(null);
   const [detailsItemId, setDetailsItemId] = useState<number | null>(null);
   const [nowMs] = useState(() => Date.now());
+  const [onOrder, setOnOrder] = useState<Map<number, { qty: number; expected: string | null }>>(new Map());
 
   // Filters live in the URL so a link or a reload keeps them.
   useEffect(() => {
@@ -262,7 +266,24 @@ export default function StockAlertsPage() {
           getSuppliersForUser(user.id).catch(() => [] as Supplier[]),
         ]);
       if (itemError) throw itemError;
-      return { user, rows: (rows || []) as AlertItem[], usage, loadedSettings, loadedDepots, loadedSuppliers };
+      const { data: openLines } = await supabase
+        .from("purchase_order_lines")
+        .select("inventory_item_id, quantity, received_quantity, purchase_orders!inner(user_id, status, expected_delivery_date)")
+        .eq("purchase_orders.user_id", user.id)
+        .in("purchase_orders.status", ["ordered", "partially_received"])
+        .not("inventory_item_id", "is", null);
+      const coming = new Map<number, { qty: number; expected: string | null }>();
+      ((openLines || []) as unknown as Array<{ inventory_item_id: number; quantity: number; received_quantity: number; purchase_orders: { expected_delivery_date: string | null } }>).forEach((line) => {
+        const left = Math.max(0, Number(line.quantity) - Number(line.received_quantity || 0));
+        if (left <= 0) return;
+        const current = coming.get(line.inventory_item_id) || { qty: 0, expected: null };
+        const expected = line.purchase_orders?.expected_delivery_date || null;
+        coming.set(line.inventory_item_id, {
+          qty: current.qty + left,
+          expected: !current.expected || (expected && expected < current.expected) ? expected || current.expected : current.expected,
+        });
+      });
+      return { user, rows: (rows || []) as AlertItem[], usage, loadedSettings, loadedDepots, loadedSuppliers, coming };
     };
 
     load()
@@ -274,6 +295,7 @@ export default function StockAlertsPage() {
         setSettings(result.loadedSettings);
         setDepots(result.loadedDepots);
         setSuppliers(result.loadedSuppliers);
+        setOnOrder(result.coming);
         setLoading(false);
       })
       .catch((loadError: unknown) => {
@@ -307,10 +329,14 @@ export default function StockAlertsPage() {
         const quantity = Math.max(0, Number(item.quantity) || 0);
         const level = levelFor(item);
         const state = quantity <= 0 ? ("out" as const) : quantity <= level ? ("low" as const) : null;
-        return state ? { item, quantity, level, state, suggested: Math.max(level * 2 - quantity, 1) } : null;
+        const coming = onOrder.get(item.id);
+        const onOrderQty = coming?.qty || 0;
+        return state
+          ? { item, quantity, level, state, suggested: Math.max(level * 2 - quantity - onOrderQty, 0), onOrder: onOrderQty, expectedOn: coming?.expected || null }
+          : null;
       })
       .filter((entry): entry is Entry => entry !== null);
-  }, [items, levelFor, nowMs]);
+  }, [items, levelFor, nowMs, onOrder]);
 
   const qtyFor = useCallback((entry: Entry) => orderQty[entry.item.id] ?? entry.suggested, [orderQty]);
 
@@ -372,7 +398,7 @@ export default function StockAlertsPage() {
   };
 
   const setQty = (entry: Entry, value: number) => {
-    setOrderQty((current) => ({ ...current, [entry.item.id]: Math.max(1, Math.min(99999, Math.round(value) || 1)) }));
+    setOrderQty((current) => ({ ...current, [entry.item.id]: Math.max(0, Math.min(99999, Math.round(value) || 0)) }));
   };
 
   const openRowPanel = (entry: Entry) => {
@@ -486,8 +512,14 @@ export default function StockAlertsPage() {
       return;
     }
 
+    // Lines at 0 (already covered by an open order) are left out.
+    const toOrder = selectedEntries.filter((entry) => qtyFor(entry) > 0);
+    if (toOrder.length === 0) {
+      showToast({ tone: "info", message: "Everything selected is already on order. Raise a quantity to order more." });
+      return;
+    }
     const groups = new Map<number | null, Entry[]>();
-    for (const entry of selectedEntries) {
+    for (const entry of toOrder) {
       const key = entry.item.supplier_id ?? null;
       groups.set(key, [...(groups.get(key) || []), entry]);
     }
@@ -751,9 +783,17 @@ export default function StockAlertsPage() {
                         <span className="alerts-v2-bar" aria-hidden>
                           <i className={`is-${entry.state}`} style={{ width: `${Math.max(ratio * 100, entry.state === "out" ? 0 : 4)}%`, animationDelay: `${delay}ms` }} />
                         </span>
+                        {entry.onOrder > 0 && (
+                          <span className="alerts-v2-onorder">
+                            {entry.onOrder} on order
+                            {entry.expectedOn
+                              ? ` · expected ${new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(new Date(`${entry.expectedOn}T00:00:00`))}`
+                              : ""}
+                          </span>
+                        )}
                       </span>
                       <span role="cell" className="alerts-v2-stepper">
-                        <button type="button" onClick={() => setQty(entry, qty - 1)} disabled={qty <= 1} aria-label={`Order one less ${item.name}`}>
+                        <button type="button" onClick={() => setQty(entry, qty - 1)} disabled={qty <= 0} aria-label={`Order one less ${item.name}`}>
                           −
                         </button>
                         <input value={qty} inputMode="numeric" onChange={(event) => setQty(entry, Number(event.target.value.replace(/\D/g, "")))} aria-label={`Order quantity for ${item.name}`} />

@@ -34,6 +34,7 @@ import {
 } from "@/app/lib/scannerModes";
 import { getPairingBaseUrl, setPairingVibrate } from "@/app/lib/devicePairing";
 import { recordStockMovement } from "@/app/lib/stockMovements";
+import { confirmStockReceipt } from "@/app/lib/stockReceipts";
 import { applyScanToStockCountDraft } from "@/app/lib/stockCountDraft";
 import {
   DEFAULT_INVENTORY_UNIT_TYPE,
@@ -866,6 +867,30 @@ function ScannerWorkspace() {
 
     setListBusy(true);
     setListNotice("");
+    // Receiving is one receipt for the whole scan session (phase 41), the
+    // same engine as Stock in; issuing stays one movement per line.
+    if (listMode === "receive") {
+      try {
+        const result = await confirmStockReceipt(
+          { source: "scanner", receivedBy: null },
+          lines.map((line) => ({ itemId: line.itemId, received: Number(line.quantity) }))
+        );
+        setItems((current) =>
+          current.map((entry) => {
+            const line = lines.find((candidate) => candidate.itemId === entry.id);
+            return line ? { ...entry, quantity: entry.quantity + Number(line.quantity) } : entry;
+          })
+        );
+        setLists((current) => ({ ...current, receive: [] }));
+        showToast({ tone: "success", message: `Received ${result.good} across ${lines.length} ${lines.length === 1 ? "item" : "items"} · ${result.reference}` });
+      } catch (error: unknown) {
+        setListNotice(error instanceof Error ? error.message : "The receipt could not be saved. Nothing was changed.");
+      } finally {
+        setListBusy(false);
+      }
+      return;
+    }
+
     let done = 0;
     let pieces = 0;
     const failed: ListLine[] = [];
@@ -874,9 +899,9 @@ function ScannerWorkspace() {
       try {
         const movement = await recordStockMovement({
           itemId: line.itemId as number,
-          movementType: listMode === "receive" ? "stock_in" : "stock_out",
+          movementType: "stock_out",
           quantity,
-          notes: listMode === "receive" ? "Scanner - receive" : "Scanner - issue",
+          notes: "Scanner - issue",
         });
         setItems((current) =>
           current.map((entry) => (entry.id === line.itemId ? { ...entry, quantity: movement.quantity_after } : entry))
@@ -892,7 +917,7 @@ function ScannerWorkspace() {
     if (done > 0) {
       showToast({
         tone: "success",
-        message: `${listMode === "receive" ? "Received" : "Issued"} ${pieces} across ${done} ${done === 1 ? "item" : "items"}`,
+        message: `Issued ${pieces} across ${done} ${done === 1 ? "item" : "items"}`,
       });
     }
     if (failed.length > 0) setListNotice(`${failed.length} could not be saved. They are still in the list.`);

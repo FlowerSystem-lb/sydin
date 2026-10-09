@@ -31,6 +31,7 @@ import { getLastDepotId, getLastPaymentMethod, rememberDepotId, rememberPaymentM
 import { paymentMethodLabel, paymentMethodOptions } from "@/app/lib/paymentMethods";
 import { exportPurchaseOrderPdf } from "@/app/lib/purchaseOrderPdfExport";
 import { brandingFromSettings } from "@/app/lib/documentPdf";
+import { confirmStockReceipt } from "@/app/lib/stockReceipts";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -48,7 +49,7 @@ import {
   isPurchaseOrdersSchemaMissing,
   logPurchaseOrderActivity,
   markPurchaseOrderOrdered,
-  receivePurchaseOrder,
+  getPurchaseOrder,
   updateDraftPurchaseOrder,
   uploadPurchaseOrderAttachment,
   type PurchaseOrder,
@@ -818,8 +819,14 @@ function NewPurchaseOrder() {
       }
       if (placing && !receiveNow) await logPurchaseOrderActivity(userId, orderId, "placed", "Order placed");
       if (receiveNow) {
+        // The same receipt engine as Stock in: everything as ordered.
         try {
-          await receivePurchaseOrder(orderId);
+          const saved = await getPurchaseOrder(userId, orderId);
+          if (!saved) throw new Error("not found");
+          await confirmStockReceipt(
+            { source: "po", poId: orderId, depotId: selectedDepot?.id ?? null, receivedBy: people?.get(userId) || null, shortAction: "backorder" },
+            saved.lines.map((line) => ({ poLineId: line.id, expected: line.quantity, received: line.quantity, unitCost: line.unit_cost }))
+          );
         } catch {
           showToast({ tone: "danger", message: "The order was saved, but the stock could not be added. Receive it from the order page." });
         }

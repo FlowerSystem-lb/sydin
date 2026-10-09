@@ -1427,6 +1427,56 @@ export default function DashboardPage() {
             )}
           </section>
 
+          {/* Stock in spec §5 (9 Oct 2026): what is due to arrive in the next
+              seven days (and anything already late), from the PO dates. */}
+          {(() => {
+            const weekAhead = new Date();
+            weekAhead.setDate(weekAhead.getDate() + 7);
+            const limit = `${weekAhead.getFullYear()}-${String(weekAhead.getMonth() + 1).padStart(2, "0")}-${String(weekAhead.getDate()).padStart(2, "0")}`;
+            const now = new Date();
+            const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+            const thisWeek = business.expected
+              .filter((order) => order.expected_delivery_date && order.expected_delivery_date <= limit)
+              .sort((a, b) => (a.expected_delivery_date || "").localeCompare(b.expected_delivery_date || ""));
+            if (thisWeek.length === 0) return null;
+            return (
+              <section className="ov-section" aria-labelledby="ov-deliveries-title">
+                <div className="ov-section-head">
+                  <h2 id="ov-deliveries-title" className="ov-section-title">
+                    Deliveries expected this week
+                  </h2>
+                  <Link href="/dashboard/receiving" className="ov-link">
+                    Stock in
+                    <UiIcon name="chevron-right" className="h-4 w-4" />
+                  </Link>
+                </div>
+                <ul className="ov-list">
+                  {thisWeek.slice(0, 5).map((order) => {
+                    const progress = getPurchaseOrderReceivingProgress(order);
+                    const late = (order.expected_delivery_date || "") < todayKey;
+                    return (
+                      <li key={`week-${order.id}`}>
+                        <Link href={`/dashboard/receiving/new?po=${order.id}`} className="ov-row">
+                          <span className="ov-row-text">
+                            <strong>
+                              {order.po_number}
+                              {order.supplier_name_snapshot ? ` · ${order.supplier_name_snapshot}` : ""}
+                            </strong>
+                            <small>
+                              {late ? "Late · was due " : "Due "}
+                              {formatDateShort(order.expected_delivery_date)} · {formatNumber(progress.remaining)} units
+                            </small>
+                          </span>
+                          <span className={`ov-row-value ${late ? "ov-row-value-danger" : ""}`}>Receive</span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </section>
+            );
+          })()}
+
           {(business.overdue.length > 0 || business.expected.length > 0) && (
             <section className="ov-section" aria-labelledby="ov-action-title">
               <div className="ov-section-head">
@@ -1458,7 +1508,7 @@ export default function DashboardPage() {
                   return (
                     <li key={`po-${order.id}`}>
                       <Link
-                        href={`/dashboard/purchase-orders?open=${order.id}&receive=1`}
+                        href={`/dashboard/receiving/new?po=${order.id}`}
                         className="ov-row"
                       >
                         <span className="ov-row-text">

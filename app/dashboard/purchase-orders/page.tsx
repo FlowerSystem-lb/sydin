@@ -450,7 +450,7 @@ function PurchaseOrdersList() {
                         : missingCosts
                           ? { label: "Add costs", href: `/dashboard/purchase-orders/${order.id}` }
                           : order.status === "ordered" || order.status === "partially_received"
-                            ? { label: "Receive", href: `/dashboard/purchase-orders/${order.id}?receive=1` }
+                            ? { label: "Receive", href: `/dashboard/receiving/new?po=${order.id}` }
                             : order.status === "received" && balance > 0.004
                               ? { label: "Pay", href: `/dashboard/purchase-orders/${order.id}?pay=1` }
                               : null;

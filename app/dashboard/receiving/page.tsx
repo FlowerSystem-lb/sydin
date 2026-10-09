@@ -1,59 +1,18 @@
 "use client";
 
-import ProductThumbnail from "@/components/inventory/ProductThumbnail";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
 import UiIcon from "@/components/UiIcon";
-import {
-  Button,
-  DialogShell,
-  FieldGroup,
-  FieldRow,
-  HelpLink,
-  Select,
-} from "@/components/ui";
-import {
-  DashboardNotice,
-  DashboardPageHeader,
-  DashboardPageShell,
-  DashboardToolbar,
-  LoadingSkeletonGroup,
-} from "@/components/dashboard/Workspace";
-import {
-  DEFAULT_BUSINESS_SETTINGS,
-  getOrCreateBusinessSettings,
-  type BusinessSettings,
-} from "@/app/lib/businessSettings";
-import {
-  formatDepotLabel,
-  getDepotsForUser,
-  type Depot,
-} from "@/app/lib/depots";
-import {
-  formatInventoryPrice,
-  getEffectiveItemLowStockThreshold,
-  getInventoryQuantityLabel,
-  getInventoryUnitLabel,
-  normalizeCurrencyCode,
-  type InventoryUnitType,
-} from "@/app/lib/inventoryItemModel";
-import {
-  formatStockMovementNotes,
-  getRecentStockMovements,
-  recordStockMovement,
-  type StockMovement,
-} from "@/app/lib/stockMovements";
-import {
-  getPurchaseOrderReceivingProgress,
-  getPurchaseOrdersForUser,
-  isPurchaseOrderOpen,
-  type PurchaseOrder,
-} from "@/app/lib/purchaseOrders";
-import { getSuppliersForUser, type Supplier } from "@/app/lib/suppliers";
-import { getLastDepotId, rememberDepotId } from "@/app/lib/lastUsed";
-import { supabase } from "@/app/lib/supabase";
-import { getBusinessUser } from "@/app/lib/business";
+import { buttonClassName, useToast } from "@/components/ui";
 import { LockedFeaturePanel } from "@/components/UpgradePrompt";
+import { DashboardNotice, DashboardPageHeader, DashboardPageShell, LoadingSkeletonGroup } from "@/components/dashboard/Workspace";
+import { useCanDelete } from "@/components/dashboard/BusinessContext";
+import { getBusinessUser } from "@/app/lib/business";
+import { supabase } from "@/app/lib/supabase";
+import { DEFAULT_BUSINESS_SETTINGS, getOrCreateBusinessSettings, type BusinessSettings } from "@/app/lib/businessSettings";
+import { brandingFromSettings } from "@/app/lib/documentPdf";
+import { getInventoryUnitLabel } from "@/app/lib/inventoryItemModel";
 import {
   FALLBACK_SUBSCRIPTION,
   formatPlanName,
@@ -61,2005 +20,398 @@ import {
   getUserSubscription,
   type UserSubscription,
 } from "@/app/lib/subscription";
+import { getPurchaseOrderReceivingProgress, getPurchaseOrdersForUser, type PurchaseOrder } from "@/app/lib/purchaseOrders";
+import { getLegacyStockIns, getRecentReceipts, reasonLabel, voidStockReceipt, type StockReceipt } from "@/app/lib/stockReceipts";
+import { exportStockReceiptPdf } from "@/app/lib/stockReceiptPdf";
 
-type WorkflowStep = "setup" | "receive" | "review" | "finalized";
-type ReceivingSource =
-  | "supplier_delivery"
-  | "purchase_order_draft"
-  | "manual_restock"
-  | "customer_return"
-  | "other";
-type ReceiveFilter =
-  | "all"
-  | "not-received"
-  | "received"
-  | "over-received"
-  | "missing-quantity";
+/*
+ * Stock in (redesign 9 Oct 2026, Sayed's spec): what just arrived? Pick the
+ * order it belongs to, or receive without one / as a customer return. Every
+ * way in leads to the same receiving screen (/dashboard/receiving/new) and the
+ * same database transaction (confirm_stock_receipt). Recent receipts are
+ * listed one per receipt, not one per item.
+ */
 
-interface ReceivingInventoryItem {
-  id: number;
-  name: string;
-  category: string | null;
-  quantity: number;
-  image: string;
-  sku?: string | null;
-  item_code?: string | null;
-  unit_type?: InventoryUnitType | string | null;
-  custom_unit_label?: string | null;
-  cost_price?: number | string | null;
-  min_stock_level?: number | null;
-  supplier_id?: number | null;
-  depot_id?: number | null;
-}
-
-interface ReceivingDetails {
+interface FeedEntry {
+  key: string;
+  tag: "PO" | "D" | "SC" | "RT" | "IN";
   title: string;
-  source: ReceivingSource;
-  supplierId: string;
-  supplierName: string;
-  receivedDate: string;
-  depotId: string;
-  notes: string;
+  meta: string;
+  badge: string;
+  at: string;
+  receipt?: StockReceipt;
 }
 
-interface ReceivingLine {
-  id: string;
-  itemId: number;
-  source: "inventory" | "selected" | "po-draft" | "low-stock";
-  orderedQuantity: number | null;
-  receivedQuantity: string;
-  unitCost: string;
-  note: string;
+function shortDate(value?: string | null) {
+  if (!value) return "";
+  const date = new Date(value.includes("T") ? value : `${value}T00:00:00`);
+  return Number.isNaN(date.getTime()) ? "" : new Intl.DateTimeFormat("en", { month: "short", day: "numeric" }).format(date);
 }
 
-interface FinalizeResult {
-  recorded: number;
-  skipped: number;
-  failed: Array<{ itemId: number; name: string; message: string }>;
+function todayIso() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-interface DraftPayload {
-  step: WorkflowStep;
-  details: ReceivingDetails;
-  lines: ReceivingLine[];
-  savedAt: string;
-}
-
-const DRAFT_STORAGE_KEY = "sydin:receiving-draft";
-
-// "Purchase order draft" is intentionally not offered anymore — real purchases
-// belong in the Purchase Orders module, which adds stock itself when received.
-const SOURCE_OPTIONS: Array<{ value: ReceivingSource; label: string }> = [
-  { value: "supplier_delivery", label: "Supplier delivery" },
-  { value: "manual_restock", label: "Manual restock" },
-  { value: "customer_return", label: "Return from customer" },
-  { value: "other", label: "Other" },
-];
-
-const sourceLabels: Record<ReceivingSource, string> = {
-  supplier_delivery: "Supplier delivery",
-  purchase_order_draft: "Purchase order draft",
-  manual_restock: "Manual restock",
-  customer_return: "Return from customer",
-  other: "Other",
-};
-
-const inputClassName =
-  "min-h-11 w-full rounded-xl border border-theme bg-theme-inset px-3 text-sm text-theme-primary outline-none transition placeholder:text-theme-subtle focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15 disabled:opacity-60";
-
-function makeLineId() {
-  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
-    return crypto.randomUUID();
-  }
-
-  return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
-}
-
-function generateReceivingTitle() {
-  const date = new Date();
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `RCV-${year}${month}${day}`;
-}
-
-function makeDefaultDetails(): ReceivingDetails {
-  return {
-    title: generateReceivingTitle(),
-    source: "supplier_delivery",
-    supplierId: "",
-    supplierName: "",
-    receivedDate: new Date().toISOString().slice(0, 10),
-    depotId: "",
-    notes: "",
-  };
-}
-
-function parseNonNegativeNumber(value: string) {
-  if (value.trim() === "") return null;
-  const parsed = Number(value);
-
-  return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
-}
-
-function formatNumber(value: number) {
-  return new Intl.NumberFormat("en", {
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
-function makeLineFromItem(
-  item: ReceivingInventoryItem,
-  source: ReceivingLine["source"],
-  orderedQuantity: number | null = null,
-  unitCost: string | number | null | undefined = item.cost_price,
-  note = ""
-): ReceivingLine {
-  return {
-    id: makeLineId(),
-    itemId: item.id,
-    source,
-    orderedQuantity,
-    receivedQuantity: "",
-    unitCost: unitCost === null || unitCost === undefined ? "" : String(unitCost),
-    note,
-  };
-}
-
-function getLineReceived(line: ReceivingLine) {
-  return parseNonNegativeNumber(line.receivedQuantity);
-}
-
-function getLineUnitCost(line: ReceivingLine) {
-  return parseNonNegativeNumber(line.unitCost);
-}
-
-export default function ReceivingPage() {
-  const handoffAppliedRef = useRef(false);
-  const [items, setItems] = useState<ReceivingInventoryItem[]>([]);
-  const [subscription, setSubscription] =
-    useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
-  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
-  const [depots, setDepots] = useState<Depot[]>([]);
-  const [businessSettings, setBusinessSettings] =
-    useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+export default function StockInPage() {
+  const router = useRouter();
+  const { showToast } = useToast();
+  const canDelete = useCanDelete();
+  const [userId, setUserId] = useState("");
+  const [settings, setSettings] = useState<BusinessSettings>(DEFAULT_BUSINESS_SETTINGS);
+  const [subscription, setSubscription] = useState<UserSubscription>(FALLBACK_SUBSCRIPTION);
+  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+  const [receipts, setReceipts] = useState<StockReceipt[]>([]);
+  const [legacy, setLegacy] = useState<Awaited<ReturnType<typeof getLegacyStockIns>>>([]);
+  const [monthUnits, setMonthUnits] = useState(0);
+  const [monthMoves, setMonthMoves] = useState(0);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState("");
-  const [notice, setNotice] = useState("");
-  const [step, setStep] = useState<WorkflowStep>("setup");
-  const [details, setDetails] = useState<ReceivingDetails>(makeDefaultDetails);
-  const [lines, setLines] = useState<ReceivingLine[]>([]);
-  const [selectedItemIds, setSelectedItemIds] = useState<number[]>([]);
-  const [selectedInventoryItemId, setSelectedInventoryItemId] = useState("");
-  const [receiveSearch, setReceiveSearch] = useState("");
-  const [receiveFilter, setReceiveFilter] = useState<ReceiveFilter>("all");
-  const [setupError, setSetupError] = useState("");
-  const [lineError, setLineError] = useState("");
-  const [finalizeError, setFinalizeError] = useState("");
-  const [finalizing, setFinalizing] = useState(false);
-  const [confirmFinalize, setConfirmFinalize] = useState(false);
-  const [confirmClearDraft, setConfirmClearDraft] = useState(false);
-  const [draftRestored, setDraftRestored] = useState(false);
-  const [recentStockIn, setRecentStockIn] = useState<StockMovement[]>([]);
-  // Orders still waiting on a delivery. Stock In is where someone stands when
-  // the van arrives; if what arrived was ordered, the order is the place to
-  // receive it, and this is the hand-off.
-  const [expectedOrders, setExpectedOrders] = useState<PurchaseOrder[]>([]);
-  const [finalizeResult, setFinalizeResult] = useState<FinalizeResult | null>(
-    null
-  );
+  const [error, setError] = useState("");
+  const [voiding, setVoiding] = useState<number | null>(null);
+  const [busy, setBusy] = useState(false);
 
-  const currencyCode = normalizeCurrencyCode(
-    businessSettings.currency_code,
-    "USD"
-  );
-  const supplierById = useMemo(
-    () => new Map(suppliers.map((supplier) => [supplier.id, supplier])),
-    [suppliers]
-  );
-  const supplierNameById = useMemo(
-    () => new Map(suppliers.map((supplier) => [supplier.id, supplier.name])),
-    [suppliers]
-  );
-  const depotById = useMemo(
-    () => new Map(depots.map((depot) => [depot.id, depot])),
-    [depots]
-  );
-  const itemById = useMemo(
-    () => new Map(items.map((item) => [item.id, item])),
-    [items]
-  );
-
-  const selectedIdSet = useMemo(
-    () => new Set(selectedItemIds),
-    [selectedItemIds]
-  );
-  const selectedItems = useMemo(
-    () => items.filter((item) => selectedIdSet.has(item.id)),
-    [items, selectedIdSet]
-  );
-  const lowStockItems = useMemo(
-    () =>
-      items.filter((item) => {
-        const threshold = getEffectiveItemLowStockThreshold(
-          item.min_stock_level,
-          0
-        );
-        return threshold > 0 && Number(item.quantity || 0) <= threshold;
-      }),
-    [items]
-  );
-
-  // "Received this month" summary + recent history feed (stock_in movements).
-  const receivingHistory = useMemo(() => {
-    const now = new Date();
-    const monthMovements = recentStockIn.filter((movement) => {
-      const date = new Date(movement.created_at);
-      return (
-        !Number.isNaN(date.getTime()) &&
-        date.getFullYear() === now.getFullYear() &&
-        date.getMonth() === now.getMonth()
-      );
-    });
-
-    return {
-      monthCount: monthMovements.length,
-      monthUnits: monthMovements.reduce(
-        (total, movement) => total + Math.max(0, movement.quantity_delta),
-        0
-      ),
-      recent: recentStockIn.slice(0, 8),
-    };
-  }, [recentStockIn]);
-
-  const receivedDetails = useMemo(
-    () =>
-      lines
-        .map((line) => {
-          const item = itemById.get(line.itemId);
-          const received = getLineReceived(line);
-          const unitCost = getLineUnitCost(line);
-          const overReceived =
-            received !== null &&
-            line.orderedQuantity !== null &&
-            received > line.orderedQuantity;
-          const hasInvalidQuantity =
-            line.receivedQuantity.trim() !== "" && received === null;
-          const hasInvalidCost = line.unitCost.trim() !== "" && unitCost === null;
-          const hasReceived = received !== null && received > 0;
-
-          return {
-            line,
-            item,
-            received,
-            unitCost,
-            overReceived,
-            hasInvalidQuantity,
-            hasInvalidCost,
-            hasReceived,
-          };
-        })
-        .filter((detail) => detail.item),
-    [itemById, lines]
-  );
-
-  const normalizedReceiveSearch = receiveSearch.trim().toLowerCase();
-  const visibleDetails = receivedDetails.filter((detail) => {
-    const item = detail.item;
-    if (!item) return false;
-
-    const supplier = item.supplier_id ? supplierById.get(item.supplier_id) : null;
-    const depot = item.depot_id ? depotById.get(item.depot_id) : null;
-    const searchText = [
-      item.name,
-      item.item_code,
-      item.sku,
-      item.category,
-      supplier?.name,
-      formatDepotLabel(depot),
-      detail.line.note,
-    ]
-      .filter(Boolean)
-      .join(" ")
-      .toLowerCase();
-    const matchesSearch =
-      !normalizedReceiveSearch || searchText.includes(normalizedReceiveSearch);
-    const matchesFilter =
-      receiveFilter === "all" ||
-      (receiveFilter === "not-received" && !detail.hasReceived) ||
-      (receiveFilter === "received" && detail.hasReceived) ||
-      (receiveFilter === "over-received" && detail.overReceived) ||
-      (receiveFilter === "missing-quantity" &&
-        (!detail.hasReceived || detail.hasInvalidQuantity));
-
-    return matchesSearch && matchesFilter;
-  });
-
-  const invalidQuantityCount = receivedDetails.filter(
-    (detail) => detail.hasInvalidQuantity
-  ).length;
-  const invalidCostCount = receivedDetails.filter(
-    (detail) => detail.hasInvalidCost
-  ).length;
-  const receivedLineDetails = receivedDetails.filter(
-    (detail) => detail.hasReceived && detail.item && detail.received !== null
-  );
-  const skippedCount = Math.max(0, receivedDetails.length - receivedLineDetails.length);
-  const overReceivedDetails = receivedLineDetails.filter(
-    (detail) => detail.overReceived
-  );
-  const missingQuantityCount = receivedDetails.filter(
-    (detail) => !detail.hasReceived
-  ).length;
-  const totalReceivedQuantity = receivedLineDetails.reduce(
-    (total, detail) => total + Number(detail.received || 0),
-    0
-  );
-  const estimatedReceivedValue = receivedLineDetails.reduce((total, detail) => {
-    if (detail.unitCost === null || detail.received === null) return total;
-    return total + detail.received * detail.unitCost;
-  }, 0);
-  const hasCostValue = receivedLineDetails.some(
-    (detail) => detail.unitCost !== null
-  );
-  const hasCustomTitle = !/^RCV-\d{8}$/.test(details.title.trim());
-  const hasDraft =
-    step !== "setup" ||
-    lines.length > 0 ||
-    hasCustomTitle ||
-    details.source !== "supplier_delivery" ||
-    details.supplierId !== "" ||
-    details.depotId !== "" ||
-    details.supplierName.trim() !== "" ||
-    details.notes.trim() !== "";
-
-  const getSupplierLabel = (item: ReceivingInventoryItem) =>
-    item.supplier_id ? supplierNameById.get(item.supplier_id) || "Supplier" : "";
-  const getDepotLabel = (item: ReceivingInventoryItem) =>
-    formatDepotLabel(item.depot_id ? depotById.get(item.depot_id) : null);
-
-  const updateDetails = (field: keyof ReceivingDetails, value: string) => {
-    setDetails((current) => ({
-      ...current,
-      [field]: value,
-    }));
+  const load = async (ownerId: string) => {
+    const monthStart = new Date();
+    monthStart.setDate(1);
+    monthStart.setHours(0, 0, 0, 0);
+    const [loadedOrders, loadedReceipts, loadedLegacy, month] = await Promise.all([
+      getPurchaseOrdersForUser(ownerId).catch(() => [] as PurchaseOrder[]),
+      getRecentReceipts(ownerId, 30).catch(() => [] as StockReceipt[]),
+      getLegacyStockIns(ownerId, 40),
+      supabase.from("stock_movements").select("quantity_delta").eq("user_id", ownerId).eq("movement_type", "stock_in").gte("created_at", monthStart.toISOString()),
+    ]);
+    setOrders(loadedOrders);
+    setReceipts(loadedReceipts);
+    setLegacy(loadedLegacy);
+    const rows = (month.data || []) as Array<{ quantity_delta: number }>;
+    setMonthUnits(rows.reduce((sum, row) => sum + Number(row.quantity_delta || 0), 0));
+    setMonthMoves(rows.length);
   };
-
-  const handleSupplierChange = (supplierId: string) => {
-    const supplier = supplierId ? supplierById.get(Number(supplierId)) : null;
-
-    setDetails((current) => ({
-      ...current,
-      supplierId,
-      supplierName: supplier?.name || current.supplierName,
-    }));
-  };
-
-  const addLinesForItems = useCallback(
-    (
-      additions: ReceivingLine[],
-      successMessage: string,
-      emptyMessage: string
-    ) => {
-      setLineError("");
-      setLines((current) => {
-        const existingIds = new Set(current.map((line) => line.itemId));
-        const nextLines = additions.filter((line) => !existingIds.has(line.itemId));
-
-        if (nextLines.length === 0) {
-          setLineError(emptyMessage);
-          return current;
-        }
-
-        setNotice(successMessage.replace("{count}", String(nextLines.length)));
-        return [...current, ...nextLines];
-      });
-    },
-    []
-  );
 
   useEffect(() => {
     let active = true;
-
-    async function loadData() {
+    (async () => {
       const {
         data: { user },
       } = await getBusinessUser();
-
-      if (!user) throw new Error("Please sign in again to use receiving.");
-
-      const [
-        { data: inventoryRows, error: inventoryError },
-        loadedSuppliers,
-        loadedDepots,
-        settings,
-        loadedMovements,
-        loadedSubscription,
-        loadedOrders,
-      ] = await Promise.all([
-        supabase
-          .from("inventory")
-          .select(
-            "id, name, category, quantity, image, sku, item_code, unit_type, custom_unit_label, cost_price, min_stock_level, supplier_id, depot_id"
-          )
-          .eq("user_id", user.id)
-          .order("name", { ascending: true }),
-        getSuppliersForUser(user.id).catch(() => []),
-        getDepotsForUser(user.id).catch(() => []),
-        getOrCreateBusinessSettings(user.id).catch(
-          () => DEFAULT_BUSINESS_SETTINGS
-        ),
-        getRecentStockMovements(user.id, 150).catch(() => []),
-        getUserSubscription(user.id),
-        getPurchaseOrdersForUser(user.id).catch(() => [] as PurchaseOrder[]),
-      ]);
-
-      if (inventoryError) throw inventoryError;
-      if (!active) return;
-
-      setSubscription(loadedSubscription);
-      setItems((inventoryRows || []) as ReceivingInventoryItem[]);
-      setSuppliers(loadedSuppliers);
-      setDepots(loadedDepots);
-      // A draft restored from this device keeps its own depot; a fresh form
-      // starts from the depot used last time.
-      const lastDepot = getLastDepotId();
-      if (lastDepot && loadedDepots.some((row) => String(row.id) === lastDepot)) {
-        setDetails((current) =>
-          current.depotId ? current : { ...current, depotId: lastDepot }
-        );
+      if (!user) {
+        router.replace("/login");
+        return;
       }
-      setBusinessSettings(settings);
-      setRecentStockIn(
-        loadedMovements.filter(
-          (movement) => movement.movement_type === "stock_in"
-        )
-      );
-      setExpectedOrders(
-        loadedOrders.filter(
-          (order) =>
-            order.status !== "draft" &&
-            isPurchaseOrderOpen(order) &&
-            order.lines.length > 0
-        )
-      );
-      setLoading(false);
-    }
-
-    loadData().catch((error) => {
+      const [loadedSettings, loadedSubscription] = await Promise.all([getOrCreateBusinessSettings(user.id), getUserSubscription(user.id)]);
       if (!active) return;
-      setLoadError(
-        error instanceof Error ? error.message : "We could not load receiving."
-      );
-      setLoading(false);
-    });
-
+      setUserId(user.id);
+      setSettings(loadedSettings);
+      setSubscription(loadedSubscription);
+      await load(user.id);
+    })()
+      .catch(() => {
+        if (active) setError("Stock in could not be loaded. Refresh and try again.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
     return () => {
       active = false;
     };
-  }, []);
+  }, [router]);
 
-  useEffect(() => {
-    const frame = window.requestAnimationFrame(() => {
-      const requestedIds = new URLSearchParams(window.location.search)
-        .get("items")
-        ?.split(",")
-        .map((id) => Number(id))
-        .filter((id) => Number.isInteger(id) && id > 0);
+  const today = todayIso();
+  const waiting = useMemo(
+    () =>
+      orders
+        .filter((order) => order.status === "ordered" || order.status === "partially_received")
+        .filter((order) => getPurchaseOrderReceivingProgress(order).remaining > 0)
+        .sort((a, b) => {
+          const overdueA = a.expected_delivery_date && a.expected_delivery_date < today ? 0 : 1;
+          const overdueB = b.expected_delivery_date && b.expected_delivery_date < today ? 0 : 1;
+          return overdueA - overdueB || (a.expected_delivery_date || "9999").localeCompare(b.expected_delivery_date || "9999");
+        }),
+    [orders, today]
+  );
+  const waitingUnits = waiting.reduce((sum, order) => sum + getPurchaseOrderReceivingProgress(order).remaining, 0);
 
-      if (requestedIds?.length) {
-        setSelectedItemIds(requestedIds);
-      }
-    });
-
-    return () => window.cancelAnimationFrame(frame);
-  }, []);
-
-  useEffect(() => {
-    if (loading) return;
-    let frame = 0;
-
-    try {
-      const rawDraft = window.sessionStorage.getItem(DRAFT_STORAGE_KEY);
-      if (!rawDraft) return;
-      const parsed = JSON.parse(rawDraft) as Partial<DraftPayload>;
-      if (!parsed.details && !parsed.lines?.length) return;
-      const validIds = new Set(items.map((item) => item.id));
-
-      frame = window.requestAnimationFrame(() => {
-        if (parsed.details) {
-          setDetails({
-            ...makeDefaultDetails(),
-            ...parsed.details,
-            source: SOURCE_OPTIONS.some(
-              (option) => option.value === parsed.details?.source
-            )
-              ? parsed.details.source
-              : "supplier_delivery",
-          });
-        }
-        if (Array.isArray(parsed.lines)) {
-          setLines(
-            parsed.lines
-              .filter((line) => validIds.has(line.itemId))
-              .map((line) => ({
-                ...line,
-                id: line.id || makeLineId(),
-                orderedQuantity:
-                  typeof line.orderedQuantity === "number"
-                    ? line.orderedQuantity
-                    : null,
-                receivedQuantity: String(line.receivedQuantity || ""),
-                unitCost: String(line.unitCost || ""),
-                note: line.note || "",
-              }))
-          );
-        }
-        setStep(
-          parsed.step === "receive" || parsed.step === "review"
-            ? parsed.step
-            : "receive"
-        );
-        setDraftRestored(true);
-        setNotice("Restored a receiving draft saved on this device.");
-      });
-    } catch {
-      window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-    }
-
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, [items, loading]);
-
-  useEffect(() => {
-    if (loading || handoffAppliedRef.current || selectedItemIds.length === 0) {
-      return;
-    }
-    if (draftRestored || lines.length > 0) {
-      handoffAppliedRef.current = true;
-      return;
-    }
-
-    const handoffLines = selectedItems.map((item) =>
-      makeLineFromItem(
-        item,
-        "selected",
-        null,
-        item.cost_price,
-        "Added from Inventory selection."
-      )
-    );
-
-    let frame = 0;
-    if (handoffLines.length > 0) {
-      frame = window.requestAnimationFrame(() => {
-        setDetails((current) => ({
-          ...current,
-          source: "manual_restock",
-        }));
-        setLines(handoffLines);
-        setStep("receive");
-        setNotice(
-          `Added ${handoffLines.length} selected Inventory item${
-            handoffLines.length === 1 ? "" : "s"
-          } to this receiving draft.`
-        );
-      });
-    }
-
-    handoffAppliedRef.current = true;
-
-    return () => {
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, [draftRestored, lines.length, loading, selectedItemIds.length, selectedItems]);
-
-  useEffect(() => {
-    if (loading || step === "finalized" || !hasDraft) return;
-
-    try {
-      window.sessionStorage.setItem(
-        DRAFT_STORAGE_KEY,
-        JSON.stringify({
-          step,
-          details,
-          lines,
-          savedAt: new Date().toISOString(),
-        } satisfies DraftPayload)
-      );
-    } catch {
-      // Browser draft recovery is best effort only.
-    }
-  }, [details, hasDraft, lines, loading, step]);
-
-  useEffect(() => {
-    if (!hasDraft || step === "finalized") return;
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      event.preventDefault();
-      event.returnValue = "";
-    };
-
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [hasDraft, step]);
-
-  const refreshItems = async () => {
-    const {
-      data: { user },
-    } = await getBusinessUser();
-
-    if (!user) throw new Error("Please sign in again to refresh inventory.");
-
-    const { data, error } = await supabase
-      .from("inventory")
-      .select(
-        "id, name, category, quantity, image, sku, item_code, unit_type, custom_unit_label, cost_price, min_stock_level, supplier_id, depot_id"
-      )
-      .eq("user_id", user.id)
-      .order("name", { ascending: true });
-
-    if (error) throw error;
-    setItems((data || []) as ReceivingInventoryItem[]);
-  };
-
-  const startReceiving = () => {
-    setSetupError("");
-    setLineError("");
-    const title = details.title.trim();
-
-    if (!title) {
-      setSetupError("Add a receiving title or reference before starting.");
-      return;
-    }
-
-    if (items.length === 0) {
-      setSetupError("Inventory is empty. Add items before receiving stock.");
-      return;
-    }
-
-    if (selectedItems.length > 0 && lines.length === 0) {
-      setLines(
-        selectedItems.map((item) =>
-          makeLineFromItem(item, "selected", null, item.cost_price)
-        )
-      );
-    }
-
-    setReceiveSearch("");
-    setReceiveFilter("all");
-    setConfirmFinalize(false);
-    setFinalizeResult(null);
-    setStep("receive");
-  };
-
-  const addInventoryLine = () => {
-    const item = itemById.get(Number(selectedInventoryItemId));
-
-    if (!item) {
-      setLineError("Choose an inventory item before adding it.");
-      return;
-    }
-
-    addLinesForItems(
-      [makeLineFromItem(item, "inventory")],
-      "Added {count} item to this receiving draft.",
-      "That item is already on this receiving draft."
-    );
-    setSelectedInventoryItemId("");
-  };
-
-  const addLowStockLines = () => {
-    addLinesForItems(
-      lowStockItems.map((item) => makeLineFromItem(item, "low-stock")),
-      "Added {count} low-stock item(s) to this receiving draft.",
-      "No new low-stock items are available to add."
-    );
-  };
-
-  const updateLine = (
-    lineId: string,
-    update: Partial<Pick<ReceivingLine, "receivedQuantity" | "unitCost" | "note">>
-  ) => {
-    setLines((current) =>
-      current.map((line) =>
-        line.id === lineId
-          ? {
-              ...line,
-              ...update,
-            }
-          : line
-      )
-    );
-  };
-
-  const clearLine = (lineId: string) => {
-    setLines((current) =>
-      current.map((line) =>
-        line.id === lineId
-          ? {
-              ...line,
-              receivedQuantity: "",
-              unitCost: "",
-              note: "",
-            }
-          : line
-      )
-    );
-  };
-
-  const receiveOrderedLine = (lineId: string) => {
-    setLines((current) =>
-      current.map((line) =>
-        line.id === lineId && line.orderedQuantity !== null
-          ? {
-              ...line,
-              receivedQuantity: String(line.orderedQuantity),
-            }
-          : line
-      )
-    );
-  };
-
-  const receiveOrderedQuantities = () => {
-    setLines((current) =>
-      current.map((line) =>
-        line.orderedQuantity !== null
-          ? {
-              ...line,
-              receivedQuantity: String(line.orderedQuantity),
-            }
-          : line
-      )
-    );
-  };
-
-  const clearDraft = () => {
-    window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-    setDetails(makeDefaultDetails());
-    setLines([]);
-    setStep("setup");
-    setReceiveSearch("");
-    setReceiveFilter("all");
-    setSetupError("");
-    setLineError("");
-    setFinalizeError("");
-    setConfirmFinalize(false);
-    setConfirmClearDraft(false);
-    setFinalizeResult(null);
-    setDraftRestored(false);
-    setNotice("Receiving draft cleared.");
-  };
-
-  const goToReview = () => {
-    setFinalizeError("");
-    setLineError("");
-
-    if (invalidQuantityCount > 0 || invalidCostCount > 0) {
-      setLineError("Fix invalid received quantities or costs before review.");
-      return;
-    }
-
-    setConfirmFinalize(false);
-    setStep("review");
-  };
-
-  const finalizeReceiving = async () => {
-    if (finalizing || !confirmFinalize) return;
-    if (invalidQuantityCount > 0 || invalidCostCount > 0) {
-      setFinalizeError("Fix invalid received quantities or costs before finalizing.");
-      return;
-    }
-
-    try {
-      setFinalizing(true);
-      setFinalizeError("");
-      rememberDepotId(details.depotId);
-      const failed: FinalizeResult["failed"] = [];
-      let recorded = 0;
-
-      for (const detail of receivedLineDetails) {
-        const item = detail.item;
-        if (!item || detail.received === null || detail.received <= 0) continue;
-
-        try {
-          await recordStockMovement({
-            itemId: item.id,
-            movementType: "stock_in",
-            quantity: detail.received,
-            notes: [
-              /* Stays "Receiving" although the screen is now called Stock In.
-                 This string is written into stock movement history, and every
-                 record already in the database says "Receiving". Changing it
-                 would split the audit trail into two vocabularies for one
-                 action without rewriting the past, which is worse than one
-                 slightly old-fashioned word. The label people read has moved;
-                 the record they can search has not. */
-              "Receiving",
-              details.title.trim(),
-              sourceLabels[details.source],
-              details.supplierName.trim(),
-              detail.line.note.trim(),
-            ]
-              .filter(Boolean)
-              .join(" - "),
-          });
-          recorded += 1;
-        } catch (error) {
-          failed.push({
-            itemId: item.id,
-            name: item.name,
-            message:
-              error instanceof Error
-                ? error.message
-                : "Stock-in movement could not be recorded.",
-          });
-        }
-      }
-
-      await refreshItems();
-      try {
-        const {
-          data: { user },
-        } = await getBusinessUser();
-        if (user) {
-          const refreshedMovements = await getRecentStockMovements(user.id, 150);
-          setRecentStockIn(
-            refreshedMovements.filter(
-              (movement) => movement.movement_type === "stock_in"
-            )
-          );
-        }
-      } catch {
-        // History refresh is cosmetic; the finalize itself already succeeded.
-      }
-      const result = {
-        recorded,
-        skipped: skippedCount,
-        failed,
+  const feed = useMemo<FeedEntry[]>(() => {
+    const fromReceipts: FeedEntry[] = receipts.map((receipt) => {
+      const names = receipt.lines.map((line) => line.item?.name).filter(Boolean) as string[];
+      const units = receipt.lines.reduce((sum, line) => sum + line.quantity - line.damaged_quantity, 0);
+      const tag = receipt.source === "po" ? "PO" : receipt.source === "scanner" ? "SC" : receipt.source === "return" ? "RT" : "D";
+      const sourceText =
+        receipt.source === "po"
+          ? receipt.po_reference || receipt.receipt_number
+          : receipt.source === "return"
+            ? "customer return"
+            : receipt.source === "scanner"
+              ? "Scanner"
+              : `without order (${reasonLabel(receipt.reason).toLowerCase()})`;
+      return {
+        key: `r-${receipt.id}`,
+        tag,
+        title: names.slice(0, 5).join(", ") + (names.length > 5 ? ` +${names.length - 5}` : "") || "Receipt",
+        meta: [shortDate(receipt.received_at), receipt.reference, sourceText, `${receipt.lines.length} ${receipt.lines.length === 1 ? "line" : "lines"}`, receipt.status === "voided" ? "voided" : ""].filter(Boolean).join(" · "),
+        badge: receipt.status === "voided" ? "voided" : receipt.lines.length > 1 ? `${receipt.lines.length} lines` : `+${units}`,
+        at: receipt.received_at,
+        receipt,
       };
-      setFinalizeResult(result);
-      setStep("finalized");
-      setNotice(
-        failed.length
-          ? `Receiving finalized with ${failed.length} failed stock-in movement${
-              failed.length === 1 ? "" : "s"
-            }.`
-          : "Receiving finalized through stock-in movements."
-      );
-      if (failed.length === 0) {
-        window.sessionStorage.removeItem(DRAFT_STORAGE_KEY);
-      }
-    } catch {
-      setFinalizeError("Something went wrong while finalizing receiving.");
+    });
+    // Older stock-ins (before one receipt per delivery), grouped by note + minute.
+    const groups = new Map<string, typeof legacy>();
+    legacy.forEach((row) => {
+      const groupKey = `${row.notes || ""}|${row.created_at.slice(0, 16)}`;
+      groups.set(groupKey, [...(groups.get(groupKey) || []), row]);
+    });
+    const fromLegacy: FeedEntry[] = [...groups.values()].map((rows) => {
+      const note = rows[0].notes || "";
+      const isScanner = /scanner/i.test(note);
+      const units = rows.reduce((sum, row) => sum + Number(row.quantity_delta || 0), 0);
+      const names = [...new Set(rows.map((row) => row.inventory?.name).filter(Boolean))] as string[];
+      return {
+        key: `m-${rows[0].id}`,
+        tag: isScanner ? "SC" : "IN",
+        title: names.slice(0, 5).join(", ") || "Stock in",
+        meta: [shortDate(rows[0].created_at), note.replace(/\s+/g, " ").slice(0, 70)].filter(Boolean).join(" · "),
+        badge: rows.length > 1 ? `${rows.length} lines` : `+${units}`,
+        at: rows[0].created_at,
+      };
+    });
+    return [...fromReceipts, ...fromLegacy].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 15);
+  }, [legacy, receipts]);
+
+  const printReceipt = async (receipt: StockReceipt) => {
+    const order = receipt.purchase_order_id ? orders.find((entry) => entry.id === receipt.purchase_order_id) : null;
+    await exportStockReceiptPdf({
+      details: {
+        reference: receipt.reference || receipt.receipt_number,
+        poReference: receipt.po_reference,
+        poNumber: order?.po_number,
+        sourceLabel: receipt.source === "po" ? "Purchase order" : receipt.source === "return" ? "Customer return" : receipt.source === "scanner" ? "Scanner" : `No order · ${reasonLabel(receipt.reason)}`,
+        receivedAt: receipt.received_at,
+        receivedBy: receipt.received_by,
+        supplierName: receipt.supplier_name || order?.supplier_name_snapshot,
+        depotName: order?.depot_name_snapshot,
+        deliveryNoteNo: receipt.delivery_note_no,
+        notes: receipt.notes,
+        voided: receipt.status === "voided",
+        qrUrl: `${window.location.origin}/dashboard/receiving`,
+      },
+      lines: receipt.lines.map((line) => ({
+        name: line.item?.name || "Item",
+        code: line.item?.item_code || line.item?.sku,
+        unit: line.item ? getInventoryUnitLabel(line.item.unit_type, line.item.custom_unit_label) : null,
+        imageUrl: line.item?.image,
+        expected: line.expected_quantity,
+        received: line.quantity,
+        damaged: line.damaged_quantity,
+        unitCost: line.unit_cost,
+        batch: line.batch,
+        expiryDate: line.expiry_date,
+      })),
+      branding: brandingFromSettings(settings),
+    });
+  };
+
+  const voidReceipt = async (receipt: StockReceipt) => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      await voidStockReceipt(receipt.id, "Voided from Stock in");
+      setVoiding(null);
+      await load(userId);
+      showToast({ tone: "success", message: `${receipt.reference || receipt.receipt_number} voided; its stock was taken back out.` });
+    } catch (voidError) {
+      showToast({ tone: "danger", message: voidError instanceof Error ? voidError.message : "The receipt could not be voided." });
     } finally {
-      setFinalizing(false);
+      setBusy(false);
     }
   };
 
-  const stepItems: Array<{ id: WorkflowStep; label: string }> = [
-    { id: "setup", label: "Setup" },
-    { id: "receive", label: "Items" },
-    { id: "review", label: "Review" },
-    { id: "finalized", label: "Finalize" },
-  ];
+  const header = (
+    <DashboardPageHeader
+      eyebrow="Buying"
+      title="Stock in"
+      description="What just arrived? Pick the order it belongs to — or receive without one."
+      actions={
+        <Link href="/dashboard/scanner?mode=receive" className={buttonClassName({ variant: "secondary" })}>
+          <UiIcon name="scan" className="h-4 w-4" />
+          Scan a delivery
+        </Link>
+      }
+    />
+  );
 
-  // Same boundary as purchase orders: Free tells you what you have, paid plans
-  // run the buying workflow that changes it.
-  if (!getSubscriptionCapabilities(subscription).receiving) {
+  if (!loading && !getSubscriptionCapabilities(subscription).receiving) {
     return (
-      <main className="operations-workspace operations-receiving">
-        <DashboardPageShell width="wide">
-          <DashboardPageHeader
-            eyebrow="Operations"
-            title="Stock In"
-            description="Book arriving stock into the depot."
-          />
-          <LockedFeaturePanel
-            feature="Stock In"
-            benefit="Book arriving stock into a depot in one pass, with supplier, cost and quantity recorded against every item."
-            currentPlan={formatPlanName(subscription.plan)}
-            requiredPlan="Standard"
-            source="receiving"
-          />
-        </DashboardPageShell>
-      </main>
+      <DashboardPageShell as="main">
+        {header}
+        <LockedFeaturePanel
+          feature="Stock In"
+          benefit="Book arriving stock into a depot in one pass, with supplier, cost and quantity recorded against every item."
+          currentPlan={formatPlanName(subscription.plan)}
+          requiredPlan="Standard"
+          source="receiving"
+        />
+      </DashboardPageShell>
     );
   }
 
   return (
-    <main className="operations-workspace operations-receiving">
-      <DashboardPageShell
-        width="wide"
-        className={
-          step === "receive" || step === "review" ? "pb-28 sm:pb-0" : ""
-        }
-      >
-        <DashboardPageHeader
-          eyebrow="Operations"
-          title="Stock In"
-          description="Record stock that arrives without a purchase — customer returns, corrections, and quick restocks. Bought something? Use Purchase Orders instead."
-          actions={
-            <div className="operations-step-strip grid grid-cols-4 overflow-hidden rounded-2xl border border-theme bg-theme-inset text-center text-xs font-black text-theme-secondary">
-              {stepItems.map((item, index) => (
-                <div
-                  key={item.id}
-                  className={`min-w-20 border-r border-theme px-3 py-2 last:border-r-0 ${
-                    step === item.id ? "bg-blue-500/10 text-theme-accent" : ""
-                  }`}
-                >
-                  <span className="block text-xs">
-                    Step {index + 1}
-                  </span>
-                  <span>{item.label}</span>
-                </div>
-              ))}
-            </div>
-          }
-        />
+    <DashboardPageShell as="main" className="rcv-v2">
+      {header}
+      {error && <DashboardNotice tone="danger">{error}</DashboardNotice>}
 
-        {(notice || loadError) && (
-          <DashboardNotice tone={loadError ? "danger" : "info"}>
-            {loadError || notice}
-          </DashboardNotice>
-        )}
+      <section className="rcv-v2-sources">
+        <a href="#waiting" className="rcv-v2-source is-recommended motion-enter">
+          <span className="rcv-v2-source-icon is-blue" aria-hidden>
+            <UiIcon name="cart" className="h-5 w-5" />
+          </span>
+          <strong>Against a purchase order</strong>
+          <span>
+            Expected items load automatically. Shortages become a backorder. <b>Recommended.</b>
+          </span>
+        </a>
+        <Link href="/dashboard/receiving/new?source=no_order" className="rcv-v2-source motion-enter" style={{ animationDelay: "50ms" }}>
+          <span className="rcv-v2-source-icon is-green" aria-hidden>
+            <UiIcon name="download" className="h-5 w-5" />
+          </span>
+          <strong>Without an order</strong>
+          <span>Walk-in supplier, gift, found stock or opening balance. Pick a reason.</span>
+        </Link>
+        <Link href="/dashboard/receiving/new?source=return" className="rcv-v2-source motion-enter" style={{ animationDelay: "100ms" }}>
+          <span className="rcv-v2-source-icon is-amber" aria-hidden>
+            <UiIcon name="movement" className="h-5 w-5" />
+          </span>
+          <strong>Customer return</strong>
+          <span>Items coming back from a sale or event. Choose restock or damaged.</span>
+        </Link>
+      </section>
 
+      <section id="waiting" className="po-v2-card rcv-v2-list motion-enter" style={{ animationDelay: "150ms" }}>
+        <div className="po-v2-card-head">
+          <h2>Waiting to be received</h2>
+          <span className="rcv-v2-muted">
+            {waiting.length} {waiting.length === 1 ? "order" : "orders"} · {waitingUnits} units
+          </span>
+        </div>
         {loading ? (
-          <LoadingSkeletonGroup
-            count={3}
-            className="dashboard-card"
-            itemClassName="min-h-20"
-          />
-        ) : loadError ? null : step === "setup" ? (
-          <section className="dashboard-card grid gap-4 lg:grid-cols-[minmax(0,1fr)_22rem]">
-            <div className="grid gap-4">
-              <div className="rounded-2xl border border-blue-300/20 bg-blue-500/10 px-4 py-3 text-sm text-theme-accent">
-                Draft saved on this device. Finalizing records stock-in
-                movements and updates inventory.
-              </div>
-              {draftRestored && (
-                <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-theme-warning">
-                  A receiving draft saved on this device was restored. Review it
-                  before finalizing or clear it to restart.
-                </p>
-              )}
-              {setupError && (
-                <DashboardNotice tone="danger">{setupError}</DashboardNotice>
-              )}
-              {/* Was the last form but one still on the old shape: a caption
-                  stacked above every boxed input. Same label-left rows as
-                  Add Item, the invoice and New PO now. Labels shortened to
-                  fit the 6.5rem label column -- "Stock in title/reference"
-                  is "Reference", "Default depot/location" is "Depot". */}
-              <div className="item-form">
-                <div className="item-form-groups">
-                  <FieldGroup label="Delivery">
-                    <FieldRow label="Reference" htmlFor="rcv-title">
-                      <input
-                        id="rcv-title"
-                        type="text"
-                        value={details.title}
-                        onChange={(event) => updateDetails("title", event.target.value)}
-                        placeholder="RCV-20260622"
-                      />
-                    </FieldRow>
-
-                    <FieldRow label="Source">
-                      <Select
-                        ariaLabel="Source"
-                        value={details.source}
-                        onChange={(value) =>
-                          updateDetails("source", value as ReceivingSource)
-                        }
-                        options={SOURCE_OPTIONS.map((option) => ({
-                          value: option.value,
-                          label: option.label,
-                        }))}
-                      />
-                      {details.source === "supplier_delivery" && (
-                        <span className="receiving-po-hint mt-2">
-                          <UiIcon name="info" className="h-4 w-4 shrink-0" />
-                          <span>
-                            Buying from a supplier? A{" "}
-                            <Link
-                              href={`/dashboard/purchase-orders/new?returnTo=${encodeURIComponent(
-                                "/dashboard/receiving"
-                              )}`}
-                            >
-                              purchase order
-                            </Link>{" "}
-                            also tracks cost, payment, and the invoice — and adds
-                            stock when received.
-                          </span>
-                        </span>
-                      )}
-                    </FieldRow>
-
-                    <FieldRow label="Date" htmlFor="rcv-date">
-                      <input
-                        id="rcv-date"
-                        type="date"
-                        value={details.receivedDate}
-                        onChange={(event) =>
-                          updateDetails("receivedDate", event.target.value)
-                        }
-                      />
-                    </FieldRow>
-
-                    <FieldRow label="Depot">
-                      <Select
-                        ariaLabel="Default depot"
-                        value={details.depotId}
-                        onChange={(value) => updateDetails("depotId", value)}
-                        placeholder="No default depot"
-                        clearable
-                        searchable={depots.length > 8}
-                        options={depots.map((depot) => ({
-                          value: String(depot.id),
-                          label: formatDepotLabel(depot),
-                        }))}
-                      />
-                    </FieldRow>
-                  </FieldGroup>
-
-                  <FieldGroup label="Supplier">
-                    {suppliers.length > 0 ? (
-                      <>
-                        <FieldRow label="Supplier">
-                          <Select
-                            ariaLabel="Supplier"
-                            value={details.supplierId}
-                            onChange={handleSupplierChange}
-                            placeholder="No supplier selected"
-                            clearable
-                            searchable={suppliers.length > 8}
-                            options={suppliers.map((supplier) => ({
-                              value: String(supplier.id),
-                              label: supplier.name,
-                            }))}
-                          />
-                        </FieldRow>
-                        <FieldRow label="Source text" htmlFor="rcv-supplier-text">
-                          <input
-                            id="rcv-supplier-text"
-                            type="text"
-                            value={details.supplierName}
-                            onChange={(event) =>
-                              updateDetails("supplierName", event.target.value)
-                            }
-                            placeholder="Optional receiving source text"
-                          />
-                        </FieldRow>
-                      </>
-                    ) : (
-                      <FieldRow label="Supplier" htmlFor="rcv-supplier-name">
-                        <input
-                          id="rcv-supplier-name"
-                          type="text"
-                          value={details.supplierName}
-                          onChange={(event) =>
-                            updateDetails("supplierName", event.target.value)
-                          }
-                          placeholder="Supplier or source name"
-                        />
-                      </FieldRow>
-                    )}
-                  </FieldGroup>
-
-                  <FieldGroup label="Notes">
-                    <textarea
-                      value={details.notes}
-                      onChange={(event) => updateDetails("notes", event.target.value)}
-                      placeholder="Optional receiving notes"
-                      aria-label="Notes"
-                      className="item-panel-textarea"
-                    />
-                  </FieldGroup>
-                </div>
-              </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Button onClick={startReceiving} disabled={items.length === 0}>
-                  Start receiving
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={() => setConfirmClearDraft(true)}
-                  disabled={!hasDraft}
-                >
-                  Clear draft
-                </Button>
-              </div>
-            </div>
-            <aside className="grid content-start gap-3 rounded-2xl border border-theme bg-theme-inset p-4">
-              <p className="text-sm font-black text-theme-primary">
-                Setup status
-              </p>
-              <div className="grid grid-cols-2 gap-2 text-sm">
-                <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-xs font-bold text-theme-subtle">
-                    Inventory
-                  </p>
-                  <p className="mt-1 text-2xl font-black text-theme-primary">
-                    {items.length}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-theme bg-theme-surface p-3">
-                  <p className="text-xs font-bold text-theme-subtle">
-                    Selected
-                  </p>
-                  <p className="mt-1 text-2xl font-black text-theme-primary">
-                    {selectedItems.length}
-                  </p>
-                </div>
-              </div>
-              {expectedOrders.length > 0 && (
-                <div className="grid gap-1.5">
-                  <p className="text-xs font-bold text-theme-subtle">
-                    Deliveries expected
-                  </p>
-                  {expectedOrders.slice(0, 5).map((order) => {
-                    const progress = getPurchaseOrderReceivingProgress(order);
-                    return (
-                      <Link
-                        key={order.id}
-                        href={`/dashboard/purchase-orders?open=${order.id}&receive=1`}
-                        className="receiving-expected-row"
-                      >
-                        <span className="min-w-0">
-                          <span className="block truncate text-sm font-semibold text-theme-primary">
-                            {order.po_number}
-                            {order.supplier_name_snapshot
-                              ? ` · ${order.supplier_name_snapshot}`
-                              : ""}
-                          </span>
-                          <span className="block truncate text-xs text-theme-muted">
-                            {progress.remaining} of {progress.ordered} units still to come
-                          </span>
-                        </span>
-                        <span className="receiving-expected-cta">Receive</span>
-                      </Link>
-                    );
-                  })}
-                  {expectedOrders.length > 5 && (
-                    <Link
-                      href="/dashboard/purchase-orders?status=ordered"
-                      className="text-xs font-semibold text-theme-accent underline-offset-2 hover:underline"
-                    >
-                      All {expectedOrders.length} open orders
-                    </Link>
-                  )}
-                </div>
-              )}
-              <p className="text-xs leading-5 text-theme-muted">
-                Use this page for stock that arrives without a purchase order.
-                Deliveries against an order are received on the order, so the
-                order knows what is still to come.{" "}
-                <HelpLink article="stock-in-without-order">What is Stock In?</HelpLink>
-              </p>
-              {items.length === 0 && (
-                <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
-                  Inventory is empty. Add items before receiving stock.
-                </p>
-              )}
-            </aside>
-          </section>
-        ) : step === "receive" ? (
-          <>
-            <DashboardToolbar>
-              <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                <div>
-                  <h2 className="text-xl font-black text-theme-primary">
-                    {details.title || "Receiving draft"}
-                  </h2>
-                  <p className="mt-1 text-sm text-theme-muted">
-                    {sourceLabels[details.source]}. {receivedLineDetails.length}{" "}
-                    of {receivedDetails.length} lines have received quantity.
-                  </p>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-[minmax(12rem,1fr)_12rem] xl:min-w-[35rem]">
-                  <label className="relative">
-                    <span className="sr-only">Search receiving items</span>
-                    <UiIcon
-                      name="search"
-                      className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-theme-subtle"
-                    />
-                    <input
-                      type="search"
-                      value={receiveSearch}
-                      onChange={(event) => setReceiveSearch(event.target.value)}
-                      placeholder="Search receiving"
-                      className="ui-input min-h-9 w-full rounded-lg border border-theme bg-theme-surface py-2.5 pl-10 pr-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                    />
-                  </label>
-                  <Select
-                    ariaLabel="Receiving filter"
-                    value={receiveFilter}
-                    onChange={(value) => setReceiveFilter(value as ReceiveFilter)}
-                    options={[
-                      { value: "all", label: "All rows" },
-                      { value: "not-received", label: "Not received" },
-                      { value: "received", label: "Received" },
-                      { value: "over-received", label: "Over received" },
-                      { value: "missing-quantity", label: "Missing quantity" },
-                    ]}
-                  />
-                </div>
-              </div>
-              <div className="mt-3 grid gap-2 lg:grid-cols-[minmax(12rem,1fr)_auto_auto_auto]">
-                <Select
-                  ariaLabel="Add inventory item"
-                  value={selectedInventoryItemId}
-                  onChange={setSelectedInventoryItemId}
-                  placeholder="Add inventory item"
-                  searchable={items.length > 8}
-                  options={items.map((item) => ({
-                    value: String(item.id),
-                    label: item.name,
-                    description: [item.item_code || item.sku, getDepotLabel(item)]
-                      .filter(Boolean)
-                      .join(" | "),
-                    image: item.image || null,
-                  }))}
-                />
-                <Button variant="secondary" onClick={addInventoryLine}>
-                  Add item
-                </Button>
-                <Button variant="secondary" onClick={addLowStockLines}>
-                  Add low stock
-                </Button>
-              </div>
-              {lineError && (
-                <DashboardNotice tone="danger" className="mt-3">
-                  {lineError}
-                </DashboardNotice>
-              )}
-              <p className="sr-only" aria-live="polite">
-                {receivedLineDetails.length} received lines, {skippedCount} skipped
-                lines, {overReceivedDetails.length} over received warnings.
-              </p>
-            </DashboardToolbar>
-
-            {invalidQuantityCount > 0 || invalidCostCount > 0 ? (
-              <DashboardNotice tone="danger">
-                Fix {invalidQuantityCount} invalid received quantity value
-                {invalidQuantityCount === 1 ? "" : "s"} and {invalidCostCount}{" "}
-                invalid cost value{invalidCostCount === 1 ? "" : "s"}.
-              </DashboardNotice>
-            ) : null}
-
-            <section className="dashboard-table-card">
-              <div className="hidden overflow-x-auto xl:block">
-                <table className="dashboard-table min-w-[1180px] table-fixed">
-                  <thead>
-                    <tr>
-                      <th className="w-[23%] px-4 py-3">Item</th>
-                      <th className="w-[10%] px-4 py-3 text-right">Current</th>
-                      <th className="w-[10%] px-4 py-3">Unit</th>
-                      <th className="w-[12%] px-4 py-3">Depot</th>
-                      <th className="w-[12%] px-4 py-3">Supplier</th>
-                      <th className="w-[9%] px-4 py-3 text-right">Ordered</th>
-                      <th className="w-[10%] px-4 py-3">Received</th>
-                      <th className="w-[9%] px-4 py-3">Unit cost</th>
-                      <th className="px-4 py-3">Note</th>
-                      <th className="w-[10%] px-4 py-3">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-divider)]">
-                    {visibleDetails.map((detail) => {
-                      const item = detail.item;
-                      if (!item) return null;
-                      const receivedInputId = `received-${detail.line.id}`;
-                      const costInputId = `cost-${detail.line.id}`;
-
-                      return (
-                        <tr key={detail.line.id} className="align-middle">
-                          <td className="px-4 py-3">
-                            <div className="flex min-w-0 items-center gap-3">
-                              <div className="relative h-11 w-11 shrink-0 overflow-hidden rounded-xl bg-theme-inset ring-1 ring-black/5">
-                                <ProductThumbnail
-                                  src={item.image}
-                                  alt=""
-                                  sizes="44px"
-                                  imgClassName="object-cover"
-                                  iconClassName="h-4 w-4"
-                                  fallbackClassName="flex h-full w-full items-center justify-center text-theme-subtle"
-                                />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="truncate font-black text-theme-primary">
-                                  {item.name}
-                                </p>
-                                <p className="truncate text-xs text-theme-muted">
-                                  {item.item_code || item.sku || "Inventory item"}
-                                </p>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-4 py-3 text-right font-black text-theme-primary">
-                            {formatNumber(Number(item.quantity || 0))}
-                          </td>
-                          <td className="px-4 py-3 text-theme-secondary">
-                            {getInventoryUnitLabel(
-                              item.unit_type,
-                              item.custom_unit_label
-                            )}
-                          </td>
-                          <td className="px-4 py-3 text-theme-secondary">
-                            {getDepotLabel(item)}
-                          </td>
-                          <td className="px-4 py-3 text-theme-secondary">
-                            {getSupplierLabel(item) || details.supplierName || "Not set"}
-                          </td>
-                          <td className="px-4 py-3 text-right font-bold text-theme-secondary">
-                            {detail.line.orderedQuantity === null
-                              ? "Not set"
-                              : formatNumber(detail.line.orderedQuantity)}
-                          </td>
-                          <td className="px-4 py-3">
-                            <label htmlFor={receivedInputId} className="sr-only">
-                              Received quantity for {item.name}
-                            </label>
-                            <input
-                              id={receivedInputId}
-                              inputMode="decimal"
-                              type="number"
-                              min="0"
-                              step="any"
-                              value={detail.line.receivedQuantity}
-                              onChange={(event) =>
-                                updateLine(detail.line.id, {
-                                  receivedQuantity: event.target.value,
-                                })
-                              }
-                              className={inputClassName}
-                            />
-                            {detail.overReceived && (
-                              <p className="mt-1 text-xs font-bold text-theme-warning">
-                                Over ordered quantity
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-4 py-3">
-                            <label htmlFor={costInputId} className="sr-only">
-                              Unit cost for {item.name}
-                            </label>
-                            <input
-                              id={costInputId}
-                              inputMode="decimal"
-                              type="number"
-                              min="0"
-                              step="any"
-                              value={detail.line.unitCost}
-                              onChange={(event) =>
-                                updateLine(detail.line.id, {
-                                  unitCost: event.target.value,
-                                })
-                              }
-                              className={inputClassName}
-                            />
-                          </td>
-                          <td className="px-4 py-3">
-                            <input
-                              type="text"
-                              value={detail.line.note}
-                              onChange={(event) =>
-                                updateLine(detail.line.id, {
-                                  note: event.target.value,
-                                })
-                              }
-                              aria-label={`Receiving note for ${item.name}`}
-                              placeholder="Optional"
-                              className={inputClassName}
-                            />
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="grid gap-2">
-                              <button
-                                type="button"
-                                onClick={() => receiveOrderedLine(detail.line.id)}
-                                disabled={detail.line.orderedQuantity === null}
-                                className="min-h-10 rounded-xl border border-theme bg-theme-inset px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover disabled:opacity-50"
-                              >
-                                Receive ordered
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => clearLine(detail.line.id)}
-                                className="min-h-10 rounded-xl border border-theme bg-theme-inset px-2 text-xs font-bold text-theme-primary transition hover:bg-theme-hover"
-                              >
-                                Clear row
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-
-              <div className="grid gap-2 p-3 xl:hidden">
-                {visibleDetails.map((detail) => {
-                  const item = detail.item;
-                  if (!item) return null;
-
-                  return (
-                    <article
-                      key={detail.line.id}
-                      className="receiving-line-row rounded-2xl border border-theme bg-theme-inset p-3"
-                    >
-                      <div className="flex min-w-0 items-center gap-3">
-                        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl bg-theme-surface ring-1 ring-black/5">
-                          <ProductThumbnail
-                            src={item.image}
-                            alt=""
-                            sizes="48px"
-                            imgClassName="object-cover"
-                            iconClassName="h-5 w-5"
-                            fallbackClassName="flex h-full w-full items-center justify-center text-theme-subtle"
-                          />
-                        </div>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate font-black text-theme-primary">
-                            {item.name}
-                          </p>
-                          <p className="truncate text-xs text-theme-muted">
-                            {[item.item_code || item.sku, getDepotLabel(item)]
-                              .filter(Boolean)
-                              .join(" | ")}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
-                        <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                          <p className="font-bold text-theme-subtle">
-                            Current
-                          </p>
-                          <p className="mt-1 font-black text-theme-primary">
-                            {getInventoryQuantityLabel(
-                              item.quantity,
-                              item.unit_type,
-                              item.custom_unit_label
-                            )}
-                          </p>
-                        </div>
-                        <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                          <p className="font-bold text-theme-subtle">
-                            Ordered
-                          </p>
-                          <p className="mt-1 font-black text-theme-primary">
-                            {detail.line.orderedQuantity === null
-                              ? "Not set"
-                              : formatNumber(detail.line.orderedQuantity)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 grid gap-2">
-                        <label className="grid gap-1 text-sm font-bold text-theme-primary">
-                          Received quantity
-                          <input
-                            inputMode="decimal"
-                            type="number"
-                            min="0"
-                            step="any"
-                            value={detail.line.receivedQuantity}
-                            onChange={(event) =>
-                              updateLine(detail.line.id, {
-                                receivedQuantity: event.target.value,
-                              })
-                            }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                          />
-                        </label>
-                        {detail.overReceived && (
-                          <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-theme-warning">
-                            Over received versus ordered quantity.
-                          </p>
-                        )}
-                        <label className="grid gap-1 text-sm font-bold text-theme-primary">
-                          Unit cost
-                          <input
-                            inputMode="decimal"
-                            type="number"
-                            min="0"
-                            step="any"
-                            value={detail.line.unitCost}
-                            onChange={(event) =>
-                              updateLine(detail.line.id, {
-                                unitCost: event.target.value,
-                              })
-                            }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                          />
-                        </label>
-                        <label className="grid gap-1 text-sm font-bold text-theme-primary">
-                          Row note
-                          <input
-                            type="text"
-                            value={detail.line.note}
-                            onChange={(event) =>
-                              updateLine(detail.line.id, {
-                                note: event.target.value,
-                              })
-                            }
-                            className="min-h-11 rounded-xl border border-theme bg-theme-surface px-3 text-sm text-theme-primary outline-none focus:border-sydin-blue/50 focus:ring-4 focus:ring-sydin-blue/15"
-                          />
-                        </label>
-                        <div className="grid grid-cols-2 gap-2">
-                          <Button
-                            variant="secondary"
-                            onClick={() => receiveOrderedLine(detail.line.id)}
-                            disabled={detail.line.orderedQuantity === null}
-                          >
-                            Receive ordered
-                          </Button>
-                          <Button
-                            variant="secondary"
-                            onClick={() => clearLine(detail.line.id)}
-                          >
-                            Clear row
-                          </Button>
-                        </div>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-
-              {visibleDetails.length === 0 && (
-                <div className="px-5 py-14 text-center">
-                  <UiIcon
-                    name="search"
-                    className="mx-auto h-8 w-8 text-theme-accent"
-                  />
-                  <h2 className="mt-4 text-xl font-bold text-theme-primary">
-                    No receiving rows match
-                  </h2>
-                  <p className="mt-2 text-sm text-theme-muted">
-                    Add items from inventory, a purchase order draft, or create a
-                    manual receiving line.
-                  </p>
-                  <div className="mx-auto mt-5 flex max-w-md flex-col justify-center gap-2 sm:flex-row">
-                    <Button variant="secondary" onClick={addInventoryLine}>
-                      Add item
-                    </Button>
-                    <Button variant="secondary" onClick={addLowStockLines}>
-                      Add low stock
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </section>
-
-            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-blue-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <div className="grid grid-cols-3 gap-2 text-center text-xs font-bold text-theme-secondary sm:flex sm:text-left">
-                  <span className="rounded-xl bg-blue-500/10 px-3 py-2 text-theme-accent">
-                    {receivedLineDetails.length}/{receivedDetails.length} received
-                  </span>
-                  <span className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
-                    {skippedCount} skipped
-                  </span>
-                  <span className="rounded-xl border border-theme bg-theme-inset px-3 py-2">
-                    {overReceivedDetails.length} over
-                  </span>
-                </div>
-                <div className="receiving-step-actions flex flex-col gap-2 sm:flex-row">
-                  <Button variant="secondary" onClick={() => setStep("setup")}>
-                    Setup
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={receiveOrderedQuantities}
-                    disabled={!lines.some((line) => line.orderedQuantity !== null)}
-                  >
-                    Receive ordered quantities
-                  </Button>
-                  <Button variant="secondary" onClick={() => setConfirmClearDraft(true)}>
-                    Restart
-                  </Button>
-                  <Button onClick={goToReview}>Review stock in</Button>
-                </div>
-              </div>
-            </section>
-          </>
-        ) : step === "review" ? (
-          <>
-            <section className="grid gap-3 rounded-[22px] border border-theme bg-theme-surface p-4 shadow-[0_10px_30px_rgba(15,23,42,0.06)] md:grid-cols-3 xl:grid-cols-6">
-              {[
-                ["Total lines", receivedDetails.length],
-                ["Received", receivedLineDetails.length],
-                ["Skipped", skippedCount],
-                ["Total quantity", formatNumber(totalReceivedQuantity)],
-                [
-                  "Est. value",
-                  hasCostValue
-                    ? formatInventoryPrice(estimatedReceivedValue, currencyCode) ||
-                      formatNumber(estimatedReceivedValue)
-                    : "Not set",
-                ],
-                ["Over received", overReceivedDetails.length],
-              ].map(([label, value]) => (
-                <div
-                  key={label}
-                  className="rounded-xl border border-theme bg-theme-inset px-3 py-2"
-                >
-                  <p className="text-xs font-bold text-theme-subtle">
-                    {label}
-                  </p>
-                  <p className="mt-1 text-xl font-black text-theme-primary">
-                    {value}
-                  </p>
-                </div>
-              ))}
-            </section>
-
-            {(overReceivedDetails.length > 0 || missingQuantityCount > 0) && (
-              <div className="grid gap-2 md:grid-cols-2">
-                {overReceivedDetails.length > 0 && (
-                  <p className="rounded-xl border border-amber-300/25 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-theme-warning">
-                    {overReceivedDetails.length} line
-                    {overReceivedDetails.length === 1 ? "" : "s"} exceed ordered
-                    quantity. Over-receiving is allowed after confirmation.
-                  </p>
-                )}
-                {missingQuantityCount > 0 && (
-                  <p className="rounded-xl border border-blue-300/25 bg-blue-500/10 px-4 py-3 text-sm font-semibold text-theme-accent">
-                    {missingQuantityCount} line
-                    {missingQuantityCount === 1 ? "" : "s"} have no received
-                    quantity and will create no stock movement.
-                  </p>
-                )}
-              </div>
-            )}
-
-            {finalizeError && (
-              <DashboardNotice tone="danger">{finalizeError}</DashboardNotice>
-            )}
-
-            <section className="overflow-hidden rounded-[22px] border border-theme bg-theme-surface shadow-[0_12px_36px_rgba(15,23,42,0.07)]">
-              <div className="border-b border-theme p-4">
-                <h2 className="text-xl font-black text-theme-primary">
-                  Review received stock
-                </h2>
-                <p className="mt-1 text-sm text-theme-muted">
-                  Only lines with received quantity greater than zero will create
-                  stock-in movements.
-                </p>
-              </div>
-              {receivedLineDetails.length > 0 ? (
-                <>
-                <div className="hidden overflow-x-auto md:block">
-                  <table className="min-w-[840px] w-full table-fixed text-left text-sm">
-                    <thead className="border-b border-theme bg-theme-inset text-xs font-black text-theme-subtle">
-                      <tr>
-                        <th className="px-4 py-3">Item</th>
-                        <th className="px-4 py-3 text-right">Current</th>
-                        <th className="px-4 py-3 text-right">Received</th>
-                        <th className="px-4 py-3 text-right">Resulting</th>
-                        <th className="px-4 py-3">Unit</th>
-                        <th className="px-4 py-3">Depot</th>
-                        <th className="px-4 py-3">Note</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-[var(--border-divider)]">
-                      {receivedLineDetails.map((detail) => {
-                        const item = detail.item;
-                        if (!item || detail.received === null) return null;
-                        const currentQuantity = Number(item.quantity || 0);
-                        const resultingQuantity = currentQuantity + detail.received;
-
-                        return (
-                          <tr key={detail.line.id}>
-                            <td className="px-4 py-3">
-                              <p className="font-black text-theme-primary">
-                                {item.name}
-                              </p>
-                              <p className="text-xs text-theme-muted">
-                                {item.item_code || item.sku || "Inventory item"}
-                              </p>
-                            </td>
-                            <td className="px-4 py-3 text-right font-bold text-theme-secondary">
-                              {formatNumber(currentQuantity)}
-                            </td>
-                            <td className="px-4 py-3 text-right font-black text-theme-success">
-                              +{formatNumber(detail.received)}
-                            </td>
-                            <td className="px-4 py-3 text-right font-black text-theme-primary">
-                              {formatNumber(resultingQuantity)}
-                            </td>
-                            <td className="px-4 py-3 text-theme-secondary">
-                              {getInventoryUnitLabel(
-                                item.unit_type,
-                                item.custom_unit_label
-                              )}
-                            </td>
-                            <td className="px-4 py-3 text-theme-secondary">
-                              {getDepotLabel(item)}
-                            </td>
-                            <td className="px-4 py-3 text-theme-muted">
-                              {detail.line.note || "Receiving"}
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="grid gap-2 p-3 md:hidden">
-                  {receivedLineDetails.map((detail) => {
-                    const item = detail.item;
-                    if (!item || detail.received === null) return null;
-                    const currentQuantity = Number(item.quantity || 0);
-                    const resultingQuantity = currentQuantity + detail.received;
-
-                    return (
-                      <article
-                        key={detail.line.id}
-                        className="rounded-2xl border border-theme bg-theme-inset p-3"
-                      >
-                        <div className="flex items-start justify-between gap-3">
-                          <div className="min-w-0">
-                            <h3 className="truncate font-black text-theme-primary">
-                              {item.name}
-                            </h3>
-                            <p className="mt-1 truncate text-xs text-theme-muted">
-                              {item.item_code || item.sku || "Inventory item"}
-                            </p>
-                          </div>
-                          <span className="shrink-0 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-2.5 py-1 text-xs font-black text-theme-success">
-                            +{formatNumber(detail.received)}
-                          </span>
-                        </div>
-                        <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
-                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold text-theme-subtle">
-                              Current
-                            </p>
-                            <p className="mt-1 font-black text-theme-primary">
-                              {formatNumber(currentQuantity)}
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold text-theme-subtle">
-                              Result
-                            </p>
-                            <p className="mt-1 font-black text-theme-primary">
-                              {formatNumber(resultingQuantity)}
-                            </p>
-                          </div>
-                          <div className="rounded-xl border border-theme bg-theme-surface px-3 py-2">
-                            <p className="font-bold text-theme-subtle">
-                              Unit
-                            </p>
-                            <p className="mt-1 truncate font-black text-theme-primary">
-                              {getInventoryUnitLabel(
-                                item.unit_type,
-                                item.custom_unit_label
-                              )}
-                            </p>
-                          </div>
-                        </div>
-                        <p className="mt-3 text-xs font-semibold text-theme-muted">
-                          {getDepotLabel(item)} | {detail.line.note || "Receiving"}
-                        </p>
-                      </article>
-                    );
-                  })}
-                </div>
-                </>
-              ) : (
-                <div className="px-5 py-12 text-center">
-                  <UiIcon
-                    name="info"
-                    className="mx-auto h-8 w-8 text-theme-accent"
-                  />
-                  <h2 className="mt-4 text-xl font-bold text-theme-primary">
-                    No received quantities
-                  </h2>
-                  <p className="mt-2 text-sm text-theme-muted">
-                    No stock-in movements will be recorded until received
-                    quantities are entered.
-                  </p>
-                </div>
-              )}
-            </section>
-
-            <section className="receiving-step-bar fixed inset-x-3 bottom-3 z-30 rounded-[18px] border border-blue-300/25 bg-theme-surface p-3 shadow-[0_18px_48px_rgba(15,23,42,0.22)] sm:sticky sm:bottom-auto sm:top-2">
-              <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                <label className="flex items-start gap-2 text-xs font-bold text-theme-primary">
-                  <input
-                    type="checkbox"
-                    checked={confirmFinalize}
-                    onChange={(event) => setConfirmFinalize(event.target.checked)}
-                    disabled={finalizing}
-                    className="mt-0.5 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-sydin-blue/40"
-                  />
-                  Finalizing will record stock-in movements for received
-                  quantities. Zero rows will be skipped.
-                </label>
-                <div className="receiving-step-actions flex flex-col gap-2 sm:flex-row">
-                  <Button
-                    variant="secondary"
-                    onClick={() => setStep("receive")}
-                    disabled={finalizing}
-                  >
-                    Back to Items
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    onClick={() => setConfirmClearDraft(true)}
-                    disabled={finalizing}
-                  >
-                    Restart
-                  </Button>
-                  <Button
-                    onClick={() => void finalizeReceiving()}
-                    disabled={!confirmFinalize || finalizing}
-                    loading={finalizing}
-                    loadingLabel="Finalizing..."
-                  >
-                    Finalize receiving
-                  </Button>
-                </div>
-              </div>
-            </section>
-          </>
+          <LoadingSkeletonGroup count={2} className="p-4" itemClassName="min-h-14" />
+        ) : waiting.length === 0 ? (
+          <p className="po-v2-empty">
+            Nothing on order right now.{" "}
+            <Link href="/dashboard/purchase-orders/new" className="po-v2-link">
+              New purchase order
+            </Link>
+          </p>
         ) : (
-          <section className="grid gap-4 rounded-[22px] border border-theme bg-theme-surface p-5 shadow-[0_10px_30px_rgba(15,23,42,0.06)]">
-            <div>
-              <p className="text-xs font-bold text-theme-accent">
-                Finalized
-              </p>
-              <h2 className="mt-1 text-2xl font-black text-theme-primary">
-                Receiving complete
-              </h2>
-              <p className="mt-1 text-sm text-theme-muted">
-                Inventory was refreshed after finalization. Each received line
-                was processed through the existing stock-in movement path.
-              </p>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold text-theme-subtle">
-                  Stock-in movements
-                </p>
-                <p className="mt-1 text-2xl font-black text-theme-primary">
-                  {finalizeResult?.recorded || 0}
-                </p>
+          waiting.map((order) => {
+            const progress = getPurchaseOrderReceivingProgress(order);
+            const overdue = order.expected_delivery_date && order.expected_delivery_date < today;
+            return (
+              <div key={order.id} className="pol-v2-row rcv-v2-wait">
+                <Link href={`/dashboard/purchase-orders/${order.id}`} className="pol-v2-row-link" aria-label={`Open ${order.po_number}`} />
+                <span className="pon-v2-avatar rcv-v2-avatar">{(order.supplier_name_snapshot || "?").charAt(0).toUpperCase()}</span>
+                <span className="pol-v2-main">
+                  <span className="pol-v2-title">
+                    <b className="is-mono">{order.po_number}</b>
+                    <span>{order.supplier_name_snapshot || "No supplier"}</span>
+                    {order.expected_delivery_date && (
+                      <span className={`rcv-v2-expect ${overdue ? "is-overdue" : ""}`}>
+                        {overdue ? "Overdue · " : "Expected "}
+                        {shortDate(order.expected_delivery_date)}
+                      </span>
+                    )}
+                  </span>
+                  <small>
+                    {[
+                      `${order.lines.length} ${order.lines.length === 1 ? "line" : "lines"}`,
+                      order.lines
+                        .slice(0, 3)
+                        .map((line) => `${line.name_snapshot} ${line.quantity - line.received_quantity}`)
+                        .join(" · "),
+                      order.depot_name_snapshot ? `to ${order.depot_name_snapshot}` : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </small>
+                </span>
+                <span className="pol-v2-progress">
+                  <span className="pol-v2-progress-top">
+                    <span>
+                      {progress.received} of {progress.ordered} received
+                    </span>
+                  </span>
+                  <span className="pol-v2-bar" aria-hidden>
+                    <i style={{ transform: `scaleX(${progress.ordered ? progress.received / progress.ordered : 0})` }} />
+                  </span>
+                </span>
+                <span className="pol-v2-action">
+                  <Link href={`/dashboard/receiving/new?po=${order.id}`} className={buttonClassName()}>
+                    Receive
+                  </Link>
+                </span>
               </div>
-              <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold text-theme-subtle">
-                  Skipped rows
-                </p>
-                <p className="mt-1 text-2xl font-black text-theme-primary">
-                  {finalizeResult?.skipped || 0}
-                </p>
-              </div>
-              <div className="rounded-xl border border-theme bg-theme-inset p-3">
-                <p className="text-xs font-bold text-theme-subtle">
-                  Failed
-                </p>
-                <p className="mt-1 text-2xl font-black text-theme-primary">
-                  {finalizeResult?.failed.length || 0}
-                </p>
-              </div>
-            </div>
-            {finalizeResult && finalizeResult.failed.length > 0 && (
-              <div className="rounded-2xl border border-red-400/30 bg-red-500/10 p-4">
-                <p className="font-black text-theme-danger">
-                  Failed stock-in movements
-                </p>
-                <ul className="mt-2 grid gap-1 text-sm text-theme-danger">
-                  {finalizeResult.failed.map((failure) => (
-                    <li key={failure.itemId}>
-                      {failure.name}: {failure.message}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Button onClick={clearDraft}>Start a new stock in</Button>
-              <Button variant="secondary" onClick={() => setStep("receive")}>
-                View receiving rows
-              </Button>
-            </div>
-          </section>
+            );
+          })
         )}
+      </section>
 
-        {(step === "setup" || step === "finalized") && !loading && (
-          <section className="receiving-history" aria-label="Recent stock in">
-            <div className="receiving-history-header">
-              <h2>Recent stock in</h2>
-              <Link href="/dashboard/stock-movements" className="receiving-history-link">
-                All movements
-                <UiIcon name="chevron-right" className="h-4 w-4" />
-              </Link>
-            </div>
-
-            <div className="receiving-history-summary">
-              <div className="receiving-history-stat">
-                <small>Received this month</small>
-                <strong>{formatNumber(receivingHistory.monthUnits)}</strong>
-                <em>units added to stock</em>
-              </div>
-              <div className="receiving-history-stat">
-                <small>Stock-in movements</small>
-                <strong>{formatNumber(receivingHistory.monthCount)}</strong>
-                <em>this month</em>
-              </div>
-            </div>
-
-            {receivingHistory.recent.length === 0 ? (
-              <p className="receiving-history-empty">
-                No stock-in movements yet. Finalized receiving and received
-                purchase orders will show here.
-              </p>
-            ) : (
-              <div className="receiving-history-list">
-                {receivingHistory.recent.map((movement) => {
-                  const item = movement.item_id
-                    ? itemById.get(movement.item_id)
-                    : null;
-                  const note = formatStockMovementNotes(movement.notes);
-
-                  return (
-                    <div key={movement.id} className="receiving-history-row">
-                      <span className="receiving-history-row-icon" aria-hidden="true">
-                        <UiIcon name="movement" className="h-4 w-4" />
-                      </span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-black text-theme-primary">
-                          {item?.name || "Stock in"}
-                        </span>
-                        <span className="mt-0.5 block truncate text-xs font-semibold text-theme-muted">
-                          {[
-                            new Intl.DateTimeFormat("en", {
-                              month: "short",
-                              day: "numeric",
-                            }).format(new Date(movement.created_at)),
-                            note,
-                          ]
-                            .filter(Boolean)
-                            .join(" · ")}
-                        </span>
-                      </span>
-                      <span className="receiving-history-delta">
-                        +{formatNumber(movement.quantity_delta)}
-                      </span>
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
+      <section className="po-v2-card rcv-v2-list motion-enter" style={{ animationDelay: "200ms" }}>
+        <div className="po-v2-card-head">
+          <h2>Recent receipts</h2>
+          <span className="rcv-v2-muted rcv-v2-stats">
+            <span>
+              <b>{monthUnits}</b> units this month
+            </span>
+            <span>
+              <b>{monthMoves}</b> movements
+            </span>
+            <Link href="/dashboard/stock-movements" className="po-v2-link">
+              All movements →
+            </Link>
+          </span>
+        </div>
+        {loading ? (
+          <LoadingSkeletonGroup count={3} className="p-4" itemClassName="min-h-12" />
+        ) : feed.length === 0 ? (
+          <p className="po-v2-empty">No stock has come in yet.</p>
+        ) : (
+          <ul className="rcv-v2-feed">
+            {feed.map((entry) => (
+              <li key={entry.key} className={entry.receipt?.status === "voided" ? "is-voided" : ""}>
+                <span className={`rcv-v2-tag is-${entry.tag.toLowerCase()}`}>{entry.tag}</span>
+                <span className="rcv-v2-feed-text">
+                  <strong>{entry.title}</strong>
+                  <small>{entry.meta}</small>
+                </span>
+                {entry.receipt && voiding === entry.receipt.id ? (
+                  <span className="rcv-v2-feed-actions">
+                    <span className="rcv-v2-muted">Take its stock back out?</span>
+                    <button type="button" onClick={() => setVoiding(null)} className="po-v2-link">
+                      Keep
+                    </button>
+                    <button type="button" disabled={busy} onClick={() => void voidReceipt(entry.receipt as StockReceipt)} className="po-v2-link is-danger">
+                      Void receipt
+                    </button>
+                  </span>
+                ) : (
+                  <span className="rcv-v2-feed-actions">
+                    {entry.receipt && (
+                      <button type="button" onClick={() => void printReceipt(entry.receipt as StockReceipt)} className="po-v2-link">
+                        GRN
+                      </button>
+                    )}
+                    {entry.receipt && canDelete && entry.receipt.status === "confirmed" && (
+                      <button type="button" onClick={() => setVoiding(entry.receipt?.id ?? null)} className="po-v2-link is-danger">
+                        Void
+                      </button>
+                    )}
+                    <span className={`rcv-v2-badge ${entry.badge === "voided" ? "is-voided" : ""}`}>{entry.badge}</span>
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
         )}
-      </DashboardPageShell>
-
-      {confirmClearDraft && (
-        <DialogShell
-          title="Clear receiving draft?"
-          eyebrow="Device draft"
-          description="This clears the receiving draft saved on this device. Finalized stock movements are not affected."
-          tone="danger"
-          onClose={() => setConfirmClearDraft(false)}
-          footer={
-            <>
-              <Button
-                variant="secondary"
-                onClick={() => setConfirmClearDraft(false)}
-              >
-                Keep draft
-              </Button>
-              <Button variant="danger" onClick={clearDraft}>
-                Clear draft
-              </Button>
-            </>
-          }
-        />
-      )}
-    </main>
+      </section>
+    </DashboardPageShell>
   );
 }
