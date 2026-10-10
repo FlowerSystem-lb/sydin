@@ -237,7 +237,7 @@ footer .links a{display:inline-flex;align-items:center;gap:8px;text-decoration:n
   <div>
    <form id="f" novalidate>
     <label><span class="lb">الاسم <span class="en">Name</span></span><input name="name" autocomplete="name" required placeholder="اسمك"></label>
-    <label><span class="lb">رقم الواتساب <span class="en">WhatsApp number</span></span><input name="whatsapp" type="tel" inputmode="tel" autocomplete="tel" required placeholder="+961 70 123 456"></label>
+    <label><span class="lb">رقم الواتساب <span class="en">WhatsApp number</span></span><input name="phone" type="tel" inputmode="tel" autocomplete="tel" required placeholder="+961 70 123 456"></label>
     <div><div class="lb" style="font-weight:600;font-size:15.5px;display:flex;justify-content:space-between;margin-bottom:6px">شو عندك؟ <span class="en" style="font-weight:500;font-size:13px;color:var(--muted)">What do you run?</span></div>
      <div class="seg">
       <input type="radio" name="business" id="b1" value="Depot" checked><label for="b1">مستودع<span class="en">Depot</span></label>
@@ -273,11 +273,11 @@ var FORMSPREE_ID = "xqervwkg";
  var f=document.getElementById('f'),err=document.getElementById('err'),go=document.getElementById('go');
  f.addEventListener('submit',function(ev){
   ev.preventDefault();err.textContent='';
-  var d=new FormData(f),n=(d.get('name')||'').trim(),w=(d.get('whatsapp')||'').replace(/[^\d+]/g,'');
+  var d=new FormData(f),n=(d.get('name')||'').trim(),w=(d.get("phone")||'').replace(/[^\d+]/g,'');
   if(!n){err.textContent='اكتب اسمك · Please add your name';f.name.focus();return}
-  if(w.replace(/\D/g,'').length<7){err.textContent='اكتب رقم واتساب صحيح · Please add a valid WhatsApp number';f.whatsapp.focus();return}
+  if(w.replace(/\D/g,'').length<7){err.textContent='اكتب رقم واتساب صحيح · Please add a valid WhatsApp number';f.phone.focus();return}
   var em=(d.get('email')||'').trim();if(em&&!/^\S+@\S+\.\S+$/.test(em)){err.textContent='الإيميل مش مزبوط · That email looks wrong';f.email.focus();return}
-  d.set('_subject','SydIN waitlist: '+d.get('business'));
+
   go.disabled=true;go.style.opacity=.7;
   fetch('https://formspree.io/f/'+FORMSPREE_ID,{method:'POST',body:d,headers:{Accept:'application/json'}})
    .then(function(r){if(!r.ok)throw 0;f.style.display='none';document.getElementById('ok').style.display='block'})
